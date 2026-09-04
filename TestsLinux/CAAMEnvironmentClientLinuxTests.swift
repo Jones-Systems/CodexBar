@@ -59,6 +59,34 @@ struct CAAMEnvironmentClientLinuxTests {
     }
 
     @Test
+    func `fallback restoration binds the plan revision and operation identity`() throws {
+        let operationID = try #require(UUID(uuidString: "11111111-2222-4333-8444-555555555555"))
+        let idempotencyKey = try #require(UUID(uuidString: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"))
+        let digest = String(repeating: "b", count: 64)
+        let client = CAAMEnvironmentClient(
+            resolveLocalGateway: { _ in "/usr/local/bin/caam-codexbar" })
+        let configuration = CAAMEnvironmentConfiguration(id: "laptop", label: "Laptop", connection: .local())
+
+        let command = try client.command(
+            for: configuration,
+            operation: .restoreFallback(
+                environmentID: "laptop",
+                expectedRevision: "42",
+                planDigest: digest,
+                operationID: operationID,
+                idempotencyKey: idempotencyKey))
+
+        #expect(command.arguments == [
+            "restore-fallback",
+            "--environment-id", "laptop",
+            "--expected-revision", "42",
+            "--plan-digest", digest,
+            "--operation-id", "11111111-2222-4333-8444-555555555555",
+            "--idempotency-key", "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+        ])
+    }
+
+    @Test
     func `command rejects cross environment targeting and unsafe profile`() throws {
         let client = CAAMEnvironmentClient(resolveLocalGateway: { _ in "/usr/local/bin/caam-codexbar" })
         let configuration = CAAMEnvironmentConfiguration(id: "laptop", label: "Laptop", connection: .local())

@@ -49,7 +49,12 @@ public enum CAAMGatewayOperation: Sendable, Equatable {
     case executeSwitch(environmentID: String, planDigest: String, operationID: UUID, idempotencyKey: UUID)
     case operationStatus(environmentID: String, operationID: UUID)
     case recoverSwitch(environmentID: String, operationID: UUID, expectedRevision: String)
-    case restoreFallback(environmentID: String, expectedRevision: String, operationID: UUID, idempotencyKey: UUID)
+    case restoreFallback(
+        environmentID: String,
+        expectedRevision: String,
+        planDigest: String,
+        operationID: UUID,
+        idempotencyKey: UUID)
 
     public var environmentID: String {
         switch self {
@@ -58,7 +63,7 @@ public enum CAAMGatewayOperation: Sendable, Equatable {
              let .executeSwitch(environmentID, _, _, _),
              let .operationStatus(environmentID, _),
              let .recoverSwitch(environmentID, _, _),
-             let .restoreFallback(environmentID, _, _, _):
+             let .restoreFallback(environmentID, _, _, _, _):
             environmentID
         }
     }
@@ -109,12 +114,14 @@ public enum CAAMGatewayOperation: Sendable, Equatable {
                 "--operation-id", operationID.uuidString.lowercased(),
                 "--expected-revision", expectedRevision,
             ]
-        case let .restoreFallback(environmentID, expectedRevision, operationID, idempotencyKey):
+        case let .restoreFallback(environmentID, expectedRevision, planDigest, operationID, idempotencyKey):
             try Self.validateRevision(expectedRevision)
+            try Self.validatePlanDigest(planDigest)
             return [
                 "restore-fallback",
                 "--environment-id", environmentID,
                 "--expected-revision", expectedRevision,
+                "--plan-digest", planDigest,
                 "--operation-id", operationID.uuidString.lowercased(),
                 "--idempotency-key", idempotencyKey.uuidString.lowercased(),
             ]

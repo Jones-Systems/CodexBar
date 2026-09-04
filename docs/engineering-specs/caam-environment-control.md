@@ -91,7 +91,7 @@ A switch begins with `plan-switch` bound to environment, target profile, observe
 
 Known completion must return a typed result and a fresh matching snapshot. Known no-effect permits a new plan. If transport ends after execution might have begun, CodexBar records the operation as unknown and invokes only `operation-status` with the same operation ID. It never blindly executes again.
 
-`recover-switch` references the pending operation and lets host-local CAAM complete or roll back according to its journal. `restore-fallback` is a new planned operation targeting the configured fallback profile. Recovery does not silently become fallback restoration. If no valid fallback exists, the fallback action is unavailable.
+`recover-switch` references the pending operation and lets host-local CAAM complete or roll back according to its journal. `restore-fallback` executes only from a plan digest bound to the configured fallback profile and expected revision. Recovery does not silently become fallback restoration. If no valid fallback exists, the fallback action is unavailable.
 <!-- codex-section:end id="spec.caam-environment-control#req.mutation-and-recovery.001" -->
 
 <!-- codex-section:begin id="spec.caam-environment-control#req.presentation.001" -->

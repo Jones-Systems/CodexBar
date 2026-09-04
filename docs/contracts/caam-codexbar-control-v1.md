@@ -25,7 +25,7 @@ Contract revision: 1
 - Requests and responses contain no credential, cookie, token, private key, complete auth-file digest, auth path, vault path, command text, or shell fragment.
 - Every response is bound to one `environment_id` and `protocol_version`.
 - Profile names are local selectors. `identity.stable_id` is the optional cross-environment correlation key.
-- Mutations require an operation ID, idempotency key, exact expected revision, and a prior unexpired plan digest.
+- New switch and fallback mutations require an operation ID, idempotency key, exact expected revision, and a prior unexpired plan digest. Recovery instead binds the pending operation ID and exact expected revision.
 - A lost response after possible execution is `unknown`, never known failure. Only operation lookup or recovery may follow automatically.
 - Recovering a pending switch and restoring a configured fallback are distinct operations.
 <!-- codex-section:end id="contract.caam-codexbar-control-v1#ctx.invariants.001" -->
@@ -54,7 +54,7 @@ plan-switch --environment-id <id> --profile <name> --expected-revision <revision
 execute-switch --environment-id <id> --plan-digest <sha256> --operation-id <uuid> --idempotency-key <uuid>
 operation-status --environment-id <id> --operation-id <uuid>
 recover-switch --environment-id <id> --operation-id <uuid> --expected-revision <revision>
-restore-fallback --environment-id <id> --expected-revision <revision> --operation-id <uuid> --idempotency-key <uuid>
+restore-fallback --environment-id <id> --expected-revision <revision> --plan-digest <sha256> --operation-id <uuid> --idempotency-key <uuid>
 ```
 
 ## Common envelope
