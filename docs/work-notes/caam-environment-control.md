@@ -77,6 +77,6 @@ The coordinator is the sole Git owner of `/home/malcolmjones/Projects/CodexBar-w
 - No compile, UI screenshot, live CAAM, SSH gateway, credential, or mutation evidence exists yet.
 - Swift build and macOS UI verification are unavailable on this VPS because `swift` is not installed and the complete app target is macOS-only.
 - Production switching stays blocked until the CAAM V3 service is composed into a public, versioned gateway adapter with exact operation lookup and recovery semantics.
-- The public `Jones-Systems/CodexBar` fork was created from upstream commit `392310c665485f8d57c93881e7416c5ebf69d8ef` and verified as a fork of `steipete/CodexBar`. Branch publication and draft-PR readback remain pending.
+- The public `Jones-Systems/CodexBar` fork was created from upstream commit `392310c665485f8d57c93881e7416c5ebf69d8ef` and verified as a fork of `steipete/CodexBar`. Draft PR #1 is the delivery vehicle inside the Jones Systems fork. Fork Actions are enabled for PR verification; the inherited scheduled upstream-monitor workflow remains disabled.
 - Installation on the laptop, VPS, and Mac Mini; gateway provisioning; signing; release; automatic updates; merge; and deployment are outside the first PR's authority and finish line.
 <!-- codex-section:end id="worknote.caam-environment-control#ctx.execution-evidence.001" -->
