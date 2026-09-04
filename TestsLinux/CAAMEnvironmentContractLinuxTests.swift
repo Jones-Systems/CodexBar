@@ -127,7 +127,7 @@ struct CAAMEnvironmentContractLinuxTests {
         #expect(row.canRestoreFallback == false)
     }
 
-    private static let snapshotJSON = #"""
+    static let snapshotJSON = #"""
     {
       "schema":"caam.codexbar-control/v1",
       "kind":"snapshot",
