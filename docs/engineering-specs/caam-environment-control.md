@@ -121,7 +121,7 @@ The independently consumed cross-project wire contract is `contract.caam-codexba
 - Command construction proves exact local and SSH argv, security options, fixed gateway operation, scalar validation, and absence of shell invocation.
 - The Codex settings pane conditionally renders an Environments section through a stable state seam without changing existing account-selection behavior.
 - Mutation controls are absent or disabled when the environment lacks complete capability/currentness evidence.
-- Documentation identifies the unavailable macOS compile/UI evidence and the CAAM activation dependency.
+- Documentation identifies the exact-head macOS CI evidence, unavailable interactive UI evidence, and the CAAM activation dependency.
 <!-- codex-section:end id="spec.caam-environment-control#ac.foundation.001" -->
 
 <!-- codex-section:begin id="spec.caam-environment-control#ac.full-project.001" -->
