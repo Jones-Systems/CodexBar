@@ -83,6 +83,16 @@ extension ProvidersPane {
         self.codexAccountsSectionState(for: .codex)
     }
 
+    func _test_codexEnvironmentsSectionState() -> CodexEnvironmentsSectionState {
+        self.codexEnvironmentsSectionState()
+    }
+
+    func _test_saveCodexEnvironmentConfigurations(
+        _ configurations: [CAAMEnvironmentConfiguration]) -> String?
+    {
+        self.saveCodexEnvironmentConfigurations(configurations)
+    }
+
     func _test_selectCodexVisibleAccount(id: String) async {
         await self.selectCodexVisibleAccount(id: id)
     }
