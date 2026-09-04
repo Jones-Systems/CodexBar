@@ -91,6 +91,24 @@ struct CAAMEnvironmentContractLinuxTests {
                 Data(credentialBearing.utf8),
                 expectedEnvironmentID: "laptop")
         }
+
+        let inconsistentActiveProfile = Self.snapshotJSON.replacingOccurrences(
+            of: #""active":true"#,
+            with: #""active":false"#)
+        #expect(throws: CAAMEnvironmentContractError.self) {
+            try CAAMEnvironmentContract.decodeSnapshot(
+                Data(inconsistentActiveProfile.utf8),
+                expectedEnvironmentID: "laptop")
+        }
+
+        let invalidIdentity = Self.snapshotJSON.replacingOccurrences(
+            of: #""display_email":"p***@example.invalid""#,
+            with: #""display_email":"p***@example.invalid\nspoofed""#)
+        #expect(throws: CAAMEnvironmentContractError.self) {
+            try CAAMEnvironmentContract.decodeSnapshot(
+                Data(invalidIdentity.utf8),
+                expectedEnvironmentID: "laptop")
+        }
     }
 
     @Test

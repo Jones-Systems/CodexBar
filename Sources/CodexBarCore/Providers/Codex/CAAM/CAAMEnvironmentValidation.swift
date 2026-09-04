@@ -109,7 +109,10 @@ public enum CAAMEnvironmentContract {
             throw CAAMEnvironmentContractError.invalidEnvelope(
                 "The CAAM gateway response identified another environment.")
         }
-        guard envelope.protocolVersion.split(separator: ".").first == "1" else {
+        guard envelope.protocolVersion.count <= 32,
+              self.isASCIIPrintable(envelope.protocolVersion),
+              envelope.protocolVersion.split(separator: ".").first == "1"
+        else {
             throw CAAMEnvironmentContractError.invalidEnvelope("The CAAM gateway protocol version is unsupported.")
         }
         guard (envelope.result == nil) != (envelope.error == nil) else {
@@ -248,9 +251,24 @@ public enum CAAMEnvironmentContract {
                     "The CAAM pending operation referenced an unknown profile.")
             }
         }
-        guard snapshot.profiles.filter(\.active).count <= 1 else {
+        let activeProfiles = snapshot.profiles.filter(\.active)
+        guard activeProfiles.count <= 1,
+              activeProfiles.first?.name == snapshot.hostDefaultProfile
+        else {
             throw CAAMEnvironmentContractError.invalidEnvelope(
-                "The CAAM environment snapshot identified multiple active profiles.")
+                "The CAAM environment snapshot identified inconsistent active profiles.")
+        }
+        guard snapshot.profiles.allSatisfy({ profile in
+            guard let identity = profile.identity else { return true }
+            return self.isSafeIdentifier(identity.provider, maximumLength: 64) &&
+                self.isSafeOptionalDisplayText(identity.stableID, maximumLength: 160) &&
+                self.isSafeOptionalDisplayText(identity.displayEmail, maximumLength: 160) &&
+                self.isSafeOptionalDisplayText(identity.workspaceID, maximumLength: 160) &&
+                self.isSafeOptionalDisplayText(identity.workspaceLabel, maximumLength: 160) &&
+                self.isSafeOptionalDisplayText(identity.plan, maximumLength: 80)
+        }) else {
+            throw CAAMEnvironmentContractError.invalidEnvelope(
+                "The CAAM environment snapshot contained invalid account identity metadata.")
         }
     }
 
@@ -267,15 +285,24 @@ public enum CAAMEnvironmentContract {
 
     private static func isSafeVersion(_ value: String) -> Bool {
         guard !value.isEmpty, value.count <= 32 else { return false }
-        return value.unicodeScalars.allSatisfy { scalar in
-            scalar.value >= 32 && scalar.value < 127
-        }
+        return self.isASCIIPrintable(value)
     }
 
     private static func isSafeDisplayText(_ value: String, maximumLength: Int) -> Bool {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, trimmed == value, value.count <= maximumLength else { return false }
         return value.unicodeScalars.allSatisfy { !CharacterSet.controlCharacters.contains($0) }
+    }
+
+    private static func isSafeOptionalDisplayText(_ value: String?, maximumLength: Int) -> Bool {
+        guard let value else { return true }
+        return self.isSafeDisplayText(value, maximumLength: maximumLength)
+    }
+
+    private static func isASCIIPrintable(_ value: String) -> Bool {
+        value.unicodeScalars.allSatisfy { scalar in
+            scalar.value >= 32 && scalar.value < 127
+        }
     }
 
     private static func accountLabel(_ identity: CAAMProfileIdentity) -> String? {
