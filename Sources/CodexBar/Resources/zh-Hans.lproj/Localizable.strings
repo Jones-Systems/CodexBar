@@ -1554,3 +1554,23 @@
 "in %@m" = "%@ 分钟后";
 "now" = "现在";
 "Spending cap, not balance" = "支出上限，并非余额";
+
+/* CAAM Environments */
+"A running Codex process may need to reload." = "正在运行的 Codex 进程可能需要重新加载。";
+"Add Laptop" = "添加笔记本电脑";
+"Add Remote Environment" = "添加远程环境";
+"CAAM %@" = "CAAM %@";
+"CAAM keeps credentials on each environment. Remote access uses your SSH configuration." = "CAAM 将凭据保留在各个环境中。远程访问使用您的 SSH 配置。";
+"Current profile: %@" = "当前配置文件：%@";
+"Degraded" = "降级";
+"Environment name" = "环境名称";
+"Environments" = "环境";
+"Fallback: %@" = "后备配置文件：%@";
+"Laptop" = "笔记本电脑";
+"No CAAM environments configured." = "未配置 CAAM 环境。";
+"Not checked yet." = "尚未检查。";
+"Ready" = "就绪";
+"Recovery required" = "需要恢复";
+"SSH" = "SSH";
+"SSH destination" = "SSH 目标";
+"Update required" = "需要更新";

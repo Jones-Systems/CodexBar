@@ -1546,3 +1546,23 @@
 "menu_bar_layout_conditional_default_either_high" = "เซสชันหรือรายสัปดาห์อยู่ในระดับสูง";
 "menu_bar_layout_conditional_default_scoped_weekly" = "รายสัปดาห์ตามโมเดลเกิน 60%";
 "Spending cap, not balance" = "เพดานการใช้จ่าย ไม่ใช่ยอดคงเหลือ";
+
+/* CAAM Environments */
+"A running Codex process may need to reload." = "กระบวนการ Codex ที่กำลังทำงานอยู่อาจต้องโหลดใหม่";
+"Add Laptop" = "เพิ่มแล็ปท็อป";
+"Add Remote Environment" = "เพิ่มสภาพแวดล้อมระยะไกล";
+"CAAM %@" = "CAAM %@";
+"CAAM keeps credentials on each environment. Remote access uses your SSH configuration." = "CAAM เก็บข้อมูลประจำตัวไว้ในแต่ละสภาพแวดล้อม การเข้าถึงระยะไกลใช้การกำหนดค่า SSH ของคุณ";
+"Current profile: %@" = "โปรไฟล์ปัจจุบัน: %@";
+"Degraded" = "ประสิทธิภาพลดลง";
+"Environment name" = "ชื่อสภาพแวดล้อม";
+"Environments" = "สภาพแวดล้อม";
+"Fallback: %@" = "โปรไฟล์สำรอง: %@";
+"Laptop" = "แล็ปท็อป";
+"No CAAM environments configured." = "ยังไม่ได้กำหนดค่าสภาพแวดล้อม CAAM";
+"Not checked yet." = "ยังไม่ได้ตรวจสอบ";
+"Ready" = "พร้อม";
+"Recovery required" = "จำเป็นต้องกู้คืน";
+"SSH" = "SSH";
+"SSH destination" = "ปลายทาง SSH";
+"Update required" = "จำเป็นต้องอัปเดต";

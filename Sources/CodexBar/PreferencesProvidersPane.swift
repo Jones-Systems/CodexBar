@@ -28,6 +28,7 @@ struct ProvidersPane: View {
     @State private var activeConfirmation: ProviderSettingsConfirmationState?
     @State private var codexAccountsNotice: CodexAccountsSectionNotice?
     @State private var isAuthenticatingLiveCodexAccount = false
+    @State private var caamEnvironmentCoordinator = CAAMEnvironmentCoordinator()
 
     init(
         // Provider-specific by design: Codex is the historical settings selection when no provider is supplied.
@@ -98,6 +99,17 @@ struct ProvidersPane: View {
                         addAccount: {
                             Task { @MainActor in
                                 await self.addManagedCodexAccount()
+                            }
+                        })
+                    CodexEnvironmentsSectionView(
+                        state: self.codexEnvironmentsSectionState(),
+                        saveConfigurations: { configurations in
+                            self.saveCodexEnvironmentConfigurations(configurations)
+                        },
+                        refresh: {
+                            Task { @MainActor in
+                                await self.caamEnvironmentCoordinator.refresh(
+                                    configurations: self.settings.codexCAAMEnvironments)
                             }
                         })
                 }
@@ -247,6 +259,20 @@ struct ProvidersPane: View {
             isAuthenticatingLiveAccount: self.isAuthenticatingLiveCodexAccount,
             isPromotingSystemAccount: self.codexAccountPromotionCoordinator.isPromotingSystemAccount,
             notice: self.codexAccountsNotice ?? degradedNotice)
+    }
+
+    func codexEnvironmentsSectionState() -> CodexEnvironmentsSectionState {
+        self.caamEnvironmentCoordinator.state(configurations: self.settings.codexCAAMEnvironments)
+    }
+
+    func saveCodexEnvironmentConfigurations(_ configurations: [CAAMEnvironmentConfiguration]) -> String? {
+        do {
+            try self.settings.setCodexCAAMEnvironments(configurations)
+            self.caamEnvironmentCoordinator.configurationsDidChange(configurations)
+            return nil
+        } catch {
+            return error.localizedDescription
+        }
     }
 
     func selectCodexVisibleAccount(id: String) async {

@@ -10,4 +10,9 @@ extension ProviderConfig {
         get { self.extensionValue(forKey: "codexProfileHomePaths") }
         set { self.setExtensionValue(newValue, forKey: "codexProfileHomePaths") }
     }
+
+    public var codexCAAMEnvironments: [CAAMEnvironmentConfiguration]? {
+        get { self.extensionValue(forKey: "codexCAAMEnvironments") }
+        set { self.setExtensionValue(newValue, forKey: "codexCAAMEnvironments") }
+    }
 }

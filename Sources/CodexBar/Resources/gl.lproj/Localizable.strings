@@ -1541,3 +1541,23 @@
 "menu_bar_layout_conditional_default_either_high" = "Sesión ou semana en nivel alto";
 "menu_bar_layout_conditional_default_scoped_weekly" = "Semana por modelo por riba do 60 %";
 "Spending cap, not balance" = "Límite de gasto, non saldo";
+
+/* CAAM Environments */
+"A running Codex process may need to reload." = "É posible que sexa necesario recargar un proceso de Codex en execución.";
+"Add Laptop" = "Engadir portátil";
+"Add Remote Environment" = "Engadir contorno remoto";
+"CAAM %@" = "CAAM %@";
+"CAAM keeps credentials on each environment. Remote access uses your SSH configuration." = "CAAM mantén as credenciais en cada contorno. O acceso remoto utiliza a túa configuración de SSH.";
+"Current profile: %@" = "Perfil actual: %@";
+"Degraded" = "Degradado";
+"Environment name" = "Nome do contorno";
+"Environments" = "Contornos";
+"Fallback: %@" = "Alternativa: %@";
+"Laptop" = "Portátil";
+"No CAAM environments configured." = "Non hai contornos de CAAM configurados.";
+"Not checked yet." = "Aínda non se comprobou.";
+"Ready" = "Listo";
+"Recovery required" = "Requírese recuperación";
+"SSH" = "SSH";
+"SSH destination" = "Destino SSH";
+"Update required" = "Requírese unha actualización";

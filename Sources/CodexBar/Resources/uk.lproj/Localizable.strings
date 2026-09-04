@@ -1542,3 +1542,23 @@
 "menu_bar_layout_conditional_default_either_high" = "Сесія або тиждень на високому рівні";
 "menu_bar_layout_conditional_default_scoped_weekly" = "Тижневе вікно моделі понад 60 %";
 "Spending cap, not balance" = "Ліміт витрат, не баланс";
+
+/* CAAM Environments */
+"A running Codex process may need to reload." = "Запущений процес Codex може потребувати перезавантаження.";
+"Add Laptop" = "Додати ноутбук";
+"Add Remote Environment" = "Додати віддалене середовище";
+"CAAM %@" = "CAAM %@";
+"CAAM keeps credentials on each environment. Remote access uses your SSH configuration." = "CAAM зберігає облікові дані в кожному середовищі. Для віддаленого доступу використовується ваша конфігурація SSH.";
+"Current profile: %@" = "Поточний профіль: %@";
+"Degraded" = "Обмежена робота";
+"Environment name" = "Назва середовища";
+"Environments" = "Середовища";
+"Fallback: %@" = "Резервний профіль: %@";
+"Laptop" = "Ноутбук";
+"No CAAM environments configured." = "Середовища CAAM не налаштовано.";
+"Not checked yet." = "Ще не перевірено.";
+"Ready" = "Готово";
+"Recovery required" = "Потрібне відновлення";
+"SSH" = "SSH";
+"SSH destination" = "Адреса SSH";
+"Update required" = "Потрібне оновлення";
