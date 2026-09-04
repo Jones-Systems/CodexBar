@@ -137,7 +137,7 @@ public enum CAAMGatewayOperation: Sendable, Equatable {
     private static func validateRevision(_ revision: String) throws {
         guard !revision.isEmpty, revision.count <= 64, revision.unicodeScalars.allSatisfy({ scalar in
             guard scalar.value < 128 else { return false }
-            switch scalar.value {
+            return switch scalar.value {
             case 45, 46, 48...58, 65...90, 95, 97...122: true
             default: false
             }

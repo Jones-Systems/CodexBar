@@ -197,7 +197,7 @@ public enum CAAMEnvironmentContract {
         guard !value.isEmpty, value.count <= maximumLength, !value.hasPrefix("-") else { return false }
         return value.unicodeScalars.allSatisfy { scalar in
             guard scalar.value < 128 else { return false }
-            switch scalar.value {
+            return switch scalar.value {
             case 45, 46, 48...57, 65...90, 95, 97...122: true
             default: false
             }
@@ -208,7 +208,7 @@ public enum CAAMEnvironmentContract {
         guard !value.isEmpty, value.count <= 255, !value.hasPrefix("-") else { return false }
         return value.unicodeScalars.allSatisfy { scalar in
             guard scalar.value < 128 else { return false }
-            switch scalar.value {
+            return switch scalar.value {
             case 45, 46, 48...57, 58, 64, 65...90, 95, 97...122: true
             default: false
             }
@@ -275,7 +275,7 @@ public enum CAAMEnvironmentContract {
         guard !value.isEmpty, value.count <= 64 else { return false }
         return value.unicodeScalars.allSatisfy { scalar in
             guard scalar.value < 128 else { return false }
-            switch scalar.value {
+            return switch scalar.value {
             case 45, 46, 48...58, 65...90, 95, 97...122: true
             default: false
             }
@@ -307,7 +307,7 @@ public enum CAAMEnvironmentContract {
     private static func accountLabel(_ identity: CAAMProfileIdentity) -> String? {
         let email = identity.displayEmail?.trimmingCharacters(in: .whitespacesAndNewlines)
         let workspace = identity.workspaceLabel?.trimmingCharacters(in: .whitespacesAndNewlines)
-        switch (email?.isEmpty == false ? email : nil, workspace?.isEmpty == false ? workspace : nil) {
+        return switch (email?.isEmpty == false ? email : nil, workspace?.isEmpty == false ? workspace : nil) {
         case let (.some(email), .some(workspace)): "\(email) — \(workspace)"
         case let (.some(email), .none): email
         case let (.none, .some(workspace)): workspace
