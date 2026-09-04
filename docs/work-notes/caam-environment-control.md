@@ -68,7 +68,13 @@ The coordinator is the sole Git owner of `/home/malcolmjones/Projects/CodexBar-w
 
 - Planning started from a clean worktree at `392310c665485f8d57c93881e7416c5ebf69d8ef`.
 - The primary upstream checkout remains on `main`; all project mutations occur in the declared linked worktree.
-- No compile, test, UI screenshot, live CAAM, SSH gateway, credential, or mutation evidence exists yet.
+- Specification revision 1 is the accepted implementation baseline for this first-PR slice.
+- Coherent checkpoints now cover the foundation (`be99bc4b5`), bounded client (`f0b2d6aa9`), snapshot-validation hardening (`24c641591` and `d3c0206a9`), formatting reconciliation (`802cde60c`), and settings UI (`5bf27d79b`).
+- SwiftFormat 0.61.1 passes all touched Swift files. `git diff --check`, touched-file width inspection, direct-shell absence inspection, localization-key presence, repository-size checks, shell syntax checks, documentation links, generated `llms.txt`, and site locales pass.
+- The portable suite passed parser hashes, provider manifests, bundled plugin generation, package/release path checks, checksum checks, the Python process-cleanup suite, Swift-test sharding, and the CI path gate. Its Homebrew tap fixture could not start because this VPS lacks `jq`; that check is unrelated to the changed paths.
+- SwiftLint 0.65.0 cannot load `libsourcekitdInProc.so` without a Swift toolchain on this VPS. The app-locale script also requires macOS `plutil`. These are unavailable checks rather than passing evidence.
+- Synthetic Swift tests exist for configuration, contract validation, row projection, exact command construction, failure redaction, settings persistence, and coordinator refresh, but they have not executed on this VPS.
+- No compile, UI screenshot, live CAAM, SSH gateway, credential, or mutation evidence exists yet.
 - Swift build and macOS UI verification are unavailable on this VPS because `swift` is not installed and the complete app target is macOS-only.
 - Production switching stays blocked until the CAAM V3 service is composed into a public, versioned gateway adapter with exact operation lookup and recovery semantics.
 - Draft-PR publication requires selecting the fork owner. No fork exists yet under `Mjones13` or `Jones-Systems`.

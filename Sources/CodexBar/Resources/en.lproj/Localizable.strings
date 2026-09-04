@@ -1558,13 +1558,10 @@
 "Environments" = "Environments";
 "Fallback: %@" = "Fallback: %@";
 "Laptop" = "Laptop";
-"Local" = "Local";
 "No CAAM environments configured." = "No CAAM environments configured.";
 "Not checked yet." = "Not checked yet.";
 "Ready" = "Ready";
 "Recovery required" = "Recovery required";
 "SSH" = "SSH";
 "SSH destination" = "SSH destination";
-"Unavailable" = "Unavailable";
 "Update required" = "Update required";
-"Updated %@" = "Updated %@";
