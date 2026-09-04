@@ -2,8 +2,8 @@ import CodexBarCore
 import Foundation
 
 extension SettingsStore {
-    // Provider-specific by design: CAAM environment control is scoped to Codex accounts.
     var codexCAAMEnvironments: [CAAMEnvironmentConfiguration] {
+        // Provider-specific by design: CAAM environment control is scoped to Codex accounts.
         self.config.providerConfig(for: .codex)?.codexCAAMEnvironments ?? []
     }
 
