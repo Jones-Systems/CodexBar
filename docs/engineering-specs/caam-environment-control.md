@@ -43,6 +43,7 @@ The full project finishes only after macOS compilation and UI proof, credential-
 - `recover-switch` resolves a journaled interrupted operation. `restore-fallback` is a separate deliberate mutation.
 - A host-default profile and an account cached by running Codex processes are separate fields. Unknown runtime state is shown as unknown, not inferred.
 - The first PR adds no dependency and no background polling loop. Refresh remains explicit or owned by a later bounded scheduler.
+- The first PR is delivered to the organization-controlled `Jones-Systems/CodexBar` fork and does not target upstream `steipete/CodexBar`.
 <!-- codex-section:end id="spec.caam-environment-control#ctx.boundaries-and-assumptions.001" -->
 
 ## Requirements
@@ -254,7 +255,7 @@ Dependencies: Tasks 1–3.
 
 Writer scope: candidate-wide remediation and truthful artifact/PR updates. Git scope: sole Git owner.
 
-Inspect all touched comments under the project comment practice, run every feasible repository check, classify unavailable Swift/macOS evidence explicitly, inspect the complete diff, and perform focused security and maintainability review. Refresh canonical upstream main, forward-merge when needed, rerun invalidated checks, select the fork owner, publish the exact branch without force, and open one draft PR with checks and limitations. No merge, release, signing, installation, or deployment.
+Inspect all touched comments under the project comment practice, run every feasible repository check, classify unavailable Swift/macOS evidence explicitly, inspect the complete diff, and perform focused security and maintainability review. Refresh canonical upstream main, forward-merge when needed, rerun invalidated checks, verify the selected Jones Systems fork, publish the exact branch without force, and open one draft PR with checks and limitations. No merge, release, signing, installation, or deployment.
 <!-- codex-section:end id="spec.caam-environment-control#task.fanin-review-publication.001" -->
 
 Sequential plan: Task 1, Task 2, Task 3, then Task 4.

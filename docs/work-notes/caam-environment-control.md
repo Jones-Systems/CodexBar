@@ -60,7 +60,7 @@ Synthesis:
 5. The first PR implements the safe read-only/configuration foundation and capability-gates mutations. Later CAAM delivery activates mutation without redesigning the UI or transport.
 6. A dedicated Environments section inside the existing Codex provider settings is the smallest reversible first placement. A top-level settings destination remains a later product decision after real macOS rendering evidence.
 
-The coordinator is the sole Git owner of `/home/malcolmjones/Projects/CodexBar-worktrees/caam-environments` on `work/caam-environments`. No other writer is assigned. Publication owner (`Mjones13` versus `Jones-Systems`) remains a late delivery question because no fork currently exists under either owner.
+The coordinator is the sole Git owner of `/home/malcolmjones/Projects/CodexBar-worktrees/caam-environments` on `work/caam-environments`. No other writer is assigned. The owner selected `Jones-Systems/CodexBar` as the organization-controlled delivery fork; no pull request will target the upstream `steipete/CodexBar` repository.
 <!-- codex-section:end id="worknote.caam-environment-control#ctx.lanes-dependencies-and-synthesis.001" -->
 
 <!-- codex-section:begin id="worknote.caam-environment-control#ctx.execution-evidence.001" -->
@@ -69,7 +69,7 @@ The coordinator is the sole Git owner of `/home/malcolmjones/Projects/CodexBar-w
 - Planning started from a clean worktree at `392310c665485f8d57c93881e7416c5ebf69d8ef`.
 - The primary upstream checkout remains on `main`; all project mutations occur in the declared linked worktree.
 - Specification revision 1 is the accepted implementation baseline for this first-PR slice.
-- Coherent checkpoints now cover the foundation (`be99bc4b5`), bounded client (`f0b2d6aa9`), snapshot-validation hardening (`24c641591` and `d3c0206a9`), formatting reconciliation (`802cde60c`), and settings UI (`5bf27d79b`).
+- Coherent checkpoints now cover the foundation (`be99bc4b5`), bounded client (`f0b2d6aa9`), snapshot-validation hardening (`24c641591` and `d3c0206a9`), formatting reconciliation (`802cde60c`), settings UI (`5bf27d79b`), verification reconciliation (`662333949`), and plan-bound fallback restoration (`987aef824`).
 - SwiftFormat 0.61.1 passes all touched Swift files. `git diff --check`, touched-file width inspection, direct-shell absence inspection, localization-key presence, repository-size checks, shell syntax checks, documentation links, generated `llms.txt`, and site locales pass.
 - The portable suite passed parser hashes, provider manifests, bundled plugin generation, package/release path checks, checksum checks, the Python process-cleanup suite, Swift-test sharding, and the CI path gate. Its Homebrew tap fixture could not start because this VPS lacks `jq`; that check is unrelated to the changed paths.
 - SwiftLint 0.65.0 cannot load `libsourcekitdInProc.so` without a Swift toolchain on this VPS. The app-locale script also requires macOS `plutil`. These are unavailable checks rather than passing evidence.
@@ -77,6 +77,6 @@ The coordinator is the sole Git owner of `/home/malcolmjones/Projects/CodexBar-w
 - No compile, UI screenshot, live CAAM, SSH gateway, credential, or mutation evidence exists yet.
 - Swift build and macOS UI verification are unavailable on this VPS because `swift` is not installed and the complete app target is macOS-only.
 - Production switching stays blocked until the CAAM V3 service is composed into a public, versioned gateway adapter with exact operation lookup and recovery semantics.
-- Draft-PR publication requires selecting the fork owner. No fork exists yet under `Mjones13` or `Jones-Systems`.
+- The public `Jones-Systems/CodexBar` fork was created from upstream commit `392310c665485f8d57c93881e7416c5ebf69d8ef` and verified as a fork of `steipete/CodexBar`. Branch publication and draft-PR readback remain pending.
 - Installation on the laptop, VPS, and Mac Mini; gateway provisioning; signing; release; automatic updates; merge; and deployment are outside the first PR's authority and finish line.
 <!-- codex-section:end id="worknote.caam-environment-control#ctx.execution-evidence.001" -->
