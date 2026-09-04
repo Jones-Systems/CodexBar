@@ -27,7 +27,7 @@ CodexBar running on the owner's laptop presents one coherent view of Codex accou
 
 CodexBar can observe every configured environment. When an environment advertises the complete mutation capability set, CodexBar can request a switch plan, confirm its exact consequences, execute once, query an operation after ambiguous transport completion, recover an interrupted transaction, or explicitly restore the fallback profile. It never synchronizes or reads credential payloads.
 
-The full project finishes only after macOS compilation and UI proof, credential-free local/SSH integration tests, CAAM V3 adapter conformance, and real read-only then bounded mutation qualification on the three intended environments. The first draft PR stops at the capability-gated foundation described in `spec.caam-environment-control#ctx.delivery-boundaries.001`.
+The full project finishes only after macOS compilation and UI proof, credential-free local/SSH integration tests, CAAM V3 adapter conformance, and real read-only then bounded mutation qualification on the three intended environments. The first PR stops at the capability-gated foundation described in `spec.caam-environment-control#ctx.delivery-boundaries.001`.
 <!-- codex-section:end id="spec.caam-environment-control#ctx.outcome-and-scope.001" -->
 
 <!-- codex-section:begin id="spec.caam-environment-control#ctx.boundaries-and-assumptions.001" -->
@@ -249,7 +249,7 @@ Add the conditional Environments section with local-first deterministic rows, re
 <!-- codex-section:end id="spec.caam-environment-control#task.settings-ui.001" -->
 
 <!-- codex-section:begin id="spec.caam-environment-control#task.fanin-review-publication.001" -->
-### Task 4 — Fan-in, review, synchronization, and draft PR
+### Task 4 — Fan-in, review, synchronization, and candidate PR
 
 Dependencies: Tasks 1–3.
 
@@ -276,7 +276,7 @@ Stop/recovery rules: stop mutation on worktree identity or ownership drift, unex
 <!-- codex-section:begin id="spec.caam-environment-control#ctx.delivery-boundaries.001" -->
 ## Delivery boundaries
 
-The first draft PR may contain planning artifacts, a versioned inactive protocol, environment configuration, synthetic fixtures, pure model/projection logic, safe command construction, injected client seams, and a capability-gated Codex settings section. It does not claim that CAAM currently conforms, that real SSH switching works, or that the app compiled on this VPS.
+The first PR may contain planning artifacts, a versioned inactive protocol, environment configuration, synthetic fixtures, pure model/projection logic, safe command construction, injected client seams, and a capability-gated Codex settings section. It does not claim that CAAM currently conforms, that real SSH switching works, or that the app compiled on this VPS.
 
-The request authorizes creating/using a task fork, committing the declared paths, refreshing and forward-merging canonical upstream main, pushing the exact task branch normally, and opening one draft PR. It does not authorize merge, upstream submission to `steipete/CodexBar`, signing, notarization, release, Homebrew publication, device installation, SSH gateway provisioning, live credential access, live account switching, daemon termination, or automatic software update.
+The initial publication request authorized creating/using a task fork, committing the declared paths, refreshing and forward-merging canonical upstream main, pushing the exact task branch normally, and opening one draft PR. The owner's later merge request authorizes merging PR #1 into `Jones-Systems/CodexBar:main` after its required checks pass. Neither request authorizes upstream submission to `steipete/CodexBar`, signing, notarization, release, Homebrew publication, device installation, SSH gateway provisioning, live credential access, live account switching, daemon termination, or automatic software update.
 <!-- codex-section:end id="spec.caam-environment-control#ctx.delivery-boundaries.001" -->
