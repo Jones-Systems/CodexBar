@@ -8,8 +8,8 @@ struct CAAMEnvironmentSettingsTests {
     @Test
     func `codex pane starts with no configured CAAM environments`() {
         let suite = "CAAMEnvironmentSettingsTests-empty"
-        defer { Self.clearSettingsStore(suite: suite) }
         let settings = Self.makeSettingsStore(suite: suite)
+        defer { Self.clearSettingsStore(settings, suite: suite) }
         let store = Self.makeUsageStore(settings: settings)
         let pane = ProvidersPane(settings: settings, store: store)
 
@@ -23,8 +23,8 @@ struct CAAMEnvironmentSettingsTests {
     @Test
     func `codex pane persists local and SSH environment configuration`() {
         let suite = "CAAMEnvironmentSettingsTests-save"
-        defer { Self.clearSettingsStore(suite: suite) }
         let settings = Self.makeSettingsStore(suite: suite)
+        defer { Self.clearSettingsStore(settings, suite: suite) }
         let store = Self.makeUsageStore(settings: settings)
         let pane = ProvidersPane(settings: settings, store: store)
         let configurations = [
@@ -46,8 +46,8 @@ struct CAAMEnvironmentSettingsTests {
     @Test
     func `codex pane rejects unsafe SSH environment without changing config`() {
         let suite = "CAAMEnvironmentSettingsTests-invalid"
-        defer { Self.clearSettingsStore(suite: suite) }
         let settings = Self.makeSettingsStore(suite: suite)
+        defer { Self.clearSettingsStore(settings, suite: suite) }
         let store = Self.makeUsageStore(settings: settings)
         let pane = ProvidersPane(settings: settings, store: store)
         let unsafe = [
@@ -87,11 +87,17 @@ struct CAAMEnvironmentSettingsTests {
     private static func makeSettingsStore(suite: String) -> SettingsStore {
         let defaults = UserDefaults(suiteName: suite)!
         defaults.removePersistentDomain(forName: suite)
-        return SettingsStore(userDefaults: defaults)
+        return SettingsStore(
+            userDefaults: defaults,
+            configStore: testConfigStore(suiteName: suite),
+            zaiTokenStore: NoopZaiTokenStore(),
+            syntheticTokenStore: NoopSyntheticTokenStore())
     }
 
-    private static func clearSettingsStore(suite: String) {
+    private static func clearSettingsStore(_ settings: SettingsStore, suite: String) {
+        settings.configPersistTask?.cancel()
         UserDefaults(suiteName: suite)?.removePersistentDomain(forName: suite)
+        try? FileManager.default.removeItem(at: settings.configStore.fileURL.deletingLastPathComponent())
     }
 
     private static func makeUsageStore(settings: SettingsStore) -> UsageStore {
