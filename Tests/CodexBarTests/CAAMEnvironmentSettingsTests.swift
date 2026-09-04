@@ -1,7 +1,7 @@
-import CodexBarCore
 import Foundation
 import Testing
 @testable import CodexBar
+@testable import CodexBarCore
 
 @MainActor
 struct CAAMEnvironmentSettingsTests {
@@ -96,11 +96,11 @@ struct CAAMEnvironmentSettingsTests {
 
     private static func makeUsageStore(settings: SettingsStore) -> UsageStore {
         UsageStore(
-            settings: settings,
             fetcher: UsageFetcher(environment: [:]),
-            claudeFetcher: ClaudeUsageFetcher(environment: [:]),
-            refreshOnInit: false,
-            startTimers: false)
+            browserDetection: BrowserDetection(cacheTTL: 0),
+            settings: settings,
+            startupBehavior: .testing,
+            environmentBase: [:])
     }
 
     private static let snapshotJSON = #"""
@@ -136,6 +136,10 @@ struct CAAMEnvironmentSettingsTests {
 
 private actor CAAMSettingsTestRunner: CAAMEnvironmentCommandRunning {
     let stdout: String
+
+    init(stdout: String) {
+        self.stdout = stdout
+    }
 
     func run(command _: CAAMEnvironmentCommand, environment _: [String: String]) async throws -> SubprocessResult {
         SubprocessResult(stdout: self.stdout, stderr: "")
