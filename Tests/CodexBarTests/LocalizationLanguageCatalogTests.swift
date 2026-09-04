@@ -578,6 +578,7 @@ struct LocalizationLanguageCatalogTests {
         let intentionallyUnchanged: Set = [
             "Account",
             "Build",
+            "CAAM %@",
             "Chrome",
             "Cookie: ...",
             "Cookie: …",
