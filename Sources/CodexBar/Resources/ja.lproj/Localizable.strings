@@ -1542,3 +1542,23 @@
 "menu_bar_layout_conditional_default_either_high" = "セッションまたは週間が高水準";
 "menu_bar_layout_conditional_default_scoped_weekly" = "モデル別週間の使用率 60% 超";
 "Spending cap, not balance" = "利用上限額（残高ではありません）";
+
+/* CAAM Environments */
+"A running Codex process may need to reload." = "実行中の Codex プロセスは再読み込みが必要な場合があります。";
+"Add Laptop" = "ノートパソコンを追加";
+"Add Remote Environment" = "リモート環境を追加";
+"CAAM %@" = "CAAM %@";
+"CAAM keeps credentials on each environment. Remote access uses your SSH configuration." = "CAAM は認証情報を各環境に保持します。リモートアクセスには SSH 設定が使用されます。";
+"Current profile: %@" = "現在のプロファイル：%@";
+"Degraded" = "低下";
+"Environment name" = "環境名";
+"Environments" = "環境";
+"Fallback: %@" = "フォールバック：%@";
+"Laptop" = "ノートパソコン";
+"No CAAM environments configured." = "CAAM 環境が設定されていません。";
+"Not checked yet." = "まだ確認されていません。";
+"Ready" = "準備完了";
+"Recovery required" = "復旧が必要";
+"SSH" = "SSH";
+"SSH destination" = "SSH 接続先";
+"Update required" = "更新が必要";

@@ -1545,3 +1545,23 @@
 "menu_bar_layout_conditional_default_either_high" = "Sesi atau mingguan sedang tinggi";
 "menu_bar_layout_conditional_default_scoped_weekly" = "Mingguan per model di atas 60%";
 "Spending cap, not balance" = "Batas pengeluaran, bukan saldo";
+
+/* CAAM Environments */
+"A running Codex process may need to reload." = "Proses Codex yang sedang berjalan mungkin perlu dimuat ulang.";
+"Add Laptop" = "Tambahkan Laptop";
+"Add Remote Environment" = "Tambahkan Lingkungan Jarak Jauh";
+"CAAM %@" = "CAAM %@";
+"CAAM keeps credentials on each environment. Remote access uses your SSH configuration." = "CAAM menyimpan kredensial di setiap lingkungan. Akses jarak jauh menggunakan konfigurasi SSH Anda.";
+"Current profile: %@" = "Profil saat ini: %@";
+"Degraded" = "Terdegradasi";
+"Environment name" = "Nama lingkungan";
+"Environments" = "Lingkungan";
+"Fallback: %@" = "Cadangan: %@";
+"Laptop" = "Laptop";
+"No CAAM environments configured." = "Belum ada lingkungan CAAM yang dikonfigurasi.";
+"Not checked yet." = "Belum diperiksa.";
+"Ready" = "Siap";
+"Recovery required" = "Pemulihan diperlukan";
+"SSH" = "SSH";
+"SSH destination" = "Tujuan SSH";
+"Update required" = "Pembaruan diperlukan";

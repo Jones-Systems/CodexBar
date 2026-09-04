@@ -1573,3 +1573,23 @@
 "menu_bar_layout_conditional_default_either_high" = "工作階段或每週用量偏高";
 "menu_bar_layout_conditional_default_scoped_weekly" = "模型專屬每週已用超過 60%";
 "Spending cap, not balance" = "支出上限，並非餘額";
+
+/* CAAM Environments */
+"A running Codex process may need to reload." = "正在執行的 Codex 程序可能需要重新載入。";
+"Add Laptop" = "加入筆記型電腦";
+"Add Remote Environment" = "加入遠端環境";
+"CAAM %@" = "CAAM %@";
+"CAAM keeps credentials on each environment. Remote access uses your SSH configuration." = "CAAM 會將憑證保留在各個環境中。遠端存取使用您的 SSH 設定。";
+"Current profile: %@" = "目前設定檔：%@";
+"Degraded" = "降級";
+"Environment name" = "環境名稱";
+"Environments" = "環境";
+"Fallback: %@" = "後備設定檔：%@";
+"Laptop" = "筆記型電腦";
+"No CAAM environments configured." = "尚未設定 CAAM 環境。";
+"Not checked yet." = "尚未檢查。";
+"Ready" = "就緒";
+"Recovery required" = "需要復原";
+"SSH" = "SSH";
+"SSH destination" = "SSH 目的地";
+"Update required" = "需要更新";

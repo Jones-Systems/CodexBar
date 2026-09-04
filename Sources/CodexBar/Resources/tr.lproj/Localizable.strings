@@ -1544,3 +1544,23 @@
 "menu_bar_layout_conditional_default_either_high" = "Oturum veya haftalık kullanım yükseldi";
 "menu_bar_layout_conditional_default_scoped_weekly" = "Model haftasının %60'ından fazlası kullanıldı";
 "Spending cap, not balance" = "Harcama sınırı, bakiye değil";
+
+/* CAAM Environments */
+"A running Codex process may need to reload." = "Çalışan bir Codex işleminin yeniden yüklenmesi gerekebilir.";
+"Add Laptop" = "Dizüstü Bilgisayar Ekle";
+"Add Remote Environment" = "Uzak Ortam Ekle";
+"CAAM %@" = "CAAM %@";
+"CAAM keeps credentials on each environment. Remote access uses your SSH configuration." = "CAAM kimlik bilgilerini her ortamda tutar. Uzak erişim SSH yapılandırmanızı kullanır.";
+"Current profile: %@" = "Geçerli profil: %@";
+"Degraded" = "Kısıtlı";
+"Environment name" = "Ortam adı";
+"Environments" = "Ortamlar";
+"Fallback: %@" = "Yedek profil: %@";
+"Laptop" = "Dizüstü bilgisayar";
+"No CAAM environments configured." = "Yapılandırılmış CAAM ortamı yok.";
+"Not checked yet." = "Henüz kontrol edilmedi.";
+"Ready" = "Hazır";
+"Recovery required" = "Kurtarma gerekli";
+"SSH" = "SSH";
+"SSH destination" = "SSH hedefi";
+"Update required" = "Güncelleme gerekli";

@@ -1541,3 +1541,23 @@
 "menu_bar_layout_conditional_default_either_high" = "Session eller vecka ligger högt";
 "menu_bar_layout_conditional_default_scoped_weekly" = "Modellvecka över 60 % använt";
 "Spending cap, not balance" = "Utgiftstak, inte saldo";
+
+/* CAAM Environments */
+"A running Codex process may need to reload." = "En Codex-process som körs kan behöva läsas in igen.";
+"Add Laptop" = "Lägg till bärbar dator";
+"Add Remote Environment" = "Lägg till fjärrmiljö";
+"CAAM %@" = "CAAM %@";
+"CAAM keeps credentials on each environment. Remote access uses your SSH configuration." = "CAAM behåller inloggningsuppgifter i varje miljö. Fjärråtkomst använder din SSH-konfiguration.";
+"Current profile: %@" = "Aktuell profil: %@";
+"Degraded" = "Nedsatt";
+"Environment name" = "Miljönamn";
+"Environments" = "Miljöer";
+"Fallback: %@" = "Reservprofil: %@";
+"Laptop" = "Bärbar dator";
+"No CAAM environments configured." = "Inga CAAM-miljöer har konfigurerats.";
+"Not checked yet." = "Inte kontrollerat ännu.";
+"Ready" = "Klar";
+"Recovery required" = "Återställning krävs";
+"SSH" = "SSH";
+"SSH destination" = "SSH-mål";
+"Update required" = "Uppdatering krävs";

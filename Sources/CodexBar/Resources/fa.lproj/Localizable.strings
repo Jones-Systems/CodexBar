@@ -1546,3 +1546,23 @@
 "menu_bar_layout_conditional_default_either_high" = "نشست یا هفته در سطح بالا";
 "menu_bar_layout_conditional_default_scoped_weekly" = "پنجره هفتگی مدل بیش از ۶۰٪";
 "Spending cap, not balance" = "سقف هزینه، نه موجودی";
+
+/* CAAM Environments */
+"A running Codex process may need to reload." = "ممکن است فرایند در حال اجرای Codex نیاز به بارگیری مجدد داشته باشد.";
+"Add Laptop" = "افزودن لپ‌تاپ";
+"Add Remote Environment" = "افزودن محیط راه دور";
+"CAAM %@" = "CAAM %@";
+"CAAM keeps credentials on each environment. Remote access uses your SSH configuration." = "CAAM اطلاعات ورود را در هر محیط نگه می‌دارد. دسترسی راه دور از پیکربندی SSH شما استفاده می‌کند.";
+"Current profile: %@" = "نمایه فعلی: %@";
+"Degraded" = "کاهش‌یافته";
+"Environment name" = "نام محیط";
+"Environments" = "محیط‌ها";
+"Fallback: %@" = "جایگزین: %@";
+"Laptop" = "لپ‌تاپ";
+"No CAAM environments configured." = "هیچ محیط CAAM پیکربندی نشده است.";
+"Not checked yet." = "هنوز بررسی نشده است.";
+"Ready" = "آماده";
+"Recovery required" = "بازیابی لازم است";
+"SSH" = "SSH";
+"SSH destination" = "مقصد SSH";
+"Update required" = "به‌روزرسانی لازم است";
