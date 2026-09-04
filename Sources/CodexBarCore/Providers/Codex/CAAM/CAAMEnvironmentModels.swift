@@ -98,7 +98,9 @@ public struct CAAMProfileIdentity: Codable, Sendable, Equatable {
 }
 
 public struct CAAMEnvironmentProfile: Codable, Sendable, Equatable, Identifiable {
-    public var id: String { self.name }
+    public var id: String {
+        self.name
+    }
 
     public let name: String
     public let active: Bool

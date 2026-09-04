@@ -150,17 +150,16 @@ public enum CAAMEnvironmentContract {
         let hasPending = snapshot.pendingOperation != nil
         let currentProfile = snapshot.profiles.first(where: { $0.name == snapshot.hostDefaultProfile })
         let accountLabel = currentProfile?.identity.flatMap(Self.accountLabel)
-        let availability: CAAMEnvironmentAvailability
-        if snapshot.pendingOperation?.state == .manualRequired ||
+        let availability: CAAMEnvironmentAvailability = if snapshot.pendingOperation?.state == .manualRequired ||
             snapshot.pendingOperation?.state == .recoveryRequired
         {
-            availability = .recoveryRequired
+            .recoveryRequired
         } else if snapshot.reachability == .degraded || !snapshot.warnings.isEmpty {
-            availability = .degraded
+            .degraded
         } else if !capabilities.contains(.snapshot) {
-            availability = .incompatible
+            .incompatible
         } else {
-            availability = .ready
+            .ready
         }
 
         return CAAMEnvironmentRowState(
