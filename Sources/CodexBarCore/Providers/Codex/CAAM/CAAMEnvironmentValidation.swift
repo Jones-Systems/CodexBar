@@ -317,24 +317,29 @@ public enum CAAMEnvironmentContract {
 
     private static func containsForbiddenCredentialKey(_ value: Any) -> Bool {
         let forbiddenKeys = Set([
-            "access_token",
-            "api_key",
+            "accesstoken",
+            "apikey",
             "auth",
-            "auth_json",
-            "auth_path",
+            "authorization",
+            "authjson",
+            "authpath",
+            "bearer",
             "cookie",
             "cookies",
             "credential",
             "credentials",
-            "id_token",
-            "private_key",
-            "refresh_token",
+            "idtoken",
+            "password",
+            "privatekey",
+            "refreshtoken",
+            "secret",
             "token",
-            "vault_path",
+            "vaultpath",
         ])
         if let object = value as? [String: Any] {
             return object.contains { key, child in
-                forbiddenKeys.contains(key.lowercased()) || self.containsForbiddenCredentialKey(child)
+                let normalizedKey = key.lowercased().filter { $0.isASCII && ($0.isLetter || $0.isNumber) }
+                return forbiddenKeys.contains(normalizedKey) || self.containsForbiddenCredentialKey(child)
             }
         }
         if let array = value as? [Any] {

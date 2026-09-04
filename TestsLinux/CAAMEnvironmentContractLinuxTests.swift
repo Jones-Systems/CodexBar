@@ -92,6 +92,15 @@ struct CAAMEnvironmentContractLinuxTests {
                 expectedEnvironmentID: "laptop")
         }
 
+        let camelCaseCredentialField = Self.snapshotJSON.replacingOccurrences(
+            of: #""warnings":[]"#,
+            with: #""accessToken":"not-a-real-secret","warnings":[]"#)
+        #expect(throws: CAAMEnvironmentContractError.self) {
+            try CAAMEnvironmentContract.decodeSnapshot(
+                Data(camelCaseCredentialField.utf8),
+                expectedEnvironmentID: "laptop")
+        }
+
         let inconsistentActiveProfile = Self.snapshotJSON.replacingOccurrences(
             of: #""active":true"#,
             with: #""active":false"#)
