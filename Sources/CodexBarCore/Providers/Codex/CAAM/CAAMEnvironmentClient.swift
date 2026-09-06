@@ -39,6 +39,7 @@ public struct DefaultCAAMEnvironmentCommandRunner: CAAMEnvironmentCommandRunning
             environment: environment,
             timeout: command.timeout,
             maxOutputBytes: command.maximumOutputBytes,
+            acceptsNonZeroExit: true,
             label: command.label)
     }
 }
@@ -220,9 +221,120 @@ public struct CAAMEnvironmentClient: Sendable {
         } catch {
             throw CAAMEnvironmentClientError.commandFailed
         }
-        return try CAAMEnvironmentContract.decodeSnapshot(
+        guard result.stdoutWasValidUTF8 else {
+            throw CAAMEnvironmentContractError.invalidEncoding
+        }
+        let snapshot = try CAAMEnvironmentContract.decodeSnapshot(
             Data(result.stdout.utf8),
             expectedEnvironmentID: configuration.id)
+        guard result.exitCode == 0 else { throw CAAMEnvironmentClientError.commandFailed }
+        return snapshot
+    }
+
+    public func fetchPlan(
+        for configuration: CAAMEnvironmentConfiguration,
+        profile: String,
+        expectedRevision: String) async throws -> CAAMSwitchPlan
+    {
+        try await self.request(
+            CAAMSwitchPlan.self,
+            configuration: configuration,
+            operation: .planSwitch(
+                environmentID: configuration.id,
+                profile: profile,
+                expectedRevision: expectedRevision))
+    }
+
+    public func perform(
+        _ operation: CAAMGatewayOperation,
+        for configuration: CAAMEnvironmentConfiguration) async throws -> CAAMOperationResult
+    {
+        guard let operationID = operation.operationID else {
+            throw CAAMControlFailure(reason: .invalidResponse)
+        }
+        let result = try await self.request(CAAMOperationResult.self, configuration: configuration, operation: operation)
+        do {
+            try CAAMEnvironmentContract.validateOperationResult(result, operationID: operationID)
+        } catch {
+            throw CAAMControlFailure(reason: .invalidResponse, effect: .unknown)
+        }
+        return result
+    }
+
+    private func request<Value: Codable & Sendable>(
+        _ type: Value.Type,
+        configuration: CAAMEnvironmentConfiguration,
+        operation: CAAMGatewayOperation) async throws -> Value
+    {
+        let command: CAAMEnvironmentCommand
+        do {
+            try Task.checkCancellation()
+            command = try self.command(for: configuration, operation: operation)
+        } catch {
+            throw Self.failure(for: error, possibleEffect: .knownNoEffect)
+        }
+        let possibleEffect: CAAMControlEffect = operation.mayMutateCredentials ? .unknown : .knownNoEffect
+        let response: SubprocessResult
+        do {
+            response = try await self.runner.run(command: command, environment: self.environment)
+        } catch {
+            throw Self.failure(for: error, possibleEffect: possibleEffect)
+        }
+        do {
+            guard response.stdoutWasValidUTF8 else {
+                throw CAAMEnvironmentContractError.invalidEncoding
+            }
+            let result = try CAAMEnvironmentContract.decodeResponse(
+                type,
+                data: Data(response.stdout.utf8),
+                environmentID: configuration.id,
+                kind: operation.kind)
+            guard response.exitCode == 0 else {
+                throw CAAMControlFailure(reason: .transport, effect: possibleEffect)
+            }
+            return result
+        } catch {
+            throw Self.failure(for: error, possibleEffect: possibleEffect)
+        }
+    }
+
+    public static func failure(for error: any Error, possibleEffect: CAAMControlEffect) -> CAAMControlFailure {
+        if let error = error as? CAAMControlFailure {
+            return CAAMControlFailure(reason: error.reason, effect: possibleEffect, code: error.code)
+        }
+        if error is CancellationError {
+            return CAAMControlFailure(reason: .cancelled, effect: possibleEffect)
+        }
+        if let error = error as? CAAMEnvironmentContractError {
+            switch error {
+            case let .remoteError(code, _, effect):
+                return CAAMControlFailure(reason: .rejected, effect: effect, code: code)
+            case .outputTooLarge:
+                return CAAMControlFailure(reason: .oversized, effect: possibleEffect)
+            case .invalidConfiguration:
+                return CAAMControlFailure(reason: .invalidResponse)
+            case .invalidEncoding, .invalidEnvelope:
+                return CAAMControlFailure(reason: .invalidResponse, effect: possibleEffect)
+            }
+        }
+        if let error = error as? SubprocessRunnerError {
+            switch error {
+            case .binaryNotFound, .launchFailed: return CAAMControlFailure(reason: .unavailable)
+            case .timedOut: return CAAMControlFailure(reason: .timeout, effect: possibleEffect)
+            case .outputTooLarge: return CAAMControlFailure(reason: .oversized, effect: possibleEffect)
+            case .nonZeroExit: return CAAMControlFailure(reason: .transport, effect: possibleEffect)
+            }
+        }
+        if let error = error as? CAAMEnvironmentClientError {
+            switch error {
+            case .binaryUnavailable: return CAAMControlFailure(reason: .unavailable)
+            case .timedOut: return CAAMControlFailure(reason: .timeout, effect: possibleEffect)
+            case .responseTooLarge: return CAAMControlFailure(reason: .oversized, effect: possibleEffect)
+            case .cancelled: return CAAMControlFailure(reason: .cancelled, effect: possibleEffect)
+            case .commandFailed: return CAAMControlFailure(reason: .transport, effect: possibleEffect)
+            }
+        }
+        return CAAMControlFailure(reason: .transport, effect: possibleEffect)
     }
 
     public func command(
@@ -276,6 +388,7 @@ public struct CAAMEnvironmentClient: Sendable {
         }
         let path = environment["PATH"] ?? "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
         return path.split(separator: ":")
+            .filter { $0.hasPrefix("/") }
             .map { String($0) + "/" + Self.defaultGatewayName }
             .first { fileManager.isExecutableFile(atPath: $0) }
     }

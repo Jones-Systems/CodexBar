@@ -49,7 +49,8 @@ struct CAAMEnvironmentContractLinuxTests {
             Data(Self.snapshotJSON.utf8),
             expectedEnvironmentID: "laptop")
         let configuration = CAAMEnvironmentConfiguration(id: "laptop", label: "Laptop", connection: .local())
-        let row = CAAMEnvironmentContract.rowState(configuration: configuration, snapshot: snapshot)
+        let row = CAAMEnvironmentContract.rowState(
+            configuration: configuration, snapshot: snapshot, now: snapshot.observedAt)
 
         #expect(snapshot.hostDefaultProfile == "primary")
         #expect(snapshot.unknownCapabilities == ["future_capability"])
@@ -146,7 +147,8 @@ struct CAAMEnvironmentContractLinuxTests {
                 state: .recoveryRequired,
                 targetProfile: "primary"))
 
-        let row = CAAMEnvironmentContract.rowState(configuration: configuration, snapshot: snapshot)
+        let row = CAAMEnvironmentContract.rowState(
+            configuration: configuration, snapshot: snapshot, now: snapshot.observedAt)
 
         #expect(row.availability == .recoveryRequired)
         #expect(row.canSwitch == false)
