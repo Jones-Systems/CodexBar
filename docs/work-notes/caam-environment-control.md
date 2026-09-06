@@ -108,6 +108,48 @@ The historical foundation evidence above is not evidence for this new candidate.
 
 ## Connector and runtime incidents
 
+### C14 — Linux fixture compilation omitted a required argument
+
+- Observation: audit read at `2026-09-06T01:15:35Z`; CI emitted the same diagnostic on ARM64 at
+  `2026-09-06T01:12:19.5032651Z` and x64 at `2026-09-06T01:13:39.7199048Z`.
+  Phase/intended effect: native verification of the published candidate, not a live account operation.
+- Action/shape: existing CI `swift test --parallel`; diagnosis through connector `exec_command`
+  with `gh api repos/Jones-Systems/CodexBar/actions/jobs/<job-id>/logs`, filtered and fully drained
+  with `sed` while limiting the displayed excerpt. No raw log was persisted.
+- Native result: both Linux jobs COMPLETED/FAILURE; test-step process exit 1. Exact useful excerpt:
+  `TestsLinux/CAAMControlTransportLinuxTests.swift:8:59: error: missing argument for parameter 'configuredPath' in call`.
+  Run `34002864831`, x64 job `101404777530`, ARM64 job `101404777527`, head
+  `443071c8c704b1102ce27f417dcef81e0d9fe912`. Log reads exited 0 (1201 and 414 rendered output tokens).
+  Original stdout/stderr byte counts and compiler exit separate from the test step are unavailable.
+- Effect classification: **partial** verification. Release compilation succeeded; tests could not compile,
+  CLI smoke steps were skipped, and the aggregate gate failed. No live account or repository write by the failed tests.
+- Reconciliation/repair: inspected the actual method signature, which requires `configuredPath: String?`;
+  add explicit `configuredPath: nil` in the relative-PATH fixture. Production code is unchanged.
+- Blocked dependants: native fixture execution and green Linux/aggregate checks. Unaffected work:
+  lint and musl build passed; diagnostic audit, portable checks, commits, and draft publication continue.
+- Disposition: source repair applied; native rerun pending. Next diagnostic: replacement CI test-step
+  result on the normally pushed repair commit. Local Swift remains unavailable (C5).
+
+### C13 — Diagnostic helper patch received indeterminate platform safety status
+
+- Observation: audit pass on 2026-09-06 UTC, after the workspace/PR read at 01:15:35Z;
+  exact rejection timestamp was not supplied. Phase: incident audit and CI failure diagnosis.
+- Intended effect/action: connector `apply_patch` to add an ignored, repository-local bounded CI-log reader
+  at `.build/caam-diagnostic-read.py`. The requested helper would drain a public project job log,
+  retain only bounded sanitized diagnostics, and report stream byte counts and digests.
+- Native result: "This tool call was blocked by OpenAI because we couldn't determine the safety status
+  of the request." No native classification/code beyond that message, process exit, stream sizes,
+  or command session were supplied. The original payload is not persisted.
+- Effect: initially unknown; reconciled to **known-no-effect**. Connector `read` of `.build` returned
+  exactly one existing entry, `caam-observability-pr-body.md`; the proposed helper did not exist.
+- Attempts/alternative: one patch attempt; no blind replay. Use the existing `gh api` read route for
+  bounded job metadata/annotations instead. The x64 job metadata read exited 0 (581 output tokens),
+  confirming release build success and failure specifically in the Swift-test step.
+- Blocked dependants: only the proposed stream-count helper. Work Note editing, Git access, public
+  documentation research, CI metadata inspection, and publication remain available.
+- Disposition: helper path abandoned after no-effect readback; runtime safety cause remains unknown.
+  Next diagnostic: read the failing job's bounded annotations; no tooling install or permission changes.
+
 ### C11 — GitHub CLI body edit failed on a deprecated GraphQL field
 
 - Intended effect/action: update only draft PR #2's description with the final implementation/check/incident summary.
@@ -156,6 +198,8 @@ The historical foundation evidence above is not evidence for this new candidate.
   fixture authoring, portable validation, commits, and draft publication continue.
 - Resolution: platform dependency remains absent; next diagnostic is existing CI against the candidate,
   not tool installation on the bound host.
+- Audit rerun after the C14 fixture repair: `make check` again exited 2; stdout 23 bytes,
+  stderr 1288 bytes. Minimal excerpt: `Error: spawnSync plutil ENOENT`. No raw log was saved.
 
 ### C9 — A later inspection process could no longer resolve ripgrep
 
@@ -217,6 +261,9 @@ The historical foundation evidence above is not evidence for this new candidate.
   portable checks, documentation, and publication continue. Existing Linux CI may provide native evidence;
   existing macOS CI policy explicitly defers macOS tests on draft PRs.
 - Resolution: toolchain limitation remains. Next diagnostic: native CI outcomes for the exact published HEAD.
+- Audit rerun after the C14 fixture repair: `make test` again exited 2; stdout 384 bytes,
+  stderr 1702 bytes. Minimal excerpt: `FileNotFoundError: [Errno 2] No such file or directory: 'swift'`.
+  No raw traceback was saved; zero native test execution remains the result.
 
 ### C6 — Repository Git author identity is unset
 

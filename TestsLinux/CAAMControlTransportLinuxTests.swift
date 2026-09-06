@@ -5,7 +5,9 @@ import Testing
 struct CAAMControlTransportLinuxTests {
     @Test
     func `relative PATH entries cannot choose a gateway from the working directory`() {
-        #expect(CAAMEnvironmentClient.resolveLocalGateway(environment: ["PATH": ".:relative/bin"]) == nil)
+        #expect(CAAMEnvironmentClient.resolveLocalGateway(
+            configuredPath: nil,
+            environment: ["PATH": ".:relative/bin"]) == nil)
     }
 
     private func client(_ runner: CAAMControlFixtureRunner) -> CAAMEnvironmentClient {
