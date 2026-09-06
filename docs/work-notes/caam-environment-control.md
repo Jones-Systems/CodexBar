@@ -108,6 +108,28 @@ The historical foundation evidence above is not evidence for this new candidate.
 
 ## Connector and runtime incidents
 
+### C11 — GitHub CLI body edit failed on a deprecated GraphQL field
+
+- Intended effect/action: update only draft PR #2's description with the final implementation/check/incident summary.
+- Safe invocation shape: `gh pr edit 2 --repo Jones-Systems/CodexBar --body <bounded project summary>`.
+  No token, environment, recovery-bundle, or permission inspection was requested.
+- Native result: exit 1, 52 output tokens; GraphQL rejected `repository.pullRequest.projectCards`, with
+  a message about deprecated Projects (classic). This is a CLI/API-schema failure, not evidence of denied
+  repository ownership or publication authorization.
+- Effect reconciliation: an initial grouped read-only REST/CI-status check was platform-blocked because safety
+  status could not be determined; it returned no subprocess exit/session. A simple `gh pr view ... --json`
+  then exited 0 (966 tokens), confirming the original PR body was unchanged, draft=true, and head at
+  `76616f4b8cfea3aa65fc23c60a8992e0b5af365e`. The attempted body edit had no observed effect.
+- Workaround: prepare the bounded description in ignored repository scratch space and use GitHub's REST
+  pull-request update through the same bound connector and already-qualified host credential.
+- Blocked dependants: description refresh only; branch push and draft creation already succeeded. No new PR,
+  force push, credential change, or host installation is needed. Resolution pending the REST postcondition;
+  next diagnostic is the updated PR body/head/draft readback.
+- Resolution evidence: REST `PATCH repos/Jones-Systems/CodexBar/pulls/2` with a repository-local body file
+  exited 0 and returned the existing PR URL (13 output tokens). Subsequent PR readback exited 0 (1740 tokens),
+  showed the updated description and C1-C11 reference, and preserved OPEN/draft=true and the exact task head.
+  No additional PR or repository setting was created or changed.
+
 ### C10 — Bounded CI log preview closed its pipe early
 
 - Intended effect/action: read failed lint diagnostics for this draft PR using `gh api` on its completed job log,
@@ -371,3 +393,22 @@ reasons to withhold the independent implementation from a draft PR.
 - Remediation preserves behavior: use named permission booleans, one argument per line for mixed-layout calls,
   wrap long touched lines, and require valid fixture UTF-8. The bounded diagnostic retrieval issue is C10 above.
   The same draft PR receives the remediation commit and normal push; CI will rerun for its exact HEAD.
+
+### Final delivery verification
+
+- Remediation commit `76616f4b8cfea3aa65fc23c60a8992e0b5af365e` was normally pushed and verified as
+  the head of draft PR #2. The replacement CI run is
+  <https://github.com/Jones-Systems/CodexBar/actions/runs/34002533888>.
+- **Native CI lint passed** on that implementation HEAD: completed successfully at
+  `2026-09-06T00:57:03Z`, job
+  <https://github.com/Jones-Systems/CodexBar/actions/runs/34002533888/job/101403882429>.
+  The earlier 40 findings are therefore remediated with successful rerun evidence, not merely source edits.
+  This is the existing Linux lint route; it does not establish a macOS SwiftFormat or UI-rendering result.
+- Path-gate detection also passed. Linux x64/ARM64 build/test jobs and the musl build remained in progress at
+  this inspection. macOS native tests were explicitly skipped for the draft. No unobserved build/test pass is claimed.
+- Final metadata-only checkpoint adds C11 and these verified delivery outcomes to this same Work Note;
+  it changes no implementation, tests, catalog, contract, or workflow. PR description update used the
+  already-qualified REST route after the GraphQL failure, with postcondition readback confirming one open draft.
+- Persistent incident evidence is this committed path, `docs/work-notes/caam-environment-control.md`,
+  linked from <https://github.com/Jones-Systems/CodexBar/pull/2>. All incidents C1-C11 include bounded
+  native evidence, effect classification, postconditions, workarounds, and remaining diagnostics.
