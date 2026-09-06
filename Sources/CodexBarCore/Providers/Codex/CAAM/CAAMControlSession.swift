@@ -121,7 +121,8 @@ public struct CAAMControlSession: Sendable, Equatable {
     public mutating func beginPlan(target: String, fallback: Bool, now: Date) throws -> String {
         guard self.canForget else { throw CAAMControlFailure(reason: .busy) }
         let row = self.row(now: now)
-        guard let snapshot, (fallback ? row.canRestoreFallback : row.canSwitch),
+        let permitted = fallback ? row.canRestoreFallback : row.canSwitch
+        guard let snapshot, permitted,
               !fallback || target == snapshot.fallbackProfile,
               snapshot.profiles.contains(where: { $0.name == target && $0.eligible && !$0.active })
         else { throw CAAMControlFailure(reason: .stale) }
@@ -189,8 +190,8 @@ public struct CAAMControlSession: Sendable, Equatable {
                 environmentID: self.configuration.id, operationID: operationID, expectedRevision: snapshot.revision)
         case .switchProfile, .restoreFallback:
             let row = self.row(now: now)
-            guard self.pendingOperationID == nil, let plan = confirmation.plan,
-                  (confirmation.kind == .restoreFallback ? row.canRestoreFallback : row.canSwitch)
+            let permitted = confirmation.kind == .restoreFallback ? row.canRestoreFallback : row.canSwitch
+            guard self.pendingOperationID == nil, let plan = confirmation.plan, permitted
             else { throw CAAMControlFailure(reason: .stale) }
             try CAAMEnvironmentContract.validatePlan(plan, snapshot: snapshot, target: plan.targetProfile, now: now)
             let operationID = UUID()
@@ -200,12 +201,17 @@ public struct CAAMControlSession: Sendable, Equatable {
                     throw CAAMControlFailure(reason: .stale)
                 }
                 operation = .restoreFallback(
-                    environmentID: self.configuration.id, expectedRevision: snapshot.revision,
-                    planDigest: plan.planDigest, operationID: operationID, idempotencyKey: idempotencyKey)
+                    environmentID: self.configuration.id,
+                    expectedRevision: snapshot.revision,
+                    planDigest: plan.planDigest,
+                    operationID: operationID,
+                    idempotencyKey: idempotencyKey)
             } else {
                 operation = .executeSwitch(
-                    environmentID: self.configuration.id, planDigest: plan.planDigest,
-                    operationID: operationID, idempotencyKey: idempotencyKey)
+                    environmentID: self.configuration.id,
+                    planDigest: plan.planDigest,
+                    operationID: operationID,
+                    idempotencyKey: idempotencyKey)
             }
             self.expectedCommittedProfile = plan.targetProfile
         }

@@ -310,7 +310,8 @@ public enum CAAMEnvironmentContract {
         if let object = value as? [String: Any] {
             return object.contains { key, child in
                 let normalizedKey = key.lowercased().filter { $0.isASCII && ($0.isLetter || $0.isNumber) }
-                return forbiddenKeys.contains(normalizedKey) || self.containsForbiddenCredentialKey(child, depth: depth + 1)
+                return forbiddenKeys.contains(normalizedKey) ||
+                    self.containsForbiddenCredentialKey(child, depth: depth + 1)
             }
         }
         if let array = value as? [Any] {

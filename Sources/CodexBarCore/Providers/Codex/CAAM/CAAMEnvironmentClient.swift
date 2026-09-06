@@ -252,7 +252,10 @@ public struct CAAMEnvironmentClient: Sendable {
         guard let operationID = operation.operationID else {
             throw CAAMControlFailure(reason: .invalidResponse)
         }
-        let result = try await self.request(CAAMOperationResult.self, configuration: configuration, operation: operation)
+        let result = try await self.request(
+            CAAMOperationResult.self,
+            configuration: configuration,
+            operation: operation)
         do {
             try CAAMEnvironmentContract.validateOperationResult(result, operationID: operationID)
         } catch {

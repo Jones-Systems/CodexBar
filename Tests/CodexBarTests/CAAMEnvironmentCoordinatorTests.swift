@@ -119,9 +119,13 @@ private enum CAAMCoordinatorFixture {
 
     static func snapshot(active: String = "primary") -> CAAMEnvironmentSnapshot {
         CAAMEnvironmentSnapshot(
-            revision: "1", observedAt: Self.now, caamVersion: "fixture",
-            capabilities: CAAMControlCapability.allCases.map(\.rawValue), reachability: .reachable,
-            hostDefaultProfile: active, fallbackProfile: "secondary",
+            revision: "1",
+            observedAt: Self.now,
+            caamVersion: "fixture",
+            capabilities: CAAMControlCapability.allCases.map(\.rawValue),
+            reachability: .reachable,
+            hostDefaultProfile: active,
+            fallbackProfile: "secondary",
             profiles: ["primary", "secondary"].map { name in
                 CAAMEnvironmentProfile(
                     name: name, active: name == active, system: false, eligible: true, health: .healthy)
@@ -133,9 +137,14 @@ private enum CAAMCoordinatorFixture {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         let data = try encoder.encode(CAAMControlEnvelope(
-            schema: CAAMEnvironmentContract.schema, kind: kind, environmentID: Self.configuration.id,
-            protocolVersion: "1.0", result: value, error: nil))
-        return SubprocessResult(stdout: String(decoding: data, as: UTF8.self), stderr: "")
+            schema: CAAMEnvironmentContract.schema,
+            kind: kind,
+            environmentID: Self.configuration.id,
+            protocolVersion: "1.0",
+            result: value,
+            error: nil))
+        let stdout = try #require(String(data: data, encoding: .utf8))
+        return SubprocessResult(stdout: stdout, stderr: "")
     }
 }
 
@@ -150,8 +159,12 @@ private actor CAAMCoordinatorFixtureRunner: CAAMEnvironmentCommandRunning {
             return try CAAMCoordinatorFixture.response(CAAMCoordinatorFixture.snapshot(), kind: kind)
         case "plan-switch":
             return try CAAMCoordinatorFixture.response(CAAMSwitchPlan(
-                planDigest: String(repeating: "a", count: 64), expectedRevision: "1", currentProfile: "primary",
-                targetProfile: "secondary", affectedProfiles: ["primary", "secondary"], reloadRequired: false,
+                planDigest: String(repeating: "a", count: 64),
+                expectedRevision: "1",
+                currentProfile: "primary",
+                targetProfile: "secondary",
+                affectedProfiles: ["primary", "secondary"],
+                reloadRequired: false,
                 expiresAt: CAAMCoordinatorFixture.now.addingTimeInterval(30)), kind: kind)
         case "execute-switch":
             throw SubprocessRunnerError.timedOut("fixture interruption")
@@ -160,8 +173,11 @@ private actor CAAMCoordinatorFixtureRunner: CAAMEnvironmentCommandRunning {
                 throw SubprocessRunnerError.launchFailed("fixture invalid operation ID")
             }
             return try CAAMCoordinatorFixture.response(CAAMOperationResult(
-                operationID: operationID, state: .committed, effect: .knownEffect,
-                previousProfile: "primary", currentProfile: "secondary",
+                operationID: operationID,
+                state: .committed,
+                effect: .knownEffect,
+                previousProfile: "primary",
+                currentProfile: "secondary",
                 snapshot: CAAMCoordinatorFixture.snapshot(active: "secondary")), kind: kind)
         default:
             throw SubprocessRunnerError.launchFailed("fixture unexpected operation")

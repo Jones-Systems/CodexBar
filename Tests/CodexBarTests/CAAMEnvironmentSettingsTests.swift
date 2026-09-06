@@ -11,7 +11,10 @@ struct CAAMEnvironmentSettingsTests {
         let settings = Self.makeSettingsStore(suite: suite)
         defer { Self.clearSettingsStore(settings, suite: suite) }
         let store = Self.makeUsageStore(settings: settings)
-        let pane = ProvidersPane(settings: settings, store: store, caamEnvironmentCoordinator: CAAMEnvironmentCoordinator())
+        let pane = ProvidersPane(
+            settings: settings,
+            store: store,
+            caamEnvironmentCoordinator: CAAMEnvironmentCoordinator())
 
         let state = pane._test_codexEnvironmentsSectionState()
 
@@ -26,7 +29,10 @@ struct CAAMEnvironmentSettingsTests {
         let settings = Self.makeSettingsStore(suite: suite)
         defer { Self.clearSettingsStore(settings, suite: suite) }
         let store = Self.makeUsageStore(settings: settings)
-        let pane = ProvidersPane(settings: settings, store: store, caamEnvironmentCoordinator: CAAMEnvironmentCoordinator())
+        let pane = ProvidersPane(
+            settings: settings,
+            store: store,
+            caamEnvironmentCoordinator: CAAMEnvironmentCoordinator())
         let configurations = [
             CAAMEnvironmentConfiguration(id: "vps", label: "VPS", connection: .ssh(destination: "vps")),
             CAAMEnvironmentConfiguration(id: "laptop", label: "Laptop", connection: .local()),
@@ -49,7 +55,10 @@ struct CAAMEnvironmentSettingsTests {
         let settings = Self.makeSettingsStore(suite: suite)
         defer { Self.clearSettingsStore(settings, suite: suite) }
         let store = Self.makeUsageStore(settings: settings)
-        let pane = ProvidersPane(settings: settings, store: store, caamEnvironmentCoordinator: CAAMEnvironmentCoordinator())
+        let pane = ProvidersPane(
+            settings: settings,
+            store: store,
+            caamEnvironmentCoordinator: CAAMEnvironmentCoordinator())
         let unsafe = [
             CAAMEnvironmentConfiguration(
                 id: "vps",

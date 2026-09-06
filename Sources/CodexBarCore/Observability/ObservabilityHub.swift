@@ -181,7 +181,8 @@ public enum ObservabilityHub {
                     historyDays: snapshot.historyDays,
                     provenance: snapshot.costProvenance,
                     evidence: .cached(
-                        source: "Existing provider cost cache", observedAt: snapshot.updatedAt,
+                        source: "Existing provider cost cache",
+                        observedAt: snapshot.updatedAt,
                         failed: input.costFailed,
                         partial: !snapshot.historyCoverageIsEstablished || snapshot.costProvenance == .unknown,
                         now: now))
@@ -195,7 +196,10 @@ public enum ObservabilityHub {
                 confidence: input.usage?.dataConfidence ?? .unknown,
                 evidence: .cached(
                     source: input.source.isEmpty ? "Existing provider snapshot" : input.source,
-                    observedAt: input.usage?.updatedAt, failed: input.usageFailed, partial: percent == nil, now: now),
+                    observedAt: input.usage?.updatedAt,
+                    failed: input.usageFailed,
+                    partial: percent == nil,
+                    now: now),
                 cost: cost)
         }
         var work: [HubWorkObservation] = []
@@ -208,20 +212,28 @@ public enum ObservabilityHub {
                 if cost.sessions.count > available { workIsPartial = true }
                 for (index, session) in cost.sessions.prefix(available).enumerated() {
                     work.append(HubWorkObservation(
-                        id: "\(input.id):\(index)", provider: input.label, ordinal: index + 1,
+                        id: "\(input.id):\(index)",
+                        provider: input.label,
+                        ordinal: index + 1,
                         lastActivity: session.lastActivity,
                         tokens: session.totalTokens.flatMap { $0 >= 0 ? $0 : nil },
                         estimatedCostUSD: self.nonnegative(session.costUSD),
                         evidence: .cached(
-                            source: "Recorded local session cache", observedAt: cost.updatedAt,
-                            failed: input.costFailed, partial: true, now: now)))
+                            source: "Recorded local session cache",
+                            observedAt: cost.updatedAt,
+                            failed: input.costFailed,
+                            partial: true,
+                            now: now)))
                 }
             }
         }
         return ObservabilityHubSnapshot(
-            services: services, accounts: accounts, providers: providerRows,
+            services: services,
+            accounts: accounts,
+            providers: providerRows,
             hosts: services.map { NetdataReadOnlyFacade.unavailable(environmentID: $0.id) },
-            work: work, workIsPartial: workIsPartial)
+            work: work,
+            workIsPartial: workIsPartial)
     }
 
     private static func nonnegative(_ value: Double?) -> Double? {

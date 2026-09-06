@@ -108,6 +108,18 @@ The historical foundation evidence above is not evidence for this new candidate.
 
 ## Connector and runtime incidents
 
+### C10 — Bounded CI log preview closed its pipe early
+
+- Intended effect/action: read failed lint diagnostics for this draft PR using `gh api` on its completed job log,
+  filter output, and cap the preview with `head`.
+- Native result: exit 141 with pipefail enabled; 3437 output tokens. The filter included progress lines,
+  so the preview filled before the actual diagnostics. This is a partial read/SIGPIPE, not a failed write.
+- Postcondition/workaround: narrow the filter to errors/warnings/summary and use `sed -n` to drain the stream
+  while bounding displayed lines. Retry exited 0 (2624 tokens) and supplied all 40 reported lint violations.
+- Blocked dependants: first diagnostic preview only. No repository, branch, PR, or credential mutation occurred.
+  Remediation of the actual source findings continued. Resolution: resolved; next diagnostic on recurrence
+  is pipeline exit/status interpretation, not retrying a publication operation.
+
 ### C8 — Standard check entrypoint cannot launch Apple's catalog parser
 
 - Intended effect/action: run the required repository entrypoint `make check`.
@@ -339,3 +351,23 @@ Publication remains one normal push of only `work/caam-codexbar-observability-hu
 Jones Systems fork. Production mutation qualification intentionally remains empty; CAAM dependency access,
 native platform evidence, translation review, and Netdata API qualification are recorded limitations, not
 reasons to withhold the independent implementation from a draft PR.
+
+### Published draft and CI remediation
+
+- Normal non-force push of the task branch succeeded against the verified fork push destination.
+  Prior matching PR search returned none. Created **draft PR #2**:
+  <https://github.com/Jones-Systems/CodexBar/pull/2>. API readback confirmed OPEN, draft=true,
+  base `main`, exact task head, and implementation HEAD `db5e39a36be393724d6efbd85addc5085054a098`.
+- Implementation commits: `425b0a8ea64c992ed6d2254b56f4e715260d9249` (typed core/models/fixtures)
+  and `db5e39a36be393724d6efbd85addc5085054a098` (app integration, UI, catalog helper/tests, specification).
+- Re-fetched canonical main before publication; it remained the original `d6e929cd736eccae187cd41ddb5305a670afb2c8`.
+  Worktree was clean; the complete implementation diff covered 51 files, including 23 append-only locale catalogs.
+- Existing CI run <https://github.com/Jones-Systems/CodexBar/actions/runs/34002315176> started for that HEAD.
+  Path-gate detection passed; macOS native tests were explicitly skipped by draft policy. Linux x64/ARM64
+  builds/tests and musl build were in progress at first inspection, not passed.
+- CI lint supplied real native evidence unavailable locally: **40 serious violations across 2116 files**, all
+  in the touched CAAM/hub sources and fixtures. Findings were unnecessary guard parentheses, mixed multiline
+  arguments, missed 120-column limits, and one non-failable fixture Data-to-String conversion.
+- Remediation preserves behavior: use named permission booleans, one argument per line for mixed-layout calls,
+  wrap long touched lines, and require valid fixture UTF-8. The bounded diagnostic retrieval issue is C10 above.
+  The same draft PR receives the remediation commit and normal push; CI will rerun for its exact HEAD.
