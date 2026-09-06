@@ -32,7 +32,8 @@ public struct HubEvidence: Sendable, Equatable {
         }
         let age = now.timeIntervalSince(observedAt)
         let stale = failed || !age.isFinite || age < -5 || age > 300
-        return Self(source: source, observedAt: observedAt, availability: stale ? .stale : partial ? .partial : .available)
+        return Self(
+            source: source, observedAt: observedAt, availability: stale ? .stale : partial ? .partial : .available)
     }
 }
 

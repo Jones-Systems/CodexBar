@@ -23,7 +23,8 @@ enum CAAMControlFixtures {
             profiles: ["primary", "secondary"].map { name in
                 CAAMEnvironmentProfile(
                     name: name, active: name == active, system: false, eligible: true, health: .healthy,
-                    identity: CAAMProfileIdentity(provider: provider, stableID: stableID, displayEmail: "f***@example.invalid"))
+                    identity: CAAMProfileIdentity(
+                        provider: provider, stableID: stableID, displayEmail: "f***@example.invalid"))
             },
             runtime: CAAMRuntimeSnapshot(state: .unknown, reloadRequired: false),
             pendingOperation: pending,

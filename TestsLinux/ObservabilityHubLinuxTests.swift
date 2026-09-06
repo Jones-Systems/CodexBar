@@ -81,7 +81,8 @@ struct ObservabilityHubLinuxTests {
     @Test
     func `account correlation requires matching provider and stable ID not profile name or email`() throws {
         let first = CAAMControlFixtures.session()
-        let otherConfiguration = CAAMEnvironmentConfiguration(id: "other", label: "Other", connection: .ssh(destination: "fixture"))
+        let otherConfiguration = CAAMEnvironmentConfiguration(
+            id: "other", label: "Other", connection: .ssh(destination: "fixture"))
         var other = CAAMControlSession(configuration: otherConfiguration)
         other.observe(CAAMControlFixtures.snapshot(provider: "other-provider"), now: CAAMControlFixtures.now)
         let hub = ObservabilityHub.aggregate(sessions: [first, other], providers: [], now: CAAMControlFixtures.now)

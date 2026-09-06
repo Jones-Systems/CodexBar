@@ -135,6 +135,9 @@ The historical foundation evidence above is not evidence for this new candidate.
   Native Swift checks were already unavailable independently; implementation and publication are unaffected.
 - Resolution: fallback inspection pending confirmation. Next diagnostic: command availability in the same
   bound workspace, without changing PATH, installing utilities, or inspecting credentials.
+- Resolution evidence: `git grep` completed the full in-scope long-line audit with exit 0. Standard Git,
+  grep, sed, and Python resolved successfully. The environmental cause of missing `rg` remains unknown,
+  but no remaining task depends on it.
 
 ### C7 — Inline locale maintenance could not obtain platform safety status
 
@@ -191,6 +194,9 @@ The historical foundation evidence above is not evidence for this new candidate.
   for this agent's commits. Do not impersonate the owner or change global configuration.
 - Blocked dependants: commit attribution only. Implementation and checks continued. Resolution will be
   confirmed by the first successful attributed commit; next diagnostic is `git show` author/HEAD metadata.
+- Resolution evidence: command-scoped identity produced commit
+  `425b0a8ea64c992ed6d2254b56f4e715260d9249` with author `ChatGPT <chatgpt-agent@example.invalid>`.
+  No global Git setting was changed.
 
 ### C3 — Edit invocation had indeterminate platform safety status
 
@@ -291,3 +297,45 @@ The historical foundation evidence above is not evidence for this new candidate.
 - Added fixture test cases remain unexecuted because Swift is absent. `make test` and `make check` are attempted
   but blocked as C5/C8 describe. Portable catalog coverage, documentation links/index, and whitespace checks pass.
 - No live CAAM, SSH account operation, Netdata collection, credential inspection, installation, or deployment ran.
+
+### Presentation checkpoint and final sequential self-review
+
+The second checkpoint connects the typed core to Codex preferences, preserves the existing account-selection
+flow, and supplies Overview, Accounts, Systems, and Work views. English catalogs add 73 new keys in each of
+23 locales as explicitly labeled fallbacks, not completed translations. The portable checker covers 111 literal
+keys across the affected preference/control/hub files, including multiline calls.
+
+| Finding | Disposition |
+| --- | --- |
+| A failed mutation could otherwise be mistaken for retryable failure | Closed effect classification; execute-once confirmation; same-UUID lookup; terminal fresh snapshot required |
+| Refresh with an empty journal could erase a locally unknown operation | Preserve intent through refresh/restart; receipt bound to exact configuration; original-target lookup retained |
+| Concurrent operations could overwrite receipt images | One application coordinator and global sequential operation gate; persistence precedes launch; no-effect storage failure cannot dispatch |
+| Qualification keyed only by ID could survive endpoint replacement | Qualification and receipts bind full configuration; late-generation observations rejected |
+| Cached provider display helpers can inspect credential-adjacent files | Hub consumes only already-published memory snapshots; historical costs are not attributed to CAAM accounts |
+| Unlike spend/usage/host measurements could be blended or fabricated | Separate typed ledgers; explicit provenance, confidence, time, currency/window; no combined total; host metrics unsupported and nil |
+| Default view construction could reach actual CAAM during tests | Existing test-process detection selects no-launch runner and memory-only receipts; explicit test clients are synthetic |
+| Interrupted locale maintenance could leave non-English catalogs incomplete | Sync reconciles each catalog independently and preserves existing values; regression test proves restart idempotence |
+| New source lines exceeded the repository's width guideline | Manually wrapped identified new-source lines; native SwiftFormat/SwiftLint remain unavailable, not marked passed |
+
+These are this agent's sequential correctness, security, maintainability, and performance **self-review**,
+not independent review. Performance review establishes explicit bounds and asynchronous ownership, not measured
+latency. No additional behavioral blocker was found by static inspection; native compilation, tests, and rendered
+UI evidence remain required before production qualification or a merge decision.
+
+Actual checks after the presentation pass:
+
+- `python3 Scripts/test_check_caam_observability_locales.py`: exit 0; **5 tests passed**. These test only the
+  portable catalog helper (multiline/escaped literals, placeholders, bounds, restart-safe sync), not Swift behavior.
+- `python3 Scripts/check_caam_observability_locales.py`: exit 0; **111 literal keys / 23 catalogs**, placeholders match.
+- `node Scripts/check-documentation-links.mjs`: exit 0; **192 local links** checked.
+- `node Scripts/generate-llms.mjs --check`: exit 0; documentation index current.
+- Both unstaged and staged `git diff --check`: exit 0.
+- New Swift tests: **29 declared cases** (24 Linux core cases and five macOS coordinator cases), plus fixed-clock
+  updates to existing projection/settings tests. They were **not executed** locally; C5/C8 describe exact blockers.
+- No screenshot, interactive UI run, native build, native formatter pass, live gateway conformance, Netdata
+  telemetry, independent review, installation, or account switch is claimed.
+
+Publication remains one normal push of only `work/caam-codexbar-observability-hub` and one draft PR to the
+Jones Systems fork. Production mutation qualification intentionally remains empty; CAAM dependency access,
+native platform evidence, translation review, and Netdata API qualification are recorded limitations, not
+reasons to withhold the independent implementation from a draft PR.

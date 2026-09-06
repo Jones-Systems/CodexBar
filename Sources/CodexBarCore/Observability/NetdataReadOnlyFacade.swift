@@ -14,7 +14,8 @@ public enum NetdataReadOnlyFacade {
     public static func unavailable(environmentID: String) -> HubHostObservation {
         HubHostObservation(
             environmentID: environmentID,
-            evidence: HubEvidence(source: "Netdata collector not configured", observedAt: nil, availability: .unsupported),
+            evidence: HubEvidence(
+                source: "Netdata collector not configured", observedAt: nil, availability: .unsupported),
             cpuPercent: nil,
             memoryUsedBytes: nil)
     }
