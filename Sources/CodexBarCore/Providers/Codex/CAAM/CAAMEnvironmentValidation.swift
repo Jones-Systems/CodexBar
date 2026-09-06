@@ -80,87 +80,50 @@ public enum CAAMEnvironmentContract {
         _ data: Data,
         expectedEnvironmentID: String) throws -> CAAMEnvironmentSnapshot
     {
-        guard data.count <= self.maximumOutputBytes else {
-            throw CAAMEnvironmentContractError.outputTooLarge
-        }
-        guard String(data: data, encoding: .utf8) != nil else {
-            throw CAAMEnvironmentContractError.invalidEncoding
-        }
-        guard let rawObject = try? JSONSerialization.jsonObject(with: data),
-              !self.containsForbiddenCredentialKey(rawObject)
-        else {
-            throw CAAMEnvironmentContractError.invalidEnvelope(
-                "The CAAM gateway response contained a credential-bearing field.")
-        }
-
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let envelope: CAAMSnapshotEnvelope
-        do {
-            envelope = try decoder.decode(CAAMSnapshotEnvelope.self, from: data)
-        } catch {
-            throw CAAMEnvironmentContractError.invalidEnvelope("The CAAM gateway response was malformed.")
-        }
-
-        guard envelope.schema == self.schema, envelope.kind == "snapshot" else {
-            throw CAAMEnvironmentContractError.invalidEnvelope("The CAAM gateway response used an unsupported schema.")
-        }
-        guard envelope.environmentID == expectedEnvironmentID else {
-            throw CAAMEnvironmentContractError.invalidEnvelope(
-                "The CAAM gateway response identified another environment.")
-        }
-        guard envelope.protocolVersion.count <= 32,
-              self.isASCIIPrintable(envelope.protocolVersion),
-              envelope.protocolVersion.split(separator: ".").first == "1"
-        else {
-            throw CAAMEnvironmentContractError.invalidEnvelope("The CAAM gateway protocol version is unsupported.")
-        }
-        guard (envelope.result == nil) != (envelope.error == nil) else {
-            throw CAAMEnvironmentContractError.invalidEnvelope(
-                "The CAAM gateway response must contain exactly one result or error.")
-        }
-        if let error = envelope.error {
-            guard self.isSafeIdentifier(error.code, maximumLength: 64),
-                  self.isSafeDisplayText(error.message, maximumLength: 240)
-            else {
-                throw CAAMEnvironmentContractError.invalidEnvelope("The CAAM gateway error was invalid.")
-            }
-            throw CAAMEnvironmentContractError.remoteError(
-                code: error.code,
-                message: error.message,
-                effect: error.effect)
-        }
-        guard let snapshot = envelope.result else {
-            throw CAAMEnvironmentContractError.invalidEnvelope("The CAAM gateway response omitted its result.")
-        }
+        let snapshot = try self.decodeResponse(
+            CAAMEnvironmentSnapshot.self,
+            data: data,
+            environmentID: expectedEnvironmentID,
+            kind: "snapshot")
         try self.validateSnapshot(snapshot)
         return snapshot
     }
 
     public static func rowState(
         configuration: CAAMEnvironmentConfiguration,
-        snapshot: CAAMEnvironmentSnapshot) -> CAAMEnvironmentRowState
+        snapshot: CAAMEnvironmentSnapshot,
+        now: Date = Date(),
+        refreshFailed: Bool = false) -> CAAMEnvironmentRowState
     {
+        let current = self.isCurrent(snapshot, now: now) && !refreshFailed
         let capabilities = snapshot.supportedCapabilities
         let hasAllSwitchCapabilities = capabilities.isSuperset(of: [
+            .snapshot,
             .planSwitch,
             .executeSwitch,
             .operationStatus,
+            .recoverSwitch,
         ])
         let hasPending = snapshot.pendingOperation != nil
         let currentProfile = snapshot.profiles.first(where: { $0.name == snapshot.hostDefaultProfile })
-        let accountLabel = currentProfile?.identity.flatMap(Self.accountLabel)
-        let availability: CAAMEnvironmentAvailability = if snapshot.pendingOperation?.state == .manualRequired ||
+        let accountLabel = currentProfile?.identity.flatMap { identity in
+            identity.provider == "codex" ? Self.accountLabel(identity) : nil
+        }
+        let availability: CAAMEnvironmentAvailability = if !capabilities.contains(.snapshot) {
+            .incompatible
+        } else if !current {
+            .stale
+        } else if snapshot.pendingOperation?.state == .manualRequired ||
             snapshot.pendingOperation?.state == .recoveryRequired
         {
             .recoveryRequired
         } else if snapshot.reachability == .degraded || !snapshot.warnings.isEmpty {
             .degraded
-        } else if !capabilities.contains(.snapshot) {
-            .incompatible
         } else {
             .ready
         }
+        let canMutate = current && availability == .ready && hasAllSwitchCapabilities && !hasPending
+        let eligibleTargets = snapshot.profiles.filter { $0.eligible && $0.name != snapshot.hostDefaultProfile }
 
         return CAAMEnvironmentRowState(
             id: configuration.id,
@@ -174,11 +137,13 @@ public enum CAAMEnvironmentContract {
             reloadRequired: snapshot.runtime.reloadRequired,
             caamVersion: snapshot.caamVersion,
             observedAt: snapshot.observedAt,
-            message: snapshot.warnings.first,
-            canSwitch: hasAllSwitchCapabilities && !hasPending,
-            canRecover: capabilities.contains(.recoverSwitch) && hasPending,
-            canRestoreFallback: capabilities.contains(.restoreFallback) &&
-                snapshot.fallbackProfile != nil && !hasPending)
+            message: current ? snapshot.warnings.first : "Cached state is stale; refresh before changing environments.",
+            canSwitch: canMutate && !eligibleTargets.isEmpty,
+            canRecover: current && snapshot.reachability == .reachable &&
+                capabilities.isSuperset(of: [.snapshot, .recoverSwitch, .operationStatus]) &&
+                snapshot.pendingOperation?.state == .recoveryRequired,
+            canRestoreFallback: canMutate && capabilities.contains(.restoreFallback) &&
+                eligibleTargets.contains { $0.name == snapshot.fallbackProfile })
     }
 
     public static func unavailableRow(
@@ -215,7 +180,7 @@ public enum CAAMEnvironmentContract {
         }
     }
 
-    private static func validateSnapshot(_ snapshot: CAAMEnvironmentSnapshot) throws {
+    static func validateSnapshot(_ snapshot: CAAMEnvironmentSnapshot) throws {
         guard self.isSafeRevision(snapshot.revision),
               self.isSafeVersion(snapshot.caamVersion),
               snapshot.capabilities.count <= CAAMControlCapability.allCases.count + 16,
@@ -287,9 +252,9 @@ public enum CAAMEnvironmentContract {
         return self.isASCIIPrintable(value)
     }
 
-    private static func isSafeDisplayText(_ value: String, maximumLength: Int) -> Bool {
+    static func isSafeDisplayText(_ value: String, maximumLength: Int) -> Bool {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, trimmed == value, value.count <= maximumLength else { return false }
+        guard !trimmed.isEmpty, trimmed == value, value.unicodeScalars.count <= maximumLength else { return false }
         return value.unicodeScalars.allSatisfy { !CharacterSet.controlCharacters.contains($0) }
     }
 
@@ -315,13 +280,19 @@ public enum CAAMEnvironmentContract {
         }
     }
 
-    private static func containsForbiddenCredentialKey(_ value: Any) -> Bool {
+    static func containsForbiddenCredentialKey(_ value: Any, depth: Int = 0) -> Bool {
+        guard depth <= 32 else { return true }
         let forbiddenKeys = Set([
             "accesstoken",
             "apikey",
             "auth",
             "authorization",
             "authjson",
+            "authfiledigest",
+            "authfilehash",
+            "command",
+            "commandtext",
+            "shellfragment",
             "authpath",
             "bearer",
             "cookie",
@@ -339,11 +310,12 @@ public enum CAAMEnvironmentContract {
         if let object = value as? [String: Any] {
             return object.contains { key, child in
                 let normalizedKey = key.lowercased().filter { $0.isASCII && ($0.isLetter || $0.isNumber) }
-                return forbiddenKeys.contains(normalizedKey) || self.containsForbiddenCredentialKey(child)
+                return forbiddenKeys.contains(normalizedKey) ||
+                    self.containsForbiddenCredentialKey(child, depth: depth + 1)
             }
         }
         if let array = value as? [Any] {
-            return array.contains(where: self.containsForbiddenCredentialKey)
+            return array.contains { self.containsForbiddenCredentialKey($0, depth: depth + 1) }
         }
         return false
     }
