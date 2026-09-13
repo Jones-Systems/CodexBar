@@ -5,63 +5,80 @@ Artifact Type: `work-note`
 
 Artifact ID: `work.repository-sync`
 
-Purpose: Preserve research, implementation evidence, limitations, and continuation for safe repository synchronization.
+Purpose: Preserve independent implementation evidence, ownership boundaries, and continuation for repository synchronization.
 
-Governing artifact: owner Task Text; the progressive `spec.repository-sync` will own implementation decisions.
+Governing artifact: owner Task Text; implementation decisions are in [`spec.repository-sync`](../engineering-specs/repository-sync.md).
 
-Work owner: single Level 2 project agent
+Work owner: `JCV-A019`, work `JCV-W142`; one sequential project author
 
 Consumers: CodexBar maintainers, host-capability implementer, owner, and reviewers
 
 Authority effect: none
 <!-- codex-section:end id="work.repository-sync#ctx.artifact-header.001" -->
 
-## Goal and finish line
+## Goal, inherited authority, and current disposition
 
-Reconcile each selected repository/environment pair against its configured canonical Git remote. Do not copy working directories or uncommitted content between machines. Deliver the safe repository-owned implementation, proving tests, documented host boundary, and one draft PR. A draft is a visibility checkpoint, not merge or deployment readiness.
+Reconcile each selected repository/environment pair against its configured canonical Git remote. Do not copy working directories or uncommitted content between machines. The existing owner authority is task-branch commits and one draft PR in the Jones Systems fork, not merge, deployment, installation, live-host synchronization, credential access, or account changes. No usage or billing feature is authorized.
 
-The owner authorizes connected GitHub reads and task-branch commits/draft PR publication. No live laptop, Mac Mini, VPS, credential store, ChatGPT Web Connector, bot review, merge, deployment, installation, fork, new repository, force push, branch deletion, or protected-environment change is authorized here. Work uses sequential research, architecture, implementation, verification, security, maintainability, and self-review passes; there is no independent-review claim.
+**Current disposition: safety-core implementation candidate; end-to-end production sync is not complete.** The code implements typed state, mapping, cancellation requests, at-most-once client dispatch, private durable intent, same-operation readback, conflict fences, and guarded rollback planning. It has no production Git/SSH host conformer or UI entry point, and defaults to no qualified targets. Live host implementation/conformance, accepted PR #2 UI ownership, and native repository checks remain gates.
 
-## Source strategy and current evidence
+The retained prompt said no committed continuation had been verified. Fresh connected GitHub reads found an actual research Work Note commit, `88c7bbb0ddba05e2dd62e292110a3cd13679c4bf`, on the existing task branch. This supersedes only that uncertainty, not the finding that implementation and a sync PR were missing. The prior note remains in immutable Git history; no source browser conversation was reopened or searched.
 
-Native GitHub is the repository transport. Public primary documentation supplies Git semantics and platform guidance. Upstream implementation is not an implementation input.
+## Immutable source and ownership readback
 
-| Binding | Immutable observation |
+| Binding | Observed state before implementation publication |
 | --- | --- |
-| Target | `Jones-Systems/CodexBar`, repository ID `1356759930`, public fork |
-| Approved base | `main` at `d6e929cd736eccae187cd41ddb5305a670afb2c8` |
-| Base tree | `d1e5d48281ed0ceabc34a06d6cbf0cc25d328068` |
-| Task branch | `work/repository-sync-orchestration-20260907` |
-| Level 2 guidance | `Jones-Systems/Codex-V3@a88f2e251961b9a9767cd09fa1e882205484e401` |
-| Current V3 reference | `Jones-Systems/Codex-V3@6c049da2795d9cea922528021f9af80bf8640704` |
-| Upstream evaluated | `Dicklesworthstone/repo_updater@b5fe0131d3bb53fe311f6ebfc54d60fbc2404c73` |
-| Upstream LICENSE blob | `3d414da6ff83defe084707be6030866e8a7fb794` |
-| Upstream README blob | `6b6b7ea6467e52fcc7a4b516ae11d5c3d06d0d77` |
+| Repository | `Jones-Systems/CodexBar`, repository ID `1356759930` |
+| Main | `d6e929cd736eccae187cd41ddb5305a670afb2c8` |
+| Existing task branch | `work/repository-sync-orchestration-20260907` |
+| Existing branch head | `88c7bbb0ddba05e2dd62e292110a3cd13679c4bf` |
+| Existing branch tree | `7a5b0f04fe5cf45e49767b87d298bcf26736bad9` |
+| PR #2 | Draft, open, unmerged; author `Mjones13`; head `0bdf8a262bc9342d9b62a5f12f8062db22273b50` |
+| PR #2 overlaps | Its 51 changed paths were read; zero changed-file overlap with this candidate |
+| PR #2 handoff | No comments returned; no owner handoff, review, or approval inferred |
+| PR inventory | Only PR #1 and PR #2 returned; no prior sync PR found |
+| PR #2 current-head CI | Run `34004200721` completed with conclusion `failure`; not treated as sync-candidate evidence |
 
-The upstream head was resolved natively, not assumed from the prompt. The license is titled **MIT License (with OpenAI/Anthropic Rider)**. Its controlling rider defines restricted parties and says **“no rights are granted to any Restricted Party”** absent prior written permission. It also expressly addresses analysis, execution, testing, and derivatives. The README's MIT badge is not affirmative reuse permission. Engineering disposition: **reference_only**; no upstream implementation is copied, vendored, translated, ported, forked, installed, or executed. Any contrary reuse decision requires owner/legal disposition or an affirmatively compatible permission grant. This is factual license evidence and a conservative engineering gate, not a legal ruling about the owner.
+PR #2 owns CAAM controls, observability, environment preferences, shared subprocess changes, locales, related fixtures, and its own specification/Work Note. This candidate touches none of those files and does not import that unmerged branch. Any later entry-point integration requires explicit owner coordination.
 
-Immutable evidence: [LICENSE](https://github.com/Dicklesworthstone/repo_updater/blob/b5fe0131d3bb53fe311f6ebfc54d60fbc2404c73/LICENSE), [README](https://github.com/Dicklesworthstone/repo_updater/blob/b5fe0131d3bb53fe311f6ebfc54d60fbc2404c73/README.md).
+Repository `AGENTS.md`, the package manifest, existing environment identity model, lint configuration, Makefile, and current CI workflow were read. No additional `AGENTS.md` was found at the inspected new-code/documentation/test/script ancestor paths. The historical V3 Level 2 root locator returned 404; code search returned no match with `incomplete_results: true`, so the guide's current location is **unresolved**, not proven absent. No new authority is inferred from that failed lookup.
 
-The merged CAAM foundation provides `CAAMEnvironmentConfiguration.id`, labels, and local/SSH connection configuration. The separate account-control v1 contract already requires environment binding, revision/plan checks, credential-free output, and unknown-effect reconciliation. Reuse its environment identity; do not add repository operations to its closed account-control command family.
+## License-safe engine decision
 
-[Existing draft PR #2](https://github.com/Jones-Systems/CodexBar/pull/2) remains unmerged at `0bdf8a262bc9342d9b62a5f12f8062db22273b50`. It changes CAAM controls, the environment preferences section, observability, subprocess code, locales, and related tests. New synchronization modules must not silently adopt or overwrite that draft. Any minimal entry-point overlap must be reported and reviewed.
+The prior research pinned `Dicklesworthstone/repo_updater@b5fe0131d3bb53fe311f6ebfc54d60fbc2404c73` and recorded an unresolved MIT/OpenAI/Anthropic rider. Reuse remains prohibited absent a separate affirmative owner/legal disposition. The successor did not fetch, copy, translate, port, install, or execute that implementation. All new Swift logic is requirements-derived, uses Foundation/POSIX and the existing repository toolchain, and introduces no dependency. No legal clearance for the upstream source is claimed.
 
-## Research lanes and execution
+## Changed implementation
 
-One agent owns synthesis. Lanes are sequential because the owner prohibits subagents: licensing/adoption; documented upstream behavior and maturity; current CodexBar/host contracts; Git-state and threat model; UI alternatives; implementation and deterministic verification. The eight requested adoption/ownership directions will be compared before finalizing the specification.
+`Sources/CodexBarCore/RepositorySync/` contains the independent target/snapshot/plan/receipt models, durable journal, and coordinator. `TestsLinux/RepositorySync*.swift` contains synthetic fixtures and three suites. `Scripts/test_repository_sync_core.sh` is an offline source-closure runner; it installs nothing. The progressive specification defines the host contract and the exact unimplemented integration boundary.
 
-Current checkpoint: source bindings, initial license gate, merged environment model, overlapping draft paths, and CI policy inspected. Research and implementation are not complete. The next effect is further bounded read-only research, followed by a progressive Engineering Spec and a coherent implementation checkpoint.
+The journal reserves a full immutable plan before dispatch, retains idempotency tombstones, blocks overlapping pending/unknown/conflicted operations, bounds records and bytes, pins its private directory, uses no-follow file opens and nonblocking process locks, and persists through file fsync, atomic rename, and directory fsync. Missing/corrupt state cannot silently reset history. Unknown outcomes never call execute again. Contradictory terminal results persist a conflict fence requiring manual disposition.
 
-CI is triggered by PR events rather than ordinary non-main branch pushes. The current workflow defers required macOS tests for draft PRs and keeps aggregate CI incomplete. Preserve that gate; do not convert this explicitly requested draft to ready merely to obtain a green aggregate. Linux builds/tests and lint remain useful independent evidence.
+Rollback requires a separately confirmed operation and a stored applied original with unchanged target/physical identity/current HEAD. Actual Git restoration is deliberately not fabricated as a client-side shell command; the missing host must implement and qualify it.
 
-## Blockers, incidents, and verification limits
+## Verification and self-review evidence
 
-- A percent-escaped branch-API route returned `INVALID_ARGUMENT` / HTTP 400. The alternate native Git-reference route succeeded. Known no effect; this was not repository access denial.
-- Public codeload download from scratch failed with curl exit 6 (DNS resolution). Native connected GitHub reads work. Use exact file-content reconstruction and Git blob verification for the bounded source closure; do not claim a complete checkout or full local build from missing source.
-- Scratch contains Swift 6.2.1, Git 2.47.3, Python 3.13.5, Bash, and make. SwiftFormat, SwiftLint, gh, macOS frameworks, Xcode, signing, and owner devices are not available. No dependencies or owner-device software were installed.
-- No implementation checks have run at this research checkpoint. No live repository synchronization has occurred.
+The scratch runtime was freshly checked: Swift 6.2.1 for Linux x86_64, Git 2.47.3, Python 3.13.5, Bash, and make are present. SwiftFormat and SwiftLint are not present. No installation, live host, credential, provider, account, or ChatGPT Web Connector execution occurred.
+
+The first source-closure build passed. The first 28-test/2-suite run passed. Adding persistence cases produced two fixture failures: the tamper test replaced an unescaped slash that the JSON encoder had escaped, and a contention test incorrectly required exactly one dispatch although fail-closed pre-dispatch contention may yield zero. Both fixtures were corrected without weakening at-most-once behavior. A subsequent complete run reported **39 tests in 3 suites passed**, including the bounded 256-record retention case. Fresh final debug and release runs of `bash Scripts/test_repository_sync_core.sh` (release with `-c release`) each passed **39 tests in 3 suites**. `bash -n` passed. All candidate Swift lines are within 120 columns and a candidate whitespace scan passed; these are not SwiftFormat/SwiftLint results.
+
+Sequential security/recovery self-review found and repaired a real gap: conflicting terminal outcomes must not preserve a misleading success/no-effect state. The journal now stores `conflicted`, blocks overlaps and rollback, and refuses ordinary status-based clearing. It also rechecks directory permissions on every transaction and uses nonblocking rather than indefinitely blocking process locks. Those changes are covered by the passing suites.
+
+The offline source closure is not the full repository. The exact original Makefile was reconstructed and blob-verified in a separate bounded check context. `make test` and `make check` each exited **2** because `Scripts/test.sh` and `Scripts/lint.sh` were absent there (their shell commands exited 127); no full repository test or linter ran. SwiftFormat/SwiftLint, native macOS behavior, repository CI, host crash/power-loss qualification, and independent review remain separate evidence gates; no standalone result substitutes for them. Final publication/readback and exact-head CI belong in the draft PR and final delivery receipt, rather than inventing a self-referential commit hash here.
+
+## Open gates and next concrete effect
+
+| Gate | Required next effect |
+| --- | --- |
+| Host implementation | Implement and independently qualify the proposed separate Git/SSH host protocol before any production target is admitted |
+| PR #2 path/owner handoff | Obtain accepted ownership for an explicit sync entry point; preserve all existing CAAM/account-control boundaries |
+| Exact-head checks | Observe this candidate's own lint/Linux jobs and retain any failures; required macOS evidence remains deferred while draft |
+| Native/device qualification | Obtain separate live authorization and execute exact-configuration tests without inferring authority from this PR |
+| Independent review | Obtain a non-author review under separate authority; this lane has only sequential self-review |
+| V3 guidance locator | Resolve the historical Level 2 guide location before asserting compliance with that unavailable document |
+
+No merge, force push, branch deletion, upstream PR, deployment, release, installation, live synchronization, destructive Git operation, or external owner message is included. No existing unknown-effect implementation tree was replayed. If a publication call has an unknown result, read its exact immutable object/ref/PR state before any retry.
 
 ## Level 2 recovery checkpoint
 
 <!-- chatgpt-level2-recovery:v1 -->
-Recovery status: not created. This normal Work Note preserves the current useful continuation; there is no separate unfinished implementation payload yet. Do not create an empty recovery branch. If unique unfinished scratch later needs preservation, use only `scratch/level-2/work/repository-sync-orchestration-20260907` and link its verified README, manifest, and commit here or in a linked PR checkpoint. Never place `.chatgpt-scratch/` in the task branch or PR history.
+The tested implementation is intended for the existing task branch and one draft PR, not an empty recovery branch. No `.chatgpt-scratch/` content or raw workspace handle belongs in this history. The final delivery receipt must name the verified commit, tree, PR, check observations, and remaining gates; an unverified write is never publication proof.
