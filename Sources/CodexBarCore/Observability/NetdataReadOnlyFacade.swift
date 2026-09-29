@@ -7,7 +7,9 @@ public struct HubHostObservation: Sendable, Equatable, Identifiable {
     public let memoryUsedBytes: UInt64?
     public let memoryAvailableBytes: UInt64?
 
-    public var id: String { self.environmentID }
+    public var id: String {
+        self.environmentID
+    }
 }
 
 /// Decodes supplied Netdata v3 json2 data only; no network collector is activated.
@@ -22,7 +24,7 @@ public enum NetdataReadOnlyFacade {
             memoryAvailableBytes: nil)
     }
 
-    public static let maximumPayloadBytes = 65536
+    public static let maximumPayloadBytes = 65_536
 
     public enum DecodeError: Error, Equatable {
         case invalidIdentity
@@ -49,10 +51,10 @@ public enum NetdataReadOnlyFacade {
         else { throw DecodeError.invalidIdentity }
         let cpu = try cpuData.map { try self.sample($0, metric: .cpu, machineGUID: machineGUID) }
         let memory = try availableMemoryData.map { try self.sample($0, metric: .memory, machineGUID: machineGUID) }
-        let timestamps = [cpu?.observedAt, memory?.observedAt].compactMap { $0 }
+        let timestamps = [cpu?.observedAt, memory?.observedAt].compactMap(\.self)
         let observedAt = timestamps.min()
         let futureSample = timestamps.contains { $0.timeIntervalSince(now) > 5 }
-        let memoryBytes = memory?.value.map { UInt64($0 * 1048576) }
+        let memoryBytes = memory?.value.map { UInt64($0 * 1_048_576) }
         return HubHostObservation(
             environmentID: environmentID,
             evidence: self.evidence(
@@ -93,8 +95,13 @@ public enum NetdataReadOnlyFacade {
             }
         }
 
-        var unit: String { self == .cpu ? "percentage" : "MiB" }
-        var context: String { self == .cpu ? "system.cpu" : "mem.available" }
+        var unit: String {
+            self == .cpu ? "percentage" : "MiB"
+        }
+
+        var context: String {
+            self == .cpu ? "system.cpu" : "mem.available"
+        }
     }
 
     private struct Sample {
@@ -152,7 +159,7 @@ public enum NetdataReadOnlyFacade {
             if let timestamp = try? container.decode(Double.self) {
                 self = .timestamp(timestamp)
             } else {
-                self = .point(try container.decode([Double?].self))
+                self = try .point(container.decode([Double?].self))
             }
         }
     }
@@ -181,17 +188,20 @@ public enum NetdataReadOnlyFacade {
         guard let row = response.result.data.first else { return Sample(observedAt: nil, value: nil) }
         guard row.count == dimensions.count + 1 else { throw DecodeError.unexpectedContract }
         guard case let .timestamp(timestamp) = row[0],
-              timestamp.isFinite, timestamp > 0, timestamp <= 253402300799,
+              timestamp.isFinite, timestamp > 0, timestamp <= 253_402_300_799,
               timestamp.rounded(.towardZero) == timestamp
         else { throw DecodeError.invalidValue }
         var values: [Double?] = []
         for cell in row.dropFirst() {
             guard case let .point(point) = cell, point.count == 3 else { throw DecodeError.unexpectedContract }
-            guard point.compactMap({ $0 }).allSatisfy(\.isFinite) else { throw DecodeError.invalidValue }
+            guard point.compactMap(\.self).allSatisfy(\.isFinite) else { throw DecodeError.invalidValue }
             if let value = point[0] {
-                guard value >= 0,
-                      (metric == .cpu ? value <= 100 : value * 1048576 < Double(UInt64.max))
-                else { throw DecodeError.invalidValue }
+                guard value >= 0 else { throw DecodeError.invalidValue }
+                if metric == .cpu {
+                    guard value <= 100 else { throw DecodeError.invalidValue }
+                } else {
+                    guard value * 1_048_576 < Double(UInt64.max) else { throw DecodeError.invalidValue }
+                }
             }
             values.append(point[0])
         }
@@ -199,7 +209,7 @@ public enum NetdataReadOnlyFacade {
         if values.contains(where: { $0 == nil }) {
             value = nil
         } else if metric == .cpu {
-            let busy = values.dropLast().compactMap { $0 }.reduce(0, +)
+            let busy = values.dropLast().compactMap(\.self).reduce(0, +)
             guard busy.isFinite, busy <= 100 else { throw DecodeError.invalidValue }
             value = busy
         } else {
