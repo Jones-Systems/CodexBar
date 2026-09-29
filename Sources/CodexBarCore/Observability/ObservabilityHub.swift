@@ -142,6 +142,7 @@ public enum ObservabilityHub {
         sessions: [CAAMControlSession],
         providers: [HubProviderInput],
         includeWork: Bool = false,
+        hostsByEnvironmentID: [String: HubHostObservation] = [:],
         now: Date) -> ObservabilityHubSnapshot
     {
         let boundedSessions = sessions.prefix(CAAMEnvironmentContract.maximumEnvironmentCount)
@@ -231,7 +232,25 @@ public enum ObservabilityHub {
             services: services,
             accounts: accounts,
             providers: providerRows,
-            hosts: services.map { NetdataReadOnlyFacade.unavailable(environmentID: $0.id) },
+            hosts: services.map { service in
+                guard let host = hostsByEnvironmentID[service.id], host.environmentID == service.id else {
+                    return NetdataReadOnlyFacade.unavailable(environmentID: service.id)
+                }
+                if host.evidence.availability == .unsupported || host.evidence.availability == .unavailable {
+                    return host
+                }
+                return HubHostObservation(
+                    environmentID: host.environmentID,
+                    evidence: NetdataReadOnlyFacade.evidence(
+                        source: host.evidence.source,
+                        observedAt: host.evidence.observedAt,
+                        failed: host.evidence.availability == .stale,
+                        partial: host.cpuPercent == nil || host.memoryAvailableBytes == nil,
+                        now: now),
+                    cpuPercent: host.cpuPercent,
+                    memoryUsedBytes: host.memoryUsedBytes,
+                    memoryAvailableBytes: host.memoryAvailableBytes)
+            },
             work: work,
             workIsPartial: workIsPartial)
     }
