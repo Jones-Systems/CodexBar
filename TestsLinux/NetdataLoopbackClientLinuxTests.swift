@@ -89,8 +89,13 @@ struct NetdataLoopbackClientLinuxTests {
             let transport = RecordingTransport(failure: failure, failedContext: failedContext)
             let result = try await self.client(transport).fetch(now: Self.now)
             #expect(result.evidence.availability == .partial)
-            #expect(result.cpuPercent == (failedContext == "system.cpu" ? nil : 8))
-            #expect(result.memoryAvailableBytes == (failedContext == "mem.available" ? nil : 512 * 1_048_576))
+            if failedContext == "system.cpu" {
+                #expect(result.cpuPercent == nil)
+                #expect(result.memoryAvailableBytes == 512 * 1_048_576)
+            } else {
+                #expect(result.cpuPercent == 8)
+                #expect(result.memoryAvailableBytes == nil)
+            }
             #expect(await transport.requests.count == 2)
         }
     }
