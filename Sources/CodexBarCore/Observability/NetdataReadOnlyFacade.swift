@@ -24,7 +24,7 @@ public enum NetdataReadOnlyFacade {
             memoryAvailableBytes: nil)
     }
 
-    public static let maximumPayloadBytes = 65_536
+    public static let maximumPayloadBytes = 65536
 
     public enum DecodeError: Error, Equatable {
         case invalidIdentity
