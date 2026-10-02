@@ -8,7 +8,9 @@ private enum ObservabilityHubTab: String, CaseIterable, Identifiable {
     case systems
     case work
 
-    var id: String { self.rawValue }
+    var id: String {
+        self.rawValue
+    }
 
     var title: String {
         switch self {
@@ -159,7 +161,7 @@ struct CodexObservabilityHubView: View {
                         format: L("Provider: %@ · Health: %@"),
                         account.provider ?? L("Unknown"),
                         account.health.rawValue))
-                    .font(.caption2)
+                        .font(.caption2)
                     if account.hostDefault { Text(L("Host default")).font(.caption2) }
                     HubEvidenceView(evidence: account.evidence)
                 }

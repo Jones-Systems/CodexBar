@@ -48,7 +48,9 @@ public struct HubAccountObservation: Sendable, Equatable, Identifiable {
     public let health: CAAMProfileHealth
     public let evidence: HubEvidence
 
-    public var id: String { "\(self.environmentID):\(self.profile)" }
+    public var id: String {
+        "\(self.environmentID):\(self.profile)"
+    }
 
     /// Correlation never joins profile names or display emails across environments/providers.
     public func isSameAccount(as other: Self) -> Bool {
@@ -63,7 +65,9 @@ public struct HubServiceObservation: Sendable, Equatable, Identifiable {
     public let pendingOperationID: UUID?
     public let evidence: HubEvidence
 
-    public var id: String { self.row.id }
+    public var id: String {
+        self.row.id
+    }
 }
 
 public struct HubCostObservation: Sendable, Equatable {

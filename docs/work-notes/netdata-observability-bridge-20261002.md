@@ -9,7 +9,7 @@ Purpose: Carry the explicit supplied-client bridge and existing Systems/Overview
 
 Governing artifact: `spec.netdata-menu-bar#iface.host-observation.001`, `spec.netdata-menu-bar#iface.polling.001`
 
-Continuity owner: Portfolio slot14 under root's exact five-path binding.
+Continuity owner: Portfolio slot14 under root's exact source and formatting bindings.
 
 Consumers: Original Netdata integration owner and parent Observability hub owner.
 
@@ -29,8 +29,9 @@ An independent task-owned common repository obtained that exact local object wit
 a depth-one fetch from slot14's own prior common repository. No parent ref or
 index was advanced. Canonical origin is `Jones-Systems/CodexBar`.
 
-The writer cone is the new core bridge, its Linux tests, the two existing
-Observability view/Providers pane files, and this note. The two app files retain
+The initial bridge writer cone covered the new core bridge, its Linux tests,
+the two existing Observability view/Providers pane files, and this note. The
+later six-file formatting scope is recorded in the source-formatting section. The two app files retain
 known source overlap with open parent PR2. Independent preparation does not
 transfer that parent's custody or authorize its integration, publication or merge.
 No package, lock, configuration schema, localization catalog, provider/account,
@@ -84,9 +85,11 @@ The two new Swift files passed formatting. All four changed Swift files passed
 strict SwiftLint. The two app files passed syntax parsing only; native Mac
 constructor/typecheck/rendering remains independently unverified. Repository
 size and its contained fixtures, documentation links, and the LLMS index passed.
-Three inherited formatting findings in untouched Observability view text remain
-outside this source correction. Final changed-note links require their own
-current-input check; unchanged passed source checks are not repeated for prose.
+At the original `d64dfbef244aabcec43ebb1158ea1cb277aacc0d` checkpoint, three
+inherited formatting findings in untouched Observability view text were retained.
+The separately bound source-formatting correction below addresses that gate.
+Changed-note links use their current input; unchanged behavior checks are not
+repeated for formatting or prose.
 
 The first focused build compiled the bridge/core and CLI, then failed linking
 before tests because Swift 6.2's Linux Observation library required an unexported
@@ -161,3 +164,72 @@ undisposed and unfixed. The old client still captures sample time before its
 sequential requests. This bridge neither repairs that issue nor establishes
 native freshness acceptance.
 <!-- codex-section:end id="worknote.netdata-observability-bridge#ctx.remaining.001" -->
+
+<!-- codex-section:begin id="worknote.netdata-observability-bridge#ctx.source-formatting.001" -->
+## Bounded source formatting gate
+
+[Source PR6](https://github.com/Jones-Systems/CodexBar/pull/6) targets the existing
+client branch at `1849a8cb0a4235b4e406036cc65316e99f53c0ba`, with PR5, PR4 and PR2
+retaining their own source custody. Initial source publication joined the two
+local units as ten cumulative paths and left the source tree unchanged.
+
+At source `d64dfbef244aabcec43ebb1158ea1cb277aacc0d`, run `37065791842` attempt 1,
+job `111033225986` failed during the macOS formatting step. It reported twenty
+SwiftFormat diagnostics across six files. All diagnostic lines already existed in PR5 and PR2, with nearby contexts
+unchanged from PR5. Seventeen diagnostics occurred in five
+files outside the initial ten-path child diff; the three hub diagnostics mapped
+from candidate lines 11, 12 and 162 to parent lines 11, 12 and 156. This shard
+skipped Swift Test and plugin goldens, so its failure gives no app compile or
+typecheck proof. The other shard remains the existing observer's responsibility;
+this formatting record makes no terminal or native-success claim for it.
+
+Root bound only those twenty formatter diagnostics in these six existing files,
+plus this note, on slot14's existing isolated source branch:
+
+- `Sources/CodexBar/CAAMEnvironmentControlsView.swift`
+- `Sources/CodexBar/CodexObservabilityHubView.swift`
+- `Sources/CodexBar/PreferencesProvidersPane+Observability.swift`
+- `Sources/CodexBarCore/Observability/ObservabilityHub.swift`
+- `Sources/CodexBarCore/Providers/Codex/CAAM/CAAMOperationReceiptStore.swift`
+- `Tests/CodexBarTests/CAAMEnvironmentCoordinatorTests.swift`
+
+SwiftFormat 0.61.1 matches the repository's CI pin. Its previously authenticated
+Linux archive digest is
+`7bc8706e3fd51963f1f29eb99098ebdf482f3497fa527c68e6cf75cbee29c77a`;
+the existing Darwin CI archive pin is
+`b990400779aceb7d7020796eb9ba814d4480543f671d38fc0ff48cb72f04c584`.
+A six-file copy preview using the unchanged repository configuration proposed
+only the qualified property/function wrapping, indentation and private fixture
+syntax corrections. Five files preserve every token except whitespace. The
+fixture preserves every token after two explicit equivalent rewrites:
+`Self.now` becomes `self.now` in a static function of the same private enum;
+the private helper's single `Value: Codable & Sendable` parameter becomes
+`some Codable & Sendable`. That type parameter has no separate use in the
+signature or body; JSON encoding, throw paths, callers and output remain
+unchanged. No comment, control, freshness, settings, cardinality, endpoint,
+architecture policy or workflow changes are included.
+
+The corrected six source inputs passed the pinned formatter (zero of six files
+require formatting), Swift 6.2 frontend syntax parsing, strict SwiftLint 0.65.0
+(zero violations) and `git diff --check`. Parsing is syntax evidence only, not
+native Mac constructor/typecheck/render proof. Token/body comparison proves the
+bounded source equivalence; the unchanged Netdata behavior groups were not
+rerun or added to a new test total. Actual input/configuration hashes remain
+bound to the corrected files. Package lock bytes remained unchanged.
+
+Each check had fresh same-host admission and one global serial process: CPU
+used was 9.72%, 9.37%, 13.25% and 12.03%; available RAM was 41.27–41.28 GiB and
+one effective core represented 6.25% of host capacity. Owned temporary preview
+and check trees were absent after all children exited. Retained authenticated
+tools and evidence occupied 5,698,236,971 bytes, below the eight-GiB bound.
+No installer, shared tool pointer, host or parent worktree was changed.
+
+The corrective commit expands the cumulative source PR to fifteen paths through
+five additional inherited-formatting files. This is an explicit source gate
+correction, not transfer of parent custody or disposition of the preserved
+`NETDATA-CLIENT-01` P2, `NETDATA-DOC-01` P3 or prior architecture gate. Existing
+native Mac/live acceptance and opaque-input boundaries remain. Corrective
+publication preserves the existing observer's terminal result for the old
+remaining macOS shard before advancing the published source head; no explicit CI cancel,
+retry, new watcher or automated review request is part of this correction.
+<!-- codex-section:end id="worknote.netdata-observability-bridge#ctx.source-formatting.001" -->
