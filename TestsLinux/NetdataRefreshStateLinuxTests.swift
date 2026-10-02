@@ -8,43 +8,60 @@ struct NetdataRefreshStateLinuxTests {
     @Test
     func `one in flight request and visible background schedule remain pure decisions`() throws {
         var state = NetdataRefreshState(environmentID: "fixture")
-        let request = try #require(state.beginRefresh(now: Self.now))
-        #expect(state.beginRefresh(now: Self.now, force: true) == nil)
+        let started = state.beginRefresh(now: Self.now)
+        let request = try #require(started)
+        let overlapping = state.beginRefresh(now: Self.now, force: true)
+        #expect(overlapping == nil)
         #expect(state.systemsState(now: Self.now).isRefreshing)
-        #expect(state.complete(request, observation: Self.host(), now: Self.now))
+        let completed = state.complete(request, observation: Self.host(), now: Self.now)
+        #expect(completed)
         #expect(state.nextRefreshAt == Self.now.addingTimeInterval(10))
-        #expect(state.beginRefresh(now: Self.now.addingTimeInterval(9)) == nil)
-        let visible = try #require(state.beginRefresh(now: Self.now.addingTimeInterval(10)))
-        #expect(state.complete(visible, observation: Self.host(), now: Self.now.addingTimeInterval(10), visible: true))
+        let early = state.beginRefresh(now: Self.now.addingTimeInterval(9))
+        #expect(early == nil)
+        let visibleStarted = state.beginRefresh(now: Self.now.addingTimeInterval(10))
+        let visible = try #require(visibleStarted)
+        let visibleCompleted = state.complete(
+            visible, observation: Self.host(), now: Self.now.addingTimeInterval(10), visible: true)
+        #expect(visibleCompleted)
         #expect(state.nextRefreshAt == Self.now.addingTimeInterval(15))
     }
 
     @Test
     func `configuration changes and repeated completions cannot replace newer observations`() throws {
         var state = NetdataRefreshState(environmentID: "fixture")
-        let old = try #require(state.beginRefresh(now: Self.now))
+        let oldStarted = state.beginRefresh(now: Self.now)
+        let old = try #require(oldStarted)
         state.configure(environmentID: "second")
-        let current = try #require(state.beginRefresh(now: Self.now))
-        #expect(!state.complete(old, observation: Self.host(), now: Self.now))
+        let currentStarted = state.beginRefresh(now: Self.now)
+        let current = try #require(currentStarted)
+        let oldCompleted = state.complete(old, observation: Self.host(), now: Self.now)
+        #expect(!oldCompleted)
         #expect(state.inFlight == current)
-        #expect(state.complete(current, observation: Self.host(environmentID: "second"), now: Self.now))
-        #expect(!state.complete(current, observation: Self.host(cpu: 99), now: Self.now))
+        let currentCompleted = state.complete(current, observation: Self.host(environmentID: "second"), now: Self.now)
+        #expect(currentCompleted)
+        let repeated = state.complete(current, observation: Self.host(cpu: 99), now: Self.now)
+        #expect(!repeated)
         #expect(state.systemsState(now: Self.now).cpuPercent == 28)
         state.configure(environmentID: "fixture")
         #expect(state.observation == nil)
         #expect(state.receivedAt == nil)
-        #expect(!state.complete(old, observation: Self.host(), now: Self.now))
+        let originalHostCompleted = state.complete(old, observation: Self.host(), now: Self.now)
+        #expect(!originalHostCompleted)
     }
 
     @Test
     func `failed refresh retains dated cache bounded backoff and recovery clears failure`() throws {
         var state = NetdataRefreshState(environmentID: "fixture")
-        let initial = try #require(state.beginRefresh(now: Self.now))
-        #expect(state.complete(initial, observation: Self.host(), now: Self.now))
+        let initialStarted = state.beginRefresh(now: Self.now)
+        let initial = try #require(initialStarted)
+        let initialCompleted = state.complete(initial, observation: Self.host(), now: Self.now)
+        #expect(initialCompleted)
         for index in 0..<8 {
             let time = Self.now.addingTimeInterval(Double(index + 1))
-            let request = try #require(state.beginRefresh(now: time, force: true))
-            #expect(state.complete(request, observation: nil, now: time))
+            let started = state.beginRefresh(now: time, force: true)
+            let request = try #require(started)
+            let completed = state.complete(request, observation: nil, now: time)
+            #expect(completed)
             let row = state.systemsState(now: time)
             #expect(row.availability == .stale)
             #expect(row.receivedAt == Self.now)
@@ -52,8 +69,10 @@ struct NetdataRefreshStateLinuxTests {
             #expect(state.nextRefreshAt?.timeIntervalSince(time) == [10.0, 20, 40, 60, 60, 60, 60, 60][index])
         }
         let time = Self.now.addingTimeInterval(9)
-        let request = try #require(state.beginRefresh(now: time, force: true))
-        #expect(state.complete(request, observation: Self.host(sampledAt: time), now: time))
+        let started = state.beginRefresh(now: time, force: true)
+        let request = try #require(started)
+        let completed = state.complete(request, observation: Self.host(sampledAt: time), now: time)
+        #expect(completed)
         #expect(!state.requestFailed)
         #expect(state.systemsState(now: time).availability == .available)
         #expect(state.receivedAt == time)
@@ -63,16 +82,24 @@ struct NetdataRefreshStateLinuxTests {
     @Test
     func `sleep wake cancellation and wrong environment do not publish late results`() throws {
         var state = NetdataRefreshState(environmentID: "fixture")
-        let sleeping = try #require(state.beginRefresh(now: Self.now))
+        let sleepingStarted = state.beginRefresh(now: Self.now)
+        let sleeping = try #require(sleepingStarted)
         state.suspend()
-        #expect(state.beginRefresh(now: Self.now, force: true) == nil)
-        #expect(!state.complete(sleeping, observation: Self.host(), now: Self.now))
+        let whileSleeping = state.beginRefresh(now: Self.now, force: true)
+        #expect(whileSleeping == nil)
+        let sleepingCompleted = state.complete(sleeping, observation: Self.host(), now: Self.now)
+        #expect(!sleepingCompleted)
         state.wake(now: Self.now)
-        let cancelled = try #require(state.beginRefresh(now: Self.now))
-        #expect(state.cancel(cancelled, now: Self.now))
-        let current = try #require(state.beginRefresh(now: Self.now))
-        #expect(!state.complete(cancelled, observation: Self.host(), now: Self.now))
-        #expect(state.complete(current, observation: Self.host(environmentID: "other"), now: Self.now))
+        let cancelledStarted = state.beginRefresh(now: Self.now)
+        let cancelled = try #require(cancelledStarted)
+        let didCancel = state.cancel(cancelled, now: Self.now)
+        #expect(didCancel)
+        let currentStarted = state.beginRefresh(now: Self.now)
+        let current = try #require(currentStarted)
+        let cancelledCompleted = state.complete(cancelled, observation: Self.host(), now: Self.now)
+        #expect(!cancelledCompleted)
+        let foreignCompleted = state.complete(current, observation: Self.host(environmentID: "other"), now: Self.now)
+        #expect(foreignCompleted)
         #expect(state.observation == nil)
         #expect(state.requestFailed)
         #expect(state.systemsState(now: Self.now).availability == .unavailable)
@@ -81,8 +108,10 @@ struct NetdataRefreshStateLinuxTests {
     @Test
     func `partial samples keep independent absence and cache eventually becomes unavailable`() throws {
         var state = NetdataRefreshState(environmentID: "fixture")
-        let request = try #require(state.beginRefresh(now: Self.now))
-        #expect(state.complete(request, observation: Self.host(cpu: nil), now: Self.now))
+        let started = state.beginRefresh(now: Self.now)
+        let request = try #require(started)
+        let completed = state.complete(request, observation: Self.host(cpu: nil), now: Self.now)
+        #expect(completed)
         #expect(state.systemsState(now: Self.now).availability == .partial)
         #expect(state.systemsState(now: Self.now).cpuPercent == nil)
         #expect(state.systemsState(now: Self.now.addingTimeInterval(31)).availability == .stale)
@@ -93,10 +122,12 @@ struct NetdataRefreshStateLinuxTests {
     func `invalid configuration and invalid clock never start a request`() {
         for id in ["", String(repeating: "x", count: 129), "fixture\n"] {
             var state = NetdataRefreshState(environmentID: id)
-            #expect(state.beginRefresh(now: Self.now) == nil)
+            let started = state.beginRefresh(now: Self.now)
+            #expect(started == nil)
         }
         var state = NetdataRefreshState(environmentID: "fixture")
-        #expect(state.beginRefresh(now: Date(timeIntervalSince1970: .nan)) == nil)
+        let started = state.beginRefresh(now: Date(timeIntervalSince1970: .nan))
+        #expect(started == nil)
         #expect(state.inFlight == nil)
     }
 
@@ -106,6 +137,8 @@ struct NetdataRefreshStateLinuxTests {
         HubHostObservation(
             environmentID: environmentID,
             evidence: HubEvidence(source: "Synthetic fixture", observedAt: sampledAt, availability: .available),
-            cpuPercent: cpu, memoryUsedBytes: nil, memoryAvailableBytes: 5_905_580_032)
+            cpuPercent: cpu,
+            memoryUsedBytes: nil,
+            memoryAvailableBytes: 5_905_580_032)
     }
 }

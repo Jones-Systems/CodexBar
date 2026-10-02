@@ -39,9 +39,10 @@ struct NetdataSystemsStateLinuxTests {
 
     @Test
     func `sample age boundaries hide stale compact values but preserve dated history`() {
-        for (age, availability) in [(30.0, HubAvailability.available), (31, .stale), (300, .stale),
-                                    (301, .unavailable), (-5, .available), (-6, .stale)]
-        {
+        for (age, availability) in [
+            (30.0, HubAvailability.available), (31, .stale), (300, .stale),
+            (301, .unavailable), (-5, .available), (-6, .stale),
+        ] {
             let state = NetdataSystemsState(
                 environmentID: "fixture", observation: Self.host(), now: Self.now.addingTimeInterval(age))
             #expect(state.availability == availability)
@@ -60,7 +61,8 @@ struct NetdataSystemsStateLinuxTests {
         #expect(foreign.observedAt == nil)
         #expect(foreign.availability == .unavailable)
         let unsupported = NetdataSystemsState(
-            environmentID: "fixture", observation: NetdataReadOnlyFacade.unavailable(environmentID: "fixture"),
+            environmentID: "fixture",
+            observation: NetdataReadOnlyFacade.unavailable(environmentID: "fixture"),
             now: Self.now)
         #expect(unsupported.availability == .unsupported)
         #expect(unsupported.compactLabel(hostLabel: "Mac") == "Mac Not configured")
@@ -78,7 +80,10 @@ struct NetdataSystemsStateLinuxTests {
     @Test
     func `failure partial evidence invalid clock and selected host never imply healthy readings`() {
         let failed = NetdataSystemsState(
-            environmentID: "fixture", observation: Self.host(), now: Self.now, requestFailed: true,
+            environmentID: "fixture",
+            observation: Self.host(),
+            now: Self.now,
+            requestFailed: true,
             isRefreshing: true)
         #expect(failed.availability == .stale)
         #expect(failed.isRefreshing)
@@ -102,6 +107,8 @@ struct NetdataSystemsStateLinuxTests {
         HubHostObservation(
             environmentID: "fixture",
             evidence: HubEvidence(source: "Synthetic fixture", observedAt: sampledAt, availability: availability),
-            cpuPercent: cpu, memoryUsedBytes: 99, memoryAvailableBytes: memory)
+            cpuPercent: cpu,
+            memoryUsedBytes: 99,
+            memoryAvailableBytes: memory)
     }
 }
