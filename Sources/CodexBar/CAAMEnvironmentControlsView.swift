@@ -6,7 +6,9 @@ struct CAAMEnvironmentControlsView: View {
     let configuration: CAAMEnvironmentConfiguration
     @Bindable var coordinator: CAAMEnvironmentCoordinator
 
-    private var session: CAAMControlSession { self.coordinator.session(for: self.configuration) }
+    private var session: CAAMControlSession {
+        self.coordinator.session(for: self.configuration)
+    }
 
     var body: some View {
         let session = self.session

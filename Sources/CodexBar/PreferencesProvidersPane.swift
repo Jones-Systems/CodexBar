@@ -29,6 +29,7 @@ struct ProvidersPane: View {
     @State private var codexAccountsNotice: CodexAccountsSectionNotice?
     @State private var isAuthenticatingLiveCodexAccount = false
     @State private var caamEnvironmentCoordinator: CAAMEnvironmentCoordinator
+    @State private var netdataObservabilityBridge: NetdataObservabilityBridge
 
     init(
         // Provider-specific by design: Codex is the historical settings selection when no provider is supplied.
@@ -39,6 +40,7 @@ struct ProvidersPane: View {
         codexAccountPromotionCoordinator: CodexAccountPromotionCoordinator? = nil,
         codexAmbientLoginRunner: any CodexAmbientLoginRunning = DefaultCodexAmbientLoginRunner(),
         caamEnvironmentCoordinator: CAAMEnvironmentCoordinator? = nil,
+        netdataObservabilityBridge: NetdataObservabilityBridge? = nil,
         runProviderLoginFlow: @escaping @MainActor (UsageProvider) async -> Void = { _ in })
     {
         self.provider = provider
@@ -53,6 +55,8 @@ struct ProvidersPane: View {
         self.codexAmbientLoginRunner = codexAmbientLoginRunner
         self._caamEnvironmentCoordinator = State(
             initialValue: caamEnvironmentCoordinator ?? CAAMEnvironmentCoordinator.applicationCoordinator())
+        self._netdataObservabilityBridge = State(
+            initialValue: netdataObservabilityBridge ?? NetdataObservabilityBridge())
         self.runProviderLoginFlow = runProviderLoginFlow
     }
 
@@ -122,7 +126,8 @@ struct ProvidersPane: View {
                     CodexObservabilityHubView(
                         coordinator: self.caamEnvironmentCoordinator,
                         configurations: self.settings.codexCAAMEnvironments,
-                        providerInputs: { self.observabilityProviderInputs() })
+                        providerInputs: { self.observabilityProviderInputs() },
+                        netdataBridge: self.netdataObservabilityBridge)
                         .task {
                             await self.caamEnvironmentCoordinator.refresh(
                                 configurations: self.settings.codexCAAMEnvironments, force: false)

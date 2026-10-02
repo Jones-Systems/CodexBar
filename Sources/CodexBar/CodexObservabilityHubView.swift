@@ -8,7 +8,9 @@ private enum ObservabilityHubTab: String, CaseIterable, Identifiable {
     case systems
     case work
 
-    var id: String { self.rawValue }
+    var id: String {
+        self.rawValue
+    }
 
     var title: String {
         switch self {
@@ -25,6 +27,7 @@ struct CodexObservabilityHubView: View {
     @Bindable var coordinator: CAAMEnvironmentCoordinator
     let configurations: [CAAMEnvironmentConfiguration]
     let providerInputs: () -> [HubProviderInput]
+    @Bindable var netdataBridge: NetdataObservabilityBridge
     @State private var tab: ObservabilityHubTab = .overview
 
     var body: some View {
@@ -40,13 +43,14 @@ struct CodexObservabilityHubView: View {
                     sessions: self.configurations.map { self.coordinator.session(for: $0) },
                     providers: self.providerInputs(),
                     includeWork: self.tab == .work,
+                    hostsByEnvironmentID: self.netdataBridge.hostsByEnvironmentID(now: context.date),
                     now: context.date)
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 12) {
                         switch self.tab {
-                        case .overview: self.overview(snapshot)
+                        case .overview: self.overview(snapshot, now: context.date)
                         case .accounts: self.accounts(snapshot)
-                        case .systems: self.systems(snapshot)
+                        case .systems: self.systems(snapshot, now: context.date)
                         case .work: self.work(snapshot)
                         }
                     }
@@ -62,7 +66,7 @@ struct CodexObservabilityHubView: View {
         }
     }
 
-    private func overview(_ snapshot: ObservabilityHubSnapshot) -> some View {
+    private func overview(_ snapshot: ObservabilityHubSnapshot, now: Date) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(L("Service and local state")).font(.subheadline.weight(.semibold))
             if snapshot.services.isEmpty {
@@ -110,8 +114,12 @@ struct CodexObservabilityHubView: View {
             }
             Divider()
             Text(L("Host resources")).font(.subheadline.weight(.semibold))
-            Text(L("Netdata telemetry is unsupported here. No host metrics were collected."))
-                .font(.caption).foregroundStyle(.secondary)
+            if snapshot.services.isEmpty {
+                Text(L("No CAAM environments configured.")).font(.caption)
+            }
+            ForEach(snapshot.services) { service in
+                self.hostResources(environmentID: service.id, label: service.row.label, now: now)
+            }
         }
     }
 
@@ -153,7 +161,7 @@ struct CodexObservabilityHubView: View {
                         format: L("Provider: %@ · Health: %@"),
                         account.provider ?? L("Unknown"),
                         account.health.rawValue))
-                    .font(.caption2)
+                        .font(.caption2)
                     if account.hostDefault { Text(L("Host default")).font(.caption2) }
                     HubEvidenceView(evidence: account.evidence)
                 }
@@ -161,7 +169,7 @@ struct CodexObservabilityHubView: View {
         }
     }
 
-    private func systems(_ snapshot: ObservabilityHubSnapshot) -> some View {
+    private func systems(_ snapshot: ObservabilityHubSnapshot, now: Date) -> some View {
         Group {
             if snapshot.services.isEmpty { Text(L("No CAAM environments configured.")) }
             ForEach(snapshot.services) { service in
@@ -172,13 +180,27 @@ struct CodexObservabilityHubView: View {
                         format: L("Runtime effective profile: %@"),
                         service.runtimeEffectiveProfile ?? L("Unknown")))
                     HubEvidenceView(evidence: service.evidence)
-                    Text(L("Netdata telemetry is unsupported here. No host metrics were collected."))
-                        .foregroundStyle(.secondary)
+                    self.hostResources(environmentID: service.id, label: service.row.label, now: now)
                     NetdataDashboardLinkView(configuration: self.configurations.first { $0.id == service.id })
                 }
                 .font(.caption)
             }
         }
+    }
+
+    private func hostResources(environmentID: String, label: String, now: Date) -> some View {
+        let state = self.netdataBridge.systemsState(environmentID: environmentID, now: now)
+        return VStack(alignment: .leading, spacing: 3) {
+            Text(state.compactLabel(hostLabel: label))
+            if state.availability == .unsupported {
+                Text(L("Netdata telemetry is unsupported here. No host metrics were collected."))
+            } else {
+                HubEvidenceView(evidence: HubEvidence(
+                    source: state.source, observedAt: state.observedAt, availability: state.availability))
+                if state.isRefreshing { Text(L("Refreshing…")) }
+            }
+        }
+        .font(.caption).foregroundStyle(.secondary)
     }
 
     private func work(_ snapshot: ObservabilityHubSnapshot) -> some View {
