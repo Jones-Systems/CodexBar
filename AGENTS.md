@@ -35,10 +35,8 @@ every reported format/lint issue. Report unavailable or failed checks truthfully
 
 ## Safety and isolation
 
-Never run tests, checks, or ad-hoc validation that can display macOS Keychain prompts.
-Live provider probes, browser-cookie imports, `codexbar usage` against real accounts,
-and real SecItem reads require an explicit request. Otherwise use parsers, stubs,
-test stores, or `KeychainNoUIQuery`. An isolation flag is not permission for live access.
+Never run tests/checks or ad-hoc validation that can display macOS Keychain prompts. Live provider probes, browser-cookie imports, `codexbar usage` against real accounts, and real SecItem reads must be explicitly requested; otherwise use parser tests, stubs, test stores, or `KeychainNoUIQuery`.
+An isolation flag is not permission for live access.
 
 App-group migration tests must inject dictionary-backed defaults, both snapshot URLs,
 a synthetic home, and a contained recording FileManager. UUID defaults suites and
