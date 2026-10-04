@@ -2,7 +2,16 @@
 
 > Every AI coding limit, in your menu bar.
 
-[![Latest release](https://img.shields.io/github/v/release/steipete/CodexBar?style=flat-square&color=0a0a0c)](https://github.com/steipete/CodexBar/releases/latest)
+This is the [Jones Systems source fork](https://github.com/Jones-Systems/CodexBar) of
+[steipete/CodexBar](https://github.com/steipete/CodexBar), a menu bar app for monitoring
+AI coding-provider usage, costs, and reset windows.
+
+The release badges, website, and upstream download links below refer to the upstream
+project; they do not establish that a downloaded or installed binary contains Jones
+Systems changes. For this fork, start with [source development](#build-from-source)
+or the [fork guide](docs/FORK_QUICK_START.md). Coding agents start at [AGENTS.md](AGENTS.md).
+
+[![Upstream release](https://img.shields.io/github/v/release/steipete/CodexBar?style=flat-square&color=0a0a0c)](https://github.com/steipete/CodexBar/releases/latest)
 [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-0a0a0c?style=flat-square)](https://github.com/steipete/CodexBar/releases/latest)
 [![Homebrew](https://img.shields.io/badge/brew-steipete%2Ftap%2Fcodexbar-orange?style=flat-square)](https://github.com/steipete/homebrew-tap)
 [![AUR](https://img.shields.io/aur/version/codexbar-cli?style=flat-square&color=1793d1)](https://aur.archlinux.org/packages/codexbar-cli)
@@ -15,14 +24,37 @@ Tiny macOS 14+ menu bar app that keeps **AI coding-provider limits visible** and
 
 <img src="docs/codexbar.png" alt="CodexBar menu popover with provider tiles, usage bars, and reset countdowns" width="520" />
 
+## Fork scope
+
+| Area | Source status |
+| --- | --- |
+| App, shared core, CLI, and widgets | Present in this source tree; platform and provider requirements vary. See the [architecture](docs/architecture.md) and [provider guides](docs/providers.md). |
+| CAAM environment foundation | Environment configuration and snapshot refresh are in source. This foundation does not establish live remote account switching; see the [implementation evidence and limits](docs/work-notes/caam-environment-control.md). |
+| Proposed CAAM controls and observability | [PR #2](https://github.com/Jones-Systems/CodexBar/pull/2) proposes further controls and an observability hub. |
+| Proposed repository sync safety | [PR #3](https://github.com/Jones-Systems/CodexBar/pull/3) is a separate sync-safety core. |
+| Proposed Netdata integration | [PR #4](https://github.com/Jones-Systems/CodexBar/pull/4), [#5](https://github.com/Jones-Systems/CodexBar/pull/5), [#6](https://github.com/Jones-Systems/CodexBar/pull/6), [#7](https://github.com/Jones-Systems/CodexBar/pull/7), and [#8](https://github.com/Jones-Systems/CodexBar/pull/8) form a dependent integration stack. |
+
+The linked proposals are pending work, not integrated or released functionality.
+Source integration does not prove release, installation, or live provider availability.
+Codex account selection also has distinct effects: `Active` selects usage observation;
+`System` promotes the default local auth account. Neither proves that an already-running
+Codex process has switched accounts.
+
 ## Why
 
 - **Plan around resets.** Per-provider session, weekly, and monthly windows with countdowns to the next reset — stop guessing whether to start that long task.
 - **Credits, spend, and cost scans.** Credit balances, Admin API spend dashboards, provider billing summaries, and local cost scans where the source exposes enough detail.
 - **Live status.** Provider status polling surfaces incident badges in the menu and an indicator overlay on the bar icon.
-- **Privacy-first.** Reuses existing provider sessions — OAuth, device flow, API keys, browser cookies, local files — so no passwords are stored.
+- **Provider-specific authentication.** Uses existing sessions, OAuth/device flow,
+  API keys, browser cookies, or local files where supported. Some providers, including
+  [StepFun](docs/stepfun.md), also accept login credentials. See
+  [configuration](docs/configuration.md) and [Keychain boundaries](docs/keychain-prompts.md).
 
 ## Install
+
+The following routes describe upstream distributions and separately maintained packages.
+They do not establish a release of this Jones Systems fork. To build this checkout,
+use [Build from source](#build-from-source).
 
 ### Requirements
 - macOS 14+ (Sonoma)
@@ -161,9 +193,11 @@ show an incident indicator.
   invalid preferences resolve to 5 minutes. Manual and fixed 1m, 2m, 5m, 15m, and 30m alternatives remain available.
 - Bundled CLI (`codexbar`) for scripts and CI (including `codexbar cost --provider codex`, `claude`, or `both` for local cost usage); macOS and Linux CLI builds available.
 - WidgetKit widgets for supported providers.
-- Localized app and website with a shared 21-language catalog, automatic website detection, persistent pickers, and RTL support.
+- Localized app and website with a shared language catalog, automatic website detection,
+  persistent pickers, and RTL support.
 - Optional session quota notifications and weekly-reset confetti.
-- Privacy-first: on-device parsing by default; browser cookies are opt-in and reused (no passwords stored).
+- Local parsing for supported files and histories, with provider-specific authentication
+  and optional browser-cookie sources.
 
 ## Privacy note
 Wondering if CodexBar scans your disk? It doesn’t crawl your filesystem; it reads a small set of known locations (browser cookies/local storage, provider config files, local JSONL logs) when the related features are enabled. Plain Adaptive refresh never inspects local agent activity. The separate Adaptive (agent-aware) option asks before inspecting the running-process list (including command lines) to identify Codex/Claude and reading bounded known-session metadata. Declining returns to plain Adaptive. When allowed with Agent Sessions hidden, CodexBar retains only the latest activity time and discards session paths and identities. Provider tokens and token-account settings live in the CodexBar config file with restrictive file permissions. See the discussion and audit notes in [issue #12](https://github.com/steipete/CodexBar/issues/12).
@@ -179,7 +213,10 @@ Wondering if CodexBar scans your disk? It doesn’t crawl your filesystem; it re
   supported. See [Keychain prompts](docs/keychain-prompts.md) for Allow Once vs. Always Allow, recurring grants, and
   safe troubleshooting.
 - **Files & Folders prompts (folder/volume access)**: CodexBar launches provider CLIs and local probes for some providers. If those helpers read a project directory or external drive, macOS may ask CodexBar for that folder/volume (e.g., Desktop or an external volume). This is driven by the helper’s working directory, not background disk scanning.
-- **What we do not request in the background**: no Screen Recording or Accessibility permissions; user-triggered helper actions may ask macOS for Automation permission to open Terminal. No passwords are stored (browser cookies are reused when you opt in).
+- **What we do not request in the background**: no Screen Recording or Accessibility
+  permissions; user-triggered helper actions may ask macOS for Automation permission
+  to open Terminal. Authentication and storage depend on the provider; see the
+  [provider guides](docs/providers.md).
 
 ## Docs
 - Providers overview: [docs/providers.md](docs/providers.md)
@@ -200,33 +237,59 @@ Wondering if CodexBar scans your disk? It doesn’t crawl your filesystem; it re
 - Release checklist: [docs/RELEASING.md](docs/RELEASING.md)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)
 
-## Getting started (dev)
-- Clone the repo and open it in Xcode or run the scripts directly.
-- Launch once, then toggle providers in Settings → Providers.
-- Install/sign in to provider sources you rely on (CLIs, browser cookies, OAuth/device flow, API keys, or local app/config files).
-- Optional: set OpenAI cookies (Automatic or Manual) for Codex dashboard extras.
-
 ## Build from source
-Requires macOS 14+ and Swift 6.2+.
+
+Start with CLI help to build this fork without launching the menu bar app or querying
+a provider account.
+
+Prerequisites:
+
+- Git and Swift 6.2 or later; the package declares Swift tools 6.2.
+- macOS 14+ for macOS development. Building the app bundle also requires the Xcode
+  tooling described in the [development guide](docs/DEVELOPMENT.md).
+- On Linux, a supported Swift toolchain and SQLite3/libcurl development libraries
+  (for example, `libsqlite3-dev` and `libcurl4-openssl-dev` on Debian/Ubuntu).
+  Linux supports shared-core and CLI development, not the macOS app UI.
+
+From a directory where you want the checkout:
 
 ```bash
-./Scripts/package_app.sh        # builds CodexBar.app in-place with ad-hoc signing
-open CodexBar.app
+git clone https://github.com/Jones-Systems/CodexBar.git
+cd CodexBar
+swift build --product CodexBarCLI
+swift run --skip-build CodexBarCLI --help
 ```
 
-Dev loop:
-```bash
-./Scripts/compile_and_run.sh
-./Scripts/compile_and_run.sh --test  # also run the sharded test suite before packaging/relaunching
-make check                           # SwiftFormat + SwiftLint
-make docs-list                       # list docs with frontmatter summaries
-```
+The final command prints the CLI command list and exits. Its help path runs before
+command descriptors and provider commands; no provider login is needed for this step.
+See the [CLI reference](docs/cli.md) for commands and their individual effects.
 
-CLI install:
-```bash
-# after installing CodexBar.app in /Applications
-./bin/install-codexbar-cli.sh
-```
+For changes, follow [AGENTS.md](AGENTS.md) and the
+[development verification requirements](docs/DEVELOPMENT.md#verification-and-handoff).
+Use [runtime validation and command effects](docs/DEVELOPMENT.md#runtime-validation-and-command-effects)
+when app-bundle behavior needs validation: compile/run and launch wrappers terminate
+existing processes, and release packaging can launch a copied app.
+
+Installing the CLI from an app bundle is a separate operation.
+`bin/install-codexbar-cli.sh` uses the helper in `/Applications/CodexBar.app` and requests
+administrator privileges to create or replace command links in `/usr/local/bin` and
+`/opt/homebrew/bin`. It is not required for source development; run it only when that
+installation and its privileged changes are explicitly intended and authorized.
+
+## Code and interfaces
+
+| Area | Entry point and reference |
+| --- | --- |
+| Menu bar app and settings | `Sources/CodexBar`; [UI notes](docs/ui.md) |
+| Shared provider, configuration, and parsing logic | `Sources/CodexBarCore`; [architecture](docs/architecture.md) and [provider authoring](docs/provider.md) |
+| CLI commands | `Sources/CodexBarCLI`; [CLI reference](docs/cli.md) and [CLI configuration](docs/cli-configuration.md) |
+| Widgets | `Sources/CodexBarWidget` and `WidgetExtension`; [widget guide](docs/widgets.md) |
+| Native and portable tests | `Tests/CodexBarTests` and `TestsLinux`; [development guide](docs/DEVELOPMENT.md) |
+
+For fork-specific orientation, see the [fork quick start](docs/FORK_QUICK_START.md).
+For credential prompts, use [Keychain troubleshooting](docs/keychain-prompts.md).
+Release destinations, signing, and publication are covered separately in the
+[release guide](docs/RELEASING.md).
 
 ## Related
 - ✂️ [Trimmy](https://github.com/steipete/Trimmy) — “Paste once, run once.” Flatten multi-line shell snippets so they paste and run.

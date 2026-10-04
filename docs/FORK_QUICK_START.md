@@ -1,257 +1,94 @@
 ---
-summary: "Fork quick start: differences, commands, and planned features."
+summary: "Jones Systems fork onboarding, source boundaries, and verification routes."
 read_when:
-  - Onboarding to the fork workflow
-  - Reviewing fork-specific changes
-  - Running fork maintenance commands
+  - Onboarding to the Jones Systems fork
+  - Distinguishing fork source from upstream releases
+  - Finding development and provider documentation
 ---
 
-# CodexBar Fork - Quick Start Guide
+# Jones Systems CodexBar fork
 
-**Fork Maintainer:** Brandon Charleson ([topoffunnel.com](https://topoffunnel.com))  
-**Original Author:** Peter Steinberger ([steipete](https://twitter.com/steipete))  
-**Fork Repository:** https://github.com/topoffunnel/CodexBar
+The source repository is [Jones-Systems/CodexBar](https://github.com/Jones-Systems/CodexBar),
+a fork of [steipete/CodexBar](https://github.com/steipete/CodexBar).
+The [CAAM environment work note](work-notes/caam-environment-control.md) records the
+Jones Systems fork foundation and its evidence. Older fork setup and roadmap documents
+may describe earlier owners or plans; they do not establish current delivery status.
 
----
+Source support, automated test evidence, installed binaries, and live provider behavior
+are separate claims. Upstream downloads and package-manager installations do not by
+themselves prove that Jones Systems changes are present. Verify a running bundle or
+CLI's provenance before using it as evidence.
 
-## 🎯 What Makes This Fork Different?
+## Start with source verification
 
-### Key Enhancements
-1. **Augment Provider Support** - Full integration with Augment Code API
-2. **Enhanced Security** - Improved keychain handling, no permission prompts
-3. **Better Cookie Management** - Automatic session keepalive, Chrome Beta support
-4. **Bug Fixes** - Cursor bonus credits, cookie domain filtering
+Read root `AGENTS.md` and the development guide's
+[coding conventions](DEVELOPMENT.md#coding-conventions-and-tests) and
+[verification requirements](DEVELOPMENT.md#verification-and-handoff).
+The package declares Swift tools 6.2 and macOS 14+. App packaging also uses Xcode for
+the widget extension; Linux supports shared-core and CLI work.
 
-### Planned Features
-- Multi-account management per provider
-- Enhanced diagnostics and logging
-- Upstream sync automation
-- Usage history tracking
-
----
-
-## 🚀 Quick Commands
-
-### Development
 ```bash
-# Build and run (kills old instances, builds, tests, packages, relaunches)
-./Scripts/compile_and_run.sh
-
-# Quick build
 swift build
-
-# Run tests
 make test
-
-# Format code
-swiftformat Sources Tests
-swiftlint --strict
-
-# Package app
-./Scripts/package_app.sh
-
-# Restart app after rebuild
-pkill -x CodexBar || pkill -f CodexBar.app || true
-cd /Users/steipete/Projects/codexbar && open -n /Users/steipete/Projects/codexbar/CodexBar.app
+make check
 ```
 
-### Release
-```bash
-# Edit .mac-release.env first: MAC_RELEASE_REPO, feed URL, download URL,
-# bundle id, and Sparkle public/signing key must point at your fork.
-./Scripts/release.sh
+`make test` runs the isolated sharded suite. Run it before handoff, and run `make check`
+after code changes. Focused tests must preserve the repository's fixture and child-process
+isolation; see the [development guide](DEVELOPMENT.md).
 
-# See full release process
-cat docs/RELEASING.md
-```
+Routine tests and ad-hoc checks must not display Keychain prompts. Live account probes,
+browser-cookie imports, real SecItem reads, and `codexbar usage` against real accounts
+require an explicit request. CodexBar is not guaranteed to be prompt-free: signing changes
+and provider/browser-owned items can still cause prompts. See
+[Keychain boundaries](keychain-prompts.md).
 
-### Git Workflow
-```bash
-# Check status
-git status
+## Find the owning module
 
-# Create feature branch
-git checkout -b feature/my-feature
+| Area | Source |
+| --- | --- |
+| App state, menu bar, and preferences | `Sources/CodexBar` |
+| Shared configuration, providers, parsers, and usage logic | `Sources/CodexBarCore` |
+| CLI commands | `Sources/CodexBarCLI` |
+| Widgets and their packaging wrapper | `Sources/CodexBarWidget`, `WidgetExtension` |
+| Native and portable tests | `Tests/CodexBarTests`, `TestsLinux` |
 
-# Commit changes
-git add -A
-git commit -m "feat: description"
+Use the [architecture overview](architecture.md), [provider authoring guide](provider.md),
+[provider inventory](providers.md), [CLI guide](cli.md), and [plugin guide](plugins.md)
+for the relevant source surface. A provider entry or command definition is not proof
+of current account access or live service availability.
 
-# Push to fork
-git push origin feature/my-feature
+The fork contains CAAM environment configuration and snapshot-refresh foundations.
+Those models and controls do not establish live remote account switching.
+The existing Codex `Active` account selects usage observation; `System` promotes
+the default local auth account. Neither label proves that an already-running Codex
+process has switched credentials. Consult the
+[CAAM work note](work-notes/caam-environment-control.md) for the boundary.
 
-# Sync with upstream (TBD - see docs/FORK_ROADMAP.md Phase 4)
-```
+## When an app bundle is needed
 
----
+Use bundle validation only for behavior that requires it and when its runtime effects
+are authorized. `Scripts/compile_and_run.sh` terminates existing CodexBar instances
+and matching Claude probes, can inspect signing identities, packages, relaunches,
+and checks survival. Tests run only with `--test`.
 
-## 📁 Key Files & Directories
+`Scripts/launch.sh` also terminates existing instances. Release packaging through
+`Scripts/package_app.sh`, including its default invocation and `make release`, invokes
+a smoke check that can launch a copied app. Some Makefile targets still contain broad
+termination commands and a maintainer-specific absolute path.
 
-### Source Code
-- `Sources/CodexBar/` - Swift 6 menu bar app
-- `Sources/CodexBarCore/` - Core logic, providers, utilities
-- `Sources/CodexBarCore/Providers/Augment/` - Augment provider implementation
-- `Tests/CodexBarTests/` - XCTest coverage
+Read [runtime validation and command effects](DEVELOPMENT.md#runtime-validation-and-command-effects)
+before using these wrappers, and verify the freshly built running bundle. A package smoke
+check does not replace interactive UI or live provider evidence.
 
-### Scripts
-- `Scripts/compile_and_run.sh` - Main development script
-- `Scripts/package_app.sh` - Package app bundle
-- `Scripts/sign-and-notarize.sh` - Release signing
-- `Scripts/make_appcast.sh` - Generate appcast XML
+## Releases and contributions
 
-### Documentation
-- `docs/augment.md` - Augment provider guide
-- `docs/FORK_ROADMAP.md` - Development roadmap
-- `docs/RELEASING.md` - Release process
-- `docs/DEVELOPMENT.md` - Build instructions
-- `README.md` - Main documentation
+The checked-in release manifest still targets upstream `steipete/CodexBar` and its
+signing/feed configuration. Jones Systems source ownership does not turn that into
+a Jones Systems publication route. Resolve the intended target, external release
+helper, matching signing configuration, and authority through the
+[release guide](RELEASING.md) before release work.
 
----
-
-## 🔧 Common Tasks
-
-### Adding a New Feature
-1. Create feature branch: `git checkout -b feature/my-feature`
-2. Make changes in `Sources/`
-3. Add tests in `Tests/`
-4. Run `./Scripts/compile_and_run.sh` to verify
-5. Run `swiftformat Sources Tests && swiftlint --strict`
-6. Commit with descriptive message
-7. Push and create PR
-
-### Debugging Augment Issues
-1. Enable debug logging: `export CODEXBAR_LOG_LEVEL=debug`
-2. Check Console.app for "com.steipete.codexbar"
-3. Use Settings → Debug → Augment → Show Debug Info
-4. Check `docs/augment.md` troubleshooting section
-
-### Testing Changes
-```bash
-# Run all tests
-make test
-
-# Run specific test
-swift test --filter AugmentTests
-
-# Build and test together
-./Scripts/compile_and_run.sh --test
-```
-
-### Updating Documentation
-1. Edit relevant `.md` file in `docs/`
-2. Update `README.md` if needed
-3. Commit with `docs:` prefix
-4. No need to rebuild app
-
----
-
-## 🐛 Troubleshooting
-
-### App Won't Launch
-```bash
-# Kill all instances
-pkill -x CodexBar || pkill -f CodexBar.app || true
-
-# Rebuild and relaunch
-./Scripts/compile_and_run.sh
-```
-
-### Build Errors
-```bash
-# Clean build
-swift package clean
-swift build
-
-# Check for format issues
-swiftformat Sources Tests --lint
-swiftlint --strict
-```
-
-### Cookie Issues (Augment)
-1. Check browser is logged into app.augmentcode.com
-2. Verify cookie source in Settings → Providers → Augment
-3. Try manual cookie import (see `docs/augment.md`)
-4. Check debug logs for cookie import details
-
-### Keychain Permission Prompts
-- This fork includes fixes to eliminate prompts
-- If you still see prompts, check `Sources/CodexBarCore/Keychain/`
-- Ensure you're running the latest build
-
----
-
-## 📚 Learning Resources
-
-### Understanding the Codebase
-1. Start with `Sources/CodexBar/CodexbarApp.swift` - App entry point
-2. Review `Sources/CodexBarCore/UsageStore.swift` - Main state management
-3. Check `Sources/CodexBarCore/Providers/` - Provider implementations
-4. Read `docs/provider.md` - Provider authoring guide
-
-### Swift 6 & SwiftUI
-- Uses `@Observable` macro (not `ObservableObject`)
-- Prefer `@State` ownership over `@StateObject`
-- Use `@Bindable` in views for two-way binding
-- Strict concurrency checking enabled
-
-### Coding Style
-- 4-space indentation
-- 120-character line limit
-- Explicit `self` is intentional (don't remove)
-- Follow existing `MARK` organization
-- Use descriptive variable names
-
----
-
-## 🤝 Contributing
-
-### To This Fork
-1. Fork the fork repository
-2. Create feature branch
-3. Make changes with tests
-4. Submit PR to `topoffunnel/CodexBar`
-
-### To Upstream
-1. Check if feature benefits all users
-2. Create PR to `steipete/CodexBar`
-3. Reference this fork if relevant
-4. Be patient with review process
-
-See `docs/FORK_ROADMAP.md` for contribution strategy.
-
----
-
-## 📞 Support
-
-### Fork-Specific Issues
-- GitHub Issues: https://github.com/topoffunnel/CodexBar/issues
-- Email: [your-email]@topoffunnel.com
-
-### Upstream Issues
-- GitHub Issues: https://github.com/steipete/CodexBar/issues
-- Twitter: [@steipete](https://twitter.com/steipete)
-
----
-
-## 📋 Next Steps
-
-1. **Read the Roadmap:** `docs/FORK_ROADMAP.md`
-2. **Set Up Development:** `./Scripts/compile_and_run.sh`
-3. **Review Augment Docs:** `docs/augment.md`
-4. **Check Current Issues:** GitHub Issues tab
-5. **Join Development:** Pick a task from Phase 2-5
-
----
-
-## 🎉 Quick Wins
-
-Want to contribute but not sure where to start? Try these:
-
-- [ ] Add more test coverage for Augment provider
-- [ ] Improve error messages in cookie import
-- [ ] Add screenshots to `docs/augment.md`
-- [ ] Test on different macOS versions
-- [ ] Report bugs you find
-- [ ] Suggest UI improvements
-
-Happy coding! 🚀
+Keep changes and commits scoped, preserve unrelated work, and include commands and
+outcomes in the handoff. UI changes need screenshots/GIFs. Verify the intended repository
+and base before opening a contribution; do not infer them from historical fork examples.
