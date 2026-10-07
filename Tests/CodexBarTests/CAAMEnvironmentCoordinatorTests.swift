@@ -120,7 +120,7 @@ private enum CAAMCoordinatorFixture {
     static func snapshot(active: String = "primary") -> CAAMEnvironmentSnapshot {
         CAAMEnvironmentSnapshot(
             revision: "1",
-            observedAt: Self.now,
+            observedAt: self.now,
             caamVersion: "fixture",
             capabilities: CAAMControlCapability.allCases.map(\.rawValue),
             reachability: .reachable,
@@ -133,7 +133,7 @@ private enum CAAMCoordinatorFixture {
             runtime: CAAMRuntimeSnapshot(state: .unknown, reloadRequired: false))
     }
 
-    static func response<Value: Codable & Sendable>(_ value: Value, kind: String) throws -> SubprocessResult {
+    static func response(_ value: some Codable & Sendable, kind: String) throws -> SubprocessResult {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         let data = try encoder.encode(CAAMControlEnvelope(
@@ -210,7 +210,11 @@ private actor GatedCAAMCoordinatorRunner: CAAMEnvironmentCommandRunning {
 }
 
 private actor RejectingCAAMReceiptStore: CAAMOperationReceiptStoring {
-    func load() -> [CAAMOperationReceipt] { [] }
+    func load() -> [CAAMOperationReceipt] {
+        []
+    }
 
-    func save(_: [CAAMOperationReceipt]) throws { throw CAAMControlFailure(reason: .unavailable) }
+    func save(_: [CAAMOperationReceipt]) throws {
+        throw CAAMControlFailure(reason: .unavailable)
+    }
 }

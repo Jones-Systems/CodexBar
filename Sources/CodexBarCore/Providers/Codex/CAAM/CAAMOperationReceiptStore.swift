@@ -22,7 +22,9 @@ public actor CAAMMemoryReceiptStore: CAAMOperationReceiptStoring {
         self.receipts = receipts
     }
 
-    public func load() -> [CAAMOperationReceipt] { self.receipts }
+    public func load() -> [CAAMOperationReceipt] {
+        self.receipts
+    }
 
     public func save(_ receipts: [CAAMOperationReceipt]) {
         self.receipts = receipts

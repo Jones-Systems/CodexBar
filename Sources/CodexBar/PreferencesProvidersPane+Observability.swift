@@ -6,8 +6,8 @@ extension ProvidersPane {
             let provider = instanceID.firstPartyProvider
             let publication = self.store.tokenSnapshotPublications[instanceID]
             let cost: CostUsageTokenSnapshot? = if let provider, let publication,
-                                                  publication.providerConfigRevision ==
-                                                  self.settings.providerConfigRevision(for: provider)
+                                                   publication.providerConfigRevision ==
+                                                   self.settings.providerConfigRevision(for: provider)
             {
                 publication.snapshot
             } else {
