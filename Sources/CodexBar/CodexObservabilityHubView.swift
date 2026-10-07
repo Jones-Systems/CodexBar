@@ -197,7 +197,7 @@ struct CodexObservabilityHubView: View {
             } else {
                 HubEvidenceView(evidence: HubEvidence(
                     source: state.source, observedAt: state.observedAt, availability: state.availability))
-                if state.isRefreshing { Text(L("Refreshing…")) }
+                if state.isRefreshing { Text(L("Refreshing")) }
             }
         }
         .font(.caption).foregroundStyle(.secondary)
