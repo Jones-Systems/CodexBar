@@ -37,6 +37,15 @@ public enum SubprocessRunnerError: LocalizedError, Sendable {
 public struct SubprocessResult: Sendable {
     public let stdout: String
     public let stderr: String
+    public let exitCode: Int32
+    public let stdoutWasValidUTF8: Bool
+
+    public init(stdout: String, stderr: String, exitCode: Int32 = 0, stdoutWasValidUTF8: Bool = true) {
+        self.stdout = stdout
+        self.stderr = stderr
+        self.exitCode = exitCode
+        self.stdoutWasValidUTF8 = stdoutWasValidUTF8
+    }
 }
 
 public enum SubprocessRunner {
@@ -320,7 +329,11 @@ public enum SubprocessRunner {
                     "status": "\(exitCode)",
                     "duration_ms": "\(Int(duration * 1000))",
                 ])
-            return SubprocessResult(stdout: stdout, stderr: stderr)
+            return SubprocessResult(
+                stdout: stdout,
+                stderr: stderr,
+                exitCode: exitCode,
+                stdoutWasValidUTF8: String(data: capturedStdout, encoding: .utf8) != nil)
         } catch {
             let duration = Date().timeIntervalSince(start)
             self.log.warning(
