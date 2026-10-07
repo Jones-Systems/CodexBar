@@ -6,7 +6,9 @@ public struct HubHostObservation: Sendable, Equatable, Identifiable {
     public let cpuPercent: Double?
     public let memoryUsedBytes: UInt64?
 
-    public var id: String { self.environmentID }
+    public var id: String {
+        self.environmentID
+    }
 }
 
 /// No Netdata API contract is present in this repository. No network collector is activated or guessed.
