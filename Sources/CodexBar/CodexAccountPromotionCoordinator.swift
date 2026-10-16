@@ -11,7 +11,14 @@ struct CodexSystemAccountPromotionUserFacingError: Error, Equatable {
 final class CodexAccountPromotionCoordinator {
     let service: CodexAccountPromotionService
     weak var managedAccountCoordinator: ManagedCodexAccountCoordinator?
-    private(set) var isAuthenticatingLiveAccount = false
+    private var externalLiveAuthenticationCount = 0
+    var isAuthenticatingLiveAccount: Bool {
+        self.liveAuthenticationTask != nil || self.externalLiveAuthenticationCount > 0
+    }
+
+    private(set) var isLiveAuthenticationRequested = false
+    private var liveAuthenticationID: UUID?
+    private var liveAuthenticationTask: Task<CodexLoginRunner.Result, Never>?
     private(set) var isPromotingSystemAccount = false
     private(set) var userFacingError: CodexSystemAccountPromotionUserFacingError?
 
@@ -57,12 +64,47 @@ final class CodexAccountPromotionCoordinator {
         }
     }
 
+    func authenticateLiveAccount(using runner: any CodexAmbientLoginRunning) async -> CodexLoginRunner.Result? {
+        guard !self.isLiveAuthenticationRequested, !self.isPromotingSystemAccount else { return nil }
+        let authenticationID = UUID()
+        let previousTask = self.liveAuthenticationTask
+        let writer = self.service.sharedAuthWriter
+        self.liveAuthenticationID = authenticationID
+        self.isLiveAuthenticationRequested = true
+        let task = Task {
+            // Retain the cancelled attempt, including any queued predecessor, until it drains.
+            _ = await previousTask?.value
+            await writer.acquire()
+            defer { writer.release() }
+            guard !Task.isCancelled else { return CodexLoginRunner.Result(outcome: .cancelled, output: "") }
+            return await runner.run(timeout: 120)
+        }
+        self.liveAuthenticationTask = task
+        let result = await withTaskCancellationHandler {
+            await task.value
+        } onCancel: {
+            task.cancel()
+        }
+        guard self.liveAuthenticationID == authenticationID else { return nil }
+        let shouldDeliver = self.isLiveAuthenticationRequested && !Task.isCancelled && result.outcome != .cancelled
+        self.liveAuthenticationTask = nil
+        self.liveAuthenticationID = nil
+        self.isLiveAuthenticationRequested = false
+        return shouldDeliver ? result : nil
+    }
+
+    func cancelLiveAuthentication() {
+        self.isLiveAuthenticationRequested = false
+        self.liveAuthenticationTask?.cancel()
+        // Keep the task and promotion gate until the runner has actually finished.
+    }
+
     func clearError() {
         self.userFacingError = nil
     }
 
     func setLiveReauthenticationInProgress(_ isInProgress: Bool) {
-        self.isAuthenticatingLiveAccount = isInProgress
+        self.externalLiveAuthenticationCount = max(0, self.externalLiveAuthenticationCount + (isInProgress ? 1 : -1))
     }
 
     func isInteractionBlocked() -> Bool {

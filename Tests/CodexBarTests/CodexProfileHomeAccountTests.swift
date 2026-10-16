@@ -248,6 +248,39 @@ struct CodexProfileHomeAccountTests {
         #expect(points.last?.value == 56)
     }
 
+    @Test(arguments: [1, 2])
+    @MainActor
+    func `missing profile retains explicit recovery choices without selecting one`(alternativeCount: Int) throws {
+        let settings = try Self.makeSettings(suite: "CodexProfileHomeAccountTests-recovery-\(alternativeCount)")
+        let root = CodexCredentialFixtures.root
+        let removed = root.appendingPathComponent("removed").path
+        let alternatives = (0..<alternativeCount).map { root.appendingPathComponent("alternative-\($0)") }
+        for (index, home) in alternatives.enumerated() {
+            try Self.writeCodexAuthFile(
+                homeURL: home, email: "alternative-\(index)@example.com", plan: "pro",
+                accountID: "acct-alternative-\(index)")
+        }
+        settings._test_codexReconciliationEnvironment = ["CODEX_HOME": root.appendingPathComponent("empty-live").path]
+        defer { settings._test_codexReconciliationEnvironment = nil }
+        settings.updateProviderConfig(provider: .codex) { entry in
+            entry.codexProfileHomePaths = alternatives.map(\.path)
+            entry.codexActiveSource = .profileHome(path: removed)
+        }
+
+        let projection = settings.codexVisibleAccountProjection
+        #expect(projection.visibleAccounts.count == alternativeCount)
+        #expect(projection.activeVisibleAccountID == nil)
+        #expect(projection.showsAccountSelection)
+        #expect(settings.codexSettingsSnapshot(tokenOverride: nil).profileAccountTargetUnavailable)
+        #expect(settings.codexResolvedActiveSource == .profileHome(path: removed))
+        #expect(!settings.persistResolvedCodexActiveSourceCorrectionIfNeeded())
+
+        let alternative = try #require(projection.visibleAccounts.first)
+        #expect(settings.selectCodexVisibleAccount(id: alternative.id))
+        #expect(settings.codexActiveSource == alternative.selectionSource)
+        #expect(!settings.codexSettingsSnapshot(tokenOverride: nil).profileAccountTargetUnavailable)
+    }
+
     @Test
     @MainActor
     func `removed profile home stays selected without ambient fallback`() throws {

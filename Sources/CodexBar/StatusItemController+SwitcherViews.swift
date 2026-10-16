@@ -1348,7 +1348,7 @@ final class CodexAccountSwitcherView: NSView {
     {
         self.accounts = accounts
         self.onSelect = onSelect
-        self.selectedAccountID = selectedAccountID ?? accounts.first?.id ?? ""
+        self.selectedAccountID = selectedAccountID ?? ""
         var columns = max(1, accounts.count > 3 ? Int(ceil(Double(accounts.count) / 2)) : accounts.count)
         let font = self.buttonFont
         let discriminatorWidth = accounts.compactMap(\.displayDiscriminator).map {
@@ -1632,6 +1632,10 @@ final class CodexAccountSwitcherView: NSView {
     }
 
     #if DEBUG
+    func _test_buttonStates() -> [NSControl.StateValue] {
+        self.buttons.map(\.state)
+    }
+
     func _test_buttonTitles() -> [String] {
         self.buttons.map(\.title)
     }

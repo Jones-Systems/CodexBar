@@ -101,20 +101,25 @@ struct CodexFleetProfileIntegrationTests {
     }
 
     @Test
-    func `unavailable selection does not observe ambient auth or read the managed store`() {
-        let home = CodexCredentialFixtures.root.appendingPathComponent("removed").path
+    func `unavailable selection keeps live recovery when managed storage is unreadable`() {
+        let root = CodexCredentialFixtures.root
+        let removed = root.appendingPathComponent("removed").path
+        let live = ObservedSystemCodexAccount(
+            email: "recovery@example.com", codexHomePath: root.appendingPathComponent("ambient").path,
+            observedAt: Date())
         let snapshot = DefaultCodexAccountReconciler(
-            storeLoader: {
-                Issue.record("Unavailable selection must not load managed credentials")
-                return ManagedCodexAccountSet(version: FileManagedCodexAccountStore.currentVersion, accounts: [])
-            },
-            systemObserver: RejectSystemObservation(),
-            activeSource: .profileHome(path: home),
-            baseEnvironment: ["CODEX_HOME": CodexCredentialFixtures.root.appendingPathComponent("ambient").path])
+            storeLoader: { throw FileManagedCodexAccountStoreError.unsupportedVersion(999) },
+            systemObserver: RecoverySystemObservation(account: live),
+            activeSource: .profileHome(path: removed),
+            baseEnvironment: ["CODEX_HOME": live.codexHomePath])
             .loadSnapshot()
-        #expect(snapshot.liveSystemAccount == nil)
+        let projection = CodexVisibleAccountProjection.make(from: snapshot)
+        #expect(snapshot.hasUnreadableAddedAccountStore)
         #expect(snapshot.profileHomeAccounts.isEmpty)
-        #expect(CodexActiveSourceResolver.resolve(from: snapshot).resolvedSource == .profileHome(path: home))
+        #expect(projection.visibleAccounts.map(\.email) == [live.email])
+        #expect(projection.activeVisibleAccountID == nil)
+        #expect(projection.showsAccountSelection)
+        #expect(CodexActiveSourceResolver.resolve(from: snapshot).resolvedSource == .profileHome(path: removed))
     }
 
     @Test
@@ -308,32 +313,41 @@ struct CodexFleetProfileIntegrationTests {
             fetcher: UsageFetcher(environment: environment),
             claudeFetcher: ClaudeUsageFetcher(browserDetection: browserDetection),
             browserDetection: browserDetection)
-        let nativeRefresh = CodexOAuthNativeRefreshCLIStrategy(binaryResolver: { _ in
-            Issue.record("Unavailable selection must not resolve or launch the CLI")
-            return nil
-        })
-        #expect(await !CodexOAuthFetchStrategy().isAvailable(context))
-        #expect(await !CodexCLIUsageStrategy().isAvailable(context))
-        #expect(await !nativeRefresh.isAvailable(context))
-        await #expect(throws: CodexProfileSelectionError.self) {
-            _ = try await CodexOAuthFetchStrategy().fetch(context)
+        let access = UnavailableProfileAccessProbe()
+        await CodexCredentialFileAccess.$testIO.withValue({ _, _ in
+            access.recordIO()
+            return Data()
+        }) {
+            let nativeRefresh = CodexOAuthNativeRefreshCLIStrategy(binaryResolver: { _ in
+                access.recordLaunch()
+                Issue.record("Unavailable selection must not resolve or launch the CLI")
+                return nil
+            })
+            #expect(await !CodexOAuthFetchStrategy().isAvailable(context))
+            #expect(await !CodexCLIUsageStrategy().isAvailable(context))
+            #expect(await !nativeRefresh.isAvailable(context))
+            await #expect(throws: CodexProfileSelectionError.self) {
+                _ = try await CodexOAuthFetchStrategy().fetch(context)
+            }
+            await #expect(throws: CodexProfileSelectionError.self) {
+                _ = try await CodexCLIUsageStrategy().fetch(context)
+            }
+            await #expect(throws: CodexProfileSelectionError.self) {
+                _ = try await nativeRefresh.fetch(context)
+            }
+            let outcome = await CodexProviderDescriptor.descriptor.fetchPlan.fetchOutcome(
+                context: context,
+                provider: .codex)
+            #expect(outcome.attempts.map(\.strategyID) == ["codex.profile-unavailable"])
+            guard case let .failure(error) = outcome.result else {
+                Issue.record("Unavailable profile must fail through the existing error state")
+                return
+            }
+            #expect(error is CodexProfileSelectionError)
+            #expect(error.localizedDescription.contains("unavailable or removed"))
         }
-        await #expect(throws: CodexProfileSelectionError.self) {
-            _ = try await CodexCLIUsageStrategy().fetch(context)
-        }
-        await #expect(throws: CodexProfileSelectionError.self) {
-            _ = try await nativeRefresh.fetch(context)
-        }
-        let outcome = await CodexProviderDescriptor.descriptor.fetchPlan.fetchOutcome(
-            context: context,
-            provider: .codex)
-        #expect(outcome.attempts.map(\.strategyID) == ["codex.profile-unavailable"])
-        guard case let .failure(error) = outcome.result else {
-            Issue.record("Unavailable profile must fail through the existing error state")
-            return
-        }
-        #expect(error is CodexProfileSelectionError)
-        #expect(error.localizedDescription.contains("unavailable or removed"))
+        #expect(access.ioCount == 0)
+        #expect(access.launchCount == 0)
     }
 
     @Test
@@ -399,10 +413,33 @@ struct CodexFleetProfileIntegrationTests {
         try data.write(to: home.appendingPathComponent("auth.json"))
     }
 
-    private struct RejectSystemObservation: CodexSystemAccountObserving {
+    private struct RecoverySystemObservation: CodexSystemAccountObserving {
+        let account: ObservedSystemCodexAccount
+
         func loadSystemAccount(environment _: [String: String]) throws -> ObservedSystemCodexAccount? {
-            Issue.record("Unavailable selection must not observe ambient credentials")
-            return nil
+            self.account
         }
+    }
+}
+
+private final class UnavailableProfileAccessProbe: @unchecked Sendable {
+    private let lock = NSLock()
+    private var io = 0
+    private var launches = 0
+
+    var ioCount: Int {
+        self.lock.withLock { self.io }
+    }
+
+    var launchCount: Int {
+        self.lock.withLock { self.launches }
+    }
+
+    func recordIO() {
+        self.lock.withLock { self.io += 1 }
+    }
+
+    func recordLaunch() {
+        self.lock.withLock { self.launches += 1 }
     }
 }

@@ -34,7 +34,11 @@ struct CodexAccountsSectionState: Equatable {
     let notice: CodexAccountsSectionNotice?
 
     var showsActivePicker: Bool {
-        self.visibleAccounts.count > 1
+        self.visibleAccounts.count > 1 || (self.activeVisibleAccountID == nil && !self.visibleAccounts.isEmpty)
+    }
+
+    var activeSelectionID: String {
+        self.activeVisibleAccountID ?? ""
     }
 
     var singleVisibleAccount: CodexVisibleAccount? {
@@ -143,6 +147,9 @@ struct CodexAccountsSectionView: View {
                             .frame(width: ProviderSettingsMetrics.pickerLabelWidth, alignment: .leading)
 
                         Picker("", selection: selection) {
+                            if self.state.activeVisibleAccountID == nil {
+                                Text("—").tag("")
+                            }
                             ForEach(self.state.visibleAccounts) { account in
                                 Text(account.displayName).tag(account.id)
                             }
@@ -237,10 +244,8 @@ struct CodexAccountsSectionView: View {
 
     private var activeSelectionBinding: Binding<String>? {
         guard self.state.showsActivePicker else { return nil }
-        let fallbackID = self.state.activeVisibleAccountID ?? self.state.visibleAccounts.first?.id
-        guard let fallbackID else { return nil }
         return Binding(
-            get: { self.state.activeVisibleAccountID ?? fallbackID },
+            get: { self.state.activeSelectionID },
             set: { self.setActiveVisibleAccount($0) })
     }
 
