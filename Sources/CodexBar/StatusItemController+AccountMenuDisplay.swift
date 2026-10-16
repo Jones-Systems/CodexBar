@@ -108,7 +108,7 @@ extension StatusItemController {
                 projection.visibleAccounts,
                 snapshots: self.store.codexAccountSnapshots,
                 activeVisibleAccountID: projection.activeVisibleAccountID)
-            : projection.visibleAccounts
+            : self.settings.orderedCodexAccounts(projection.visibleAccounts)
         let snapshots = showAll ? self.codexAccountSnapshots(matching: accounts) : []
         return CodexAccountMenuDisplay(
             accounts: accounts,

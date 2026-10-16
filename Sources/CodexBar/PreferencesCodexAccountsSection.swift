@@ -125,6 +125,8 @@ struct CodexAccountsSectionState: Equatable {
 @MainActor
 struct CodexAccountsSectionView: View {
     let state: CodexAccountsSectionState
+    var moveAccount: (CodexVisibleAccount, Int) -> Void = { _, _ in }
+    var cancelAuthentication: () -> Void = {}
     let setActiveVisibleAccount: (String) -> Void
     let reauthenticateAccount: (CodexVisibleAccount) -> Void
     let removeAccount: (CodexVisibleAccount) -> Void
@@ -193,10 +195,20 @@ struct CodexAccountsSectionView: View {
                             reauthenticateTitle: self.state.reauthenticateTitle(for: account),
                             canReauthenticate: self.state.canReauthenticate(account),
                             canRemove: self.state.canRemove(account),
+                            canMoveUp: account.id != self.state.visibleAccounts.first?.id,
+                            canMoveDown: account.id != self.state.visibleAccounts.last?.id,
+                            onMoveUp: { self.moveAccount(account, -1) },
+                            onMoveDown: { self.moveAccount(account, 1) },
                             onReauthenticate: { self.reauthenticateAccount(account) },
                             onRemove: { self.removeAccount(account) })
                     }
                 }
+            }
+
+            if self.state.visibleAccounts.count > 1 {
+                Text(L("Use the arrows to set menu order. Active account selection stays unchanged."))
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
 
             if let notice = self.state.notice {
@@ -204,6 +216,12 @@ struct CodexAccountsSectionView: View {
                     .font(.footnote)
                     .foregroundStyle(notice.tone == .warning ? .red : .secondary)
                     .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if self.state.isAuthenticatingManagedAccount || self.state.isAuthenticatingLiveAccount {
+                Button(L("Cancel Login")) { self.cancelAuthentication() }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
             }
 
             Button(self.state.addAccountTitle) {
@@ -287,6 +305,10 @@ private struct CodexAccountsSectionRowView: View {
     let reauthenticateTitle: String
     let canReauthenticate: Bool
     let canRemove: Bool
+    let canMoveUp: Bool
+    let canMoveDown: Bool
+    let onMoveUp: () -> Void
+    let onMoveDown: () -> Void
     let onReauthenticate: () -> Void
     let onRemove: () -> Void
 
@@ -310,6 +332,20 @@ private struct CodexAccountsSectionRowView: View {
             }
 
             Spacer(minLength: 8)
+
+            Button(action: self.onMoveUp) {
+                Image(systemName: "arrow.up")
+            }
+            .help(L("Move account up"))
+            .accessibilityLabel(L("Move account up"))
+            .disabled(!self.canMoveUp)
+
+            Button(action: self.onMoveDown) {
+                Image(systemName: "arrow.down")
+            }
+            .help(L("Move account down"))
+            .accessibilityLabel(L("Move account down"))
+            .disabled(!self.canMoveDown)
 
             if self.account.canReauthenticate {
                 Button(self.reauthenticateTitle) {

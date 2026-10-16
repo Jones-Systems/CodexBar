@@ -1638,3 +1638,9 @@
 "Waiting for CAAM; the app remains available." = "Waiting for CAAM; the app remains available.";
 "Window length: %d minutes" = "Window length: %d minutes";
 "Work" = "Work";
+
+"Move account up" = "Di chuyển tài khoản lên";
+"Move account down" = "Di chuyển tài khoản xuống";
+"Cancel Login" = "Hủy đăng nhập";
+"Login cancelled." = "Đã hủy đăng nhập.";
+"Use the arrows to set menu order. Active account selection stays unchanged." = "Dùng các mũi tên để sắp xếp thứ tự menu. Tài khoản đang hoạt động được chọn không thay đổi.";

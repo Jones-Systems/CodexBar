@@ -1638,3 +1638,9 @@
 "Waiting for CAAM; the app remains available." = "Waiting for CAAM; the app remains available.";
 "Window length: %d minutes" = "Window length: %d minutes";
 "Work" = "Work";
+
+"Move account up" = "Переместить аккаунт вверх";
+"Move account down" = "Переместить аккаунт вниз";
+"Cancel Login" = "Отменить вход";
+"Login cancelled." = "Вход отменён.";
+"Use the arrows to set menu order. Active account selection stays unchanged." = "Используйте стрелки для изменения порядка в меню. Выбор активного аккаунта не изменится.";

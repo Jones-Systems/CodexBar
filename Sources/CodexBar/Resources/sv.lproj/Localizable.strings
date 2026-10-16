@@ -1636,3 +1636,9 @@
 "Waiting for CAAM; the app remains available." = "Waiting for CAAM; the app remains available.";
 "Window length: %d minutes" = "Window length: %d minutes";
 "Work" = "Work";
+
+"Move account up" = "Flytta konto uppåt";
+"Move account down" = "Flytta konto nedåt";
+"Cancel Login" = "Avbryt inloggning";
+"Login cancelled." = "Inloggningen avbröts.";
+"Use the arrows to set menu order. Active account selection stays unchanged." = "Använd pilarna för att ange menyordningen. Valet av aktivt konto ändras inte.";

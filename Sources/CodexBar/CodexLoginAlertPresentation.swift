@@ -10,6 +10,8 @@ enum CodexLoginAlertPresentation {
         switch result.outcome {
         case .success:
             return nil
+        case .cancelled:
+            return CodexLoginAlertInfo(title: "Codex", message: L("Login cancelled."))
         case .missingBinary:
             return CodexLoginAlertInfo(
                 title: L("Codex CLI not found"),

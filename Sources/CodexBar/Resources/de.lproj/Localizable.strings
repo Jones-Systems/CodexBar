@@ -1637,3 +1637,9 @@
 "Waiting for CAAM; the app remains available." = "Waiting for CAAM; the app remains available.";
 "Window length: %d minutes" = "Window length: %d minutes";
 "Work" = "Work";
+
+"Move account up" = "Konto nach oben verschieben";
+"Move account down" = "Konto nach unten verschieben";
+"Cancel Login" = "Anmeldung abbrechen";
+"Login cancelled." = "Anmeldung abgebrochen.";
+"Use the arrows to set menu order. Active account selection stays unchanged." = "Mit den Pfeilen die Menüreihenfolge festlegen. Die Auswahl des aktiven Kontos bleibt unverändert.";

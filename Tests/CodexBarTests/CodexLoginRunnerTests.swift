@@ -5,6 +5,51 @@ import Testing
 
 struct CodexLoginRunnerTests {
     @Test
+    func `cancelling login terminates the owned process and returns cancelled`() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("codexbar-login-cancel-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let ready = root.appendingPathComponent("ready")
+        let finished = root.appendingPathComponent("finished")
+        let executable = root.appendingPathComponent("codex")
+        try """
+        #!/usr/bin/python3
+        import os, time
+        with open(os.environ["CODEXBAR_TEST_READY"], "w") as f:
+            f.write(str(os.getpid()))
+        time.sleep(30)
+        with open(os.environ["CODEXBAR_TEST_FINISHED"], "w") as f:
+            f.write("finished")
+        """.write(to: executable, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: executable.path)
+        let task = Task {
+            await CodexLoginRunner.run(
+                homePath: root.path, timeout: 5, outputDrainTimeout: 0.1,
+                environment: [
+                    "PATH": root.path,
+                    "CODEXBAR_TEST_READY": ready.path,
+                    "CODEXBAR_TEST_FINISHED": finished.path,
+                ], loginPATH: nil)
+        }
+        for _ in 0..<200 {
+            if FileManager.default.fileExists(atPath: ready.path) { break }
+            try? await Task.sleep(for: .milliseconds(10))
+        }
+        let started = FileManager.default.fileExists(atPath: ready.path)
+        let cancelledAt = Date()
+        task.cancel()
+        let result = await task.value
+        #expect(started)
+        #expect(result.outcome == .cancelled)
+        #expect(Date().timeIntervalSince(cancelledAt) < 3)
+        #expect(!FileManager.default.fileExists(atPath: finished.path))
+        if let pidText = try? String(contentsOf: ready, encoding: .utf8), let pid = pid_t(pidText) {
+            #expect(kill(pid, 0) == -1)
+        }
+    }
+
+    @Test
     func `login runner returns timeout before hung codex exits`() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("codexbar-login-runner-\(UUID().uuidString)", isDirectory: true)
