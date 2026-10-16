@@ -93,20 +93,33 @@ extension SettingsStore {
     }
 
     var codexProfileHomePaths: [String] {
-        Self.normalizedCodexProfileHomePaths(
-            self.configSnapshot.providerConfig(for: .codex)?.codexProfileHomePaths)
+        self.combinedCodexProfileHomePaths(fleetPaths: self.codexFleetProfileHomePaths)
+    }
+
+    private func combinedCodexProfileHomePaths(fleetPaths: [String]) -> [String] {
+        let explicitPaths = self.configSnapshot.providerConfig(for: .codex)?.codexProfileHomePaths ?? []
+        return Self.normalizedCodexProfileHomePaths(explicitPaths + fleetPaths)
+    }
+
+    private var codexFleetProfileHomePaths: [String] {
+        guard case let .available(paths) = self.codexFleetProfileDiscoveryResult else { return [] }
+        return Self.normalizedCodexProfileHomePaths(paths)
+    }
+
+    private var codexFleetProfileDiscoveryResult: CodexFleetProfileDiscovery.Result {
+        #if DEBUG
+        if let result = CodexManagedRemoteHomeTestingOverride.fleetDiscovery(for: self) {
+            return result
+        }
+        #endif
+        return CodexFleetProfileDiscovery.discover()
     }
 
     func profileCodexHomePath(forActiveSource source: CodexActiveSource) -> String? {
         guard case let .profileHome(path) = source else {
             return nil
         }
-        guard let normalizedPath = CodexHomeScope.normalizedHomePath(path),
-              self.codexProfileHomePaths.contains(normalizedPath)
-        else {
-            return nil
-        }
-        return normalizedPath
+        return CodexHomeScope.normalizedHomePath(path)
     }
 
     func managedCodexRemoteHomePath(forActiveSource source: CodexActiveSource) -> String? {
@@ -252,10 +265,14 @@ extension SettingsStore {
     {
         let activeSource = activeSourceOverride ?? self.codexPersistedActiveSource
         let cacheInterval = Self.codexAccountReconciliationSnapshotCacheInterval
+        let fleetPaths = self.codexFleetProfileHomePaths
+        let profileHomePaths = self.combinedCodexProfileHomePaths(fleetPaths: fleetPaths)
         let now = Date()
         if cacheInterval > 0,
            let cached = self.cachedCodexAccountReconciliationSnapshot,
            cached.activeSource == activeSource,
+           cached.snapshot.profileHomePaths == profileHomePaths,
+           cached.snapshot.fleetProfileHomePaths == fleetPaths,
            now.timeIntervalSince(cached.loadedAt) < cacheInterval
         {
             return cached.snapshot
@@ -393,6 +410,8 @@ extension SettingsStore {
 
     private func codexAccountReconciler(activeSource: CodexActiveSource) -> DefaultCodexAccountReconciler {
         let baseEnvironment = self.codexReconciliationEnvironment()
+        let fleetPaths = self.codexFleetProfileHomePaths
+        let profileHomePaths = self.combinedCodexProfileHomePaths(fleetPaths: fleetPaths)
         #if DEBUG
         let liveSystemAccountOverride = CodexManagedRemoteHomeTestingOverride.liveSystemAccount(for: self)
         let reconciliationEnvironmentOverride = CodexManagedRemoteHomeTestingOverride
@@ -404,7 +423,8 @@ extension SettingsStore {
             return DefaultCodexAccountReconciler(
                 activeSource: activeSource,
                 baseEnvironment: baseEnvironment,
-                profileHomePaths: self.codexProfileHomePaths,
+                profileHomePaths: profileHomePaths,
+                fleetProfileHomePaths: fleetPaths,
                 managedEnvironmentBuilder: { environment, account in
                     CodexHomeScope.scopedEnvironment(base: environment, codexHome: account.managedHomePath)
                 })
@@ -435,7 +455,8 @@ extension SettingsStore {
                 usesInjectedEnvironment: reconciliationEnvironmentOverride != nil),
             activeSource: activeSource,
             baseEnvironment: baseEnvironment,
-            profileHomePaths: self.codexProfileHomePaths,
+            profileHomePaths: profileHomePaths,
+            fleetProfileHomePaths: fleetPaths,
             managedEnvironmentBuilder: { environment, account in
                 CodexHomeScope.scopedEnvironment(base: environment, codexHome: account.managedHomePath)
             })
@@ -443,7 +464,8 @@ extension SettingsStore {
         return DefaultCodexAccountReconciler(
             activeSource: activeSource,
             baseEnvironment: baseEnvironment,
-            profileHomePaths: self.codexProfileHomePaths,
+            profileHomePaths: profileHomePaths,
+            fleetProfileHomePaths: fleetPaths,
             managedEnvironmentBuilder: { environment, account in
                 CodexHomeScope.scopedEnvironment(base: environment, codexHome: account.managedHomePath)
             })
@@ -469,11 +491,12 @@ private enum CodexManagedRemoteHomeTestingOverride {
         var managedStoreURL: URL?
         var liveSystemAccount: ObservedSystemCodexAccount?
         var reconciliationEnvironment: [String: String]?
+        var fleetDiscovery: CodexFleetProfileDiscovery.Result?
 
         var isEmpty: Bool {
             self.account == nil && self.homePath == nil && self.unreadableStore == false && self
                 .managedStoreURL == nil && self.liveSystemAccount == nil && self
-                .reconciliationEnvironment == nil
+                .reconciliationEnvironment == nil && self.fleetDiscovery == nil
         }
     }
 
@@ -604,6 +627,23 @@ private enum CodexManagedRemoteHomeTestingOverride {
     }
 
     @MainActor
+    static func fleetDiscovery(for settings: SettingsStore) -> CodexFleetProfileDiscovery.Result? {
+        self.entry(for: settings)?.overrideValue.fleetDiscovery
+    }
+
+    @MainActor
+    static func setFleetDiscovery(_ result: CodexFleetProfileDiscovery.Result?, for settings: SettingsStore) {
+        let key = ObjectIdentifier(settings)
+        var override = self.entry(for: settings)?.overrideValue ?? Override()
+        override.fleetDiscovery = result
+        if override.isEmpty {
+            self.values.removeValue(forKey: key)
+        } else {
+            self.values[key] = Entry(settings: settings, overrideValue: override)
+        }
+    }
+
+    @MainActor
     static func hasAnyOverride(for settings: SettingsStore) -> Bool {
         self.entry(for: settings)?.overrideValue.isEmpty == false
     }
@@ -632,6 +672,11 @@ extension SettingsStore {
     private func invalidateCodexAccountReconciliationCachesForTesting() {
         self.invalidateCodexAccountReconciliationSnapshotCache()
         self.cachedCodexAccountMenuProjection = nil
+    }
+
+    var _test_codexFleetProfileDiscovery: CodexFleetProfileDiscovery.Result? {
+        get { CodexManagedRemoteHomeTestingOverride.fleetDiscovery(for: self) }
+        set { CodexManagedRemoteHomeTestingOverride.setFleetDiscovery(newValue, for: self) }
     }
 
     var _test_activeManagedCodexRemoteHomePath: String? {

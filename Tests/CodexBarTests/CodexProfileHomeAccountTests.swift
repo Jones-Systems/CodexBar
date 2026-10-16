@@ -250,7 +250,7 @@ struct CodexProfileHomeAccountTests {
 
     @Test
     @MainActor
-    func `removed profile home falls back without routing stale path`() throws {
+    func `removed profile home stays selected without ambient fallback`() throws {
         let suite = "CodexProfileHomeAccountTests-stale-routing"
         let settings = try Self.makeSettings(suite: suite)
         let missingLiveHome = CodexCredentialFixtures.root.appendingPathComponent(
@@ -276,17 +276,17 @@ struct CodexProfileHomeAccountTests {
             settings: settings,
             tokenOverride: nil)
 
-        #expect(settings.codexResolvedActiveSource == .liveSystem)
-        #expect(environment["CODEX_HOME"] == "/tmp/ambient-codex")
+        #expect(settings.codexResolvedActiveSource == .profileHome(path: removedProfileHome.path))
+        #expect(environment["CODEX_HOME"] == removedProfileHome.path)
         let staleOverrideEnvironment = ProviderRegistry.makeEnvironment(
             base: ["CODEX_HOME": "/tmp/ambient-codex"],
             provider: .codex,
             settings: settings,
             tokenOverride: nil,
             codexActiveSourceOverride: .profileHome(path: removedProfileHome.path))
-        #expect(staleOverrideEnvironment["CODEX_HOME"] == "/tmp/ambient-codex")
-        #expect(settings.persistResolvedCodexActiveSourceCorrectionIfNeeded())
-        #expect(settings.codexActiveSource == .liveSystem)
+        #expect(staleOverrideEnvironment["CODEX_HOME"] == removedProfileHome.path)
+        #expect(!settings.persistResolvedCodexActiveSourceCorrectionIfNeeded())
+        #expect(settings.codexActiveSource == .profileHome(path: removedProfileHome.path))
     }
 
     @Test
@@ -336,8 +336,8 @@ struct CodexProfileHomeAccountTests {
             provider: .codex,
             settings: settings,
             tokenOverride: nil)
-        #expect(settings.codexResolvedActiveSource == .liveSystem)
-        #expect(environment["CODEX_HOME"] == "/tmp/ambient-codex")
+        #expect(settings.codexResolvedActiveSource == .profileHome(path: profileHome.path))
+        #expect(environment["CODEX_HOME"] == profileHome.path)
     }
 
     @Test

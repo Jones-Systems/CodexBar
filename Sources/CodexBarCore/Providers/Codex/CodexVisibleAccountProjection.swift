@@ -235,11 +235,33 @@ extension CodexVisibleAccountProjection {
         })
         for profileAccount in snapshot.profileHomeAccounts {
             let profilePath = CodexHomeScope.normalizedHomePath(profileAccount.codexHomePath)
-            guard let profilePath,
-                  profilePath != livePath,
-                  !managedPaths.contains(profilePath)
-            else {
+            guard let profilePath else { continue }
+            let isFleetProfile = snapshot.fleetProfileHomePaths.contains(profilePath)
+            guard isFleetProfile || (profilePath != livePath && !managedPaths.contains(profilePath)) else {
                 continue
+            }
+            if isFleetProfile {
+                let profileIdentity = snapshot.runtimeIdentity(for: profileAccount)
+                drafts.removeAll { draft in
+                    // Preserve an explicitly selected source until the user selects its fleet replacement.
+                    guard draft.selectionSource != resolvedActiveSource else { return false }
+                    switch draft.selectionSource {
+                    case .liveSystem:
+                        return livePath == profilePath
+                    case let .managedAccount(id):
+                        let sameHome = snapshot.storedAccounts.first { $0.id == id }.flatMap {
+                            CodexHomeScope.normalizedHomePath($0.managedHomePath)
+                        } == profilePath
+                        let missingMatchingAuth = draft.authFingerprint == nil && CodexIdentityMatcher.matches(
+                            draft.identity,
+                            lhsEmail: draft.email,
+                            profileIdentity,
+                            rhsEmail: profileAccount.email)
+                        return sameHome || missingMatchingAuth
+                    case .profileHome:
+                        return false
+                    }
+                }
             }
             drafts.append(VisibleAccountDraft(
                 email: Self.normalizeVisibleEmail(profileAccount.email),

@@ -1,0 +1,56 @@
+# Work Note — Fleet authentication discovery
+
+<!-- codex-section:begin id="worknote.fleet-auth-discovery#ctx.artifact-header.001" -->
+Artifact Type: `work-note`
+
+Artifact ID: `worknote.fleet-auth-discovery`
+
+Purpose: Correct disconnected Codex accounts by reusing the owner’s fleet authentication authority.
+
+Governing artifact: `spec.fleet-auth-discovery`
+
+Continuity owner: root coordinator
+
+Consumers: CodexBar maintainers and fleet-auth implementation
+
+Authority effect: none
+<!-- codex-section:end id="worknote.fleet-auth-discovery#ctx.artifact-header.001" -->
+
+## Outcome
+
+Fix CodexBar discovery of existing UMICH, Malcolm and Wallace fleet logins, evaluate Headroom selectively, and report outstanding fork work. Source completion and bounded PR publication are in scope. Installation, privileged operations and unrelated provider-directory repair require their own route.
+
+## Current State And Evidence
+
+- User explicitly authorized parallel subagents and use of the existing fleet authorization credentials. No token or credential content has been read or emitted.
+- Canonical fork: Jones-Systems/CodexBar, base `5f4a4c9474d2c44e136275fe5c42689a6c6e7a56`. Primary local checkout is upstream and is not the implementation base.
+- Isolated worktree: `/home/malcolmjones/Projects/CodexBar-worktrees/fleet-auth-discovery-20261016`; branch `work/fleet-auth-discovery-20261016`; root is sole Git owner. Core builder owns only the new discovery core and its focused test file. App integration is separately scoped. Root owns docs and Git.
+- Fork PR #3 is a draft repository-sync core with disjoint paths. CAAM and Netdata source stacks are merged; installed behavior and live conformance remain unproved.
+- Headroom research is pinned to `b1e4aa53ceb86715808fc38348ac38c863252535`; Graphify navigation snapshot is stale and current source controls conclusions.
+- Native thread: `0488f286-4c8b-4932-9b44-67ef47cb70a3`; environment `6ec33bac-c2bb-4418-b6c6-c2515a13e8b5`. Registration is unavailable pending a verified native project binding; no project identity is guessed.
+
+## Next Action
+
+Fleet source and its 10 integration tests are implemented. Existing app-managed selections prefer a registered fleet home only on unique exact workspace identity and normalized email; selection removal/unavailable cases fail closed. Core parser tests and integration source cover projection, scoped routing, metadata loss/recovery, duplicates, identity ambiguity and isolation. SwiftFormat and whitespace checks passed. `make test` was attempted and cannot discover tests because `swift` is absent. `make check` was attempted and stops at the macOS `plutil` dependency before source checks. SwiftLint additionally lacks `libsourcekitdInProc.so`. These are unavailable local checks, not passes. macOS CI and native UI evidence remain required.
+
+Owner followup confirmed the native Mac menu. Additional independent source work covers account ordering and cancel/retry re-auth in `/home/malcolmjones/Projects/CodexBar-worktrees/account-auth-controls-20261016`; an Opus 5.5 high Jace Claude task drafts fork-isolation planning/guidance in the Codex V3 worktree, followed by requested fresh Opus extra-high review. Frontier mode applies prospectively; already launched builders keep their accepted tuples.
+
+Read-only independent lanes: `headroom` evaluates useful reset/pacing/ranking ideas; `auth_diagnosis` traces current fork credential discovery and supplies minimal fix framing; `codexbar_status` completed current PR/source inventory. Coordinator consolidates results, binds source changes and synthetic checks, then publishes the fix. No launch depends on Headroom adoption.
+
+Headroom evaluation completed against public revision `b1e4aa53ceb86715808fc38348ac38c863252535`:
+
+- Consider compact limiting-window and exact-reset explanations; do not add its separate dashboard or vault.
+- Account ranking by the smallest remaining quota is already present in CodexBar. Headroom does not incorporate plan size, task needs or reset timing into that rank.
+- Existing CodexBar historical/workday pacing is broader; only consider missing freshness, sample-span and idle-use quality gates after a demonstrated gap.
+- Signed webhooks could become future machine signals. Headroom does not implement account/session/agent handoff; its documented “Hand-off” is alert replacement, and ACP is out of scope.
+- Skip Wallet, Telegram, credential storage, login duplication and reset redemption in this scope. No Headroom code is copied. Its MIT license and any third-party notices would govern future copying.
+
+Primary evidence: [ranking](https://github.com/amitray007/headroom/blob/b1e4aa53ceb86715808fc38348ac38c863252535/apps/web/src/views/compare/compare-model.ts#L174), [timeline](https://github.com/amitray007/headroom/blob/b1e4aa53ceb86715808fc38348ac38c863252535/apps/web/src/views/timeline/tips.ts#L64), [pace estimator](https://github.com/amitray007/headroom/blob/b1e4aa53ceb86715808fc38348ac38c863252535/packages/view-model/src/pace.ts), [alert hand-off](https://github.com/amitray007/headroom/blob/b1e4aa53ceb86715808fc38348ac38c863252535/docs/architecture/notifications.md#L68), [ACP boundary](https://github.com/amitray007/headroom/blob/b1e4aa53ceb86715808fc38348ac38c863252535/docs/research/acp.md#L27). Source-level findings do not establish runtime accuracy.
+
+## Blocker Or Decision
+
+Requested cross-provider plan task: `node:delegated-task:command%3Amcp%3A3794ecaf-e0be-474c-9ff6-2d313aa3bc3b%3Adelegate-task%3Acodexbar-fork-guidance-opus-high-20261016-r1`, `claudeAgent_jace_claude`, `claude-opus-5-5`, `effort=high`. Fresh requested `effort=xhigh` review must be launched with a distinct delegate_task request after its result; never send continuation to backing childThreadId. Source target for planning/guidance is Codex V3 branch `t3/fix-codexbar-fleet-auth` at `214a9c36a9e5620f17ccb5e86344149a7ebb564b`.
+
+Local verification update: SwiftFormat 0.61.1 from the existing caam-environments worktree matches the current pinned version and can run. SwiftLint 0.65.0 cannot load libsourcekitdInProc.so without Swift; native test/build execution is unavailable. No new host toolchain was installed.
+
+Do not treat valid Jones Code authentication as proof CodexBar can discover it. The current Jones Code catalog recognizes Malcolm/UMICH authentication but reports Wallace provider startup failure due to a pre-existing non-symlink generated-images entry; no repair is authorized by inference. Swift is absent from the VPS PATH; native build/test availability remains unresolved. No sudo use, live Keychain probe, new login, or automatic credential rotation is planned.
