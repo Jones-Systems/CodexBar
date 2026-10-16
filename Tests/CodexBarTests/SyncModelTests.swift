@@ -27,6 +27,7 @@ struct SyncModelTests {
         local.claudeSwapExecutablePath = "/machine/bin/cswap"
         local.codexActiveSource = .managedAccount(id: UUID())
         local.codexProfileHomePaths = ["/machine/codex"]
+        local.codexAccountOrder = ["profile:/machine/codex"]
         local.awsProfile = "machine-profile"
         local.awsAuthMode = "machine-auth"
 
@@ -37,6 +38,7 @@ struct SyncModelTests {
 
         #expect(!encoded.contains("api-secret"))
         #expect(!encoded.contains("machine/bin"))
+        #expect(!encoded.contains("codexAccountOrder"))
         #expect(!encoded.contains("machine-profile"))
         #expect(!encoded.contains("source"))
         #expect(secrets["apiKey"] == "api-secret")
@@ -52,6 +54,7 @@ struct SyncModelTests {
         baseline.claudeSwapExecutablePath = "/local/cswap"
         baseline.codexActiveSource = .liveSystem
         baseline.codexProfileHomePaths = ["/local/home"]
+        baseline.codexAccountOrder = ["profile:/local/home"]
         baseline.awsProfile = "local-profile"
         baseline.awsAuthMode = "local-auth"
         let applied = try decoded.applying(to: baseline, secretFields: secrets) { _, _ in true }
@@ -64,6 +67,7 @@ struct SyncModelTests {
         #expect(applied.claudeSwapExecutablePath == "/local/cswap")
         #expect(applied.codexActiveSource == .liveSystem)
         #expect(applied.codexProfileHomePaths == ["/local/home"])
+        #expect(applied.codexAccountOrder == ["profile:/local/home"])
         #expect(applied.awsProfile == "local-profile")
         #expect(applied.awsAuthMode == "local-auth")
         #expect(applied.apiKey == "api-secret")

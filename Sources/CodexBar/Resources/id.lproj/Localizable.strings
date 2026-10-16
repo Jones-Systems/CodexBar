@@ -1640,3 +1640,9 @@
 "Waiting for CAAM; the app remains available." = "Waiting for CAAM; the app remains available.";
 "Window length: %d minutes" = "Window length: %d minutes";
 "Work" = "Work";
+
+"Move account up" = "Pindahkan akun ke atas";
+"Move account down" = "Pindahkan akun ke bawah";
+"Cancel Login" = "Batalkan Login";
+"Login cancelled." = "Login dibatalkan.";
+"Use the arrows to set menu order. Active account selection stays unchanged." = "Gunakan panah untuk mengatur urutan menu. Pilihan akun aktif tidak berubah.";

@@ -28,6 +28,8 @@ struct ProvidersPane: View {
     @State private var activeConfirmation: ProviderSettingsConfirmationState?
     @State private var codexAccountsNotice: CodexAccountsSectionNotice?
     @State private var isAuthenticatingLiveCodexAccount = false
+    @State private var liveCodexAuthenticationID: UUID?
+    @State private var liveCodexAuthenticationTask: Task<CodexLoginRunner.Result, Never>?
     @State private var caamEnvironmentCoordinator: CAAMEnvironmentCoordinator
     @State private var netdataObservabilityBridge: NetdataObservabilityBridge
 
@@ -85,6 +87,10 @@ struct ProvidersPane: View {
                 if let state = self.codexAccountsSectionState(for: self.provider) {
                     CodexAccountsSectionView(
                         state: state,
+                        moveAccount: { account, offset in
+                            self.settings.moveCodexAccount(account, by: offset, in: state.visibleAccounts)
+                        },
+                        cancelAuthentication: { self.cancelCodexAuthentication() },
                         setActiveVisibleAccount: { visibleAccountID in
                             Task { @MainActor in
                                 await self.selectCodexVisibleAccount(id: visibleAccountID)
@@ -269,7 +275,7 @@ struct ProvidersPane: View {
         }
 
         return CodexAccountsSectionState(
-            visibleAccounts: projection.visibleAccounts,
+            visibleAccounts: self.settings.orderedCodexAccounts(projection.visibleAccounts),
             activeVisibleAccountID: projection.activeVisibleAccountID,
             liveVisibleAccountID: projection.liveVisibleAccountID,
             hasUnreadableManagedAccountStore: projection.hasUnreadableAddedAccountStore,
@@ -328,6 +334,8 @@ struct ProvidersPane: View {
             let account = try await self.managedCodexAccountCoordinator.authenticateManagedAccount()
             self.selectCodexVisibleAccountForAuthenticatedManagedAccount(account)
             await self.refreshCodexProvider()
+        } catch is CancellationError {
+            return
         } catch {
             self.codexAccountsNotice = self.codexAccountsNotice(for: error)
         }
@@ -343,6 +351,8 @@ struct ProvidersPane: View {
                 _ = try await self.managedCodexAccountCoordinator
                     .authenticateManagedAccount(existingAccountID: accountID)
                 await self.refreshCodexProvider()
+            } catch is CancellationError {
+                return
             } catch {
                 self.codexAccountsNotice = self.codexAccountsNotice(for: error)
             }
@@ -353,20 +363,45 @@ struct ProvidersPane: View {
             return
         }
 
+        let authenticationID = UUID()
+        self.liveCodexAuthenticationID = authenticationID
         self.isAuthenticatingLiveCodexAccount = true
         self.codexAccountPromotionCoordinator.setLiveReauthenticationInProgress(true)
         defer {
-            self.isAuthenticatingLiveCodexAccount = false
-            self.codexAccountPromotionCoordinator.setLiveReauthenticationInProgress(false)
+            if self.liveCodexAuthenticationID == authenticationID {
+                self.clearLiveCodexAuthentication()
+            }
         }
 
-        let result = await self.codexAmbientLoginRunner.run(timeout: 120)
+        let task = Task { await self.codexAmbientLoginRunner.run(timeout: 120) }
+        self.liveCodexAuthenticationTask = task
+        let result = await withTaskCancellationHandler {
+            await task.value
+        } onCancel: {
+            task.cancel()
+        }
+        guard self.liveCodexAuthenticationID == authenticationID, !Task.isCancelled,
+              result.outcome != .cancelled else { return }
         if let info = CodexLoginAlertPresentation.alertInfo(for: result) {
             self.presentLoginAlert(title: info.title, message: info.message)
             return
         }
 
         await self.refreshCodexProvider()
+    }
+
+    func cancelCodexAuthentication() {
+        self.managedCodexAccountCoordinator.cancelAuthentication()
+        self.liveCodexAuthenticationTask?.cancel()
+        self.clearLiveCodexAuthentication()
+        self.codexAccountsNotice = CodexAccountsSectionNotice(text: L("Login cancelled."), tone: .secondary)
+    }
+
+    private func clearLiveCodexAuthentication() {
+        self.liveCodexAuthenticationID = nil
+        self.liveCodexAuthenticationTask = nil
+        self.isAuthenticatingLiveCodexAccount = false
+        self.codexAccountPromotionCoordinator.setLiveReauthenticationInProgress(false)
     }
 
     func removeManagedCodexAccount(id: UUID) async {

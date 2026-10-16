@@ -1639,3 +1639,9 @@
 "Waiting for CAAM; the app remains available." = "Waiting for CAAM; the app remains available.";
 "Window length: %d minutes" = "Window length: %d minutes";
 "Work" = "Work";
+
+"Move account up" = "Hesabı yukarı taşı";
+"Move account down" = "Hesabı aşağı taşı";
+"Cancel Login" = "Girişi İptal Et";
+"Login cancelled." = "Giriş iptal edildi.";
+"Use the arrows to set menu order. Active account selection stays unchanged." = "Menü sırasını ayarlamak için okları kullanın. Etkin hesap seçimi değişmez.";

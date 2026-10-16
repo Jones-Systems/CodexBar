@@ -783,6 +783,7 @@ extension StatusItemController: StatusItemMenuPersistentActionDelegate {
     func describe(_ outcome: CodexLoginRunner.Result.Outcome) -> String {
         switch outcome {
         case .success: "success"
+        case .cancelled: "cancelled"
         case .timedOut: "timedOut"
         case let .failed(status): "failed(status: \(status))"
         case .missingBinary: "missingBinary"

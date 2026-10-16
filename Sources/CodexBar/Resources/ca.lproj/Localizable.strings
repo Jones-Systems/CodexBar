@@ -1639,3 +1639,9 @@
 "Waiting for CAAM; the app remains available." = "Waiting for CAAM; the app remains available.";
 "Window length: %d minutes" = "Window length: %d minutes";
 "Work" = "Work";
+
+"Move account up" = "Mou el compte amunt";
+"Move account down" = "Mou el compte avall";
+"Cancel Login" = "Cancel·la l’inici de sessió";
+"Login cancelled." = "S’ha cancel·lat l’inici de sessió.";
+"Use the arrows to set menu order. Active account selection stays unchanged." = "Fes servir les fletxes per ordenar el menú. La selecció del compte actiu no canvia.";

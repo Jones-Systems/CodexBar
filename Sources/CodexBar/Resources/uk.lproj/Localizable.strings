@@ -1637,3 +1637,9 @@
 "Waiting for CAAM; the app remains available." = "Waiting for CAAM; the app remains available.";
 "Window length: %d minutes" = "Window length: %d minutes";
 "Work" = "Work";
+
+"Move account up" = "Перемістити обліковий запис угору";
+"Move account down" = "Перемістити обліковий запис униз";
+"Cancel Login" = "Скасувати вхід";
+"Login cancelled." = "Вхід скасовано.";
+"Use the arrows to set menu order. Active account selection stays unchanged." = "Використовуйте стрілки, щоб змінити порядок у меню. Вибір активного облікового запису не зміниться.";

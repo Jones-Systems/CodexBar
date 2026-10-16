@@ -14,6 +14,8 @@ final class ManagedCodexAccountCoordinator {
     private(set) var authenticatingManagedAccountID: UUID?
     private(set) var isRemovingManagedAccount: Bool = false
     private(set) var removingManagedAccountID: UUID?
+    private var authenticationID: UUID?
+    private var authenticationTask: Task<ManagedCodexAccount, Error>?
     var onManagedAccountsDidChange: (@MainActor () -> Void)?
 
     var hasConflictingManagedAccountOperationInFlight: Bool {
@@ -33,18 +35,44 @@ final class ManagedCodexAccountCoordinator {
             throw ManagedCodexAccountCoordinatorError.authenticationInProgress
         }
 
+        try Task.checkCancellation()
+        let authenticationID = UUID()
+        self.authenticationID = authenticationID
         self.isAuthenticatingManagedAccount = true
         self.authenticatingManagedAccountID = existingAccountID
         defer {
-            self.isAuthenticatingManagedAccount = false
-            self.authenticatingManagedAccountID = nil
+            if self.authenticationID == authenticationID {
+                self.clearAuthentication()
+            }
         }
 
-        let account = try await self.service.authenticateManagedAccount(
-            existingAccountID: existingAccountID,
-            timeout: timeout)
+        let task = Task {
+            try await self.service.authenticateManagedAccount(
+                existingAccountID: existingAccountID,
+                timeout: timeout)
+        }
+        self.authenticationTask = task
+        let account = try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
+        try Task.checkCancellation()
+        guard self.authenticationID == authenticationID else { throw CancellationError() }
         self.onManagedAccountsDidChange?()
         return account
+    }
+
+    func cancelAuthentication() {
+        self.authenticationTask?.cancel()
+        self.clearAuthentication()
+    }
+
+    private func clearAuthentication() {
+        self.authenticationID = nil
+        self.authenticationTask = nil
+        self.isAuthenticatingManagedAccount = false
+        self.authenticatingManagedAccountID = nil
     }
 
     func removeManagedAccount(id: UUID) async throws {

@@ -1668,3 +1668,9 @@
 "Waiting for CAAM; the app remains available." = "Waiting for CAAM; the app remains available.";
 "Window length: %d minutes" = "Window length: %d minutes";
 "Work" = "Work";
+
+"Move account up" = "上移帳戶";
+"Move account down" = "下移帳戶";
+"Cancel Login" = "取消登入";
+"Login cancelled." = "已取消登入。";
+"Use the arrows to set menu order. Active account selection stays unchanged." = "使用箭頭設定選單順序。目前選取的使用中帳戶保持不變。";
