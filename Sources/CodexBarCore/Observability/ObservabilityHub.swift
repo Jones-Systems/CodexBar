@@ -37,7 +37,16 @@ public struct HubEvidence: Sendable, Equatable {
     }
 }
 
+public enum HubAccountHealth: String, Sendable, Equatable {
+    case healthy
+    case warning
+    case critical
+    case cooldown
+    case unknown
+}
+
 public struct HubAccountObservation: Sendable, Equatable, Identifiable {
+    public let id: String
     public let environmentID: String
     public let environmentLabel: String
     public let profile: String
@@ -45,11 +54,24 @@ public struct HubAccountObservation: Sendable, Equatable, Identifiable {
     public let stableID: String?
     public let displayLabel: String?
     public let hostDefault: Bool
-    public let health: CAAMProfileHealth
+    public let health: HubAccountHealth
     public let evidence: HubEvidence
 
-    public var id: String {
-        "\(self.environmentID):\(self.profile)"
+    public init(
+        environmentID: String, environmentLabel: String, profile: String,
+        provider: String?, stableID: String?, displayLabel: String?, hostDefault: Bool,
+        health: HubAccountHealth, evidence: HubEvidence, id: String? = nil)
+    {
+        self.id = id ?? "\(environmentID):\(profile)"
+        self.environmentID = environmentID
+        self.environmentLabel = environmentLabel
+        self.profile = profile
+        self.provider = provider
+        self.stableID = stableID
+        self.displayLabel = displayLabel
+        self.hostDefault = hostDefault
+        self.health = health
+        self.evidence = evidence
     }
 
     /// Correlation never joins profile names or display emails across environments/providers.
@@ -60,13 +82,21 @@ public struct HubAccountObservation: Sendable, Equatable, Identifiable {
 }
 
 public struct HubServiceObservation: Sendable, Equatable, Identifiable {
-    public let row: CAAMEnvironmentRowState
+    public let id: String
+    public let label: String
+    public let currentProfile: String?
     public let runtimeEffectiveProfile: String?
-    public let pendingOperationID: UUID?
     public let evidence: HubEvidence
 
-    public var id: String {
-        self.row.id
+    public init(
+        id: String, label: String, currentProfile: String? = nil,
+        runtimeEffectiveProfile: String? = nil, evidence: HubEvidence)
+    {
+        self.id = id
+        self.label = label
+        self.currentProfile = currentProfile
+        self.runtimeEffectiveProfile = runtimeEffectiveProfile
+        self.evidence = evidence
     }
 }
 
@@ -139,41 +169,21 @@ public struct ObservabilityHubSnapshot: Sendable, Equatable {
 }
 
 public enum ObservabilityHub {
+    public static let maximumServices = 32
+    public static let maximumAccounts = 2048
     public static let maximumProviders = 64
     public static let maximumWorkRows = 100
 
     public static func aggregate(
-        sessions: [CAAMControlSession],
+        services: [HubServiceObservation] = [],
+        accounts: [HubAccountObservation] = [],
         providers: [HubProviderInput],
         includeWork: Bool = false,
         hostsByEnvironmentID: [String: HubHostObservation] = [:],
         now: Date) -> ObservabilityHubSnapshot
     {
-        let boundedSessions = sessions.prefix(CAAMEnvironmentContract.maximumEnvironmentCount)
-        let services = boundedSessions.map { session in
-            let row = session.row(now: now)
-            return HubServiceObservation(
-                row: row,
-                runtimeEffectiveProfile: session.cachedSnapshot(now: now)?.runtime.effectiveProfile,
-                pendingOperationID: session.pendingOperationID,
-                evidence: self.evidence(for: row))
-        }
-        let accounts = boundedSessions.flatMap { session -> [HubAccountObservation] in
-            guard let snapshot = session.cachedSnapshot(now: now) else { return [] }
-            let evidence = self.evidence(for: session.row(now: now))
-            return snapshot.profiles.prefix(CAAMEnvironmentContract.maximumProfileCount).map { profile in
-                HubAccountObservation(
-                    environmentID: session.configuration.id,
-                    environmentLabel: session.configuration.label,
-                    profile: profile.name,
-                    provider: profile.identity?.provider,
-                    stableID: profile.identity?.stableID,
-                    displayLabel: profile.identity?.displayEmail ?? profile.identity?.workspaceLabel,
-                    hostDefault: profile.name == snapshot.hostDefaultProfile,
-                    health: profile.health,
-                    evidence: evidence)
-            }
-        }
+        let services = Array(services.prefix(self.maximumServices))
+        let accounts = Array(accounts.prefix(self.maximumAccounts))
         let boundedProviders = providers.prefix(self.maximumProviders)
         let providerRows = boundedProviders.map { input in
             let primary = input.usage?.primary
@@ -262,16 +272,5 @@ public enum ObservabilityHub {
     private static func nonnegative(_ value: Double?) -> Double? {
         guard let value, value.isFinite, value >= 0 else { return nil }
         return value
-    }
-
-    private static func evidence(for row: CAAMEnvironmentRowState) -> HubEvidence {
-        let availability: HubAvailability = switch row.availability {
-        case .ready: .available
-        case .stale: .stale
-        case .degraded, .recoveryRequired: .partial
-        case .incompatible: .unsupported
-        case .unavailable: .unavailable
-        }
-        return HubEvidence(source: "CAAM gateway snapshot", observedAt: row.observedAt, availability: availability)
     }
 }

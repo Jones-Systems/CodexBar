@@ -1,5 +1,7 @@
 # Engineering Spec — CAAM Environment Control
 
+> Archived: CodexBar's active CAAM integration was retired at the owner's request. This document preserves historical design and evidence, not current functionality or runtime authority. See [CAAM retirement](../engineering-specs/caam-retirement.md).
+
 <!-- codex-section:begin id="spec.caam-environment-control#ctx.artifact-header.001" -->
 Artifact Type: `engineering-spec`
 

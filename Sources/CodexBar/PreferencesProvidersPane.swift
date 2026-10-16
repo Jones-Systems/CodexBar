@@ -30,7 +30,6 @@ struct ProvidersPane: View {
     @State private var isAuthenticatingLiveCodexAccount = false
     @State private var liveCodexAuthenticationID: UUID?
     @State private var liveCodexAuthenticationTask: Task<CodexLoginRunner.Result, Never>?
-    @State private var caamEnvironmentCoordinator: CAAMEnvironmentCoordinator
     @State private var netdataObservabilityBridge: NetdataObservabilityBridge
 
     init(
@@ -41,7 +40,6 @@ struct ProvidersPane: View {
         managedCodexAccountCoordinator: ManagedCodexAccountCoordinator = ManagedCodexAccountCoordinator(),
         codexAccountPromotionCoordinator: CodexAccountPromotionCoordinator? = nil,
         codexAmbientLoginRunner: any CodexAmbientLoginRunning = DefaultCodexAmbientLoginRunner(),
-        caamEnvironmentCoordinator: CAAMEnvironmentCoordinator? = nil,
         netdataObservabilityBridge: NetdataObservabilityBridge? = nil,
         runProviderLoginFlow: @escaping @MainActor (UsageProvider) async -> Void = { _ in })
     {
@@ -55,8 +53,6 @@ struct ProvidersPane: View {
                 usageStore: store,
                 managedAccountCoordinator: managedCodexAccountCoordinator)
         self.codexAmbientLoginRunner = codexAmbientLoginRunner
-        self._caamEnvironmentCoordinator = State(
-            initialValue: caamEnvironmentCoordinator ?? CAAMEnvironmentCoordinator.applicationCoordinator())
         self._netdataObservabilityBridge = State(
             initialValue: netdataObservabilityBridge ?? NetdataObservabilityBridge())
         self.runProviderLoginFlow = runProviderLoginFlow
@@ -114,30 +110,10 @@ struct ProvidersPane: View {
                                 await self.addManagedCodexAccount()
                             }
                         })
-                    TimelineView(.periodic(from: .now, by: 15)) { context in
-                        CodexEnvironmentsSectionView(
-                            state: self.caamEnvironmentCoordinator.state(
-                                configurations: self.settings.codexCAAMEnvironments, at: context.date),
-                            coordinator: self.caamEnvironmentCoordinator,
-                            saveConfigurations: { configurations in
-                                self.saveCodexEnvironmentConfigurations(configurations)
-                            },
-                            refresh: {
-                                Task { @MainActor in
-                                    await self.caamEnvironmentCoordinator.refresh(
-                                        configurations: self.settings.codexCAAMEnvironments)
-                                }
-                            })
-                    }
                     CodexObservabilityHubView(
-                        coordinator: self.caamEnvironmentCoordinator,
-                        configurations: self.settings.codexCAAMEnvironments,
+                        accountInputs: { self.observabilityAccountInputs() },
                         providerInputs: { self.observabilityProviderInputs() },
                         netdataBridge: self.netdataObservabilityBridge)
-                        .task {
-                            await self.caamEnvironmentCoordinator.refresh(
-                                configurations: self.settings.codexCAAMEnvironments, force: false)
-                        }
                 }
             })
             .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
@@ -285,23 +261,6 @@ struct ProvidersPane: View {
             isAuthenticatingLiveAccount: self.isAuthenticatingLiveCodexAccount,
             isPromotingSystemAccount: self.codexAccountPromotionCoordinator.isPromotingSystemAccount,
             notice: self.codexAccountsNotice ?? degradedNotice)
-    }
-
-    func codexEnvironmentsSectionState() -> CodexEnvironmentsSectionState {
-        self.caamEnvironmentCoordinator.state(configurations: self.settings.codexCAAMEnvironments)
-    }
-
-    func saveCodexEnvironmentConfigurations(_ configurations: [CAAMEnvironmentConfiguration]) -> String? {
-        guard self.caamEnvironmentCoordinator.canChangeConfigurations(
-            from: self.settings.codexCAAMEnvironments, to: configurations)
-        else { return L("Refresh and resolve pending operations before changing this environment.") }
-        do {
-            try self.settings.setCodexCAAMEnvironments(configurations)
-            self.caamEnvironmentCoordinator.configurationsDidChange(configurations)
-            return nil
-        } catch {
-            return error.localizedDescription
-        }
     }
 
     func selectCodexVisibleAccount(id: String) async {

@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-import check_caam_observability_locales as checker
+import check_observability_locales as checker
 
 
 class CatalogHelperTests(unittest.TestCase):
@@ -22,9 +22,11 @@ class CatalogHelperTests(unittest.TestCase):
 
     def test_bounded_read_rejects_outside_root(self):
         with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "repository"
+            root.mkdir()
             outside = Path(directory) / "outside"
             outside.write_text("fixture", encoding="utf-8")
-            with self.assertRaises(ValueError):
+            with patch.object(checker, "ROOT", root), self.assertRaises(ValueError):
                 checker.bounded_read(outside)
 
     def test_bounded_read_rejects_oversized_file(self):

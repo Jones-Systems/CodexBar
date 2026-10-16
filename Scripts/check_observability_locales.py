@@ -16,10 +16,8 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 RESOURCES = ROOT / "Sources/CodexBar/Resources"
 SOURCE_NAMES = (
-    "CAAMEnvironmentControlsView.swift",
-    "CAAMEnvironmentCoordinator.swift",
     "CodexObservabilityHubView.swift",
-    "PreferencesCodexEnvironmentsSection.swift",
+    "PreferencesCodexAccountsSection.swift",
     "PreferencesProvidersPane.swift",
 )
 LOCALES = (
@@ -60,7 +58,7 @@ def main() -> int:
             # Reconcile every feature key so interruption after the English write is restart-safe.
             missing = sorted(keys - existing.keys())
             if missing:
-                addition = "\n/* CAAM observability: English fallback pending translation review. */\n"
+                addition = "\n/* Observability: English fallback pending translation review. */\n"
                 addition += "".join(f'"{key}" = "{english.get(key, key)}";\n' for key in missing)
                 path.write_text(text.rstrip() + "\n" + addition, encoding="utf-8")
         print(f"Registered {len(new_keys)} new English keys across {len(LOCALES)} catalogs (not translations).")
