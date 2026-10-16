@@ -245,7 +245,7 @@ struct FileCodexAccountUsageSnapshotStore: CodexAccountUsageSnapshotStoring, @un
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.homeDirectoryForCurrentUser
         return base
-            .appendingPathComponent("CodexBar", isDirectory: true)
+            .appendingPathComponent(JonesStateRoot.path("CodexBar"), isDirectory: true) // JONES(trial-identity)
             .appendingPathComponent("codex-account-snapshots.json", isDirectory: false)
     }
 }

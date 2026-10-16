@@ -1411,13 +1411,13 @@ extension ClaudeStatusProbe {
         let fm = FileManager.default
         let base = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first ?? fm.temporaryDirectory
         let dir = base
-            .appendingPathComponent("CodexBar", isDirectory: true)
+            .appendingPathComponent(JonesStateRoot.path("CodexBar"), isDirectory: true) // JONES(trial-identity)
             .appendingPathComponent("ClaudeProbe", isDirectory: true)
         do {
             try fm.createDirectory(at: dir, withIntermediateDirectories: true)
             return dir
         } catch {
-            return fm.temporaryDirectory
+            return JonesStateRoot.identity == nil ? fm.temporaryDirectory : dir // JONES(trial-identity)
         }
     }
 

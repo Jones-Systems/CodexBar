@@ -90,13 +90,14 @@ public enum ClaudeOAuthCredentialsStore {
     private static let directKeychainReadConsentRevocationMarkerKey =
         "ClaudeOAuthDirectKeychainReadConsentRevocationMarkerV1"
     private static var sharedDefaults: UserDefaults {
-        ClaudeOAuthApplicationDefaults.resolve(domain: "com.steipete.codexbar")
+        ClaudeOAuthApplicationDefaults
+            .resolve(domain: JonesStateRoot.identity?.bundleID ?? "com.steipete.codexbar") // JONES(trial-identity)
     }
 
     private static let pendingCodexBarOAuthKeychainCacheClearStore: ClaudeOAuthPendingCacheClearStore =
         ClaudeOAuthPendingCacheClearUserDefaultsStore(
             // The cache service is shared by release/debug apps and their CLIs, so its tombstone is shared too.
-            domain: "com.steipete.codexbar",
+            domain: JonesStateRoot.identity?.bundleID ?? "com.steipete.codexbar", // JONES(trial-identity)
             key: ClaudeOAuthCredentialsStore.pendingCodexBarOAuthKeychainCacheClearKey)
     private static let claudeKeychainChangeCheckLock = NSLock()
     private nonisolated(unsafe) static var lastClaudeKeychainChangeCheckAt: Date?

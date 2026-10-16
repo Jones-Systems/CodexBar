@@ -24,7 +24,7 @@ enum MiniMaxCookieStoreError: LocalizedError {
 struct KeychainMiniMaxCookieStore: MiniMaxCookieStoring {
     private static let log = CodexBarLog.logger(LogCategories.provider(.minimax, scope: "cookie-store"))
 
-    private let service = "com.steipete.CodexBar"
+    private let service = JonesStateRoot.namespace("com.steipete.CodexBar") // JONES(trial-identity)
     private let account = "minimax-cookie"
 
     func loadCookieHeader() throws -> String? {

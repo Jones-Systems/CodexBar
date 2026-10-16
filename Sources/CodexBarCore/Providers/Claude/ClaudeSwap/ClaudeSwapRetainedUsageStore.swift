@@ -74,7 +74,7 @@ public enum ClaudeSwapRetainedUsageStore {
         if self.isRunningTests { return nil }
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
         return base?
-            .appendingPathComponent("CodexBar", isDirectory: true)
+            .appendingPathComponent(JonesStateRoot.path("CodexBar"), isDirectory: true) // JONES(trial-identity)
             .appendingPathComponent("claude-swap-retained-usage.json")
     }
 

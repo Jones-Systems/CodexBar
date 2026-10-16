@@ -143,7 +143,7 @@ public enum OpenCodexUsageLog {
     {
         let codexBarRoot = codexBarCachesDirectory
             ?? fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first?
-            .appendingPathComponent("CodexBar", isDirectory: true)
+            .appendingPathComponent(JonesStateRoot.path("CodexBar"), isDirectory: true) // JONES(trial-identity)
             ?? AppGroupSupport.localFallbackDirectory(fileManager: fileManager)
         return codexBarRoot.appendingPathComponent("opencodex-usage", isDirectory: true)
     }

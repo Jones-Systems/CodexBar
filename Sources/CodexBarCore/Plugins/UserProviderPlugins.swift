@@ -226,12 +226,16 @@ public final class UserProviderPluginLoader: @unchecked Sendable {
 
     public static var defaultProvidersDirectory: URL {
         FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".config/codexbar/providers", isDirectory: true)
+            .appendingPathComponent(
+                JonesStateRoot.path(".config/codexbar/providers"),
+                isDirectory: true) // JONES(trial-identity)
     }
 
     public static var defaultCacheDirectory: URL {
         FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Caches/CodexBar/plugins", isDirectory: true)
+            .appendingPathComponent(
+                JonesStateRoot.path("Library/Caches/CodexBar/plugins"),
+                isDirectory: true) // JONES(trial-identity)
     }
 
     private let providersDirectory: URL

@@ -45,3 +45,5 @@ docs/.astro/
 # Swift Package Manager metadata (leave sources tracked)
 # Packages/
 # Package.resolved
+
+.mac-release.jones.env

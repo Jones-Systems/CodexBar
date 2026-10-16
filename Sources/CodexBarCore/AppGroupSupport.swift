@@ -35,8 +35,12 @@ public enum AppGroupSupport {
         }
     }
 
-    public static func currentGroupID(for bundleID: String? = Bundle.main.bundleIdentifier) -> String {
-        self.currentGroupID(teamID: self.resolvedTeamID(), bundleID: bundleID)
+    public static func currentGroupID(
+        for bundleID: String? = Bundle.main.bundleIdentifier,
+        forkIdentity: JonesStateRoot.Identity? = JonesStateRoot.identity) -> String // JONES(trial-identity)
+    {
+        forkIdentity?.groupID ?? self
+            .currentGroupID(teamID: self.resolvedTeamID(), bundleID: bundleID) // JONES(trial-identity)
     }
 
     static func currentGroupID(teamID: String, bundleID: String?) -> String {
@@ -54,6 +58,8 @@ public enum AppGroupSupport {
         infoDictionaryOverride: [String: Any]?,
         bundleURLOverride: URL?) -> String
     {
+        if let identity = JonesStateRoot
+            .identity(info: infoDictionaryOverride ?? [:]) { return identity.teamID } // JONES(trial-identity)
         if let teamID = self.codeSignatureTeamID(bundleURL: bundleURLOverride) {
             return teamID
         }
@@ -111,7 +117,8 @@ public enum AppGroupSupport {
     {
         let base = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? fileManager.temporaryDirectory
-        let directory = base.appendingPathComponent("CodexBar", isDirectory: true)
+        let directory = base
+            .appendingPathComponent(JonesStateRoot.path("CodexBar"), isDirectory: true) // JONES(trial-identity)
         try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
         return directory
     }
@@ -135,9 +142,11 @@ public enum AppGroupSupport {
         currentDefaultsOverride: UserDefaults? = nil,
         legacyDefaultsOverride: UserDefaults? = nil,
         currentSnapshotURLOverride: URL? = nil,
-        legacySnapshotURLOverride: URL? = nil)
+        legacySnapshotURLOverride: URL? = nil,
+        forkIdentity: JonesStateRoot.Identity? = JonesStateRoot.identity) // JONES(trial-identity)
         -> MigrationResult
     {
+        if forkIdentity != nil { return MigrationResult(status: .noChangesNeeded) } // JONES(trial-identity)
         if standardDefaults.integer(forKey: self.migrationVersionKey) >= self.migrationVersion {
             return MigrationResult(status: .alreadyCompleted)
         }

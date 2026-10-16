@@ -24,7 +24,7 @@ enum ZaiTokenStoreError: LocalizedError {
 struct KeychainZaiTokenStore: ZaiTokenStoring {
     private static let log = CodexBarLog.logger(LogCategories.provider(.zai, scope: "token-store"))
 
-    private let service = "com.steipete.CodexBar"
+    private let service = JonesStateRoot.namespace("com.steipete.CodexBar") // JONES(trial-identity)
     private let account = "zai-api-token"
 
     // Cache to reduce keychain access frequency

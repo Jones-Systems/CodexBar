@@ -934,7 +934,7 @@ public enum CookieHeaderCache {
         let fm = FileManager.default
         let base = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? fm.temporaryDirectory
-        return base.appendingPathComponent("CodexBar", isDirectory: true)
+        return base.appendingPathComponent(JonesStateRoot.path("CodexBar"), isDirectory: true) // JONES(trial-identity)
     }
 
     private static func key(for provider: UsageProvider, scope: Scope?) -> KeychainCacheStore.Key {

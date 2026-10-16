@@ -1,6 +1,61 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# JONES(trial-identity): pure identity resolution; fixture tests source only this block.
+resolve_package_identity() {
+  BUNDLE_ID="com.steipete.codexbar"
+  FEED_URL="https://raw.githubusercontent.com/steipete/CodexBar/main/appcast.xml"
+  AUTO_CHECKS=true
+  PUBLIC_ED_KEY="AGCY8w5vHirVfGGDGc8Szc5iuOqupZSh9pMj/Qs67XI="
+  DISPLAY_NAME="CodexBar"
+  JONES_OVERLAY=0
+  JONES_METADATA=""
+  if [[ "$LOWER_CONF" == "debug" ]]; then
+    BUNDLE_ID="com.steipete.codexbar.debug"
+    FEED_URL=""
+    AUTO_CHECKS=false
+  fi
+  if [[ "$SIGNING_MODE" == "adhoc" ]]; then
+    FEED_URL=""
+    AUTO_CHECKS=false
+  fi
+  if [[ -f "$ROOT/.mac-release.jones.env" ]]; then
+    source "$ROOT/.mac-release.jones.env"
+    : "${JONES_BUNDLE_ID:?Missing JONES_BUNDLE_ID}" "${JONES_TEAM_ID:?Missing JONES_TEAM_ID}"
+    [[ "$JONES_BUNDLE_ID" =~ ^[a-zA-Z0-9]+([.-][a-zA-Z0-9]+)+$ && "$JONES_BUNDLE_ID" != *steipete* ]] || return 1
+    [[ "$JONES_TEAM_ID" =~ ^[A-Z0-9_]+$ && "$JONES_TEAM_ID" != "Y5PE65HELJ" ]] || return 1
+    [[ "${JONES_STATE_KEY:-}" == "jones" ]] || return 1
+    [[ "${JONES_DISPLAY_NAME:-}" == "CodexBar Jones" ]] || return 1
+    BUNDLE_ID="$JONES_BUNDLE_ID"
+    APP_TEAM_ID="$JONES_TEAM_ID"
+    DISPLAY_NAME="$JONES_DISPLAY_NAME"
+    FEED_URL=""
+    PUBLIC_ED_KEY=""
+    AUTO_CHECKS=false
+    JONES_OVERLAY=1
+  fi
+  WIDGET_BUNDLE_ID="${BUNDLE_ID}.widget"
+  ICLOUD_ID="iCloud.${BUNDLE_ID}"
+  APP_TEAM_ID="${APP_TEAM_ID:-Y5PE65HELJ}"
+  APP_GROUP_ID="${APP_TEAM_ID}.com.steipete.codexbar"
+  if [[ "$BUNDLE_ID" == *".debug"* ]]; then
+    APP_GROUP_ID="${APP_TEAM_ID}.com.steipete.codexbar.debug"
+  fi
+  if [[ "$JONES_OVERLAY" == "1" ]]; then
+    APP_GROUP_ID="${APP_TEAM_ID}.${BUNDLE_ID}"
+    JONES_METADATA="
+    <key>JonesStateKey</key><string>jones</string>
+    <key>JonesAppBundleID</key><string>${BUNDLE_ID}</string>
+    <key>JonesAppGroupID</key><string>${APP_GROUP_ID}</string>
+    <key>JonesICloudID</key><string>${ICLOUD_ID}</string>"
+    if [[ "$SIGNING_MODE" == "identity" ]]; then
+      : "${JONES_SIGNING_IDENTITY:?Fork signing identity must be explicitly supplied}"
+      [[ "$JONES_SIGNING_IDENTITY" != *Y5PE65HELJ* ]] || return 1
+    fi
+  fi
+}
+# JONES(trial-identity): end pure identity resolution.
+
 resolve_package_signing_mode() {
   local requested="${CODEXBAR_SIGNING:-adhoc}"
   case "$requested" in
@@ -51,6 +106,7 @@ esac
 source "$ROOT/version.env"
 source "$ROOT/Scripts/package_product_paths.sh"
 source "$ROOT/Scripts/sparkle_signing_paths.sh"
+resolve_package_identity # JONES(trial-identity): resolve before any build or packaging effects.
 
 # Clean build only when explicitly requested (slower).
 if [[ "${CODEXBAR_FORCE_CLEAN:-0}" == "1" ]]; then
@@ -216,24 +272,6 @@ if [[ -f "$ICON_SOURCE" ]]; then
   iconutil --convert icns --output "$ICON_TARGET" "$ICON_SOURCE"
 fi
 
-BUNDLE_ID="com.steipete.codexbar"
-FEED_URL="https://raw.githubusercontent.com/steipete/CodexBar/main/appcast.xml"
-AUTO_CHECKS=true
-if [[ "$LOWER_CONF" == "debug" ]]; then
-  BUNDLE_ID="com.steipete.codexbar.debug"
-  FEED_URL=""
-  AUTO_CHECKS=false
-fi
-if [[ "$SIGNING_MODE" == "adhoc" ]]; then
-  FEED_URL=""
-  AUTO_CHECKS=false
-fi
-WIDGET_BUNDLE_ID="${BUNDLE_ID}.widget"
-APP_TEAM_ID="${APP_TEAM_ID:-Y5PE65HELJ}"
-APP_GROUP_ID="${APP_TEAM_ID}.com.steipete.codexbar"
-if [[ "$BUNDLE_ID" == *".debug"* ]]; then
-  APP_GROUP_ID="${APP_TEAM_ID}.com.steipete.codexbar.debug"
-fi
 ENTITLEMENTS_DIR="$ROOT/.build/entitlements"
 APP_ENTITLEMENTS="${ENTITLEMENTS_DIR}/CodexBar.entitlements"
 WIDGET_ENTITLEMENTS="${ENTITLEMENTS_DIR}/CodexBarWidget.entitlements"
@@ -248,7 +286,11 @@ fi
 PROVISIONING_PROFILE_SOURCE="$ROOT/Scripts/profiles/CodexBar-DeveloperID.provisionprofile"
 EMBED_PROVISIONING_PROFILE=0
 ICLOUD_ENTITLEMENT_KEYS=""
-if [[ "$SIGNING_MODE" == "identity" && "$LOWER_CONF" == "release" && "$BUNDLE_ID" == "com.steipete.codexbar" ]]; then
+# JONES(trial-identity): a fork never embeds the upstream provisioning profile.
+if [[ "$JONES_OVERLAY" == "1" ]]; then
+  PROVISIONING_PROFILE_SOURCE="${JONES_PROVISIONING_PROFILE:-}"
+fi
+if [[ "$SIGNING_MODE" == "identity" && "$LOWER_CONF" == "release" && ( "$BUNDLE_ID" == "com.steipete.codexbar" || "$JONES_OVERLAY" == "1" ) ]]; then
   if [[ ! -f "$PROVISIONING_PROFILE_SOURCE" ]]; then
     echo "ERROR: Missing $PROVISIONING_PROFILE_SOURCE (required for iCloud entitlements in release builds)" >&2
     exit 1
@@ -265,7 +307,7 @@ if [[ "$SIGNING_MODE" == "identity" && "$LOWER_CONF" == "release" && "$BUNDLE_ID
     </array>
     <key>com.apple.developer.icloud-container-identifiers</key>
     <array>
-        <string>iCloud.${BUNDLE_ID}</string>
+        <string>${ICLOUD_ID}</string>
     </array>
     <key>com.apple.developer.icloud-container-environment</key>
     <string>Production</string>
@@ -309,7 +351,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key><string>CodexBar</string>
-    <key>CFBundleDisplayName</key><string>CodexBar</string>
+    <key>CFBundleDisplayName</key><string>${DISPLAY_NAME:-CodexBar}</string>
     <key>CFBundleIdentifier</key><string>${BUNDLE_ID}</string>
     <key>CFBundleExecutable</key><string>CodexBar</string>
     <key>CFBundlePackageType</key><string>APPL</string>
@@ -320,11 +362,11 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>CFBundleIconFile</key><string>Icon</string>
     <key>NSHumanReadableCopyright</key><string>© 2026 Peter Steinberger. MIT License.</string>
     <key>SUFeedURL</key><string>${FEED_URL}</string>
-    <key>SUPublicEDKey</key><string>AGCY8w5vHirVfGGDGc8Szc5iuOqupZSh9pMj/Qs67XI=</string>
+    <key>SUPublicEDKey</key><string>${PUBLIC_ED_KEY-AGCY8w5vHirVfGGDGc8Szc5iuOqupZSh9pMj/Qs67XI=}</string>
     <key>SUEnableAutomaticChecks</key><${AUTO_CHECKS}/>
     <key>CodexBuildTimestamp</key><string>${BUILD_TIMESTAMP}</string>
     <key>CodexGitCommit</key><string>${GIT_COMMIT}</string>
-    <key>CodexBarTeamID</key><string>${APP_TEAM_ID}</string>
+    <key>CodexBarTeamID</key><string>${APP_TEAM_ID}</string>${JONES_METADATA:-}
     <key>UTExportedTypeDeclarations</key>
     <array>
         <dict>
@@ -529,6 +571,7 @@ elif [[ "$ALLOW_LLDB" == "1" ]]; then
   CODESIGN_ARGS=(--force --sign "$CODESIGN_ID")
 else
   CODESIGN_ID="${APP_IDENTITY:-Developer ID Application: Peter Steinberger (Y5PE65HELJ)}"
+  if [[ "$JONES_OVERLAY" == "1" ]]; then CODESIGN_ID="$JONES_SIGNING_IDENTITY"; fi # JONES(trial-identity)
   CODESIGN_ARGS=(--force --timestamp --options runtime --sign "$CODESIGN_ID")
 fi
 function resign() { codesign "${CODESIGN_ARGS[@]}" "$1"; }
@@ -595,6 +638,15 @@ if [[ -d "${APP}/Contents/Helpers/CodexBar_CodexBarCore.bundle" ]]; then
 fi
 if [[ -f "${APP}/Contents/Helpers/CodexBarClaudeWatchdog" ]]; then
   codesign "${CODESIGN_ARGS[@]}" "${APP}/Contents/Helpers/CodexBarClaudeWatchdog"
+fi
+
+# JONES(trial-identity): widget metadata carries the same identity; CLI reads its enclosing app metadata.
+if [[ "$JONES_OVERLAY" == "1" && -d "${APP}/Contents/PlugIns/CodexBarWidget.appex" ]]; then
+  WIDGET_INFO="${APP}/Contents/PlugIns/CodexBarWidget.appex/Contents/Info.plist"
+  /usr/libexec/PlistBuddy -c "Add :JonesStateKey string jones" "$WIDGET_INFO"
+  /usr/libexec/PlistBuddy -c "Add :JonesAppBundleID string ${BUNDLE_ID}" "$WIDGET_INFO"
+  /usr/libexec/PlistBuddy -c "Add :JonesAppGroupID string ${APP_GROUP_ID}" "$WIDGET_INFO"
+  /usr/libexec/PlistBuddy -c "Add :JonesICloudID string ${ICLOUD_ID}" "$WIDGET_INFO"
 fi
 
 # Sign widget extension if present
