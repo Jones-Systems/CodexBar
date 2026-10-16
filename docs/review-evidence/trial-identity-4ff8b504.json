@@ -1,0 +1,40 @@
+{
+  "review_id": "codexbar-trial-identity-correctness-20261016-r1",
+  "source_profile": "native generic review role (codex-v3-code-reviewer instructions fallback)",
+  "model": "gpt-6-astra",
+  "reasoning_effort": "high",
+  "reviewed_revision": "4ff8b5040930da2dd74b97b6d69b746a96544a0a",
+  "parent_revision": "0f842d7f26edcd1a1fff886409291ef9b4f846b6",
+  "source_result_ref": "node:delegated-task:command%3Amcp%3Ad4fad46f-6f60-4566-8a66-ad626d212917%3Adelegate-task%3Acodexbar-trial-identity-correctness-20261016-r1",
+  "findings": [
+    {
+      "id": "TIR001",
+      "original_severity": "P2",
+      "path": "Sources/CodexBarCore/ProviderSessionStoreFile.swift",
+      "line": 27,
+      "related_path": "Scripts/test_provider_session_file_isolation.sh",
+      "related_line": 9,
+      "title": "Standalone session-isolation fixture cannot compile",
+      "evidence": "ProviderSessionStoreFile references JonesStateRoot, but the fixture compiles an explicit list omitting its definition. Swift execution unavailable here; dependency regression established from source.",
+      "original_blocking_effect": "Breaks the existing optimized session-isolation verification path, including without an overlay.",
+      "status": "deferred_pending_explicit_owner_direction",
+      "corrected": false
+    },
+    {
+      "id": "TIR002",
+      "original_severity": "P2",
+      "path": "Sources/CodexBarCore/JonesStateRoot.swift",
+      "line": 30,
+      "title": "Non-string identity marker fails open",
+      "evidence": "A present Boolean/integer JonesStateKey fails the String cast and is treated as absent; bundled CLI resolves nil and selects upstream paths/namespaces. Generated templates use strings.",
+      "original_blocking_effect": "Violates the documented fail-closed contract for invalid packaged metadata.",
+      "status": "deferred_pending_explicit_owner_direction",
+      "corrected": false
+    }
+  ],
+  "limitations": [
+    "Source review only; no native tests executed.",
+    "No trial-readiness claim.",
+    "Documented trial gates and parent AFR001/002 retain their independent dispositions."
+  ]
+}

@@ -150,3 +150,9 @@ eca99a33261f59b7dcda5ed825eabaf682863b7fc390b9fe4ce0944303e94bed  docs/jones/IDE
 Recovery: use this exact preserved candidate; the coordinator owns subsequent
 writes and all Git/index effects. No installation or operational approval is
 implied by source completion. Source ownership has been released.
+
+## Coordinator integration and independent review
+
+The original 52-file manifest above remains bound to candidate `4ff8b5040930da2dd74b97b6d69b746a96544a0a`; it is historical handoff evidence, not the final integrated file set. PR #12 publishes this source checkpoint above PR #11. The authorized account fixes at parent `5519723504787c83f17f6eeb799f2a888309ab9c` were merged without conflicts in `d1fb9db946fe90ddc9a0840ab66bcb0d7c04c7a0`. Their source changes do not overlap the identity hooks.
+
+Independent Astra/high correctness review of `4ff8b5040930da2dd74b97b6d69b746a96544a0a` found TIR001 and TIR002, both P2. Exact source/result bindings, original severities and blocking effects are preserved in `docs/review-evidence/trial-identity-4ff8b504.json`. Both remain uncorrected and deferred under the explicit-direction rule; the owner authorized AFR001/002, not these new findings. No severity or blocking claim is waived. Native checks and all previously recorded trial gates remain open. No merge or installation is claimed.
