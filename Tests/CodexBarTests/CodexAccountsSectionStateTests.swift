@@ -6,6 +6,22 @@ import Testing
 @MainActor
 struct CodexAccountsSectionStateTests {
     @Test
+    func `sole recovery account remains explicitly selectable and is not preselected`() {
+        let account = CodexVisibleAccount(
+            id: "recovery", email: "recovery@example.com", storedAccountID: nil,
+            selectionSource: .profileHome(path: "/fixture/recovery"), isActive: false, isLive: false,
+            canReauthenticate: false, canRemove: false)
+        let state = CodexAccountsSectionState(
+            visibleAccounts: [account], activeVisibleAccountID: nil, liveVisibleAccountID: nil,
+            hasUnreadableManagedAccountStore: false, isAuthenticatingManagedAccount: false,
+            authenticatingManagedAccountID: nil, isRemovingManagedAccount: false,
+            isAuthenticatingLiveAccount: false, isPromotingSystemAccount: false, notice: nil)
+        #expect(state.showsActivePicker)
+        #expect(state.activeSelectionID.isEmpty)
+        #expect(state.activeSelectionID != account.id)
+    }
+
+    @Test
     func `system badge shows for merged live row`() {
         let accountID = UUID()
         let mergedLiveAccount = CodexVisibleAccount(

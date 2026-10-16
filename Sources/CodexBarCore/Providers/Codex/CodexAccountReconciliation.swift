@@ -278,20 +278,7 @@ public struct DefaultCodexAccountReconciler: Sendable {
     }
 
     public func loadSnapshot() -> CodexAccountReconciliationSnapshot {
-        if case let .profileHome(path) = self.activeSource,
-           let normalizedPath = CodexHomeScope.normalizedHomePath(path),
-           !self.profileHomePaths.contains(normalizedPath)
-        {
-            return CodexAccountReconciliationSnapshot(
-                storedAccounts: [],
-                activeStoredAccount: nil,
-                liveSystemAccount: nil,
-                profileHomePaths: self.profileHomePaths,
-                fleetProfileHomePaths: self.fleetProfileHomePaths,
-                matchingStoredAccountForLiveSystemAccount: nil,
-                activeSource: self.activeSource,
-                hasUnreadableAddedAccountStore: false)
-        }
+        // Enumeration supports explicit recovery; resolving a missing selection still preserves its exact source.
         let liveSystemAccount = self.loadLiveSystemAccount()
         let profileHomeAccounts = self.loadProfileHomeAccounts(liveSystemAccount: liveSystemAccount)
 
