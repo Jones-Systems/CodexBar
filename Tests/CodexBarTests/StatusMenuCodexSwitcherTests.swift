@@ -118,6 +118,22 @@ struct StatusMenuCodexSwitcherTests {
     }
 
     @Test
+    func `sole recovery switcher row stays unselected until clicked`() {
+        let account = CodexVisibleAccount(
+            id: "recovery", email: "recovery@example.com", storedAccountID: nil,
+            selectionSource: .profileHome(path: "/fixture/recovery"), isActive: false, isLive: false,
+            canReauthenticate: false, canRemove: false)
+        var selections: [CodexVisibleAccount] = []
+        let view = CodexAccountSwitcherView(
+            accounts: [account], selectedAccountID: nil, width: 220, onSelect: { selections.append($0) })
+        #expect(view._test_buttonStates() == [.off])
+        #expect(selections.isEmpty)
+        #expect(view._test_simulateRuntimeClick(id: account.id))
+        #expect(selections == [account])
+        #expect(view._test_buttonStates() == [.on])
+    }
+
+    @Test
     func `codex menu shows account switcher and add account action for multiple visible accounts`() throws {
         self.disableMenuCardsForTesting()
         let settings = self.makeSettings()

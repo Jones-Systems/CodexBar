@@ -101,8 +101,9 @@ extension StatusItemController {
         // Provider-specific by design: managed Codex profiles use reconciled visible-account projection state.
         guard provider == .codex else { return nil }
         guard let projection = self.settings.codexVisibleAccountProjectionForMenuDisplay else { return nil }
-        guard projection.visibleAccounts.count > 1 else { return nil }
-        let showAll = self.settings.multiAccountMenuLayout == .stacked
+        guard projection.showsAccountSelection else { return nil }
+        // Recovery requires an explicit switch action even when the usual layout only displays stacked cards.
+        let showAll = self.settings.multiAccountMenuLayout == .stacked && projection.activeVisibleAccountID != nil
         let accounts = showAll
             ? self.store.limitedCodexVisibleAccounts(
                 projection.visibleAccounts,

@@ -137,6 +137,10 @@ public struct CodexVisibleAccountProjection: Equatable, Sendable {
         self.hasUnreadableAddedAccountStore = hasUnreadableAddedAccountStore
     }
 
+    public var showsAccountSelection: Bool {
+        self.visibleAccounts.count > 1 || (self.activeVisibleAccountID == nil && !self.visibleAccounts.isEmpty)
+    }
+
     public func source(forVisibleAccountID id: String) -> CodexActiveSource? {
         self.visibleAccounts.first { $0.id == id }?.selectionSource
     }

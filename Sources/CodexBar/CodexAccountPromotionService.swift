@@ -151,8 +151,40 @@ enum CodexAccountPromotionError: Error, Equatable {
     case liveAuthSwapFailed
 }
 
+/// A cancelled login remains a writer until its runner confirms termination and reap.
+/// UI generations cannot provide this exclusion across panes or direct service calls.
+@MainActor
+final class CodexSharedAuthWriter {
+    static let shared = CodexSharedAuthWriter()
+    private var isHeld = false
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+
+    #if DEBUG
+    var _test_waitingWriterCount: Int {
+        self.waiters.count
+    }
+    #endif
+
+    func acquire() async {
+        if !self.isHeld {
+            self.isHeld = true
+            return
+        }
+        await withCheckedContinuation { self.waiters.append($0) }
+    }
+
+    func release() {
+        if self.waiters.isEmpty {
+            self.isHeld = false
+        } else {
+            self.waiters.removeFirst().resume()
+        }
+    }
+}
+
 @MainActor
 final class CodexAccountPromotionService {
+    let sharedAuthWriter: CodexSharedAuthWriter
     private let store: any ManagedCodexAccountStoring
     private let homeFactory: any ManagedCodexHomeProducing
     private let identityReader: any ManagedCodexIdentityReading
@@ -176,8 +208,10 @@ final class CodexAccountPromotionService {
         activeSourceWriter: any CodexActiveSourceWriting,
         accountScopedRefresher: any CodexAccountScopedRefreshing,
         baseEnvironment: [String: String] = ProcessInfo.processInfo.environment,
-        fileManager: FileManager = .default)
+        fileManager: FileManager = .default,
+        sharedAuthWriter: CodexSharedAuthWriter = .shared)
     {
+        self.sharedAuthWriter = sharedAuthWriter
         self.store = store
         self.homeFactory = homeFactory
         self.identityReader = identityReader
@@ -212,6 +246,9 @@ final class CodexAccountPromotionService {
     }
 
     func promoteManagedAccount(id: UUID) async throws -> CodexAccountPromotionResult {
+        await self.sharedAuthWriter.acquire()
+        defer { self.sharedAuthWriter.release() }
+        try Task.checkCancellation()
         let contextBuilder = PreparedPromotionContextBuilder(
             store: self.store,
             workspaceResolver: self.workspaceResolver,
@@ -220,6 +257,7 @@ final class CodexAccountPromotionService {
             baseEnvironment: self.baseEnvironment,
             fileManager: self.fileManager)
         let context = try await contextBuilder.build(targetID: id)
+        try Task.checkCancellation()
 
         if let resultingActiveSource = self.convergedActiveSource(for: context) {
             self.activeSourceWriter.writeCodexActiveSource(resultingActiveSource)

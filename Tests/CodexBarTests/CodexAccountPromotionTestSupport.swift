@@ -87,7 +87,8 @@ final class CodexAccountPromotionTestContainer {
         liveAuthSwapper: (any CodexLiveAuthSwapping)? = nil,
         activeSourceWriter: (any CodexActiveSourceWriting)? = nil,
         snapshotLoader: (any CodexAccountReconciliationSnapshotLoading)? = nil,
-        accountScopedRefresher: (any CodexAccountScopedRefreshing)? = nil)
+        accountScopedRefresher: (any CodexAccountScopedRefreshing)? = nil,
+        sharedAuthWriter: CodexSharedAuthWriter = .shared)
         -> CodexAccountPromotionService
     {
         CodexAccountPromotionService(
@@ -104,7 +105,8 @@ final class CodexAccountPromotionTestContainer {
             accountScopedRefresher: accountScopedRefresher
                 ?? UsageStoreCodexAccountScopedRefresher(usageStore: self.usageStore),
             baseEnvironment: self.baseEnvironment,
-            fileManager: .default)
+            fileManager: .default,
+            sharedAuthWriter: sharedAuthWriter)
     }
 
     func installDynamicCodexUsageLoader(usedPercent: Double = 12) {
