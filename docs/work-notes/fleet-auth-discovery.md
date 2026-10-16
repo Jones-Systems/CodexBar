@@ -67,3 +67,12 @@ Both are deferred under the owner's standing P2–P4 instruction; neither is cor
 Owner clarification: the laptop runs the standard CodexBar app. This fork has not been installed or tried on any machine. The reported symptoms are motivation and acceptance requirements for the first usable fork trial, not a reproduced defect in a deployed fork. First-trial readiness also needs an explicit fork app/update-feed identity decision.
 
 Post-integration affected checks: all 26 changed Swift files passed SwiftFormat together. Three unchanged preferences gatekeeper anchors were updated to their new source lines with exact base/head anchor checks. The account-order extension moved under its existing Codex provider ownership boundary without content changes, avoiding new generic-provider suppressions.
+
+
+## Local account switching requirement clarification
+
+The owner requires one local CodexBar account selector that determines the account used by subsequent standalone Codex CLI/thread and Codex desktop app launches on the laptop. Fixed-profile usage enumeration alone is insufficient. This does not request VPS or Mac Mini switching. Usage must continue reading existing canonical Authfleet homes. The earlier fixed-profile-versus-launcher question is resolved as product intent; the implementation mechanism still needs source and laptop evidence. No live credentials, auth switching, launcher changes, or installation have been attempted. A read-only source investigation is checking desktop and CLI account-loading semantics; the owner offered a laptop evidence thread. Claude Authfleet authentication fixes are being handled separately.
+
+CAAM retirement was integrated through merge 2fb2df0d6a965af247fad23a15d530554177f2fe (lane commit 082cd4943). This does not resolve the two findings preserved in account-fixes-ccafd932.json. First-trial readiness remains unproved.
+
+Final integrated portable verification: source-absence test (1), locale-checker tests (5), feature locale coverage (80 keys across 23 catalogs), SwiftFormat lint (35 surviving changed Swift files), and whitespace passed. Fresh CPU admission was 3.75% used, 41.68 GiB available, one fully used core 6.25% of host capacity; one serial check process. Temporary check storage was context-managed under .build and removed. Native checks remain unavailable as recorded above.
