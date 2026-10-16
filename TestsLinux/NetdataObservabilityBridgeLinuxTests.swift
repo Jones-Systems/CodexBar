@@ -42,12 +42,11 @@ struct NetdataObservabilityBridgeLinuxTests {
         #expect(state.availableRAMGiB == 0.5)
         #expect(state.receivedAt == Self.now)
         #expect(state.compactLabel(hostLabel: "Fixture") == "Fixture 8% · 0.5 GiB avail")
-        let unavailableService = CAAMControlSession(configuration: CAAMEnvironmentConfiguration(
-            id: "synthetic",
-            label: "Fixture",
-            connection: .local()))
+        let unavailableService = HubServiceObservation(
+            id: "synthetic", label: "Fixture",
+            evidence: HubEvidence(source: "Synthetic unavailable service", observedAt: nil, availability: .unavailable))
         let snapshot = ObservabilityHub.aggregate(
-            sessions: [unavailableService],
+            services: [unavailableService],
             providers: [],
             hostsByEnvironmentID: bridge.hostsByEnvironmentID(now: Self.now),
             now: Self.now)

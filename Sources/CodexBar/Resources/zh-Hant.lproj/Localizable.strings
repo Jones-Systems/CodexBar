@@ -1574,50 +1574,20 @@
 "menu_bar_layout_conditional_default_scoped_weekly" = "模型專屬每週已用超過 60%";
 "Spending cap, not balance" = "支出上限，並非餘額";
 
-/* CAAM Environments */
-"A running Codex process may need to reload." = "正在執行的 Codex 程序可能需要重新載入。";
-"Add Laptop" = "加入筆記型電腦";
-"Add Remote Environment" = "加入遠端環境";
-"CAAM %@" = "CAAM %@";
-"CAAM keeps credentials on each environment. Remote access uses your SSH configuration." = "CAAM 會將憑證保留在各個環境中。遠端存取使用您的 SSH 設定。";
-"Current profile: %@" = "目前設定檔：%@";
 "Degraded" = "降級";
-"Environment name" = "環境名稱";
-"Environments" = "環境";
-"Fallback: %@" = "後備設定檔：%@";
-"Laptop" = "筆記型電腦";
-"No CAAM environments configured." = "尚未設定 CAAM 環境。";
-"Not checked yet." = "尚未檢查。";
-"Ready" = "就緒";
-"Recovery required" = "需要復原";
-"SSH" = "SSH";
-"SSH destination" = "SSH 目的地";
-"Update required" = "需要更新";
 
-/* CAAM observability: English fallback pending translation review. */
+/* Observability: English fallback pending translation review. */
 "%@ · Recorded session %d" = "%@ · Recorded session %d";
-"Affected profiles" = "Affected profiles";
-"An unresolved operation belongs to a changed environment. Restore its original configuration." = "An unresolved operation belongs to a changed environment. Restore its original configuration.";
 "Available" = "Available";
-"CAAM may complete or roll back its pending transaction. This does not restore fallback." = "CAAM may complete or roll back its pending transaction. This does not restore fallback.";
-"CAAM operation tracking is unavailable. Mutations remain disabled." = "CAAM operation tracking is unavailable. Mutations remain disabled.";
-"CAAM requires manual intervention on this environment. Automatic recovery is disabled." = "CAAM requires manual intervention on this environment. Automatic recovery is disabled.";
-"Change host default: %@ → %@" = "Change host default: %@ → %@";
-"Confirm once" = "Confirm once";
 "Cost unavailable; not zero." = "Cost unavailable; not zero.";
 "Dashboard URL (not stored)" = "Dashboard URL (not stored)";
 "Data confidence: %@" = "Data confidence: %@";
 "Estimated API cost: %@" = "Estimated API cost: %@";
-"Expected revision: %@" = "Expected revision: %@";
-"Gateway code: %@" = "Gateway code: %@";
-"Historical provider cache; not a billing receipt or an identified CAAM account." = "Historical provider cache; not a billing receipt or an identified CAAM account.";
 "Host default" = "Host default";
 "Host default: %@" = "Host default: %@";
 "Host resources" = "Host resources";
-"Last operation: %@ · %@" = "Last operation: %@ · %@";
 "List-price estimate" = "List-price estimate";
 "Local service state, provider usage and cost, and host resources are separate ledgers." = "Local service state, provider usage and cost, and host resources are separate ledgers.";
-"Look up operation" = "Look up operation";
 "Mixed provenance" = "Mixed provenance";
 "Netdata telemetry is unsupported here. No host metrics were collected." = "Netdata telemetry is unsupported here. No host metrics were collected.";
 "No account profiles have been observed." = "No account profiles have been observed.";
@@ -1630,42 +1600,26 @@
 "Open an existing Netdata dashboard" = "Open an existing Netdata dashboard";
 "Open dashboard in browser" = "Open dashboard in browser";
 "Opening a dashboard does not import telemetry or verify this host." = "Opening a dashboard does not import telemetry or verify this host.";
-"Operation outcome is unresolved. Look up the existing operation before another change." = "Operation outcome is unresolved. Look up the existing operation before another change.";
 "Partial" = "Partial";
 "Partial view: limited to 100 recorded sessions." = "Partial view: limited to 100 recorded sessions.";
-"Plan digest: %@" = "Plan digest: %@";
-"Plan fallback" = "Plan fallback";
-"Plan switch" = "Plan switch";
 "Primary window: %.1f%% used" = "Primary window: %.1f%% used";
 "Profiles are environment-local. Only provider and stable ID establish cross-environment identity." = "Profiles are environment-local. Only provider and stable ID establish cross-environment identity.";
 "Provider usage and API cost" = "Provider usage and API cost";
 "Provider: %@ · Health: %@" = "Provider: %@ · Health: %@";
-"Read-only until CAAM conformance is independently qualified." = "Read-only until CAAM conformance is independently qualified.";
 "Recorded cost: %@ · %d days · %@" = "Recorded cost: %@ · %d days · %@";
 "Recorded local sessions only; not a live job queue or evidence of running processes." = "Recorded local sessions only; not a live job queue or evidence of running processes.";
 "Refresh and resolve pending operations before changing this environment." = "Refresh and resolve pending operations before changing this environment.";
 "Resets: %@" = "Resets: %@";
-"Resolve retained operations before adding more environment observations." = "Resolve retained operations before adding more environment observations.";
-"Retained unresolved operation" = "Retained unresolved operation";
-"Review fallback restoration" = "Review fallback restoration";
-"Review interrupted-operation recovery" = "Review interrupted-operation recovery";
-"Review recovery" = "Review recovery";
-"Review switch plan" = "Review switch plan";
 "Runtime effective profile: %@" = "Runtime effective profile: %@";
-"Runtime state: %@" = "Runtime state: %@";
 "Separate metered amount: %@ (not added)" = "Separate metered amount: %@ (not added)";
 "Service and local state" = "Service and local state";
 "Stale" = "Stale";
-"Status and recovery remain bound to the original environment configuration." = "Status and recovery remain bound to the original environment configuration.";
 "Systems" = "Systems";
-"The CAAM configuration is invalid." = "The CAAM configuration is invalid.";
 "Tokens: %d" = "Tokens: %d";
 "Unknown provenance" = "Unknown provenance";
-"Unresolved operation: %@" = "Unresolved operation: %@";
 "Usage unavailable" = "Usage unavailable";
 "Use HTTPS, or loopback HTTP, without credentials, query parameters, or fragments." = "Use HTTPS, or loopback HTTP, without credentials, query parameters, or fragments.";
 "Vendor-metered" = "Vendor-metered";
-"Waiting for CAAM; the app remains available." = "Waiting for CAAM; the app remains available.";
 "Window length: %d minutes" = "Window length: %d minutes";
 "Work" = "Work";
 
@@ -1674,3 +1628,6 @@
 "Cancel Login" = "取消登入";
 "Login cancelled." = "已取消登入。";
 "Use the arrows to set menu order. Active account selection stays unchanged." = "使用箭頭設定選單順序。目前選取的使用中帳戶保持不變。";
+
+"No system observations are available." = "暫無系統觀測資料。";
+"Historical provider cache; not a billing receipt or an identified account." = "供應商的歷史快取；不是帳單收據，也不代表已識別的帳戶。";

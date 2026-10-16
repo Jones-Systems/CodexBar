@@ -10,8 +10,8 @@ read_when:
 
 The source repository is [Jones-Systems/CodexBar](https://github.com/Jones-Systems/CodexBar),
 a fork of [steipete/CodexBar](https://github.com/steipete/CodexBar).
-The [CAAM environment work note](work-notes/caam-environment-control.md) records the
-Jones Systems fork foundation and its evidence. Older fork setup and roadmap documents
+The [CAAM retirement note](work-notes/caam-retirement.md) records removal of the earlier
+CAAM integration; its original work note remains historical evidence. Older fork setup and roadmap documents
 may describe earlier owners or plans; they do not establish current delivery status.
 
 Source support, automated test evidence, installed binaries, and live provider behavior
@@ -58,12 +58,12 @@ Use the [architecture overview](architecture.md), [provider authoring guide](pro
 for the relevant source surface. A provider entry or command definition is not proof
 of current account access or live service availability.
 
-The fork contains CAAM environment configuration and snapshot-refresh foundations.
-Those models and controls do not establish live remote account switching.
+CAAM environment configuration, transport, and controls have been removed from active source.
+Native Codex accounts and profiles and independent observability remain.
 The existing Codex `Active` account selects usage observation; `System` promotes
 the default local auth account. Neither label proves that an already-running Codex
 process has switched credentials. Consult the
-[CAAM work note](work-notes/caam-environment-control.md) for the boundary.
+[retirement spec](engineering-specs/caam-retirement.md) for the boundary.
 
 ## When an app bundle is needed
 

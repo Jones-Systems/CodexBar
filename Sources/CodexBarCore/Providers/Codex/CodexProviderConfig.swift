@@ -15,9 +15,4 @@ extension ProviderConfig {
         get { self.extensionValue(forKey: "codexAccountOrder") }
         set { self.setExtensionValue(newValue, forKey: "codexAccountOrder") }
     }
-
-    public var codexCAAMEnvironments: [CAAMEnvironmentConfiguration]? {
-        get { self.extensionValue(forKey: "codexCAAMEnvironments") }
-        set { self.setExtensionValue(newValue, forKey: "codexCAAMEnvironments") }
-    }
 }
