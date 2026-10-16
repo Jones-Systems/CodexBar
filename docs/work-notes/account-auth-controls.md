@@ -44,7 +44,7 @@ CODEXBAR_SUPPRESS_TEST_KEYCHAIN_ACCESS=1 CODEXBAR_TEST_CODEX_FILE_ISOLATION=1 CO
 
 Result: unavailable, exit 127, `swift: command not found`. No Swift tests executed or passed.
 
-Existing SwiftFormat 0.61.1 was used without installing tools. Invocation: `/home/malcolmjones/Projects/CodexBar-worktrees/caam-environments/.build/lint-tools/bin/swiftformat --lint` followed by all 17 changed Swift paths (the Git diff paths plus `Sources/CodexBar/SettingsStore+CodexAccountOrder.swift`). Final result: zero files require formatting. `git diff --check` passes. Every changed Swift line is at most 120 characters.
+Existing SwiftFormat 0.61.1 was used without installing tools. Invocation: `/home/malcolmjones/Projects/CodexBar-worktrees/caam-environments/.build/lint-tools/bin/swiftformat --lint` followed by all 17 changed Swift paths (the Git diff paths plus `Sources/CodexBar/Providers/Codex/CodexAccountOrder.swift`). Final result: zero files require formatting. `git diff --check` passes. Every changed Swift line is at most 120 characters.
 
 Existing SwiftLint 0.65.0 invocation: `/home/malcolmjones/Projects/CodexBar-worktrees/caam-environments/.build/lint-tools/bin/swiftlint lint --strict` followed by the same changed Swift paths. Result: unavailable, process exit -4, `Loading libsourcekitdInProc.so failed`. No lint pass is claimed. No new tool installation was attempted.
 

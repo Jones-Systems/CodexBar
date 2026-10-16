@@ -54,3 +54,16 @@ Requested cross-provider plan task: `node:delegated-task:command%3Amcp%3A3794eca
 Local verification update: SwiftFormat 0.61.1 from the existing caam-environments worktree matches the current pinned version and can run. SwiftLint 0.65.0 cannot load libsourcekitdInProc.so without Swift; native test/build execution is unavailable. No new host toolchain was installed.
 
 Do not treat valid Jones Code authentication as proof CodexBar can discover it. The current Jones Code catalog recognizes Malcolm/UMICH authentication but reports Wallace provider startup failure due to a pre-existing non-symlink generated-images entry; no repair is authorized by inference. Swift is absent from the VPS PATH; native build/test availability remains unresolved. No sudo use, live Keychain probe, new login, or automatic credential rotation is planned.
+
+## Independent correctness review and deferred findings
+
+Source review `account-fixes-review-ccafd932-r1`, native task `/root/account_fixes_review`, profile `codex-v3-code-reviewer` (Astra/high), reviewed exact `ccafd932fa8e7f9160ab1dd133677e8d622b45bc`. Finding record: [immutable source-bound review record](../review-evidence/account-fixes-ccafd932.json), SHA-256 `4218de156c65d72241f8d00eb7f50ef6cc8cd473fd65dd02629f583112ad4a62`. The source review's original severity and blocking effects remain unchanged:
+
+- AFR-001, P2: a missing selected profile hides healthy alternative accounts, preventing explicit recovery selection.
+- AFR-002, P2: ambient cancellation releases the shared-auth/promotion gate before the previous login process has drained; late UI guards do not exclude overlapping filesystem writers. No live overwrite was observed.
+
+Both are deferred under the owner's standing P2–P4 instruction; neither is corrected or accepted as proof of runtime readiness. Continue source publication and CI. Installed trial readiness retains these original blocking claims until exact owner-directed work or valid bounded disposition resolves them. No mid-workflow approval question is created by these findings.
+
+Owner clarification: the laptop runs the standard CodexBar app. This fork has not been installed or tried on any machine. The reported symptoms are motivation and acceptance requirements for the first usable fork trial, not a reproduced defect in a deployed fork. First-trial readiness also needs an explicit fork app/update-feed identity decision.
+
+Post-integration affected checks: all 26 changed Swift files passed SwiftFormat together. Three unchanged preferences gatekeeper anchors were updated to their new source lines with exact base/head anchor checks. The account-order extension moved under its existing Codex provider ownership boundary without content changes, avoiding new generic-provider suppressions.
