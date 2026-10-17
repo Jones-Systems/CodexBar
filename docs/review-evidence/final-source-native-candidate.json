@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "authority_effect": "none",
-  "source_candidate": "ecdb8643b6af1f6852152f32f827b254a75a2a2a",
+  "source_candidate": "70c1f766510166df450b3a14c0031ca290637951",
   "base": "21c34561387b26f76d0a27e9f00d1538fbc0926f",
   "parent_PR11_head": "4f62ba08bd6c22940bd79189b451464ba2df3ba5",
   "source_paths": {
@@ -11,7 +11,7 @@
     "Scripts/test.sh": "3b2a7e7df9c2364d457f65d59825bed779f5894d2985a503df42031b2245ee0b",
     "Scripts/test_codex_file_isolation_child.sh": "c5f10d93007f94cd7fc500c84009fc9729b5992b7e95f547492c56be3c95f77e",
     "Scripts/test_fixture_process_ownership.py": "0321ae9647163235423a19fba634aba268d5173ef113075dd57b5c5bf5bb37ac",
-    "Scripts/test_fixture_scratch_parent.py": "8bce47b094aaecb882a4a2ac2cb112286a69b3699579d0daaf4def1b31cd3610",
+    "Scripts/test_fixture_scratch_parent.py": "e80565ba0e6e48ee95f70df5b721869a55e2e3fa3aea0a659878e640d1dda5ab",
     "Scripts/test_jones_identity_overlay.sh": "ff356dc9eb12e9bfc52511f5531844cb4e20f0dda182b73bed50aeecb27acfd0",
     "Scripts/test_mimo_usage.py": "30807e825f98b052bfded18bfa2ff4dae7a54bd245cd63e9a8b3b602e2b91daa",
     "Scripts/test_provider_session_file_isolation.sh": "6b3d656742aec08200f298c6f7627a1efc61ea899304f791482f843d15679154",
@@ -149,7 +149,7 @@
     "Tests/CodexBarTests/CodexActiveSourceConfigTests.swift": "8635df55b26b6b35c7d950f5f38c5bc226330afeb80cc0de0884ee66fb61015b",
     "Tests/CodexBarTests/CodexAutomaticRefreshPersistenceTests.swift": "674d23be09715006f1547de5faaa762a0bd37b9bfb5bfc4f6c4cf1336e1be985",
     "Tests/CodexBarTests/CodexBarConfigMigratorTests.swift": "7a184cfbde929a08e229aea7630541c8d3ae4b2d7f06731a0a31e619316ff30c",
-    "Tests/CodexBarTests/CodexBarCoreResourcesTests.swift": "3dac6c99710106504b006b039683f680f0bb6fad3f6acb24eadabd3c20c8116f",
+    "Tests/CodexBarTests/CodexBarCoreResourcesTests.swift": "50a186ebe205102dea8b2b32c327b5125585cabe1815af87ca3c46587e60356b",
     "Tests/CodexBarTests/CodexBaselineCharacterizationTests.swift": "4a3f54e4af3f144222e3752a5a3b97c0483e2fa1156ab002d5dc664a9a7cc72a",
     "Tests/CodexBarTests/CodexCredentialFileAccessTests.swift": "312d414ac603176159b767353c35f9b50bdf53105ffc738889636c9354218fc0",
     "Tests/CodexBarTests/CodexCredentialFixtures.swift": "6b61327e5fd56a60cbcc89ecaac0d700d023622c7fa1e588025d4ff96d32ed53",
@@ -367,6 +367,7 @@
     "CodexAccountsSectionStateTests",
     "CodexAccountsSettingsSectionTests",
     "CodexActiveSourceConfigTests",
+    "CodexBarCoreResourcesTests",
     "CodexFleetProfileDiscoveryTests",
     "CodexFleetProfileIntegrationTests",
     "CodexLoginRunnerTests",
@@ -419,7 +420,7 @@
     "MiMo3 already passed laptop44a; no unchanged rerun"
   ],
   "held_native_suites": [
-    "Actual Swift runner path source-reviewed safe to attempt in controlled synthetic capsule. Changed scratch-parent harness HELD for NFCR-COR-001; identity/scratch and sharding regressions also blocked by deferred P2 NFCR-COR-002/003. Full make test still UNRUN on revised source."
+    "P1 targeted eight-case seam requires new owned capsule; full scratch/identity/sharding proof completion remains blocked by NFCR-COR-002/003 P2 deferred/unfixed. Revised resource suites/full native qualification UNRUN."
   ],
   "remaining_product_gaps": [
     "AFCL installed flow includes native usage companion reusable by native selector if present; readiness unknown; automation-token endpoint/scope support remains separately unproved",
@@ -593,7 +594,7 @@
     "upstream_monitor": "preserve disabled_fork",
     "next_gate": "Exact owner approval or owner authenticated UI initiating action; laptop preparing narrow gate; VPS does not re-enable/dispatch/settings-change"
   },
-  "portable_commands_status": "Updated explicit-parent/lifecycle source needs revised synthetic harness and optimized standalone proofs. Prior c9 six preliminary checks passed; original historical inner-reap unknown remains recorded, not silently reconciled.",
+  "portable_commands_status": "Full synthetic scratch/identity/sharding proof commands HELD for deferred P2 NFCR-COR-002/003. P1 nested cleanup source corrected, eight focused regressions UNRUN. Actual optimized child proofs PASS at95cfdd64; carry only if dependencies match.",
   "AFCL_product_fit": {
     "authority_effect": "none",
     "source": "Laptop coordinator506fc1fd static installed wrapper/source evidence relay; not owner approval, not independent VPS installed-state verification",
@@ -708,7 +709,7 @@
     ],
     "deferred": "FSP-PROC-002 and NFP-COR-002 untouched"
   },
-  "preceding_source_candidate": "735c159b43d5300f9e3d1f55b1f18cc9b3bd6b93",
+  "preceding_source_candidate": "ecdb8643b6af1f6852152f32f827b254a75a2a2a",
   "interim_native_candidate": {
     "source_checkpoint": "45ac35cc586449f59976652f0f4b059c1a09073e",
     "published_documentation_head": "Use exact full SHA in accompanying interim handoff; documentation-only descendant shares manifest hashes",
@@ -1100,5 +1101,26 @@
         ]
       }
     ]
+  },
+  "native_r9_candidate": {
+    "integration": "70c1f766510166df450b3a14c0031ca290637951",
+    "delta_from": "95cfdd64dad7b9ba4167344f9d1d8d0b435f3bb9",
+    "P1_checkpoint": "42abd50569541104954c4e989f0f098b56f957ea",
+    "changed_paths": [
+      "Scripts/test_fixture_scratch_parent.py",
+      "Tests/CodexBarTests/CodexBarCoreResourcesTests.swift"
+    ],
+    "scope": "Invocation-bound nested drain proof and eight P1 regressions; explicit directory URL on adjacent-resource fixture, strict assertion unchanged.",
+    "qualification": "UNRUN on revised source",
+    "focused_required": [
+      "nested_cleanup_regressions(prepared_parent) (8 targeted P1 cases, not full harness qualification)",
+      "CodexBarCoreResourcesTests",
+      "CodexBarCoreResourcesPortableTests"
+    ],
+    "full_required": "make test once after focused checks pass; unchanged focused86/5 and two native child proofs may carry only by exact dependency hashes",
+    "named_rollup_count": 84,
+    "native_r8": "Discovery1030PASS1010.06s;focus86PASS39.24s;actualCodex5.61s/Provider4.09sPASS;fullFAIL216.61s group26after25PASS,2resourceURLcases,2945SwiftTesting+59XCTest reported,0timeouts/retries/skips. Named83focused+full48PASS/35unexecuted;failedresource suiteoutside83,now84. Original12=5PASS/7unexecuted.",
+    "cleanup": "All5outerdrainsproved;exactparentremoved/absenceverified;512observedcostpathscontained;framework/compiler/historicalexternalstateunknown.",
+    "deferred": "NFCR-COR-002/003 remain P2 uncorrected, full scratch/identity/sharding proofs held; NFP-COR-002/FSP-PROC-002 unchanged."
   }
 }

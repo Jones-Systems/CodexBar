@@ -299,5 +299,13 @@
         ]
       }
     ]
-  }
+  },
+  "P1_correction": {
+    "checkpoint": "42abd50569541104954c4e989f0f098b56f957ea",
+    "path": "Scripts/test_fixture_scratch_parent.py",
+    "sha256": "e80565ba0e6e48ee95f70df5b721869a55e2e3fa3aea0a659878e640d1dda5ab",
+    "source": "Nested launches deny cleanup until invocation-bound nested runner drain receipt. Exceptions preserve tree/originalfailure. Eight focused cases supplied.",
+    "verification": "Static AST/diff PASS; behavior UNRUN. Full harness remains blocked by deferredP2s; targeted seam does not waive them."
+  },
+  "native_r8_result": "Discovery1030PASS1010.06s;focus86PASS39.24s;actualCodex5.61s/Provider4.09sPASS;fullFAIL216.61s group26after25PASS,2resourceURLcases,2945SwiftTesting+59XCTest reported,0timeouts/retries/skips. Named83focused+full48PASS/35unexecuted;failedresource suiteoutside83,now84. Original12=5PASS/7unexecuted."
 }

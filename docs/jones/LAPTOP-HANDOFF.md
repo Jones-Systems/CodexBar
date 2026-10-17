@@ -6,6 +6,33 @@ Authority effect: none. VPS owns its existing source branches; laptop root owns 
 trial disposition and eligible merges. No live authentication, installation or switching
 operation is granted by this handoff.
 
+## Native resource fixture and nested cleanup checkpoint
+
+Latest source checkpoint `70c1f766510166df450b3a14c0031ca290637951` contains the one-file
+P1 nested-cleanup correction (42abd505) and one-line adjacent-resource fixture directory declaration.
+Strict URL equality remains unchanged; no production resolver or shared allocator change. P1 guard
+requires an invocation-bound drain receipt before scratch deletion, preserving original failure/tree
+on uncertainty. Eight focused P1 regressions are supplied but UNRUN. NFCR-COR-002/003 P2 remain
+uncorrected/deferred; full scratch/identity/sharding proofs are held. A targeted P1 seam does not
+qualify or bypass those proofs. NFP-COR-002/FSP-PROC-002 remain unchanged.
+
+Native-r8 at95cfdd64: discovery1030PASS/1010.06seconds (zero behavior), focused86tests/5suites
+PASS39.24seconds, actualoptimizedCodex4modesPASS5.61seconds/Provider4filenamesPASS4.09seconds.
+FullmakeFAILexit2/216.61seconds atgroup26after25PASS, two resource URL parameter cases;
+2945SwiftTesting+59XCTest reported,0timeouts/retries/gatedskips beforestop. Named83focused+full
+48PASS/35unexecuted; failedresource suite outside83, now84. Original12=5PASS/7unexecuted.
+512observedcostpaths stayed below ownedparent. All5outerdrainsproved, exactparentremoved and
+absenceverified; cache/logs retained. Framework/compiler internal scratch and historicalexternal
+cleanup/Claudepriorstate unknown. Earlier current-candidate instructions below are superseded here.
+
+Next safe capsule: verify all304hashes, eight targeted P1 cases under one prepared parent, native and
+portable resource suites, then fullmakeonce ifpassing. Carry unchanged86focusedtests/twonativeproofs
+only by dependencyhash comparison. Directtest parent/workspace variables, threeproviderisolationflags,
+serialadmission/defaultgroup12/180seconds/no manualretry remain. Source/verification worktrees use
+one root Gitowner; no checkout advancement while a verifier is active. Source all304hashes and84named
+supplemental rollup recorded; global full discovery still required. makecheck/CI/merge/extraction/
+seven trial/sign/package/install/live gates remain open. No operational success claim.
+
 ## Native fixture containment checkpoint
 
 Current source checkpoint `ecdb8643b6af1f6852152f32f827b254a75a2a2a` is on laptop-owned
