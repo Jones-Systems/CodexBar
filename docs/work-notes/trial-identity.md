@@ -1137,3 +1137,10 @@ Astra bounded repair changes one synthetic test file: POSIX realpath after owned
 Native-r4 at60c released/parentcleanup verified: targeted7PASS, full17groupsPASS/group18fails three CLIStorageOwnership fixtures. Historical79=17PASS/0FAIL/62unexecuted, failedownership suite additional actualcoverage; new union80. Original12unexecuted.1951SwiftTesting+59XCTest reported before failure; targetedrepeat7notunique.
 
 Existing bounded Astra lane diagnosed synthetic process-default cache identity versus explicit config profile. Threefixtures now seed matching profile key/identity; all ownership/rotation/history/restart/failure assertions retained. Other six tests/helpers and production unchanged. Source320562d63 cherry-picked PR11 as195f66a64; integrated PR12 atbfd35ef493. Scoped formatter/diff/staticPASS, nativeUNRUN.69sourcehashes verified. Sixpreproofs/MiMo unaffected; hash-boundcarryforward only. No extra review needed for fixture-only exactsource correction. All deferredfindings/CI/tooling/extraction/activationgates unchanged.
+
+
+### Native-r5 Codex physical-path fixture checkpoint
+
+964 native-r5 released/ownedparentcleaned: ownership9PASS and full26groupsPASS/group27CodexfixtureFAIL. Historical80=46PASS/0FAIL/34unexecuted; new Codexsuite union81. Original12=5PASS/7unexecuted;3053SwiftTesting+59XCTest fullreported, target9repeatnotunique.
+
+Existing Astra lane corrected identical Codex fixture physical-path mismatch using verified Claude POSIXrealpath/plainlet/metadata/cleanup pattern.7tests and5rejectionblocks preserved; productionunchanged. Bounded sibling inspection no additionalidenticalmismatch. Source430b642bf cherry-picked PR11 as4f62ba08b, integrated PR12cc94d3ebc. Formatter/diffPASS, nativeUNRUN.70sourcehashes verified; preliminarydependenciesunchanged. Noextra review needed; deferredP2/CI/tooling/extraction/activationgates preserved. Evidence codex-binding-physical-fixture.json.

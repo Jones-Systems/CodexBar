@@ -6,6 +6,27 @@ Authority effect: none. Source stays on VPS. Laptop thread
 trial disposition and eligible merges. No live authentication, installation or switching
 operation is granted by this handoff.
 
+## Native-r6 Codex physical-path fixture candidate
+
+Latest source checkpoint `cc94d3ebcacc655edf13347a9e071ad47d5dcd23`, PR11 parent
+`4f62ba08bd6c22940bd79189b451464ba2df3ba5`. Bind accompanying exact published PR12
+head after ancestry/cleanliness and all70source hashes verify. Native-r5 explicitly
+released with exact owned-parent removal/absence verified. Only CodexFleetProfileDiscoveryTests.swift
+changes from964. Use seven-test Codex discovery target first, then accepted full/remaining
+qualification if passing, existing synthetic isolation/oneparent/admission/retries0.
+
+Codex fixture now uses the Mac-verified Claude physical realpath pattern. All7tests
+and5rejectionblocks retained; plain positive lets, metadata and cleanupdiagnostics.
+Production readers unchanged; bounded sibling inspection found no further identical
+mismatch. Scoped formatter/diffPASS; native revisedsource UNRUN. See codex-binding-physical-fixture.json.
+
+Native-r5 ownership9PASS81.56s and fullgroup18PASS; full226.08s reached26PASS/group27
+CodexfixtureFAIL.3053SwiftTesting+59XCTest reported (targetrepeat9notuniqueadded).
+Historical80=46PASS/0FAIL/34unexecuted; Codex suite outside80, now union81. Original12
+=5PASS/7unexecuted. Sixproofs/MiMo unchanged dependency evidence carry only after hashmatch.
+All deferredfindings/CIpause/lintinstall/extraction/sign/install/live gates unchanged.
+Earlier candidate directions are historical where superseded here.
+
 ## Native-r5 profile-scoped ownership fixture candidate
 
 Latest source checkpoint `bfd35ef493aff3925bf0e14cc8379d6930e70b1b`, PR11 parent

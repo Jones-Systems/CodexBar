@@ -1,0 +1,25 @@
+{
+  "authority_effect": "none",
+  "source_commit": "430b642bfdd8d065ad381e40f784bd8c43e53713",
+  "PR11_head": "4f62ba08bd6c22940bd79189b451464ba2df3ba5",
+  "PR12_integration": "cc94d3ebcacc655edf13347a9e071ad47d5dcd23",
+  "changed_paths": {
+    "Tests/CodexBarTests/CodexFleetProfileDiscoveryTests.swift": "4e6222713dc87fb8574b0f7f507161bab58f9d50b06d1bde561a1f5217d3e12f"
+  },
+  "diagnosis": "Codex and Claude production strict readBinding implementations identical; Codex fixture used Foundation resolvingSymlinksInPath, which can strip /private. Same documented physical-path precondition mismatch as Mac-verified Claude fixture; exact new native behavior unrun.",
+  "correction": "Post-creation POSIXrealpath, plain throwing positive reads, metadata assertions, cleanup diagnostics. All7tests and5rejectionblocks byte-identical: size, permissions, file symlink, ancestor symlink, hardlink. Neither production reader changed.",
+  "bounded_sibling_inspection": "No additional identical no-symlink-reader/temporary Foundation resolver mismatch found. Prior other cache fixture observation retained read-only, not remediated.",
+  "checks": "Scoped SwiftFormat and git diff --check PASS; no native Swift executable VPS; make test/make check unrun revised source",
+  "native_r5": {
+    "head": "96405e18ee6302eb93ab33d96d8e4e7c8089db18",
+    "target": "ownership9/9PASS81.56s; alsofullgroup18PASS; Claude discoveryfullPASS",
+    "full": "FAIL226.08s after26groupsPASS/group27CodexdiscoveryFAIL;1029selections86groupsdiscoveryPASS;zero timeout/retry/actual skip",
+    "counts": "3053SwiftTesting+59XCTest; targeted9notaddedunique",
+    "historical80": "46PASS/0FAIL/34unexecuted; Codex failure additional actualcoverage outside80",
+    "original12": "5PASS(reconciliation,sectionstate,settingssection,menudisplay,promotionservice)/7unexecuted",
+    "cleanup": "Laptop explicit RELEASED, exactparentremoved/absenceverified, clean source/index all69hashesmatch"
+  },
+  "affected_union": "Historical80 plus CodexFleetProfileDiscoveryTests =81; seven-test target first. Preserve historical80.",
+  "carryforward": "Sixpreproofs/MiMo unchanged dependencies eligible only after hashmatch",
+  "gates": "Existing deferredP2/CIpause/lintinstall/extraction/sign/activation/live gates unchanged"
+}
