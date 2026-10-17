@@ -270,3 +270,30 @@ still signs/builds a widget, release packaging invokes launch smoke, and a real
 identity overlay is required. No package/sign/launch result is claimed. Final
 source-ready reporting must distinguish exact available VPS lint/portable checks
 from these missing Mac checks; none of the seven categories is passed by framing.
+
+### UI and TIR source checkpoint
+
+UI source `cde72f0a6` is integrated/published in PR11 at
+`7aa41aa1daa22a5b2811b3a612c4012687d207e4`. It adds explicit collapse/re-expansion
+state and five initially visible Codex accounts. Ten native tests remain unrun;
+seven-file scoped SwiftFormat passed. Its native task summary was truncated to
+"The proposed"; root recovered the complete prior terminal handoff and release
+from exact backing-thread activity before accepting writes.
+
+Known TIR source repairs `cd1d3c665` integrate at
+`a7381944376a5d191274a617e95fb3a2b607ab13`: compile JonesStateRoot in the real standalone
+session fixture, distinguish absent versus invalid marker, and keep scratch/cache
+invocation-owned. Original P2 reviews/blocking claims remain unchanged. The overlay
+harness passes 30 portable checks, including stub-compiler source-list/cleanup
+proofs, NOT actual Swift compilation. Sixteen native rejection cases are provided
+but unavailable here. Root moved throwing plist decoding outside #require to avoid
+the macro compile defect already seen on the laptop. Scope/digests/check limits are
+in `../review-evidence/ui-tir-source-a7381944.json`.
+
+A focused independent Astra/high correctness review of that exact combined source
+is pending. Native affected additions: AccountMenuLayoutPlannerTests,
+JonesCompactAccountPresentationTests, StatusMenuCompactAccountLayoutTests,
+StatusMenuClaudeSwapCompactTests, StatusMenuInstantOpenTests, StatusMenuOpenRefreshTests,
+JonesStateRootTests and ProviderSessionStoreFileTests, plus the standalone/overlay
+scripts. No intermediate Mac run is requested: compose remaining source lanes first.
+No merge, signing, package, install or account operation occurred.
