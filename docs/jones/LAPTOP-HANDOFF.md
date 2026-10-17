@@ -121,7 +121,11 @@ native containment remain unresolved despite WebKit identifier hardening. All se
 trial categories retain their exact dispositions in IDENTITY.md/final JSON.
 
 Required CI is absent, not green. Prior bounded investigation found no runs/checks,
-with organization-policy inspection denied403; cause unknown. Native local results
+with organization-policy inspection denied403. Subsequent laptop public Actions UI evidence
+identifies a fork-wide pause due to Actions usage scale (repoID1356759930); active/API
+enabled metadata does not clear it. No setting changed. Preserve upstream-monitor
+disabled_fork. Re-enable/dispatch/settings changes require exact owner approval or
+owner authenticated UI initiation; laptop is preparing that separate gate. Native local results
 cannot waive ac.trial-gates. Do not repeat close/reopen, settings or permission changes.
 Extraction remains read-only until PR11 AND trial identity merge to fork main, or
 explicit M Jones release of ac.custom-base-settled.001; coordinator takeover is no waiver.

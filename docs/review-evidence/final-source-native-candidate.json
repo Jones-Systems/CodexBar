@@ -253,5 +253,16 @@
     "make_check": "held: installer/no-tool-install boundary",
     "scratch": "invocation-owned TemporaryDirectory under worktree .build/source-qualification, absence verified"
   },
-  "delivery_stage": "NOT source-ready: NFP-COR-001 repair and exact targeted confirmation pending; native rerun remains held"
+  "delivery_stage": "NOT source-ready: NFP-COR-001 repair and exact targeted confirmation pending; native rerun remains held",
+  "CI_pause_evidence": {
+    "source": "Agent relay from laptop coordinator506fc1fd; not owner approval; local evidence not assumed accessible VPS",
+    "url": "https://github.com/Jones-Systems/CodexBar/actions",
+    "repository_id": 1356759930,
+    "observed_UI_text": "Workflows are not currently being run on this fork due to the scale of GitHub Actions usage. A repository maintainer can choose to re-enable these.",
+    "metadata_limit": "workflow active/API enabled does not clear fork pause",
+    "settings_changed": false,
+    "API_substitute": "not proved",
+    "upstream_monitor": "preserve disabled_fork",
+    "next_gate": "Exact owner approval or owner authenticated UI initiating action; laptop preparing narrow gate; VPS does not re-enable/dispatch/settings-change"
+  }
 }

@@ -813,3 +813,23 @@ native authority. Missing-binary/expired-fixture/sentinel coverage requested, no
 provider/credential operation. Launch admission32.09%CPU/39.99GiB RAM/onecore6.25%.
 Source-ready and native handoff remain held until repair/new exact independent confirmation.
 CI/extraction/runtime/signing/install gates remain unchanged.
+
+
+### Fork Actions pause identified by laptop evidence
+
+Laptop continuity coordinator506fc1fd reports the public CodexBar Actions UI explicitly
+states: "Workflows are not currently being run on this fork due to the scale of GitHub
+Actions usage. A repository maintainer can choose to re-enable these."
+Source https://github.com/Jones-Systems/CodexBar/actions, repoID1356759930. This explains
+the prior zero-run evidence despite workflow active/API enabled. Source attribution is
+agent evidence relay, not independently observed VPS UI or owner approval. Local laptop
+evidence CI-PAUSE-UI.json and CI-PREREQUISITES.md is not assumed accessible on VPS.
+No setting was changed; preview was logged out and no supported API substitute proved.
+
+Fork pause remains an explicit CI prerequisite. Do not re-enable, dispatch or change
+settings from this relay; upstream-monitor disabled_fork remains preserved. Exact owner
+approval or owner authenticated UI initiating action is needed, separately from source
+and eligible-merge authorization. Laptop prepares that narrow gate while VPS source
+repair continues. Required CI remains absent, not green; neither local native evidence
+nor active workflow metadata clears it. Laptop44a checkout is idle/fixed awaiting final
+combined candidate after NFP-COR-001 repair/confirmation. All other gates persist.
