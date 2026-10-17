@@ -159,7 +159,21 @@
       "sha": "44a43f5928154e08b4ce14724c2a1231b88143a9",
       "operation": "compile/discovery only; active at relay",
       "checkout": "immutable until terminal",
-      "final_acceptance": false
+      "final_acceptance": false,
+      "compiler_blocker": {
+        "file": "Sources/CodexBar/GeminiLoginRunner.swift",
+        "locations": [
+          "120:22",
+          "126:22"
+        ],
+        "diagnostic": "capture of fileManager with non-Sendable type FileManager in a @Sendable closure [SendableClosureCaptures]",
+        "toolchain": "Apple Swift6.3 / macOS26.4 SDK",
+        "SDK_evidence": "NSFileManager.h96: FileManager does not conform to Sendable",
+        "behavior_tests": 0,
+        "terminal": "original compile still draining at relay, no retry",
+        "repair_task": "codexbar-gemini-cleanup-sendability-20261017-r1",
+        "source_repair": "active, no correction or native pass claimed"
+      }
     },
     "full_make_test": "HELD: unguarded persistent WebKit factory cases; no standard isolation or production runner full-suite exclusion seam",
     "affected_verification": "admitted groups through existing runner functions, partial coverage only",

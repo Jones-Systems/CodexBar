@@ -85,6 +85,13 @@ Its checkout is now pinned at `44a43f5928154e08b4ce14724c2a1231b88143a9` for INT
 compilation/discovery while AFCL GUI work continues. It is immutable until that run
 is terminal. No final test pass, final candidate or source acceptance is implied.
 
+That interim build has reported GeminiLoginRunner.swift120:22/126:22 compiler errors:
+fileManager (FileManager, non-Sendable in the macOS26.4 SDK) is captured by @Sendable
+onCancel/delayed-cleanup closures. Zero behavior tests ran; the original compile was
+still draining at relay and must not be retried unchanged. A separate bounded VPS
+repair lane is active. Preserve the pinned checkout until terminal, then await the
+new combined exact-head handoff. No source correction or passing rerun is claimed.
+
 Full-suite hold is source-confirmed: OpenAIDashboardWebViewCacheTests lines108–129 and
 134–140 call persistent factories unguarded; lines89–106 and609–637 have only CI guards.
 OpenAIDashboardWebsiteDataStore uses default() at27 and persistent forIdentifier at35;

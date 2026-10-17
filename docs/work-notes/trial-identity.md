@@ -626,3 +626,31 @@ admission CPU2.79%, RAM39.84GiB, one full core6.25%; one start. Laptop interim44
 checkout remains immutable until its terminal result. Full make test persistent-store
 hold, missing CI, owner-only extraction and signing/activation boundaries remain.
 No new final source-ready SHA or native rerun is requested yet.
+
+
+### Interim native compiler blocker and isolated source repair
+
+Laptop relay identifies exact44a43f5928154e08b4ce14724c2a1231b88143a9, AppleSwift6.3 /
+macOS26.4SDK: GeminiLoginRunner.swift120:22 and126:22 capture fileManager with
+non-Sendable type FileManager in @Sendable closures [SendableClosureCaptures]. The
+onCancel and delayed cleanup both remove the owned script; SDK NSFileManager.h96
+states FileManager does not conform to Sendable. No behavior tests ran. Original
+compile still draining; no retry or local source edit. Detailed native log is retained
+only on laptop; this record preserves the exact relayed diagnostic, not a VPS compile.
+
+Root assigned Astra/high repair task codexbar-gemini-cleanup-sendability-20261017-r1,
+physical /home/malcolmjones/Projects/CodexBar-worktrees/gemini-cleanup-sendability-20261017,
+branch work/gemini-cleanup-sendability-20261017, clean base7eadfdd80. Root is sole Git/
+index owner; builder edits Gemini runner, bounded cleanup helper if necessary and
+focused Gemini scratch/login fixtures only. It must preserve injected FileManager,
+cancellation/drain and per-script cleanup ownership; no escape to default filesystem
+or global unchecked FileManager conformance. Source repair is not yet available.
+Fresh admission CPU8.12%, RAM39.97GiB, one core6.25%; one start. Claude native GUI
+builder continues independently in its existing source cone.
+
+Integration ordering is explicit: Gemini repair is based on PR12 and goes ONLY into
+PR12; do not merge its trial ancestry into PR11. Claude GUI source is based on PR11,
+then its verified parent head flows into PR12. Final manifest/affected Gemini scratch
+and login suites will be refreshed on their combined candidate. No intermediate
+native rerun; original pinned build must first become terminal. Native/full-suite-
+safety/CI/extraction/signing/activation gates remain intact.
