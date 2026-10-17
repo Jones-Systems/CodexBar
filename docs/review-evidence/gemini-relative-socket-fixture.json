@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "authority_effect": "none",
+  "source_checkpoint": "79541c811e56ce280f9b5729d7cb39a9adfbb25c",
+  "failed_revision": "5f84229384403f3deebcd16ffe40a021bbcaa658",
+  "path": "Tests/CodexBarTests/GeminiStdoutHolderFixture.swift",
+  "sha256": "e7cbefd5209a23241e7b672550f4dca07948671b21156471033f71eade0b9ad5",
+  "diagnosis": "Recorded95byteparent plusUUIDroot makesholder134/producer136byte addresses. DarwinSDKsun_path104; bindprecedesfault/readiness. Earlystatus1/EOF/stdout0 consistent;270byte stderrnotpersisted, exacttextunavailable. Sourcecausehighconfidence, no experimentalprobe.",
+  "fix": "OnlyPythonchildren chdirtoownedroot thenbasename socketpath; s/s.p/s.error remaininownedroot, absolutePIDunchanged. Parentcwd/executableminimalenv/lifecycleunchanged.",
+  "checks": {
+    "diff_whitespace": "PASS",
+    "native_revised": "UNRUN"
+  },
+  "scope": "Root2line mechanicalrepairafterAstrahighfix-readydiagnosis. DeferredP2sexcluded."
+}

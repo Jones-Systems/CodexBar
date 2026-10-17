@@ -6,6 +6,14 @@ Authority effect: none. VPS owns its existing source branches; laptop root owns 
 trial disposition and eligible merges. No live authentication, installation or switching
 operation is granted by this handoff.
 
+## Native Gemini socket fixture checkpoint
+
+Latest source checkpoint `79541c811e56ce280f9b5729d7cb39a9adfbb25c` gives the synthetic holder/producer children a working directory inside their existing owned root and short socket basenames. Recorded absolute addresses134/136bytes exceeded Darwin sun_path104; bind occurs before readiness/fault injection. Exact270-byte stderr was not persisted, so source/path/platform evidence establishes the high-confidence diagnosis without a new probe. Parent working directory, absolute PID paths, minimal environment, executable, capture/ownership/readiness/deadline/cleanup assertions remain unchanged.
+
+Native-r10 at5f842293: wholecostcatchupsuite7PASS83.960seconds. FullmakeFAIL387.814seconds group45after44PASS, GeminiStatusProbeAPI2issues/GeminiStdoutHolderFixture21issues, sevenfaileddefinitions.5321SwiftTesting+61XCTest;85named58PASS/1FAIL/26unexecuted;original12ninePASS/threeunexecuted. Onegatedskip,0runnertimeouts/fallbacks/retries.522observedcostpathscontained;bothouterdrainsproved/exactparentremoved/absenceverified/305hashesindexclean/laneRELEASED.
+
+Next safe capsule: all306sourcehashes/86named supplemental, focus both Gemini suites, then fullmakeonce ifPASS. Carryunchangedpriorresults onlywithdependencyhashbindings. Onecanonicalownedparent/all3isolationflags/bothworkspacevariables/TMPDIR/jobs1/default180/no manualretry. Fullscratch/identity/shardingP2proofs remain HELD0attempts; makecheck/CI/merge/extraction/trial/operationalgates persist. This section supersedes older directions below.
+
 ## Native cost normalization fixture checkpoint
 
 Latest source checkpoint `8bb8377fe48ae4edd008e8ec3cbbc901b782e538` replaces an incidental macOS temporary-root alias with an explicit raw `/./` spelling of the existing contained file. It retains the inequality and queue-clearing assertions and adds standardized-path equality. Production normalization, shared allocation, file contents and cleanup are unchanged. Astra diagnosed the exact owned-log failure; root applied the small one-file correction.

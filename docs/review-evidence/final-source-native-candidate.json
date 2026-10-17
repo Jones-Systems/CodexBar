@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "authority_effect": "none",
-  "source_candidate": "8bb8377fe48ae4edd008e8ec3cbbc901b782e538",
+  "source_candidate": "79541c811e56ce280f9b5729d7cb39a9adfbb25c",
   "base": "21c34561387b26f76d0a27e9f00d1538fbc0926f",
   "parent_PR11_head": "4f62ba08bd6c22940bd79189b451464ba2df3ba5",
   "source_paths": {
@@ -207,6 +207,7 @@
     "Tests/CodexBarTests/FactoryAPIKeyUsageTests.swift": "91324ef5fc1b12f2fe8520e61dd6a782e61965e53031b8400e4c4e4c45f8468e",
     "Tests/CodexBarTests/FactoryStatusProbeFetchTests.swift": "4e44db982da5153c58a20f905a7774fa54b08a2a2be7bd971ed9a387b22a7303",
     "Tests/CodexBarTests/GeminiFixturePathTests.swift": "35626814723732cd9aa6fe0dea7c74037905e835353902f6fac79612c90195b9",
+    "Tests/CodexBarTests/GeminiStdoutHolderFixture.swift": "e7cbefd5209a23241e7b672550f4dca07948671b21156471033f71eade0b9ad5",
     "Tests/CodexBarTests/GeminiTestEnvironment.swift": "a0c3fc9a747bb8df9d63d0d147ab57e9a4e0b57ee0542055adf1a979d07e9b7b",
     "Tests/CodexBarTests/GrokAccountContextTests.swift": "5de6d7ea158ce0d7c1f66a68920c0f9adc13f9e8b6edd7acd4dc2b96222bffbf",
     "Tests/CodexBarTests/GrokAuthTests.swift": "938179d7020279a520f0c2b07f90db2ab386fe6123a900084e26c90eb60681d6",
@@ -316,8 +317,8 @@
     "diff_whitespace": "PASS",
     "scratch_harness": "Native-r2 c9 mock38/live45/lifecycle56 PASS; unchanged dependency inputs available for laptop hash-bound carryforward",
     "MiMo_writer": "Laptop PASS3 at44a43f59; affected MiMo source unchanged since then",
-    "native": "Latest960 targetedP1 eightPASS/resources sevenPASS; fullFAILgroup35 oncostfixture; revised8bb source UNRUN.",
-    "make_test": "FAIL294.91s at960; revised8bb source UNRUN",
+    "native": "5f842293cost7PASS/fullFAILgroup45Gemini socketfixture; revised79541sourceUNRUN",
+    "make_test": "FAIL387.814s at5f842293; revised79541UNRUN",
     "make_check": "HELD installer/no-tool-install boundary",
     "independent_Claude_review": "NFP-COR-001 source-remediated eb9bb968 and independently confirmed; native unrun. NFP-COR-002 P2 deferred/unrepaired.",
     "independent_process_review": "FSP-PROC-001 source-remediated and independently confirmed b9d2ca08; nonblockingFSP-PROC-002 P2 deferred/unrepaired"
@@ -407,7 +408,8 @@
     "StatusMenuOpenRefreshTests",
     "TestFixtureScratchTests",
     "UsageStorePlanUtilizationClaudeIdentityBoundaryTests",
-    "CostUsageCatchUpCompletionTests"
+    "CostUsageCatchUpCompletionTests",
+    "GeminiStdoutHolderFixtureTests"
   ],
   "native_additional_coverage": [
     "Claude existing credential-ownership, Keychain-isolation/policy, profile-cache, delegated-refresh/profile-isolation, consent/history-routing suites after fixture admission",
@@ -422,7 +424,7 @@
     "MiMo3 already passed laptop44a; no unchanged rerun"
   ],
   "held_native_suites": [
-    "Fullscratch/identity/sharding proofs HELD0attempts for deferredNFCR-COR-002/003; revised CostUsageCatchUpCompletionTests/full native qualification due."
+    "Fullscratch/identity/shardingHELD0attemptsfordeferredNFCR-COR-002/003; revisedGemini2suites/fullnativequalificationdue."
   ],
   "remaining_product_gaps": [
     "AFCL installed flow includes native usage companion reusable by native selector if present; readiness unknown; automation-token endpoint/scope support remains separately unproved",
@@ -946,6 +948,7 @@
       "Tests/CodexBarTests/FactoryAPIKeyUsageTests.swift",
       "Tests/CodexBarTests/FactoryStatusProbeFetchTests.swift",
       "Tests/CodexBarTests/GeminiFixturePathTests.swift",
+      "Tests/CodexBarTests/GeminiStdoutHolderFixture.swift",
       "Tests/CodexBarTests/GeminiTestEnvironment.swift",
       "Tests/CodexBarTests/GrokAccountContextTests.swift",
       "Tests/CodexBarTests/GrokAuthTests.swift",
@@ -1133,13 +1136,31 @@
       "Tests/CodexBarTests/CostUsageCatchUpCompletionTests.swift"
     ],
     "scope": "Explicit raw /./ spelling of the existing contained file, preserving distinctness and all queue/identity/scan assertions, adding standardized-equivalence assertion. Production/helper/cleanup unchanged.",
-    "qualification": "UNRUN",
+    "qualification": "At5f842293: focusedcost7PASS83.960s;fullFAIL387.814s group45after44PASS, GeminiAPI2issues/Holder21issues/7faileddefinitions.5321SwiftTesting+61XCTest;85named58PASS/1FAIL/26unexecuted;original12ninePASS/threeunexecuted;0runnertimeouts/fallbacks/retries;onegatedskip.",
     "focused_required": [
       "CostUsageCatchUpCompletionTests"
     ],
     "full_required": "make test once after focused PASS under one owned parent/default180/jobs1/threeisolationflags; no samehead retry",
     "source_path_count": 305,
     "named_rollup_count": 85,
-    "carryforward": "P1target8/resource7 at960 and focused86/twoactualproofs at95 only by exact dependency hashes; no claim rerun current source."
+    "carryforward": "P1target8/resource7 at960 and focused86/twoactualproofs at95 only by exact dependency hashes; no claim rerun current source.",
+    "cleanup": "Bothouterdrainsproved; exactparentremoved/absenceverified;522observedcostpathscontained;all305hashes/indexclean;laneRELEASED. Childstderr270bytes notpersisted, unavailable."
+  },
+  "native_r11_candidate": {
+    "integration": "79541c811e56ce280f9b5729d7cb39a9adfbb25c",
+    "delta_from": "5f84229384403f3deebcd16ffe40a021bbcaa658",
+    "changed_paths": [
+      "Tests/CodexBarTests/GeminiStdoutHolderFixture.swift"
+    ],
+    "scope": "Synthetic holder/producer Python children chdir into existing ownedfixture directory and use basename socket addresses s/s.p, avoiding134/136byte AF_UNIX paths vsDarwin104capacity. Parentcwd/environment/executable/PIDabsolute paths/capture/readiness/deadlines/assertions/cleanup unchanged.",
+    "qualification": "UNRUN",
+    "focused_required": [
+      "GeminiStdoutHolderFixtureTests",
+      "GeminiStatusProbeAPITests"
+    ],
+    "full_required": "make test once after focusPASS, onecanonicalparent/jobs1/default180/3isolationflags/no manualretry",
+    "source_path_count": 306,
+    "named_rollup_count": 86,
+    "carryforward": "r10cost7/r9P1target8/resources7/r8focus86andactualtwoproofs onlybyexactdependencyhashbinding, no currentheadrerunclaim."
   }
 }
