@@ -541,3 +541,29 @@ capability research and the active correctness review. Fresh admission CPU12.93%
 RAM39.99GiB, one core6.25%; one research start. No native rerun/new final candidate is
 requested until these dependencies resolve. Existing CI/extraction/activation gates
 remain unchanged.
+
+
+### AFCL typed-status review: excluded candidate, preserved P2 findings
+
+The independent correctness review at exact c61fa5f9 against283e3b587 returned two
+P2 findings, now bound as AFCS001/AFCS002 in afcl-mode-status-c61fa5f9.json:
+AFCS001 blocks an explicitly selected native config/secure-storage profile when
+inherited automation signals are present; AFCS002 makes Auto ignore its configured
+Admin API key precedence under the same signals. Both are conditional source
+regressions, not proof of the owner's current GUI environment. No P0/P1 or immediate-
+stop condition was identified. Existing explicit web/API and distinct token-account
+routes remain intact; copied inference token promotion is blocked.
+
+Root preserves original severities/blocking claims and defers repair under the
+applicable no-P2-remediation-without-explicit-direction rule. No source fix is made
+for these findings and no generic mid-workflow approval question is raised. The
+c61fa5f9 source checkpoint stays intact in its separate worktree; it is excluded
+from PR11/12 integration, so these regressions are not in the current task PRs.
+This is not a claim that the typed-status feature is delivered or the findings
+resolved. The previously published ledger claim 'preserved explicit credentials'
+was implementation intent, now qualified by this independent evidence.
+
+The distinct native GUI discovery/projection research remains active and may support
+an independently scoped continuation of the owner's outstanding Authfleet reuse
+requirement. No new candidate/rerun is requested until that result is consumed.
+All native/check/CI/extraction/activation gates remain unchanged.

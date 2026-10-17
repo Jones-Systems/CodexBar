@@ -3,7 +3,7 @@
   "authority_effect": "none",
   "source_candidate": "c61fa5f9a5a9562020593d79cf751a960f94dc4a",
   "base": "283e3b587b896d2c10bc7d04d1b04d4dc725883c",
-  "publication": "local source checkpoint pending focused correctness review; not yet integrated into PR11/12",
+  "publication": "Excluded from PR11/12 integration after two P2 review findings; local source checkpoint retained. No P2 repair performed.",
   "paths": {
     "Sources/CodexBarCore/Providers/Claude/ClaudeAuthFleetUsageStatus.swift": "5e2070a6da4dc157765907c0891375db221dfc033a3c0a22f831ddfc846e8ec3",
     "Sources/CodexBarCore/Providers/Claude/ClaudeOAuth/ClaudeOAuthCredentials.swift": "837019b4a457363a3c6ff8c091925f1c7c53bf65cb264a42b91aa30a4fc93bb3",
@@ -48,10 +48,36 @@
     "ClaudeUsageTests"
   ],
   "gates": [
-    "Focused independent correctness review active",
+    "Two original P2 findings retained, no repair direction",
     "GUI native discovery/source projection research active",
     "No automation usage adapter",
     "Native compilation and interaction unproved",
     "No credential operation or native provisioning authorized"
-  ]
+  ],
+  "review": {
+    "task": "codexbar-afcl-status-correctness-20261017-r1",
+    "reviewed_candidate": "c61fa5f9a5a9562020593d79cf751a960f94dc4a",
+    "base": "283e3b587b896d2c10bc7d04d1b04d4dc725883c",
+    "lens": "independent read-only correctness; Astra/high; native generic-role fallback",
+    "findings": [
+      {
+        "id": "AFCS001",
+        "original_severity": "P2",
+        "location": "Sources/CodexBarCore/Providers/Claude/ClaudeAuthFleetUsageStatus.swift:30",
+        "blocking_claim": "Explicit native OAuth profile selection is blocked before credential examination when inherited automation token or managed marker is present",
+        "evidence": "OAuth executor resolves selected config/secure-storage profile; helper exempts only a distinct CodexBar token",
+        "disposition": "Deferred; patch excluded from integration; no repair authorized/performed"
+      },
+      {
+        "id": "AFCS002",
+        "original_severity": "P2",
+        "location": "Sources/CodexBarCore/Providers/Claude/ClaudeProviderDescriptor.swift:258",
+        "blocking_claim": "Auto mode with configured ANTHROPIC_ADMIN_KEY plus automation signal returns typed block instead of configured Admin API usage",
+        "evidence": "ProviderEnvironmentResolver retains inherited env; blocker precedes hasAutoAdminAPIKey; existing ClaudeAdminAPIUsageTests establishes precedence",
+        "disposition": "Deferred; patch excluded from integration; no repair authorized/performed"
+      }
+    ],
+    "other_boundaries": "distinct selected token credentials and explicit web/API routes preserved; copied inference token blocked; no native execution",
+    "limits": "Neither conditional regression proves owner GUI environment; no P0/P1 or immediate-stop finding; tests unrun"
+  }
 }
