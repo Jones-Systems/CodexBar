@@ -156,3 +156,41 @@ implied by source completion. Source ownership has been released.
 The original 52-file manifest above remains bound to candidate `4ff8b5040930da2dd74b97b6d69b746a96544a0a`; it is historical handoff evidence, not the final integrated file set. PR #12 publishes this source checkpoint above PR #11. The authorized account fixes at parent `5519723504787c83f17f6eeb799f2a888309ab9c` were merged without conflicts in `d1fb9db946fe90ddc9a0840ab66bcb0d7c04c7a0`. Their source changes do not overlap the identity hooks.
 
 Independent Astra/high correctness review of `4ff8b5040930da2dd74b97b6d69b746a96544a0a` found TIR001 and TIR002, both P2. Exact source/result bindings, original severities and blocking effects are preserved in `docs/review-evidence/trial-identity-4ff8b504.json`. Both remain uncorrected and deferred under the explicit-direction rule; the owner authorized AFR001/002, not these new findings. No severity or blocking claim is waived. Native checks and all previously recorded trial gates remain open. No merge or installation is claimed.
+
+## Laptop continuity takeover and VPS source assignment
+
+Coordinator relay received from laptop thread
+`506fc1fd-d94f-4616-84f4-7751eda0aec8`, environment
+`8750edf7-486b-41ac-81ce-cd50dfeb71eb`, reporting M Jones's current direct
+completion direction. Attribution remains agent relay, not independent agent
+approval. Laptop retains overall continuity, Mac verification, eligible merge
+sequencing and final delivery. VPS root retains sole Git/index ownership of
+existing declared source worktrees, publishes source checkpoints, and does not
+merge behind the coordinator. No live authentication, protected-store reads,
+host activation, installation, signing or release is covered.
+
+New source scope: collapsible active/top Codex account with coherent compact /
+expanded rows; five initially visible Codex accounts; source-first Claude AFCL
+reuse investigation without a second independent login lifecycle; known
+TIR001/TIR002 source repairs and concrete disposition of seven trial categories;
+proportionate upstream-friendly isolation remains in scope. Original finding
+severities and exact review bindings remain unchanged. Screenshots concern stock
+installed CodexBar, not proof this candidate was run.
+
+Current clean integration branches verified: PR11
+`c2a3118daf3d6824bba648abe6f4e84ef710272d`, PR12
+`21c34561387b26f76d0a27e9f00d1538fbc0926f`, matching fork remote refs.
+No source writer or unknown prior effect remained before assignment. PR3 is
+unrelated repository-sync work with no path overlap. New task worktrees:
+`account-presentation-20261017` from PR11 and
+`trial-blocker-repairs-20261017` from PR12. Root owns Git in both; builders own
+only their declared UI/test or two-finding repair cones. Sol source research of
+Claude and Astra trial framing are read-only. No duplicate top-level thread
+was created. Frontier remains explicit; no preference writes.
+
+Fresh admission before the first three lanes: CPU 2.83%, available RAM 40.16 GiB;
+before the known-blocker builder: CPU 8.36%, RAM 39.87 GiB. One fully used core
+is 6.25% of host capacity. Native verification remains laptop-owned and is not
+substituted by missing-Swift results on the VPS. Current registered cross-host
+return route still targets a different peer environment; checkpoint reports are
+retained here and in Git for the coordinator's authorized VPS reader.
