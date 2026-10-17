@@ -399,3 +399,24 @@ must retain this product gap rather than equating native profile reuse with AFCL
 The exact UI/TIR independent result and original three CAIR P2 blocking claims are
 now recorded additively in the existing ui-tir-source-a7381944 evidence file. UI
 acceptance correction and Claude correctness review remain active dependencies.
+
+
+### UI acceptance corrections published
+
+Source `c6b29cc2021f8415bc8467558689118a68e824aa` addresses CAIR001/002/003 in
+four released files. Root verified the exact manifest and inspected policy/callback
+callers. Additive planner policy defaults preserve other callers; Codex opts into
+compact layout at one account and folding a single eligible overflow row. Counts
+0–6, 8 and 12, toggles/re-expansion, overflow reveal, close/reopen reset and priority
+exceptions have synthetic coverage authored. The adjacent provider-specific marker
+matches the gatekeeper's documented form. Builder scoped SwiftFormat/diff checks
+passed; no native compilation, tests or interaction proof exists here.
+
+PR11 normal publication is `3c2e3b7f55ea069f42374427c52dd2c73b8d3d2d`; PR12 source
+integration is `adce95773ec8fb03d2c275e53b262ad95260abef`. Original P2 findings remain
+bound to a7381944; dispositions are source-addressed, native pending. Priority rows
+and explicit user toggles can exceed five. Workspace-grouped menus retain their
+existing sectioned stacked fallback; this slice proves no collapse interaction in
+that separate presentation. Exact correction manifest/dispositions are appended to
+the existing UI/TIR evidence file. Claude review remains the final active source
+integration dependency. No intermediate native rerun or merge was requested.

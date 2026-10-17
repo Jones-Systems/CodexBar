@@ -48,24 +48,41 @@
         "original_severity": "P2",
         "location": "Sources/CodexBarCore/AccountMenuLayoutPlanner.swift:62",
         "blocking_claim": "Active/top collapse and coherent re-expansion unavailable at counts 1\u20133",
-        "disposition": "open; bounded correction assigned under direct account-presentation acceptance"
+        "disposition": "addressed in source c6b29cc2021f8415bc8467558689118a68e824aa; native qualification pending"
       },
       {
         "id": "CAIR002",
         "original_severity": "P2",
         "location": "Sources/CodexBarCore/AccountMenuLayoutPlanner.swift:82",
         "blocking_claim": "Six healthy accounts bypass five-account initial presentation because one hidden candidate is discarded",
-        "disposition": "open; bounded correction assigned under direct five-account acceptance"
+        "disposition": "addressed in source c6b29cc2021f8415bc8467558689118a68e824aa; native qualification pending"
       },
       {
         "id": "CAIR003",
         "original_severity": "P2",
         "location": "Sources/CodexBar/Jones/JonesCompactAccountPresentation.swift:16",
         "blocking_claim": "New Codex comparison lacks justification required by ProviderArchitectureGatekeeperTests",
-        "disposition": "open; required-check correction assigned with same bounded policy change"
+        "disposition": "addressed in source c6b29cc2021f8415bc8467558689118a68e824aa; native qualification pending"
       }
     ],
     "TIR001_TIR002": "Confirmed addressed in source; original P2 severities/blocking claims preserved; native qualification pending",
     "limits": "Native interactions, Swift compilation and full checks unproved; no independent operational success claim"
+  },
+  "acceptance_correction": {
+    "source": "c6b29cc2021f8415bc8467558689118a68e824aa",
+    "PR11_checkpoint": "3c2e3b7f55ea069f42374427c52dd2c73b8d3d2d",
+    "PR12_integration": "adce95773ec8fb03d2c275e53b262ad95260abef",
+    "paths": {
+      "Sources/CodexBar/Jones/JonesCompactAccountPresentation.swift": "de15bd9bf03ad511483c79105f94c0297f5c2b79f2813017e23f83d65493bdbe",
+      "Sources/CodexBarCore/AccountMenuLayoutPlanner.swift": "2cbe06da00e04d79828da7174ef5161ca878591415fc5d8e7fc64540083c1c5f",
+      "Tests/CodexBarTests/AccountMenuLayoutPlannerTests.swift": "0cc064e3f3d8a8e59dbc5f0050faea35c94089fb2f911146ad863264f1ac5004",
+      "Tests/CodexBarTests/JonesCompactAccountPresentationTests.swift": "6f9f87734c7b94b6d914b3e673ef7e9be2f86dabc6786a9aab50d831545d58da"
+    },
+    "checks": "builder scoped SwiftFormat0.61.1 and diff check PASS; root manifest verified; native unexecuted",
+    "exceptions": [
+      "priority rows and explicit toggles may exceed five",
+      "workspace-grouped menus retain existing stacked fallback"
+    ],
+    "independent_post_repair_review": "not performed; direct source correction and fixture qualification pending"
   }
 }
