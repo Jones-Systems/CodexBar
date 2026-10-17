@@ -1130,3 +1130,10 @@ Astra bounded repair changes one synthetic test file: POSIX realpath after owned
 ### Native-r3 macro compiler follow-up
 
 46055de targeted seven-test gate failed compile60.64s attempt1, zero tests; full make test never started. Exact diagnosed nesting of throwing #expect reads corrected locally by root: plain throwing lets, nonthrowing value expectations; all rejection/metadata/path/cleanup assertions retained. Small one-path mechanical correction did not justify another agent/reviewer. PR11 sourcefdfea6b06 integrated PR12 at51bf105cf; scoped formatter0.2s and diff PASS, native unavailable/unrun.68manifest hashes match; preliminary dependencies unchanged. Laptop oldHEAD remains fixed until explicit lane release. Deferred P2/CI/tooling/extraction/activation gates unchanged.
+
+
+### Native-r4 ownership fixture repair checkpoint
+
+Native-r4 at60c released/parentcleanup verified: targeted7PASS, full17groupsPASS/group18fails three CLIStorageOwnership fixtures. Historical79=17PASS/0FAIL/62unexecuted, failedownership suite additional actualcoverage; new union80. Original12unexecuted.1951SwiftTesting+59XCTest reported before failure; targetedrepeat7notunique.
+
+Existing bounded Astra lane diagnosed synthetic process-default cache identity versus explicit config profile. Threefixtures now seed matching profile key/identity; all ownership/rotation/history/restart/failure assertions retained. Other six tests/helpers and production unchanged. Source320562d63 cherry-picked PR11 as195f66a64; integrated PR12 atbfd35ef493. Scoped formatter/diff/staticPASS, nativeUNRUN.69sourcehashes verified. Sixpreproofs/MiMo unaffected; hash-boundcarryforward only. No extra review needed for fixture-only exactsource correction. All deferredfindings/CI/tooling/extraction/activationgates unchanged.

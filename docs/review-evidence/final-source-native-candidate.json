@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "authority_effect": "none",
-  "source_candidate": "51bf105cf122c38b67dbc632d8347d8fd61f3248",
+  "source_candidate": "bfd35ef493aff3925bf0e14cc8379d6930e70b1b",
   "base": "21c34561387b26f76d0a27e9f00d1538fbc0926f",
-  "parent_PR11_head": "fdfea6b06a1f58e235bdfc0cafbf6143419729cc",
+  "parent_PR11_head": "195f66a6471e381a3baccbe1022251cde5f26d8b",
   "source_paths": {
     "Scripts/fixture_process_anchor.py": "9b429b274bc1e56f1bf50766da3e9fc08a7f977fc6d18787f40ceda50d4868d0",
     "Scripts/test_codex_file_isolation_child.sh": "c8433a161896c7ab904bf72b5d730614cf532d160f5b863bd0ddb526b53d71a7",
@@ -61,6 +61,7 @@
     "Tests/CodexBarTests/ClaudeNativeProfileFetchTests.swift": "ad2ddaf9caad15f133fa9259a0e7017ee5a147517b39777c5e4ec631b642f6aa",
     "Tests/CodexBarTests/ClaudeNativeProfileIntegrationTests.swift": "35442c2214beb9222af6960e37452fc4af0b95f50989a9b335b430b7ec328bd4",
     "Tests/CodexBarTests/ClaudeNativeProfileSelectionTests.swift": "7790040c58d98b3e4a16340be3371dc24af70d40aac349e4e7540c46af794b08",
+    "Tests/CodexBarTests/ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests.swift": "a1374eea4e7256ce090ea31c6c52cf923b6e116a49f27abf50c3adf4dc66eaba",
     "Tests/CodexBarTests/ClaudeOAuthCredentialsStoreIsolatedSecurityCLITests.swift": "36466534748d00f9fc0f4b540838a81e38f9d5aea03044faddfc2f9d3e2d7a8a",
     "Tests/CodexBarTests/ClaudeOAuthDelegatedRefreshMCPProfileTests.swift": "5d2862fe9f575cf1c398a42b70cd4f3a15e659692605065770fb138692a17921",
     "Tests/CodexBarTests/Jones/JonesFrameworkIsolationTests.swift": "ebee68096330ae660d95f29f1d9792d44f95fb0f92a4e098ff60d5882cc5ed57",
@@ -79,8 +80,8 @@
     "diff_whitespace": "PASS",
     "scratch_harness": "Native-r2 c9 mock38/live45/lifecycle56 PASS; unchanged dependency inputs available for laptop hash-bound carryforward",
     "MiMo_writer": "Laptop PASS3 at44a43f59; affected MiMo source unchanged since then",
-    "native": "Native-r3 46055de targeted compileFAIL60.64s zero tests; plain-let compiler correction new source native UNRUN",
-    "make_test": "Native-r3 full run never started; previous c9 partial failure preserved",
+    "native": "Native-r4 60c discovery and seven-test safe-readerPASS; full17groupsPASS/group18ownershipfixtureFAIL; revisedownership fixture nativeUNRUN",
+    "make_test": "Native-r4 FAIL148.66s zero timeouts/retries; revised candidate unrun",
     "make_check": "HELD installer/no-tool-install boundary",
     "independent_Claude_review": "NFP-COR-001 source-remediated eb9bb968 and independently confirmed; native unrun. NFP-COR-002 P2 deferred/unrepaired.",
     "independent_process_review": "FSP-PROC-001 source-remediated and independently confirmed b9d2ca08; nonblockingFSP-PROC-002 P2 deferred/unrepaired"
@@ -101,6 +102,7 @@
     "ClaudeNativeProfileSelectionTests",
     "ClaudeNativeProfileServiceLinuxTests",
     "ClaudeOAuthCredentialsProfileCacheTests",
+    "ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests",
     "ClaudeOAuthCredentialsStoreIsolatedSecurityCLITests",
     "ClaudeOAuthDelegatedRefreshCoordinatorTests",
     "ClaudeOAuthDelegatedRefreshEpochTests",
@@ -519,6 +521,18 @@
     ],
     "affected_suite": "ClaudeFleetProfileDiscoveryTests seven tests first",
     "evidence": "claude-binding-physical-fixture.json#macro_compile_followup",
+    "preliminary_dependencies_unchanged": true
+  },
+  "native_r5_candidate": {
+    "integration": "bfd35ef493aff3925bf0e14cc8379d6930e70b1b",
+    "delta_from": "60c64879f02805c37509c25625303610618ea70e",
+    "changed_paths": [
+      "Tests/CodexBarTests/ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests.swift"
+    ],
+    "affected_suite": "ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests nine tests first",
+    "evidence": "claude-cli-ownership-fixtures.json",
+    "historical79_preserved": "17PASS/0FAIL/62unexecuted native-r4",
+    "new_union_count": 80,
     "preliminary_dependencies_unchanged": true
   }
 }

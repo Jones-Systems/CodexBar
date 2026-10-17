@@ -6,6 +6,29 @@ Authority effect: none. Source stays on VPS. Laptop thread
 trial disposition and eligible merges. No live authentication, installation or switching
 operation is granted by this handoff.
 
+## Native-r5 profile-scoped ownership fixture candidate
+
+Latest source checkpoint `bfd35ef493aff3925bf0e14cc8379d6930e70b1b`, PR11 parent
+`195f66a6471e381a3baccbe1022251cde5f26d8b`. Bind accompanying exact published PR12
+head after ancestry/cleanliness and all69source hashes verify. Native-r4 is explicitly
+released with exact scratch parent removed/absence verified; no active lane dependency.
+Only ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests.swift changes from60c.
+
+Three fixtures now seed the cache under the explicit selected profile identity/key,
+rather than process-default legacy identity. Production code unchanged. All ownership,
+rotation, history/restart and refresh-failure assertions retained; other six tests
+and helpers unchanged. Formatter/diff/static comparison PASS; native UNRUN. Verify
+this nine-test suite first, then accepted full/remaining qualification if PASS, using
+existing isolation/no-retry/one-owned-parent resource-admitted route. No live operation.
+
+Native-r4 safe-reader7PASS82.04s and fullgroup17PASS; full148.66s then group18 failed
+three ownership fixtures after17PASS.1951SwiftTesting+59XCTest reported before failure;
+targetrepeat7 not added unique. Historical79=17PASS/0FAIL/62unexecuted; failedownership
+suite was additional actual coverage, now included in union80. Original12 unexecuted.
+Sixpreproofs/MiMo unchanged dependency evidence may carry only after verifier hash match;
+two TestsLinux suites actualMacPASS. All deferredP2/CI/lint/extraction/sign/install/live
+gates unchanged. See claude-cli-ownership-fixtures.json. Earlier candidates historical.
+
 ## Native-r4 macro compiler correction
 
 Latest source checkpoint `51bf105cf122c38b67dbc632d8347d8fd61f3248`, PR11 parent
