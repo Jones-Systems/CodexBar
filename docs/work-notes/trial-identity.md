@@ -448,3 +448,39 @@ shared HTTP state/native containment unresolved, native qualification unavailabl
 CI absent, owner-only extraction sequencing unchanged and no activation authority.
 Laptop coordinator owns integration/merge decisions; VPS performs no source PR merge.
 The unavailable return bridge is unchanged; Git/thread evidence is the delivery route.
+
+
+### Eligible product-source continuation after e23b813c8
+
+Laptop coordinator reports exact e23b813c8 fetched and manifest/handoff read, but
+baseline compile remains active; no checkout advance. It relays the existing owner
+requirements without grouped-presentation exception and keeps AFCL a required gap.
+Root resumes two independent Astra/high tasks under Frontier explicit workstream
+revision1, with native generic-role fallback and declared physical isolated checkouts:
+
+- grouped-account-presentation-20261017: path under CodexBar-worktrees, branch
+  work/grouped-account-presentation-20261017, base283e3b587; grouped Codex menu/planner
+  helpers and synthetic presentation fixtures only.
+- claude-afcl-status-20261017: path under CodexBar-worktrees, branch
+  work/claude-afcl-status-20261017, base283e3b587; source/official-primary AFCL command
+  and mode research, bounded Claude integration or typed unverified-capability status,
+  and synthetic fixtures only. host-tooling source is read-only.
+
+Both task identities use the matching codexbar-grouped-account-presentation and
+codexbar-afcl-mode-integration suffixes with 20261017-r1 in the existing native
+parent task namespace. Root remains sole Git/index owner in both worktrees and owns
+shared docs; their write scopes do not overlap. Existing source worktrees/results
+are preserved. No top-level thread was created. Fresh admission: CPU20.00%, RAM40.13
+GiB available, one fully used core6.25%; two starts were below the batch ceiling10.
+
+Grouped work must preserve workspace identity/labels and switching semantics while
+supporting collapse and five initial account rows. AFCL work must establish the exact
+producer command/mode before claiming reuse; lacking usage-endpoint/granted-scope
+proof cannot be replaced with fabricated support. A precise typed status can address
+misleading generic auth-not-found while the true provider contract remains open.
+No real authentication/credential/Keychain/provider operation is authorized.
+
+The prior final-source manifest is historical until these lanes compose. No new
+native candidate/rerun is requested yet. Laptop continues fixture-safety investigation;
+full make test cannot silently run persistent WebKit stores. Missing CI, owner-only
+extraction sequencing and signing/package/activation holds remain unchanged.

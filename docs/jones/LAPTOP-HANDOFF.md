@@ -5,6 +5,16 @@ on VPS; laptop thread `506fc1fd-d94f-4616-84f4-7751eda0aec8` in environment
 `8750edf7-486b-41ac-81ce-cd50dfeb71eb` retains continuity, native verification,
 trial disposition and eligible merges. No installation or live switching is authorized.
 
+## Source continuation notice
+
+The laptop coordinator requested two further source slices after reading e23b813c8:
+workspace-grouped account presentation and AFCL command/auth-mode integration or
+truthful typed status. Both are active on VPS. Preserve e23b813c8 and older evidence;
+**do not treat a documentation-only head carrying this notice as the next native
+candidate**. Wait for the new exact source-ready SHA and refreshed manifest after
+both slices return. No intermediate checkout advance or native rerun is requested.
+The binding below describes the preceding source checkpoint until replaced.
+
 ## Candidate binding
 
 Use the **exact published PR12 head in the accompanying VPS source-ready message**,
