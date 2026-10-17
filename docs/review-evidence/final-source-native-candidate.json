@@ -78,7 +78,7 @@
     "native": "UNRUN on new candidate; Swift unavailable VPS",
     "make_test": "HELD pending integrated synthetic WebKit safety qualification and native checks; not passing",
     "make_check": "HELD installer/no-tool-install boundary",
-    "independent_Claude_review": "NFP-COR-001 sourcefixeb9bb968 integrated, targetedconfirmationpending; NFP-COR-002 P2deferredunrepaired"
+    "independent_Claude_review": "NFP-COR-001 source-remediated eb9bb968 and independently confirmed; native unrun. NFP-COR-002 P2 deferred/unrepaired."
   },
   "native_affected_suites": [
     "AccountMenuLayoutPlannerTests",
@@ -179,7 +179,7 @@
     "AFCL installed flow includes native usage companion reusable by native selector if present; readiness unknown; automation-token endpoint/scope support remains separately unproved",
     "All new native behavior/GUI evidence pending",
     "Shared HTTP/native app/widget/unbundled CLI containment remains unqualified",
-    "NFP-COR-001 P1 enrolled-executable fallback: repair active, not corrected",
+    "NFP-COR-001 originalP1 source-remediated and independently confirmed eb9bb968; native execution pending",
     "NFP-COR-002 P2 identityless success history mixing: deferred unrepaired, see exact review ledger",
     "FSP-PROC-001 P1 recycled process-group signaling risk: execution hold, bounded source repair active"
   ],
@@ -263,7 +263,7 @@
     "make_check": "held: installer/no-tool-install boundary",
     "scratch": "invocation-owned TemporaryDirectory under worktree .build/source-qualification, absence verified"
   },
-  "delivery_stage": "Integrated source75c03d06; NFP-COR-001 and FSP-PROC-001 targeted confirmations in progress; NOT native handoff yet",
+  "delivery_stage": "Integrated source75c03d06; Claude P1 source-confirmed, FSP-PROC-001 containment confirmation pending; await exact native handoff",
   "CI_pause_evidence": {
     "source": "Agent relay from laptop coordinator506fc1fd; not owner approval; local evidence not assumed accessible VPS",
     "url": "https://github.com/Jones-Systems/CodexBar/actions",

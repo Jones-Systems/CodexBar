@@ -928,3 +928,19 @@ unsupported capabilities fail before spawn. Actual Mac containment remains unqua
 Independent Astra confirmation codexbar-fixture-process-identity-confirmation-20261017-r1
 active. Both originalP1 blocks remain until confirmation; no premature source-ready/native
 handoff. Full native/CIpause/extraction/runtime/sign/install gates unchanged.
+
+
+### Enrolled-executable P1 independently source-confirmed
+
+Astra targeted confirmation codexbar-claude-enrolled-executable-confirmation-20261017-r1
+reviewed exact eb9bb9683f6b226c672876e88e493987663995bc vs e7ac58f8d and supports
+NFP-COR-001 source remediation, no newly introduced correctness/fixture-safety findings.
+Immutable confirmation identity/anchors are preserved with the original finding in
+claude-native-gui-ab73cbaa.json. Resolver143 rejects missing/nonexec/removed/unavailable
+selected CLI before ambient/test overrides; delegated availability239 and StatusProbe344
+both consume it, the latter re-resolves before /status. Valid passive OAuth remains usable.
+Fixture130/224 owns contained scratch and stubs all usage/fingerprint/CLI touch paths.
+No tests/live operations were run by reviewer. OriginalP1/severity/blocking effect retained
+historically; outcome remediate-and-review-new-revision is source-confirmed, not a native
+pass or runtime/merge qualification. NFP-COR-002 P2 remains deferred/unrepaired. Process-
+identity confirmation still active, so no final native handoff yet; all other gates persist.

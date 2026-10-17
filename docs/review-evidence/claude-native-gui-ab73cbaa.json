@@ -74,7 +74,7 @@
       "path": "Sources/CodexBarCore/Providers/Claude/ClaudeNativeProfileFetchStrategy.swift:21",
       "consequence": "Expired native credentials plus missing enrolled native_cli permit delegated OAuth refresh to use another Claude executable on PATH through resolver fallback; consent retained but enrollment bypassed",
       "test_gap": "missing enrolled binary, expired injected credentials and sentinel fallback executable",
-      "outcome": "remain blocked",
+      "outcome": "remediate and review a new revision",
       "next_step": "Bounded authorized source repair in codexbar-claude-enrolled-executable-repair-20261017-r1; exact independent confirmation required before correction claim",
       "repair_progress": "Source-addressed eb9bb9683f6b226c672876e88e493987663995bc, PR11 parent c0f7ffa78afb8d5016404461495ec9a469cf8232 and PR12 source75c03d065bc14c641228da117724f88734cb6027; targeted independent confirmation in progress; native unrun, original block retained",
       "repair_manifest": {
@@ -82,7 +82,23 @@
         "Tests/CodexBarTests/ClaudeNativeProfileFetchTests.swift": "ad2ddaf9caad15f133fa9259a0e7017ee5a147517b39777c5e4ec631b642f6aa"
       },
       "confirmation_task": "codexbar-claude-enrolled-executable-confirmation-20261017-r1",
-      "checks": "Scoped formatter2/diff PASS; five synthetic cases added but unrun, Swift unavailable"
+      "checks": "Scoped formatter2/diff PASS; five synthetic cases added but unrun, Swift unavailable",
+      "source_disposition": "Source-remediated and independently confirmed at eb9bb9683f6b226c672876e88e493987663995bc; native qualification remains separate/unrun. Original P1 delivery-blocking finding retained historically.",
+      "confirmation": {
+        "reviewed_revision": "eb9bb9683f6b226c672876e88e493987663995bc",
+        "base": "e7ac58f8d4c436947331d195a36afdfa585600d1",
+        "source_profile": "Astra/high independent targeted correctness; generic T3 role fallback",
+        "task": "codexbar-claude-enrolled-executable-confirmation-20261017-r1",
+        "immutable_result": "context-transfer:type:subagent_result:source-thread:thread%3Adelegated-task%3Acommand%253Amcp%253Ad4fad46f-6f60-4566-8a66-ad626d212917%253Adelegate-task%253Acodexbar-claude-enrolled-executable-confirmation-20261017-r1:target-thread:0488f286-4c8b-4932-9b44-67ef47cb70a3:25db0419-4de5-458c-b0db-f15b7cdecffc",
+        "result": "supported source remediation; no newly introduced correctness/fixture-safety findings",
+        "anchors": [
+          "ClaudeSourcePlanner.swift143 enrolled guard",
+          "ClaudeOAuthDelegatedRefreshCoordinator.swift239 availability",
+          "ClaudeStatusProbe.swift344 re-resolves before /status",
+          "ClaudeNativeProfileFetchTests.swift130/224 fixture isolation/transport stubs"
+        ],
+        "native": "UNRUN; readiness unknown; no operational success"
+      }
     },
     {
       "source_review_profile": "Astra/high independent correctness; generic T3 review role fallback",
