@@ -4,6 +4,7 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 # Fixtures exercise identity metadata and isolated session compilation; packaging/signing never runs.
 exec python3 - "$ROOT" <<'PYTEST'
 import hashlib
+import os
 from pathlib import Path
 import plistlib
 import re
@@ -14,7 +15,21 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = Path(sys.argv[1])
+ROOT = Path(sys.argv[1]).resolve()
+# Optional CODEXBAR_TEST_SCRATCH_PARENT must be a canonical absolute workspace descendant.
+# The caller owns this existing parent; only our unique fixture child is disposable.
+SCRATCH_PARENT = ROOT
+if "CODEXBAR_TEST_SCRATCH_PARENT" in os.environ:
+    raw_parent = os.environ["CODEXBAR_TEST_SCRATCH_PARENT"]
+    parent = Path(raw_parent)
+    try:
+        if (not raw_parent or "\n" in raw_parent or not parent.is_absolute() or ".." in parent.parts
+                or parent == ROOT or ROOT not in parent.parents
+                or parent.resolve(strict=True) != parent or not parent.is_dir()):
+            raise ValueError("expected an existing canonical directory strictly inside the workspace")
+    except (OSError, RuntimeError, ValueError) as error:
+        sys.exit(f"Invalid CODEXBAR_TEST_SCRATCH_PARENT: {error}")
+    SCRATCH_PARENT = parent
 SOURCE = (ROOT / "Scripts/package_app.sh").read_text()
 GOLDEN = {'release/identity/$APP/Contents/Info.plist': '139d367a203b990fea2584d54fcb9893ba6510f0a8b5cc11c04c0c556acaed5e', 'release/identity/$APP_ENTITLEMENTS': '82637aeed3306a079b86c3828b0159d193b3af3b8312349fd0f1cd0d755982d5', 'release/identity/$WIDGET_ENTITLEMENTS': '068b22ca7b56d898fd0c275d87a3924ba6b2266244d59e059cd7ba4e4cde12a4', 'release/adhoc/$APP/Contents/Info.plist': '3023450dd5489602ee0c1ee03020194506ae3457714e19d7ba0f3448cf0973ca', 'release/adhoc/$APP_ENTITLEMENTS': '82637aeed3306a079b86c3828b0159d193b3af3b8312349fd0f1cd0d755982d5', 'release/adhoc/$WIDGET_ENTITLEMENTS': '068b22ca7b56d898fd0c275d87a3924ba6b2266244d59e059cd7ba4e4cde12a4', 'debug/identity/$APP/Contents/Info.plist': '0f709318f2455aabae759f9868e35e66108d11e4bb15d9699e21684cde9327d0', 'debug/identity/$APP_ENTITLEMENTS': '55f83f8a1f01c38a1fdeb735c46e1f72c5baa709be046c5b2780649085f211e3', 'debug/identity/$WIDGET_ENTITLEMENTS': '7bdbe4f531d23ac5ff9ded2b82e46c110346dd1b7102fc1bce52af14fd41a098', 'debug/adhoc/$APP/Contents/Info.plist': '0f709318f2455aabae759f9868e35e66108d11e4bb15d9699e21684cde9327d0', 'debug/adhoc/$APP_ENTITLEMENTS': '55f83f8a1f01c38a1fdeb735c46e1f72c5baa709be046c5b2780649085f211e3', 'debug/adhoc/$WIDGET_ENTITLEMENTS': '7bdbe4f531d23ac5ff9ded2b82e46c110346dd1b7102fc1bce52af14fd41a098'}
 BASE_OID = "0f842d7f26edcd1a1fff886409291ef9b4f846b6"
@@ -57,7 +72,7 @@ def values(fixture, config="release", mode="adhoc", extra=None):
     return dict(zip(FIELDS, data))
 
 count = 0
-with tempfile.TemporaryDirectory(prefix=".jones-identity-fixture-", dir=ROOT) as name:
+with tempfile.TemporaryDirectory(prefix=".jones-identity-fixture-", dir=SCRATCH_PARENT) as name:
     fixture = Path(name)
     # Exercise the real standalone compile command without claiming a native Swift build.
     tools = fixture / "tools"
@@ -97,10 +112,15 @@ output.chmod(0o700)
         result = subprocess.run(
             ["bash", str(ROOT / "Scripts/test_provider_session_file_isolation.sh")],
             env={"PATH": str(tools) + ":/usr/bin:/bin", "TMPDIR": str(fixture),
-                 "PROOF_MODE": mode, "PROOF_RECORD": str(record)},
+                 "PROOF_MODE": mode, "PROOF_RECORD": str(record),
+                 **({"CODEXBAR_TEST_SCRATCH_PARENT": str(fixture)}
+                    if "CODEXBAR_TEST_SCRATCH_PARENT" in os.environ else {})},
             capture_output=True)
         assert result.returncode == expected, (mode, result.stderr.decode())
-        assert not Path(record.read_text()).exists(), mode + " leaked owned scratch"
+        proof_root = Path(record.read_text())
+        expected_parent = fixture if "CODEXBAR_TEST_SCRATCH_PARENT" in os.environ else ROOT
+        assert proof_root.parent == expected_parent, mode + " ignored scratch parent"
+        assert not proof_root.exists(), mode + " leaked owned scratch"
         count += 1
     print("Standalone session fixture: compile source list and success/failure cleanup passed (stub compiler)")
 
