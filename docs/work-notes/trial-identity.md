@@ -1015,3 +1015,28 @@ no directCodexBar refreshchain. No structural gap in boundedpath, runtime/extern
 UNKNOWN. Save sourcecandidatecheckout until explicitverifierrelease; no operationalpermission.
 CIpause/extraction/sign/install and allseven trialgates remain intact. Native/source-ready
 status superseded by failures, not a passing84c or permission for unchangedretry.
+
+
+### Direct native compiler errors source-addressed
+
+Released Astra two-file repair preserves allassertions/coverage, no newuncheckedSendable,
+try? weakening or scratch storage. Root inspected exacthashes/diffs and committedClaude
+macro correctionb1f85e011f7dd7984d08c0cb849238a5e57b24f5 separately from Jones closure
+correctione42cc09f4f828ca96957eb12e9f62fe97ff362a2. PR11 receives onlyClaude changevia
+76f86a42560d21143dd4359aad54248bf60b28e6, preserving no trialancestry; exactparent
+integratedwithbothcorrections intoPR12a22f2c159d36d6a61dcc6e6a18dc074bae47a220.
+Throwingconfigloadnowprecedes#expect;3Taskclosuresexplicit@Sendablecaptureswithrequest
+byvalue. InmemoryFileManager/cancellation/drain/concurrentcleanup remain unchanged.
+Builderformatter2files/diffPASS, rootmanifest/diffPASS. NativecompileUNRUNSwiftabsent;
+all79suites remain unavailable from84cfailure. Macro25/7800repetition/contiguousbatch
+supports downstreamcascadeinference only, notproof; no unchangedtestsweep. Exactledger
+native-compile-repair-e42cc09f.json. No extra broadreview needed for directcorrection.
+
+Consumedlaptopreconciliation: failed largeoutput child isexactonePython/no forks,
+terminalobservedtwice, no livewritersupported. Explicitinnerreap stillUNPROVED; outer
+completeddrain/reaponlyknowntrackedchildren notunseenchildclaim. No probes/signals/retries.
+Originalparent cleanedafteridentity/hashchecks, absenceverified/logscacheretained and
+initiallanereleased. Independentidentity/providerstandalones runseparately; collector/make
+remainheldandcheckout84cfixeduntilverifierrelease. Maccollectorrepaircontinueselsewhere.
+No newsource-ready or intermediatecompile requested; updatefinalmanifestafteritsreturn.
+Allfindings/gates/auth/native/installboundariesremain unchanged.

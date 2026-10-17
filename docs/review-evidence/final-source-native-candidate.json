@@ -3,7 +3,7 @@
   "authority_effect": "none",
   "source_candidate": "75c03d065bc14c641228da117724f88734cb6027",
   "base": "21c34561387b26f76d0a27e9f00d1538fbc0926f",
-  "parent_PR11_head": "c0f7ffa78afb8d5016404461495ec9a469cf8232",
+  "parent_PR11_head": "76f86a42560d21143dd4359aad54248bf60b28e6",
   "source_paths": {
     "Scripts/test_fixture_process_ownership.py": "62c2cbd6895d4b92cb58dc563f6b3438ca7a36e7a84f03e6872967503b98ea54",
     "Scripts/test_fixture_scratch_parent.py": "7f055a4d3ae566991cd1fb4931d8016c56c746ab31d61903574b037ee80f4468",
@@ -290,7 +290,18 @@
         "execution": "shared collector scratch regression HELD"
       },
       "Mac_admission": "CPU92.45% => zero new tests at relay; not VPS capacity",
-      "laptop_checkout": "fixed84c; no advance until explicit verifier release"
+      "laptop_checkout": "fixed84c; no advance until explicit verifier release",
+      "reconciliation": {
+        "source": "Laptop coordinator506fc1fd verifier evidence relay",
+        "failed_child": "exactly one Python importos/two os.write command, nofork; terminal before both signal attempts; no live writer supported",
+        "explicit_inner_reap": "UNPROVED, not signal success",
+        "outer_runner": "completed drain/reap noerror for known tracked children only, no never-observed-child claim",
+        "extra_probes_signals_retries": false,
+        "original_parent": "identity/hash checked, cleanup completed and absence verified; logs/cache retained; initial lane released",
+        "independent_scripts": "new one-parent lifetime identity/provider standalones admitted; do not import failedcollector",
+        "laptop_checkout": "84c fixed until brief lane releases; no compile/sharedcollector retry",
+        "macro_batch": "two changedtestfiles + contiguous JonesStateRoot/KeyboardShortcuts/Keychain/Kilo/Kimi/Kiro; repeateddirect25x/macros7800x supports inference only"
+      }
     }
   },
   "historical_source_candidate": "3bed0667e8841e38c1e8ac573067daacc255454c",
@@ -303,7 +314,7 @@
     "make_check": "held: installer/no-tool-install boundary",
     "scratch": "invocation-owned TemporaryDirectory under worktree .build/source-qualification, absence verified"
   },
-  "delivery_stage": "84c28e3 FAILED native qualification; NOT source-ready pending bounded Swift compilation and Mac process-error-path repairs. Laptop checkout/parent remain held.",
+  "delivery_stage": "Direct native test errors source-addressed a22f2c15, not native-proved; Mac collector EPERM/reap repair active. NOT next native candidate yet.",
   "CI_pause_evidence": {
     "source": "Agent relay from laptop coordinator506fc1fd; not owner approval; local evidence not assumed accessible VPS",
     "url": "https://github.com/Jones-Systems/CodexBar/actions",
@@ -356,5 +367,37 @@
     },
     "qualification": "CI absent while fork Actions paused; no qualifying merge"
   },
-  "platform_correction": "Package.swift166-177 includes TestsLinux target on Mac; log988 compiled ClaudeNativeProfileServiceLinuxTests. Both supplemental files are Mac compilation inputs too; no absent/pass inference."
+  "platform_correction": "Package.swift166-177 includes TestsLinux target on Mac; log988 compiled ClaudeNativeProfileServiceLinuxTests. Both supplemental files are Mac compilation inputs too; no absent/pass inference.",
+  "native_compile_correction": {
+    "authority_effect": "none",
+    "failed_candidate": "84c28e3c86d9ce846ddd37f8bebe1ed597ece752",
+    "source_commits": {
+      "Claude": "b1f85e011f7dd7984d08c0cb849238a5e57b24f5",
+      "Jones": "e42cc09f4f828ca96957eb12e9f62fe97ff362a2"
+    },
+    "PR11_Claude_only": "76f86a42560d21143dd4359aad54248bf60b28e6",
+    "PR12_integration": "a22f2c159d36d6a61dcc6e6a18dc074bae47a220",
+    "source_paths": {
+      "Tests/CodexBarTests/ClaudeNativeProfileIntegrationTests.swift": "35442c2214beb9222af6960e37452fc4af0b95f50989a9b335b430b7ec328bd4",
+      "Tests/CodexBarTests/JonesProviderScratchTests.swift": "a6f34b8e833c6f14723a4c9f30a382d2991bd92a7d91a65ed470d8dbde02ca47"
+    },
+    "changes": [
+      "Throwing config load outside #expect; same alias assertion and propagation",
+      "Three Task closures explicitly @Sendable; captures files/request/failure by value; no added unchecked conformance, no assertion removal or real filesystem fallback"
+    ],
+    "checks": {
+      "builder": "SwiftFormat0.61.1 scoped2files PASS; diff PASS",
+      "root": "exactmanifest/sourceinspection/diff PASS",
+      "native": "UNRUN after correction, Swift unavailable VPS; all79suites unavailable at failed candidate"
+    },
+    "macro_diagnostics": "Direct4errors repeat25x; @const/@section 7800x each in contiguous batch supports cascade inference, not proof. No unchanged-file sweep. Mac log not available VPS.",
+    "affected_suites": [
+      "ClaudeNativeProfileIntegrationTests",
+      "JonesProviderScratchTests",
+      "GeminiLoginScratchTests",
+      "AliyunCookieScratchTests",
+      "GeminiCurlScratchTests"
+    ],
+    "next_gate": "Await Mac collector source repair then final exactcandidate; laptopcheckout fixed84c until explicit release; no intermediate compile/retry"
+  }
 }

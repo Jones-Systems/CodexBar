@@ -1,0 +1,32 @@
+{
+  "authority_effect": "none",
+  "failed_candidate": "84c28e3c86d9ce846ddd37f8bebe1ed597ece752",
+  "source_commits": {
+    "Claude": "b1f85e011f7dd7984d08c0cb849238a5e57b24f5",
+    "Jones": "e42cc09f4f828ca96957eb12e9f62fe97ff362a2"
+  },
+  "PR11_Claude_only": "76f86a42560d21143dd4359aad54248bf60b28e6",
+  "PR12_integration": "a22f2c159d36d6a61dcc6e6a18dc074bae47a220",
+  "source_paths": {
+    "Tests/CodexBarTests/ClaudeNativeProfileIntegrationTests.swift": "35442c2214beb9222af6960e37452fc4af0b95f50989a9b335b430b7ec328bd4",
+    "Tests/CodexBarTests/JonesProviderScratchTests.swift": "a6f34b8e833c6f14723a4c9f30a382d2991bd92a7d91a65ed470d8dbde02ca47"
+  },
+  "changes": [
+    "Throwing config load outside #expect; same alias assertion and propagation",
+    "Three Task closures explicitly @Sendable; captures files/request/failure by value; no added unchecked conformance, no assertion removal or real filesystem fallback"
+  ],
+  "checks": {
+    "builder": "SwiftFormat0.61.1 scoped2files PASS; diff PASS",
+    "root": "exactmanifest/sourceinspection/diff PASS",
+    "native": "UNRUN after correction, Swift unavailable VPS; all79suites unavailable at failed candidate"
+  },
+  "macro_diagnostics": "Direct4errors repeat25x; @const/@section 7800x each in contiguous batch supports cascade inference, not proof. No unchanged-file sweep. Mac log not available VPS.",
+  "affected_suites": [
+    "ClaudeNativeProfileIntegrationTests",
+    "JonesProviderScratchTests",
+    "GeminiLoginScratchTests",
+    "AliyunCookieScratchTests",
+    "GeminiCurlScratchTests"
+  ],
+  "next_gate": "Await Mac collector source repair then final exactcandidate; laptopcheckout fixed84c until explicit release; no intermediate compile/retry"
+}
