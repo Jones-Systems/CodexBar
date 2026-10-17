@@ -1624,6 +1624,7 @@ public enum ClaudeOAuthCredentialsStore {
             respectKeychainPromptCooldown: respectKeychainPromptCooldown,
             allowClaudeKeychainRepairWithoutPrompt: allowClaudeKeychainRepairWithoutPrompt,
             clearInvalidCache: clearInvalidCache)
+        try ClaudeNativeProfileSelection.validateCredentialOwner(record.owner, environment: environment)
         let credentials = record.credentials
         let now = Date()
         var expiryMetadata = credentials.diagnosticsMetadata(now: now)

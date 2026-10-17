@@ -196,6 +196,10 @@ struct ProviderRegistry {
                 env = CodexHomeScope.scopedEnvironment(base: env, codexHome: profileHomePath)
             }
         }
+        // Provider-specific by design: an explicit enrolled Claude profile scopes only its usage environment.
+        if provider == .claude {
+            env = settings.claudeNativeProfileEnvironment(base: env, hasTokenAccount: account != nil)
+        }
         return env
     }
 

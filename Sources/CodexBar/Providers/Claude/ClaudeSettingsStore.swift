@@ -2,6 +2,29 @@ import CodexBarCore
 import Foundation
 
 extension SettingsStore {
+    var claudeNativeProfileAlias: String? {
+        get { self.configSnapshot.providerConfig(for: .claude)?.claudeNativeProfileAlias }
+        set {
+            self.updateProviderConfig(provider: .claude) { entry in
+                entry.claudeNativeProfileAlias = newValue
+            }
+        }
+    }
+
+    func claudeNativeProfileEnvironment(
+        base: [String: String], hasTokenAccount: Bool) -> [String: String]
+    {
+        guard ClaudeNativeProfileSelection.applies(
+            alias: self.claudeNativeProfileAlias,
+            source: self.claudeUsageDataSource,
+            hasTokenAccount: hasTokenAccount,
+            hasManualCookie: self.claudeCookieSource == .manual && !self.claudeCookieHeader.isEmpty,
+            environment: base), let alias = self.claudeNativeProfileAlias
+        else { return base }
+        return ClaudeNativeProfileSelection.environment(
+            base: base, alias: alias, discovery: ClaudeFleetProfileDiscovery.discover())
+    }
+
     var claudeUsageDataSource: ClaudeUsageDataSource {
         get {
             let source = self.configSnapshot.providerConfig(for: .claude)?.source

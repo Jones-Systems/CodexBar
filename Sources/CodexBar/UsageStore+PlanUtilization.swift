@@ -52,6 +52,10 @@ extension UsageStore {
     func planUtilizationHistorySelection(for provider: UsageProvider)
         -> PlanUtilizationHistorySelection
     {
+        // Provider-specific by design: selected Claude profile transitions must not expose another profile's history.
+        if provider == .claude, self.shouldWithholdClaudeNativeProfileHistory() {
+            return PlanUtilizationHistorySelection(accountKey: nil, histories: [])
+        }
         // The persisted history has not been read yet. Return the in-memory
         // stub (empty) without performing account migration or enqueueing an
         // empty persistence snapshot — otherwise a startup refresh racing the

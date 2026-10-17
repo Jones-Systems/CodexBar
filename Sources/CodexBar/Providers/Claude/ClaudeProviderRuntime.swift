@@ -4,6 +4,24 @@ import CodexBarCore
 final class ClaudeProviderRuntime: ProviderRuntime {
     let id: UsageProvider = .claude
     private var lastSwapConfiguration: Configuration?
+    private var lastNativeProfileIdentity: String?
+    private(set) var nativeProfileTransitionPending = false
+
+    func reconcileNativeProfileEnvironment(
+        _ environment: [String: String], store: UsageStore, invalidateInFlight: Bool)
+    {
+        let identity = environment[ClaudeNativeProfileSelection.identityKey]
+        guard identity != self.lastNativeProfileIdentity else { return }
+        self.lastNativeProfileIdentity = identity
+        self.nativeProfileTransitionPending = true
+        if invalidateInFlight { store.invalidateProviderRefreshRequests(.claude) }
+        store.clearClaudeCredentialDerivedStateForCredentialSwap()
+        store.clearClaudeSwapAccountState()
+    }
+
+    func nativeProfileUsagePublished() {
+        self.nativeProfileTransitionPending = false
+    }
 
     func start(context: ProviderRuntimeContext) {
         self.reconcileSwapConfiguration(context: context)
@@ -15,6 +33,8 @@ final class ClaudeProviderRuntime: ProviderRuntime {
     }
 
     func settingsDidChange(context: ProviderRuntimeContext) {
+        self.reconcileNativeProfileEnvironment(
+            context.store.claudeNativeProfileFetchEnvironment(), store: context.store, invalidateInFlight: true)
         self.reconcileSwapConfiguration(context: context)
     }
 
