@@ -567,3 +567,25 @@ The distinct native GUI discovery/projection research remains active and may sup
 an independently scoped continuation of the owner's outstanding Authfleet reuse
 requirement. No new candidate/rerun is requested until that result is consumed.
 All native/check/CI/extraction/activation gates remain unchanged.
+
+
+### Laptop baseline compilation and confirmed full-suite safety hold
+
+Laptop evidence relay, agent provenance: baseline21c34561387b26f76d0a27e9f00d1538fbc0926f
+compile/discovery PASS attempt1 exit0 after1876.72s, 10,371 identifiers/1,015 runner
+selections, zero unknown lines, ZERO behavior tests. Scratch removed, source/index
+unchanged, cache retained. This qualifies baseline compilation/discovery only.
+Its checkout is now immutable at44a43f5928154e08b4ce14724c2a1231b88143a9 for interim
+compilation/discovery; no final source acceptance or test pass. VPS source ownership
+and the remaining native GUI discovery research remain unchanged.
+
+Full make test remains HELD from actual source: OpenAIDashboardWebViewCacheTests
+108–129/134–140 unguarded persistent factories;89–106/609–637 guarded only by CI.
+OpenAIDashboardWebsiteDataStore27 default(),35 persistent forIdentifier,71–72 cache
+clear drops refs only. Standard isolation flags/TMPDIR do not contain those stores;
+production runner has no full-suite exclusion seam. Laptop will use existing runner
+functions for exact admitted affected groups and report partial coverage, never a
+full make test pass. No unsafe group executes. Identifier-only framework tests remain
+safe. This precise hold is added to LAPTOP-HANDOFF and the historical source manifest's
+native-evidence overlay without rebinding its source candidate or claiming later
+source compilation. No source repair or waiver of the hold is authorized/performed.

@@ -138,5 +138,31 @@
     "laptop coordinator retains merge ownership",
     "extraction requires PR11 AND identity merged to main or direct owner release"
   ],
-  "delivery_gap": "No registered VPS bridge to laptop environment; source-ready report and this Git handoff must be consumed via existing authorized laptop route"
+  "delivery_gap": "No registered VPS bridge to laptop environment; source-ready report and this Git handoff must be consumed via existing authorized laptop route",
+  "native_evidence_relay": {
+    "source": "laptop coordinator506fc1fd-d94f-4616-84f4-7751eda0aec8; agent evidence, not owner authorship",
+    "baseline": {
+      "sha": "21c34561387b26f76d0a27e9f00d1538fbc0926f",
+      "operation": "compile/discovery only",
+      "attempt": 1,
+      "exit": 0,
+      "elapsed_seconds": 1876.72,
+      "identifiers": 10371,
+      "runner_selections": 1015,
+      "unknown_lines": 0,
+      "behavior_tests": 0,
+      "scratch": "removed",
+      "source_index": "unchanged",
+      "cache": "retained"
+    },
+    "interim": {
+      "sha": "44a43f5928154e08b4ce14724c2a1231b88143a9",
+      "operation": "compile/discovery only; active at relay",
+      "checkout": "immutable until terminal",
+      "final_acceptance": false
+    },
+    "full_make_test": "HELD: unguarded persistent WebKit factory cases; no standard isolation or production runner full-suite exclusion seam",
+    "affected_verification": "admitted groups through existing runner functions, partial coverage only",
+    "safe_identifier_suite": "JonesFrameworkIsolationTests"
+  }
 }

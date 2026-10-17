@@ -60,9 +60,11 @@ Continue accepted serial, fixture-isolated mechanics with fresh Mac capacity evi
 and invocation-owned workspace scratch, preserving logs then exact cleanup. No tool
 installation or Homebrew Node repair. Preserve Keychain suppression, Codex-file and
 session-file isolation, exclude live/fixture grants and disable non-timeout retries.
-Run discovery, the deduplicated affected suite union in the final JSON, and required
-make test only within proven fixture-safe admission. Report absent suite names as
-absent, not passed. Existing credential/history suites must retain their documented
+Run discovery and the deduplicated admitted affected groups through existing runner
+functions. Full make test is HELD: actual persistent WebKit-store cases lack standard
+isolation or a production-runner full-suite exclusion seam. Do not run or count
+unsafe groups. Report this as partial affected verification, never a full-suite pass.
+Report absent suite names as absent, not passed. Existing credential/history suites must retain their documented
 synthetic overrides. Do not run broad persistent WebKit-store cases; the safe
 JonesFrameworkIsolationTests create identifiers only. If full make test would cross
 that boundary, report the precise held group rather than silently running or passing it.
@@ -71,6 +73,25 @@ Report exact SHA, commands, discovery/test counts, failures/skips/unavailable/he
 checks, cleanup and manifest match. Source fixes return to VPS. Static installed-app
 compatibility evidence is already complete; do not repeat it. Stock behavior is owner
 observation, not candidate installation or switching proof.
+
+## Current native evidence, exact bindings
+
+Laptop reports baseline `21c34561387b26f76d0a27e9f00d1538fbc0926f` compilation/discovery
+PASS, attempt1, exit0, elapsed1876.72s: 10,371 identifiers, 1,015 runner selections,
+zero unknown lines and ZERO behavior tests. Invocation scratch removed, source/index
+unchanged, build cache retained. This does not qualify later source changes.
+
+Its checkout is now pinned at `44a43f5928154e08b4ce14724c2a1231b88143a9` for INTERIM
+compilation/discovery while AFCL GUI work continues. It is immutable until that run
+is terminal. No final test pass, final candidate or source acceptance is implied.
+
+Full-suite hold is source-confirmed: OpenAIDashboardWebViewCacheTests lines108–129 and
+134–140 call persistent factories unguarded; lines89–106 and609–637 have only CI guards.
+OpenAIDashboardWebsiteDataStore uses default() at27 and persistent forIdentifier at35;
+clearCache at71–72 drops references only. No ordinary isolation/TMPDIR override or
+production-runner full-suite exclusion seam exists. Do not execute that unsafe group.
+Identifier-only JonesFrameworkIsolationTests remain safe. Existing admitted affected
+runner groups may proceed, with partial coverage reported exactly.
 
 ## Open completion gates
 
