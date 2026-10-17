@@ -214,3 +214,59 @@ helper and all live stores. Root owns Git. Native default, named profile, consen
 cache/history and refresh routing must remain isolated. Metadata/fleet integration
 will be assessed without inventing automation-token usage capability. No runtime
 authentication or data access has occurred; Swift checks remain unavailable here.
+
+### Trial-finish framing and next source wave
+
+Astra framing is pinned to source `21c34561387b26f76d0a27e9f00d1538fbc0926f`
+and accepted Spec at `42892c67755c16638f5a32f1b56c6cf00396cda5` / merged
+`428de85c77c6a781c88a55a21ca1331f1d380356` (identical spec SHA-256
+29f751c243b24a90944f90505fa0333863c955b1bf66544fffeac4d49fb5aaa6).
+The copy decision controls; the superseded launcher design is not revived.
+Known TIR repair ownership remains with the existing builder, preserving original
+4ff8b504 review, P2 severities and blocking claims; no duplicate repair started.
+
+Four independent source worktrees now start at `b97a45da0`:
+`trial-diagnostics-20261017`, `trial-mimo-20261017`,
+`trial-scratch-20261017`, `trial-framework-20261017` (branches `work/<name>`).
+Root is sole Git owner; each Astra/high builder owns its declared subsystem,
+new distinct helpers and focused tests only. All shared Work Note/ledger/spec
+updates remain root-owned. Before this batch: CPU 7.59%, available RAM 40.34 GiB;
+one fully used core is 6.25% of host capacity. No native success is claimed.
+
+Seven category dispositions at this checkpoint:
+
+1. Fixed debug exports: source lane isolates overlay diagnostics and preserves
+   exact stock paths, with explicit retained-log lifetime; no persistent /tmp export.
+2. MiMo: identity-aware reader plus existing explicit tracker output override and
+   synthetic agreement; real wrapper/LaunchAgent activation remains held.
+3. Other scratch: fork confinement and early cleanup for Aliyun copy failures and
+   Gemini login/write/permission/launch failures; no live database/Terminal use.
+4. Framework: source namespace/configuration hardening plus inventory of remaining
+   HTTP/cookie consumers; actual app/widget/bundled-CLI containment remains native.
+5. Unbundled/copied CLI: absent metadata intentionally retains upstream behavior;
+   restricting trial use to the bundled CLI needs the laptop owner's disposition.
+   No new launcher/identity activation mechanism is inferred.
+6. Explicit/provider-owned paths: preserve explicit overrides and external input;
+   distinguish intentional sharing from credential mutation. Canonical auth and
+   browser stores are not silently redirected; live System Account copy stays held.
+7. Native/release: final integrated candidate goes to laptop. Real identifiers,
+   signing, packaging smoke, installation, app launch and live account operations
+   remain outside this source capsule and require their bounded authority.
+
+The upstream extraction sequencing predicate `ac.custom-base-settled.001` still
+requires merged parents or explicit coordinator release with an exact alternative
+base. Full completion scope alone does not satisfy that dependency. Read-only
+inventory and independent trial repairs may proceed; no merge behind the laptop
+coordinator. Subsequent bounded slices remain localization, pane sections, stable
+account helpers and fork docs; unstable seams remain explained patched-file rows,
+not a new plugin framework or duplicated upstream subsystem.
+
+Laptop tooling evidence relay: native baseline discovery at 21c3456 was still
+active with zero tests at report time. Pinned SwiftFormat/SwiftLint/oxlint/oxfmt
+were absent PATH and unconfirmed in its bounded audit. TypeScript 5.9.3 could not
+run through Homebrew Node because libsimdjson.27.dylib was missing. No tool install
+or repair was authorized/performed; make check remains held. Debug ad-hoc packaging
+still signs/builds a widget, release packaging invokes launch smoke, and a real
+identity overlay is required. No package/sign/launch result is claimed. Final
+source-ready reporting must distinguish exact available VPS lint/portable checks
+from these missing Mac checks; none of the seven categories is passed by framing.
