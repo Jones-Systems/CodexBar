@@ -1,19 +1,86 @@
-# Laptop verification handoff
+# Laptop native verification and continuity handoff
 
-Authority effect: none. Native verification continues the accepted VPS/laptop split; it does not authorize installation or live switching. This supersedes the intermediate e6837457c handoff. Source implementation stays on the VPS.
+Authority effect: none. This replaces the old c2a3118 PR11-only handoff. Source stays
+on VPS; laptop thread `506fc1fd-d94f-4616-84f4-7751eda0aec8` in environment
+`8750edf7-486b-41ac-81ce-cd50dfeb71eb` retains continuity, native verification,
+trial disposition and eligible merges. No installation or live switching is authorized.
 
-Copy the following into laptop thread `506fc1fd-d94f-4616-84f4-7751eda0aec8` in environment `8750edf7-486b-41ac-81ce-cd50dfeb71eb`:
+## Candidate binding
 
-> Continue your accepted native Mac verification lane. The VPS source candidate is ready: Jones-Systems/CodexBar PR #11, branch `work/fleet-auth-discovery-20261016`, exact head **c2a3118daf3d6824bba648abe6f4e84ef710272d**, base branch `main` (fork base 5f4a4c9474d2c44e136275fe5c42689a6c6e7a56). Verify that exact commit in your dedicated non-main worktree, preserving the prior 55197235 evidence, existing worktrees and unrelated changes. Root remains Git owner; no candidate source edits during pinned verification.
->
-> This head includes both discovery-macro compiler corrections at e6837457c and the owner's approved Authfleet-profile System Account copy behavior. It copies established canonical auth into ordinary default ~/.codex through the existing preservation/swap flow, with typed targets, identity/workspace/fingerprint checks, queued membership revalidation and shared-writer/cancellation drain. It rejects conflicting CODEX_HOME overrides and source/destination overlap; it does not retarget running processes or prove external refresh safety. Canonical fleet auth remains canonical. See docs/work-notes/fleet-system-promotion.md and docs/jones/fleet-system-promotion-ledger.md. Source implementation 7805dac297e19d882e249434c9c0d52d056f05d2 received focused independent Astra/high correctness review with no actionable findings; exact ledger docs/review-evidence/fleet-system-copy-7805dac29.json. Native compilation remains unverified: VPS has no Swift; SwiftFormat20 and whitespace passed. No synthetic test pass is claimed.
->
-> Read applicable AGENTS.md and docs/DEVELOPMENT.md. Use the previously accepted fixture isolation and serial native verification mechanics, fresh local capacity admission and invocation-owned workspace scratch with verified cleanup. No tool installation. Run make test and affected suites after successful discovery; preserve Keychain suppression, Codex-file/session-file isolation, no live/fixture grants and no retries of non-timeout failures. Report full native commands, exact head, discovery/test counts, pass/fail/unavailable results and scratch cleanup. make check remains held if it requires installing missing tooling; do not install it.
->
-> Deduplicate the union of the previous 12 recovery/drain suites and new affected suites: CodexAccountReconciliationTests, CodexProfileHomeAccountTests, CodexFleetProfileIntegrationTests, CodexAccountsSectionStateTests, CodexAccountsSettingsSectionTests, CodexAccountMenuDisplaySnapshotTests, StatusMenuCodexSwitcherTests, CodexSystemPromotionUITests, CodexAccountPromotionServiceTests, CodexLoginRunnerTests, ManagedCodexAccountCoordinatorTests, ManagedCodexAccountServiceTests, JonesCodexFleetPromotionTests, JonesCodexFleetPromotionBoundaryTests, JonesCodexFleetPromotionMenuTests, CodexAccountPromotionPreparationTests, CodexAccountPromotionPlanningTests, CodexAccountPromotionExecutionTests, CodexVisibleAccountTests and CodexVisibleAccountProjectionRuntimeIdentityTests. Include compiler-correction CodexActiveSourceConfigTests. Tests with absent/discovered names must be reported rather than silently treated as passed.
->
-> Your static installed-desktop evidence is already complete; do not repeat that inspection. Owner reports directly opening the desktop and working stock System Account switching. This remains product intent/owner observation, not candidate operational proof. This lane performs no auth/binding/configuration/Keychain reads, real credential copies, account switches, provider or usage calls, browser-cookie imports, app lifecycle or smoke wrappers, signing, packaging, release, installation, launchctl change, sudo or fleet propagation. Source repairs stay on the VPS after your exact evidence return.
->
-> PR #12 remains a separate identity candidate, not an installable trial. TIR001/TIR002 remain P2, uncorrected/deferred, with original blocking effects; all seven trial categories remain open. Do not repair those or test/install the trial as a substitute for this pinned PR #11 candidate. Return exact native evidence and remaining gates to the originating VPS thread 0488f286-4c8b-4932-9b44-67ef47cb70a3 through the already authorized route. No passing native behavior, merge readiness, installation or switching success should be claimed without direct evidence.
+Use the **exact published PR12 head in the accompanying VPS source-ready message**,
+not a moving branch. PR12: https://github.com/Jones-Systems/CodexBar/pull/12,
+branch `work/codexbar-trial-identity-20261016`, base
+`work/fleet-auth-discovery-20261016`. Its integrated source checkpoint is
+`3bed0667e8841e38c1e8ac573067daacc255454c`; later publication adds evidence/docs only.
+Verify ancestry and every source-file hash in
+`docs/review-evidence/final-source-native-candidate.json` before the pinned run.
+If the message SHA is unavailable, resolve/read back the exact PR12 head and verify
+that manifest before acting; do not assume a changing head or older baseline is final.
 
-Delivery gap: the VPS installed cross-host bridge targets a different peer environment. No send to this laptop was attempted; this file must be passed to the existing laptop thread through an available authorized route. Receipt alone would not prove native verification complete.
+PR11 parent is `283e3b587b896d2c10bc7d04d1b04d4dc725883c`, base fork main.
+PR12 contains that exact parent, identity repairs and all source lanes. Preserve
+historical 55197235 and 21c3456 evidence, existing worktrees and unrelated changes.
+Root is sole Git/index owner of declared VPS worktrees; do not edit the pinned source.
+
+## Source and verification evidence
+
+Included: Authfleet discovery/System Account copy and cancellation drain; account
+ordering; coherent flat-list collapse down to one account and five initial healthy
+Codex accounts; trial identity TIR001/TIR002 source corrections; MiMo cache agreement;
+retained diagnostic destinations; Gemini/Aliyun scratch cleanup; WebKit identifier
+namespacing; named native Claude profile service/cache/recovery routing.
+
+Claude source `7cfd882e` received independent Astra/high correctness review with no
+supported findings. Its PR12 composition retains the existing two trial-owned
+application-defaults/tombstone domain hooks. UI CAIR001/002/003 remain P2 under their
+original a7381944 binding, now source-addressed, native pending. Original TIR P2
+severities/blocking effects remain preserved. See the three component evidence files
+and final manifest; no source review establishes runtime behavior.
+
+VPS final-source checks: scoped SwiftFormat0.61.1 passed38 Swift files; whitespace
+passed; identity overlay passed30 portable checks (stub-compiler source-list/cleanup,
+not native Swift); MiMo writer passed3 synthetic tests. Invocation scratch cleanup
+was verified. make test failed exit2 before discovery because Swift is absent;
+zero tests executed. make check remains held because missing tools require installation.
+
+## Native run
+
+Continue accepted serial, fixture-isolated mechanics with fresh Mac capacity evidence
+and invocation-owned workspace scratch, preserving logs then exact cleanup. No tool
+installation or Homebrew Node repair. Preserve Keychain suppression, Codex-file and
+session-file isolation, exclude live/fixture grants and disable non-timeout retries.
+Run discovery, the deduplicated affected suite union in the final JSON, and required
+make test only within proven fixture-safe admission. Report absent suite names as
+absent, not passed. Existing credential/history suites must retain their documented
+synthetic overrides. Do not run broad persistent WebKit-store cases; the safe
+JonesFrameworkIsolationTests create identifiers only. If full make test would cross
+that boundary, report the precise held group rather than silently running or passing it.
+
+Report exact SHA, commands, discovery/test counts, failures/skips/unavailable/held
+checks, cleanup and manifest match. Source fixes return to VPS. Static installed-app
+compatibility evidence is already complete; do not repeat it. Stock behavior is owner
+observation, not candidate installation or switching proof.
+
+## Open completion gates
+
+AFCL automation-token reuse is **unimplemented**: its contract does not prove usage
+endpoint support or a granted user:profile scope. Native profile service routing
+must not be reported as resolving that separate owner requirement. Workspace-grouped
+menus retain their pre-existing stacked fallback. Shared HTTP state ownership and
+native containment remain unresolved despite WebKit identifier hardening. All seven
+trial categories retain their exact dispositions in IDENTITY.md/final JSON.
+
+Required CI is absent, not green. Prior bounded investigation found no runs/checks,
+with organization-policy inspection denied403; cause unknown. Native local results
+cannot waive ac.trial-gates. Do not repeat close/reopen, settings or permission changes.
+Extraction remains read-only until PR11 AND trial identity merge to fork main, or
+explicit M Jones release of ac.custom-base-settled.001; coordinator takeover is no waiver.
+
+No real auth/config/binding/Keychain reads, credential copies, account switching,
+provider/usage calls, browser imports, app lifecycle/smoke wrappers, signing, package,
+release, installation, launchctl, sudo or fleet propagation belongs to this verification
+lane. Do not claim installability or operational success without direct evidence.
+
+Delivery gap: the registered VPS bridge targets another environment. No send to the
+laptop was attempted. Consume this Git handoff and the exact-head source-ready message
+through the existing authorized laptop-to-VPS route; receipt is not native success.

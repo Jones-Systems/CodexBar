@@ -420,3 +420,31 @@ existing sectioned stacked fallback; this slice proves no collapse interaction i
 that separate presentation. Exact correction manifest/dispositions are appended to
 the existing UI/TIR evidence file. Claude review remains the final active source
 integration dependency. No intermediate native rerun or merge was requested.
+
+
+### Integrated source handoff checkpoint
+
+Claude independent review found no supported correctness findings at exact 7cfd882e
+against c2a3118; fixtures inspected, not executed. Review/source hashes are in
+`../review-evidence/claude-native-profile-7cfd882e.json`. Root published PR11 head
+283e3b587 and integrated it into PR12 at 3bed0667. The only credentials-store composition
+delta from reviewed source preserves two already-existing trial identity defaults/
+tombstone domain hooks. No merge conflict occurred.
+
+Final available checks at 3bed0667: SwiftFormat0.61.1 lint passed 38 changed Swift files,
+whitespace passed, identity portable harness 30 passed and MiMo Python 3 passed. The
+standalone proof uses a stub compiler; sixteen native cases remain unavailable.
+make test exited 2 for missing Swift, zero selections discovered/executed/retries;
+make check remains held. Tests were serial under fresh CPU 8.80%, RAM 40.14 GiB admission,
+one full core 6.25%; invocation-owned workspace scratch absence verified after cleanup.
+
+Updated LAPTOP-HANDOFF.md supersedes the old PR11-only c2a3118 instructions. The final
+source manifest at 3bed0667 and affected native union live in final-source-native-candidate.json.
+The accompanying source-ready message pins the publication head carrying these docs;
+source bytes must match the manifest. No source builders remain active. This is a
+verification handoff with open product/CI/trial gates, not full task completion:
+AFCL automation adapter remains unimplemented, workspace-grouped menus stay stacked,
+shared HTTP state/native containment unresolved, native qualification unavailable,
+CI absent, owner-only extraction sequencing unchanged and no activation authority.
+Laptop coordinator owns integration/merge decisions; VPS performs no source PR merge.
+The unavailable return bridge is unchanged; Git/thread evidence is the delivery route.

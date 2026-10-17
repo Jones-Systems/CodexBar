@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "authority_effect": "none",
+  "source_candidate": "7cfd882ed03983a32be23300d252946387a832a9",
+  "base": "c2a3118daf3d6824bba648abe6f4e84ef710272d",
+  "paths": {
+    "Sources/CodexBarCore/Providers/Claude/ClaudeConfigPaths.swift": "d8964e3d5c6fc3f8f98afa8bde2582013f86f9c49e0ec8a08a9a9ad8a679e935",
+    "Sources/CodexBarCore/Providers/Claude/ClaudeOAuth/ClaudeOAuthCredentials+SecurityCLIReader.swift": "0cc5f69416c8653003dea34678e6d146c7258a8716790e98e4d00ed89d3531b5",
+    "Sources/CodexBarCore/Providers/Claude/ClaudeOAuth/ClaudeOAuthCredentials+TestingOverrides.swift": "1d46abf93f2d0ad4a5efa3eb1a0f47fb8801394b95fe78a882aafc1663c5c636",
+    "Sources/CodexBarCore/Providers/Claude/ClaudeOAuth/ClaudeOAuthCredentials.swift": "d5f443708a7b2146fb63f477eb071612bc128a2e139f1c64a56765739c89985a",
+    "Sources/CodexBarCore/Providers/Claude/ClaudeOAuth/ClaudeOAuthDelegatedRefreshCoordinator.swift": "bdefa50009c9a61fd2431dffb045c66cda6d5ff7b64d88e721ed49431f864dc1",
+    "Sources/CodexBarCore/Providers/Claude/ClaudeOAuth/ClaudeOAuthKeychainQueryTiming.swift": "f60c1da56edc82512f9f873727fdfc1071514568d0c5be42866d26492f218127",
+    "Sources/CodexBarCore/Providers/Claude/ClaudeProviderDescriptor.swift": "15da32fe5f99ac50a76a18f119fd90b1e1a23db490c113c79472ea00a1e9bd1b",
+    "Tests/CodexBarTests/ClaudeConfigPathsTests.swift": "e6be448c1c7481848f681684a4ee921bc8628bb2ef951db538923eb82fe8e775",
+    "Tests/CodexBarTests/ClaudeNativeKeychainProfileTests.swift": "148f48deb2375d62c8f482e6ff0c232c1acdff20b8fd41d3b455acbfb0a173d1",
+    "Tests/CodexBarTests/ClaudeOAuthCredentialsStoreIsolatedSecurityCLITests.swift": "36466534748d00f9fc0f4b540838a81e38f9d5aea03044faddfc2f9d3e2d7a8a",
+    "Tests/CodexBarTests/ClaudeOAuthDelegatedRefreshMCPProfileTests.swift": "5d2862fe9f575cf1c398a42b70cd4f3a15e659692605065770fb138692a17921",
+    "TestsLinux/ClaudeNativeProfileServiceLinuxTests.swift": "ed3d4dd0eece275fb0533e81b58a245abfb20bcc278bd48b82744d338757c497"
+  },
+  "review": {
+    "task": "codexbar-claude-native-profile-correctness-20261017-r1",
+    "lens": "independent read-only correctness; Astra/high native generic-role fallback",
+    "result": "No supported correctness findings",
+    "checks": "independent diff whitespace PASS; fixtures inspected, not executed",
+    "unknowns": [
+      "Swift compilation",
+      "native fixture behavior",
+      "AFCL automation record usage capability"
+    ]
+  },
+  "root_checks": {
+    "original_manifest": "12 files verified before formatting",
+    "format": "5 files formatted with existing SwiftFormat0.61.1; final12 lint passed",
+    "native": "make test unavailable; zero tests",
+    "make_check": "held: no installer authorization"
+  },
+  "integration_delta": "PR12 retains two existing trial identity defaults/tombstone domain hooks; no other credentials-store difference from reviewed source",
+  "AFCL_adapter": "unimplemented; no usage endpoint or granted-scope proof"
+}
