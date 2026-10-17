@@ -126,10 +126,20 @@ it a fully qualified trial or launch it while these gates remain unresolved.
    `TEMP/codex-openai-dashboard-<seconds>.{html,txt}`. These are shared names/root
    and need a separately scoped hook or an explicit trial decision excluding the
    affected feature. Merely avoiding the button is not isolation proof.
-2. **External MiMo tracker:** `MiMoLocalUsageFallback` still reads
-   `HOME/.codexbar/mimo-local-usage.json`, written by `Scripts/mimo-usage.py`.
-   The tracker is outside this cone; `MIMO_LOCAL_USAGE_PATH` remains an explicit
-   override. Do not silently move either side or claim this fallback isolated.
+2. **External MiMo tracker:** the reader now defaults to
+   `HOME/.codexbar-jones/mimo-local-usage.json` with Jones identity and retains
+   `HOME/.codexbar/mimo-local-usage.json` without it. `MIMO_LOCAL_USAGE_PATH`
+   keeps precedence. The unchanged external tracker needs that existing explicit
+   output override to agree with the Jones reader. Synthetic Python writer tests
+   pass; native reader/writer agreement and real tracker activation remain pending.
+   Proposed invocation, not executed:
+
+   ```bash
+   MIMO_LOCAL_USAGE_PATH="$HOME/.codexbar-jones/mimo-local-usage.json" \
+     python3 Scripts/mimo-usage.py --update
+   ```
+
+   This does not alter tracker inputs or authorize real-session access.
 3. **Other runtime scratch outside this cone:** Gemini login creates
    `TEMP/gemini_login_<UUID>.command`; Gemini curl writes
    `TEMP/codexbar-gemini-curl-<UUID>/`; Aliyun cookie fallback writes

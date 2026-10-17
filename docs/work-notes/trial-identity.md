@@ -316,3 +316,25 @@ settings, permission or authentication changes are authorized. Missing checks ar
 not green; native local passes cannot silently waive ac.trial-gates. Source-ready
 reporting must preserve this exact evidence limitation and the separate activation,
 packaging/signing, installation, account-operation and owner-only sequencing gates.
+
+
+### MiMo source checkpoint
+
+Source `1753412bad7ddbb0062f3f858d6f8f9b7642444b` integrates at
+`185d047661f74aceec2b0eebdbcf2305b81dc5fa`. The default reader cache now follows
+JonesStateRoot while stock behavior and explicit MIMO_LOCAL_USAGE_PATH precedence
+remain unchanged. The external tracker receives no new identity activation mechanism;
+its existing explicit output override is documented, not executed.
+
+Root verified the released four-file manifest, inspected the diff, and repeated all
+three synthetic Python writer tests successfully with invocation-owned scratch and
+verified cleanup. Scoped SwiftFormat passed all three Swift files; diff whitespace
+passed. Root also moved throwing JSON decoding outside #require in the touched test
+helper to avoid the known macro compilation pattern. Native compilation remains
+unproved: Swift is absent on VPS. make check remains held at the no-install boundary.
+Affected native suites are MiMoLocalUsageFallbackTests, MiMoUsageScriptTests,
+MiMoProviderTests and JonesStateRootTests. No intermediate laptop run is requested.
+
+This is a source checkpoint, not the final integrated candidate or a trial-gate pass.
+The other source lanes, native qualification, missing CI, owner-only extraction
+predicate and activation/signing/install boundaries remain unchanged.
