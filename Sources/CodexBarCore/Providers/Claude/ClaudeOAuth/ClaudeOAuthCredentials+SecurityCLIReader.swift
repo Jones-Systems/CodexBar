@@ -16,6 +16,7 @@ extension ClaudeOAuthCredentialsStore {
 
     struct SecurityCLIReadRequest {
         let account: String?
+        let service: String
     }
 
     static func shouldPreferSecurityCLIKeychainRead(
@@ -46,12 +47,14 @@ extension ClaudeOAuthCredentialsStore {
     ///   `security` can prompt.
     static func loadFromClaudeKeychainViaSecurityCLIIfEnabled(
         interaction: ProviderInteraction,
-        readStrategy: ClaudeOAuthKeychainReadStrategy = ClaudeOAuthKeychainReadStrategyPreference.current())
+        readStrategy: ClaudeOAuthKeychainReadStrategy = ClaudeOAuthKeychainReadStrategyPreference.current(),
+        environment: [String: String] = ProcessInfo.processInfo.environment)
         -> Data?
     {
         guard let sanitized = self.readRawClaudeKeychainPayloadViaSecurityCLIIfEnabled(
             interaction: interaction,
-            readStrategy: readStrategy)
+            readStrategy: readStrategy,
+            environment: environment)
         else {
             return nil
         }
@@ -101,7 +104,8 @@ extension ClaudeOAuthCredentialsStore {
 
         do {
             let preferredAccount = self.preferredClaudeKeychainAccountForSecurityCLIRead(
-                interaction: interaction)
+                interaction: interaction,
+                environment: environment)
             let output: Data
             let status: Int32
             let stderrLength: Int
@@ -119,7 +123,9 @@ extension ClaudeOAuthCredentialsStore {
                 case .nonZeroExit:
                     throw SecurityCLIReadError.nonZeroExit(status: 1, stderrLength: 0)
                 case let .dynamic(read):
-                    output = read(SecurityCLIReadRequest(account: preferredAccount)) ?? Data()
+                    output = read(SecurityCLIReadRequest(
+                        account: preferredAccount,
+                        service: self.claudeKeychainService(environment: environment))) ?? Data()
                     status = 0
                     stderrLength = 0
                     durationMs = 0
@@ -287,7 +293,7 @@ extension ClaudeOAuthCredentialsStore {
         var arguments = [
             "find-generic-password",
             "-s",
-            self.claudeKeychainService,
+            self.claudeKeychainService(environment: environment),
         ]
         if let account, !account.isEmpty {
             arguments.append(contentsOf: ["-a", account])
@@ -325,7 +331,8 @@ extension ClaudeOAuthCredentialsStore {
     #else
     static func loadFromClaudeKeychainViaSecurityCLIIfEnabled(
         interaction _: ProviderInteraction,
-        readStrategy _: ClaudeOAuthKeychainReadStrategy = ClaudeOAuthKeychainReadStrategyPreference.current())
+        readStrategy _: ClaudeOAuthKeychainReadStrategy = ClaudeOAuthKeychainReadStrategyPreference.current(),
+        environment _: [String: String] = ProcessInfo.processInfo.environment)
         -> Data?
     {
         nil
@@ -376,7 +383,7 @@ extension ClaudeOAuthCredentialsStore {
         }
         let payload: Data? = switch readStrategy {
         case .securityFramework:
-            self.readRawClaudeKeychainPayloadViaSecurityFrameworkWithoutPrompt()
+            self.readRawClaudeKeychainPayloadViaSecurityFrameworkWithoutPrompt(environment: environment)
         case .securityCLIExperimental:
             self.readRawClaudeKeychainPayloadViaSecurityCLIIfEnabled(
                 interaction: interaction,
@@ -393,7 +400,7 @@ extension ClaudeOAuthCredentialsStore {
         keychainAccessDisabled: Bool = KeychainAccessGate.isDisabled,
         environment: [String: String] = ProcessInfo.processInfo.environment) -> Bool
     {
-        // The global Keychain item has no profile identity. It can diagnose a missing selected profile,
+        // The selected Keychain service can diagnose a missing profile,
         // but cannot veto an OAuth credentials file attributable to that profile.
         guard !self.hasSelectedProfileOAuthCredentialsFile(environment: environment) else { return false }
         return self.isMcpOAuthOnlyClaudeKeychainPayloadPresent(

@@ -411,7 +411,8 @@ public enum ClaudeOAuthDelegatedRefreshCoordinator {
             return .securityCLI(data: self.currentClaudeKeychainDataViaSecurityCLIForObservation(
                 readStrategy: readStrategy,
                 keychainAccessDisabled: keychainAccessDisabled,
-                interaction: .background))
+                interaction: .background,
+                environment: configuration?.environment ?? ProcessInfo.processInfo.environment))
         }
         return .securityFramework(fingerprint: self.currentClaudeKeychainFingerprint(configuration: configuration))
     }
@@ -450,7 +451,8 @@ public enum ClaudeOAuthDelegatedRefreshCoordinator {
                 guard let current = self.currentClaudeKeychainDataViaSecurityCLIForObservation(
                     readStrategy: readStrategy,
                     keychainAccessDisabled: keychainAccessDisabled,
-                    interaction: .background)
+                    interaction: .background,
+                    environment: configuration?.environment ?? ProcessInfo.processInfo.environment)
                 else { return false }
                 return current != dataBefore
             }
@@ -485,7 +487,8 @@ public enum ClaudeOAuthDelegatedRefreshCoordinator {
             return override()
         }
         #endif
-        return ClaudeOAuthCredentialsStore.currentClaudeKeychainFingerprintWithoutPromptForAuthGate()
+        return ClaudeOAuthCredentialsStore.currentClaudeKeychainFingerprintWithoutPromptForAuthGate(
+            environment: configuration?.environment ?? ProcessInfo.processInfo.environment)
     }
 
     private static func currentClaudeKeychainFingerprintForObservation() -> ClaudeOAuthCredentialsStore
@@ -509,19 +512,22 @@ public enum ClaudeOAuthDelegatedRefreshCoordinator {
         // This temporarily classifies the observation query as "user initiated" so it bypasses the gate that only
         // applies to background probes. The query remains "no UI" and does not clear cooldown state itself.
         return ProviderInteractionContext.$current.withValue(.userInitiated) {
-            ClaudeOAuthCredentialsStore.currentClaudeKeychainFingerprintWithoutPromptForAuthGate()
+            ClaudeOAuthCredentialsStore.currentClaudeKeychainFingerprintWithoutPromptForAuthGate(
+                environment: configuration?.environment ?? ProcessInfo.processInfo.environment)
         }
     }
 
     private static func currentClaudeKeychainDataViaSecurityCLIForObservation(
         readStrategy: ClaudeOAuthKeychainReadStrategy,
         keychainAccessDisabled: Bool,
-        interaction: ProviderInteraction) -> Data?
+        interaction: ProviderInteraction,
+        environment: [String: String]) -> Data?
     {
         guard !keychainAccessDisabled else { return nil }
         return ClaudeOAuthCredentialsStore.readRawClaudeKeychainPayloadViaSecurityCLIIfEnabled(
             interaction: interaction,
-            readStrategy: readStrategy)
+            readStrategy: readStrategy,
+            environment: environment)
     }
 
     private static func isRefreshResultUnreadable(configuration: AttemptConfiguration) -> Bool {

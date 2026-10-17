@@ -658,7 +658,7 @@ struct ClaudeOAuthFetchStrategy: ProviderFetchStrategy {
         {
             return false
         }
-        return ClaudeOAuthCredentialsStore.hasClaudeKeychainCredentialsWithoutPrompt()
+        return ClaudeOAuthCredentialsStore.hasClaudeKeychainCredentialsWithoutPrompt(environment: environment)
     }
 
     private static func hasMcpOAuthOnlyClaudeKeychainPayload(environment: [String: String]) -> Bool {
