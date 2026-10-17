@@ -13,7 +13,7 @@ truthful typed status. Grouped source is now integrated (50a67106; native pendin
 on VPS. Preserve e23b813c8 and older evidence;
 **do not treat a documentation-only head carrying this notice as the next native
 candidate**. Wait for the new exact source-ready SHA and refreshed manifest after
-both slices return. No intermediate checkout advance or native rerun is requested.
+Claude GUI discovery/selection and single-parent fixture containment return, including the integrated Gemini correction. No intermediate checkout advance or native rerun is requested.
 The binding below describes the preceding source checkpoint until replaced.
 
 ## Candidate binding
@@ -81,17 +81,17 @@ PASS, attempt1, exit0, elapsed1876.72s: 10,371 identifiers, 1,015 runner selecti
 zero unknown lines and ZERO behavior tests. Invocation scratch removed, source/index
 unchanged, build cache retained. This does not qualify later source changes.
 
-Its checkout is now pinned at `44a43f5928154e08b4ce14724c2a1231b88143a9` for INTERIM
-compilation/discovery while AFCL GUI work continues. It is immutable until that run
-is terminal. No final test pass, final candidate or source acceptance is implied.
+Interim `44a43f5928154e08b4ce14724c2a1231b88143a9` is terminal FAIL, exit1 after128.77s,
+zero discovery/tests. Its checkout remains fixed, source/index clean; scratch removed,
+cache retained and no live process remains. No final source acceptance is implied.
 
 That interim build has reported GeminiLoginRunner.swift120:22/126:22 compiler errors:
 fileManager (FileManager, non-Sendable in the macOS26.4 SDK) is captured by @Sendable
 onCancel/delayed-cleanup closures. Zero behavior tests ran; the original compile was
-still draining at relay and must not be retried unchanged. VPS source repair8effc1ec is integrated into PR12 at025c9bd8; it preserves the injected
+terminal as recorded above and must not be retried unchanged. VPS source repair8effc1ec is integrated into PR12 at025c9bd8; it preserves the injected
 manager through a locked per-script cleanup capability. Native compilation remains
-pending. Preserve the pinned checkout until terminal, then await the new combined
-exact-head handoff after Claude GUI integration. No passing rerun is claimed.
+pending. Preserve the fixed checkout and await the new combined
+exact-head handoff after Claude GUI and fixture containment integration. No passing rerun is claimed.
 
 Full-suite hold is source-confirmed: OpenAIDashboardWebViewCacheTests lines108–129 and
 134–140 call persistent factories unguarded; lines89–106 and609–637 have only CI guards.
@@ -101,12 +101,19 @@ production-runner full-suite exclusion seam exists. Do not execute that unsafe g
 Identifier-only JonesFrameworkIsolationTests remain safe. Existing admitted affected
 runner groups may proceed, with partial coverage reported exactly.
 
+The laptop independently passed all three synthetic Scripts/test_mimo_usage.py cases
+at44a43f59; no unchanged rerun is required. Both native shell checks remain HELD until
+their roots and nested calls support one caller-owned workspace scratch parent. Astra
+source task codexbar-fixture-scratch-parent-20261017-r1 owns that correction. Preserve
+native rejected-case16 as unrun until actual Swift execution. Stub proof is not native.
+
 ## Open completion gates
 
 AFCL automation-token reuse is **unimplemented**: its contract does not prove usage
 endpoint support or a granted user:profile scope. Native profile service routing
 must not be reported as resolving that separate owner requirement. Workspace-grouped
-menus retain their pre-existing stacked fallback. Shared HTTP state ownership and
+menus are source-addressed at50a67106 with a global five-account budget and collapsible
+active account; native behavior remains pending. Shared HTTP state ownership and
 native containment remain unresolved despite WebKit identifier hardening. All seven
 trial categories retain their exact dispositions in IDENTITY.md/final JSON.
 

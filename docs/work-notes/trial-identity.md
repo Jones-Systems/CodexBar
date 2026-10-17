@@ -675,3 +675,36 @@ for actual persistent WebKit-store cases; make check installer held. Exact sourc
 diagnostic binding, hashes and affected Gemini scratch/login suites are in
 ../review-evidence/gemini-cleanup-sendability-8effc1ec.json. Final union will include
 these paths after Claude GUI source returns. No intermediate native rerun requested.
+
+
+### Native terminal evidence and single-parent fixture containment
+
+Laptop coordinator506fc1fd reports interim44a43f5928154e08b4ce14724c2a1231b88143a9
+terminal FAIL exit1 after128.77s, only Gemini FileManager120/126 Sendable diagnostics,
+zero discovery and zero behavior tests. Scratch removed, cache retained, source/index
+clean; no live process remains. Independently Scripts/test_mimo_usage.py passed three
+synthetic tests at that exact head with no live reads. Do not rerun unchanged MiMo.
+Gemini source correction8effc1ec remains pending native compilation on the final head.
+
+Two native shell checks are HELD: test_jones_identity_overlay.sh creates its fixture
+with TemporaryDirectory(dir=ROOT); test_provider_session_file_isolation.sh creates
+ROOT/.provider-session-child.XXXXXX. TMPDIR cannot contain those roots, and identity
+invokes provider three times under stubs. The owner requires one invocation-owned
+workspace scratch parent, including nested calls. Native rejected-case16 evidence
+remains unrun; compiler-source-list stub proof is not native proof.
+
+Root assigned bounded Astra/high task codexbar-fixture-scratch-parent-20261017-r1,
+physical /home/malcolmjones/Projects/CodexBar-worktrees/fixture-scratch-parent-20261017,
+branch work/fixture-scratch-parent-20261017, clean base2b03bcdb484ff582db197e34340e095c99c6c075.
+Root is sole Git/index owner. Builder owns those two scripts and a necessary focused
+synthetic regression script only; shared documentation stays root-owned. Add optional
+explicit caller-owned workspace scratch parent with containment validation/fail-closed
+invalid input, preserve no-override behavior, remove only invocation descendants on
+success/failure/cancellation and preserve caller parent/siblings. Nested invocations
+must inherit that parent. No extra authorized root patterns or live operations.
+Launch admission CPU7.57%, RAM40.36GiB, one full core6.25%; one start.
+
+Claude GUI source continues independently. Final manifest/suite union will follow
+both lanes and include Gemini correction; no intermediate native rerun requested.
+Full-suite persistent-WebKit hold, missing tooling/CI, owner-only extraction predicate,
+and signing/installation/activation boundaries remain unchanged.

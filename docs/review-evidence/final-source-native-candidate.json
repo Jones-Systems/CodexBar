@@ -121,7 +121,9 @@
   ],
   "remaining_product_gaps": [
     "AFCL automation adapter and usage-endpoint/granted-scope evidence",
-    "workspace-grouped Codex menus retain stacked presentation"
+    "Claude native Authfleet GUI discovery/selection source lane active",
+    "Grouped Codex presentation source-addressed at50a67106; native pending",
+    "Single-parent shell fixture containment source lane active"
   ],
   "trial_gates": {
     "diagnostics": "source addressed, retained-export native proof pending",
@@ -157,8 +159,8 @@
     },
     "interim": {
       "sha": "44a43f5928154e08b4ce14724c2a1231b88143a9",
-      "operation": "compile/discovery only; active at relay",
-      "checkout": "immutable until terminal",
+      "operation": "compile/discovery attempted; terminal failure",
+      "checkout": "fixed; source/index unchanged; no live process",
       "final_acceptance": false,
       "compiler_blocker": {
         "file": "Sources/CodexBar/GeminiLoginRunner.swift",
@@ -170,13 +172,27 @@
         "toolchain": "Apple Swift6.3 / macOS26.4 SDK",
         "SDK_evidence": "NSFileManager.h96: FileManager does not conform to Sendable",
         "behavior_tests": 0,
-        "terminal": "original compile still draining at relay, no retry",
+        "terminal": "FAIL exit1; only reported Gemini120/126 diagnostics; no retry",
         "repair_task": "codexbar-gemini-cleanup-sendability-20261017-r1",
         "source_repair": "Source-addressed at8effc1ec, integrated PR12 at025c9bd8; native compile pending final candidate, not passed"
-      }
+      },
+      "exit": 1,
+      "elapsed_seconds": 128.77,
+      "discovery": 0,
+      "behavior_tests": 0,
+      "scratch": "removed",
+      "cache": "retained"
     },
     "full_make_test": "HELD: unguarded persistent WebKit factory cases; no standard isolation or production runner full-suite exclusion seam",
     "affected_verification": "admitted groups through existing runner functions, partial coverage only",
-    "safe_identifier_suite": "JonesFrameworkIsolationTests"
+    "safe_identifier_suite": "JonesFrameworkIsolationTests",
+    "mimo_python": {
+      "sha": "44a43f5928154e08b4ce14724c2a1231b88143a9",
+      "command": "python3 Scripts/test_mimo_usage.py",
+      "synthetic_tests_passed": 3,
+      "live_reads": false,
+      "rerun": "not needed unless affected source changes"
+    },
+    "shell_checks": "HELD: both scripts create ROOT descendants outside the one invocation-owned workspace scratch parent; bounded source containment task active; native16 rejected cases remain unrun"
   }
 }
