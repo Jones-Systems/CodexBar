@@ -977,3 +977,41 @@ Seven trialcategories/native/release/signing/install/extractionpredicate retaine
 macOS waitid/WNOWAIT prerequisite explicit; no toolinstall. Native16identity/providerchecks
 remain unrun. No liveauth/provider/Keychain/browser/app/sign/install/process/fleetoperation.
 Return route remains unavailable to exactlaptopenv; durableGit/thread handoff is deliveryroute.
+
+
+### Exact84c native failure and two bounded source lanes
+
+Laptop coordinator relays84c28e3 make test FAILexit2after1057.89s, zero discovered/
+executedselections/retries. Directcompilererrors: ClaudeNativeProfileIntegrationTests55–56
+throwing configload inside #expect unhandledmacrocall; JonesProviderScratchTests72/157
+non-Sendable asyncGemini closures,232 async throwingData/URLResponse SendingRisksDataRace.
+@const/@section macrodiagnostics across25files remain unknowncascade; baseline21c compiled
+same toolchain, no source sweep. Root assigned Astra/high codexbar-native-test-compile-repair-20261017-r1
+physical /home/malcolmjones/Projects/CodexBar-worktrees/native-test-compile-repair-20261017,
+branch work/native-test-compile-repair-20261017, exactbase84c. Two namedtestfiles only,
+assertions/coverage preserved, no try?/uncheckedSendable/testdeletion. Root soleGitowner;
+will commitClaude andJones paths separately so PR11 correction carries no trial ancestry.
+
+Separate ownershipfixtureFAIL20/19pass, MacPython3.13.3: largeoutputsinglechildnofork
+case210 -> finalSIGKILL107 -> killpg56 EPERM. All16mocks/other3livepass incl exitedleader/
+descendants. Terminalleader observed, failedPIDnotlogged, wait skipped on exception;
+outerrunnerdrained/noerror does not prove innerreap. No retry/processprobes/signals.
+Parent retained pending no-live-effects reconciliation; laptopfixed84c, CPU92.45% means
+zero localtests. Root assigned Astra/high codexbar-fixture-macos-reap-repair-20261017-r1,
+physical /home/malcolmjones/Projects/CodexBar-worktrees/fixture-macos-reap-repair-20261017,
+branch work/fixture-macos-reap-repair-20261017, exactbase84c. Scriptcollector/ownership
+fixture only; preserveall20+50cases/retainedidentity and strict signalbeforereap, no merely
+swallowedEPERM/PIDexistencecheck. Source must account for sole-reap on failedsignal and
+separate actual prior-effect unknowns; LinuxcannotproveMacrecovery. No liveMacprobe.
+Root soleGitowner/shareddocsowner; no overlap, no extra review/broadrepair. ExistingP2s
+remain deferred. FreshVPSlaunchCPU1.88%, RAM40.05GiB, onecore6.25%; twoindependentstarts.
+
+Corrected manifest/platform assumption: Package.swift166–177 includes TestsLinux on Mac;
+log988 compiled ClaudeNativeProfileServiceLinuxTests. Both supplemental hashes match
+root source and are now in finalmanifest66paths, not Linux-only/absent Mac inputs.
+Final-native/ exactlogs remain laptoplocal. Refresher assessment already consumed: native
+selection validatesCLIownership, delegatesexpiredcredentials through same selectedenv;
+no directCodexBar refreshchain. No structural gap in boundedpath, runtime/externalrefresh
+UNKNOWN. Save sourcecandidatecheckout until explicitverifierrelease; no operationalpermission.
+CIpause/extraction/sign/install and allseven trialgates remain intact. Native/source-ready
+status superseded by failures, not a passing84c or permission for unchangedretry.

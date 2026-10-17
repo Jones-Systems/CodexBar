@@ -84,7 +84,7 @@
       "execution": "reviewer did not execute; builder Linux evidence only"
     }
   },
-  "laptop_commands_status": "Repaired-source confirmation satisfied. Verify exact manifest/platform capability and native fixture admission before execution; macOS Python3.13+ with waitid/WNOWAIT required.",
+  "laptop_commands_status": "HELD pending Mac-compatible signal-error/sole-reap repair and exact prior-effect reconciliation; no retry or unknown-PID probe/signal",
   "deferred_findings": [
     {
       "id": "FSP-PROC-002",
@@ -102,5 +102,19 @@
       "revisit_trigger": "Direct owner instruction to remediate or future scoped changes to handler restoration",
       "disposition": "Deferred/unrepaired; original severity/consequence retained"
     }
-  ]
+  ],
+  "Mac_native_followup": {
+    "tests": 20,
+    "passed": 19,
+    "failed": "test_large_outputs_do_not_block_on_pipe_capacity at test_fixture_process_ownership.py210",
+    "error": "PermissionError errno1 EPERM from os.killpg at collector56, finalSIGKILL107 after retained terminal leader observation",
+    "platform": "macOS Python3.13.3",
+    "passed_detail": "16 mocks + other3live, including exited leader descendant cleanup",
+    "failed_PID": "not logged",
+    "sole_reap": "UNPROVED; wait skipped on signal exception",
+    "outer_runner": "drained/reported no error; not proof inner reap",
+    "retry": false,
+    "recovery": "No additional process signals/probes; caller-owned parent retained until no-live-effects reconciled",
+    "execution": "shared collector scratch regression HELD"
+  }
 }

@@ -68,14 +68,16 @@
     "Tests/CodexBarTests/JonesStateRootTests.swift": "72933e9e04680825fd64d8d4169b8bfab38ac3e0af4b2b34666b75d029ccf303",
     "Tests/CodexBarTests/MiMoLocalUsageFallbackTests.swift": "7633fd3a2988c8f7b8f0045f49a38e4129ce7ac85499281892699ed134b9303a",
     "Tests/CodexBarTests/MiMoUsageScriptTests.swift": "e6cce43581d749046d495b2ab71d7bffe133b5f23af96d1eccc8c5869e0f251e",
-    "Tests/CodexBarTests/OpenAIDashboardWebViewCacheTests.swift": "613658a8fab7610ba2edf23ef0fa1b6892d0ecc30e1619aee34ef0ca195d6faf"
+    "Tests/CodexBarTests/OpenAIDashboardWebViewCacheTests.swift": "613658a8fab7610ba2edf23ef0fa1b6892d0ecc30e1619aee34ef0ca195d6faf",
+    "TestsLinux/ClaudeNativeProfileServiceLinuxTests.swift": "ed3d4dd0eece275fb0533e81b58a245abfb20bcc278bd48b82744d338757c497",
+    "TestsLinux/JonesDiagnosticDestinationTests.swift": "08c19629bfb481a44f7dbd4f089735f221ec1618d0c7a8bc8e9fd05936ec1d79"
   },
   "checks": {
     "SwiftFormat_0_61_1": "PASS59 final integrated Swift files --lint --cache ignore,9.76s",
     "diff_whitespace": "PASS",
-    "scratch_harness": "Builder Linux/Python3.13.5 PASS20ownership+50lifecycle atb9d2ca08; independent exact-source confirmation supported; nativeMacunrun",
+    "scratch_harness": "FAIL20/19pass onMacPython3.13.3; EPERM terminal leader group signal, sole-reap unknown; execution held; Linux evidence remains historical",
     "MiMo_writer": "Laptop PASS3 at44a43f59; affected MiMo source unchanged since then",
-    "native": "UNRUN on new candidate; Swift unavailable VPS",
+    "native": "FAIL84c compilation before discovery; zero behavior tests; corrections active",
     "make_test": "HELD pending integrated synthetic WebKit safety qualification and native checks; not passing",
     "make_check": "HELD installer/no-tool-install boundary",
     "independent_Claude_review": "NFP-COR-001 source-remediated eb9bb968 and independently confirmed; native unrun. NFP-COR-002 P2 deferred/unrepaired.",
@@ -184,7 +186,9 @@
     "NFP-COR-001 originalP1 source-remediated and independently confirmed eb9bb968; native execution pending",
     "NFP-COR-002 P2 identityless success history mixing: deferred unrepaired, see exact review ledger",
     "FSP-PROC-001 originalP1 source-remediated/confirmed b9d2ca08; native Mac behavior pending",
-    "FSP-PROC-002 P2 handler restoration window: nonblocking, deferred/unrepaired"
+    "FSP-PROC-002 P2 handler restoration window: nonblocking, deferred/unrepaired",
+    "Exact84c native compile failure in two named testfiles; bounded source repair active",
+    "Mac group-signal EPERM causes skipped wait; prior inner reap unknown; source repair/effect reconciliation required"
   ],
   "trial_gates": {
     "diagnostics": "source addressed, retained-export native proof pending",
@@ -254,7 +258,40 @@
       "live_reads": false,
       "rerun": "not needed unless affected source changes"
     },
-    "shell_checks": "Source containment corrected c5454c8b, integrated e73b14de; 50 synthetic lifecycle cases and30 portable identity checks passed; native16 identity/provider checks remain unrun; see fixture-scratch-parent-c5454c8b.json"
+    "shell_checks": "Source containment corrected c5454c8b, integrated e73b14de; 50 synthetic lifecycle cases and30 portable identity checks passed; native16 identity/provider checks remain unrun; see fixture-scratch-parent-c5454c8b.json",
+    "final_84c": {
+      "source": "Laptop coordinator506fc1fd evidence relay; not owner approval",
+      "candidate": "84c28e3c86d9ce846ddd37f8bebe1ed597ece752",
+      "make_test": {
+        "exit": 2,
+        "elapsed_seconds": 1057.89,
+        "discovered_selections": 0,
+        "executed_selections": 0,
+        "retries": 0,
+        "direct_compiler_errors": [
+          "ClaudeNativeProfileIntegrationTests.swift55-56 #expect throwing config load expansion: unhandled thrown call",
+          "JonesProviderScratchTests.swift72:20/157:20 sending non-Sendable async Gemini result closures;232:46 non-Sendable async throwing Data/URLResponse closure; SendingRisksDataRace"
+        ],
+        "macro_diagnostics": "@const compile-time/@section across25files; downstream/cascade UNKNOWN; no unrelated sweep",
+        "log": "Laptop final-native/ evidence, not assumed accessible VPS"
+      },
+      "ownership_fixture": {
+        "tests": 20,
+        "passed": 19,
+        "failed": "test_large_outputs_do_not_block_on_pipe_capacity at test_fixture_process_ownership.py210",
+        "error": "PermissionError errno1 EPERM from os.killpg at collector56, finalSIGKILL107 after retained terminal leader observation",
+        "platform": "macOS Python3.13.3",
+        "passed_detail": "16 mocks + other3live, including exited leader descendant cleanup",
+        "failed_PID": "not logged",
+        "sole_reap": "UNPROVED; wait skipped on signal exception",
+        "outer_runner": "drained/reported no error; not proof inner reap",
+        "retry": false,
+        "recovery": "No additional process signals/probes; caller-owned parent retained until no-live-effects reconciled",
+        "execution": "shared collector scratch regression HELD"
+      },
+      "Mac_admission": "CPU92.45% => zero new tests at relay; not VPS capacity",
+      "laptop_checkout": "fixed84c; no advance until explicit verifier release"
+    }
   },
   "historical_source_candidate": "3bed0667e8841e38c1e8ac573067daacc255454c",
   "historical_checks": {
@@ -266,7 +303,7 @@
     "make_check": "held: installer/no-tool-install boundary",
     "scratch": "invocation-owned TemporaryDirectory under worktree .build/source-qualification, absence verified"
   },
-  "delivery_stage": "SOURCE-READY FOR EXACT NATIVE VERIFICATION; not merge/install/release ready; no native pass claimed",
+  "delivery_stage": "84c28e3 FAILED native qualification; NOT source-ready pending bounded Swift compilation and Mac process-error-path repairs. Laptop checkout/parent remain held.",
   "CI_pause_evidence": {
     "source": "Agent relay from laptop coordinator506fc1fd; not owner approval; local evidence not assumed accessible VPS",
     "url": "https://github.com/Jones-Systems/CodexBar/actions",
@@ -278,7 +315,7 @@
     "upstream_monitor": "preserve disabled_fork",
     "next_gate": "Exact owner approval or owner authenticated UI initiating action; laptop preparing narrow gate; VPS does not re-enable/dispatch/settings-change"
   },
-  "portable_commands_status": "Use one caller-owned workspace parent, supported Python3.13+ on macOS; preserve native fixture admission and exact cleanup. Original unsafe regression remains historical, never execute it.",
+  "portable_commands_status": "HELD: Mac EPERM/reap-error path unknown; no shared-collector rerun until source correction and effect reconciliation; no extra process probes/signals",
   "AFCL_product_fit": {
     "authority_effect": "none",
     "source": "Laptop coordinator506fc1fd static installed wrapper/source evidence relay; not owner approval, not independent VPS installed-state verification",
@@ -318,5 +355,6 @@
       "checks": []
     },
     "qualification": "CI absent while fork Actions paused; no qualifying merge"
-  }
+  },
+  "platform_correction": "Package.swift166-177 includes TestsLinux target on Mac; log988 compiled ClaudeNativeProfileServiceLinuxTests. Both supplemental files are Mac compilation inputs too; no absent/pass inference."
 }

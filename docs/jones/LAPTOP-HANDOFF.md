@@ -6,6 +6,20 @@ Authority effect: none. Source stays on VPS. Laptop thread
 trial disposition and eligible merges. No live authentication, installation or switching
 operation is granted by this handoff.
 
+## Native failure supersedes source-ready handoff
+
+Exact84c28e3 qualification FAILED before discovery: make test exit2 after1057.89s,
+zero selections/tests/retries. Two named Swift test files require bounded compilation
+repairs. Macro diagnostics across25files may be downstream; not proved, no sweep.
+The ownership regression separately failed20/19pass on MacPython3.13.3: final group
+SIGKILL raised EPERM for a terminal no-fork leader, skipping wait; inner reap remains
+unproved. Do not retry the shared collector or probe/signal unknown processes. Keep the
+invocation parent and84c checkout held until laptop verifier explicitly releases them.
+Two separate Astra source lanes are active. Await a new exact source-ready handoff;
+the prior source-ready text below is historical and does not authorize an84c rerun.
+TestsLinux files are also compiled on Mac via Package.swift166–177; the two supplemental
+hashes are now in the manifest, correcting the earlier Linux-only interpretation.
+
 ## Exact candidate and ownership
 
 Source is ready for native verification. Use the **exact published PR12 head in the
