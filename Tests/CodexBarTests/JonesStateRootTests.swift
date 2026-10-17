@@ -18,6 +18,24 @@ struct JonesStateRootTests {
     }
 
     @Test
+    func `valid string marker survives packaged plist serialization`() throws {
+        for format in [PropertyListSerialization.PropertyListFormat.xml, .binary] {
+            let data = try PropertyListSerialization.data(fromPropertyList: Self.metadata, format: format, options: 0)
+            let propertyList = try PropertyListSerialization.propertyList(from: data, format: nil)
+            let info = try #require(propertyList as? [String: Any])
+            #expect(JonesStateRoot.identity(info: info) == Self.identity)
+        }
+    }
+
+    @Test
+    func `other identity fields without a marker preserve absent legacy behavior`() {
+        var info = Self.metadata
+        info.removeValue(forKey: "JonesStateKey")
+        #expect(JonesStateRoot.identity(info: info) == nil)
+        #expect(JonesStateRoot.identity(info: [:]) == nil)
+    }
+
+    @Test
     func `app widget and bundled CLI resolve the same identity without state reads`() {
         var reads: [URL] = []
         let app = URL(fileURLWithPath: "/synthetic/Fixture.app")

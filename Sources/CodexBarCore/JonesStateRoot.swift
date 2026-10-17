@@ -27,7 +27,10 @@ public enum JonesStateRoot {
         })
 
     public static func identity(info: [String: Any]) -> Identity? {
-        guard let key = info["JonesStateKey"] as? String else { return nil }
+        guard let marker = info["JonesStateKey"] else { return nil }
+        guard let key = marker as? String else {
+            preconditionFailure("Invalid packaged Jones state key type")
+        }
         precondition(key == "jones", "Unsupported packaged Jones state key")
         func value(_ key: String) -> String {
             guard let value = info[key] as? String, !value.isEmpty else {
