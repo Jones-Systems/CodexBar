@@ -509,3 +509,35 @@ the exception they reported; this new checkpoint supersedes that exception only.
 AFCL source work remains active. No new native candidate/rerun is requested yet;
 refresh the full manifest and pinned handoff after AFCL returns. All merge, CI,
 extraction, native/full-suite-safety and activation holds remain intact.
+
+
+### AFCL mode evidence and typed-status source result
+
+The released five-file source is committed at
+`c61fa5f9a5a9562020593d79cf751a960f94dc4a` in claude-afcl-status-20261017; root verified
+its full manifest. It is not yet integrated/published to PR11/12. The patch adds
+terminal typed statuses for inference-token or missing host-managed selections,
+rejects same-token scope promotion through CodexBar's environment override, and
+removes two incorrect setup-token usage-recovery messages. Independent explicit
+credentials and native profile routing remain intended behavior; a focused Astra/high
+correctness review is active before acceptance. Source tests are authored, unexecuted;
+builder five-file SwiftFormat lint and whitespace passed. make test is unavailable
+for missing Swift, make check held. Source checks do not establish operational success.
+
+Host-tooling source fc3327229 distinguishes automation login/push/status from native-
+login/native-push/native-status for Claude. The automation launcher supplies its
+inference token only to a child process. The installed afcl shortcut was not inspected.
+Root independently read Anthropic's primary authentication contract: setup-token
+supports model requests, not usage authority. Exact contract/source facts and hashes
+are in ../review-evidence/afcl-mode-status-c61fa5f9.json. No live token or endpoint was
+read/called, and no provider scope was invented.
+
+GUI native-profile discovery/selection remains an acceptance gap, not an automatic
+owner-provisioning conclusion. Root started a bounded Sol/medium source-only contract
+research task to determine whether a current nonsecret Authfleet registry/projection
+or existing CodexBar selection boundary can support that integration. Missing selected
+environment alone is not proof it cannot. This research is distinct from automation
+capability research and the active correctness review. Fresh admission CPU12.93%,
+RAM39.99GiB, one core6.25%; one research start. No native rerun/new final candidate is
+requested until these dependencies resolve. Existing CI/extraction/activation gates
+remain unchanged.
