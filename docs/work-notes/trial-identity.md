@@ -254,8 +254,8 @@ Seven category dispositions at this checkpoint:
    remain outside this source capsule and require their bounded authority.
 
 The upstream extraction sequencing predicate `ac.custom-base-settled.001` still
-requires merged parents or explicit coordinator release with an exact alternative
-base. Full completion scope alone does not satisfy that dependency. Read-only
+requires both PR11 and trial identity merged into fork main, or explicit M Jones
+release with an exact alternative base. The laptop coordinator cannot release it. Full completion scope alone does not satisfy that dependency. Read-only
 inventory and independent trial repairs may proceed; no merge behind the laptop
 coordinator. Subsequent bounded slices remain localization, pane sections, stable
 account helpers and fork docs; unstable seams remain explained patched-file rows,
@@ -297,3 +297,22 @@ StatusMenuClaudeSwapCompactTests, StatusMenuInstantOpenTests, StatusMenuOpenRefr
 JonesStateRootTests and ProviderSessionStoreFileTests, plus the standalone/overlay
 scripts. No intermediate Mac run is requested: compose remaining source lanes first.
 No merge, signing, package, install or account operation occurred.
+
+### Coordinator clarification: owner-only extraction and CI gates
+
+Laptops coordinator relay explicitly confirms that its continuity takeover does
+not release `ac.custom-base-settled.001`. Only M Jones can release that predicate;
+otherwise both PR11 and the trial identity parent must be merged into fork main.
+Extraction inventory stays read-only. All currently eligible UI/Claude/trial source
+work continues; no generic owner question is raised while that work is actionable.
+This corrects the earlier shorthand "coordinator release" without claiming a waiver.
+
+Read-only CI investigation relayed by laptop: Actions enabled, allowed_actions all,
+active workflow349929607, workflow blob bec7a5d8... identical at main and captured
+heads, PR events configured without path filters or skips. Zero runs/suites/checks
+and no action_required runs were observed. Org policy inspection returned403 for
+missing admin:org, so suppression cause remains unknown. No additional close/reopen,
+settings, permission or authentication changes are authorized. Missing checks are
+not green; native local passes cannot silently waive ac.trial-gates. Source-ready
+reporting must preserve this exact evidence limitation and the separate activation,
+packaging/signing, installation, account-operation and owner-only sequencing gates.
