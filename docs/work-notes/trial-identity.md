@@ -708,3 +708,34 @@ Claude GUI source continues independently. Final manifest/suite union will follo
 both lanes and include Gemini correction; no intermediate native rerun requested.
 Full-suite persistent-WebKit hold, missing tooling/CI, owner-only extraction predicate,
 and signing/installation/activation boundaries remain unchanged.
+
+
+### Bounded WebKit synthetic fixture source lane
+
+Laptop coordinator requests source correction of the identified persistent-store fixture
+hazard under the accepted full-completion/native-synthetic-only scope. Root assigned
+Astra/high task codexbar-webkit-synthetic-fixtures-20261017-r1 in isolated worktree
+/home/malcolmjones/Projects/CodexBar-worktrees/webkit-synthetic-fixtures-20261017,
+branch work/webkit-synthetic-fixtures-20261017, base8d1ced4c49fd7b2b18821889548800eaeb0cdc38.
+Root remains sole Git/index owner; builder owns OpenAIDashboardWebViewCacheTests and
+only the narrow necessary WebsiteDataStore/direct cache fixture seam. No overlap with
+Claude GUI or shell scratch lanes; no shared documentation writes or live operations.
+Launch admission CPU7.55%, RAM40.33GiB, one full core6.25%; one start.
+
+Preserve production default stores, persistent identifiers and cache semantics, every
+meaningful existing case/assertion, using contained nonpersistent/injected factories.
+Pure identifier derivation assertions must retain their actual contract; don't replace
+them with tautologies or skip them. If any case cannot preserve meaningful synthetic
+coverage, return the precise residual hold. No default/persistent WebKit store may be
+opened by fixtures. Source correction and native fixture proof do not qualify actual
+persistent runtime containment. Full make test remains HELD pending source integration
+and native safety verification; no fabricated full pass or blanket other-suite safety.
+Final candidate manifest and affected-suite union will include this lane. CI/extraction/
+signing/installation/native-runtime gates remain intact.
+
+The separate Claude GUI builder also received the load-bearing default-route constraint:
+Authfleet native-default metadata must remove CLAUDE_CONFIG_DIR rather than substitute
+an explicit ~/.claude, because explicit default-directory selection uses distinct macOS
+secure storage. Tests must distinguish absence/explicit default path, persisted selection,
+stale binding membership and cross-profile cache identity. Named profiles keep matching
+service/cache/refresh routing. Inherited shell home is not GUI/account evidence.

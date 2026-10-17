@@ -13,7 +13,7 @@ truthful typed status. Grouped source is now integrated (50a67106; native pendin
 on VPS. Preserve e23b813c8 and older evidence;
 **do not treat a documentation-only head carrying this notice as the next native
 candidate**. Wait for the new exact source-ready SHA and refreshed manifest after
-Claude GUI discovery/selection and single-parent fixture containment return, including the integrated Gemini correction. No intermediate checkout advance or native rerun is requested.
+Claude GUI discovery/selection and single-parent fixture containment return, including the integrated Gemini correction and bounded WebKit synthetic-fixture repair. No intermediate checkout advance or native rerun is requested.
 The binding below describes the preceding source checkpoint until replaced.
 
 ## Candidate binding
@@ -97,7 +97,7 @@ Full-suite hold is source-confirmed: OpenAIDashboardWebViewCacheTests lines108�
 134–140 call persistent factories unguarded; lines89–106 and609–637 have only CI guards.
 OpenAIDashboardWebsiteDataStore uses default() at27 and persistent forIdentifier at35;
 clearCache at71–72 drops references only. No ordinary isolation/TMPDIR override or
-production-runner full-suite exclusion seam exists. Do not execute that unsafe group.
+production-runner full-suite exclusion seam exists. Do not execute that unsafe group. Bounded Astra task codexbar-webkit-synthetic-fixtures-20261017-r1 is correcting this fixture hazard with a contained synthetic seam; the hold remains until integrated and verified.
 Identifier-only JonesFrameworkIsolationTests remain safe. Existing admitted affected
 runner groups may proceed, with partial coverage reported exactly.
 

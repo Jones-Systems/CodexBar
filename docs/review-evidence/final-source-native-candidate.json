@@ -123,7 +123,8 @@
     "AFCL automation adapter and usage-endpoint/granted-scope evidence",
     "Claude native Authfleet GUI discovery/selection source lane active",
     "Grouped Codex presentation source-addressed at50a67106; native pending",
-    "Single-parent shell fixture containment source lane active"
+    "Single-parent shell fixture containment source lane active",
+    "WebKit cache synthetic-fixture seam source lane active; production persistence/runtime containment remains separate"
   ],
   "trial_gates": {
     "diagnostics": "source addressed, retained-export native proof pending",
@@ -183,7 +184,7 @@
       "scratch": "removed",
       "cache": "retained"
     },
-    "full_make_test": "HELD: unguarded persistent WebKit factory cases; no standard isolation or production runner full-suite exclusion seam",
+    "full_make_test": "HELD: identified persistent WebKit fixture calls; bounded synthetic seam source task codexbar-webkit-synthetic-fixtures-20261017-r1 active; no passing full-suite evidence",
     "affected_verification": "admitted groups through existing runner functions, partial coverage only",
     "safe_identifier_suite": "JonesFrameworkIsolationTests",
     "mimo_python": {
