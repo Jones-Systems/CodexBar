@@ -787,3 +787,29 @@ Initial launch hold CPU94.27% prevented review start; recovered sample1.89%/39.8
 onecore6.25%, allowed one review. No runtime/process intervention. Final source manifest
 is refreshed at this source checkpoint, but source-ready/native rerun awaits review.
 All CI/extraction/runtime/signing/install gates preserved. No VPS merge to fork main.
+
+
+### Native-profile review result and bounded P1 repair
+
+Independent Astra/high task codexbar-claude-native-gui-correctness-20261017-r1 completed
+against ab73cbaa794d7c0ca921c939be0ceeb97ab85da7 (base410515a95), with two findings.
+Exact result identity, original severity/blocking effect and source anchors are preserved
+in claude-native-gui-ab73cbaa.json; composition check adds no further finding.
+NFP-COR-001 P1: expired native OAuth credential + missing enrolled executable can route
+delegated refresh through another executable on PATH. Delivery-blocking; no live effect
+observed. NFP-COR-002 P2: successful CLI usage without email can release profile history
+hold and use prior sticky history account. Deferred/unrepaired under standing P2 rule,
+no acceptance of debt/correction or readiness waiver. Original blocking claim preserved.
+No generic permission question or unrelated P2 sweep; laptop receives durable finding.
+
+Root assigned one bounded Astra/high remediation pass for NFP-COR-001 only, task
+codexbar-claude-enrolled-executable-repair-20261017-r1, physicalworktree
+/home/malcolmjones/Projects/CodexBar-worktrees/claude-enrolled-executable-20261017,
+branch work/claude-enrolled-executable-20261017, cleanbasee7ac58f8d4c436947331d195a36afdfa585600d1.
+Root sole Git/index owner; builder owns fetch strategy/narrow resolver/delegated-refresh
+seam and synthetic tests, not history/shareddocs. Preserve consent, valid passive native
+OAuth use and default/named routes; no fallback to another executable for selected
+native authority. Missing-binary/expired-fixture/sentinel coverage requested, no live
+provider/credential operation. Launch admission32.09%CPU/39.99GiB RAM/onecore6.25%.
+Source-ready and native handoff remain held until repair/new exact independent confirmation.
+CI/extraction/runtime/signing/install gates remain unchanged.

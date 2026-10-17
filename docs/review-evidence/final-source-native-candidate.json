@@ -76,7 +76,7 @@
     "native": "UNRUN on new candidate; Swift unavailable VPS",
     "make_test": "HELD pending integrated synthetic WebKit safety qualification and native checks; not passing",
     "make_check": "HELD installer/no-tool-install boundary",
-    "independent_Claude_review": "IN PROGRESS, not accepted yet"
+    "independent_Claude_review": "COMPLETE with NFP-COR-001 P1 blocking, repair active; NFP-COR-002 P2 deferred/unrepaired with original claim preserved"
   },
   "native_affected_suites": [
     "AccountMenuLayoutPlannerTests",
@@ -169,7 +169,9 @@
   "remaining_product_gaps": [
     "AFCL automation-token usage adapter remains unsupported by proved endpoint/scope contract; native profile selection does not imply automation-token support",
     "All new native behavior/GUI evidence pending",
-    "Shared HTTP/native app/widget/unbundled CLI containment remains unqualified"
+    "Shared HTTP/native app/widget/unbundled CLI containment remains unqualified",
+    "NFP-COR-001 P1 enrolled-executable fallback: repair active, not corrected",
+    "NFP-COR-002 P2 identityless success history mixing: deferred unrepaired, see exact review ledger"
   ],
   "trial_gates": {
     "diagnostics": "source addressed, retained-export native proof pending",
@@ -251,5 +253,5 @@
     "make_check": "held: installer/no-tool-install boundary",
     "scratch": "invocation-owned TemporaryDirectory under worktree .build/source-qualification, absence verified"
   },
-  "delivery_stage": "Integrated source checkpoint; independent Claude review pending; await explicit source-ready handoff before native run"
+  "delivery_stage": "NOT source-ready: NFP-COR-001 repair and exact targeted confirmation pending; native rerun remains held"
 }

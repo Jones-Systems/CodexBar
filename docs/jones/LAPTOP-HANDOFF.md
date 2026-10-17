@@ -9,8 +9,12 @@ trial disposition and eligible merges. No installation or live switching is auth
 
 All three follow-up source lanes are integrated: Claude native GUI selection ab73cbaa,
 single-parent shell fixtures c5454c8b and nonpersistent WebKit fixtures eecd20ac, plus
-Gemini Sendable correction8effc1ec. One focused independent Claude correctness review
-is in progress. Await the exact source-ready message before a native checkout advance;
+Gemini Sendable correction8effc1ec. Independent Claude correctness review found NFP-COR-001 P1 (delegated refresh can
+fallback to a non-enrolled executable), now in bounded source repair, and NFP-COR-002
+P2 (identityless success can reopen previous history), deferred and unrepaired under
+the finding policy. Original severities/blocking claims remain in
+../review-evidence/claude-native-gui-ab73cbaa.json. Await repair and exact confirmation,
+then the source-ready message before a native checkout advance;
 this documentation checkpoint is not native acceptance or a request for an interim run.
 
 ## Candidate binding

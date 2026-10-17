@@ -59,7 +59,38 @@
     "ClaudeSwapMenuBarSnapshotTests",
     "ProviderArchitectureGatekeeperTests"
   ],
-  "independent_review": "codexbar-claude-native-gui-correctness-20261017-r1 IN PROGRESS; no accepted result yet",
+  "independent_review": "COMPLETE: two findings, not no-findings; narrow trial credential-owner composition no additional finding",
   "excluded_patch": "c61fa5f9 AFCS001/AFCS002 untouched/deferred and excluded",
-  "composition": "PR12 retains only the two pre-existing trial identity defaults/tombstone domain changes relative to Claude source in shared OAuthCredentials file; inspected"
+  "composition": "PR12 retains only the two pre-existing trial identity defaults/tombstone domain changes relative to Claude source in shared OAuthCredentials file; inspected",
+  "findings": [
+    {
+      "source_review_profile": "Astra/high independent correctness; generic T3 review role fallback",
+      "source_review_task": "codexbar-claude-native-gui-correctness-20261017-r1",
+      "source_review_result": "context-transfer:type:subagent_result:source-thread:thread%3Adelegated-task%3Acommand%253Amcp%253Ad4fad46f-6f60-4566-8a66-ad626d212917%253Adelegate-task%253Acodexbar-claude-native-gui-correctness-20261017-r1:target-thread:0488f286-4c8b-4932-9b44-67ef47cb70a3:70b71b0c-d754-47ee-9b67-d461bf408fdf",
+      "reviewed_revision": "ab73cbaa794d7c0ca921c939be0ceeb97ab85da7",
+      "id": "NFP-COR-001",
+      "original_severity": "P1",
+      "original_blocking_effect": "delivery-blocking correctness finding pending authorized disposition; no live effect observed",
+      "path": "Sources/CodexBarCore/Providers/Claude/ClaudeNativeProfileFetchStrategy.swift:21",
+      "consequence": "Expired native credentials plus missing enrolled native_cli permit delegated OAuth refresh to use another Claude executable on PATH through resolver fallback; consent retained but enrollment bypassed",
+      "test_gap": "missing enrolled binary, expired injected credentials and sentinel fallback executable",
+      "outcome": "remain blocked",
+      "next_step": "Bounded authorized source repair in codexbar-claude-enrolled-executable-repair-20261017-r1; exact independent confirmation required before correction claim"
+    },
+    {
+      "source_review_profile": "Astra/high independent correctness; generic T3 review role fallback",
+      "source_review_task": "codexbar-claude-native-gui-correctness-20261017-r1",
+      "source_review_result": "context-transfer:type:subagent_result:source-thread:thread%3Adelegated-task%3Acommand%253Amcp%253Ad4fad46f-6f60-4566-8a66-ad626d212917%253Adelegate-task%253Acodexbar-claude-native-gui-correctness-20261017-r1:target-thread:0488f286-4c8b-4932-9b44-67ef47cb70a3:70b71b0c-d754-47ee-9b67-d461bf408fdf",
+      "reviewed_revision": "ab73cbaa794d7c0ca921c939be0ceeb97ab85da7",
+      "id": "NFP-COR-002",
+      "original_severity": "P2",
+      "original_blocking_effect": "deferred delivery finding; no remediation performed",
+      "path": "Sources/CodexBar/Providers/Claude/UsageStore+ClaudeNativeProfile.swift:5",
+      "consequence": "After selecting jace, successful CLI percentages without email publish a snapshot/release history hold; sticky account fallback can expose and append to prior account history",
+      "adjacent_evidence": "UsageStore+PlanUtilization.swift resolvePlanUtilizationAccountKey around1233",
+      "test_gap": "successful identityless publication after profile transition; current tests stop before publication",
+      "outcome": "remain blocked",
+      "disposition": "Standing P2 implementation deferral; unrepaired, no bounded-debt acceptance claimed. Preserve original delivery finding and report to laptop; do not remediate absent direct exact owner scope."
+    }
+  ]
 }
