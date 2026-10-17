@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "authority_effect": "none",
-  "source_candidate": "79541c811e56ce280f9b5729d7cb39a9adfbb25c",
+  "source_candidate": "c2c52e09d8084489c01306175899fc368a589eb8",
   "base": "21c34561387b26f76d0a27e9f00d1538fbc0926f",
   "parent_PR11_head": "4f62ba08bd6c22940bd79189b451464ba2df3ba5",
   "source_paths": {
@@ -272,7 +272,7 @@
     "Tests/CodexBarTests/SpendDashboardPublicationTests.swift": "c57c57e0c1dda3b2164f35187567d5e39a9b27639cb59443ada57c60aa69633b",
     "Tests/CodexBarTests/StatusItemControllerShutdownTests.swift": "98af28dda8c6e0e6911ba8dded04ea77f107067fd7ba68b3838721f0bebc5c00",
     "Tests/CodexBarTests/StatusMenuCodexSwitcherPresentationTests.swift": "21f9d5864611c873027e1ee6da3fe076d6cdc93c889b623cf7a07d82406f1ccd",
-    "Tests/CodexBarTests/StatusMenuCodexSwitcherTests.swift": "10eb455edc2e7311fd52c0c92095acbdb0ae79b014c2855b5a8f874b13782067",
+    "Tests/CodexBarTests/StatusMenuCodexSwitcherTests.swift": "42a274ec9418547d478223792533511e44c8153cace459c7b282fe67a221d6c6",
     "Tests/CodexBarTests/StatusMenuPersistentRefreshTests.swift": "c086ce397d99854a5ef9d9d167bb7835c4e9d7c574b04ca63d9d1555e6309fa3",
     "Tests/CodexBarTests/StatusMenuScopedCodexRefreshTests.swift": "7aae09edf6b77d4a4b189af8b3c03c3ad183a15de4d475ac18341f590b3918a6",
     "Tests/CodexBarTests/StatusMenuViewportRestoreTests.swift": "bd582f4b301d5978fb44fa187e3bd4bbd6ec30f5ee2ad7b49d8df09375998b77",
@@ -317,8 +317,8 @@
     "diff_whitespace": "PASS",
     "scratch_harness": "Native-r2 c9 mock38/live45/lifecycle56 PASS; unchanged dependency inputs available for laptop hash-bound carryforward",
     "MiMo_writer": "Laptop PASS3 at44a43f59; affected MiMo source unchanged since then",
-    "native": "5f842293cost7PASS/fullFAILgroup45Gemini socketfixture; revised79541sourceUNRUN",
-    "make_test": "FAIL387.814s at5f842293; revised79541UNRUN",
+    "native": "556cfca9Gemini29PASS/fullFAILgroup75menutestexpectations;revisedc2c52sourceUNRUN",
+    "make_test": "FAIL591.346s at556cfca9;revisedc2c52UNRUN",
     "make_check": "HELD installer/no-tool-install boundary",
     "independent_Claude_review": "NFP-COR-001 source-remediated eb9bb968 and independently confirmed; native unrun. NFP-COR-002 P2 deferred/unrepaired.",
     "independent_process_review": "FSP-PROC-001 source-remediated and independently confirmed b9d2ca08; nonblockingFSP-PROC-002 P2 deferred/unrepaired"
@@ -424,7 +424,7 @@
     "MiMo3 already passed laptop44a; no unchanged rerun"
   ],
   "held_native_suites": [
-    "Fullscratch/identity/shardingHELD0attemptsfordeferredNFCR-COR-002/003; revisedGemini2suites/fullnativequalificationdue."
+    "Fullscratch/identity/shardingHELD0attemptsdeferredNFCR-COR-002/003;revisedmenusuites/fullqualificationdue."
   ],
   "remaining_product_gaps": [
     "AFCL installed flow includes native usage companion reusable by native selector if present; readiness unknown; automation-token endpoint/scope support remains separately unproved",
@@ -1153,7 +1153,7 @@
       "Tests/CodexBarTests/GeminiStdoutHolderFixture.swift"
     ],
     "scope": "Synthetic holder/producer Python children chdir into existing ownedfixture directory and use basename socket addresses s/s.p, avoiding134/136byte AF_UNIX paths vsDarwin104capacity. Parentcwd/environment/executable/PIDabsolute paths/capture/readiness/deadlines/assertions/cleanup unchanged.",
-    "qualification": "UNRUN",
+    "qualification": "At556cfca9: Gemini29/2PASS92.759s/fullFAIL591.346s group75after74PASS,StatusMenuSwitcher436/488twoissues.8937SwiftTesting+123XCTest;86named79PASS1FAIL6unexecuted;original12elevenPASS/menuSwitcherFAIL.5explicitgatedskips/0runnertimeoutsfallbacksretries.",
     "focused_required": [
       "GeminiStdoutHolderFixtureTests",
       "GeminiStatusProbeAPITests"
@@ -1161,6 +1161,25 @@
     "full_required": "make test once after focusPASS, onecanonicalparent/jobs1/default180/3isolationflags/no manualretry",
     "source_path_count": 306,
     "named_rollup_count": 86,
-    "carryforward": "r10cost7/r9P1target8/resources7/r8focus86andactualtwoproofs onlybyexactdependencyhashbinding, no currentheadrerunclaim."
+    "carryforward": "r10cost7/r9P1target8/resources7/r8focus86andactualtwoproofs onlybyexactdependencyhashbinding, no currentheadrerunclaim.",
+    "cleanup": "Bothouterdrainsproved; exactparentremoved/absenceverified;522costpathscontained;0focusedholderartifactsremain;306hashes/indexclean;laneRELEASED."
+  },
+  "native_r12_candidate": {
+    "integration": "c2c52e09d8084489c01306175899fc368a589eb8",
+    "delta_from": "556cfca93532356a27275c2726bf64c12e151701",
+    "changed_paths": [
+      "Tests/CodexBarTests/StatusMenuCodexSwitcherTests.swift"
+    ],
+    "scope": "Two obsolete2-fullcard assertions replaced with exactacceptedactivecard/secondarycompactidentity+order; explicitsecondaryexpansionrequiresbothfullcards. Pendingvariantrequirespersnapshotemptybeforeafter. No-switcher/declarations/lifecycle preserved, productionunchanged.",
+    "qualification": "UNRUN",
+    "focused_required": [
+      "StatusMenuCodexSwitcherTests",
+      "JonesCompactAccountPresentationTests",
+      "StatusMenuCompactAccountLayoutTests"
+    ],
+    "full_required": "make test once iffocusedPASS underonecanonicalparent/jobs1/default180/3isolationflags/no manualretry",
+    "source_path_count": 306,
+    "named_rollup_count": 86,
+    "carryforward": "Gemini29r11/cost7r10/P1target8resources7r9/focus86andactualtwoproofsr8 onlybyexactdependencyhash/sourcebinding, nocurrentheadrerunclaim."
   }
 }

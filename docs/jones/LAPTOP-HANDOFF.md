@@ -6,6 +6,14 @@ Authority effect: none. VPS owns its existing source branches; laptop root owns 
 trial disposition and eligible merges. No live authentication, installation or switching
 operation is granted by this handoff.
 
+## Native compact-menu expectation checkpoint
+
+Latest source checkpoint `c2c52e09d8084489c01306175899fc368a589eb8 updates two stale full-card tests to accepted compact behavior without changing production: exactaccountidentities/order/active source, activecard+secondarycompactinitially, bothfullcardsafterexplicitexpansion, nolegacy/collapsedrows orswitcher. Pending-snapshotvariantrequiresempty snapshotsbeforeafterwhilebothaccountsremainrepresented/expandable. Astra diagnosis/builderreleased;rootdiffreviewPASS, nativeUNRUN.
+
+Native-r11at556cfca9:Gemini29tests/2suitesPASS92.759seconds;fullFAIL591.346seconds group75after74PASS onoldmenuCardexpectations436/488.8937SwiftTesting+123XCTest;86named79PASS1FAIL6unexecuted;original12elevenPASS/menuSwitcherFAIL.5gatedskips/0runnertimeoutsfallbacksretries.522costpathscontained/focusedholderartifactsabsent/bothdrains/exactparentcleanupabsence/306hashesindexclean/laneRELEASED.
+
+Nextcapsule:306hashes/86namedsupplemental,wholeStatusMenuCodexSwitcherTests/JonesCompactAccountPresentationTests/StatusMenuCompactAccountLayoutTests thenfullmakeonce ifPASS. Priorresultsdependencyhash-boundonly; standard180/jobs1/onecanonicalparent/all3isolationflags/bothworkspacevariables/TMPDIR/no manualretry. Fullscratch/identity/shardingP2proofsHELD0attempts;makecheck/CI/merge/extraction/trial/operationalholdsremain. Supersedesoldercandidatedirectionsbelow.
+
 ## Native Gemini socket fixture checkpoint
 
 Latest source checkpoint `79541c811e56ce280f9b5729d7cb39a9adfbb25c` gives the synthetic holder/producer children a working directory inside their existing owned root and short socket basenames. Recorded absolute addresses134/136bytes exceeded Darwin sun_path104; bind occurs before readiness/fault injection. Exact270-byte stderr was not persisted, so source/path/platform evidence establishes the high-confidence diagnosis without a new probe. Parent working directory, absolute PID paths, minimal environment, executable, capture/ownership/readiness/deadline/cleanup assertions remain unchanged.
