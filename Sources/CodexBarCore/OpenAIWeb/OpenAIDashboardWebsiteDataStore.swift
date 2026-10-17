@@ -1,5 +1,4 @@
 #if os(macOS)
-import CryptoKit
 import Foundation
 import WebKit
 
@@ -10,13 +9,14 @@ import WebKit
 ///
 /// Implementation detail: macOS 14+ supports `WKWebsiteDataStore.dataStore(forIdentifier:)`, which creates
 /// persistent isolated stores keyed by an identifier. We derive a stable UUID from the email and optional
-/// Codex source scope so distinct profiles with the same email never share a cookie store.
+/// Codex source scope so distinct profiles with the same email never share a cookie store. Packaged
+/// Jones identities add a fork namespace, including a persistent store for the no-account case.
 ///
 /// Important: We cache the `WKWebsiteDataStore` instances so the same object is returned for the same
 /// account email. This ensures `OpenAIDashboardWebViewCache` can use object identity for cache lookups.
 @MainActor
 public enum OpenAIDashboardWebsiteDataStore {
-    /// Cached data store instances keyed by normalized email and optional Codex source scope.
+    /// Cached data store instances keyed by fork identity, normalized email and optional Codex source scope.
     /// Using the same instance ensures stable object identity for WebView cache lookups.
     private static var cachedStores: [String: WKWebsiteDataStore] = [:]
 
@@ -24,15 +24,14 @@ public enum OpenAIDashboardWebsiteDataStore {
         forAccountEmail email: String?,
         scope: CookieHeaderCache.Scope? = nil) -> WKWebsiteDataStore
     {
-        guard let normalized = normalizeEmail(email) else { return .default() }
-        let storageKey = self.storageKey(normalizedEmail: normalized, scope: scope)
+        guard let storageKey = self.storageKey(forAccountEmail: email, scope: scope) else { return .default() }
 
         // Return cached instance if available to maintain stable object identity
         if let cached = cachedStores[storageKey] {
             return cached
         }
 
-        let id = Self.identifier(forStorageKey: storageKey)
+        let id = JonesFrameworkIsolation.websiteDataStoreIdentifier(forStorageKey: storageKey)
         let store = WKWebsiteDataStore(forIdentifier: id)
         self.cachedStores[storageKey] = store
         return store
@@ -62,8 +61,8 @@ public enum OpenAIDashboardWebsiteDataStore {
         }
 
         // Remove from cache so a fresh instance is created on next access
-        if let normalized = normalizeEmail(email) {
-            self.cachedStores.removeValue(forKey: self.storageKey(normalizedEmail: normalized, scope: scope))
+        if let storageKey = self.storageKey(forAccountEmail: email, scope: scope) {
+            self.cachedStores.removeValue(forKey: storageKey)
         }
     }
 
@@ -77,42 +76,11 @@ public enum OpenAIDashboardWebsiteDataStore {
 
     // MARK: - Private
 
-    private static func normalizeEmail(_ email: String?) -> String? {
-        guard let raw = email?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty else { return nil }
-        return raw.lowercased()
-    }
-
-    private static func storageKey(normalizedEmail: String, scope: CookieHeaderCache.Scope?) -> String {
-        guard let scope else { return normalizedEmail }
-        return "\(normalizedEmail)|\(scope.isolationIdentifier)"
-    }
-
-    private static func identifier(forStorageKey storageKey: String) -> UUID {
-        let digest = SHA256.hash(data: Data(storageKey.utf8))
-        var bytes = Array(digest.prefix(16))
-
-        // Make it a well-formed UUID (v4 + RFC4122 variant) while staying deterministic.
-        bytes[6] = (bytes[6] & 0x0F) | 0x40
-        bytes[8] = (bytes[8] & 0x3F) | 0x80
-
-        let uuidBytes: uuid_t = (
-            bytes[0],
-            bytes[1],
-            bytes[2],
-            bytes[3],
-            bytes[4],
-            bytes[5],
-            bytes[6],
-            bytes[7],
-            bytes[8],
-            bytes[9],
-            bytes[10],
-            bytes[11],
-            bytes[12],
-            bytes[13],
-            bytes[14],
-            bytes[15])
-        return UUID(uuid: uuidBytes)
+    private static func storageKey(forAccountEmail email: String?, scope: CookieHeaderCache.Scope?) -> String? {
+        JonesFrameworkIsolation.openAIDashboardStorageKey(
+            forAccountEmail: email,
+            scope: scope,
+            identity: JonesStateRoot.identity)
     }
 }
 #endif
