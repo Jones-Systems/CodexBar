@@ -11,7 +11,7 @@ extension UsageStore {
     {
         // Provider-specific by design: this gate protects Claude's consumer Auto source from Admin/token accounts.
         provider == .claude && context.sourceMode == .auto && !hasAdminAPIKey && !hasTokenAccount &&
-            !removedTokenAccountAuthority
+            !removedTokenAccountAuthority && !ClaudeNativeProfileSelection.isSelected(environment: context.env)
     }
 
     func clearClaudeHistoryFallbackEligibility(provider: UsageProvider) {

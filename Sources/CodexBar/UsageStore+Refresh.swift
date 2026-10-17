@@ -396,12 +396,17 @@ extension UsageStore {
             provider: provider,
             override: nil,
             claudeOwnerCLIRecoveryOnly: retryMode == .claudeOwnerCLIRecovery)
+        if provider == .claude {
+            self.reconcileClaudeNativeProfileEnvironment(fetchContext.env)
+        }
         let claudeHasAdminAPIKey = ClaudeAdminAPISettingsReader.apiKey(environment: fetchContext.env) != nil
-        let claudeActiveAccountIdentitySourceEligible = Self.shouldTrackClaudeActiveAccountIdentity(
-            provider: provider,
-            dataSource: fetchContext.settings?.claude?.usageDataSource,
-            hasSelectedTokenAccount: tokenAccount != nil,
-            hasAdminAPIKey: claudeHasAdminAPIKey)
+        let claudeActiveAccountIdentitySourceEligible =
+            !ClaudeNativeProfileSelection.isUnavailable(environment: fetchContext.env) &&
+            Self.shouldTrackClaudeActiveAccountIdentity(
+                provider: provider,
+                dataSource: fetchContext.settings?.claude?.usageDataSource,
+                hasSelectedTokenAccount: tokenAccount != nil,
+                hasAdminAPIKey: claudeHasAdminAPIKey)
         let priorClaudeSourceLabel = provider == .claude ? self.lastSourceLabels[.claude] : nil
         self.diagnostics[provider.instanceID] = nil
         let claudeAuthStateBeforeFetch = claudeActiveAccountIdentitySourceEligible
@@ -539,6 +544,14 @@ extension UsageStore {
                 oauthHistoryPersistentRefHash: nil,
                 oauthActiveAccountObservation: .changed)
         }
+        guard self.claudeNativeProfileEnvironmentIsCurrent(input.environment) else {
+            return ClaudeRefreshReconciliation(
+                disposition: .retry, oauthHistoryPersistentRefHash: nil, oauthActiveAccountObservation: .changed)
+        }
+        if ClaudeNativeProfileSelection.isUnavailable(environment: input.environment) {
+            return ClaudeRefreshReconciliation(
+                disposition: .apply, oauthHistoryPersistentRefHash: nil, oauthActiveAccountObservation: .changed)
+        }
         let historyAccountState = await Self.captureClaudeHistoryAccountState(environment: input.environment)
         guard self.isCurrentProviderRefreshGeneration(input.provider, generation: input.generation) else {
             return ClaudeRefreshReconciliation(
@@ -630,6 +643,10 @@ extension UsageStore {
         // every Claude route, but retire only the live projection; configured token-account caches remain isolated.
         if credentialsChanged || activeAccountChangedDuringFetchForOutcome || sourceAuthorityChanged {
             self.clearClaudeCredentialDerivedStateForCredentialSwap()
+        }
+        guard self.claudeNativeProfileEnvironmentIsCurrent(input.environment) else {
+            return ClaudeRefreshReconciliation(
+                disposition: .retry, oauthHistoryPersistentRefHash: nil, oauthActiveAccountObservation: .changed)
         }
         let disposition: ClaudeRefreshDisposition = if oauthAccountMismatch {
             .retryOwnerCLI
@@ -745,6 +762,10 @@ extension UsageStore {
             }
             self.lastKnownResetSnapshots[provider.instanceID] = backfilled
             self.snapshots[provider.instanceID] = backfilled
+            // Provider-specific by design: a current Claude result ends the selected-profile transition hold.
+            if provider == .claude {
+                (self.providerRuntimes[.claude] as? ClaudeProviderRuntime)?.nativeProfileUsagePublished()
+            }
             self.widgetUsagePreservationBlockedProviders.remove(provider.instanceID)
             if provider == .deepseek {
                 self.clearDeepSeekProfileTransition()
@@ -1310,7 +1331,7 @@ extension UsageStore {
         }
     }
 
-    private func clearClaudeCredentialDerivedStateForCredentialSwap() {
+    func clearClaudeCredentialDerivedStateForCredentialSwap() {
         // Provider-specific by design: Claude credential swaps invalidate OAuth, swap, widget, quota, and token state.
         self.widgetUsagePreservationBlockedProviders.insert(.claude)
         self.snapshots.removeValue(forKey: .claude)

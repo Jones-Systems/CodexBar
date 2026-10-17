@@ -18,6 +18,7 @@ struct ClaudeProviderImplementation: ProviderImplementation {
 
     @MainActor
     func observeSettings(_ settings: SettingsStore) {
+        _ = settings.claudeNativeProfileAlias
         _ = settings.claudeUsageDataSource
         _ = settings.claudeAdminAPIKey
         _ = settings.claudeCookieSource
@@ -249,6 +250,7 @@ struct ClaudeProviderImplementation: ProviderImplementation {
         }
 
         return [
+            self.nativeProfilePicker(context: context),
             ProviderSettingsPickerDescriptor(
                 id: "claude-usage-source",
                 title: "Usage source",
@@ -315,7 +317,12 @@ struct ClaudeProviderImplementation: ProviderImplementation {
 
     @MainActor
     func runLoginFlow(context: ProviderLoginContext) async -> Bool {
-        await context.controller.runClaudeLoginFlow()
+        if ClaudeNativeProfileSelection.isSelected(
+            environment: context.controller.store.claudeNativeProfileFetchEnvironment())
+        {
+            return false
+        }
+        return await context.controller.runClaudeLoginFlow()
     }
 
     @MainActor
@@ -351,6 +358,9 @@ struct ClaudeProviderImplementation: ProviderImplementation {
     func loginMenuAction(context: ProviderMenuLoginContext)
         -> (label: String, action: MenuDescriptor.MenuAction)?
     {
+        if ClaudeNativeProfileSelection.isSelected(environment: context.store.claudeNativeProfileFetchEnvironment()) {
+            return ("Manage selected native profile in Claude Settings…", .providerSettings(.claude))
+        }
         if self.shouldOfferDirectKeychainReadConsent(context: context) {
             // Terminal unreadable state (#2634/#2650): OAuth cannot recover until the user either opts in
             // to reading Claude Code's Keychain item or usage arrives via the Claude CLI fallback.
