@@ -372,3 +372,30 @@ not authorization for an unrelated P2 sweep. Source TIR001/TIR002 corrections we
 confirmed, still pending native qualification at their original P2 severities.
 Astra/high bounded UI repair is active; Claude auth reuse remains active. No final
 candidate or intermediate laptop rerun is requested yet. No merge or live operation.
+
+
+### Claude source result received; review dependency
+
+The native-profile source lane released twelve paths at c2a3118 base. Root verified
+all released SHA-256 values. Existing SwiftFormat 0.61.1 was available on VPS despite
+the builder's unavailable report: the first scoped lint found five files, root
+formatted only those scoped paths, and the final twelve-file lint passed. Source
+checkpoint `7cfd882ed03983a32be23300d252946387a832a9` is committed in the declared
+Claude worktree, not yet integrated/published to PR11. A single focused independent
+Astra/high correctness task now reviews that exact commit against c2a3118, including
+callsite consistency, profile/cache isolation and refresh verification. No Swift
+compilation or native passing result is claimed; builder make test failed for
+missing Swift and make check remains held.
+
+The implementation covers named native profile services and environment propagation,
+not AFCL automation tokens. An AFCL adapter is still unimplemented: the automation
+record contract does not prove usage-endpoint capability or a granted user:profile
+scope. Its selected-source projection, provenance/identity checks and fail-closed
+recovery contract remain unresolved. This patch does not establish resolution of the
+owner's stock-app Claude error. No independent login lifecycle or real credential
+operation was introduced/performed by this source work. Final source-ready handoff
+must retain this product gap rather than equating native profile reuse with AFCL.
+
+The exact UI/TIR independent result and original three CAIR P2 blocking claims are
+now recorded additively in the existing ui-tir-source-a7381944 evidence file. UI
+acceptance correction and Claude correctness review remain active dependencies.

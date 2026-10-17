@@ -34,5 +34,38 @@
     "original_severity": "P2",
     "original_review": "4ff8b5040930da2dd74b97b6d69b746a96544a0a",
     "disposition": "source repair published; native qualification pending"
+  },
+  "independent_review": {
+    "source": "codexbar-ui-tir-correctness-20261017-r1",
+    "reviewed_candidate": "a7381944376a5d191274a617e95fb3a2b607ab13",
+    "base": "21c34561387b26f76d0a27e9f00d1538fbc0926f",
+    "lens": "correctness; native generic-role fallback; Astra/high; read-only",
+    "checks_executed": false,
+    "manifest_sha256": "f77ce611305f988e04d7f66d99ca1c85615e08fd3ea127e5b6eaffd12888753b",
+    "findings": [
+      {
+        "id": "CAIR001",
+        "original_severity": "P2",
+        "location": "Sources/CodexBarCore/AccountMenuLayoutPlanner.swift:62",
+        "blocking_claim": "Active/top collapse and coherent re-expansion unavailable at counts 1\u20133",
+        "disposition": "open; bounded correction assigned under direct account-presentation acceptance"
+      },
+      {
+        "id": "CAIR002",
+        "original_severity": "P2",
+        "location": "Sources/CodexBarCore/AccountMenuLayoutPlanner.swift:82",
+        "blocking_claim": "Six healthy accounts bypass five-account initial presentation because one hidden candidate is discarded",
+        "disposition": "open; bounded correction assigned under direct five-account acceptance"
+      },
+      {
+        "id": "CAIR003",
+        "original_severity": "P2",
+        "location": "Sources/CodexBar/Jones/JonesCompactAccountPresentation.swift:16",
+        "blocking_claim": "New Codex comparison lacks justification required by ProviderArchitectureGatekeeperTests",
+        "disposition": "open; required-check correction assigned with same bounded policy change"
+      }
+    ],
+    "TIR001_TIR002": "Confirmed addressed in source; original P2 severities/blocking claims preserved; native qualification pending",
+    "limits": "Native interactions, Swift compilation and full checks unproved; no independent operational success claim"
   }
 }
