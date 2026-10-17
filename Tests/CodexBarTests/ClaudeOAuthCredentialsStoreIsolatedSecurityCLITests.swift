@@ -6,6 +6,21 @@ import Testing
 @Suite(.serialized)
 struct ClaudeOAuthCredentialsStoreIsolatedSecurityCLITests {
     @Test
+    func `security CLI arguments target selected native service without default fallback`() {
+        let environment = [
+            KeychainAccessGate.disableAccessEnvironmentKey: "1",
+            ClaudeOAuthCredentialsStore.isolatedSecurityCLIKeychainEnvironmentKey: "/synthetic/fixture.keychain-db",
+            "CLAUDE_CONFIG_DIR": "/synthetic/home/.claude-t3/jace",
+        ]
+        #expect(ClaudeOAuthCredentialsStore.securityCLIReadArguments(
+            account: "synthetic-account",
+            environment: environment) == [
+            "find-generic-password", "-s", "Claude Code-credentials-9a9e7cae",
+            "-a", "synthetic-account", "-w", "/synthetic/fixture.keychain-db",
+        ])
+    }
+
+    @Test
     func `safety blocks security CLI access to the login keychain`() {
         let blockedEnvironment = [KeychainTestSafety.suppressAccessEnvironmentKey: "1"]
         #expect(ClaudeOAuthCredentialsStore.securityCLIReadArguments(

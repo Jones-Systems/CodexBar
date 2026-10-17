@@ -146,9 +146,22 @@ extension ClaudeOAuthCredentialsStore {
 
     final class ClaudeKeychainFingerprintStore: @unchecked Sendable {
         var fingerprint: ClaudeKeychainFingerprint?
+        private var scoped: [String: ClaudeKeychainFingerprint] = [:]
 
         init(fingerprint: ClaudeKeychainFingerprint? = nil) {
             self.fingerprint = fingerprint
+        }
+
+        func load(key: String) -> ClaudeKeychainFingerprint? {
+            key == "ClaudeOAuthClaudeKeychainFingerprintV2" ? self.fingerprint : self.scoped[key]
+        }
+
+        func save(_ fingerprint: ClaudeKeychainFingerprint?, key: String) {
+            if key == "ClaudeOAuthClaudeKeychainFingerprintV2" {
+                self.fingerprint = fingerprint
+            } else {
+                self.scoped[key] = fingerprint
+            }
         }
     }
 

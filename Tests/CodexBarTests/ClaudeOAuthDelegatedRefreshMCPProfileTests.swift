@@ -18,7 +18,7 @@ private final class ClaudeDelegatedProfileTouchCounter: @unchecked Sendable {
 @Suite(.serialized)
 struct ClaudeOAuthDelegatedRefreshMCPProfileTests {
     @Test
-    func `selected profile file lets delegated refresh bypass unrelated global mcp O auth`() async throws {
+    func `selected profile file and refresh observation use the same native service`() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let profile = root.appendingPathComponent("selected-profile", isDirectory: true)
@@ -32,7 +32,7 @@ struct ClaudeOAuthDelegatedRefreshMCPProfileTests {
             .write(to: ClaudeConfigPaths.credentialsURL(environment: environment))
         let mcpOAuthOnly = Data(#"{"mcpOAuth":{"plugin:test":{"accessToken":"other-profile"}}}"#.utf8)
         let refreshedCredentials = self.makeCredentialsData(
-            accessToken: "global-after-touch",
+            accessToken: "selected-after-touch",
             expiresAt: Date(timeIntervalSinceNow: 3600))
         let touches = ClaudeDelegatedProfileTouchCounter()
         let touchAuthPath: @Sendable (TimeInterval, [String: String]) async -> Void = { _, _ in
@@ -54,8 +54,11 @@ struct ClaudeOAuthDelegatedRefreshMCPProfileTests {
                                         touchAuthPath)
                                     {
                                         await ClaudeOAuthCredentialsStore.withSecurityCLIReadOverrideForTesting(
-                                            .dynamic { _ in
-                                                touches.count() > 0 ? refreshedCredentials : mcpOAuthOnly
+                                            .dynamic { request in
+                                                guard request.service == ClaudeConfigPaths.keychainService(
+                                                    environment: environment)
+                                                else { return nil }
+                                                return touches.count() > 0 ? refreshedCredentials : mcpOAuthOnly
                                             }) {
                                                 await ProviderInteractionContext.$current.withValue(.background) {
                                                     await ClaudeOAuthDelegatedRefreshCoordinator.attempt(
@@ -73,6 +76,51 @@ struct ClaudeOAuthDelegatedRefreshMCPProfileTests {
         }
 
         #expect(outcome == .attemptedSucceeded)
+        #expect(touches.count() == 1)
+    }
+
+    @Test
+    func `default service rotation cannot verify a named profile refresh`() async {
+        let environment = ["CLAUDE_CONFIG_DIR": "/synthetic/home/.claude-t3/jace"]
+        let selectedService = "Claude Code-credentials-9a9e7cae"
+        let selected = self.makeCredentialsData(
+            accessToken: "selected-unchanged", expiresAt: Date(timeIntervalSinceNow: 3600))
+        let defaultBefore = self.makeCredentialsData(
+            accessToken: "default-before", expiresAt: Date(timeIntervalSinceNow: 3600))
+        let defaultAfter = self.makeCredentialsData(
+            accessToken: "default-after", expiresAt: Date(timeIntervalSinceNow: 3600))
+        let touches = ClaudeDelegatedProfileTouchCounter()
+        let outcome = await KeychainAccessGate.withTaskOverrideForTesting(false) {
+            await ClaudeOAuthKeychainPromptPreference.withTaskOverrideForTesting(.always) {
+                await ClaudeOAuthKeychainReadStrategyPreference.withTaskOverrideForTesting(.securityCLIExperimental) {
+                    await ClaudeOAuthDelegatedRefreshCoordinator.withIsolatedStateForTesting {
+                        await ClaudeOAuthDelegatedRefreshCoordinator.withCLIAvailableOverrideForTesting(true) {
+                            await ClaudeOAuthDelegatedRefreshCoordinator.withTouchAuthPathOverrideForTesting({ _, env in
+                                #expect(env == environment)
+                                touches.increment()
+                            }) {
+                                await ClaudeOAuthCredentialsStore.withSecurityCLIReadOverrideForTesting(.dynamic {
+                                    request in
+                                    if request.service == selectedService { return selected }
+                                    return touches.count() == 0 ? defaultBefore : defaultAfter
+                                }) {
+                                    await ProviderInteractionContext.$current.withValue(.userInitiated) {
+                                        await ClaudeOAuthDelegatedRefreshCoordinator.attempt(
+                                            now: Date(timeIntervalSince1970: 65000),
+                                            timeout: 0.1,
+                                            environment: environment)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        guard case .attemptedFailed = outcome else {
+            Issue.record("Unchanged selected service was incorrectly reported as refreshed")
+            return
+        }
         #expect(touches.count() == 1)
     }
 
