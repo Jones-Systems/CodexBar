@@ -65,7 +65,7 @@ extension StatusItemController {
         }
     }
 
-    private func addCodexWorkspaceHeader(_ title: String, index: Int, to menu: NSMenu) {
+    func addCodexWorkspaceHeader(_ title: String, index: Int, to menu: NSMenu) {
         let header = NSMenuItem(title: title, action: nil, keyEquivalent: "")
         header.isEnabled = false
         header.representedObject = "codexWorkspace-\(index)"

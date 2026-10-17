@@ -24,6 +24,7 @@ extension StatusItemController {
         let idPrefix: String
         let cardModel: (ProviderAccountUsageSnapshot) -> UsageMenuCardView.Model?
         var planAction: ((ProviderAccountUsageSnapshot) -> (() -> Void)?)?
+        var workspaceSections: [CodexAccountWorkspaceSection] = []
     }
 
     /// Renders the token-account list with the compact plan when it applies.
@@ -61,15 +62,13 @@ extension StatusItemController {
     }
 
     /// Renders the Codex account list with the compact plan when it applies.
-    /// Workspace-grouped lists keep their sectioned stacked layout; the flat
-    /// compact plan would lose the grouping headers.
+    /// Workspace groups share the global visibility budget and retain their section headers.
     func addCompactCodexAccountMenuIfPlanned(
         display: CodexAccountMenuDisplay,
         to menu: NSMenu,
         captureMenu: NSMenu,
         context: MenuCardContext) -> Bool
     {
-        guard !display.showsWorkspaceGroups else { return false }
         let projected = Self.projectedCodexAccounts(
             display: display,
             includeOptionalCredits: self.settings.showOptionalCreditsAndExtraUsage)
@@ -99,7 +98,8 @@ extension StatusItemController {
                             forVisibleAccount: account),
                         creditsOverride: accountSnapshot?.credits)
                 },
-                planAction: nil),
+                planAction: nil,
+                workspaceSections: display.showsWorkspaceGroups ? display.workspaceSections : []),
             to: menu,
             captureMenu: captureMenu,
             context: context)
@@ -112,15 +112,38 @@ extension StatusItemController {
         captureMenu: NSMenu,
         context: MenuCardContext)
     {
-        let plan = rendering.plan
+        let sections = JonesCompactAccountPresentation.menuSections(
+            plan: rendering.plan,
+            workspaceSections: rendering.workspaceSections)
+        for section in sections {
+            if let title = section.title, let index = section.workspaceIndex {
+                self.addCodexWorkspaceHeader(title, index: index, to: menu)
+            }
+            self.addCompactAccountMenuSectionRows(
+                section, rendering: rendering, to: menu, captureMenu: captureMenu, context: context)
+        }
+        if self.addStorageMenuCardSection(to: menu, provider: context.currentProvider, width: context.menuWidth) {
+            menu.addItem(.separator())
+        }
+    }
+
+    private func addCompactAccountMenuSectionRows(
+        _ section: JonesCompactAccountPresentation.MenuSection,
+        rendering: CompactAccountMenuRendering,
+        to menu: NSMenu,
+        captureMenu: NSMenu,
+        context: MenuCardContext)
+    {
         let idPrefix = rendering.idPrefix
+        let workspaceSuffix = section.workspaceIndex.map { "-workspace-\($0)" } ?? ""
+        let collapsedID = "\(idPrefix)Collapsed\(workspaceSuffix)"
         let cardModel = rendering.cardModel
         let planAction = rendering.planAction
         let provider = context.currentProvider
         let accountsByID = Dictionary(uniqueKeysWithValues: rendering.accounts.map { ($0.id, $0) })
         let progressColor = UsageMenuCardView.Model.progressColor(for: provider)
         var previousRowWasCard = false
-        for (index, row) in plan.rows.enumerated() {
+        for (index, row) in section.rows.enumerated() {
             switch row {
             case let .card(accountID):
                 guard let account = accountsByID[accountID],
@@ -174,9 +197,9 @@ extension StatusItemController {
                 let view = MenuCardCollapsedAccountsRowView(count: count, width: context.menuWidth)
                 menu.addItem(self.makeMenuCardItem(
                     view,
-                    id: "\(idPrefix)Collapsed",
+                    id: collapsedID,
                     width: context.menuWidth,
-                    heightCacheScope: "\(idPrefix)-collapsed",
+                    heightCacheScope: "\(idPrefix)-collapsed\(workspaceSuffix)",
                     heightCacheFingerprint: "collapsed-\(count)",
                     onClick: { [weak self, weak captureMenu] in
                         self?.expandCompactAccountHealthyTail(for: provider, menu: captureMenu)
@@ -184,10 +207,7 @@ extension StatusItemController {
                 previousRowWasCard = false
             }
         }
-        if !plan.rows.isEmpty {
-            menu.addItem(.separator())
-        }
-        if self.addStorageMenuCardSection(to: menu, provider: provider, width: context.menuWidth) {
+        if !section.rows.isEmpty {
             menu.addItem(.separator())
         }
     }
