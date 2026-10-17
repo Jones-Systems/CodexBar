@@ -25,8 +25,99 @@ def signal_exit(signum, _frame):
     raise SystemExit(128 + signum)
 
 
-for sig in (signal.SIGHUP, signal.SIGINT, signal.SIGTERM):
-    signal.signal(sig, signal_exit)
+CANCELLATION_SIGNALS = (signal.SIGHUP, signal.SIGINT, signal.SIGTERM)
+
+
+def require_wait_ownership():
+    # CPython exposes waitid on macOS starting with 3.13. Never fall back to poll.
+    if not all(hasattr(os, name) for name in (
+            "waitid", "P_PID", "WEXITED", "WNOHANG", "WNOWAIT", "CLD_EXITED")):
+        raise RuntimeError("Fixture containment requires waitid/WNOWAIT (macOS: Python 3.13+)")
+    if signal.getsignal(signal.SIGCHLD) != signal.SIG_DFL:
+        raise RuntimeError("Fixture containment requires the default SIGCHLD disposition")
+
+
+def retained_status(process):
+    # This standalone, single-threaded runner is the sole wait owner. WNOWAIT
+    # pins the leader PID even after exit; no Popen poll/communicate/send_signal.
+    if process.returncode is not None:
+        raise RuntimeError("Synthetic process leader was already reaped")
+    result = os.waitid(os.P_PID, process.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
+    if result is None:
+        return None
+    return result.si_status if result.si_code == os.CLD_EXITED else -result.si_status
+
+
+def signal_retained_group(process, signum):
+    # ECHILD or any other observation error denies signaling. The retained wait
+    # identity, not a numeric PID existence check, authorizes this owned group.
+    retained_status(process)
+    try:
+        os.killpg(process.pid, signum)
+    except ProcessLookupError:
+        pass
+
+
+def collect_owned_process(command, env, owned, ready=None, cancel=None, timeout=20):
+    require_wait_ownership()
+    deferred = []
+    deferring = True
+
+    def cancellation(signum, frame):
+        if deferring:
+            deferred.append(signum)
+        else:
+            signal_exit(signum, frame)
+
+    # Files cannot fill a pipe or wait for descendant-held descriptors to close.
+    # Both are unlinked/closed by this invocation, under its exact scratch root.
+    with tempfile.TemporaryFile(dir=owned) as stdout, tempfile.TemporaryFile(dir=owned) as stderr:
+        previous = {}
+        process = None
+        try:
+            for sig in CANCELLATION_SIGNALS:
+                previous[sig] = signal.signal(sig, cancellation)
+            try:
+                # Defer ordinary cancellation through Popen's return/assignment;
+                # an interrupt must not lose the only handle to a created child.
+                process = subprocess.Popen(command, env=env, stdout=stdout, stderr=stderr, start_new_session=True)
+                deferring = False
+                if deferred:
+                    signal_exit(deferred[0], None)
+                if cancel is not None:
+                    deadline = time.monotonic() + 15
+                    while not ready.exists():
+                        if retained_status(process) is not None or time.monotonic() >= deadline:
+                            raise AssertionError("synthetic cancellation seam not reached")
+                        time.sleep(0.02)
+                    signal_retained_group(process, cancel)
+                deadline = time.monotonic() + timeout
+                while (status := retained_status(process)) is None:
+                    if time.monotonic() >= deadline:
+                        raise subprocess.TimeoutExpired(command, timeout)
+                    time.sleep(0.02)
+            finally:
+                deferring = True
+                if process is not None:
+                    # Final authorized group signal precedes the ONLY reap, on
+                    # success, timeout, cancellation and every exception path.
+                    # If ownership is unknown, signal_retained_group fails closed.
+                    propagating = sys.exc_info()[0] is not None
+                    try:
+                        signal_retained_group(process, signal.SIGKILL)
+                        process.wait(timeout=5)
+                    except BaseException as error:
+                        if not propagating:
+                            raise
+                        print(f"Synthetic process cleanup also failed: {error}", file=sys.stderr)
+        finally:
+            for sig, handler in previous.items():
+                signal.signal(sig, handler)
+        if deferred:
+            signal_exit(deferred[0], None)
+        stdout.seek(0)
+        stderr.seek(0)
+        return status, stdout.read(), stderr.read()
 
 
 def executable(path, body):
@@ -37,6 +128,7 @@ def executable(path, body):
 def main():
     if len(sys.argv) != 2:
         sys.exit("Usage: python3 Scripts/test_fixture_scratch_parent.py OWNED_WORKSPACE_PARENT")
+    require_wait_ownership()
     parent = Path(sys.argv[1])
     if (not parent.is_absolute() or ".." in parent.parts
             or parent.resolve(strict=True) != parent or not parent.is_dir()
@@ -137,36 +229,20 @@ output.chmod(0o700)
                    "READY": str(ready), "MODE": mode}
             if override is not None:
                 env[KEY] = override
-            process = subprocess.Popen(
+            status, stdout, stderr = collect_owned_process(
                 [str(identity_tools / "bash"), str(workspace / "Scripts" / script)],
-                env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)
-            try:
-                if cancel is not None:
-                    deadline = time.monotonic() + 15
-                    while not ready.exists():
-                        if process.poll() is not None or time.monotonic() >= deadline:
-                            raise AssertionError("synthetic cancellation seam not reached")
-                        time.sleep(0.02)
-                    os.killpg(process.pid, cancel)
-                stdout, stderr = process.communicate(timeout=20)
-                assert process.returncode == expected, (script, mode, process.returncode, stderr.decode())
-                if expected == 0 and script == IDENTITY:
-                    assert b"UNAVAILABLE: native JonesStateRoot" in stdout
-                    assert b"30 checks passed" in stdout
-                if record.exists():
-                    proof = Path(record.read_text())
-                    assert proof.parent == (workspace if override is None else Path(override))
-                    assert not proof.exists(), "owned provider child leaked"
-                if override is not None and expected == 1 and mode == "success":
-                    assert b"Invalid CODEXBAR_TEST_SCRATCH_PARENT" in stderr, (override, stderr.decode())
-                    assert not record.exists(), "invalid parent reached compiler"
-            finally:
-                # Only this invocation's new synthetic process group is owned here.
-                try:
-                    os.killpg(process.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
-                process.communicate()
+                env, owned, ready, cancel)
+            assert status == expected, (script, mode, status, stderr.decode())
+            if expected == 0 and script == IDENTITY:
+                assert b"UNAVAILABLE: native JonesStateRoot" in stdout
+                assert b"30 checks passed" in stdout
+            if record.exists():
+                proof = Path(record.read_text())
+                assert proof.parent == (workspace if override is None else Path(override))
+                assert not proof.exists(), "owned provider child leaked"
+            if override is not None and expected == 1 and mode == "success":
+                assert b"Invalid CODEXBAR_TEST_SCRATCH_PARENT" in stderr, (override, stderr.decode())
+                assert not record.exists(), "invalid parent reached compiler"
             clean()
 
         invalid = (
@@ -198,4 +274,6 @@ output.chmod(0o700)
 
 
 if __name__ == "__main__":
+    for sig in CANCELLATION_SIGNALS:
+        signal.signal(sig, signal_exit)
     main()
