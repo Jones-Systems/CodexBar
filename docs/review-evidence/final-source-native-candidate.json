@@ -1,13 +1,14 @@
 {
   "schema_version": 1,
   "authority_effect": "none",
-  "source_candidate": "45ac35cc586449f59976652f0f4b059c1a09073e",
+  "source_candidate": "a6a4ef4660b5bfab91d786b06bbe4105bf5fb039",
   "base": "21c34561387b26f76d0a27e9f00d1538fbc0926f",
   "parent_PR11_head": "76f86a42560d21143dd4359aad54248bf60b28e6",
   "source_paths": {
+    "Scripts/fixture_process_anchor.py": "9b429b274bc1e56f1bf50766da3e9fc08a7f977fc6d18787f40ceda50d4868d0",
     "Scripts/test_codex_file_isolation_child.sh": "c8433a161896c7ab904bf72b5d730614cf532d160f5b863bd0ddb526b53d71a7",
-    "Scripts/test_fixture_process_ownership.py": "f061183fa41e196b3c0db30ad7c7c96ae35fc2b5453933b93f82458cd238b810",
-    "Scripts/test_fixture_scratch_parent.py": "1169ea479acb75f67e5465a77eb3f669495e5258ef01bded6270cfec8f0aff38",
+    "Scripts/test_fixture_process_ownership.py": "0321ae9647163235423a19fba634aba268d5173ef113075dd57b5c5bf5bb37ac",
+    "Scripts/test_fixture_scratch_parent.py": "8806d4e6a405641348c270341778bf2c28fc666c72590353171e65c4bc4dffc3",
     "Scripts/test_jones_identity_overlay.sh": "ff356dc9eb12e9bfc52511f5531844cb4e20f0dda182b73bed50aeecb27acfd0",
     "Scripts/test_mimo_usage.py": "30807e825f98b052bfded18bfa2ff4dae7a54bd245cd63e9a8b3b602e2b91daa",
     "Scripts/test_provider_session_file_isolation.sh": "ecf73fe745eeac6348c5341296a0cb929852b2ac68a53b3cf9b199413056cfc4",
@@ -76,7 +77,7 @@
   "checks": {
     "SwiftFormat_0_61_1": "PASS61 integratedSwiftfiles includingTestsLinux --lint --cache ignore,9.69s",
     "diff_whitespace": "PASS",
-    "scratch_harness": "FAIL20/19pass onMacPython3.13.3; EPERM terminal leader group signal, sole-reap unknown; execution held; Linux evidence remains historical",
+    "scratch_harness": "New collector Linux45/45 ownership/helper and56/56 lifecycle PASS; native Mac UNRUN. Old84c Mac19/20 remains historical failure.",
     "MiMo_writer": "Laptop PASS3 at44a43f59; affected MiMo source unchanged since then",
     "native": "FAIL84c compilation before discovery; zero behavior tests; corrections active",
     "make_test": "HELD pending integrated synthetic WebKit safety qualification and native checks; not passing",
@@ -487,5 +488,17 @@
     "concurrency": "Laptop pins exact checkout until verification terminal; VPS collector edits remain separate worktree; reconcile final unit input hashes before carrying interim evidence",
     "native": "UNRUN on corrected source; previous84cfailure retained",
     "CI": "paused,checksabsent; no waiver"
+  },
+  "collector_candidate": {
+    "integration": "a6a4ef4660b5bfab91d786b06bbe4105bf5fb039",
+    "prior_interim_head": "e1034c277bc94806388af6644d76feab1e7dc4ce",
+    "changed_paths": [
+      "Scripts/fixture_process_anchor.py",
+      "Scripts/test_fixture_process_ownership.py",
+      "Scripts/test_fixture_scratch_parent.py"
+    ],
+    "Swift_unit_inputs_unchanged": true,
+    "evidence": "harness-collector-anchor.json",
+    "advance_rule": "Do not advance active laptop checkout; finish pinned interim lane, reconcile input hashes, then bind new exact published head for independent native collector/standalone checks."
   }
 }

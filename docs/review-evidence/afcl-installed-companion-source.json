@@ -13,11 +13,16 @@
   "local_laptop_hash_evidence": "AFCL-INSTALLED-SOURCE.json; not assumed accessible VPS",
   "product_fit": "Installed AFCL no longer automation-only: existing selected native Authfleet profile may reuse AFCL-established native subscription usage companion when present. Automation token endpoint/scope remains separately unsupported.",
   "refresh_ownership": "Existing native Claude CLI credential ownership/delegated refresh is intended companion path; elected executable must remain enrolled and profile environment must match. NFP-COR-001 repair explicitly informed of this evidence.",
-  "structural_gap_status": "Bounded refresher seam assessment requested from active executable-repair builder; no broad review or separate duplicate lane",
+  "structural_gap_status": "Bounded existing builder response and source seam assessment complete: no structural gap found in selected native companion refresh route; runtime remains unknown.",
   "unknowns": [
     "Actual companion presence/auth readiness",
     "Native runtime usage/refresh success and external refresh interaction",
     "Installed/source binding identity matching"
   ],
-  "protected_operations": "None granted or performed; no wrapper/login/refresh execution or binding/auth/Keychain/profile reads"
+  "protected_operations": "None granted or performed; no wrapper/login/refresh execution or binding/auth/Keychain/profile reads",
+  "refresh_source_basis": [
+    "ClaudeOAuthCredentials validates enrolled CLI ownership and uses delegated refresh for claudeCLI records; direct token refresh remains codexbar-owned only",
+    "ClaudeUsageFetcher passes selected profile environment to delegated coordinator; ClaudeStatusProbe resolves enrolled executable for that environment",
+    "Native-default route preserves unset CLAUDE_CONFIG_DIR; named profiles preserve selected config/service/cache boundaries"
+  ]
 }

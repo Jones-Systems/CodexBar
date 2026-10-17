@@ -6,6 +6,32 @@ Authority effect: none. Source stays on VPS. Laptop thread
 trial disposition and eligible merges. No live authentication, installation or switching
 operation is granted by this handoff.
 
+## Collector source completion checkpoint
+
+New source checkpoint `a6a4ef4660b5bfab91d786b06bbe4105bf5fb039` integrates the
+three-file Python collector/helper repair. Use the exact accompanying published PR12
+head after the current laptop lane terminates. **Keep any active checkout pinned to
+`e1034c277bc94806388af6644d76feab1e7dc4ce` until terminal.** No Swift unit, production,
+Package.swift or make-test runner input changed from that interim head. Reconcile
+those hashes before carrying forward its eventual native evidence; no result is
+assumed here. The interim section below remains the binding for that active lane.
+
+Collector now gates command exec until a live sibling anchor joins its private group.
+Final signaling precedes both direct-child reaps; denial remains failure, with EOF
+anchor release and bounded independent waits. Linux45/45 ownership/helper and56/56
+lifecycle cases passed. Native Mac collector remains unrun; original failed inner
+reap remains historically unproved. See `harness-collector-anchor.json` and the68-path
+manifest. Once idle and freshly admitted, native mock-first ownership, live ownership
+and scratch-parent lifecycle checks may bind this revised source under the existing
+one-parent synthetic fixture scope. Standalone identity/provider/Codex proofs retain
+their own exact-source qualification. No unchanged failed collector retry is requested.
+
+AFCL refresher assessment is complete in `afcl-installed-companion-source.json`:
+selected native companion refresh stays delegated to the enrolled CLI and matching
+profile environment. No bounded source structural gap found; readiness and external
+refresh interaction remain unknown. CI pause, tooling, extraction and all runtime,
+signing/installation gates remain unchanged. No live operation is granted.
+
 ## Interim compile/unit candidate is available independently
 
 Use the exact full published SHA in the accompanying interim handoff. Its integrated

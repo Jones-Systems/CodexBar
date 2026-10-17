@@ -1111,3 +1111,10 @@ unitinputhashes before carrying interimresults; docs/harnesschanges alone don'ti
 identicalSwiftinputs. Resource/fixture/singleparent/isolation/retries/effectboundaries stay.
 No directlaptopbridge available; exactGit/threadhandoff throughauthorizedreadroute.
 CIpause/extraction/native/install/sign/findinggates remain unchanged.
+
+
+### Collector anchor completion checkpoint
+
+Integrated source `50986b6ec` as `a6a4ef4660b5bfab91d786b06bbe4105bf5fb039`. Root sole Git owner; builder released the three-file scope. Live sibling anchor preserves a signal recipient through final group cleanup; both retained direct children are reaped afterward. Linux45 ownership/helper and56 lifecycle cases passed; original20 identities/four live bodies and lifecycle dispatch preserved. Native Mac execution remains unrun. No extra review or duplicate lane: existing Astra implementation evidence plus root bounded source inspection.
+
+Only three Python collector/helper paths differ from interim e1034c277; Swift unit inputs unchanged. Laptop keeps its active checkout immutable until terminal, then reconciles hashes before new candidate qualification. Historical original inner reap remains unproved; no old PID effect authorized. Evidence: harness-collector-anchor.json; manifest68 paths. AFCL bounded refresher assessment closed with no source structural gap in enrolled CLI/profile delegation, runtime unknown. Deferred P2s and CI/tooling/extraction/sign/package/install/live gates unchanged.

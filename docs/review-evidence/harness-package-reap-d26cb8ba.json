@@ -37,5 +37,6 @@
     "ownershipmock/live",
     "scratchparent lifecycle"
   ],
-  "deferred": "FSP-PROC-002 and NFP-COR-002 untouched"
+  "deferred": "FSP-PROC-002 and NFP-COR-002 untouched",
+  "completion_overlay": "harness-collector-anchor.json records later source repair and Linux proof; this checkpoint and Mac limits remain historical."
 }
