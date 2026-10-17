@@ -906,3 +906,25 @@ AFCL companion ownership assessment: this seam consumes native credentials and r
 through enrolled native_cli; it does not invoke companion auth login --claudeai. No new
 source contract gap identified in that bounded seam, but companion presence/readiness,
 installed membership and real external refresh interaction remain UNKNOWN. No live probe.
+
+
+### Both P1 source repairs integrated; targeted confirmations active
+
+Claude fixture-parent completion released corrected two-file manifest, root checked it,
+committed eb9bb9683f6b226c672876e88e493987663995bc and published through PR11 parent
+c0f7ffa78afb8d5016404461495ec9a469cf8232. Explicit scratch override now validates existing
+canonical absolute strict workspace parent, with unique checked-defer cleanup. P1 resolver
+fix and five synthetic cases retain original scope; tests remain native-unrun. Independent
+Astra confirmation codexbar-claude-enrolled-executable-confirmation-20261017-r1 active.
+
+Process-identity source b9d2ca08a923c03b972de5f607b8963a06f8a498 integrated into combined
+PR12 source75c03d065bc14c641228da117724f88734cb6027. Root manifest/diff inspection passes.
+WNOWAIT keeps unreaped leader identity until final group signal then sole wait; no poll/
+communicate reap. Lost ownership denies signals; cancellation deferred through acquisition/
+cleanup, TemporaryFiles avoid descendant-held pipe deadlocks. BuilderLinux/Python3.13.5
+passed20ownershiptests(16mock+4live synthetic) plus all50lifecyclecases and exactscratchcleanup.
+Historical unsafe ordering reproduced with mocks only. macOS requires Python3.13+ waitid;
+unsupported capabilities fail before spawn. Actual Mac containment remains unqualified.
+Independent Astra confirmation codexbar-fixture-process-identity-confirmation-20261017-r1
+active. Both originalP1 blocks remain until confirmation; no premature source-ready/native
+handoff. Full native/CIpause/extraction/runtime/sign/install gates unchanged.

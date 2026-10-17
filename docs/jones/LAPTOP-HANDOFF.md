@@ -23,13 +23,13 @@ Use the **exact published PR12 head in the accompanying VPS source-ready message
 not a moving branch. PR12: https://github.com/Jones-Systems/CodexBar/pull/12,
 branch `work/codexbar-trial-identity-20261016`, base
 `work/fleet-auth-discovery-20261016`. Its integrated source checkpoint is
-`d42d5312ebc3dee1cfadb8e0d93d9655a0686f3a`; later publication adds evidence/docs only.
+`75c03d065bc14c641228da117724f88734cb6027`; later publication adds evidence/docs only.
 Verify ancestry and every source-file hash in
 `docs/review-evidence/final-source-native-candidate.json` before the pinned run.
 If the message SHA is unavailable, resolve/read back the exact PR12 head and verify
 that manifest before acting; do not assume a changing head or older baseline is final.
 
-PR11 parent is `e7ac58f8d4c436947331d195a36afdfa585600d1`, base fork main.
+PR11 parent is `c0f7ffa78afb8d5016404461495ec9a469cf8232`, base fork main.
 PR12 contains that exact parent, identity repairs and all source lanes. Preserve
 historical 55197235 and 21c3456 evidence, existing worktrees and unrelated changes.
 Root is sole Git/index owner of declared VPS worktrees; do not edit the pinned source.
@@ -109,8 +109,10 @@ CODEXBAR_TEST_SCRATCH_PARENT, source c5454c8b integrated at e73b14de. See
 Historical checks passed50 lifecycle cases and30 identity checks. NEW P1 execution hold:
 DO NOT EXECUTE Scripts/test_fixture_scratch_parent.py as-is: poll/communicate can reap
 the leader before unconditional finally killpg, allowing recycled-PGID signaling.
-Bounded repair codexbar-fixture-process-identity-repair-20261017-r1 is active; exact
-confirmation and native qualification await the revised final candidate. Preserve
+Source repairb9d2ca08 retains identity with waitid/WNOWAIT until signaling is complete.
+Targeted independent confirmation is active; execution hold remains until that result.
+On macOS use Python3.13+ with waitid/WNOWAIT; unsupported capability fails before spawn.
+Native qualification awaits the final candidate. Preserve
 native rejected-case16 as unrun until actual Swift execution. Stub proof is not native.
 
 ## Open completion gates

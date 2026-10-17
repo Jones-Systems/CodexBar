@@ -55,10 +55,19 @@
     "source_commit": "c5454c8b7debb092638801d00b402bbc43298eba",
     "source_blob_sha256": "ce137a7c31d818348c38d5f98fe0458fd532116f9a88434e33ad4b26192d0041",
     "consequence": "poll/communicate may reap leader before unconditional finally killpg(pid,SIGKILL); recycled PGID could target unrelated processes",
-    "outcome": "remain blocked",
+    "outcome": "remain blocked pending independent exact-source containment confirmation; native Mac qualification separate",
     "repair_task": "codexbar-fixture-process-identity-repair-20261017-r1",
     "prior_effect": "No unrelated process effect known; unsafe original regression not rerun",
-    "historical_results_limit": "50 passed cases prove prior synthetic behavior only, not signal identity safety"
+    "historical_results_limit": "50 passed cases prove prior synthetic behavior only, not signal identity safety",
+    "repair_commit": "b9d2ca08a923c03b972de5f607b8963a06f8a498",
+    "confirmation_task": "codexbar-fixture-process-identity-confirmation-20261017-r1",
+    "repair_design": "WNOWAIT retains unreaped leader identity through final group signal before sole reap; observation failure denies signaling; deferred cancellation for acquisition/cleanup and owned TemporaryFiles for output",
+    "repair_manifest": {
+      "Scripts/test_fixture_scratch_parent.py": "7f055a4d3ae566991cd1fb4931d8016c56c746ab31d61903574b037ee80f4468",
+      "Scripts/test_fixture_process_ownership.py": "62c2cbd6895d4b92cb58dc563f6b3438ca7a36e7a84f03e6872967503b98ea54"
+    },
+    "builder_evidence": "Linux/Python3.13.5 PASS20ownership(16mock+4live synthetic) and50lifecycle; exactscratch cleanup; unsafehistoricalsource mockreproonly",
+    "platform_prerequisite": "macOS Python3.13+ waitid/WNOWAIT; unsupported capability fails before spawn; native Mac unrun"
   },
-  "laptop_commands_status": "HELD: do not execute listed regression command until revised source and targeted containment confirmation"
+  "laptop_commands_status": "HELD until revised-source independent confirmation; use supported Python3.13+ on macOS"
 }

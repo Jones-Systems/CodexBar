@@ -76,7 +76,13 @@
       "test_gap": "missing enrolled binary, expired injected credentials and sentinel fallback executable",
       "outcome": "remain blocked",
       "next_step": "Bounded authorized source repair in codexbar-claude-enrolled-executable-repair-20261017-r1; exact independent confirmation required before correction claim",
-      "repair_progress": "Builder returned resolver-only selected-executable guard plus five synthetic cases; root inspected. Not committed: follow-up makes new fixture obey existing single caller-owned parent. Native tests/independent confirmation remain pending; original P1 block retained."
+      "repair_progress": "Source-addressed eb9bb9683f6b226c672876e88e493987663995bc, PR11 parent c0f7ffa78afb8d5016404461495ec9a469cf8232 and PR12 source75c03d065bc14c641228da117724f88734cb6027; targeted independent confirmation in progress; native unrun, original block retained",
+      "repair_manifest": {
+        "Sources/CodexBarCore/Providers/Claude/ClaudeSourcePlanner.swift": "28bc777aafd3149beecd26b95fffc708bca68cc9db9a9edddda34c490d44e4b7",
+        "Tests/CodexBarTests/ClaudeNativeProfileFetchTests.swift": "ad2ddaf9caad15f133fa9259a0e7017ee5a147517b39777c5e4ec631b642f6aa"
+      },
+      "confirmation_task": "codexbar-claude-enrolled-executable-confirmation-20261017-r1",
+      "checks": "Scoped formatter2/diff PASS; five synthetic cases added but unrun, Swift unavailable"
     },
     {
       "source_review_profile": "Astra/high independent correctness; generic T3 review role fallback",
