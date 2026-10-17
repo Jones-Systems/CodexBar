@@ -11,7 +11,7 @@ import Glibc
 extension KiroStatusProbeTests {
     @Test
     func `tty runner bounds hard stop while cleaning root TERM and third generation PTY holders`() async throws {
-        let childPIDFile = FileManager.default.temporaryDirectory
+        let childPIDFile = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-double-fork-\(UUID().uuidString).pid")
         let termChildPIDFile = childPIDFile.appendingPathExtension("term-child")
         let lateChildPIDFile = childPIDFile.appendingPathExtension("late-child")
@@ -114,7 +114,7 @@ extension KiroStatusProbeTests {
 
     @Test
     func `tty runner bounds hard stop when root exits during early stop settle`() async throws {
-        let holderPIDFile = FileManager.default.temporaryDirectory
+        let holderPIDFile = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-settle-holder-\(UUID().uuidString).pid")
         let allowRootExitFile = holderPIDFile.appendingPathExtension("allow-root-exit")
         let rootExitedFile = holderPIDFile.appendingPathExtension("root-exited")
@@ -197,7 +197,7 @@ extension KiroStatusProbeTests {
     }
 
     private func makeHardStopCLI() throws -> URL {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-cli-\(UUID().uuidString)", isDirectory: true)
         let cliURL = root.appendingPathComponent("kiro-cli")
         let script = """
@@ -281,7 +281,7 @@ extension KiroStatusProbeTests {
     }
 
     private func makeSettleExitHardStopCLI() throws -> URL {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-settle-cli-\(UUID().uuidString)", isDirectory: true)
         let cliURL = root.appendingPathComponent("kiro-cli")
         let script = """

@@ -60,7 +60,7 @@ struct DirectoryMetadataScanBudgetTests {
 
     @Test
     func `entry fetched after the deadline is not retained`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("DirectoryMetadataScanBudgetTests-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -84,7 +84,7 @@ struct DirectoryMetadataScanBudgetTests {
 
     @Test(arguments: [false, true])
     func `desktop root discovery honors the shared deadline`(expired: Bool) throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("DesktopRootScanBudgetTests-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let projects = root.appendingPathComponent(

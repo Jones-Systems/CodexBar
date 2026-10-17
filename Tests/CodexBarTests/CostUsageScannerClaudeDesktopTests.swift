@@ -161,7 +161,7 @@ struct CostUsageScannerClaudeDesktopTests {
 
     @Test
     func `Claude config root is one relative literal and always owns a projects child`() {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("CostUsageScanner-ClaudePaths-\(UUID().uuidString)", isDirectory: true)
         let workingDirectory = root.appendingPathComponent("probe", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }

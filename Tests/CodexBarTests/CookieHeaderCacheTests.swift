@@ -309,7 +309,7 @@ struct CookieHeaderCacheTests {
         KeychainCacheStore.setTestStoreForTesting(true)
         defer { KeychainCacheStore.setTestStoreForTesting(false) }
 
-        let legacyBase = FileManager.default.temporaryDirectory
+        let legacyBase = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         CookieHeaderCache.withLegacyBaseURLOverrideForTesting(legacyBase) {
             let provider: UsageProvider = .codex
@@ -341,7 +341,7 @@ struct CookieHeaderCacheTests {
         KeychainCacheStore.setTestStoreForTesting(true)
         defer { KeychainCacheStore.setTestStoreForTesting(false) }
 
-        let legacyBase = FileManager.default.temporaryDirectory
+        let legacyBase = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         CookieHeaderCache.withLegacyBaseURLOverrideForTesting(legacyBase) {
             let provider: UsageProvider = .codex
@@ -368,7 +368,7 @@ struct CookieHeaderCacheTests {
         KeychainCacheStore.setTestStoreForTesting(true)
         defer { KeychainCacheStore.setTestStoreForTesting(false) }
 
-        let legacyBase = FileManager.default.temporaryDirectory
+        let legacyBase = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         CookieHeaderCache.withLegacyBaseURLOverrideForTesting(legacyBase) {
             let provider: UsageProvider = .codex
@@ -406,7 +406,7 @@ struct CookieHeaderCacheTests {
         KeychainCacheStore.setTestStoreForTesting(true)
         defer { KeychainCacheStore.setTestStoreForTesting(false) }
 
-        let legacyBase = FileManager.default.temporaryDirectory
+        let legacyBase = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         CookieHeaderCache.withLegacyBaseURLOverrideForTesting(legacyBase) {
             let provider: UsageProvider = .codex
@@ -429,7 +429,7 @@ struct CookieHeaderCacheTests {
         KeychainCacheStore.setTestStoreForTesting(true)
         defer { KeychainCacheStore.setTestStoreForTesting(false) }
 
-        let legacyBase = FileManager.default.temporaryDirectory
+        let legacyBase = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         CookieHeaderCache.withLegacyBaseURLOverrideForTesting(legacyBase) {
             let provider: UsageProvider = .codex
@@ -508,7 +508,7 @@ struct CookieHeaderCacheTests {
         CookieHeaderCache.resetDisplayCacheForTesting()
         defer { CookieHeaderCache.resetDisplayCacheForTesting() }
 
-        let legacyBase = FileManager.default.temporaryDirectory
+        let legacyBase = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try await CookieHeaderCache.withLegacyBaseURLOverrideForTesting(legacyBase) {
             let provider: UsageProvider = .codex
@@ -541,7 +541,7 @@ struct CookieHeaderCacheTests {
         CookieHeaderCache.resetDisplayCacheForTesting()
         defer { CookieHeaderCache.resetDisplayCacheForTesting() }
 
-        let legacyBase = FileManager.default.temporaryDirectory
+        let legacyBase = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         CookieHeaderCache.withLegacyBaseURLOverrideForTesting(legacyBase) {
             let provider: UsageProvider = .codex
@@ -562,8 +562,8 @@ struct CookieHeaderCacheTests {
     @Test
     func `legacy URL override supports concurrent teardown reads`() {
         let legacyBases = [
-            FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true),
-            FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true),
+            TestFixtureScratch.root.appendingPathComponent(UUID().uuidString, isDirectory: true),
+            TestFixtureScratch.root.appendingPathComponent(UUID().uuidString, isDirectory: true),
         ]
         CookieHeaderCache.withLegacyBaseURLOverrideForTesting(legacyBases[0]) {
             DispatchQueue.concurrentPerform(iterations: 5000) { index in
@@ -669,7 +669,7 @@ struct CookieHeaderCacheTests {
         defer { CookieHeaderCache.resetDisplayCacheForTesting() }
 
         KeychainCacheStore.withServiceOverrideForTesting("legacy-clear-\(UUID().uuidString)") {
-            let legacyBase = FileManager.default.temporaryDirectory
+            let legacyBase = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
             CookieHeaderCache.withLegacyBaseURLOverrideForTesting(legacyBase) {
                 let provider: UsageProvider = .codex
@@ -714,7 +714,7 @@ struct CookieHeaderCacheTests {
         KeychainCacheStore.setTestStoreForTesting(true)
         defer { KeychainCacheStore.setTestStoreForTesting(false) }
 
-        let legacyBase = FileManager.default.temporaryDirectory
+        let legacyBase = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         CookieHeaderCache.withLegacyBaseURLOverrideForTesting(legacyBase) {
             let provider: UsageProvider = .codex
@@ -917,7 +917,7 @@ struct CookieHeaderCacheTests {
 
     private func withIsolatedCookieCache<T>(_ operation: () -> T) -> T {
         KeychainCacheStore.withServiceOverrideForTesting("cookie-isolation-\(UUID().uuidString)") {
-            let legacyBase = FileManager.default.temporaryDirectory
+            let legacyBase = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
             return CookieHeaderCache.withLegacyBaseURLOverrideForTesting(legacyBase) {
                 KeychainCacheStore.setTestStoreForTesting(true)
@@ -937,7 +937,7 @@ extension CookieHeaderCacheTests {
         CookieHeaderCache.resetDisplayCacheForTesting()
         defer { CookieHeaderCache.resetDisplayCacheForTesting() }
         let preflightCount = LockIsolated(0)
-        let cacheDirectory = FileManager.default.temporaryDirectory
+        let cacheDirectory = TestFixtureScratch.root
             .appendingPathComponent("cookie-acl-recovery-\(UUID().uuidString)")
         try await CookieHeaderCache.withLegacyBaseURLOverrideForTesting(cacheDirectory) {
             try await KeychainCacheStore.withServiceOverrideForTesting("display-recovery-\(UUID().uuidString)") {

@@ -1,3 +1,4 @@
+import CodexBarCore
 import Foundation
 import Testing
 
@@ -5,7 +6,7 @@ import Testing
 struct CodexRPCLoggingTests {
     @Test
     func `Codex RPC diagnostics respect CLI verbosity`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codex-rpc-logging-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }

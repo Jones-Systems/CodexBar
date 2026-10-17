@@ -279,7 +279,7 @@ private struct ScaleFixture: Sendable {
     let root: URL
 
     init() throws {
-        self.root = FileManager.default.temporaryDirectory
+        self.root = TestFixtureScratch.root
             .appendingPathComponent("CodexBar-CostUsageStoreScaleProof-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: self.root, withIntermediateDirectories: true)
     }

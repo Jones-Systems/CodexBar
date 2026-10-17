@@ -91,7 +91,7 @@ struct ClaudeWebFetchDeadlineTests {
         let planningProbe = ClaudeWebPlanningAvailabilityProbe()
         let cliPath = try Self.makeLoggedInClaudeCLI()
         defer { try? FileManager.default.removeItem(atPath: cliPath) }
-        let profileRoot = FileManager.default.temporaryDirectory
+        let profileRoot = TestFixtureScratch.root
             .appendingPathComponent("codexbar-claude-web-deadline-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: profileRoot, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: profileRoot) }
@@ -324,7 +324,7 @@ struct ClaudeWebFetchDeadlineTests {
     }
 
     private static func makeLoggedInClaudeCLI() throws -> String {
-        let url = FileManager.default.temporaryDirectory
+        let url = TestFixtureScratch.root
             .appendingPathComponent("claude-auth-status-\(UUID().uuidString)")
         let script = """
         #!/bin/sh

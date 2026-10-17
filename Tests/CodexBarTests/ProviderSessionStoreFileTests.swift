@@ -88,7 +88,7 @@ struct ProviderSessionStoreFileTests {
 
     @Test
     func `Cursor fixture reload repairs permissions and prunes expired cookies`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("cursor-session-fixture-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let file = root.appendingPathComponent("cursor-session.json")

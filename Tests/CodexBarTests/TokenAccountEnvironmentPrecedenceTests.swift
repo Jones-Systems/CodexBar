@@ -1170,7 +1170,7 @@ extension TokenAccountEnvironmentPrecedenceTests {
         managedAccounts: [ManagedCodexAccount],
         operation: (URL) throws -> T) throws -> T
     {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codex-known-owner-store-\(UUID().uuidString)", isDirectory: true)
         let managedStoreURL = root.appendingPathComponent("managed-codex-accounts.json", isDirectory: false)
         let fileManager = FileManager.default

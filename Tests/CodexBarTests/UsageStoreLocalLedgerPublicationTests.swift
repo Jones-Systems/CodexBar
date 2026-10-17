@@ -304,7 +304,7 @@ struct UsageStoreLocalLedgerPublicationTests {
         private var stopping = false
 
         init(globalEnabled: Bool, localEnabled: Bool) throws {
-            self.root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+            self.root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
             let settings = testSettingsStore(suiteName: "UsageStoreLocalLedgerPublicationTests")
             settings._test_managedCodexAccountStoreURL = self.root.appendingPathComponent("accounts.json")
             settings.costUsageEnabled = globalEnabled

@@ -74,7 +74,7 @@ struct TTYIntegrationTests {
 
     @Test
     func `claude pty usage stops on subscription notice`() async throws {
-        let logURL = FileManager.default.temporaryDirectory
+        let logURL = TestFixtureScratch.root
             .appendingPathComponent("CodexBarTTYTests-\(UUID().uuidString).log")
         let cli = try Self.makeSubscriptionNoticeClaudeCLI(logURL: logURL)
         defer {
@@ -100,7 +100,7 @@ struct TTYIntegrationTests {
 
     @Test
     func `claude pty keepalive relaunches when account or launch environment changes`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("CodexBarTTYAccountScope-\(UUID().uuidString)", isDirectory: true)
         let configRoot = root.appendingPathComponent("profile", isDirectory: true)
         let launchLog = root.appendingPathComponent("launches.log")
@@ -145,7 +145,7 @@ struct TTYIntegrationTests {
     }
 
     private static func makeSlowUsageClaudeCLI() throws -> URL {
-        let dir = FileManager.default.temporaryDirectory
+        let dir = TestFixtureScratch.root
             .appendingPathComponent("CodexBarTTYTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let url = dir.appendingPathComponent("claude")
@@ -173,7 +173,7 @@ struct TTYIntegrationTests {
     }
 
     private static func makeSubscriptionNoticeClaudeCLI(logURL: URL) throws -> URL {
-        let dir = FileManager.default.temporaryDirectory
+        let dir = TestFixtureScratch.root
             .appendingPathComponent("CodexBarTTYTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let url = dir.appendingPathComponent("claude")

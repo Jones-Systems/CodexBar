@@ -24,7 +24,7 @@ struct ProviderInstanceIdentityCharacterizationTests {
 
     @Test
     func `history uses the provider raw value for its filename and leaves payload shape unchanged`() throws {
-        let directoryURL = FileManager.default.temporaryDirectory
+        let directoryURL = TestFixtureScratch.root
             .appendingPathComponent("ProviderInstanceIdentityCharacterizationTests-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: directoryURL) }
 

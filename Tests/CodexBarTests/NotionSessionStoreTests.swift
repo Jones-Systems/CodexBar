@@ -39,7 +39,7 @@ struct NotionSessionStoreTests {
     }
 
     private static func makeSessionLocation() throws -> (URL, URL) {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("codexbar-notion-session-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         return (directory, directory.appendingPathComponent("notion-session.json"))

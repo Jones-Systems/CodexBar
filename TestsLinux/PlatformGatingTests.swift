@@ -108,7 +108,7 @@ struct PlatformGatingTests {
     @Test(arguments: [ProviderSourceMode.auto, .cli])
     func `Claude CLI runtime skips logged out interactive fallback`(sourceMode: ProviderSourceMode) async throws {
         #if os(Linux)
-        let invocationLog = FileManager.default.temporaryDirectory
+        let invocationLog = TestFixtureScratch.root
             .appendingPathComponent("claude-cli-runtime-invocations-\(UUID().uuidString).log")
         let binaryURL = try Self.makeClaudeCLI(loggedIn: false, invocationLog: invocationLog)
         defer {
@@ -156,7 +156,7 @@ struct PlatformGatingTests {
 
     @Test
     func `Claude CLI runtime delegates unavailable auth status to owner executable`() async throws {
-        let invocationLog = FileManager.default.temporaryDirectory
+        let invocationLog = TestFixtureScratch.root
             .appendingPathComponent("claude-cli-runtime-invocations-\(UUID().uuidString).log")
         let binaryURL = try Self.makeClaudeCLI(loggedIn: nil, invocationLog: invocationLog)
         defer {
@@ -291,7 +291,7 @@ struct PlatformGatingTests {
         if let invocationLog {
             try Data().write(to: invocationLog)
         }
-        let binaryURL = FileManager.default.temporaryDirectory
+        let binaryURL = TestFixtureScratch.root
             .appendingPathComponent("claude-cli-runtime-\(UUID().uuidString)")
         let recordInvocation = invocationLog.map { "printf '%s\\n' \"$*\" >> '\($0.path)'" } ?? ""
         let authStatusJSON = loggedIn.map { #"{"loggedIn":\#($0)}"# } ?? "not-json"

@@ -761,7 +761,7 @@ struct DoubaoUsageFetcherTests {
 
     @Test
     func `arkcli subprocess explicitly requests JSON output`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-arkcli-arguments-\(UUID().uuidString)", isDirectory: true)
         let executable = root.appendingPathComponent("arkcli")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -784,7 +784,7 @@ struct DoubaoUsageFetcherTests {
 
     @Test
     func `arkcli subprocess uses discovery path for node interpreter`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-arkcli-node-path-\(UUID().uuidString)", isDirectory: true)
         let executable = root.appendingPathComponent("arkcli")
         let node = root.appendingPathComponent("node")
@@ -820,7 +820,7 @@ struct DoubaoUsageFetcherTests {
 
     @Test
     func `arkcli nonzero login error surfaces authentication guidance`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-arkcli-login-\(UUID().uuidString)", isDirectory: true)
         let executable = root.appendingPathComponent("arkcli")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -843,7 +843,7 @@ struct DoubaoUsageFetcherTests {
 
     @Test
     func `arkcli oversized stdout fails closed before JSON parsing`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-arkcli-output-\(UUID().uuidString)", isDirectory: true)
         let executable = root.appendingPathComponent("arkcli")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

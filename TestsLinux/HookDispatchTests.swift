@@ -93,7 +93,7 @@ struct HookDispatchTests {
 
     @Test
     func `dispatch coalesces repeated refresh failures`() async throws {
-        let output = FileManager.default.temporaryDirectory
+        let output = TestFixtureScratch.root
             .appendingPathComponent("codexbar-hook-rate-limit-\(UUID().uuidString).json")
         defer { try? FileManager.default.removeItem(at: output) }
         let event = self.event(.refreshFailed, usagePercent: nil, window: nil)
@@ -111,7 +111,7 @@ struct HookDispatchTests {
 
     @Test
     func `dispatch contains one rule failure and continues`() async {
-        let output = FileManager.default.temporaryDirectory
+        let output = TestFixtureScratch.root
             .appendingPathComponent("codexbar-hook-failure-\(UUID().uuidString).json")
         defer { try? FileManager.default.removeItem(at: output) }
         let event = self.event()
@@ -127,7 +127,7 @@ struct HookDispatchTests {
 
     @Test
     func `disabled dispatch never invokes a rule`() async {
-        let output = FileManager.default.temporaryDirectory
+        let output = TestFixtureScratch.root
             .appendingPathComponent("codexbar-hook-disabled-\(UUID().uuidString).json")
         defer { try? FileManager.default.removeItem(at: output) }
         let config = HooksConfig(enabled: false, events: [

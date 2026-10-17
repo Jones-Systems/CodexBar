@@ -1,3 +1,4 @@
+import CodexBarCore
 import Darwin
 import Foundation
 import Testing
@@ -6,7 +7,7 @@ import Testing
 struct KiroLoginRunnerTests {
     @Test
     func `login runner returns timeout before hung kiro-cli exits`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-login-runner-\(UUID().uuidString)", isDirectory: true)
         let binDir = root.appendingPathComponent("bin", isDirectory: true)
         try FileManager.default.createDirectory(at: binDir, withIntermediateDirectories: true)
@@ -38,7 +39,7 @@ struct KiroLoginRunnerTests {
 
     @Test
     func `login runner bounds output drain when detached child keeps pipes open`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-login-drain-\(UUID().uuidString)", isDirectory: true)
         let binDir = root.appendingPathComponent("bin", isDirectory: true)
         let childPIDFile = root.appendingPathComponent("child.pid")
@@ -82,7 +83,7 @@ struct KiroLoginRunnerTests {
 
     @Test
     func `login runner reports progress once a device-flow URL appears`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-login-progress-\(UUID().uuidString)", isDirectory: true)
         let binDir = root.appendingPathComponent("bin", isDirectory: true)
         try FileManager.default.createDirectory(at: binDir, withIntermediateDirectories: true)

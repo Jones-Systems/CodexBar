@@ -10,7 +10,7 @@ struct ClaudeSessionMappingTests {
 
     @Test
     func `newest transcript is selected from mapped project directory`() throws {
-        let home = FileManager.default.temporaryDirectory
+        let home = TestFixtureScratch.root
             .appendingPathComponent("ClaudeSessionMappingTests-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: home) }
         let cwd = "/Users/test/Projects/alpha"
@@ -44,7 +44,7 @@ struct ClaudeSessionMappingTests {
 
     @Test
     func `directory metadata scan bounds entry count depth and time`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("ClaudeSessionMappingBoundsTests-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

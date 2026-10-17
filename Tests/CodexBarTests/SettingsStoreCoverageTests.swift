@@ -437,7 +437,7 @@ struct SettingsStoreCoverageTests {
     @Test
     func `token cost usage source detection`() throws {
         let fileManager = FileManager.default
-        let root = fileManager.temporaryDirectory.appendingPathComponent(
+        let root = TestFixtureScratch.root.appendingPathComponent(
             "token-cost-\(UUID().uuidString)",
             isDirectory: true)
         let codexRoot = root.appendingPathComponent("sessions", isDirectory: true)
@@ -449,7 +449,7 @@ struct SettingsStoreCoverageTests {
             env: ["CODEX_HOME": root.path],
             fileManager: fileManager))
 
-        let claudeRoot = fileManager.temporaryDirectory.appendingPathComponent(
+        let claudeRoot = TestFixtureScratch.root.appendingPathComponent(
             "claude-\(UUID().uuidString)",
             isDirectory: true)
         let claudeProjects = claudeRoot.appendingPathComponent("projects", isDirectory: true)
@@ -461,7 +461,7 @@ struct SettingsStoreCoverageTests {
             env: ["CLAUDE_CONFIG_DIR": claudeRoot.path],
             fileManager: fileManager))
 
-        let metadataOnlyHome = fileManager.temporaryDirectory.appendingPathComponent(
+        let metadataOnlyHome = TestFixtureScratch.root.appendingPathComponent(
             "claude-desktop-metadata-\(UUID().uuidString)",
             isDirectory: true)
         let metadataFile = metadataOnlyHome
@@ -475,7 +475,7 @@ struct SettingsStoreCoverageTests {
             fileManager: fileManager,
             homeDirectory: metadataOnlyHome))
 
-        let desktopHome = fileManager.temporaryDirectory.appendingPathComponent(
+        let desktopHome = TestFixtureScratch.root.appendingPathComponent(
             "claude-desktop-\(UUID().uuidString)",
             isDirectory: true)
         let desktopProjects = desktopHome
@@ -500,7 +500,7 @@ struct SettingsStoreCoverageTests {
             fileManager: fileManager,
             homeDirectory: desktopHome))
 
-        let desktopCodeHome = fileManager.temporaryDirectory.appendingPathComponent(
+        let desktopCodeHome = TestFixtureScratch.root.appendingPathComponent(
             "claude-desktop-code-\(UUID().uuidString)",
             isDirectory: true)
         let desktopCodeFile = desktopCodeHome
@@ -740,7 +740,7 @@ struct SettingsStoreCoverageTests {
 
     @Test
     func `removing last antigravity oauth account clears matching shared credentials`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("antigravity-shared-removal-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -767,7 +767,7 @@ struct SettingsStoreCoverageTests {
 
     @Test
     func `removing antigravity oauth account preserves freshly reauthenticated credentials`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("antigravity-shared-reauth-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -798,7 +798,7 @@ struct SettingsStoreCoverageTests {
 
     @Test
     func `removing antigravity oauth account preserves different shared credentials`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("antigravity-shared-preserve-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }

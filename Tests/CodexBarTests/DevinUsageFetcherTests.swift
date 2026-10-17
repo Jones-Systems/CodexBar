@@ -491,7 +491,7 @@ struct DevinUsageFetcherTests {
 
     @Test
     func `automatic local storage import does not fall back beyond Chrome`() throws {
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: temp) }
 
         let braveRoot = temp

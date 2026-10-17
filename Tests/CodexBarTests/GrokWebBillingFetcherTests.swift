@@ -216,7 +216,7 @@ struct GrokWebBillingFetcherTests {
 
     @Test
     func `oauth strategy preserves malformed auth file error`() async throws {
-        let grokHome = FileManager.default.temporaryDirectory
+        let grokHome = TestFixtureScratch.root
             .appendingPathComponent("CodexBar-GrokWebBilling-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: grokHome, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: grokHome) }
@@ -349,7 +349,7 @@ struct GrokWebBillingFetcherTests {
 
     @Test
     func `web strategy publishes identity-only result for team billing`() async throws {
-        let grokHome = FileManager.default.temporaryDirectory
+        let grokHome = TestFixtureScratch.root
             .appendingPathComponent("CodexBar-GrokTeamFallback-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: grokHome, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: grokHome) }
@@ -443,7 +443,7 @@ struct GrokWebBillingFetcherTests {
 
     @Test
     func `period-only billing keeps account details and surfaces an explicit usage diagnostic`() async throws {
-        let grokHome = FileManager.default.temporaryDirectory
+        let grokHome = TestFixtureScratch.root
             .appendingPathComponent("CodexBar-GrokUnknownUsage-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: grokHome, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: grokHome) }
@@ -1181,7 +1181,7 @@ extension GrokWebBillingFetcherTests {
     }
 
     private static func webContext(grokHome: URL?) -> ProviderFetchContext {
-        let home = grokHome ?? FileManager.default.temporaryDirectory
+        let home = grokHome ?? TestFixtureScratch.root
             .appendingPathComponent("CodexBar-GrokWebContext-\(UUID().uuidString)", isDirectory: true)
         let browserDetection = BrowserDetection(cacheTTL: 0)
         return ProviderFetchContext(
@@ -1242,7 +1242,7 @@ extension GrokWebBillingFetcherTests {
                     provider: .grok,
                     cookieHeader: "sso=cached-session",
                     sourceLabel: "Chrome")
-                let grokHome = FileManager.default.temporaryDirectory
+                let grokHome = TestFixtureScratch.root
                     .appendingPathComponent(
                         "CodexBar-GrokCachedAvailability-\(UUID().uuidString)",
                         isDirectory: true)

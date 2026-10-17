@@ -2312,7 +2312,7 @@ private struct StoreFixture: Sendable {
     let root: URL
 
     init() throws {
-        self.root = FileManager.default.temporaryDirectory
+        self.root = TestFixtureScratch.root
             .appendingPathComponent("CodexBar-CostUsageStoreTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: self.root, withIntermediateDirectories: true)
     }

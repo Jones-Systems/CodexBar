@@ -24,7 +24,7 @@ struct StatusMenuCodexSwitcherPresentationTests {
     }
 
     private func makeManagedAccountStoreURL(accounts: [ManagedCodexAccount]) throws -> URL {
-        let storeURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let storeURL = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let store = FileManagedCodexAccountStore(fileURL: storeURL)
         try store.storeAccounts(ManagedCodexAccountSet(
             version: FileManagedCodexAccountStore.currentVersion,
@@ -257,7 +257,7 @@ struct StatusMenuCodexSwitcherPresentationTests {
 
     @Test
     func `codex account snapshot store hydrates current visible accounts`() {
-        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let fileURL = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: fileURL) }
 
         let account = CodexVisibleAccount(
@@ -288,7 +288,7 @@ struct StatusMenuCodexSwitcherPresentationTests {
 
     @Test
     func `codex account snapshot store roundtrips monthly credit limits`() {
-        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let fileURL = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: fileURL) }
         let now = Date(timeIntervalSince1970: 1_700_000_000)
         let credits = CreditsSnapshot(
@@ -331,7 +331,7 @@ struct StatusMenuCodexSwitcherPresentationTests {
 
     @Test
     func `codex account snapshot store rejects mismatched workspace records`() {
-        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let fileURL = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: fileURL) }
 
         let oldAccountID = UUID()
@@ -374,7 +374,7 @@ struct StatusMenuCodexSwitcherPresentationTests {
 
     @Test
     func `codex account snapshot store keeps same composite owner after auth fingerprint changes`() {
-        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let fileURL = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: fileURL) }
 
         let accountID = UUID()
@@ -417,7 +417,7 @@ struct StatusMenuCodexSwitcherPresentationTests {
 
     @Test
     func `codex account snapshot store rejects legacy workspace records without identity`() throws {
-        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let fileURL = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: fileURL) }
         let payload = """
         {
@@ -455,7 +455,7 @@ struct StatusMenuCodexSwitcherPresentationTests {
 
     @Test
     func `codex account snapshot store rejects normalized legacy email ids without composite owner`() throws {
-        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let fileURL = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: fileURL) }
         let payload = """
         {
@@ -488,7 +488,7 @@ struct StatusMenuCodexSwitcherPresentationTests {
 
     @Test
     func `codex account snapshot store rejects legacy stable ids crossing workspace members`() throws {
-        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let fileURL = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: fileURL) }
 
         let managedAccountID = UUID()

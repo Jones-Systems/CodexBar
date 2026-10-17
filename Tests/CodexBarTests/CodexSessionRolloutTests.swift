@@ -163,7 +163,7 @@ struct CodexSessionRolloutTests {
     @Test
     func `local scanner parses only its newest configured rollout candidates`() async throws {
         let fileManager = FileManager.default
-        let temporaryRoot = fileManager.temporaryDirectory
+        let temporaryRoot = TestFixtureScratch.root
             .appendingPathComponent("CodexSessionRolloutTests-\(UUID().uuidString)", isDirectory: true)
         defer { try? fileManager.removeItem(at: temporaryRoot) }
 
@@ -305,7 +305,7 @@ struct CodexSessionRolloutTests {
     @Test
     func `live scanner suppresses descriptive names for ambiguous same project processes`() async throws {
         let fileManager = FileManager.default
-        let root = fileManager.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("CodexSessionRolloutTests-ambiguous-\(UUID().uuidString)", isDirectory: true)
         defer { try? fileManager.removeItem(at: root) }
 
@@ -367,7 +367,7 @@ struct CodexSessionRolloutTests {
         appServerIsTrusted: Bool = true) throws -> AdaptiveChatGPTFixture
     {
         let fileManager = FileManager.default
-        let root = fileManager.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("CodexSessionRolloutTests-chatgpt-\(UUID().uuidString)", isDirectory: true)
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
@@ -407,7 +407,7 @@ struct CodexSessionRolloutTests {
     @Test
     func `scanner resolves relative sqlite homes for multiple session projects`() async throws {
         let fileManager = FileManager.default
-        let root = fileManager.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("CodexSessionRolloutTests-relative-sqlite-\(UUID().uuidString)", isDirectory: true)
         defer { try? fileManager.removeItem(at: root) }
         let now = Date()

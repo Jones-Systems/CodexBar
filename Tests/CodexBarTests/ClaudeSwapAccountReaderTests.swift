@@ -6,7 +6,7 @@ import Testing
 /// claude-swap install, no credentials, no Keychain access.
 struct ClaudeSwapAccountReaderTests {
     private func makeFakeExecutable(_ script: String) throws -> String {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("claude-swap-reader-tests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let url = directory.appendingPathComponent("cswap")
@@ -147,7 +147,7 @@ struct ClaudeSwapAccountReaderTests {
 
     @Test
     func `started credential switch reaches natural exit after caller cancellation`() async throws {
-        let marker = FileManager.default.temporaryDirectory
+        let marker = TestFixtureScratch.root
             .appendingPathComponent("claude-swap-switch-finished-\(UUID().uuidString)")
         let path = try self.makeFakeExecutable("""
         sleep 0.3
@@ -176,7 +176,7 @@ struct ClaudeSwapAccountReaderTests {
 
     @Test
     func `cancellation during version probe prevents account list launch`() async throws {
-        let marker = FileManager.default.temporaryDirectory
+        let marker = TestFixtureScratch.root
             .appendingPathComponent("claude-swap-list-launched-\(UUID().uuidString)")
         let path = try self.makeFakeExecutable("""
         if [ "$1" = "--version" ]; then

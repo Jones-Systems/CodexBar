@@ -411,7 +411,7 @@ struct OpenCodeGoLocalUsageReaderTests {
     }
 
     private static func makeEnvironment() throws -> (root: URL, authURL: URL, databaseURL: URL) {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("OpenCodeGoLocalUsageReaderTests-\(UUID().uuidString)", isDirectory: true)
         let directory = root
             .appendingPathComponent(".local", isDirectory: true)

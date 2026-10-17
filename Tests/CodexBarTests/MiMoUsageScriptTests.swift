@@ -119,7 +119,7 @@ struct MiMoUsageScriptTests {
         identity: JonesStateRoot.Identity? = nil,
         cacheOverride: String? = "usage.json") throws -> [String: Any]
     {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("mimo-usage-script-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -161,6 +161,9 @@ struct MiMoUsageScriptTests {
             "MIMO_CLAUDE_HOME": mimoHome.path,
             "CODEXBAR_SUPPRESS_TEST_KEYCHAIN_ACCESS": "1",
             "CODEXBAR_TEST_CODEX_FILE_ISOLATION": "1",
+            TestFixtureScratch.parentEnvironmentKey: TestFixtureScratch.root.path,
+            TestFixtureScratch.workspaceEnvironmentKey: ProcessInfo.processInfo.environment[
+                TestFixtureScratch.workspaceEnvironmentKey]!,
             "CODEXBAR_TEST_SESSION_FILE_ISOLATION": "1",
         ]
         // The external tracker uses its existing explicit output override for the packaged fork.

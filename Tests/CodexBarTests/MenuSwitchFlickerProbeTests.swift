@@ -82,7 +82,7 @@ struct MenuSwitchFlickerProbeTests {
         defer { window.orderOut(nil) }
         window.contentView?.addSubview(switcher)
 
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("flicker-probe-test-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: directory) }
 
@@ -129,7 +129,7 @@ struct MenuSwitchFlickerProbeTests {
         let sampleCount = try #require(Int(capturedLine.split(separator: " ")[1]))
         #expect(sampleCount > 0, "probe recorded no frame samples: \(log)")
 
-        let overdueDirectory = FileManager.default.temporaryDirectory
+        let overdueDirectory = TestFixtureScratch.root
             .appendingPathComponent("flicker-probe-overdue-test-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: overdueDirectory) }
         var overdueConfiguration = MenuSwitchFlickerProbe.ProbeSession.Configuration()

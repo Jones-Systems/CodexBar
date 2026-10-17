@@ -7,7 +7,7 @@ import Testing
 struct CursorAppAuthRegressionTests {
     @Test
     func `session store replaces app auth accounts and keeps the file owner only`() async throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("cursor-session-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: directory) }
         let fileURL = directory.appendingPathComponent("cursor-session.json")
@@ -39,7 +39,7 @@ struct CursorAppAuthRegressionTests {
 
     @Test
     func `app auth store reads active WAL state without modifying database or WAL`() throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("cursor-app-auth-active-wal-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }

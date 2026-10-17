@@ -120,7 +120,7 @@ struct SubprocessRunnerTests {
 
     @Test
     func `returns partial output when detached child keeps pipes open`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-subprocess-drain-\(UUID().uuidString)", isDirectory: true)
         let childPIDFile = root.appendingPathComponent("child.pid")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -196,7 +196,7 @@ struct SubprocessRunnerTests {
 
     @Test
     func `timeout kills descendants that escape the process group`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-subprocess-tree-\(UUID().uuidString)", isDirectory: true)
         let childPIDFile = root.appendingPathComponent("child.pid")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

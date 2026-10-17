@@ -60,7 +60,7 @@ extension CostUsageStoreCrashSafetyTests {
     }
 
     private static func makeRoot() throws -> URL {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("CodexBar-CostUsageStoreCrashTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         return root

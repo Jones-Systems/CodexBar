@@ -30,7 +30,7 @@ struct VertexAIOAuthCredentialsTests {
 
     @Test
     func `user ADC credentials still parse from CLOUDSDK_CONFIG`() throws {
-        let configDir = FileManager.default.temporaryDirectory
+        let configDir = TestFixtureScratch.root
             .appendingPathComponent("codexbar-vertex-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: configDir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: configDir) }
@@ -61,7 +61,7 @@ struct VertexAIOAuthCredentialsTests {
     }
 
     private static func writeServiceAccountCredentials() throws -> URL {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("codexbar-vertex-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let fileURL = directory.appendingPathComponent("service-account.json")

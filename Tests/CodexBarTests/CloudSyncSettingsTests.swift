@@ -89,7 +89,7 @@ struct CloudSyncSettingsTests {
 
     @Test
     func `config watcher suppresses self writes and observes external atomic replacement`() async throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("ConfigFileWatcherTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -115,7 +115,7 @@ struct CloudSyncSettingsTests {
 
     @Test
     func `sync persistence never writes encrypted provider secrets and uses private permissions`() throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("CloudSyncPersistenceTests-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: directory) }
         let fileURL = directory.appendingPathComponent("engine-state.json")
@@ -143,7 +143,7 @@ struct CloudSyncSettingsTests {
 
     @Test
     func `legacy sync persistence defaults dirty state to clean`() throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("CloudSyncPersistenceLegacyTests-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: directory) }
         let fileURL = directory.appendingPathComponent("engine-state.json")
@@ -167,7 +167,7 @@ struct CloudSyncSettingsTests {
 
     @Test
     func `pending snapshot deletes survive persistence round trip`() throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("CloudSyncPendingDeletesTests-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: directory) }
         let fileURL = directory.appendingPathComponent("engine-state.json")
@@ -181,7 +181,7 @@ struct CloudSyncSettingsTests {
 
     @Test
     func `pending predecessor deletes survive persistence round trip`() throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("CloudSyncPendingPredecessorsTests-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: directory) }
         let fileURL = directory.appendingPathComponent("engine-state.json")
@@ -415,7 +415,7 @@ struct CloudSyncSettingsTests {
         let suite = "CloudSyncSettingsTests-\(name)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defaults.removePersistentDomain(forName: suite)
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent(suite, isDirectory: true)
         try? FileManager.default.removeItem(at: directory)
         let configStore = CodexBarConfigStore(fileURL: directory.appendingPathComponent("config.json"))
@@ -427,7 +427,7 @@ struct CloudSyncSettingsTests {
     }
 
     private func makePersistence(_ name: String) -> CloudSyncPersistence {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("CloudSyncDirtyTests-\(name)-\(UUID().uuidString)", isDirectory: true)
         return CloudSyncPersistence(fileURL: directory.appendingPathComponent("engine-state.json"))
     }

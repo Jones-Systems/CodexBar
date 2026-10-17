@@ -299,7 +299,7 @@ struct ClaudeOAuthDelegatedRefreshCoordinatorTests {
         ClaudeOAuthDelegatedRefreshCoordinator.resetForTesting()
         defer { ClaudeOAuthDelegatedRefreshCoordinator.resetForTesting() }
 
-        let stubCLI = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let stubCLI = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let script = "#!/bin/sh\nexit 0\n"
         try script.write(to: stubCLI, atomically: true, encoding: .utf8)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: stubCLI.path)

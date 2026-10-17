@@ -539,7 +539,7 @@ private struct Harness {
     let store: OpenCodexUsageStore
 
     static func make() throws -> Harness {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("OpenCodexUsageStoreIncremental-\(UUID().uuidString)", isDirectory: true)
         let cacheRoot = root.appendingPathComponent("cache", isDirectory: true)
         try FileManager.default.createDirectory(at: cacheRoot, withIntermediateDirectories: true)

@@ -51,7 +51,7 @@ struct SpawnedProcessGroupTests {
 
     @Test
     func `PTY descriptor reservation failure prevents child launch`() throws {
-        let marker = FileManager.default.temporaryDirectory
+        let marker = TestFixtureScratch.root
             .appendingPathComponent("codexbar-pty-reservation-\(UUID().uuidString).marker")
         defer { try? FileManager.default.removeItem(at: marker) }
 
@@ -279,7 +279,7 @@ struct SpawnedProcessGroupTests {
 
     @Test
     func `termination waits for grace before killing escaped descendants`() async throws {
-        let childPIDFile = FileManager.default.temporaryDirectory
+        let childPIDFile = TestFixtureScratch.root
             .appendingPathComponent("codexbar-process-group-\(UUID().uuidString).pid")
         defer { try? FileManager.default.removeItem(at: childPIDFile) }
 
@@ -336,7 +336,7 @@ struct SpawnedProcessGroupTests {
 
     @Test
     func `termination kills reparented process group members after root exit`() async throws {
-        let childPIDFile = FileManager.default.temporaryDirectory
+        let childPIDFile = TestFixtureScratch.root
             .appendingPathComponent("codexbar-process-group-member-\(UUID().uuidString).pid")
         defer { try? FileManager.default.removeItem(at: childPIDFile) }
 
@@ -391,7 +391,7 @@ struct SpawnedProcessGroupTests {
 
     @Test
     func `termination gives reparented process group members grace`() async throws {
-        let childPIDFile = FileManager.default.temporaryDirectory
+        let childPIDFile = TestFixtureScratch.root
             .appendingPathComponent("codexbar-process-group-grace-\(UUID().uuidString).pid")
         let termReceivedFile = childPIDFile.appendingPathExtension("term")
         let gracefulExitFile = childPIDFile.appendingPathExtension("graceful")
@@ -469,7 +469,7 @@ struct SpawnedProcessGroupTests {
 
     @Test
     func `residual termination cleans same group helpers spawned during SIGTERM`() async throws {
-        let readyFile = FileManager.default.temporaryDirectory
+        let readyFile = TestFixtureScratch.root
             .appendingPathComponent("codexbar-process-group-term-\(UUID().uuidString).ready")
         let childPIDFile = readyFile.appendingPathExtension("pid")
         let heartbeatFile = readyFile.appendingPathExtension("heartbeat")
@@ -556,7 +556,7 @@ struct SpawnedProcessGroupTests {
 
     @Test
     func `normal exit cleans a session escaped output holder`() async throws {
-        let childPIDFile = FileManager.default.temporaryDirectory
+        let childPIDFile = TestFixtureScratch.root
             .appendingPathComponent("codexbar-process-holder-\(UUID().uuidString).pid")
         defer { try? FileManager.default.removeItem(at: childPIDFile) }
 
@@ -610,7 +610,7 @@ struct SpawnedProcessGroupTests {
 
     @Test
     func `normal exit cleans a same group helper without output pipes`() async throws {
-        let childPIDFile = FileManager.default.temporaryDirectory
+        let childPIDFile = TestFixtureScratch.root
             .appendingPathComponent("codexbar-process-group-holder-\(UUID().uuidString).pid")
         let heartbeatFile = childPIDFile.appendingPathExtension("heartbeat")
         defer {
@@ -691,7 +691,7 @@ struct SpawnedProcessGroupTests {
 
     @Test
     func `normal exit cleanup catches helper spawned during SIGTERM`() async throws {
-        let readyFile = FileManager.default.temporaryDirectory
+        let readyFile = TestFixtureScratch.root
             .appendingPathComponent("codexbar-process-group-post-exit-\(UUID().uuidString).ready")
         let childPIDFile = readyFile.appendingPathExtension("pid")
         let heartbeatFile = readyFile.appendingPathExtension("heartbeat")

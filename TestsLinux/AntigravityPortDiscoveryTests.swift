@@ -187,7 +187,7 @@ struct AntigravityPortDiscoveryTests {
         let lsof: URL
 
         init(script: String) throws {
-            self.root = FileManager.default.temporaryDirectory
+            self.root = TestFixtureScratch.root
                 .appendingPathComponent("codexbar-port-discovery-\(UUID().uuidString)")
             self.lsof = self.root.appendingPathComponent("lsof")
             let files = FileManager.default

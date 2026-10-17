@@ -37,7 +37,7 @@ struct StatusMenuCodexSwitcherTests {
     }
 
     private func makeManagedAccountStoreURL(accounts: [ManagedCodexAccount]) throws -> URL {
-        let storeURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let storeURL = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let store = FileManagedCodexAccountStore(fileURL: storeURL)
         try store.storeAccounts(ManagedCodexAccountSet(
             version: FileManagedCodexAccountStore.currentVersion,
@@ -783,7 +783,7 @@ struct StatusMenuCodexSwitcherTests {
             observedAt: Date())
         defer { settings._test_liveSystemCodexAccount = nil }
 
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
         let runner = BlockingManagedCodexLoginRunnerForStatusMenuTests()
@@ -1393,7 +1393,7 @@ private final class InMemoryManagedCodexAccountStoreForStatusMenuTests: ManagedC
     }
 
     func ensureFileExists() throws -> URL {
-        FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
     }
 }
 

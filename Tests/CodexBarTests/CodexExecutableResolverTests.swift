@@ -19,7 +19,7 @@ struct CodexExecutableResolverTests {
 
     @Test
     func `explicit script override captures login path for env based launchers`() throws {
-        let scriptURL = FileManager.default.temporaryDirectory
+        let scriptURL = TestFixtureScratch.root
             .appendingPathComponent("codexbar-script-override-\(UUID().uuidString)")
         try Data("#!/usr/bin/env node\n".utf8).write(to: scriptURL)
         try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: scriptURL.path)

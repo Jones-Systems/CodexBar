@@ -589,7 +589,7 @@ struct ClaudeActiveAccountIdentityInvalidationTests {
 
     @Test
     func `account and credential probes share fetch environment profile roots`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("claude-profile-roots-\(UUID().uuidString)", isDirectory: true)
         let home = root.appendingPathComponent("home", isDirectory: true)
         let alternate = root.appendingPathComponent("alternate", isDirectory: true)
@@ -663,7 +663,7 @@ struct ClaudeActiveAccountIdentityInvalidationTests {
         _ operation: (URL) async throws -> T) async throws -> T
     {
         try await ClaudeOAuthCredentialsStore.withIsolatedCredentialsFileTrackingForTesting {
-            let missingURL = FileManager.default.temporaryDirectory
+            let missingURL = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
                 .appendingPathComponent("missing-credentials.json")
             return try await ClaudeOAuthCredentialsStore.withCredentialsURLOverrideForTesting(missingURL) {
@@ -883,7 +883,7 @@ struct ClaudeActiveAccountIdentityInvalidationTests {
 extension ClaudeActiveAccountIdentityInvalidationTests {
     @Test
     func `active account identity follows and scopes Claude config directory`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("claude-config-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -907,7 +907,7 @@ extension ClaudeActiveAccountIdentityInvalidationTests {
 
     @Test
     func `same account identity remains stable when preferred config file appears`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("claude-config-stability-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -936,7 +936,7 @@ extension ClaudeActiveAccountIdentityInvalidationTests {
         preservesCachedState: Bool) async throws
     {
         try await self.withMissingCredentialsFile { _ in
-            let root = FileManager.default.temporaryDirectory
+            let root = TestFixtureScratch.root
                 .appendingPathComponent("claude-config-migration-\(UUID().uuidString)", isDirectory: true)
             try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
             defer { try? FileManager.default.removeItem(at: root) }
@@ -982,7 +982,7 @@ extension ClaudeActiveAccountIdentityInvalidationTests {
 extension ClaudeActiveAccountIdentityInvalidationTests {
     @Test
     func `selecting another Claude profile does not treat its OAuth account as a switch`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("claude-active-account-profiles-\(UUID().uuidString)", isDirectory: true)
         let environmentA = ["CLAUDE_CONFIG_DIR": root.appendingPathComponent("profile-a").path]
         let environmentB = ["CLAUDE_CONFIG_DIR": root.appendingPathComponent("profile-b").path]

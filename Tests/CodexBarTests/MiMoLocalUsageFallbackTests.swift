@@ -44,7 +44,7 @@ struct MiMoLocalUsageFallbackTests {
 
     @Test
     func `returns nil when cache file is malformed JSON`() throws {
-        let dir = FileManager.default.temporaryDirectory
+        let dir = TestFixtureScratch.root
             .appendingPathComponent("mimo-fallback-test-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
@@ -57,7 +57,7 @@ struct MiMoLocalUsageFallbackTests {
 
     @Test
     func `returns nil when cache schema is incomplete`() throws {
-        let dir = FileManager.default.temporaryDirectory
+        let dir = TestFixtureScratch.root
             .appendingPathComponent("mimo-fallback-test-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
@@ -70,7 +70,7 @@ struct MiMoLocalUsageFallbackTests {
 
     @Test
     func `parses all token buckets without fabricating a quota window`() throws {
-        let dir = FileManager.default.temporaryDirectory
+        let dir = TestFixtureScratch.root
             .appendingPathComponent("mimo-fallback-test-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
@@ -123,7 +123,7 @@ struct MiMoLocalUsageFallbackTests {
 
     @Test
     func `idle week keeps local accounting in the plan summary`() throws {
-        let dir = FileManager.default.temporaryDirectory
+        let dir = TestFixtureScratch.root
             .appendingPathComponent("mimo-fallback-test-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
@@ -197,7 +197,7 @@ struct MiMoLocalUsageFallbackTests {
         fileModificationDate: Date? = nil,
         now: Date) throws -> MiMoUsageSnapshot
     {
-        let dir = FileManager.default.temporaryDirectory
+        let dir = TestFixtureScratch.root
             .appendingPathComponent("mimo-fallback-test-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }

@@ -157,7 +157,7 @@ struct ClaudeWebBackgroundRecoveryTests {
     // MARK: - Helpers (mirrors ClaudeWebCookieRenewalTests' stub/cache isolation)
 
     private func withIsolatedCookieCache<T>(_ operation: () async throws -> T) async rethrows -> T {
-        let legacyBase = FileManager.default.temporaryDirectory
+        let legacyBase = TestFixtureScratch.root
             .appendingPathComponent("claude-web-background-recovery-\(UUID().uuidString)", isDirectory: true)
         return try await KeychainCacheStore.withServiceOverrideForTesting(
             "claude-web-background-recovery-\(UUID().uuidString)")

@@ -8,7 +8,7 @@ import Testing
 struct ManagedCodexAccountCoordinatorTests {
     @Test(arguments: [false, true])
     func `cancel releases busy state and ignores late login success during retry`(retrySameAccount: Bool) async throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let runner = BlockingManagedCodexLoginRunner()
         let store = InMemoryManagedCodexAccountStoreForCoordinatorTests(
@@ -49,7 +49,7 @@ struct ManagedCodexAccountCoordinatorTests {
 
     @Test
     func `coordinator exposes in flight state and rejects overlapping managed authentication`() async throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
         let existingAccountID = try #require(UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-111111111111"))
@@ -82,7 +82,7 @@ struct ManagedCodexAccountCoordinatorTests {
 
     @Test
     func `coordinator clears in flight state after managed login timeout`() async throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
         let loginResult = CodexLoginRunner.Result(outcome: .timedOut, output: "timed out")
@@ -167,7 +167,7 @@ private final class InMemoryManagedCodexAccountStoreForCoordinatorTests: Managed
     }
 
     func ensureFileExists() throws -> URL {
-        FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
     }
 }
 

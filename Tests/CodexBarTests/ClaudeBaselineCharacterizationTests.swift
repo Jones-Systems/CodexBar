@@ -16,7 +16,7 @@ struct ClaudeBaselineCharacterizationTests {
     }
 
     private func makeIdentifiedClaudeProfile() throws -> (root: URL, environment: [String: String]) {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-claude-baseline-profile-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         try Data(#"{"oauthAccount":{"accountUuid":"baseline-account"}}"#.utf8)
@@ -47,7 +47,7 @@ struct ClaudeBaselineCharacterizationTests {
         \(sample)
         EOF
         """
-        let url = FileManager.default.temporaryDirectory
+        let url = TestFixtureScratch.root
             .appendingPathComponent("claude-stub-\(UUID().uuidString)")
         try Data(script.utf8).write(to: url)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
@@ -103,7 +103,7 @@ struct ClaudeBaselineCharacterizationTests {
     }
 
     private func withNoOAuthCredentials<T>(operation: () async throws -> T) async rethrows -> T {
-        let missingCredentialsURL = FileManager.default.temporaryDirectory
+        let missingCredentialsURL = TestFixtureScratch.root
             .appendingPathComponent("missing-claude-creds-\(UUID().uuidString).json")
         return try await KeychainCacheStore.withServiceOverrideForTesting("claude-baseline-\(UUID().uuidString)") {
             KeychainCacheStore.setTestStoreForTesting(true)
@@ -222,7 +222,7 @@ struct ClaudeBaselineCharacterizationTests {
 
     @Test
     func `CLI explicit source delegates authentication to the configured Claude executable`() async throws {
-        let invocationLog = FileManager.default.temporaryDirectory
+        let invocationLog = TestFixtureScratch.root
             .appendingPathComponent("claude-invocations-\(UUID().uuidString).log")
         let stubCLIPath = try self.makeStubClaudeCLI(
             authStatusScript: "printf '%s\\n' 'not-json'",
@@ -256,7 +256,7 @@ struct ClaudeBaselineCharacterizationTests {
 
     @Test
     func `CLI auto reaches Claude executable after web credentials are unavailable`() async throws {
-        let invocationLog = FileManager.default.temporaryDirectory
+        let invocationLog = TestFixtureScratch.root
             .appendingPathComponent("claude-invocations-\(UUID().uuidString).log")
         let stubCLIPath = try self.makeStubClaudeCLI(
             authStatusScript: "printf '%s\\n' 'not-json'",
@@ -328,7 +328,7 @@ struct ClaudeBaselineCharacterizationTests {
 
     @Test
     func `CLI source keeps definitive logged out guard`() async throws {
-        let invocationLog = FileManager.default.temporaryDirectory
+        let invocationLog = TestFixtureScratch.root
             .appendingPathComponent("claude-invocations-\(UUID().uuidString).log")
         let stubCLIPath = try self.makeStubClaudeCLI(loggedIn: false, invocationLog: invocationLog)
         defer {
@@ -412,7 +412,7 @@ struct ClaudeBaselineCharacterizationTests {
             webExtrasEnabled: false,
             cookieSource: .off,
             manualCookieHeader: nil))
-        let invocationLog = FileManager.default.temporaryDirectory
+        let invocationLog = TestFixtureScratch.root
             .appendingPathComponent("claude-invocations-\(UUID().uuidString).log")
         let stubCLIPath = try self.makeStubClaudeCLI(loggedIn: false, invocationLog: invocationLog)
         let profile = try self.makeIdentifiedClaudeProfile()
@@ -448,7 +448,7 @@ struct ClaudeBaselineCharacterizationTests {
             webExtrasEnabled: false,
             cookieSource: .off,
             manualCookieHeader: nil))
-        let invocationLog = FileManager.default.temporaryDirectory
+        let invocationLog = TestFixtureScratch.root
             .appendingPathComponent("claude-invocations-\(UUID().uuidString).log")
         let stubCLIPath = try self.makeStubClaudeCLI(loggedIn: false, invocationLog: invocationLog)
         let profile = try self.makeIdentifiedClaudeProfile()
@@ -486,7 +486,7 @@ struct ClaudeBaselineCharacterizationTests {
             webExtrasEnabled: false,
             cookieSource: .off,
             manualCookieHeader: nil))
-        let invocationLog = FileManager.default.temporaryDirectory
+        let invocationLog = TestFixtureScratch.root
             .appendingPathComponent("claude-invocations-\(UUID().uuidString).log")
         let stubCLIPath = try self.makeStubClaudeCLI(invocationLog: invocationLog)
         let profile = try self.makeIdentifiedClaudeProfile()
@@ -521,7 +521,7 @@ struct ClaudeBaselineCharacterizationTests {
             webExtrasEnabled: false,
             cookieSource: .manual,
             manualCookieHeader: "sessionKey=sk-ant-session-token"))
-        let invocationLog = FileManager.default.temporaryDirectory
+        let invocationLog = TestFixtureScratch.root
             .appendingPathComponent("claude-invocations-\(UUID().uuidString).log")
         let stubCLIPath = try self.makeStubClaudeCLI(invocationLog: invocationLog)
         let profile = try self.makeIdentifiedClaudeProfile()
@@ -572,7 +572,7 @@ struct ClaudeBaselineCharacterizationTests {
             webExtrasEnabled: false,
             cookieSource: .off,
             manualCookieHeader: nil))
-        let invocationLog = FileManager.default.temporaryDirectory
+        let invocationLog = TestFixtureScratch.root
             .appendingPathComponent("claude-invocations-\(UUID().uuidString).log")
         let stubCLIPath = try self.makeStubClaudeCLI(invocationLog: invocationLog)
         let profile = try self.makeIdentifiedClaudeProfile()
@@ -609,10 +609,10 @@ struct ClaudeBaselineCharacterizationTests {
             webExtrasEnabled: false,
             cookieSource: .off,
             manualCookieHeader: nil))
-        let invocationLog = FileManager.default.temporaryDirectory
+        let invocationLog = TestFixtureScratch.root
             .appendingPathComponent("claude-invocations-\(UUID().uuidString).log")
         let stubCLIPath = try self.makeStubClaudeCLI(invocationLog: invocationLog)
-        let profileRoot = FileManager.default.temporaryDirectory
+        let profileRoot = TestFixtureScratch.root
             .appendingPathComponent("codexbar-claude-disabled-keychain-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: profileRoot, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: profileRoot) }
@@ -644,7 +644,7 @@ struct ClaudeBaselineCharacterizationTests {
             webExtrasEnabled: false,
             cookieSource: .off,
             manualCookieHeader: nil))
-        let invocationLog = FileManager.default.temporaryDirectory
+        let invocationLog = TestFixtureScratch.root
             .appendingPathComponent("claude-invocations-\(UUID().uuidString).log")
         let stubCLIPath = try self.makeStubClaudeCLI(loggedIn: false, invocationLog: invocationLog)
         let env = ["CLAUDE_CLI_PATH": stubCLIPath]
@@ -669,7 +669,7 @@ struct ClaudeBaselineCharacterizationTests {
             cookieSource: .off,
             manualCookieHeader: nil))
         let stubCLIPath = try self.makeStubClaudeCLI()
-        let profileRoot = FileManager.default.temporaryDirectory
+        let profileRoot = TestFixtureScratch.root
             .appendingPathComponent("codexbar-claude-background-establishment-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: profileRoot, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: profileRoot) }
@@ -724,7 +724,7 @@ struct ClaudeBaselineCharacterizationTests {
             cookieSource: .off,
             manualCookieHeader: nil))
         let stubCLIPath = try self.makeStubClaudeCLI()
-        let profileRoot = FileManager.default.temporaryDirectory
+        let profileRoot = TestFixtureScratch.root
             .appendingPathComponent("codexbar-claude-background-revocation-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: profileRoot, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: profileRoot) }
@@ -799,7 +799,7 @@ struct ClaudeBaselineCharacterizationTests {
             cookieSource: .off,
             manualCookieHeader: nil))
         let stubCLIPath = try self.makeStubClaudeCLI()
-        let profileRoot = FileManager.default.temporaryDirectory
+        let profileRoot = TestFixtureScratch.root
             .appendingPathComponent("codexbar-claude-planned-environment-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: profileRoot, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: profileRoot) }

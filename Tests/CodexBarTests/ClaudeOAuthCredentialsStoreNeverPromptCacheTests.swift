@@ -67,7 +67,7 @@ struct ClaudeOAuthCredentialsStoreNeverPromptCacheTests {
         data: Data?,
         operation: (URL) throws -> T) throws -> T
     {
-        let tempDirectory = FileManager.default.temporaryDirectory
+        let tempDirectory = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDirectory) }
@@ -433,7 +433,7 @@ struct ClaudeOAuthCredentialsStoreNeverPromptCacheTests {
 
     @Test
     func `bundled CLI resolves the owning app prompt policy domain`() throws {
-        let tempDirectory = FileManager.default.temporaryDirectory
+        let tempDirectory = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let appURL = tempDirectory.appendingPathComponent("CodexBar.app", isDirectory: true)
         let contentsURL = appURL.appendingPathComponent("Contents", isDirectory: true)
@@ -496,7 +496,7 @@ struct ClaudeOAuthCredentialsStoreNeverPromptCacheTests {
     func `shared tombstone propagates across process boundaries`() throws {
         let domain = "ClaudeOAuthPendingCacheTests.\(UUID().uuidString)"
         let key = "pending"
-        let tempDirectory = FileManager.default.temporaryDirectory
+        let tempDirectory = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let lockURL = tempDirectory.appendingPathComponent("cache.lock")
         let userDefaults = try #require(UserDefaults(suiteName: domain))
@@ -535,7 +535,7 @@ struct ClaudeOAuthCredentialsStoreNeverPromptCacheTests {
     func `newer tombstone survives an older cache transaction`() throws {
         let domain = "ClaudeOAuthPendingCacheRaceTests.\(UUID().uuidString)"
         let key = "pending"
-        let tempDirectory = FileManager.default.temporaryDirectory
+        let tempDirectory = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let lockURL = tempDirectory.appendingPathComponent("cache.lock")
         let userDefaults = try #require(UserDefaults(suiteName: domain))
@@ -568,7 +568,7 @@ struct ClaudeOAuthCredentialsStoreNeverPromptCacheTests {
     func `legacy boolean tombstone remains pending until cache resolution`() throws {
         let domain = "ClaudeOAuthPendingCacheLegacyTests.\(UUID().uuidString)"
         let key = "pending"
-        let tempDirectory = FileManager.default.temporaryDirectory
+        let tempDirectory = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let userDefaults = try #require(UserDefaults(suiteName: domain))
         defer {
@@ -594,7 +594,7 @@ struct ClaudeOAuthCredentialsStoreNeverPromptCacheTests {
     func `cache transaction fails closed when its lock is unavailable`() throws {
         let domain = "ClaudeOAuthPendingCacheLockFailureTests.\(UUID().uuidString)"
         let key = "pending"
-        let tempDirectory = FileManager.default.temporaryDirectory
+        let tempDirectory = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         let nonDirectoryURL = tempDirectory.appendingPathComponent("not-a-directory")

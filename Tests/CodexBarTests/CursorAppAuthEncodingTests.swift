@@ -80,7 +80,7 @@ struct CursorAppAuthEncodingTests {
     }
 
     private static func load(_ value: SQLiteValue) throws -> CursorAppAuthSession? {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("cursor-encoding-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }

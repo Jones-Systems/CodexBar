@@ -180,7 +180,7 @@ public enum ClaudeOAuthCredentialsStore {
     #if DEBUG
     @TaskLocal private static var taskCredentialsURLOverride: URL?
     @TaskLocal private static var taskCredentialsProfileIdentifierOverride: String?
-    private static let isolatedTestCredentialsURL = FileManager.default.temporaryDirectory
+    private static let isolatedTestCredentialsURL = TestFixtureScratch.root
         .appendingPathComponent("codexbar-tests-\(UUID().uuidString)", isDirectory: true)
         .appendingPathComponent("credentials.json")
     #endif

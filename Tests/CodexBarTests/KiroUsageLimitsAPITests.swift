@@ -337,7 +337,7 @@ struct KiroUsageLimitsAPITests {
     @Test
     func `fetch enriches plan and overage from the usage api`() async throws {
         let limits = try KiroUsageLimitsAPI.parse(Data(Self.overageInUseResponse.utf8))
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-limits-\(UUID().uuidString)", isDirectory: true)
         let cliURL = root.appendingPathComponent("kiro-cli")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -375,7 +375,7 @@ struct KiroUsageLimitsAPITests {
 
     @Test
     func `cancellation during usage limits enrichment is preserved`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-limits-cancel-\(UUID().uuidString)", isDirectory: true)
         let cliURL = root.appendingPathComponent("kiro-cli")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

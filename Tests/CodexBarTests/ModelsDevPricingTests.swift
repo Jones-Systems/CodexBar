@@ -1369,7 +1369,7 @@ extension ModelsDevPricingTests {
     }
 
     private static func cacheRoot() throws -> URL {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-modelsdev-tests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         return root

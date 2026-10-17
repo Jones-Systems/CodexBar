@@ -196,7 +196,7 @@ struct ClaudeOAuthRateLimitResilienceTests {
 
     private func refreshWithStableClaudeCredentials(_ store: UsageStore) async {
         await ClaudeOAuthCredentialsStore.withIsolatedCredentialsFileTrackingForTesting {
-            let missingCredentialsURL = FileManager.default.temporaryDirectory
+            let missingCredentialsURL = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString)
             await ClaudeOAuthCredentialsStore.withCredentialsURLOverrideForTesting(missingCredentialsURL) {
                 await store.refreshProvider(.claude)

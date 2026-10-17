@@ -30,7 +30,7 @@ final class ProviderVersionDetectorTests: XCTestCase {
     }
 
     func test_run_returnsOutputWhenDetachedChildKeepsPipeOpen() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-version-drain-\(UUID().uuidString)", isDirectory: true)
         let childPIDFile = root.appendingPathComponent("child.pid")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -559,7 +559,7 @@ final class ProviderVersionDetectorTests: XCTestCase {
         root: URL,
         environment: [String: String])
     {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-version-profile-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let configURL = root.appendingPathComponent(".config.json")

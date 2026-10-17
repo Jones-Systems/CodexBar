@@ -6,7 +6,7 @@ import Testing
 struct CodexActiveSourceConfigTests {
     @Test
     func `Codex account order survives disk reload without affecting another provider`() throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let url = root.appendingPathComponent("config.json")
         var codex = ProviderConfig(id: .codex)

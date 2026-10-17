@@ -112,7 +112,7 @@ final class JsonlParityFixture {
     private(set) var comparisons = 0
 
     init() throws {
-        self.root = FileManager.default.temporaryDirectory
+        self.root = TestFixtureScratch.root
             .appendingPathComponent("CodexBar-jsonl-parity-" + UUID().uuidString, isDirectory: true)
         self.file = self.root.appendingPathComponent("input.jsonl")
         try FileManager.default.createDirectory(at: self.root, withIntermediateDirectories: true)

@@ -90,7 +90,7 @@ struct PathBuilderTests {
 
     @Test
     func `shell runner terminates background children after normal exit`() throws {
-        let marker = FileManager.default.temporaryDirectory
+        let marker = TestFixtureScratch.root
             .appendingPathComponent("codexbar-shell-runner-\(UUID().uuidString)")
             .path
         let escapedMarker = Self.shellSingleQuoted(marker)
@@ -477,7 +477,7 @@ struct PathBuilderTests {
 
     @Test
     func `Codex launch preflight blocks app bundled executable symlink escaping the bundle`() throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let bundle = root.appendingPathComponent("ChatGPT.app")
         let resources = bundle.appendingPathComponent("Contents/Resources")
         let executable = resources.appendingPathComponent("codex")

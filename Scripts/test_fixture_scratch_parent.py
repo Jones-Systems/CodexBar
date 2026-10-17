@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Synthetic shell lifecycle proof; pass one existing caller-owned workspace parent.
+"""Synthetic fixture and runner lifecycle proof; pass one caller-owned workspace parent.
 
 No Swift semantics are tested. A minimal copied workspace and stub tools keep
 native compilation, packaging, and real account state outside this regression.
 """
 
-from contextlib import ExitStack
+from contextlib import ExitStack, contextmanager
 import os
+import importlib.util
 from pathlib import Path
 import shutil
 import signal
@@ -15,6 +16,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -23,6 +25,21 @@ IDENTITY = "test_jones_identity_overlay.sh"
 PROVIDER = "test_provider_session_file_isolation.sh"
 CODEX = "test_codex_file_isolation_child.sh"
 HELPER = Path(__file__).with_name("fixture_process_anchor.py")
+_synthetic_cleanup_safe = True
+
+
+@contextmanager
+def owned_regression_directory(parent):
+    owned = Path(tempfile.mkdtemp(prefix="fixture-parent-regression-", dir=parent))
+    try:
+        yield str(owned)
+    finally:
+        if _synthetic_cleanup_safe:
+            shutil.rmtree(owned)
+            if owned.exists():
+                raise RuntimeError(f"Regression cleanup failed: {owned}")
+        else:
+            print(f"Preserving regression evidence after unproved process cleanup: {owned}", file=sys.stderr)
 
 
 def signal_exit(signum, _frame):
@@ -140,6 +157,7 @@ def require_live_anchor(anchor):
 
 
 def collect_owned_process(command, env, owned, ready=None, cancel=None, timeout=20):
+    global _synthetic_cleanup_safe
     require_wait_ownership()
     deferred = []
     deferring = True
@@ -212,6 +230,7 @@ def collect_owned_process(command, env, owned, ready=None, cancel=None, timeout=
                     try:
                         cleanup_retained_group(process, anchor, control)
                     except BaseException as error:
+                        _synthetic_cleanup_safe = False
                         if not propagating:
                             raise
                         print(f"Synthetic process cleanup also failed: {error}", file=sys.stderr)
@@ -230,6 +249,133 @@ def executable(path, body):
     path.chmod(0o700)
 
 
+
+def runner_lifecycle_cases(owned, workspace, caller):
+    global _synthetic_cleanup_safe
+    runner_path = workspace / "Scripts/ci_swift_test_by_suite.py"
+    spec = importlib.util.spec_from_file_location("fixture_scratch_runner", runner_path)
+    runner = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = runner
+    spec.loader.exec_module(runner)
+    ready = owned / "runner-ready"
+    record = owned / "runner-parent"
+    child_pid = owned / "runner-child-pid"
+    fake = owned / "synthetic-swift.py"
+    fake.write_text("""import os, pathlib, sys, time
+parent = pathlib.Path(os.environ['CODEXBAR_TEST_SCRATCH_PARENT'])
+workspace = pathlib.Path(os.environ['CODEXBAR_TEST_WORKSPACE_ROOT'])
+assert workspace in parent.parents and parent.is_dir()
+pathlib.Path(os.environ['RUNNER_RECORD']).write_text(str(parent))
+pathlib.Path(os.environ['RUNNER_PID']).write_text(str(os.getpid()))
+(parent / 'runner-marker').write_text('synthetic fixture')
+mode = os.environ['RUNNER_MODE']
+args = sys.argv[1:]
+stage = 'discovery' if args == ['test', 'list'] else 'metadata' if args == ['build', '--show-bin-path'] else 'group'
+if mode == stage + '-cancel':
+    pathlib.Path(os.environ['RUNNER_READY']).touch()
+    time.sleep(12)
+    sys.exit(91)
+if mode == stage + '-failure':
+    sys.exit(37)
+if stage == 'discovery':
+    if mode.startswith('metadata-'):
+        print('Library not loaded: @rpath/Sparkle.framework/Versions/B/Sparkle', file=sys.stderr)
+        print('PackageFrameworks/Sparkle.framework', file=sys.stderr)
+        sys.exit(29)
+    print('CodexBarTests.Synthetic/test_fixture()')
+""")
+    count = 0
+    for supplied in (False, True):
+        for mode, expected, cancellation in (
+                ("success", 0, None), ("discovery-failure", 37, None), ("group-failure", 37, None),
+                ("metadata-failure", 29, None),
+                *((stage + "-cancel", 128 + sig, sig)
+                  for stage in ("discovery", "metadata", "group") for sig in CANCELLATION_SIGNALS)):
+            ready.unlink(missing_ok=True)
+            record.unlink(missing_ok=True)
+            child_pid.unlink(missing_ok=True)
+            env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": str(owned / "synthetic-home"),
+                   "RUNNER_RECORD": str(record), "RUNNER_READY": str(ready), "RUNNER_MODE": mode,
+                   "RUNNER_PID": str(child_pid),
+                   "PYTHONDONTWRITEBYTECODE": "1"}
+            if supplied:
+                env[KEY] = str(caller)
+            status, stdout, stderr = collect_owned_process(
+                [sys.executable, "-B", str(runner_path), "--no-retry-non-timeout-failures",
+                 "--swift-command", sys.executable, "--swift-command-arg=" + str(fake)],
+                env, owned, ready, cancellation)
+            if b"Preserving" in stderr or b"Cleanup also failed" in stderr:
+                _synthetic_cleanup_safe = False
+            if child_pid.exists():
+                observed = runner.test_process(int(child_pid.read_text()))
+                if observed is not None and not observed.zombie:
+                    _synthetic_cleanup_safe = False
+                    raise AssertionError("Synthetic runner child still present after runner exit; preserve evidence")
+            assert status == expected, (mode, status, stdout.decode(), stderr.decode())
+            actual_parent = Path(record.read_text())
+            if supplied:
+                assert actual_parent == caller and caller.is_dir()
+                assert (caller / "runner-marker").read_text() == "synthetic fixture"
+                (caller / "runner-marker").unlink()
+                assert (caller / "sibling").read_text() == "preserve sibling"
+            else:
+                if actual_parent.exists():
+                    _synthetic_cleanup_safe = False
+                assert actual_parent.parent == workspace and not actual_parent.exists()
+                assert b"removed and absence verified" in stdout
+            count += 1
+
+    for invalid in ("", ".", str(workspace), str(caller / "missing"), str(caller / "sibling"),
+                    str(workspace / "inside-link"), str(workspace / "outside-link")):
+        before = set(workspace.iterdir())
+        with patch.dict(os.environ, {KEY: invalid}, clear=True), patch.object(runner, "run_suites") as suites:
+            assert runner.main() == 1
+            suites.assert_not_called()
+        assert set(workspace.iterdir()) == before
+        count += 1
+
+    # No processes exist in these fault-injection cases. Preserve the parent when drain proof is absent.
+    for original_status in (0, 37):
+        captured = []
+        def unproved():
+            captured.append(Path(os.environ[KEY]))
+            runner._scratch_cleanup_safe = False
+            return original_status
+        with patch.dict(os.environ, {}, clear=True), patch.object(runner, "run_suites", unproved):
+            assert runner.main() == (original_status or 1)
+        assert captured[0].is_dir()
+        shutil.rmtree(captured[0])
+        count += 1
+
+    # Cleanup failure must not replace an original command failure or turn success into a pass.
+    for original_status in (0, 37):
+        captured = []
+        def complete():
+            captured.append(Path(os.environ[KEY]))
+            return original_status
+        with patch.dict(os.environ, {}, clear=True), patch.object(runner, "run_suites", complete), \
+                patch.object(runner.shutil, "rmtree", side_effect=OSError("synthetic cleanup failure")):
+            assert runner.main() == (original_status or 1)
+        assert captured[0].is_dir()
+        shutil.rmtree(captured[0])
+        count += 1
+
+    with patch.dict(os.environ, {}, clear=True):
+        runner._scratch_cleanup_safe = True
+        first = runner.FixtureScratchParent()
+        second = runner.FixtureScratchParent()
+        first.prepare()
+        os.environ.pop(KEY)
+        second.prepare()
+        assert first.path != second.path
+        first.cleanup()
+        assert not first.path.exists() and second.path.is_dir()
+        second.cleanup()
+        assert not second.path.exists()
+        count += 1
+    return count
+
+
 def main():
     if len(sys.argv) != 2:
         sys.exit("Usage: python3 Scripts/test_fixture_scratch_parent.py OWNED_WORKSPACE_PARENT")
@@ -242,12 +388,13 @@ def main():
     baseline = subprocess.check_output([
         "git", "-C", str(ROOT), "show",
         "0f842d7f26edcd1a1fff886409291ef9b4f846b6:Scripts/package_app.sh"], text=True)
-    with tempfile.TemporaryDirectory(prefix="fixture-parent-regression-", dir=parent) as name:
+    with owned_regression_directory(parent) as name:
         owned = Path(name)
         workspace = owned / "workspace"
         workspace.mkdir()
         for relative in (
                 f"Scripts/{IDENTITY}", f"Scripts/{PROVIDER}", f"Scripts/{CODEX}", "Scripts/package_app.sh",
+                "Scripts/ci_swift_test_by_suite.py", "Scripts/test.sh",
                 "Scripts/sign-and-notarize.sh", ".mac-release.jones.env.example",
                 "WidgetExtension/Info.plist",
                 "WidgetExtension/CodexBarWidgetExtension.xcodeproj/project.pbxproj"):
@@ -259,6 +406,7 @@ def main():
                 "Sources/CodexBarCore/ProviderSessionStoreFile.swift",
                 "Sources/CodexBarCore/KeychainSecurity.swift",
                 "Sources/CodexBarCore/TestProcessSafety.swift",
+                "Sources/CodexBarCore/TestFixtureScratch.swift",
                 "Sources/CodexBarCore/CodexCredentialFileAccess.swift",
                 "Sources/CodexBarCore/CodexPriorityDatabasePath.swift",
                 "Sources/CodexBarCore/CodexHomeScope.swift",
@@ -313,7 +461,7 @@ assert '-O' in args and '-parse-as-library' in args
 assert args.count('-package-name') == 1 and args[args.index('-package-name') + 1] == 'CodexBar'
 sources = [pathlib.Path(arg) for arg in args if arg.endswith('.swift')]
 assert all(path.is_file() for path in sources)
-expected = {'KeychainSecurity.swift', 'TestProcessSafety.swift'}
+expected = {'KeychainSecurity.swift', 'TestProcessSafety.swift', 'TestFixtureScratch.swift'}
 if os.environ['FIXTURE_SCRIPT'] == 'test_codex_file_isolation_child.sh':
     expected |= {'CodexCredentialFileAccess.swift', 'CodexPriorityDatabasePath.swift', 'CodexHomeScope.swift', 'Proof.swift'}
 else:
@@ -340,6 +488,7 @@ output.chmod(0o700)
             assert set(outside.iterdir()) == {outside / "sentinel"}
             assert not list(workspace.glob(".jones-identity-fixture-*")), "default identity root leaked"
             assert not list(workspace.glob(".provider-session-child.*")), "default provider root leaked"
+            assert not list(workspace.glob(".codex-file-child.*")), "default Codex root leaked"
 
         def run(script, override, mode="success", expected=0, cancel=None):
             for path in (record, ready):
@@ -359,7 +508,7 @@ output.chmod(0o700)
                 assert b"30 checks passed" in stdout
             if record.exists():
                 proof = Path(record.read_text())
-                expected_parent = outside if script == CODEX else (workspace if override is None else Path(override))
+                expected_parent = workspace if override is None else Path(override)
                 assert proof.parent == expected_parent
                 assert not proof.exists(), "owned provider child leaked"
             if override is not None and expected == 1 and mode == "success":
@@ -375,7 +524,7 @@ output.chmod(0o700)
             str(workspace / ".." / "outside"),
         )
         count = 0
-        for script in (IDENTITY, PROVIDER):
+        for script in (IDENTITY, PROVIDER, CODEX):
             for value in invalid:
                 run(script, value, expected=1)
                 count += 1
@@ -390,12 +539,7 @@ output.chmod(0o700)
                 for sig in (signal.SIGHUP, signal.SIGINT, signal.SIGTERM):
                     run(script, override, "cancel", 128 + sig, sig)
                     count += 1
-        for mode, status in (("success", 0), ("compile-failure", 37), ("child-failure", 41)):
-            run(CODEX, None, mode, status)
-            count += 1
-        for sig in CANCELLATION_SIGNALS:
-            run(CODEX, None, "cancel", 128 + sig, sig)
-            count += 1
+        count += runner_lifecycle_cases(owned, workspace, caller)
         print(f"Fixture scratch parent: {count} synthetic lifecycle cases passed; no native Swift proof")
     assert not owned.exists(), "regression root leaked"
     assert parent.is_dir(), "caller parent removed"

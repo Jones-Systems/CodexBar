@@ -1,7 +1,7 @@
 import Foundation
 
 enum CodexPriorityDatabasePath {
-    private static let testDirectory = FileManager.default.temporaryDirectory
+    private static let testDirectory = TestFixtureScratch.root
         .appendingPathComponent("codexbar-cost-trace-tests-\(UUID().uuidString)", isDirectory: true)
 
     static func defaultURL(

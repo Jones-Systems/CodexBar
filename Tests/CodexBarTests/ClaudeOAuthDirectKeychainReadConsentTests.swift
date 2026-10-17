@@ -233,7 +233,7 @@ struct ClaudeOAuthDirectKeychainReadConsentTests {
         let service = "com.steipete.codexbar.cache.consent-tests.\(UUID().uuidString)"
         let pendingStore = ClaudeOAuthCredentialsStore.PendingCacheClearMemoryStore()
         let revocationStore = ClaudeOAuthCredentialsStore.DirectKeychainReadConsentRevocationMarkerStore()
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-consent-profiles-\(UUID().uuidString)", isDirectory: true)
         let environmentA = ["CLAUDE_CONFIG_DIR": root.appendingPathComponent("a").path]
         let environmentB = ["CLAUDE_CONFIG_DIR": root.appendingPathComponent("b").path]

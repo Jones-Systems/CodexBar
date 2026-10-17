@@ -282,7 +282,7 @@ struct AntigravityWarmAgyReuseTests {
 
     @Test
     func `warm reuse matches a selected symlink to the kernel executable path`() async throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("agy-identity-\(UUID())")
+        let root = TestFixtureScratch.root.appendingPathComponent("agy-identity-\(UUID())")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let executable = root.appendingPathComponent("actual agy")

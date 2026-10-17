@@ -1,3 +1,4 @@
+import CodexBarCore
 import Foundation
 import Testing
 @testable import CodexBar
@@ -80,7 +81,7 @@ struct ClaudeLoginRunnerTests {
     }
 
     private func makeFixture(script: String) throws -> Fixture {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-claude-login-\(UUID().uuidString)", isDirectory: true)
         let binDirectory = root.appendingPathComponent("bin", isDirectory: true)
         let homeDirectory = root.appendingPathComponent("home", isDirectory: true)

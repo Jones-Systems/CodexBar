@@ -77,7 +77,7 @@ struct ClaudeWebRecoveryMenuTests {
         showSingleSwapAccount: Bool = false,
         attempts: [ProviderFetchAttempt] = []) -> [(String, MenuDescriptor.MenuAction)]
     {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("ClaudeWebRecoveryMenuTests-\(UUID().uuidString)", isDirectory: true)
         let settings = self.makeSettings(root: root)
         defer {

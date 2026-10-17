@@ -121,15 +121,14 @@ struct CodexFleetProfileDiscoveryTests {
     @Test
     func `secure reader rejects unsafe metadata fixtures without following symlinks`() throws {
         let manager = FileManager.default
-        let fixture = manager.temporaryDirectory
+        let fixture = TestFixtureScratch.root
             .appendingPathComponent("CodexFleetProfileDiscoveryTests-" + UUID().uuidString, isDirectory: true)
         try manager.createDirectory(
             at: fixture, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
         defer {
             do { try manager.removeItem(at: fixture) } catch { Issue.record(error, "Fixture cleanup failed") }
         }
-        // Foundation's resolver may strip /private on macOS, reintroducing a symlinked ancestor.
-        // Resolve only our existing fixture with POSIX realpath; never normalize the reader's input.
+        // Bind the existing fixture to its POSIX physical path; never normalize the reader's input.
         let physicalPath = try #require(realpath(fixture.path, nil), "Fixture realpath failed: errno=\(errno)")
         defer { free(physicalPath) }
         let root = URL(fileURLWithPath: String(cString: physicalPath), isDirectory: true)

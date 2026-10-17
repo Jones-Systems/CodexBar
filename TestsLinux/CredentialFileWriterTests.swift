@@ -8,7 +8,7 @@ import Testing
 /// the Linux CI test jobs and under `swift test --parallel` without racing other suites.
 struct CredentialFileWriterTests {
     private func makeTempDir() throws -> URL {
-        let dir = FileManager.default.temporaryDirectory
+        let dir = TestFixtureScratch.root
             .appendingPathComponent("rk-cfw-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir

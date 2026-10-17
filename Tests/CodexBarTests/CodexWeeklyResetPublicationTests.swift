@@ -57,7 +57,7 @@ extension CodexAccountScopedRefreshTests {
                 capturedAt: now.addingTimeInterval(-50),
                 expiresAt: creditExpiry),
             dataConfidence: .exact)
-        let snapshotURL = FileManager.default.temporaryDirectory
+        let snapshotURL = TestFixtureScratch.root
             .appendingPathComponent("codex-weekly-delayed-\(UUID().uuidString).json")
         defer { try? FileManager.default.removeItem(at: snapshotURL) }
         let snapshotStore = FileCodexAccountUsageSnapshotStore(fileURL: snapshotURL)
@@ -182,7 +182,7 @@ extension CodexAccountScopedRefreshTests {
             firstObservedAt: stalled.updatedAt,
             createdAt: now.addingTimeInterval(-1801),
             snapshot: stalled)
-        let snapshotURL = FileManager.default.temporaryDirectory
+        let snapshotURL = TestFixtureScratch.root
             .appendingPathComponent("codex-weekly-expired-\(UUID().uuidString).json")
         defer { try? FileManager.default.removeItem(at: snapshotURL) }
         let snapshotStore = FileCodexAccountUsageSnapshotStore(fileURL: snapshotURL)
@@ -323,7 +323,7 @@ extension CodexAccountScopedRefreshTests {
             weeklyUsedPercent: 68,
             weeklyReset: priorBoundary,
             updatedAt: now.addingTimeInterval(-20))
-        let snapshotURL = FileManager.default.temporaryDirectory
+        let snapshotURL = TestFixtureScratch.root
             .appendingPathComponent("codex-weekly-round-trip-\(UUID().uuidString).json")
         defer { try? FileManager.default.removeItem(at: snapshotURL) }
         let snapshotStore = FileCodexAccountUsageSnapshotStore(fileURL: snapshotURL)

@@ -6,7 +6,7 @@ import Testing
 struct AntigravityCLIStrategyLinuxTests {
     @Test
     func `cli local strategy is available with HTTP fallback`() async throws {
-        let binaryURL = FileManager.default.temporaryDirectory
+        let binaryURL = TestFixtureScratch.root
             .appendingPathComponent("codexbar-antigravity-\(UUID().uuidString)")
         try FakeExecutable.install("#!/bin/sh\n", at: binaryURL)
         defer { try? FileManager.default.removeItem(at: binaryURL) }

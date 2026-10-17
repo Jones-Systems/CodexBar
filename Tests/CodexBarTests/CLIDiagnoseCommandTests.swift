@@ -18,7 +18,7 @@ struct CLIDiagnoseCommandTests {
 
     @Test
     func `diagnose output writer creates parent directories`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("CodexBarDiagnoseTests-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: root) }
 

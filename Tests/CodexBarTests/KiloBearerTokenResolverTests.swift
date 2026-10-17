@@ -4,7 +4,7 @@ import Testing
 
 struct KiloBearerTokenResolverTests {
     private func writeAuthFile(_ json: String) throws -> URL {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("kilo-resolver-tests-\(UUID().uuidString)", isDirectory: true)
         let kiloDir = directory
             .appendingPathComponent(".local", isDirectory: true)
@@ -61,7 +61,7 @@ struct KiloBearerTokenResolverTests {
 
     @Test
     func `cli mode throws cliSessionMissing when auth.json missing`() {
-        let nonexistentHome = FileManager.default.temporaryDirectory
+        let nonexistentHome = TestFixtureScratch.root
             .appendingPathComponent("kilo-no-such-home-\(UUID().uuidString)", isDirectory: true)
         #expect(throws: (any Error).self) {
             try KiloBearerTokenResolver.resolve(
@@ -112,7 +112,7 @@ struct KiloBearerTokenResolverTests {
 
     @Test
     func `auto mode surfaces CLI error when neither path available`() {
-        let nonexistentHome = FileManager.default.temporaryDirectory
+        let nonexistentHome = TestFixtureScratch.root
             .appendingPathComponent("kilo-no-such-home-\(UUID().uuidString)", isDirectory: true)
         #expect(throws: (any Error).self) {
             try KiloBearerTokenResolver.resolve(

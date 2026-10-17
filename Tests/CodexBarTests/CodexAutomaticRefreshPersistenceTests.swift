@@ -19,7 +19,7 @@ extension CodexAccountScopedRefreshTests {
             identity: .providerAccount(id: "acct-automatic-refresh"))
         defer { settings._test_liveSystemCodexAccount = nil }
 
-        let snapshotURL = FileManager.default.temporaryDirectory
+        let snapshotURL = TestFixtureScratch.root
             .appendingPathComponent("codex-automatic-refresh-\(UUID().uuidString).json")
         defer { try? FileManager.default.removeItem(at: snapshotURL) }
         let snapshotStore = FileCodexAccountUsageSnapshotStore(fileURL: snapshotURL)

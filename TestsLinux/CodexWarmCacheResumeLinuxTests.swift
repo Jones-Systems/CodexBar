@@ -17,7 +17,7 @@ struct CodexWarmCacheResumeLinuxTests {
         let codexSessionsRoot: URL
 
         init() throws {
-            self.root = FileManager.default.temporaryDirectory
+            self.root = TestFixtureScratch.root
                 .appendingPathComponent("codexbar-warm-resume-\(UUID().uuidString)", isDirectory: true)
             self.cacheRoot = self.root.appendingPathComponent("cache", isDirectory: true)
             self.codexSessionsRoot = self.root.appendingPathComponent("sessions", isDirectory: true)

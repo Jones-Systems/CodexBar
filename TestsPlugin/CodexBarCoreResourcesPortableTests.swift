@@ -5,7 +5,7 @@ import Testing
 struct CodexBarCoreResourcesPortableTests {
     @Test(arguments: ["bundle", "resources"])
     func `direct and symlink executables resolve the same adjacent resources`(pathExtension: String) throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("CodexBarCoreResourcesPortableTests-\(UUID().uuidString)")
         let physicalDirectory = root.appendingPathComponent("physical", isDirectory: true)
         let symlinkDirectory = root.appendingPathComponent("links", isDirectory: true)

@@ -25,7 +25,7 @@ struct ShellCommandLocatorProcessTests {
 
     @Test
     func `shell runner terminates session escaped partial output holders after timeout`() throws {
-        let pidFile = FileManager.default.temporaryDirectory
+        let pidFile = TestFixtureScratch.root
             .appendingPathComponent("codexbar-shell-runner-timeout-\(UUID().uuidString)")
             .path
         let stdoutPIDFile = "\(pidFile).stdout"

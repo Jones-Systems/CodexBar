@@ -200,13 +200,13 @@ extension KiroStatusProbeTests {
     }
 
     private static func temporaryMarker(_ name: String, pathExtension: String = "started") -> URL {
-        FileManager.default.temporaryDirectory
+        TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-\(name)-\(UUID().uuidString)")
             .appendingPathExtension(pathExtension)
     }
 
     private func makeTTYCLI(_ script: String) throws -> URL {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-tty-\(UUID().uuidString)", isDirectory: true)
         let cliURL = root.appendingPathComponent("kiro-cli")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

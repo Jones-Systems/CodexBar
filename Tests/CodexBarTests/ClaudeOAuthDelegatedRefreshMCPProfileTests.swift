@@ -19,7 +19,7 @@ private final class ClaudeDelegatedProfileTouchCounter: @unchecked Sendable {
 struct ClaudeOAuthDelegatedRefreshMCPProfileTests {
     @Test
     func `selected profile file and refresh observation use the same native service`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let profile = root.appendingPathComponent("selected-profile", isDirectory: true)
         try FileManager.default.createDirectory(at: profile, withIntermediateDirectories: true)

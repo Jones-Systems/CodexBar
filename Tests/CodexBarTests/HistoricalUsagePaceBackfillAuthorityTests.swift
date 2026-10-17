@@ -199,7 +199,7 @@ extension HistoricalUsagePaceTests {
         let store = try Self.makeUsageStoreForBackfillTests(
             suite: "HistoricalUsagePaceTests-backfill-attached-email",
             historyFileURL: Self.makeTempURL())
-        let isolatedHome = FileManager.default.temporaryDirectory
+        let isolatedHome = TestFixtureScratch.root
             .appendingPathComponent("codex-historical-attached-email-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: isolatedHome, withIntermediateDirectories: true)
         store.settings._test_liveSystemCodexAccount = nil

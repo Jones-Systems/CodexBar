@@ -19,7 +19,7 @@ struct ClaudeCLIAuthStatusProbeTests {
 
     @Test
     func `auth status uses the Claude owner working directory for relative profiles`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("ClaudeCLIAuthStatusProbe-\(UUID().uuidString)", isDirectory: true)
         let workingDirectory = root.appendingPathComponent("probe", isDirectory: true)
         let profile = workingDirectory.appendingPathComponent("relative-profile", isDirectory: true)
@@ -53,7 +53,7 @@ struct ClaudeCLIAuthStatusProbeTests {
 
     @Test
     func `nonzero logged out status remains definitive`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("ClaudeCLIAuthStatusProbe-\(UUID().uuidString)", isDirectory: true)
         let binary = root.appendingPathComponent("claude")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

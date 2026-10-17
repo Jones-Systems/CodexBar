@@ -362,7 +362,7 @@ extension CodexAccountScopedRefreshTests {
             dataConfidence: .exact)
         let credits = CreditsSnapshot(remaining: 17, events: [], updatedAt: prior.updatedAt)
         let error = "Network error: The Internet connection appears to be offline."
-        let snapshotURL = FileManager.default.temporaryDirectory.appendingPathComponent("\(suite).json")
+        let snapshotURL = TestFixtureScratch.root.appendingPathComponent("\(suite).json")
         defer { try? FileManager.default.removeItem(at: snapshotURL) }
         let snapshotStore = FileCodexAccountUsageSnapshotStore(fileURL: snapshotURL)
         let accounts = settings.codexVisibleAccountProjection.visibleAccounts

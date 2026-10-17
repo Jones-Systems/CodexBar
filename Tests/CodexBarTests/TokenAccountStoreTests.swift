@@ -28,7 +28,7 @@ func `ProviderTokenAccountData encoding`() throws {
 
 @Test
 func `FileTokenAccountStore round trip`() throws {
-    let tempDir = FileManager.default.temporaryDirectory
+    let tempDir = TestFixtureScratch.root
     let fileURL = tempDir.appendingPathComponent("codexbar-token-accounts-test.json")
     defer { try? FileManager.default.removeItem(at: fileURL) }
 

@@ -24,7 +24,7 @@ extension HistoricalUsagePaceTests {
     }
 
     static func makeTempURL() -> URL {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-historical-tests", isDirectory: true)
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         return root.appendingPathComponent("usage-history.jsonl", isDirectory: false)

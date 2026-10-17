@@ -11,7 +11,7 @@ struct ClaudeCLISessionTests {
 
     @Test
     func `Claude session scope changes with account and config root and fails closed without identity`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-claude-scope-\(UUID().uuidString)", isDirectory: true)
         let firstRoot = root.appendingPathComponent("first", isDirectory: true)
         let secondRoot = root.appendingPathComponent("second", isDirectory: true)
@@ -55,7 +55,7 @@ struct ClaudeCLISessionTests {
 
     @Test(arguments: [0.0, 0.5])
     func `profile environment launches and identifies the reusable session`(responseDelay: TimeInterval) async throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("codexbar-claude-environment-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -125,7 +125,7 @@ struct ClaudeCLISessionTests {
 
     @Test
     func `overlapping profile captures serialize PTY ownership`() async throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("codexbar-claude-overlap-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -194,7 +194,7 @@ struct ClaudeCLISessionTests {
 
     @Test
     func `probe launch reuses one persisted session identifier`() throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("codexbar-claude-session-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: directory) }
 
@@ -222,7 +222,7 @@ struct ClaudeCLISessionTests {
 
     @Test
     func `invalid persisted probe session identifier is replaced`() throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("codexbar-claude-session-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }

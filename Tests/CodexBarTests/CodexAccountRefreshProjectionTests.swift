@@ -182,7 +182,7 @@ extension CodexAccountScopedRefreshTests {
             updatedAt: 2,
             lastAuthenticatedAt: 2)
         let storeURL = try self.makeManagedAccountStoreURL(accounts: [managedAccount])
-        let snapshotURL = FileManager.default.temporaryDirectory
+        let snapshotURL = TestFixtureScratch.root
             .appendingPathComponent("codex-visible-managed-startup-\(UUID().uuidString).json")
         defer {
             settings._test_managedCodexAccountStoreURL = nil
@@ -244,7 +244,7 @@ extension CodexAccountScopedRefreshTests {
 
     @Test
     func `snapshot hydration never crosses members of the same provider workspace`() {
-        let snapshotURL = FileManager.default.temporaryDirectory
+        let snapshotURL = TestFixtureScratch.root
             .appendingPathComponent("codex-provider-member-isolation-\(UUID().uuidString).json")
         defer { try? FileManager.default.removeItem(at: snapshotURL) }
 

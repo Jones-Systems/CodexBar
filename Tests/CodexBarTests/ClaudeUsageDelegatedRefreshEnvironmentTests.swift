@@ -105,7 +105,7 @@ struct ClaudeUsageDelegatedRefreshEnvironmentTests {
     @Test
     func `oauth rejection invalidates only the fetcher profile`() async throws {
         let service = "com.steipete.codexbar.cache.environment-tests.\(UUID().uuidString)"
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let environmentA = ["CLAUDE_CONFIG_DIR": root.appendingPathComponent("profile-a").path]
         let environmentB = ["CLAUDE_CONFIG_DIR": root.appendingPathComponent("profile-b").path]
         let credentials = try ClaudeOAuthCredentials.parse(data: self.credentialsData(accessToken: "request-token"))
@@ -156,7 +156,7 @@ struct ClaudeUsageDelegatedRefreshEnvironmentTests {
     @Test
     func `delegated recovery syncs only the fetcher profile`() async throws {
         let service = "com.steipete.codexbar.cache.environment-tests.\(UUID().uuidString)"
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let environmentA = ["CLAUDE_CONFIG_DIR": root.appendingPathComponent("profile-a").path]
         let environmentB = ["CLAUDE_CONFIG_DIR": root.appendingPathComponent("profile-b").path]
         let syncedData = self.credentialsData(accessToken: "synced-profile-a-token")

@@ -183,7 +183,7 @@ struct ClaudeConfigPathsTests {
     }
 
     private static func makeTemporaryDirectory() throws -> URL {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("codexbar-claude-paths-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         return directory

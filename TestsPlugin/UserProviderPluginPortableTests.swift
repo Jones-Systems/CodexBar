@@ -59,7 +59,7 @@ struct UserProviderPluginPortableTests {
 
     @Test
     func `TypeScript user plugin loads and fetches portably`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-plugin-portable-\(UUID().uuidString)")
         let providers = root.appendingPathComponent("providers")
         let cache = root.appendingPathComponent("cache")

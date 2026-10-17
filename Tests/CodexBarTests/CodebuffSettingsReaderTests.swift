@@ -70,7 +70,7 @@ struct CodebuffSettingsReaderTests {
 
     @Test
     func `auth token returns nil when file missing`() {
-        let url = FileManager.default.temporaryDirectory
+        let url = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
             .appendingPathComponent("credentials.json", isDirectory: false)
         #expect(CodebuffSettingsReader.authToken(authFileURL: url) == nil)
@@ -100,7 +100,7 @@ struct CodebuffSettingsReaderTests {
     // MARK: - Helpers
 
     private func writeTempFile(named name: String, contents: String) throws -> URL {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let fileURL = directory.appendingPathComponent(name, isDirectory: false)

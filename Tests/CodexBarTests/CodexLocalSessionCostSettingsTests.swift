@@ -91,7 +91,7 @@ struct CodexLocalSessionCostSettingsTests {
 
     private func makeSettingsFixture(suite: String) throws -> Fixture {
         let settings = testSettingsStore(suiteName: suite)
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         settings._test_managedCodexAccountStoreURL = root.appendingPathComponent("accounts.json")
         let environment = ["HOME": root.path, "CODEX_HOME": root.appendingPathComponent("codex").path]
         let store = UsageStore(

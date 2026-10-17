@@ -1,3 +1,4 @@
+import CodexBarCore
 import Darwin
 import Foundation
 import Testing
@@ -6,7 +7,7 @@ import Testing
 struct CodexLoginRunnerTests {
     @Test
     func `cancelling login terminates the owned process and returns cancelled`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-login-cancel-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -51,7 +52,7 @@ struct CodexLoginRunnerTests {
 
     @Test
     func `login runner returns timeout before hung codex exits`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-login-runner-\(UUID().uuidString)", isDirectory: true)
         let binDir = root.appendingPathComponent("bin", isDirectory: true)
         let homeDir = root.appendingPathComponent("home", isDirectory: true)
@@ -86,7 +87,7 @@ struct CodexLoginRunnerTests {
 
     @Test
     func `login runner bounds output drain when detached child keeps pipes open`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-login-drain-\(UUID().uuidString)", isDirectory: true)
         let binDir = root.appendingPathComponent("bin", isDirectory: true)
         let homeDir = root.appendingPathComponent("home", isDirectory: true)

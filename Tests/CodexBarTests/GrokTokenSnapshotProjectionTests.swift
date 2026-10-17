@@ -7,7 +7,7 @@ import Testing
 struct GrokTokenSnapshotProjectionTests {
     @Test
     func `menu projections reuse published grok session data after the session tree disappears`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("grok-menu-session-tree-\(UUID().uuidString)", isDirectory: true)
         let sessions = root.appendingPathComponent("sessions/%2Ftmp%2Frealistic", isDirectory: true)
         let now = Date()

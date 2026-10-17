@@ -334,7 +334,7 @@ struct ClaudeCLITimeoutRetryTests {
     }
 
     private func withNoOAuthCredentials<T>(operation: () async throws -> T) async rethrows -> T {
-        let missingCredentialsURL = FileManager.default.temporaryDirectory
+        let missingCredentialsURL = TestFixtureScratch.root
             .appendingPathComponent("missing-claude-creds-\(UUID().uuidString).json")
         return try await KeychainCacheStore.withServiceOverrideForTesting("rat-107-\(UUID().uuidString)") {
             KeychainCacheStore.setTestStoreForTesting(true)
@@ -374,7 +374,7 @@ struct ClaudeCLITimeoutRetryTests {
     }
 
     private static func makeLoggedInClaudeCLI() throws -> URL {
-        let executable = FileManager.default.temporaryDirectory
+        let executable = TestFixtureScratch.root
             .appendingPathComponent("claude-auth-status-\(UUID().uuidString)")
         try Data("""
         #!/bin/sh

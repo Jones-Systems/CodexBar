@@ -41,7 +41,7 @@ struct ClaudeOAuthDelegatedRefreshUnreadableResultTests {
     }
 
     private func makeTemporaryDirectory() throws -> URL {
-        let root = URL(fileURLWithPath: NSTemporaryDirectory())
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-unreadable-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         return root

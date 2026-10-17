@@ -202,7 +202,7 @@ struct CodexAccountReconciliationTests {
     func `managed account changes invalidate short lived reconciliation snapshot`() throws {
         let suite = "CodexAccountReconciliationTests-managed-change-cache-invalidation"
         let settings = try Self.makeSettings(suite: suite)
-        let storeURL = FileManager.default.temporaryDirectory
+        let storeURL = TestFixtureScratch.root
             .appendingPathComponent("codex-managed-store-\(UUID().uuidString).json")
         try Self.writeManagedCodexStore(
             ManagedCodexAccountSet(version: FileManagedCodexAccountStore.currentVersion, accounts: []),
@@ -273,7 +273,7 @@ struct CodexAccountReconciliationTests {
         let accounts = ManagedCodexAccountSet(
             version: FileManagedCodexAccountStore.currentVersion,
             accounts: [ambient])
-        let storeURL = FileManager.default.temporaryDirectory
+        let storeURL = TestFixtureScratch.root
             .appendingPathComponent("codex-managed-store-\(UUID().uuidString).json")
         try Self.writeManagedCodexStore(accounts, to: storeURL)
 
@@ -323,7 +323,7 @@ struct CodexAccountReconciliationTests {
         let accounts = ManagedCodexAccountSet(
             version: FileManagedCodexAccountStore.currentVersion,
             accounts: [stored])
-        let storeURL = FileManager.default.temporaryDirectory
+        let storeURL = TestFixtureScratch.root
             .appendingPathComponent("codex-managed-store-\(UUID().uuidString).json")
         try Self.writeManagedCodexStore(accounts, to: storeURL)
 
@@ -866,7 +866,7 @@ struct CodexAccountReconciliationTests {
         let managedHome = CodexCredentialFixtures.root.appendingPathComponent(
             UUID().uuidString,
             isDirectory: true)
-        let storeURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let storeURL = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         defer {
             settings._test_managedCodexAccountStoreURL = nil
             settings._test_liveSystemCodexAccount = nil

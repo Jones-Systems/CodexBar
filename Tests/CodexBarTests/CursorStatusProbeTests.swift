@@ -701,7 +701,7 @@ func makeCursorStatusProbeResponse(
 extension CursorStatusProbeTests {
     @Test
     func `app auth store reads Cursor global state database`() throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("cursor-app-auth-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -723,7 +723,7 @@ extension CursorStatusProbeTests {
 
     @Test
     func `app auth store reads idle WAL database without creating sidecars`() throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("cursor-app-auth-wal-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }

@@ -109,7 +109,7 @@ struct CodexNativeJWTExpiryTests {
 
     @Test(arguments: [nil, "2000-01-01T00:00:00Z", "2100-01-01T00:00:00Z"], ["0", "4102444800"])
     func `legacy token expiry never overrides its timestamp`(_ lastRefresh: String?, _ expiration: String) throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
         let directory = root.appendingPathComponent(".config/codex")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

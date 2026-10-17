@@ -20,6 +20,9 @@ struct ProviderSessionFileProof {
                 child.environment = mode == "isolated" ? [
                     ProviderSessionStoreFile.isolationEnvironmentKey: "1",
                     "CODEXBAR_ALLOW_TEST_KEYCHAIN_ACCESS": "1",
+                    TestFixtureScratch.parentEnvironmentKey: TestFixtureScratch.root.path,
+                    TestFixtureScratch.workspaceEnvironmentKey: ProcessInfo.processInfo.environment[
+                        TestFixtureScratch.workspaceEnvironmentKey]!,
                 ] : [:]
                 try child.run()
                 child.waitUntilExit()

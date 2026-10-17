@@ -108,7 +108,7 @@ final class CLIEntryTests: XCTestCase {
     }
 
     func test_dashboardCommandPrintsOneSnapshotAndExits() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-dashboard-command-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -137,7 +137,7 @@ final class CLIEntryTests: XCTestCase {
     }
 
     func test_dashboardOutputWritesSnapshotFileAndKeepsStdoutSilent() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-dashboard-output-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -185,7 +185,7 @@ final class CLIEntryTests: XCTestCase {
     }
 
     func test_dashboardAtomicWriteFailsWhenDirectoryIsMissing() {
-        let missing = FileManager.default.temporaryDirectory
+        let missing = TestFixtureScratch.root
             .appendingPathComponent("codexbar-missing-\(UUID().uuidString)", isDirectory: true)
             .appendingPathComponent("snapshot.json")
 
@@ -197,7 +197,7 @@ final class CLIEntryTests: XCTestCase {
     }
 
     func test_dashboardAtomicWriteReplacesExistingFile() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-atomic-write-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -242,7 +242,7 @@ final class CLIEntryTests: XCTestCase {
     }
 
     func test_cliVersionFallsBackToContainingAppBundle() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-cli-version-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -263,7 +263,7 @@ final class CLIEntryTests: XCTestCase {
     }
 
     func test_containingAppVersionTerminatesOutsideAppBundle() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-cli-version-noapp-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -296,7 +296,7 @@ final class CLIEntryTests: XCTestCase {
     }
 
     func test_cliVersionFollowsSymlinkedHelper() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-cli-version-symlink-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -328,7 +328,7 @@ final class CLIEntryTests: XCTestCase {
     }
 
     func test_cliVersionFindsAdjacentVersionWhenInvokedViaRelativePathAndSymlink() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-cli-version-invocation-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -368,7 +368,7 @@ final class CLIEntryTests: XCTestCase {
     }
 
     func test_cliVersionPrefersAdjacentVersionOverStandaloneBundleName() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-cli-version-bundle-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -388,7 +388,7 @@ final class CLIEntryTests: XCTestCase {
     }
 
     private func expectAdjacentVersionFile(raw: String, expected: String) throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-cli-version-file-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -627,7 +627,7 @@ final class CLIEntryTests: XCTestCase {
     }
 
     func test_sourceModeRequiresWebSupportIsProviderAware() throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("mimo-cli-source-mode-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }

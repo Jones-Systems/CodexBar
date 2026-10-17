@@ -64,7 +64,7 @@ struct CursorAccountSwitchBrowserScanTests {
 
     @Test
     func `interactive browser support requires a readable cookie source`() throws {
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let applicationURL = temp.appendingPathComponent("Firefox.app", isDirectory: true)
         let contentsURL = applicationURL.appendingPathComponent("Contents", isDirectory: true)
         try FileManager.default.createDirectory(at: contentsURL, withIntermediateDirectories: true)
@@ -109,7 +109,7 @@ struct CursorAccountSwitchBrowserScanTests {
 
     @Test
     func `interactive browser support accepts a renamed installed application`() throws {
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let applicationURL = try Self.makeBrowserApplication(
             in: temp,
             name: "Work Browser",
@@ -163,7 +163,7 @@ struct CursorAccountSwitchBrowserScanTests {
 
     @Test
     func `interactive Safari support accepts any existing readable source`() throws {
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let applicationURL = try Self.makeBrowserApplication(
             in: temp,
             name: "Safari",
@@ -189,7 +189,7 @@ struct CursorAccountSwitchBrowserScanTests {
 
     @Test
     func `interactive Safari support rejects missing and denied sources while imports remain eligible`() throws {
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let applicationURL = try Self.makeBrowserApplication(
             in: temp,
             name: "Safari",
@@ -231,7 +231,7 @@ struct CursorAccountSwitchBrowserScanTests {
 
     @Test
     func `interactive scan refreshes a cookie store created after browser launch`() async throws {
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let applicationURL = try Self.makeBrowserApplication(
             in: temp,
             name: "Firefox",

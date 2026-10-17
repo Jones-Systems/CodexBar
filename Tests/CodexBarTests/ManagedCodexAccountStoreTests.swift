@@ -5,7 +5,7 @@ import Testing
 
 @Test
 func `FileManagedCodexAccountStore round trip`() throws {
-    let tempDir = FileManager.default.temporaryDirectory
+    let tempDir = TestFixtureScratch.root
     let fileURL = tempDir.appendingPathComponent("codexbar-managed-codex-accounts-test.json")
     defer { try? FileManager.default.removeItem(at: fileURL) }
 
@@ -54,7 +54,7 @@ func `FileManagedCodexAccountStore round trip`() throws {
 
 @Test
 func `FileManagedCodexAccountStore missing file loads empty set`() throws {
-    let tempDir = FileManager.default.temporaryDirectory
+    let tempDir = TestFixtureScratch.root
     let fileURL = tempDir.appendingPathComponent("codexbar-managed-codex-accounts-nil-active-test.json")
     defer { try? FileManager.default.removeItem(at: fileURL) }
     try? FileManager.default.removeItem(at: fileURL)
@@ -86,7 +86,7 @@ func `FileManagedCodexAccountStore missing file loads empty set`() throws {
 
 @Test
 func `FileManagedCodexAccountStore canonicalizes decoded emails`() throws {
-    let tempDir = FileManager.default.temporaryDirectory
+    let tempDir = TestFixtureScratch.root
     let fileURL = tempDir.appendingPathComponent("codexbar-managed-codex-accounts-decode-test.json")
     defer { try? FileManager.default.removeItem(at: fileURL) }
 
@@ -119,7 +119,7 @@ func `FileManagedCodexAccountStore canonicalizes decoded emails`() throws {
 
 @Test
 func `FileManagedCodexAccountStore drops duplicate canonical emails on load`() throws {
-    let tempDir = FileManager.default.temporaryDirectory
+    let tempDir = TestFixtureScratch.root
     let fileURL = tempDir.appendingPathComponent("codexbar-managed-codex-accounts-duplicate-email-test.json")
     defer { try? FileManager.default.removeItem(at: fileURL) }
 
@@ -321,7 +321,7 @@ func `FileManagedCodexAccountStore hydrates provider account I D from id token w
 
 @Test
 func `FileManagedCodexAccountStore drops duplicate IDs on load`() throws {
-    let tempDir = FileManager.default.temporaryDirectory
+    let tempDir = TestFixtureScratch.root
     let fileURL = tempDir.appendingPathComponent("codexbar-managed-codex-accounts-duplicate-id-test.json")
     defer { try? FileManager.default.removeItem(at: fileURL) }
 
@@ -363,7 +363,7 @@ func `FileManagedCodexAccountStore drops duplicate IDs on load`() throws {
 
 @Test
 func `FileManagedCodexAccountStore v1 upgrade keeps deleted home row with nil provider account I D`() throws {
-    let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+    let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString, isDirectory: true)
     defer { try? FileManager.default.removeItem(at: root) }
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
 
@@ -399,7 +399,7 @@ func `FileManagedCodexAccountStore v1 upgrade keeps deleted home row with nil pr
 
 @Test
 func `FileManagedCodexAccountStore ignores legacy active account key on load`() throws {
-    let tempDir = FileManager.default.temporaryDirectory
+    let tempDir = TestFixtureScratch.root
     let fileURL = tempDir.appendingPathComponent("codexbar-managed-codex-accounts-legacy-active-key-test.json")
     defer { try? FileManager.default.removeItem(at: fileURL) }
 
@@ -487,7 +487,7 @@ func `FileManagedCodexAccountStore upgrades v1 rows and writes readable v2 file 
 
 @Test
 func `FileManagedCodexAccountStore rejects unsupported on disk versions`() throws {
-    let tempDir = FileManager.default.temporaryDirectory
+    let tempDir = TestFixtureScratch.root
     let fileURL = tempDir.appendingPathComponent("codexbar-managed-codex-accounts-unsupported-version-test.json")
     defer { try? FileManager.default.removeItem(at: fileURL) }
 
@@ -519,7 +519,7 @@ func `FileManagedCodexAccountStore rejects unsupported on disk versions`() throw
 
 @Test
 func `FileManagedCodexAccountStore normalizes stored version to current schema`() throws {
-    let tempDir = FileManager.default.temporaryDirectory
+    let tempDir = TestFixtureScratch.root
     let fileURL = tempDir.appendingPathComponent("codexbar-managed-codex-accounts-version-normalization-test.json")
     defer { try? FileManager.default.removeItem(at: fileURL) }
 

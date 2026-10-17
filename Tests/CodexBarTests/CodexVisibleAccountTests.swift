@@ -8,7 +8,7 @@ struct CodexVisibleAccountTests {
     @Test
     @MainActor
     func `settings move persists and menu keeps chosen top account above the active account`() throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let configStore = CodexBarConfigStore(fileURL: root.appendingPathComponent("config.json"))
         try configStore.save(CodexBarConfig(providers: [ProviderConfig(id: .codex)]))

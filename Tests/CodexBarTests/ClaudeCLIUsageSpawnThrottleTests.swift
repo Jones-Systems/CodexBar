@@ -227,7 +227,7 @@ struct ClaudeCLIUsageSpawnThrottleTests {
     @Test
     func `unidentified profiles are never cached`() async throws {
         let strategy = self.makeStrategy()
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-claude-throttle-unidentified-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -300,7 +300,7 @@ struct ClaudeCLIUsageSpawnThrottleTests {
         configURL: URL,
         environment: [String: String])
     {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-claude-throttle-profile-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let configURL = root.appendingPathComponent(".config.json")

@@ -5,7 +5,7 @@ import Testing
 struct GrokLocalSessionScannerTests {
     @Test
     func `daily buckets stay local and never invent dollars`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("grok-session-scan-\(UUID().uuidString)", isDirectory: true)
         let cwd = root.appendingPathComponent("sessions/%2Ftmp%2Fdemo", isDirectory: true)
         let first = cwd.appendingPathComponent("session-a", isDirectory: true)
@@ -47,7 +47,7 @@ struct GrokLocalSessionScannerTests {
 
     @Test
     func `idle days do not reuse yesterday as today`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("grok-session-idle-\(UUID().uuidString)", isDirectory: true)
         let session = root.appendingPathComponent("sessions/%2Ftmp%2Fdemo/session-a", isDirectory: true)
         try FileManager.default.createDirectory(at: session, withIntermediateDirectories: true)
@@ -70,7 +70,7 @@ struct GrokLocalSessionScannerTests {
 
     @Test
     func `empty homes do not publish a spend snapshot`() {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("grok-session-empty-\(UUID().uuidString)", isDirectory: true)
         let summary = GrokLocalSessionScanner.summarize(
             env: ["GROK_HOME": root.path],

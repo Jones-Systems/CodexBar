@@ -56,7 +56,7 @@ extension CodexAccountScopedRefreshTests {
             candidate, expectedGuard: expected, previousSnapshot: previous) == .storeUnavailable)
         #expect(memoryOnly.codexAccountSnapshots.first?.weeklyResetCandidate?.createdAt == candidate.createdAt)
 
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codex-reset-diagnostic-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }

@@ -387,7 +387,7 @@ struct CLICardsClaudeSwapTests {
 
     @Test
     func `fake executable receives only one read only list command`() async throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("cards-claude-swap-tests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }

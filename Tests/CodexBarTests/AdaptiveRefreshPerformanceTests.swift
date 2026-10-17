@@ -30,7 +30,7 @@ struct AdaptiveRefreshPerformanceTests {
     @Test
     func `agent aware detection stays within the bounded scan budget`() async throws {
         let fileManager = FileManager.default
-        let root = fileManager.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("AdaptiveRefreshPerformanceTests-\(UUID().uuidString)", isDirectory: true)
         defer { try? fileManager.removeItem(at: root) }
 

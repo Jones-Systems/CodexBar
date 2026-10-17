@@ -107,7 +107,7 @@ struct WidgetSnapshotTestIsolationTests {
     }
 
     private static func temporarySnapshotURL() -> URL {
-        FileManager.default.temporaryDirectory
+        TestFixtureScratch.root
             .appendingPathComponent("WidgetSnapshotTestIsolationTests-\(UUID().uuidString).json")
     }
 

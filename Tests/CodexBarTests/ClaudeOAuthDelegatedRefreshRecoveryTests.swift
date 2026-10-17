@@ -76,7 +76,7 @@ struct ClaudeOAuthDelegatedRefreshRecoveryTests {
 
                 try await ClaudeOAuthCredentialsStore.withIsolatedCredentialsFileTrackingForTesting {
                     try await ClaudeOAuthCredentialsStore.withIsolatedMemoryCacheForTesting {
-                        let tempDir = FileManager.default.temporaryDirectory
+                        let tempDir = TestFixtureScratch.root
                             .appendingPathComponent(UUID().uuidString, isDirectory: true)
                         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
                         let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -184,7 +184,7 @@ struct ClaudeOAuthDelegatedRefreshRecoveryTests {
 
                 try await ClaudeOAuthCredentialsStore.withIsolatedCredentialsFileTrackingForTesting {
                     try await ClaudeOAuthCredentialsStore.withIsolatedMemoryCacheForTesting {
-                        let tempDir = FileManager.default.temporaryDirectory
+                        let tempDir = TestFixtureScratch.root
                             .appendingPathComponent(UUID().uuidString, isDirectory: true)
                         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
                         let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -301,7 +301,7 @@ struct ClaudeOAuthDelegatedRefreshRecoveryTests {
 
                 try await ClaudeOAuthCredentialsStore.withIsolatedCredentialsFileTrackingForTesting {
                     try await ClaudeOAuthCredentialsStore.withIsolatedMemoryCacheForTesting {
-                        let tempDir = FileManager.default.temporaryDirectory
+                        let tempDir = TestFixtureScratch.root
                             .appendingPathComponent(UUID().uuidString, isDirectory: true)
                         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
                         let fileURL = tempDir.appendingPathComponent("credentials.json")

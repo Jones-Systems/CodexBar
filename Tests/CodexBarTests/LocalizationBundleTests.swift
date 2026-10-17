@@ -1,3 +1,4 @@
+import CodexBarCore
 import Foundation
 import Testing
 @testable import CodexBar
@@ -65,7 +66,7 @@ struct LocalizationBundleTests {
         includeMainLocalization: Bool = false,
         includeEmptyChineseLocalization: Bool = false) throws -> (root: URL, appBundle: Bundle)
     {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(
+        let root = TestFixtureScratch.root.appendingPathComponent(
             "codexbar-localization-\(UUID().uuidString)",
             isDirectory: true)
         let appURL = root.appendingPathComponent("CodexBar.app", isDirectory: true)

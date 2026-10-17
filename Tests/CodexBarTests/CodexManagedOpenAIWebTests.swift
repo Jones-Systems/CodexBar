@@ -120,7 +120,7 @@ struct CodexManagedOpenAIWebTests {
     @Test
     func `live system codex open A I web does not reuse stale managed snapshot email after source switch`() {
         let settings = self.makeSettingsStore(suite: "CodexManagedOpenAIWebTests-live-system-stale-managed-snapshot")
-        let isolatedHome = FileManager.default.temporaryDirectory
+        let isolatedHome = TestFixtureScratch.root
             .appendingPathComponent("codex-openai-web-empty-\(UUID().uuidString)", isDirectory: true)
         try? FileManager.default.createDirectory(at: isolatedHome, withIntermediateDirectories: true)
         let managedAccount = ManagedCodexAccount(
@@ -165,7 +165,7 @@ struct CodexManagedOpenAIWebTests {
     @Test
     func `live system codex open A I web reuses last known live email without allowing any account`() async {
         let settings = self.makeSettingsStore(suite: "CodexManagedOpenAIWebTests-live-system-last-known-email")
-        let isolatedHome = FileManager.default.temporaryDirectory
+        let isolatedHome = TestFixtureScratch.root
             .appendingPathComponent("codex-openai-web-last-known-\(UUID().uuidString)", isDirectory: true)
         try? FileManager.default.createDirectory(at: isolatedHome, withIntermediateDirectories: true)
         let liveAccount = ObservedSystemCodexAccount(
@@ -277,7 +277,7 @@ struct CodexManagedOpenAIWebTests {
     @Test
     func `dashboard refresh does not target stale last known live email`() async {
         let settings = self.makeSettingsStore(suite: "CodexManagedOpenAIWebTests-live-system-refresh-strict-target")
-        let isolatedHome = FileManager.default.temporaryDirectory
+        let isolatedHome = TestFixtureScratch.root
             .appendingPathComponent("codex-openai-web-refresh-strict-\(UUID().uuidString)", isDirectory: true)
         try? FileManager.default.createDirectory(at: isolatedHome, withIntermediateDirectories: true)
         let liveAccount = ObservedSystemCodexAccount(
@@ -336,7 +336,7 @@ struct CodexManagedOpenAIWebTests {
     @Test
     func `dashboard refresh targets usage discovered live email before reconciliation catches up`() async {
         let settings = self.makeSettingsStore(suite: "CodexManagedOpenAIWebTests-live-system-usage-discovered-target")
-        let isolatedHome = FileManager.default.temporaryDirectory
+        let isolatedHome = TestFixtureScratch.root
             .appendingPathComponent("codex-openai-web-usage-discovered-\(UUID().uuidString)", isDirectory: true)
         try? FileManager.default.createDirectory(at: isolatedHome, withIntermediateDirectories: true)
         settings._test_codexReconciliationEnvironment = ["CODEX_HOME": isolatedHome.path]
@@ -394,7 +394,7 @@ struct CodexManagedOpenAIWebTests {
     @Test
     func `usage discovered live email still surfaces open A I web login guidance during reconciliation lag`() async {
         let settings = self.makeSettingsStore(suite: "CodexManagedOpenAIWebTests-live-system-usage-discovered-failure")
-        let isolatedHome = FileManager.default.temporaryDirectory
+        let isolatedHome = TestFixtureScratch.root
             .appendingPathComponent("codex-openai-web-usage-discovered-failure-\(UUID().uuidString)", isDirectory: true)
         try? FileManager.default.createDirectory(at: isolatedHome, withIntermediateDirectories: true)
         settings._test_codexReconciliationEnvironment = ["CODEX_HOME": isolatedHome.path]
@@ -589,7 +589,7 @@ struct CodexManagedOpenAIWebTests {
             createdAt: 1,
             updatedAt: 1,
             lastAuthenticatedAt: 1)
-        let storeURL = FileManager.default.temporaryDirectory
+        let storeURL = TestFixtureScratch.root
             .appendingPathComponent("codex-openai-web-\(UUID().uuidString).json")
         let managedStore = FileManagedCodexAccountStore(fileURL: storeURL)
         try? managedStore.storeAccounts(ManagedCodexAccountSet(
@@ -757,7 +757,7 @@ struct CodexManagedOpenAIWebTests {
     @Test
     func `missing managed target failure handlers do not resurrect stale dashboard state`() async {
         let settings = self.makeSettingsStore(suite: "CodexManagedOpenAIWebTests-missing-target-failure-handlers")
-        let isolatedHome = FileManager.default.temporaryDirectory
+        let isolatedHome = TestFixtureScratch.root
             .appendingPathComponent("codex-openai-web-missing-target-\(UUID().uuidString)", isDirectory: true)
         try? FileManager.default.createDirectory(at: isolatedHome, withIntermediateDirectories: true)
         settings._test_codexReconciliationEnvironment = ["CODEX_HOME": isolatedHome.path]

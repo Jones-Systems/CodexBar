@@ -9,7 +9,7 @@ import Testing
 struct ClaudeWebBrowserFallbackTests {
     @Test
     func `chrome without a Claude session falls through to Safari`() throws {
-        let temp = FileManager.default.temporaryDirectory
+        let temp = TestFixtureScratch.root
             .appendingPathComponent("claude-browser-fallback-\(UUID().uuidString)", isDirectory: true)
         let chromeCookies = temp
             .appendingPathComponent("Library/Application Support/Google/Chrome/Default/Network/Cookies")

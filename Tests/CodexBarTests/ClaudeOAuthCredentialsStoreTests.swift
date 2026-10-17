@@ -66,7 +66,7 @@ struct ClaudeOAuthCredentialsStoreTests {
             .appendingPathComponent(".claude/.credentials.json")
         #expect(ClaudeOAuthCredentialsStore.resolvedCredentialsURLForTesting != defaultURL)
 
-        let overrideURL = FileManager.default.temporaryDirectory
+        let overrideURL = TestFixtureScratch.root
             .appendingPathComponent("explicit-credentials.json")
         let resolvedOverride = ClaudeOAuthCredentialsStore.withCredentialsURLOverrideForTesting(overrideURL) {
             ClaudeOAuthCredentialsStore.resolvedCredentialsURLForTesting
@@ -82,7 +82,7 @@ struct ClaudeOAuthCredentialsStoreTests {
 
         let domain = "ClaudeOAuthPendingCacheIsolationTests.\(UUID().uuidString)"
         let key = "ClaudeOAuthPendingCodexBarOAuthKeychainCacheClearV1"
-        let tempDirectory = FileManager.default.temporaryDirectory
+        let tempDirectory = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let defaults = try #require(UserDefaults(suiteName: domain))
         defer {
@@ -151,7 +151,7 @@ struct ClaudeOAuthCredentialsStoreTests {
                     defer { ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting() }
                     try ClaudeOAuthCredentialsStore.withIsolatedCredentialsFileTrackingForTesting {
                         try ClaudeOAuthCredentialsStore.withIsolatedMemoryCacheForTesting {
-                            let tempDir = FileManager.default.temporaryDirectory
+                            let tempDir = TestFixtureScratch.root
                                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
                             try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
                             let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -219,7 +219,7 @@ struct ClaudeOAuthCredentialsStoreTests {
             try ClaudeOAuthCredentialsStore.withIsolatedCredentialsFileTrackingForTesting {
                 try ClaudeOAuthCredentialsStore.withIsolatedMemoryCacheForTesting {
                     // Ensure file-based lookup doesn't interfere (and avoid touching ~/.claude).
-                    let tempDir = FileManager.default.temporaryDirectory
+                    let tempDir = TestFixtureScratch.root
                         .appendingPathComponent(UUID().uuidString, isDirectory: true)
                     try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
                     let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -278,7 +278,7 @@ struct ClaudeOAuthCredentialsStoreTests {
         try ClaudeOAuthCredentialsStore.withKeychainAccessOverrideForTesting(true) {
             try ClaudeOAuthCredentialsStore.withIsolatedCredentialsFileTrackingForTesting {
                 try ClaudeOAuthCredentialsStore.withIsolatedMemoryCacheForTesting {
-                    let tempDir = FileManager.default.temporaryDirectory
+                    let tempDir = TestFixtureScratch.root
                         .appendingPathComponent(UUID().uuidString, isDirectory: true)
                     try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
                     let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -322,7 +322,7 @@ struct ClaudeOAuthCredentialsStoreTests {
                     ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting()
                     defer { ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting() }
 
-                    let tempDir = FileManager.default.temporaryDirectory
+                    let tempDir = TestFixtureScratch.root
                         .appendingPathComponent(UUID().uuidString, isDirectory: true)
                     try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
                     let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -355,7 +355,7 @@ struct ClaudeOAuthCredentialsStoreTests {
             ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting()
             defer { ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting() }
 
-            let tempDir = FileManager.default.temporaryDirectory
+            let tempDir = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
             try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
             let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -407,7 +407,7 @@ struct ClaudeOAuthCredentialsStoreTests {
             ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting()
             defer { ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting() }
 
-            let tempDir = FileManager.default.temporaryDirectory
+            let tempDir = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
             try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
             let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -462,7 +462,7 @@ struct ClaudeOAuthCredentialsStoreTests {
         ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting()
         defer { ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting() }
 
-        let tempDir = FileManager.default.temporaryDirectory
+        let tempDir = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -502,7 +502,7 @@ struct ClaudeOAuthCredentialsStoreTests {
         ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting()
         defer { ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting() }
 
-        let tempDir = FileManager.default.temporaryDirectory
+        let tempDir = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -532,7 +532,7 @@ struct ClaudeOAuthCredentialsStoreTests {
         ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting()
         defer { ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting() }
 
-        let tempDir = FileManager.default.temporaryDirectory
+        let tempDir = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -559,7 +559,7 @@ struct ClaudeOAuthCredentialsStoreTests {
         ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting()
         defer { ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting() }
 
-        let tempDir = FileManager.default.temporaryDirectory
+        let tempDir = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -590,7 +590,7 @@ struct ClaudeOAuthCredentialsStoreTests {
                 ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting()
                 defer { ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting() }
 
-                let tempDir = FileManager.default.temporaryDirectory
+                let tempDir = TestFixtureScratch.root
                     .appendingPathComponent(UUID().uuidString, isDirectory: true)
                 try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
                 let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -696,7 +696,7 @@ struct ClaudeOAuthCredentialsStoreTests {
                     ClaudeOAuthCredentialsStore._resetClaudeKeychainChangeTrackingForTesting()
                 }
 
-                let tempDir = FileManager.default.temporaryDirectory
+                let tempDir = TestFixtureScratch.root
                     .appendingPathComponent(UUID().uuidString, isDirectory: true)
                 try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
                 let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -895,7 +895,7 @@ struct ClaudeOAuthCredentialsStoreTests {
             ClaudeOAuthKeychainAccessGate.resetForTesting()
             defer { ClaudeOAuthKeychainAccessGate.resetForTesting() }
 
-            let tempDir = FileManager.default.temporaryDirectory
+            let tempDir = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
             try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
             let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -1020,7 +1020,7 @@ struct ClaudeOAuthCredentialsStoreTests {
 #if os(macOS)
 extension ClaudeOAuthCredentialsStoreTests {
     private func withMissingCredentialsFile<T>(operation: () throws -> T) throws -> T {
-        let tempDirectory = FileManager.default.temporaryDirectory
+        let tempDirectory = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDirectory) }

@@ -72,7 +72,7 @@ struct AugmentSessionStoreTests {
     }
 
     private static func makeSessionLocation() throws -> (URL, URL) {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("codexbar-augment-session-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         return (directory, directory.appendingPathComponent("augment-session.json"))

@@ -240,7 +240,7 @@ struct UserProviderPluginTests {
         #expect(ProviderChoice(rawValue: unknown.rawValue) == nil)
 
         let history = PlanUtilizationHistoryStore(
-            directoryURL: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString))
+            directoryURL: TestFixtureScratch.root.appendingPathComponent(UUID().uuidString))
         #expect(history.load()[unknown] == nil)
     }
 
@@ -608,7 +608,7 @@ private struct Fixture {
     let approvals: ProviderPluginApprovalStore
 
     init() throws {
-        self.root = FileManager.default.temporaryDirectory
+        self.root = TestFixtureScratch.root
             .appendingPathComponent("UserProviderPluginTests-\(UUID().uuidString)", isDirectory: true)
         self.providers = self.root.appendingPathComponent("providers", isDirectory: true)
         self.cache = self.root.appendingPathComponent("cache", isDirectory: true)

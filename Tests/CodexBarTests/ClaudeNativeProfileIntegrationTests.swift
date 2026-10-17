@@ -7,7 +7,7 @@ import Testing
 @MainActor
 struct ClaudeNativeProfileIntegrationTests {
     private func withFixture(_ body: (SettingsStore, UsageStore, URL) throws -> Void) throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("ClaudeNativeProfileIntegrationTests-" + UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }

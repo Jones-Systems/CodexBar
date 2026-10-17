@@ -176,7 +176,7 @@ final class InMemoryTokenAccountStore: ProviderTokenAccountStoring, @unchecked S
     var accounts: [UsageProvider: ProviderTokenAccountData] = [:]
     private let fileURL: URL
 
-    init(fileURL: URL = FileManager.default.temporaryDirectory.appendingPathComponent(
+    init(fileURL: URL = TestFixtureScratch.root.appendingPathComponent(
         "token-accounts-\(UUID().uuidString).json"))
     {
         self.fileURL = fileURL
@@ -197,7 +197,7 @@ final class InMemoryTokenAccountStore: ProviderTokenAccountStoring, @unchecked S
 
 func testConfigStore(suiteName: String, reset: Bool = true) -> CodexBarConfigStore {
     let sanitized = suiteName.replacingOccurrences(of: "/", with: "-")
-    let base = FileManager.default.temporaryDirectory
+    let base = TestFixtureScratch.root
         .appendingPathComponent("codexbar-tests", isDirectory: true)
         .appendingPathComponent(sanitized, isDirectory: true)
     let url = base.appendingPathComponent("config.json")
@@ -311,7 +311,7 @@ func withStatusItemControllerForTesting<T>(
 
 func testPlanUtilizationHistoryStore(suiteName: String, reset: Bool = true) -> PlanUtilizationHistoryStore {
     let sanitized = suiteName.replacingOccurrences(of: "/", with: "-")
-    let base = FileManager.default.temporaryDirectory
+    let base = TestFixtureScratch.root
         .appendingPathComponent("codexbar-tests", isDirectory: true)
         .appendingPathComponent(sanitized, isDirectory: true)
     let url = base.appendingPathComponent("history", isDirectory: true)

@@ -500,7 +500,7 @@ struct OpenCodexUsageFanOutTests {
     }
 
     private static func modelsDevCacheRoot() throws -> URL {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-opencodex-modelsdev-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         return root

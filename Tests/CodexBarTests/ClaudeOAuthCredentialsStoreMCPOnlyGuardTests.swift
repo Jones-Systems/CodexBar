@@ -9,7 +9,7 @@ struct ClaudeOAuthCredentialsStoreMCPOnlyGuardTests {
     func `standard reader skips MCP keychain probe in background but preserves user refresh`() async throws {
         let service = "com.steipete.codexbar.cache.tests.\(UUID().uuidString)"
         let mcpOAuthOnly = Data(#"{"mcpOAuth":{"plugin:test":{"accessToken":"synthetic"}}}"#.utf8)
-        let tempDir = FileManager.default.temporaryDirectory
+        let tempDir = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDir) }

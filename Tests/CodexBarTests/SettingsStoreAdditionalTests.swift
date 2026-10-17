@@ -259,7 +259,7 @@ struct SettingsStoreAdditionalTests {
     @Test
     func `detects token cost usage sources from filesystem`() throws {
         let fm = FileManager.default
-        let root = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString, isDirectory: true)
         let sessions = root.appendingPathComponent("sessions", isDirectory: true)
         try fm.createDirectory(at: sessions, withIntermediateDirectories: true)
         let jsonl = sessions.appendingPathComponent("usage.jsonl")
