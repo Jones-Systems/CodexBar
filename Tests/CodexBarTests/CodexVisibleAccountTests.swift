@@ -26,7 +26,7 @@ struct CodexVisibleAccountTests {
         let first = self.profile("first@example.com", path: "/synthetic/first", visibleID: "first")
         let second = self.profile("second@example.com", path: "/synthetic/second", visibleID: "second")
         settings.moveCodexAccount(second, by: -1, in: [first, second])
-        let reloaded = try #require(CodexBarConfigStore(fileURL: configStore.fileURL).load())
+        let reloaded = try #require(try CodexBarConfigStore(fileURL: configStore.fileURL).load())
         #expect(reloaded.providerConfig(for: .codex)?.codexAccountOrder == settings.codexAccountOrder)
         #expect(settings.orderedCodexAccounts([first, second]).map(\.id) == ["second", "first"])
         let usage = UsageStore(

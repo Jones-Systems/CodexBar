@@ -14,7 +14,7 @@ struct CodexActiveSourceConfigTests {
         let writer = CodexBarConfigStore(fileURL: url)
         try writer.save(CodexBarConfig(providers: [codex, ProviderConfig(id: .claude)]))
         let reader = CodexBarConfigStore(fileURL: url)
-        let loaded = try #require(reader.load())
+        let loaded = try #require(try reader.load())
         #expect(loaded.providerConfig(for: .codex)?.codexAccountOrder == codex.codexAccountOrder)
         #expect(loaded.providerConfig(for: .claude)?.codexAccountOrder == nil)
     }
