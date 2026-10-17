@@ -35,9 +35,10 @@ struct CodexAccountPromotionPreparationTests {
             fileManager: .default)
 
         let context = try await builder.build(targetID: target.id)
+        let preparedTarget = try #require(context.target.managedAccount)
 
-        #expect(context.target.authIdentity?.identity == .providerAccount(id: "acct-beta"))
-        #expect(context.target.authIdentity?.workspaceLabel == "Team")
+        #expect(preparedTarget.authIdentity?.identity == .providerAccount(id: "acct-beta"))
+        #expect(preparedTarget.authIdentity?.workspaceLabel == "Team")
         #expect(context.live.authIdentity?.identity == .providerAccount(id: "acct-alpha"))
         #expect(context.live.authIdentity?.workspaceLabel == "Personal")
     }
@@ -65,15 +66,16 @@ struct CodexAccountPromotionPreparationTests {
             fileManager: .default)
 
         let context = try await builder.build(targetID: target.id)
+        let preparedTarget = try #require(context.target.managedAccount)
 
-        switch context.target.homeState {
+        switch preparedTarget.homeState {
         case let .missing(homeURL):
             #expect(homeURL.path == target.managedHomePath)
         case .readable, .unreadable:
             Issue.record("Expected target auth to be represented as missing")
         }
-        #expect(context.target.authIdentity == nil)
-        #expect(context.target.persistedIdentity.identity == .providerAccount(id: "acct-beta"))
+        #expect(preparedTarget.authIdentity == nil)
+        #expect(preparedTarget.persistedIdentity.identity == .providerAccount(id: "acct-beta"))
     }
 
     @Test

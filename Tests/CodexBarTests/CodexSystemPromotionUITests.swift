@@ -50,13 +50,24 @@ struct CodexSystemPromotionUITests {
         #expect(audit.activeWriters == 0)
     }
 
-    @Test
-    func `direct promotion waits for cancelled ambient writer to confirm completion`() async throws {
+    // JONES(fleet-system-promotion): run the existing drain contract for both target kinds.
+    @Test(arguments: [false, true])
+    func `direct promotion waits for cancelled ambient writer to confirm completion`(fleet: Bool) async throws {
         let container = try CodexAccountPromotionTestContainer(suiteName: "CodexSystemPromotionUITests-drain-promote")
         defer { container.tearDown() }
-        let target = try container.createManagedAccount(
-            persistedEmail: "target@example.com", authAccountID: "acct-target")
-        try container.persistAccounts([target])
+        let target: JonesCodexSystemPromotionTarget
+        let fleetPaths: [String]
+        if fleet {
+            let profile = try container.createFleetProfile()
+            target = try jonesFleetTarget(profile)
+            fleetPaths = [profile.codexHomePath]
+        } else {
+            let managed = try container.createManagedAccount(
+                persistedEmail: "target@example.com", authAccountID: "acct-target")
+            try container.persistAccounts([managed])
+            target = .managedAccount(managed.id)
+            fleetPaths = []
+        }
         try container.removeLiveAuthFile()
         let audit = SharedAuthWriterAudit()
         let runner = DrainingAmbientLoginRunner(audit: audit)
@@ -65,7 +76,8 @@ struct CodexSystemPromotionUITests {
             audit.begin()
             defer { audit.end() }
         })
-        let service = container.makeService(liveAuthSwapper: swapper, sharedAuthWriter: writer)
+        let service = container.makeService(
+            liveAuthSwapper: swapper, sharedAuthWriter: writer, fleetHomePaths: { fleetPaths })
         let coordinator = CodexAccountPromotionCoordinator(service: service)
         let login = Task { await coordinator.authenticateLiveAccount(using: runner) }
         let started = await self.waitUntil { await runner.startCount == 1 }
@@ -73,7 +85,7 @@ struct CodexSystemPromotionUITests {
         if !started { await runner.finishAll() }
         coordinator.cancelLiveAuthentication()
         #expect(await self.waitUntil { await runner.cancellationCount == 1 })
-        let promotion = Task { try await service.promoteManagedAccount(id: target.id) }
+        let promotion = Task { try await service.promote(target: target) }
         #expect(await self.waitUntil { writer._test_waitingWriterCount == 1 })
         #expect(swapper.swapCallCount == 0)
         #expect(audit.activeWriters == 1)
@@ -238,7 +250,7 @@ struct CodexSystemPromotionUITests {
         #expect(submenu.2[0].action == nil)
         #expect(submenu.2[1].isChecked == false)
         #expect(submenu.2[1].isEnabled)
-        #expect(submenu.2[1].action == .requestCodexSystemPromotion(managedAccountID))
+        #expect(submenu.2[1].action == .requestCodexSystemPromotion(.managedAccount(managedAccountID)))
     }
 
     @Test

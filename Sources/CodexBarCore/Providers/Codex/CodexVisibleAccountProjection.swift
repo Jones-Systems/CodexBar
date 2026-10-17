@@ -12,6 +12,8 @@ public struct CodexVisibleAccount: Equatable, Identifiable, Sendable {
     public private(set) var displayDiscriminator: String?
     public let workspaceAccountID: String?
     public let authFingerprint: String?
+    // JONES(fleet-system-promotion): retain target provenance independently of usage selection.
+    public let systemPromotionTarget: JonesCodexSystemPromotionTarget?
     public let storedAccountID: UUID?
     public let selectionSource: CodexActiveSource
     public let isActive: Bool
@@ -30,13 +32,15 @@ public struct CodexVisibleAccount: Equatable, Identifiable, Sendable {
         isActive: Bool,
         isLive: Bool,
         canReauthenticate: Bool,
-        canRemove: Bool)
+        canRemove: Bool,
+        systemPromotionTarget: JonesCodexSystemPromotionTarget? = nil)
     {
         self.id = id
         self.email = email
         self.workspaceLabel = Self.normalizeWorkspaceLabel(workspaceLabel)
         self.workspaceAccountID = workspaceAccountID
         self.authFingerprint = CodexAuthFingerprint.normalize(authFingerprint)
+        self.systemPromotionTarget = systemPromotionTarget ?? storedAccountID.map { .managedAccount($0) }
         self.storedAccountID = storedAccountID
         self.selectionSource = selectionSource
         self.isActive = isActive
@@ -277,7 +281,10 @@ extension CodexVisibleAccountProjection {
                 isLive: false,
                 canReauthenticate: false,
                 canRemove: false,
-                identity: snapshot.runtimeIdentity(for: profileAccount)))
+                identity: snapshot.runtimeIdentity(for: profileAccount),
+                systemPromotionTarget: JonesCodexFleetPromotionTarget(
+                    profile: profileAccount,
+                    fleetHomePaths: snapshot.fleetProfileHomePaths).map { .fleetProfile($0) }))
         }
 
         let groupedByEmail = Dictionary(grouping: drafts.indices, by: { drafts[$0].email })
@@ -303,7 +310,8 @@ extension CodexVisibleAccountProjection {
                 isActive: isActive,
                 isLive: draft.isLive,
                 canReauthenticate: draft.canReauthenticate,
-                canRemove: draft.canRemove)
+                canRemove: draft.canRemove,
+                systemPromotionTarget: draft.systemPromotionTarget)
         }.sorted { lhs, rhs in
             if lhs.email != rhs.email {
                 return lhs.email < rhs.email
@@ -360,4 +368,5 @@ private struct VisibleAccountDraft {
     let canReauthenticate: Bool
     let canRemove: Bool
     let identity: CodexIdentity
+    var systemPromotionTarget: JonesCodexSystemPromotionTarget?
 }

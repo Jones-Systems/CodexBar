@@ -298,8 +298,9 @@ struct CodexProviderImplementation: ProviderImplementation {
             let isChecked = account.id == projection.liveVisibleAccountID
             let isEnabled = !isInteractionBlocked &&
                 !isChecked &&
-                account.storedAccountID != nil
-            let action = account.storedAccountID.map(MenuDescriptor.MenuAction.requestCodexSystemPromotion)
+                account.systemPromotionTarget != nil
+            // JONES(fleet-system-promotion): managed and canonical fleet targets share the existing menu.
+            let action = account.systemPromotionTarget.map(MenuDescriptor.MenuAction.requestCodexSystemPromotion)
             return MenuDescriptor.SubmenuItem(
                 title: account.displayName,
                 action: action,

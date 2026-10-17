@@ -1,3 +1,4 @@
+import CodexBarCore
 import Foundation
 import Observation
 
@@ -43,6 +44,13 @@ final class CodexAccountPromotionCoordinator {
     func promote(managedAccountID: UUID)
         async -> Result<CodexAccountPromotionResult, CodexSystemAccountPromotionUserFacingError>
     {
+        await self.promote(target: .managedAccount(managedAccountID))
+    }
+
+    // JONES(fleet-system-promotion): retain the existing interaction and drain gates.
+    func promote(target: JonesCodexSystemPromotionTarget)
+        async -> Result<CodexAccountPromotionResult, CodexSystemAccountPromotionUserFacingError>
+    {
         self.userFacingError = nil
 
         guard !self.isInteractionBlocked() else {
@@ -55,7 +63,7 @@ final class CodexAccountPromotionCoordinator {
         defer { self.isPromotingSystemAccount = false }
 
         do {
-            let result = try await self.service.promoteManagedAccount(id: managedAccountID)
+            let result = try await self.service.promote(target: target)
             return .success(result)
         } catch {
             let mapped = Self.mapUserFacingError(error)
@@ -124,6 +132,12 @@ final class CodexAccountPromotionCoordinator {
 
         if let error = error as? CodexAccountPromotionError {
             let message = switch error {
+            case .fleetTargetUnavailable, .fleetTargetIdentityChanged:
+                L("That account is no longer available in CodexBar. Refresh the account list and try again.")
+            case .fleetTargetAuthMissing, .fleetTargetAuthUnreadable:
+                "CodexBar could not read the canonical Authfleet credentials. Restore them in Authfleet and try again."
+            case .fleetDestinationAmbiguous:
+                "CodexBar cannot safely identify the default Codex home. Open CodexBar without a CODEX_HOME override."
             case .targetManagedAccountNotFound:
                 L("That account is no longer available in CodexBar. Refresh the account list and try again.")
             case .targetManagedAccountAuthMissing:

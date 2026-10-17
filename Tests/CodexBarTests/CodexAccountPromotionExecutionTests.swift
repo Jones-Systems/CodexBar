@@ -312,10 +312,11 @@ struct CodexAccountPromotionExecutionTests {
             homeFactory: container.homeFactory,
             fileManager: .default)
 
+        let preparedTarget = try #require(context.target.managedAccount)
         #expect(throws: CodexAccountPromotionError.managedStoreCommitFailed) {
             try executor.execute(
                 plan: .refreshExisting(
-                    destination: context.target,
+                    destination: preparedTarget,
                     reason: .readableHomeIdentityMatch),
                 context: context)
         }

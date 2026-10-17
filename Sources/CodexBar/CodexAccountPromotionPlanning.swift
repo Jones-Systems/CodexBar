@@ -67,7 +67,8 @@ struct CodexDisplacedLivePreservationPlanner {
             return .none(reason: .targetMatchesLiveAuthIdentity)
         }
 
-        let candidates = context.storedManagedAccounts.filter { $0.persisted.id != context.target.persisted.id }
+        // JONES(fleet-system-promotion): only a managed target excludes a managed ID.
+        let candidates = context.storedManagedAccounts.filter { $0.persisted.id != context.target.managedAccountID }
         if let destination = self.findReadableHomeMatch(in: candidates, liveAuthIdentity: liveAuthIdentity) {
             let reason: CodexDisplacedLivePreservationRefreshReason =
                 if liveAuthIdentity.email == nil {

@@ -15,14 +15,18 @@ struct CodexDisplacedLivePreservationExecutor {
     private let store: any ManagedCodexAccountStoring
     private let homeFactory: any ManagedCodexHomeProducing
     private let authMaterialReader: any CodexAuthMaterialReading
+    // JONES(fleet-system-promotion): preservation cannot write or remove canonical fleet homes.
+    private let protectedHomes: [URL]
     private let fileManager: FileManager
 
     init(
         store: any ManagedCodexAccountStoring,
         homeFactory: any ManagedCodexHomeProducing,
         authMaterialReader: any CodexAuthMaterialReading = DefaultCodexAuthMaterialReader(),
-        fileManager: FileManager = .default)
+        fileManager: FileManager = .default,
+        protectedHomes: [URL] = [])
     {
+        self.protectedHomes = protectedHomes
         self.store = store
         self.homeFactory = homeFactory
         self.authMaterialReader = authMaterialReader
@@ -51,11 +55,11 @@ struct CodexDisplacedLivePreservationExecutor {
             let importedAccount = try self.importDisplacedLiveAccount(from: context)
             return try self.commitImportedAccount(
                 importedAccount,
-                excludingTargetID: context.target.persisted.id)
+                excludingTargetID: context.target.managedAccountID)
 
         case let .refreshExisting(destination, _),
              let .repairExisting(destination, _):
-            guard destination.persisted.id != context.target.persisted.id else {
+            guard destination.persisted.id != context.target.managedAccountID else {
                 throw CodexAccountPromotionError.managedStoreCommitFailed
             }
 
@@ -87,6 +91,8 @@ struct CodexDisplacedLivePreservationExecutor {
         }
 
         let importedHomeURL = self.homeFactory.makeHomeURL()
+        try JonesCodexFleetPromotionAdmission.requireUnprotectedHome(
+            importedHomeURL, protectedHomes: self.protectedHomes)
         guard CodexCredentialFileAccess.permits(CodexAccountPromotionService.authFileURL(for: importedHomeURL)) else {
             throw CodexAccountPromotionError.displacedLiveImportFailed
         }
@@ -128,7 +134,7 @@ struct CodexDisplacedLivePreservationExecutor {
 
     private func commitImportedAccount(
         _ importedAccount: CodexPreparedImportedAccount,
-        excludingTargetID: UUID) throws
+        excludingTargetID: UUID?) throws
         -> CodexDisplacedLivePreservationExecutionResult
     {
         do {
@@ -150,7 +156,7 @@ struct CodexDisplacedLivePreservationExecutor {
 
     private func resolveImportedAccountAfterCommit(
         _ importedAccount: CodexPreparedImportedAccount,
-        excludingTargetID: UUID) throws
+        excludingTargetID: UUID?) throws
         -> CodexDisplacedLivePreservationExecutionResult
     {
         let persistedManagedAccounts = try self.store.loadAccounts()
@@ -198,6 +204,9 @@ struct CodexDisplacedLivePreservationExecutor {
         _ existingManagedAccount: ManagedCodexAccount,
         for importedAccount: ManagedCodexAccount) throws
     {
+        try JonesCodexFleetPromotionAdmission.requireUnprotectedHome(
+            URL(fileURLWithPath: existingManagedAccount.managedHomePath, isDirectory: true),
+            protectedHomes: self.protectedHomes)
         guard let providerAccountID = importedAccount.providerAccountID else { return }
         let homeURL = URL(fileURLWithPath: existingManagedAccount.managedHomePath, isDirectory: true)
         guard let authData = try? self.authMaterialReader.readAuthData(homeURL: homeURL),
@@ -222,7 +231,7 @@ struct CodexDisplacedLivePreservationExecutor {
     private func repairDestination(
         in persistedManagedAccounts: ManagedCodexAccountSet,
         for importedAccount: ManagedCodexAccount,
-        excludingTargetID: UUID) -> ManagedCodexAccount?
+        excludingTargetID: UUID?) -> ManagedCodexAccount?
     {
         let candidates = ManagedCodexAccountSet(
             version: persistedManagedAccounts.version,
@@ -279,6 +288,8 @@ struct CodexDisplacedLivePreservationExecutor {
                 lastAuthenticatedAt: now)
 
             let refreshedHomeURL = URL(fileURLWithPath: persistedManagedAccount.managedHomePath, isDirectory: true)
+            try JonesCodexFleetPromotionAdmission.requireUnprotectedHome(
+                refreshedHomeURL, protectedHomes: self.protectedHomes)
             guard CodexCredentialFileAccess.permits(CodexAccountPromotionService.authFileURL(for: refreshedHomeURL))
             else {
                 throw CodexAccountPromotionError.displacedLiveImportFailed
@@ -315,6 +326,7 @@ struct CodexDisplacedLivePreservationExecutor {
     }
 
     private func removeManagedHomeIfSafe(_ homeURL: URL) throws {
+        try JonesCodexFleetPromotionAdmission.requireUnprotectedHome(homeURL, protectedHomes: self.protectedHomes)
         guard CodexCredentialFileAccess.permits(CodexAccountPromotionService.authFileURL(for: homeURL)) else { return }
         try self.homeFactory.validateManagedHomeForDeletion(homeURL)
         if self.fileManager.fileExists(atPath: homeURL.path) {
