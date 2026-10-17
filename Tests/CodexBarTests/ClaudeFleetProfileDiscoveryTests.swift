@@ -139,9 +139,8 @@ struct ClaudeFleetProfileDiscoveryTests {
         defer { free(physicalPath) }
         let root = URL(fileURLWithPath: String(cString: physicalPath), isDirectory: true)
         let binding = root.appendingPathComponent("binding.json")
-        #expect(throws: Never.self, "Missing synthetic binding at \(binding.path)") {
-            #expect(try ClaudeFleetProfileDiscovery.readBinding(url: binding, maximumBytes: 2) == nil)
-        }
+        let missingBinding = try ClaudeFleetProfileDiscovery.readBinding(url: binding, maximumBytes: 2)
+        #expect(missingBinding == nil, "Missing synthetic binding at \(binding.path)")
         try Data("{}".utf8).write(to: binding)
         try manager.setAttributes([.posixPermissions: 0o600], ofItemAtPath: binding.path)
         var info = stat()
@@ -152,9 +151,8 @@ struct ClaudeFleetProfileDiscoveryTests {
         #expect(info.st_uid == getuid())
         #expect(info.st_nlink == 1)
         #expect(info.st_size == 2)
-        #expect(throws: Never.self, "Private synthetic binding at \(binding.path)") {
-            #expect(try ClaudeFleetProfileDiscovery.readBinding(url: binding, maximumBytes: 2) == Data("{}".utf8))
-        }
+        let privateBinding = try ClaudeFleetProfileDiscovery.readBinding(url: binding, maximumBytes: 2)
+        #expect(privateBinding == Data("{}".utf8), "Private synthetic binding at \(binding.path)")
         #expect(throws: (any Error).self) {
             try ClaudeFleetProfileDiscovery.readBinding(url: binding, maximumBytes: 1)
         }
