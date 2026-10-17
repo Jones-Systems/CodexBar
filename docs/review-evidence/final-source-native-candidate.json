@@ -1,15 +1,16 @@
 {
   "schema_version": 1,
   "authority_effect": "none",
-  "source_candidate": "75c03d065bc14c641228da117724f88734cb6027",
+  "source_candidate": "45ac35cc586449f59976652f0f4b059c1a09073e",
   "base": "21c34561387b26f76d0a27e9f00d1538fbc0926f",
   "parent_PR11_head": "76f86a42560d21143dd4359aad54248bf60b28e6",
   "source_paths": {
-    "Scripts/test_fixture_process_ownership.py": "62c2cbd6895d4b92cb58dc563f6b3438ca7a36e7a84f03e6872967503b98ea54",
-    "Scripts/test_fixture_scratch_parent.py": "7f055a4d3ae566991cd1fb4931d8016c56c746ab31d61903574b037ee80f4468",
-    "Scripts/test_jones_identity_overlay.sh": "3d60beb1521b655a191dced02c9ab0840c58016a61c2909b2fd364b9bb86dbfc",
+    "Scripts/test_codex_file_isolation_child.sh": "c8433a161896c7ab904bf72b5d730614cf532d160f5b863bd0ddb526b53d71a7",
+    "Scripts/test_fixture_process_ownership.py": "f061183fa41e196b3c0db30ad7c7c96ae35fc2b5453933b93f82458cd238b810",
+    "Scripts/test_fixture_scratch_parent.py": "1169ea479acb75f67e5465a77eb3f669495e5258ef01bded6270cfec8f0aff38",
+    "Scripts/test_jones_identity_overlay.sh": "ff356dc9eb12e9bfc52511f5531844cb4e20f0dda182b73bed50aeecb27acfd0",
     "Scripts/test_mimo_usage.py": "30807e825f98b052bfded18bfa2ff4dae7a54bd245cd63e9a8b3b602e2b91daa",
-    "Scripts/test_provider_session_file_isolation.sh": "30555b8480072b5e6bff1f1a743d55c2798e494e79e7bebf2952391bd38aaf8a",
+    "Scripts/test_provider_session_file_isolation.sh": "ecf73fe745eeac6348c5341296a0cb929852b2ac68a53b3cf9b199413056cfc4",
     "Sources/CodexBar/GeminiLoginRunner.swift": "329b1646a418b17898ba24ee8642d781b54f65c139bcd8c69e6eff957102f802",
     "Sources/CodexBar/Jones/JonesCompactAccountPresentation.swift": "2cc1991337393d7f1145123ea797950826f233108be1624fa8f078098fb86580",
     "Sources/CodexBar/MenuCardCompactAccountRow.swift": "5fb09537d2287db2c748872a9512d34162c555b3a47d7e7b7c9a5879fcd2780e",
@@ -57,14 +58,14 @@
     "Tests/CodexBarTests/ClaudeFleetProfileDiscoveryTests.swift": "00a244b6f8bf75fbdeca8578443c2c19553abaa7979811697dc0aa180455ce3f",
     "Tests/CodexBarTests/ClaudeNativeKeychainProfileTests.swift": "148f48deb2375d62c8f482e6ff0c232c1acdff20b8fd41d3b455acbfb0a173d1",
     "Tests/CodexBarTests/ClaudeNativeProfileFetchTests.swift": "ad2ddaf9caad15f133fa9259a0e7017ee5a147517b39777c5e4ec631b642f6aa",
-    "Tests/CodexBarTests/ClaudeNativeProfileIntegrationTests.swift": "468ce92adeca6f50499159eb876032de13ae6a6f20783987ad3cd15e03895c27",
+    "Tests/CodexBarTests/ClaudeNativeProfileIntegrationTests.swift": "35442c2214beb9222af6960e37452fc4af0b95f50989a9b335b430b7ec328bd4",
     "Tests/CodexBarTests/ClaudeNativeProfileSelectionTests.swift": "7790040c58d98b3e4a16340be3371dc24af70d40aac349e4e7540c46af794b08",
     "Tests/CodexBarTests/ClaudeOAuthCredentialsStoreIsolatedSecurityCLITests.swift": "36466534748d00f9fc0f4b540838a81e38f9d5aea03044faddfc2f9d3e2d7a8a",
     "Tests/CodexBarTests/ClaudeOAuthDelegatedRefreshMCPProfileTests.swift": "5d2862fe9f575cf1c398a42b70cd4f3a15e659692605065770fb138692a17921",
     "Tests/CodexBarTests/Jones/JonesFrameworkIsolationTests.swift": "ebee68096330ae660d95f29f1d9792d44f95fb0f92a4e098ff60d5882cc5ed57",
     "Tests/CodexBarTests/JonesCompactAccountPresentationTests.swift": "6f9f87734c7b94b6d914b3e673ef7e9be2f86dabc6786a9aab50d831545d58da",
     "Tests/CodexBarTests/JonesGroupedCompactAccountPresentationTests.swift": "c894707b103fae823b905a2050b57e8acb1b7eff332fd920f19eef22f898d209",
-    "Tests/CodexBarTests/JonesProviderScratchTests.swift": "48e43ea47254fe43b938e007096ee744b4994f5ad6ca4544b6ed16aedf8f856a",
+    "Tests/CodexBarTests/JonesProviderScratchTests.swift": "a6f34b8e833c6f14723a4c9f30a382d2991bd92a7d91a65ed470d8dbde02ca47",
     "Tests/CodexBarTests/JonesStateRootTests.swift": "72933e9e04680825fd64d8d4169b8bfab38ac3e0af4b2b34666b75d029ccf303",
     "Tests/CodexBarTests/MiMoLocalUsageFallbackTests.swift": "7633fd3a2988c8f7b8f0045f49a38e4129ce7ac85499281892699ed134b9303a",
     "Tests/CodexBarTests/MiMoUsageScriptTests.swift": "e6cce43581d749046d495b2ab71d7bffe133b5f23af96d1eccc8c5869e0f251e",
@@ -73,7 +74,7 @@
     "TestsLinux/JonesDiagnosticDestinationTests.swift": "08c19629bfb481a44f7dbd4f089735f221ec1618d0c7a8bc8e9fd05936ec1d79"
   },
   "checks": {
-    "SwiftFormat_0_61_1": "PASS59 final integrated Swift files --lint --cache ignore,9.76s",
+    "SwiftFormat_0_61_1": "PASS61 integratedSwiftfiles includingTestsLinux --lint --cache ignore,9.69s",
     "diff_whitespace": "PASS",
     "scratch_harness": "FAIL20/19pass onMacPython3.13.3; EPERM terminal leader group signal, sole-reap unknown; execution held; Linux evidence remains historical",
     "MiMo_writer": "Laptop PASS3 at44a43f59; affected MiMo source unchanged since then",
@@ -339,7 +340,7 @@
     "make_check": "held: installer/no-tool-install boundary",
     "scratch": "invocation-owned TemporaryDirectory under worktree .build/source-qualification, absence verified"
   },
-  "delivery_stage": "Standalone dependency and bounded reaping corrections integrated45ac35cc; Mac normal-completion EPERM unresolved, same-owner completion active; NOT next native candidate.",
+  "delivery_stage": "INTERIM ready for isolated native compile/unit verification only. Collector normal-completion repair independent and HELD. No source-complete/merge/install claim.",
   "CI_pause_evidence": {
     "source": "Agent relay from laptop coordinator506fc1fd; not owner approval; local evidence not assumed accessible VPS",
     "url": "https://github.com/Jones-Systems/CodexBar/actions",
@@ -465,5 +466,26 @@
       "scratchparent lifecycle"
     ],
     "deferred": "FSP-PROC-002 and NFP-COR-002 untouched"
+  },
+  "preceding_source_candidate": "75c03d065bc14c641228da117724f88734cb6027",
+  "interim_native_candidate": {
+    "source_checkpoint": "45ac35cc586449f59976652f0f4b059c1a09073e",
+    "published_documentation_head": "Use exact full SHA in accompanying interim handoff; documentation-only descendant shares manifest hashes",
+    "previous_native_candidate": "84c28e3c86d9ce846ddd37f8bebe1ed597ece752",
+    "scope": "production runner make test / isolated compilation+unit checks independent of Python collector",
+    "unit_input_delta": [
+      "Tests/CodexBarTests/ClaudeNativeProfileIntegrationTests.swift",
+      "Tests/CodexBarTests/JonesProviderScratchTests.swift"
+    ],
+    "unit_input_hashes": {
+      "Tests/CodexBarTests/ClaudeNativeProfileIntegrationTests.swift": "35442c2214beb9222af6960e37452fc4af0b95f50989a9b335b430b7ec328bd4",
+      "Tests/CodexBarTests/JonesProviderScratchTests.swift": "a6f34b8e833c6f14723a4c9f30a382d2991bd92a7d91a65ed470d8dbde02ca47"
+    },
+    "parent_PR11": "76f86a42560d21143dd4359aad54248bf60b28e6",
+    "runner_evidence": "Makefile33-34 invokes Scripts/test.sh; no collector invocation in production runner",
+    "collector": "Do not execute shared collector/ownership live/lifecycle scripts; same-sourceowner completion still active, independent of unit compile",
+    "concurrency": "Laptop pins exact checkout until verification terminal; VPS collector edits remain separate worktree; reconcile final unit input hashes before carrying interim evidence",
+    "native": "UNRUN on corrected source; previous84cfailure retained",
+    "CI": "paused,checksabsent; no waiver"
   }
 }
