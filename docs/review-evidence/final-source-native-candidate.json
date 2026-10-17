@@ -339,7 +339,7 @@
     "make_check": "held: installer/no-tool-install boundary",
     "scratch": "invocation-owned TemporaryDirectory under worktree .build/source-qualification, absence verified"
   },
-  "delivery_stage": "Swift directerrors source-addressed; active harness lane also correcting package-scoped standalone dependency; await combined source-ready candidate",
+  "delivery_stage": "Standalone dependency and bounded reaping corrections integrated45ac35cc; Mac normal-completion EPERM unresolved, same-owner completion active; NOT next native candidate.",
   "CI_pause_evidence": {
     "source": "Agent relay from laptop coordinator506fc1fd; not owner approval; local evidence not assumed accessible VPS",
     "url": "https://github.com/Jones-Systems/CodexBar/actions",
@@ -424,5 +424,46 @@
       "GeminiCurlScratchTests"
     ],
     "next_gate": "Await Mac collector source repair then final exactcandidate; laptopcheckout fixed84c until explicit release; no intermediate compile/retry"
+  },
+  "harness_package_reap_checkpoint": {
+    "authority_effect": "none",
+    "source_commit": "d26cb8ba74ee9b4e9f3c2547f90b77623d4f443f",
+    "integration": "45ac35cc586449f59976652f0f4b059c1a09073e",
+    "source_paths": {
+      "Scripts/test_fixture_scratch_parent.py": "1169ea479acb75f67e5465a77eb3f669495e5258ef01bded6270cfec8f0aff38",
+      "Scripts/test_fixture_process_ownership.py": "f061183fa41e196b3c0db30ad7c7c96ae35fc2b5453933b93f82458cd238b810",
+      "Scripts/test_provider_session_file_isolation.sh": "ecf73fe745eeac6348c5341296a0cb929852b2ac68a53b3cf9b199413056cfc4",
+      "Scripts/test_jones_identity_overlay.sh": "ff356dc9eb12e9bfc52511f5531844cb4e20f0dda182b73bed50aeecb27acfd0",
+      "Scripts/test_codex_file_isolation_child.sh": "c8433a161896c7ab904bf72b5d730614cf532d160f5b863bd0ddb526b53d71a7"
+    },
+    "implemented": [
+      "Retained ownership check then final signal and bounded child wait even if signal errors; separate diagnostics, no post-reap signals",
+      "TestProcessSafety.swift and -package-name CodexBar in both standalone compilers; unchanged production visibility/detection",
+      "Matching identity/copy/stub assertions; contained Codex module cache; HUP/INT/TERM cleanup"
+    ],
+    "builder_checks": {
+      "ownership": "Linux25/25, original20bodies unchanged",
+      "lifecycle": "Linux56/56, original50dispatch unchanged+6Codexchild cases",
+      "identity": "Updated30/30portable/stub; no newnativeproof",
+      "syntax": "Python/embeddedPython/shell and diff PASS",
+      "scratch": "ownedparents removed/absence verified"
+    },
+    "Mac_collector": "NOT complete: ambiguous EPERM still fails closed, including reported terminal zombie-only normal case. No green expected, no retry request.",
+    "prior_effect": "Original explicitinnerreap remains unproved; source WNOWAIT not reap. Parent already cleaned/outerknownchilddrain reconciled per laptop; no oldPIDoperation authorized.",
+    "source_contracts": [
+      "Apple xnu-10002.81.5 bsd/kern/kern_sig.c killpg1 excludesSZOMB, EPERM not arbitrary descendant-absence proof",
+      "CPython3.13.3 Lib/subprocess.py finalization may reap, not evidence prior invocation did",
+      "SwiftSE0386 package access requirespackage-name"
+    ],
+    "continuation": "Existing Astra sourceowner codexbar-macos-collector-completion-20261017-r1 framing robust Maccompatible originalcase lifecycle; checkpoint preserved not finalhandoff",
+    "native_limits": "Swift proofs/make test unrun newsource; oldidentity46 remains bound oldhashes",
+    "affected_native_commands": [
+      "identity-overlay",
+      "provider-session actualcompile/behavior",
+      "optimizedCodexfilechild actualcompile/behavior",
+      "ownershipmock/live",
+      "scratchparent lifecycle"
+    ],
+    "deferred": "FSP-PROC-002 and NFP-COR-002 untouched"
   }
 }

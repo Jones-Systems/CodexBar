@@ -1061,3 +1061,31 @@ Oneharnessowneravoids overlappingwriters; no newtask/reviewer. Allrealpolicy/nat
 actualprovidercompilewaitsMacSwift. Sourcefixnotpublicpolicyweakening. ExistingSwift
 compilecorrectionsremain integrated; combinednextcandidatewaits harnessrelease. Allother
 gates/P2deferrals/liveboundariespreserved; no intermediateMacrerun requested.
+
+
+### Package/reap source checkpoint; Mac collector completion still active
+
+Released five-file harnesssource d26cb8ba74ee9b4e9f3c2547f90b77623d4f443f integratesPR12
+45ac35cc586449f59976652f0f4b059c1a09073e. Root inspectedmanifest/diff and diffcheckPASS.
+Standaloneprovider+Codexchild nowincludepackage-scopedTestProcessSafety with-package-name
+CodexBar, no production visibility/detectionchanges. Identitystub/copyinventoryassertions
+updated. CodexchildmodulecacheinsideowneduniqueTMPDIR, handledsignalEXITcleanupadded.
+Collector nowreapsdirectchildboundedlyafterfinalsignalfailure, preservingseparateerrors
+and unknown-descendantdiagnostics; no post-reapsignals. Originalinnerreapstillunproved,
+notreclassifiedbysourcecontracts; nopriorPIDoperationauthorized.
+
+BuilderLinuxownership25/25(original20unchanged), lifecycle56/56(original50dispatch+6Codex),
+updatedidentity30/30portable/stub, syntax/diffPASS; exactparentsremoved/absenceverified.
+No newnativeSwiftproof. Oldidentity46PASSoldhashesonly. SourcecontractsXNUzombiegroupEPERM,
+CPythonpotentialfinalizer andSwiftpackagecontext are recorded in harness-package-reap-d26cb8ba.json.
+
+This is partialcompletion: collector stillfailsclosed onknownMacnormalterminalzombiegroup
+EPERM, so doesnotjustifyrerunexpectinggreen. RootreturnedremainingoriginalMaccompatible
+lifecycle work to SAMEAstraowner via thread-send task codexbar-macos-collector-completion-20261017-r1,
+worktreefixture-macos-reap-repair-20261017, cleannewbase d26cb8ba. RootsoleGitowner;
+collector/ownershipfixture/narrowhelperonly. Preservealloriginalcases, retainedauthority,
+noEPERMswallow/PIDexistencechecks/killbyname/deferredP2repair. Frameknown-ownedlifecycle
+fromcontracts, mocksfirstthenadmittedLinuxsynthetic; no nativeMacprobe. FreshVPS8.92%CPU,
+36.44GiBRAM, onecore6.25%. No extra reviewer/broadreview. Finalexactnativehandoffwaits
+completion; standalonecompilecorrections+Swiftcorrectionsarepublishedcheckpointonly.
+AllCI/extraction/native/install/sign/findingboundariesunchanged.
