@@ -317,8 +317,8 @@
     "diff_whitespace": "PASS",
     "scratch_harness": "Native-r2 c9 mock38/live45/lifecycle56 PASS; unchanged dependency inputs available for laptop hash-bound carryforward",
     "MiMo_writer": "Laptop PASS3 at44a43f59; affected MiMo source unchanged since then",
-    "native": "556cfca9Gemini29PASS/fullFAILgroup75menutestexpectations;revisedc2c52sourceUNRUN",
-    "make_test": "FAIL591.346s at556cfca9;revisedc2c52UNRUN",
+    "native": "PASS requiredfull/86named/original12at374529b6, sourcecheckpointc2c52e09; see native-r12-pass.json. No operationalqualification.",
+    "make_test": "PASS755.446s/all86groups,1030selections at374529b6",
     "make_check": "HELD installer/no-tool-install boundary",
     "independent_Claude_review": "NFP-COR-001 source-remediated eb9bb968 and independently confirmed; native unrun. NFP-COR-002 P2 deferred/unrepaired.",
     "independent_process_review": "FSP-PROC-001 source-remediated and independently confirmed b9d2ca08; nonblockingFSP-PROC-002 P2 deferred/unrepaired"
@@ -424,18 +424,15 @@
     "MiMo3 already passed laptop44a; no unchanged rerun"
   ],
   "held_native_suites": [
-    "Fullscratch/identity/shardingHELD0attemptsdeferredNFCR-COR-002/003;revisedmenusuites/fullqualificationdue."
+    "Fullscratch/identity/shardingproofsHELD0attemptsforNFCR-COR-002/003P2. Globalnativeunit suitesPASS; runtime/trialcontainmentproofsnotqualified."
   ],
   "remaining_product_gaps": [
-    "AFCL installed flow includes native usage companion reusable by native selector if present; readiness unknown; automation-token endpoint/scope support remains separately unproved",
-    "All new native behavior/GUI evidence pending",
-    "Shared HTTP/native app/widget/unbundled CLI containment remains unqualified",
-    "NFP-COR-001 originalP1 source-remediated and independently confirmed eb9bb968; native execution pending",
-    "NFP-COR-002 P2 identityless success history mixing: deferred unrepaired, see exact review ledger",
-    "FSP-PROC-001 originalP1 source-remediated/confirmed b9d2ca08; native Mac behavior pending",
-    "FSP-PROC-002 P2 handler restoration window: nonblocking, deferred/unrepaired",
-    "Exact84c native compile failure in two named testfiles; bounded source repair active",
-    "Mac group-signal EPERM causes skipped wait; prior inner reap unknown; source repair/effect reconciliation required"
+    "AFCLselectednativecompanionruntimeidentity/readiness/externalrefresh unverified; no protectedreadsorliveprobe",
+    "Nativeapp/widget/CLI/sharedHTTPcontainment andallsevenruntime/trialgates remain",
+    "NFP-COR-002/FSP-PROC-002 P2 deferred/unfixed",
+    "NFCR-COR-002/003 P2 deferred/unfixed; fullscratch/identity/shardingproofsheld",
+    "makecheckmissingpinnedtools/CIpause blockmergequalification",
+    "Historicalexternalcostrootabsence/ClaudeApplicationSupportpriorstatecleanup/earlierinnerreap remainunproved"
   ],
   "trial_gates": {
     "diagnostics": "source addressed, retained-export native proof pending",
@@ -447,10 +444,11 @@
     "native_release": "build/required checks/signing/package/install/launch/switching unqualified"
   },
   "merge_gates": [
-    "required CI absent, not green",
-    "native verification pending",
-    "laptop coordinator retains merge ownership",
-    "extraction requires PR11 AND identity merged to main or direct owner release"
+    "Required CI absent whileforkActions paused, notgreen",
+    "RequiredmakecheckHELDmissingpinnedtools/noinstall",
+    "HeldP2proofs/reviews/thread/docclosuremustbedispositionedwithoutwaiver",
+    "Laptoptakeoverrootretainsmergeownership",
+    "ExtractionrequiresPR11AND12mergedforkmainordirectownerrelease"
   ],
   "delivery_gap": "No registered VPS bridge to laptop environment; source-ready report and this Git handoff must be consumed via existing authorized laptop route",
   "native_evidence_relay": {
@@ -586,7 +584,7 @@
     "make_check": "held: installer/no-tool-install boundary",
     "scratch": "invocation-owned TemporaryDirectory under worktree .build/source-qualification, absence verified"
   },
-  "delivery_stage": "Source checkpoint prepared for focused containment/lifecycle review, then isolated native verification. No source-complete/native-green/merge/install claim.",
+  "delivery_stage": "NativefullPASS on374529b6/sourcec2c52e09; sourceinputmanifestunchangedbyfinaldocs. Requiredlint/CI/proof/activationgatesHELD, noeligiblemerge/installclaim.",
   "CI_pause_evidence": {
     "source": "Agent relay from laptop coordinator506fc1fd; not owner approval; local evidence not assumed accessible VPS",
     "url": "https://github.com/Jones-Systems/CodexBar/actions",
@@ -1171,7 +1169,7 @@
       "Tests/CodexBarTests/StatusMenuCodexSwitcherTests.swift"
     ],
     "scope": "Two obsolete2-fullcard assertions replaced with exactacceptedactivecard/secondarycompactidentity+order; explicitsecondaryexpansionrequiresbothfullcards. Pendingvariantrequirespersnapshotemptybeforeafter. No-switcher/declarations/lifecycle preserved, productionunchanged.",
-    "qualification": "UNRUN",
+    "qualification": "PASS at374529b6: focused30SwiftTesting+4XCTest83.420s;full755.446s/1030selections/all86groupsPASS;86named+original12allPASS;10324SwiftTesting+147XCTestreported;6skips/0timeoutsfallbacksmanualretries.",
     "focused_required": [
       "StatusMenuCodexSwitcherTests",
       "JonesCompactAccountPresentationTests",
@@ -1180,6 +1178,18 @@
     "full_required": "make test once iffocusedPASS underonecanonicalparent/jobs1/default180/3isolationflags/no manualretry",
     "source_path_count": 306,
     "named_rollup_count": 86,
-    "carryforward": "Gemini29r11/cost7r10/P1target8resources7r9/focus86andactualtwoproofsr8 onlybyexactdependencyhash/sourcebinding, nocurrentheadrerunclaim."
-  }
+    "carryforward": "Gemini29r11/cost7r10/P1target8resources7r9/focus86andactualtwoproofsr8 onlybyexactdependencyhash/sourcebinding, nocurrentheadrerunclaim.",
+    "cleanup": "Bothouterdrainsproved/exactparentremoved/absenceverified/all306hashesindexclean/processWRITEreleased;522observedcostpathscontained,framework/historicalunknownsremain."
+  },
+  "historical_remaining_product_gaps": [
+    "AFCL installed flow includes native usage companion reusable by native selector if present; readiness unknown; automation-token endpoint/scope support remains separately unproved",
+    "All new native behavior/GUI evidence pending",
+    "Shared HTTP/native app/widget/unbundled CLI containment remains unqualified",
+    "NFP-COR-001 originalP1 source-remediated and independently confirmed eb9bb968; native execution pending",
+    "NFP-COR-002 P2 identityless success history mixing: deferred unrepaired, see exact review ledger",
+    "FSP-PROC-001 originalP1 source-remediated/confirmed b9d2ca08; native Mac behavior pending",
+    "FSP-PROC-002 P2 handler restoration window: nonblocking, deferred/unrepaired",
+    "Exact84c native compile failure in two named testfiles; bounded source repair active",
+    "Mac group-signal EPERM causes skipped wait; prior inner reap unknown; source repair/effect reconciliation required"
+  ]
 }

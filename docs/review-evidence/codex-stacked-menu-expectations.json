@@ -9,7 +9,7 @@
   "fix": "Bothloaded/pendingcasesrequireexactprojectionaccounts/selectionsource/activeidentity/order,exactinitialcard+compactrows,nolegacy/collapsedrows,noswitcher;expandsecondarythroughstate/invalidate/reopenexistingseam andrequiretwoexactcards. Pendingpersnapshotexplicitlyemptybeforeafter.",
   "checks": {
     "diff_whitespace": "PASS",
-    "native_revised": "UNRUN"
+    "native_revised": "PASS fullmake at374529b6/all86groups; affectedfocusedchecksPASS atboundprior/currentheads, see native-r12-pass.json"
   },
   "scope": "Astrahighonefilebuilderreleased;rootselfreview;no production/helper/deferredP2change."
 }

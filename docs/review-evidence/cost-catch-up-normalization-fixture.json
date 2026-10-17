@@ -9,7 +9,7 @@
   "fix": "Explicitraw /./ alias ofsameexistingcontainedfile; retained inequality andallqueue-clearing/identity/scan-count/completionassertions; added standardized-equivalenceassertion. No allocation/production/helper/cleanupchange.",
   "checks": {
     "diff_whitespace": "PASS",
-    "native_revised": "UNRUN"
+    "native_revised": "PASS fullmake at374529b6/all86groups; affectedfocusedchecksPASS atboundprior/currentheads, see native-r12-pass.json"
   },
   "scope": "Root smallmechanicalonefilelane afterAstra/highread-onlyfix-readydiagnosis; noP2repair."
 }

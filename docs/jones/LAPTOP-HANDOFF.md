@@ -6,6 +6,14 @@ Authority effect: none. VPS owns its existing source branches; laptop root owns 
 trial disposition and eligible merges. No live authentication, installation or switching
 operation is granted by this handoff.
 
+## Native full-suite pass and remaining gates
+
+Tested head `374529b6723af36c919d9b4167ffd94ed8f53936`, source checkpoint `c2c52e09d8084489c01306175899fc368a589eb8`: full `make test` passed in 755.446 seconds, with all 86 groups and 1,030 selections. All 86 supplemental entries and the original 12 recovery/account suites passed. Two filename aliases map to the actual StatusMenuTests suite and explicitly verified individual cases. The run reported 10,324 Swift Testing tests and 147 XCTest tests, six existing gated skips, and zero runner timeouts, fallbacks or manual retries. The three focused menu suites passed 30 Swift Testing tests and four XCTest tests in 83.420 seconds. Exact commands and environments are included in `docs/review-evidence/native-r12-pass.json`; raw logs remain in the laptop's native-r12 evidence directory.
+
+Both outer drains were proved. The exact workspace parent was removed after identity validation and absence readback; cache and logs remain. All 306 source hashes and the clean index were verified, and process/write lanes were released. All 522 observed cost paths were contained. Framework/compiler internals and historical unknown effects remain separate. This documentation-only followup preserves every tested source input.
+
+Remaining gates: `make check` requires missing pinned tools under the original no-install constraint; fork Actions are paused and PR checks are empty. Deferred NFCR-COR-002/003 block the full scratch, identity and sharding proofs; NFP-COR-002/FSP-PROC-002 remain deferred. Exact merge readiness and extraction predicates, plus the seven runtime/trial and signing/package/install/launch/switching gates, remain open. No merge, installation or account-switching success is claimed. VPS SSH signing-agent failure prevented delivery of this result; existing VPS branches are preserved. This result supersedes earlier candidate directions without waiving those gates.
+
 ## Native compact-menu expectation checkpoint
 
 Latest source checkpoint `c2c52e09d8084489c01306175899fc368a589eb8 updates two stale full-card tests to accepted compact behavior without changing production: exactaccountidentities/order/active source, activecard+secondarycompactinitially, bothfullcardsafterexplicitexpansion, nolegacy/collapsedrows orswitcher. Pending-snapshotvariantrequiresempty snapshotsbeforeafterwhilebothaccountsremainrepresented/expandable. Astra diagnosis/builderreleased;rootdiffreviewPASS, nativeUNRUN.
