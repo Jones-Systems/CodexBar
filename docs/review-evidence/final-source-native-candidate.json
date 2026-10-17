@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "authority_effect": "none",
-  "source_candidate": "81ec3f024c5f2a78604cd27bba79603dc10d61aa",
+  "source_candidate": "51bf105cf122c38b67dbc632d8347d8fd61f3248",
   "base": "21c34561387b26f76d0a27e9f00d1538fbc0926f",
-  "parent_PR11_head": "47677b3b8a8778c82e7d07a183895d9597b546e9",
+  "parent_PR11_head": "fdfea6b06a1f58e235bdfc0cafbf6143419729cc",
   "source_paths": {
     "Scripts/fixture_process_anchor.py": "9b429b274bc1e56f1bf50766da3e9fc08a7f977fc6d18787f40ceda50d4868d0",
     "Scripts/test_codex_file_isolation_child.sh": "c8433a161896c7ab904bf72b5d730614cf532d160f5b863bd0ddb526b53d71a7",
@@ -56,7 +56,7 @@
     "Sources/CodexBarCore/Providers/Shared/AliyunOneConsole/AliyunOneConsoleChromiumCookieFallbackImporter.swift": "416d4cfdab7092304767b290a3401f5a8229a706b2fd641c27cf6eea9ea6af83",
     "Tests/CodexBarTests/AccountMenuLayoutPlannerTests.swift": "0cc064e3f3d8a8e59dbc5f0050faea35c94089fb2f911146ad863264f1ac5004",
     "Tests/CodexBarTests/ClaudeConfigPathsTests.swift": "e6be448c1c7481848f681684a4ee921bc8628bb2ef951db538923eb82fe8e775",
-    "Tests/CodexBarTests/ClaudeFleetProfileDiscoveryTests.swift": "81d4f79aeda929f4c9cdca61a243abc90419e6dc4e216eae0ebc9eefc5e472e9",
+    "Tests/CodexBarTests/ClaudeFleetProfileDiscoveryTests.swift": "f5dfeb28ec4654657b7fed5e9e7b8e6369794ac3f30b7282efee2ccbabd967ad",
     "Tests/CodexBarTests/ClaudeNativeKeychainProfileTests.swift": "148f48deb2375d62c8f482e6ff0c232c1acdff20b8fd41d3b455acbfb0a173d1",
     "Tests/CodexBarTests/ClaudeNativeProfileFetchTests.swift": "ad2ddaf9caad15f133fa9259a0e7017ee5a147517b39777c5e4ec631b642f6aa",
     "Tests/CodexBarTests/ClaudeNativeProfileIntegrationTests.swift": "35442c2214beb9222af6960e37452fc4af0b95f50989a9b335b430b7ec328bd4",
@@ -79,8 +79,8 @@
     "diff_whitespace": "PASS",
     "scratch_harness": "Native-r2 c9 mock38/live45/lifecycle56 PASS; unchanged dependency inputs available for laptop hash-bound carryforward",
     "MiMo_writer": "Laptop PASS3 at44a43f59; affected MiMo source unchanged since then",
-    "native": "Native-r2 c9 compilation/discovery PASS;16groupsPASS/group17fails Claude binding fixture; new source fixture correction native UNRUN",
-    "make_test": "Native-r2 c9 FAIL248.90s zero retries/timeouts; new candidate unrun",
+    "native": "Native-r3 46055de targeted compileFAIL60.64s zero tests; plain-let compiler correction new source native UNRUN",
+    "make_test": "Native-r3 full run never started; previous c9 partial failure preserved",
     "make_check": "HELD installer/no-tool-install boundary",
     "independent_Claude_review": "NFP-COR-001 source-remediated eb9bb968 and independently confirmed; native unrun. NFP-COR-002 P2 deferred/unrepaired.",
     "independent_process_review": "FSP-PROC-001 source-remediated and independently confirmed b9d2ca08; nonblockingFSP-PROC-002 P2 deferred/unrepaired"
@@ -509,6 +509,16 @@
     ],
     "affected_suite": "ClaudeFleetProfileDiscoveryTests all seven tests",
     "evidence": "claude-binding-physical-fixture.json",
+    "preliminary_dependencies_unchanged": true
+  },
+  "native_r4_candidate": {
+    "integration": "51bf105cf122c38b67dbc632d8347d8fd61f3248",
+    "delta_from": "46055de5c1fc8965c7a1aa2447863d60cce2e24d",
+    "changed_paths": [
+      "Tests/CodexBarTests/ClaudeFleetProfileDiscoveryTests.swift"
+    ],
+    "affected_suite": "ClaudeFleetProfileDiscoveryTests seven tests first",
+    "evidence": "claude-binding-physical-fixture.json#macro_compile_followup",
     "preliminary_dependencies_unchanged": true
   }
 }

@@ -6,6 +6,25 @@ Authority effect: none. Source stays on VPS. Laptop thread
 trial disposition and eligible merges. No live authentication, installation or switching
 operation is granted by this handoff.
 
+## Native-r4 macro compiler correction
+
+Latest source checkpoint `51bf105cf122c38b67dbc632d8347d8fd61f3248`, PR11 parent
+`fdfea6b06a1f58e235bdfc0cafbf6143419729cc`. Use accompanying exact published PR12
+head only after laptop explicitly releases native-r3; no live checkout advancement.
+The46055de targeted gate failed compilation60.64s, zero tests; full make test never
+started. Two positive reads now execute as plain throwing let statements before
+nonthrowing #expect values. All rejection assertions, physical path, metadata and
+cleanup behavior retained. Root applied this small diagnosed one-path mechanical
+repair locally; scoped formatter0.2s and diff PASS, native UNRUN. All68 hashes match.
+
+Repeat the seven-test discovery gate on the revised source under existing synthetic
+isolation and one owned scratch parent, then accepted full/remaining qualification
+if passing. Preliminary dependency hashes remain unchanged; carry forward only after
+verifier match. Prior coverage, original inner-reap history, deferred P2 and all
+CI/lint/extraction/sign/install/live gates remain unchanged. Exact source result is
+recorded as macro_compile_followup in claude-binding-physical-fixture.json. Earlier
+sections are historical where this checkpoint supersedes them.
+
 ## Native-r3 fixture correction candidate
 
 This section supersedes older candidate directions below. Source checkpoint

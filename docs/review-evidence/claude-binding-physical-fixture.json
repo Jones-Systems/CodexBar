@@ -24,5 +24,16 @@
     "cleanup": "Laptop reports terminal release, creator parent removed/absence verified; source/index clean and68hashes match"
   },
   "carry_forward": "Six preliminary dependency inputs unchanged from c9; laptop revalidate recorded hashes before reuse, no redundant execution requested. Only this Swift fixture changes. Native full make test and remaining affected suites still required.",
-  "gates": "CI forkpause, missing lint pins/no install, extraction, deferred P2 and signing/activation/live-operation boundaries unchanged"
+  "gates": "CI forkpause, missing lint pins/no install, extraction, deferred P2 and signing/activation/live-operation boundaries unchanged",
+  "macro_compile_followup": {
+    "source_commit": "fdfea6b06a1f58e235bdfc0cafbf6143419729cc",
+    "integration": "51bf105cf122c38b67dbc632d8347d8fd61f3248",
+    "prior_native_head": "46055de5c1fc8965c7a1aa2447863d60cce2e24d",
+    "prior_result": "Targeted seven-test gate COMPILE FAIL exit1 after60.64s attempt1; zero tests; nested throwing #expect expansion at143/156; full make test never started",
+    "correction": "Two throwing positive reads evaluated in plain let statements before nonthrowing value expectations; rejection cases, metadata, realpath and cleanup unchanged",
+    "source_hash": "f5dfeb28ec4654657b7fed5e9e7b8e6369794ac3f30b7282efee2ccbabd967ad",
+    "verification": "Scoped SwiftFormat PASS0.2s and diff PASS; native UNRUN",
+    "coordination": "Laptop retains old46055de checkout until explicit native-r3 terminal release; no advancement while active",
+    "delegation": "Root implements small exact one-path compiler repair locally; additional delegated framing/review would add overhead to already diagnosed mechanical correction"
+  }
 }
