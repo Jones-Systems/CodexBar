@@ -739,3 +739,23 @@ an explicit ~/.claude, because explicit default-directory selection uses distinc
 secure storage. Tests must distinguish absence/explicit default path, persisted selection,
 stale binding membership and cross-profile cache identity. Named profiles keep matching
 service/cache/refresh routing. Inherited shell home is not GUI/account evidence.
+
+
+### Single-parent fixture repair integrated
+
+Released source c5454c8b7debb092638801d00b402bbc43298eba integrates ONLY into PR12
+at e73b14de3c3baa3fa99a3c48212f3211c0db725f. Root checked all three path hashes,
+inspected source/regressions and passed diff --check. CODEXBAR_TEST_SCRATCH_PARENT is
+optional, existing/canonical/absolute/strictly within workspace; invalid explicit input
+fails closed. Scripts own unique descendants only, preserve caller parent/siblings,
+and identity's three provider stub invocations descend within its fixture. Unset
+behavior and cleanup handlers are preserved; no fixture authorization was broadened.
+
+Builder passed50 synthetic lifecycle cases (valid/invalid input, symlinks/escapes,
+nested placement, success/failure and HUP/INT/TERM cleanup) and30 portable real-source
+identity checks using compiler stubs. Final union8.69s, owned scratch removed. Native
+16-case identity and provider proofs remain unrun because VPS lacks Swift. Exact hashes,
+provenance and one-parent laptop commands are in fixture-scratch-parent-c5454c8b.json.
+Do not treat stubs as Swift behavior or run an intermediate native candidate. Claude GUI
+and WebKit fixture builders continue independently; final combined manifest/suite union
+will follow. Missing tooling/CI, extraction and runtime/signing/install gates remain.

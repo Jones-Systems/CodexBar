@@ -102,9 +102,11 @@ Identifier-only JonesFrameworkIsolationTests remain safe. Existing admitted affe
 runner groups may proceed, with partial coverage reported exactly.
 
 The laptop independently passed all three synthetic Scripts/test_mimo_usage.py cases
-at44a43f59; no unchanged rerun is required. Both native shell checks remain HELD until
-their roots and nested calls support one caller-owned workspace scratch parent. Astra
-source task codexbar-fixture-scratch-parent-20261017-r1 owns that correction. Preserve
+at44a43f59; no unchanged rerun is required. Both shell scripts now support one caller-owned workspace scratch parent via optional
+CODEXBAR_TEST_SCRATCH_PARENT, source c5454c8b integrated at e73b14de. See
+../review-evidence/fixture-scratch-parent-c5454c8b.json for exact commands and hashes.
+Portable checks passed50 lifecycle cases and30 identity checks; native qualification
+still awaits the final combined candidate. Preserve
 native rejected-case16 as unrun until actual Swift execution. Stub proof is not native.
 
 ## Open completion gates

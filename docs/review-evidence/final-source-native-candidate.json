@@ -123,7 +123,7 @@
     "AFCL automation adapter and usage-endpoint/granted-scope evidence",
     "Claude native Authfleet GUI discovery/selection source lane active",
     "Grouped Codex presentation source-addressed at50a67106; native pending",
-    "Single-parent shell fixture containment source lane active",
+    "Single-parent shell fixture containment source-addressed c5454c8b; native pending",
     "WebKit cache synthetic-fixture seam source lane active; production persistence/runtime containment remains separate"
   ],
   "trial_gates": {
@@ -194,6 +194,6 @@
       "live_reads": false,
       "rerun": "not needed unless affected source changes"
     },
-    "shell_checks": "HELD: both scripts create ROOT descendants outside the one invocation-owned workspace scratch parent; bounded source containment task active; native16 rejected cases remain unrun"
+    "shell_checks": "Source containment corrected c5454c8b, integrated e73b14de; 50 synthetic lifecycle cases and30 portable identity checks passed; native16 identity/provider checks remain unrun; see fixture-scratch-parent-c5454c8b.json"
   }
 }

@@ -1,0 +1,48 @@
+{
+  "authority_effect": "none",
+  "source_commit": "c5454c8b7debb092638801d00b402bbc43298eba",
+  "integration_commit": "e73b14de3c3baa3fa99a3c48212f3211c0db725f",
+  "task": "codexbar-fixture-scratch-parent-20261017-r1",
+  "contract": "Optional CODEXBAR_TEST_SCRATCH_PARENT: existing canonical absolute directory strictly inside workspace; explicit invalid values fail closed; each script owns only unique descendant; caller parent preserved; unset behavior retained; nested identity provider scenarios use identity fixture descendant.",
+  "source_paths": {
+    "Scripts/test_jones_identity_overlay.sh": "3d60beb1521b655a191dced02c9ab0840c58016a61c2909b2fd364b9bb86dbfc",
+    "Scripts/test_provider_session_file_isolation.sh": "30555b8480072b5e6bff1f1a743d55c2798e494e79e7bebf2952391bd38aaf8a",
+    "Scripts/test_fixture_scratch_parent.py": "ce137a7c31d818348c38d5f98fe0458fd532116f9a88434e33ad4b26192d0041"
+  },
+  "builder_evidence": {
+    "synthetic_lifecycle_cases_passed": 50,
+    "portable_real_source_identity_checks_passed": 30,
+    "native_compiler": "stub scenarios only; not native Swift proof",
+    "syntax": "shell/Python PASS",
+    "diff_check": "PASS",
+    "elapsed_seconds": 8.69,
+    "scratch": "owned parent removed; parent/sibling preservation covered",
+    "failing_before": "Original identity script accepted explicit empty override",
+    "admission": {
+      "cpu_percent": 8.13,
+      "available_ram_GiB": 40.26,
+      "one_core_percent": 6.25,
+      "serial_processes": 1
+    }
+  },
+  "root_evidence": "Exact manifest match, diff/source inspection and git diff --check PASS; no redundant test rerun",
+  "native_unrun": [
+    "16-case identity proof",
+    "provider session proof"
+  ],
+  "laptop_commands": [
+    "export CODEXBAR_TEST_SCRATCH_PARENT=\"$owned_workspace_parent\"",
+    "export TMPDIR=\"$CODEXBAR_TEST_SCRATCH_PARENT\"",
+    "python3 -B Scripts/test_fixture_scratch_parent.py \"$CODEXBAR_TEST_SCRATCH_PARENT\"",
+    "bash Scripts/test_jones_identity_overlay.sh",
+    "bash Scripts/test_provider_session_file_isolation.sh"
+  ],
+  "caller_lifetime": "caller creates and finally removes one workspace parent; override requires Python3",
+  "holds": [
+    "full make test pending WebKit synthetic seam",
+    "make check installer unavailable/held",
+    "CI absent not green",
+    "extraction owner predicate",
+    "native runtime/signing/release/install/activation unqualified"
+  ]
+}
