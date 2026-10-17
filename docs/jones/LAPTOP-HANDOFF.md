@@ -6,6 +6,32 @@ Authority effect: none. Source stays on VPS. Laptop thread
 trial disposition and eligible merges. No live authentication, installation or switching
 operation is granted by this handoff.
 
+## Native-r3 fixture correction candidate
+
+This section supersedes older candidate directions below. Source checkpoint
+`81ec3f024c5f2a78604cd27bba79603dc10d61aa` integrates PR11 parent
+`47677b3b8a8778c82e7d07a183895d9597b546e9`. Bind the exact accompanying published
+PR12 head after revalidating ancestry, cleanliness and all68 source hashes. Native-r2
+at c9 is terminal/released with creator scratch removal/absence verified.
+
+Only ClaudeFleetProfileDiscoveryTests.swift changed from c9. Fixture now obtains its
+physical existing path via POSIX realpath; Foundation can remove /private and cannot
+establish the reader's strict no-symlink precondition. This corrects a documented
+fixture mismatch; exact Mac failure cause remains unconfirmed. Production reader
+and every rejection case are unchanged; file metadata and positive-read diagnostics
+were added. Scoped formatter/diff PASS, new native run UNRUN. First verify all seven
+ClaudeFleetProfileDiscoveryTests using existing isolated runner and TMPDIR beneath
+one invocation-owned workspace parent; proceed with accepted full/remaining native
+qualification if it passes. No same-head failed rerun or weakened safety is requested.
+
+Prior c9 compiled/discovered1029selections86groups, then failed group17 after16PASS;
+reported1857SwiftTesting+59XCTest,79affected=11PASS/1FAIL/67unexecuted. Original12
+remain unexecuted. Six preliminary proofs PASS; their dependency inputs are unchanged,
+so reuse only after matching recorded hashes rather than repeat. Both named TestsLinux
+suites actually passed on Mac. See claude-binding-physical-fixture.json for exact
+bindings and limits. CI pause, lint/no-install, extraction, deferred P2 and all
+sign/package/install/live gates remain unchanged. No protected operation is granted.
+
 ## Collector source completion checkpoint
 
 New source checkpoint `a6a4ef4660b5bfab91d786b06bbe4105bf5fb039` integrates the
