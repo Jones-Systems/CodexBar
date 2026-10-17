@@ -1,10 +1,46 @@
 # Laptop native verification and continuity handoff
 
-Authority effect: none. Source stays on VPS. Laptop thread
+Authority effect: none. VPS owns its existing source branches; laptop root owns the separate local repair child described below. Laptop thread
 `506fc1fd-d94f-4616-84f4-7751eda0aec8`, environment
 `8750edf7-486b-41ac-81ce-cd50dfeb71eb`, owns continuity, native verification,
 trial disposition and eligible merges. No live authentication, installation or switching
 operation is granted by this handoff.
+
+## Native fixture containment checkpoint
+
+Current source checkpoint `ecdb8643b6af1f6852152f32f827b254a75a2a2a` is on laptop-owned
+`work/native-catalog-repair-506fc1fd`, a child of the unchanged published PR12 head405b6765.
+Root is sole Git owner; existing VPS branches/worktrees are preserved. SSH relays failed before
+dispatch, so no received transfer is claimed. This section supersedes older verification directions.
+
+The checkpoint adds explicit fixture-parent validation, migrates fixture bases across all three test
+targets, routes eight isolated source defaults, propagates standalone-child environments, and drains
+runner discovery/metadata commands before creator cleanup. Borrowed parents remain caller-owned.
+Architecture metadata preserves all41tests and scanner/negative coverage. Six new resolver/default
+tests are supplied. All304source hashes are in the manifest; the83named-suite rollup is supplemental:
+global fixture impact requires full unchanged discovery and full make test. Both writers released.
+Static Python AST, bash syntax, declaration comparison and whitespace checks passed; native source
+qualification is UNRUN. One focused review permits the actual Swift runner attempt under isolation.
+Changed scratch-parent harness is HELD for P1 NFCR-COR-001; stale compiler-stub and list-only
+comparison findings NFCR-COR-002/003 remain P2 deferred/unfixed and block those portable proofs.
+Do not run or silently bypass them. A separate one-file P1 source repair is due.
+
+Native-r7 at ba4ca5f2: localization33PASS; fullmakeFAILexit2/748.26seconds atgroup65
+architecture metadata. Reported7699SwiftTesting+86XCTest;82named suites73PASS/1FAIL/8unexecuted;
+original12=11PASS/1unexecuted. Group14timedout180seconds and12documented selection fallbacks
+passed. Four gated skips include optional TSAN, correcting older three-skip summaries. Exact owned
+workspace parent removed/absenceverified and verifier lane released. Owned logs prove external
+synthetic cost fixtures (seven roots absenceunproved); Claude test execution reached ApplicationSupport
+creation, with priorstate/creation/cleanupunknown. No external/user-state inspection or removal.
+Earlier runs do not prove workspace confinement. Actual native tests may proceed in a separately declared fixed-head capsule;
+framework/compiler internal scratch remains a separate boundary.
+
+Use DEVELOPMENT's two-variable contract with Keychain/Codex/session isolation and an explicitly owned
+workspace parent; inspect updated scripts before focused resolver, cost, Claude, architecture, child
+proofs and lifecycle checks, followed by fullmakeonce if gatespass. Preserve exactcommands/counts,
+timeouts/skips and cleanup evidence. makecheckheld for absent pinnedtools; CIpaused. DeferredP2s,
+seven trialgates, extraction, signing/package/install/live holds remain. See native-fixture-containment.json
+and architecture-gate-expectations.json. No merged/installed/switchingsuccess claim.
 
 ## Native-r7 local catalog expectation candidate
 

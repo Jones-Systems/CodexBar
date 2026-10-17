@@ -17,5 +17,18 @@
   },
   "ownership": "Laptop root thread506fc1fd-d94f-4616-84f4-7751eda0aec8 owns isolated local source child lane. Prior VPS source/remote branches preserved.",
   "transport": "Failure and release relays were not delivered: SSH agent signing communication failure, Permission denied publickey, exit255 before remote auth/dispatch. Subsequent bounded read failed identically. No auth repair attempted.",
-  "remaining": "CI fork pause, lint prerequisites, extraction, deferred findings and signing/package/install/live gates unchanged; no delivery success claim."
+  "remaining": "CI fork pause, lint prerequisites, extraction, deferred findings and signing/package/install/live gates unchanged; no delivery success claim.",
+  "native_r7_followup": {
+    "exact_head": "ba4ca5f27381900bde998f70619be4903dd4d6f0",
+    "focused": "33/33 PASS,79.46 seconds",
+    "full": "FAIL exit2,748.26 seconds,group65 architecture metadata",
+    "reported_swift_testing": 7699,
+    "reported_xctest": 86,
+    "coverage82": "73 PASS,1 FAIL,8 unexecuted",
+    "original12": "11 PASS,1 unexecuted",
+    "timeout_fallback": "group14 180s timeout drained;12 documented selection fallbacks PASS; no manual or non-timeout retries",
+    "skips_correction": "4 explicit gated skips including optional TSAN; preceding three-skip statement is incomplete historical count",
+    "containment": "NOT QUALIFIED: owned logs prove external synthetic cost fixtures, external absence unproved; Claude Application Support path executed with prior-state/creation/cleanup unknown",
+    "workspace_cleanup": "Exact invocation-owned parent removed and absence verified; no external state inspected/deleted"
+  }
 }
