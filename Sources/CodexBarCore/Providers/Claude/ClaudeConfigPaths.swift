@@ -1,5 +1,11 @@
 import Foundation
 
+#if canImport(CryptoKit)
+import CryptoKit
+#else
+import Crypto
+#endif
+
 /// Resolves Claude-owned files from the fetch environment, matching Claude Code's profile boundary.
 public enum ClaudeConfigPaths {
     public static let configDirectoryEnvironmentKey = "CLAUDE_CONFIG_DIR"
@@ -47,6 +53,22 @@ public enum ClaudeConfigPaths {
             self.configRoot(environment: environment, workingDirectory: workingDirectory)
         }
         return root.appendingPathComponent(".credentials.json")
+    }
+
+    /// Claude Code namespaces an explicit secure-storage root even when it names the default config directory.
+    /// An explicitly empty secure-storage override selects the default service instead of the config profile.
+    public static func keychainService(
+        environment: [String: String],
+        workingDirectory: URL? = nil) -> String
+    {
+        let base = "Claude Code-credentials"
+        let selectedRoot = environment[self.secureStorageDirectoryEnvironmentKey]
+            ?? environment[self.configDirectoryEnvironmentKey]
+        guard let selectedRoot, !selectedRoot.isEmpty else { return base }
+        let path = self.directoryURL(selectedRoot, workingDirectory: workingDirectory).path
+            .precomposedStringWithCanonicalMapping
+        let hash = SHA256.hash(data: Data(path.utf8)).map { String(format: "%02x", $0) }.joined()
+        return base + "-" + String(hash.prefix(8))
     }
 
     public static func homeDirectory(

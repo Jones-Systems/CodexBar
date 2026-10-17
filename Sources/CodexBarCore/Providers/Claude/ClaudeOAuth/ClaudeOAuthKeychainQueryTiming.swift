@@ -5,7 +5,18 @@ import Foundation
 import Security
 
 enum ClaudeOAuthKeychainQueryTiming {
+    #if DEBUG
+    /// Synthetic fixtures intercept before Security.framework and cannot escape to a real item read.
+    @TaskLocal static var queryOverrideForTesting: (@Sendable ([String: Any]) -> (OSStatus, AnyObject?))?
+    #endif
+
     static func copyMatching(_ query: [String: Any]) -> (status: OSStatus, result: AnyObject?, durationMs: Double) {
+        #if DEBUG
+        if let override = self.queryOverrideForTesting {
+            let (status, result) = override(query)
+            return (status, result, 0)
+        }
+        #endif
         var result: AnyObject?
         let startedAtNs = DispatchTime.now().uptimeNanoseconds
         let status = KeychainSecurity.copyMatching(query as CFDictionary, &result)
