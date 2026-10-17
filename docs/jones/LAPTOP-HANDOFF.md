@@ -6,6 +6,14 @@ Authority effect: none. VPS owns its existing source branches; laptop root owns 
 trial disposition and eligible merges. No live authentication, installation or switching
 operation is granted by this handoff.
 
+## Native cost normalization fixture checkpoint
+
+Latest source checkpoint `8bb8377fe48ae4edd008e8ec3cbbc901b782e538` replaces an incidental macOS temporary-root alias with an explicit raw `/./` spelling of the existing contained file. It retains the inequality and queue-clearing assertions and adds standardized-path equality. Production normalization, shared allocation, file contents and cleanup are unchanged. Astra diagnosed the exact owned-log failure; root applied the small one-file correction.
+
+Native-r9 at960fd58c: targeted P1 cleanup8/8PASS1.54seconds; resources7tests/2suites/4parameterinvocationsPASS76.99seconds. Full make test FAIL294.91seconds at group35 after34PASS: CostUsageCatchUpCompletionTests449 assumed a /var alias; canonical workspace path made both operands equal. Reported3981SwiftTesting+61XCTest, no retries/timeouts, one gated spend-proof skip before stop. Named84=54PASS/30unexecuted; failed cost suite outside84, now85. Original12=ninePASS/threeunexecuted. Allthree drains proved; exactparent removed/absenceverified; all304hashes/index unchanged; lane released.512observedcostpaths contained; historical unknowns remain.
+
+Next capsule: verify305source hashes/85named supplemental suites, focus CostUsageCatchUpCompletionTests, then required fullmake once under one canonical invocation parent/default180/jobs1/threeisolationflags. Carry unchanged P1/resource results from960 and86focused/twoactualproofs from95 only by dependencyhash comparison. Fullscratch/identity/sharding proofs remain HELD0attempts for deferred NFCR-COR-002/003 P2. makecheck missingpinnedtools/CIpause/merge/extraction/seventrial/sign/package/install/live gates remain. This section supersedes earlier candidate directions below.
+
 ## Native resource fixture and nested cleanup checkpoint
 
 Latest source checkpoint `70c1f766510166df450b3a14c0031ca290637951` contains the one-file

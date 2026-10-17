@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "authority_effect": "none",
-  "source_candidate": "70c1f766510166df450b3a14c0031ca290637951",
+  "source_candidate": "8bb8377fe48ae4edd008e8ec3cbbc901b782e538",
   "base": "21c34561387b26f76d0a27e9f00d1538fbc0926f",
   "parent_PR11_head": "4f62ba08bd6c22940bd79189b451464ba2df3ba5",
   "source_paths": {
@@ -179,6 +179,7 @@
     "Tests/CodexBarTests/CookieHeaderCacheConditionalMutationTests.swift": "dacfa6ec4fab4ffb43c7bd76ef60d07c2beb74e5459f936c8b8f04fc838a0ad5",
     "Tests/CodexBarTests/CookieHeaderCacheTests.swift": "0c9a748e51885d6c4731d4f5ac8a765a50412b9f3dca8edab7ad6ef439338735",
     "Tests/CodexBarTests/CopilotBudgetWebFetcherTests.swift": "e7e1bc392964c9b09c4c40a8eb3e7eaa65bcb5c6e45cf84f4dd008f51854b628",
+    "Tests/CodexBarTests/CostUsageCatchUpCompletionTests.swift": "1ee65434289625f339d166fb5103b147318a2050d0499159d920e1e315ab39d9",
     "Tests/CodexBarTests/CostUsageJsonlPerformanceTests.swift": "0a022a23ece426cc5e05c6ed14e248b3e28f2f34d9097ec3c99e5ca616adabd9",
     "Tests/CodexBarTests/CostUsageJsonlScannerTests.swift": "7e7caad959204cdacdd921c51819d635d2aedbc1d5c237e111199efc8600a1d7",
     "Tests/CodexBarTests/CostUsageJsonlShapeBenchmarkTests.swift": "b436a0d4be971a053bddaa0ec4048ae2afec5c73658a2942d0529c857902cd41",
@@ -315,8 +316,8 @@
     "diff_whitespace": "PASS",
     "scratch_harness": "Native-r2 c9 mock38/live45/lifecycle56 PASS; unchanged dependency inputs available for laptop hash-bound carryforward",
     "MiMo_writer": "Laptop PASS3 at44a43f59; affected MiMo source unchanged since then",
-    "native": "Native-r5 ownership9PASS;full26groupsPASS/group27CodexfixtureFAIL; revisedCodexfixture nativeUNRUN",
-    "make_test": "Native-r5 FAIL226.08s; revisedcandidate unrun",
+    "native": "Latest960 targetedP1 eightPASS/resources sevenPASS; fullFAILgroup35 oncostfixture; revised8bb source UNRUN.",
+    "make_test": "FAIL294.91s at960; revised8bb source UNRUN",
     "make_check": "HELD installer/no-tool-install boundary",
     "independent_Claude_review": "NFP-COR-001 source-remediated eb9bb968 and independently confirmed; native unrun. NFP-COR-002 P2 deferred/unrepaired.",
     "independent_process_review": "FSP-PROC-001 source-remediated and independently confirmed b9d2ca08; nonblockingFSP-PROC-002 P2 deferred/unrepaired"
@@ -405,7 +406,8 @@
     "StatusMenuInstantOpenTests",
     "StatusMenuOpenRefreshTests",
     "TestFixtureScratchTests",
-    "UsageStorePlanUtilizationClaudeIdentityBoundaryTests"
+    "UsageStorePlanUtilizationClaudeIdentityBoundaryTests",
+    "CostUsageCatchUpCompletionTests"
   ],
   "native_additional_coverage": [
     "Claude existing credential-ownership, Keychain-isolation/policy, profile-cache, delegated-refresh/profile-isolation, consent/history-routing suites after fixture admission",
@@ -420,7 +422,7 @@
     "MiMo3 already passed laptop44a; no unchanged rerun"
   ],
   "held_native_suites": [
-    "P1 targeted eight-case seam requires new owned capsule; full scratch/identity/sharding proof completion remains blocked by NFCR-COR-002/003 P2 deferred/unfixed. Revised resource suites/full native qualification UNRUN."
+    "Fullscratch/identity/sharding proofs HELD0attempts for deferredNFCR-COR-002/003; revised CostUsageCatchUpCompletionTests/full native qualification due."
   ],
   "remaining_product_gaps": [
     "AFCL installed flow includes native usage companion reusable by native selector if present; readiness unknown; automation-token endpoint/scope support remains separately unproved",
@@ -594,7 +596,7 @@
     "upstream_monitor": "preserve disabled_fork",
     "next_gate": "Exact owner approval or owner authenticated UI initiating action; laptop preparing narrow gate; VPS does not re-enable/dispatch/settings-change"
   },
-  "portable_commands_status": "Full synthetic scratch/identity/sharding proof commands HELD for deferred P2 NFCR-COR-002/003. P1 nested cleanup source corrected, eight focused regressions UNRUN. Actual optimized child proofs PASS at95cfdd64; carry only if dependencies match.",
+  "portable_commands_status": "P1target8PASS at960; fullscratch/identity/shardingHELD0attempts fordeferredP2s. ActualtwochildproofsPASS95, dependency-bound carryonly.",
   "AFCL_product_fit": {
     "authority_effect": "none",
     "source": "Laptop coordinator506fc1fd static installed wrapper/source evidence relay; not owner approval, not independent VPS installed-state verification",
@@ -916,6 +918,7 @@
       "Tests/CodexBarTests/CookieHeaderCacheConditionalMutationTests.swift",
       "Tests/CodexBarTests/CookieHeaderCacheTests.swift",
       "Tests/CodexBarTests/CopilotBudgetWebFetcherTests.swift",
+      "Tests/CodexBarTests/CostUsageCatchUpCompletionTests.swift",
       "Tests/CodexBarTests/CostUsageJsonlPerformanceTests.swift",
       "Tests/CodexBarTests/CostUsageJsonlScannerTests.swift",
       "Tests/CodexBarTests/CostUsageJsonlShapeBenchmarkTests.swift",
@@ -1050,7 +1053,7 @@
     "all_three_targets_on_mac": true,
     "new_suite": "TestFixtureScratchTests",
     "new_tests": 6,
-    "existing_declarations": "Unchanged in preexisting migrated files per static comparison; native discovery equivalence unrun."
+    "existing_declarations": "Preserved per static migration comparison; production discovery1030 selections/86groups PASS at95cfdd64 and960fd58c; current full qualification due."
   },
   "historical_portable_commands_status": "HELD: Mac EPERM/reap-error path unknown; no shared-collector rerun until source correction and effect reconciliation; no extra process probes/signals",
   "native_r8_candidate": {
@@ -1111,7 +1114,7 @@
       "Tests/CodexBarTests/CodexBarCoreResourcesTests.swift"
     ],
     "scope": "Invocation-bound nested drain proof and eight P1 regressions; explicit directory URL on adjacent-resource fixture, strict assertion unchanged.",
-    "qualification": "UNRUN on revised source",
+    "qualification": "At960fd58c: P1target8PASS1.54s;resource7PASS76.99s;fullFAIL294.91s group35after34PASS, CostUsageCatchUpCompletionTests449.3981SwiftTesting+61XCTest;84named54PASS/30unexecuted;original12ninePASS/threeunexecuted.0timeouts/retries;onegatedskip beforestop.",
     "focused_required": [
       "nested_cleanup_regressions(prepared_parent) (8 targeted P1 cases, not full harness qualification)",
       "CodexBarCoreResourcesTests",
@@ -1120,7 +1123,23 @@
     "full_required": "make test once after focused checks pass; unchanged focused86/5 and two native child proofs may carry only by exact dependency hashes",
     "named_rollup_count": 84,
     "native_r8": "Discovery1030PASS1010.06s;focus86PASS39.24s;actualCodex5.61s/Provider4.09sPASS;fullFAIL216.61s group26after25PASS,2resourceURLcases,2945SwiftTesting+59XCTest reported,0timeouts/retries/skips. Named83focused+full48PASS/35unexecuted;failedresource suiteoutside83,now84. Original12=5PASS/7unexecuted.",
-    "cleanup": "All5outerdrainsproved;exactparentremoved/absenceverified;512observedcostpathscontained;framework/compiler/historicalexternalstateunknown.",
+    "cleanup": "All3drainsproved; exactownedparentremoved/absenceverified;512observedcostpathscontained;304hashes/indexunchanged;laneRELEASED.",
     "deferred": "NFCR-COR-002/003 remain P2 uncorrected, full scratch/identity/sharding proofs held; NFP-COR-002/FSP-PROC-002 unchanged."
+  },
+  "native_r10_candidate": {
+    "integration": "8bb8377fe48ae4edd008e8ec3cbbc901b782e538",
+    "delta_from": "960fd58cd814fa2d81060ab7613692aef1d5b216",
+    "changed_paths": [
+      "Tests/CodexBarTests/CostUsageCatchUpCompletionTests.swift"
+    ],
+    "scope": "Explicit raw /./ spelling of the existing contained file, preserving distinctness and all queue/identity/scan assertions, adding standardized-equivalence assertion. Production/helper/cleanup unchanged.",
+    "qualification": "UNRUN",
+    "focused_required": [
+      "CostUsageCatchUpCompletionTests"
+    ],
+    "full_required": "make test once after focused PASS under one owned parent/default180/jobs1/threeisolationflags; no samehead retry",
+    "source_path_count": 305,
+    "named_rollup_count": 85,
+    "carryforward": "P1target8/resource7 at960 and focused86/twoactualproofs at95 only by exact dependency hashes; no claim rerun current source."
   }
 }

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "authority_effect": "none",
+  "source_checkpoint": "8bb8377fe48ae4edd008e8ec3cbbc901b782e538",
+  "failed_revision": "960fd58cd814fa2d81060ab7613692aef1d5b216",
+  "path": "Tests/CodexBarTests/CostUsageCatchUpCompletionTests.swift",
+  "sha256": "1ee65434289625f339d166fb5103b147318a2050d0499159d920e1e315ab39d9",
+  "diagnosis": "Ownednative-r9log16580: bothpathsidenticalcanonicalworkspacepath. Oldprefix toggle isno-op outside /var or/private/var. Production CostUsageStore+CodexCache656-661 usesstandardizedFileURL, notgenericsymlinkresolution. Boundedcostsiblings noadditional distinctnessfixture.",
+  "fix": "Explicitraw /./ alias ofsameexistingcontainedfile; retained inequality andallqueue-clearing/identity/scan-count/completionassertions; added standardized-equivalenceassertion. No allocation/production/helper/cleanupchange.",
+  "checks": {
+    "diff_whitespace": "PASS",
+    "native_revised": "UNRUN"
+  },
+  "scope": "Root smallmechanicalonefilelane afterAstra/highread-onlyfix-readydiagnosis; noP2repair."
+}

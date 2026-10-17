@@ -9,7 +9,7 @@
   "sha256": "50a186ebe205102dea8b2b32c327b5125585cabe1815af87ca3c46587e60356b",
   "checks": {
     "diff_whitespace": "PASS",
-    "native_revised": "UNRUN"
+    "native_revised": "PASS7tests/2suites/4parameterinvocations76.99s at960;fullrunresourcegroup26PASS. Fullrunlaterfailedunrelatedcostfixture."
   },
   "scope": "Root mechanical one-line lane after Astra fix-ready diagnosis; no production resolver/helper/assertion or sibling cleanup change."
 }
