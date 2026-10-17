@@ -77,22 +77,34 @@ enum AliyunOneConsoleChromiumCookieFallbackImporter {
         keys: [Data],
         label: String) throws -> [ChromiumCookieRecord]
     {
-        let tempDir = FileManager.default.temporaryDirectory
+        try self.withCopiedCookieDatabase(sourceDB: sourceDB) { copiedDB in
+            try self.readCookies(fromDB: copiedDB.path, domains: domains, keys: keys, label: label)
+        }
+    }
+
+    static func withCopiedCookieDatabase<T>(
+        sourceDB: URL,
+        fileManager: FileManager = .default,
+        forkIdentity: JonesStateRoot.Identity? = JonesStateRoot.identity,
+        read: (URL) throws -> T) throws -> T
+    {
+        let tempDir = JonesProviderScratchRoot.directory(
+            temporaryDirectory: fileManager.temporaryDirectory, identity: forkIdentity)
             .appendingPathComponent("aliyun-oneconsole-chromium-cookies-\(UUID().uuidString)", isDirectory: true)
-        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        try fileManager.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? fileManager.removeItem(at: tempDir) }
 
         let copiedDB = tempDir.appendingPathComponent("Cookies")
-        try FileManager.default.copyItem(at: sourceDB, to: copiedDB)
+        try fileManager.copyItem(at: sourceDB, to: copiedDB)
         for suffix in ["-wal", "-shm"] {
             let src = URL(fileURLWithPath: sourceDB.path + suffix)
-            if FileManager.default.fileExists(atPath: src.path) {
+            if fileManager.fileExists(atPath: src.path) {
                 let dst = URL(fileURLWithPath: copiedDB.path + suffix)
-                try? FileManager.default.copyItem(at: src, to: dst)
+                try? fileManager.copyItem(at: src, to: dst)
             }
         }
-        defer { try? FileManager.default.removeItem(at: tempDir) }
 
-        return try self.readCookies(fromDB: copiedDB.path, domains: domains, keys: keys, label: label)
+        return try read(copiedDB)
     }
 
     private static func readCookies(

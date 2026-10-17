@@ -42,12 +42,35 @@ extension GeminiStatusProbe {
     }
 
     private static func curlDataLoader(for request: URLRequest) async throws -> (Data, URLResponse) {
+        try await self.curlDataLoader(
+            for: request,
+            fileManager: .default,
+            forkIdentity: JonesStateRoot.identity,
+            write: { data, url in try data.write(to: url, options: .atomic) },
+            run: { configURL, timeout in
+                let result = try await SubprocessRunner.run(
+                    binary: "/usr/bin/curl",
+                    arguments: ["--config", configURL.path],
+                    environment: TTYCommandRunner.enrichedEnvironment(),
+                    timeout: timeout,
+                    label: "gemini-api-curl")
+                return result.stdout
+            })
+    }
+
+    static func curlDataLoader(
+        for request: URLRequest,
+        fileManager: FileManager,
+        forkIdentity: JonesStateRoot.Identity?,
+        write: (Data, URL) throws -> Void,
+        run: (URL, TimeInterval) async throws -> String) async throws -> (Data, URLResponse)
+    {
         guard let url = request.url else {
             throw URLError(.badURL)
         }
 
-        let fileManager = FileManager.default
-        let tempDir = fileManager.temporaryDirectory
+        let tempDir = JonesProviderScratchRoot.directory(
+            temporaryDirectory: fileManager.temporaryDirectory, identity: forkIdentity)
             .appendingPathComponent("codexbar-gemini-curl-\(UUID().uuidString)", isDirectory: true)
         try fileManager.createDirectory(
             at: tempDir,
@@ -80,23 +103,19 @@ extension GeminiStatusProbe {
 
         if let body = request.httpBody {
             let bodyURL = tempDir.appendingPathComponent("body")
-            try body.write(to: bodyURL, options: .atomic)
+            try write(body, bodyURL)
             try fileManager.setAttributes([.posixPermissions: 0o600], ofItemAtPath: bodyURL.path)
             config.append("data-binary = \(Self.curlConfigQuote("@\(bodyURL.path)"))")
         }
 
         config.append("write-out = \(Self.curlConfigQuote(Self.curlHTTPStatusMarker + "%{http_code}"))")
-        try config.joined(separator: "\n").write(to: configURL, atomically: true, encoding: .utf8)
+        try write(Data(config.joined(separator: "\n").utf8), configURL)
         try fileManager.setAttributes([.posixPermissions: 0o600], ofItemAtPath: configURL.path)
 
-        let result = try await SubprocessRunner.run(
-            binary: "/usr/bin/curl",
-            arguments: ["--config", configURL.path],
-            environment: TTYCommandRunner.enrichedEnvironment(),
-            timeout: max(5, request.timeoutInterval + 2),
-            label: "gemini-api-curl")
-
-        return try Self.parseCurlDataLoaderResult(result.stdout, url: url)
+        try Task.checkCancellation()
+        let output = try await run(configURL, max(5, request.timeoutInterval + 2))
+        try Task.checkCancellation()
+        return try Self.parseCurlDataLoaderResult(output, url: url)
     }
 
     private static let curlHTTPStatusMarker = "__CODEXBAR_HTTP_STATUS__:"
