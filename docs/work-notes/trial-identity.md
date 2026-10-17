@@ -879,3 +879,30 @@ AFCL-INSTALLED-SOURCE.json, not assumed available VPS. Active enrolled-executabl
 received this evidence to account for companion/native CLI refresh ownership in its bounded
 P1 seam and report any structural gap. No additional broad review/duplicate source lane.
 Final manifest/handoff product-fit text updated without live permission expansion.
+
+
+### Enrolled-executable repair result and fixture-parent completion
+
+Astra source result for NFP-COR-001 changes ClaudeSourcePlanner.swift resolver: explicitly
+selected native profiles resolve only the executable in CLAUDE_CLI_PATH, rechecked on each
+resolution, with no ambient PATH/loginPATH/test-override fallback. Both delegated-refresh
+availability and /status launch consume that resolver. Passive valid OAuth remains usable
+without CLI. Native-default/named routes, consent and independent source precedence retain
+source behavior. Five synthetic cases cover expired/valid default/Jace OAuth and missing,
+non-executable, removed, substituted executable resolution. Native execution/failing-before
+unrun because Swift absent; formatter/diff passed. NFP-COR-002/AFCS findings untouched.
+
+Root inspected two-file released diff/hashes but did not commit: newly added fixture still
+hardcoded workspace/.build/native-refresh-UUID rather than laptop's one owned parent. Root
+assigned a necessary same-cone completion to existing builder (no independent review round),
+thread-send task codexbar-claude-native-fixture-parent-followup-20261017-r1. Add existing
+optional CODEXBAR_TEST_SCRATCH_PARENT canonical/workspace validation, fail closed when
+explicit invalid, preserve unset behavior and exact per-fixture cleanup. Root remains sole
+Git owner; source may change until follow-up releases it. No tests/live operations needed.
+Fresh admissionCPU5.94%, RAM39.54GiB, onecore6.25%. Exact commit/integration/independent
+confirmation await corrected manifest; NFP-COR-001 is not yet closed.
+
+AFCL companion ownership assessment: this seam consumes native credentials and refreshes
+through enrolled native_cli; it does not invoke companion auth login --claudeai. No new
+source contract gap identified in that bounded seam, but companion presence/readiness,
+installed membership and real external refresh interaction remain UNKNOWN. No live probe.

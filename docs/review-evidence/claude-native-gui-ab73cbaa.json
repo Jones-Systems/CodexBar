@@ -75,7 +75,8 @@
       "consequence": "Expired native credentials plus missing enrolled native_cli permit delegated OAuth refresh to use another Claude executable on PATH through resolver fallback; consent retained but enrollment bypassed",
       "test_gap": "missing enrolled binary, expired injected credentials and sentinel fallback executable",
       "outcome": "remain blocked",
-      "next_step": "Bounded authorized source repair in codexbar-claude-enrolled-executable-repair-20261017-r1; exact independent confirmation required before correction claim"
+      "next_step": "Bounded authorized source repair in codexbar-claude-enrolled-executable-repair-20261017-r1; exact independent confirmation required before correction claim",
+      "repair_progress": "Builder returned resolver-only selected-executable guard plus five synthetic cases; root inspected. Not committed: follow-up makes new fixture obey existing single caller-owned parent. Native tests/independent confirmation remain pending; original P1 block retained."
     },
     {
       "source_review_profile": "Astra/high independent correctness; generic T3 review role fallback",
