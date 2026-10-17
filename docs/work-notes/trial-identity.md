@@ -589,3 +589,40 @@ full make test pass. No unsafe group executes. Identifier-only framework tests r
 safe. This precise hold is added to LAPTOP-HANDOFF and the historical source manifest's
 native-evidence overlay without rebinding its source candidate or claiming later
 source compilation. No source repair or waiver of the hold is authorized/performed.
+
+
+### Native Claude GUI discovery contract established; implementation active
+
+Source research found an existing producer: private Authfleet binding v1 enrolls
+Claude default/Jace references and native file/Keychain store paths. CodexBar already
+consumes this same schema for Codex, explicitly skipping Claude. No real binding was
+read. Membership proves enrollment only; no readiness, active mode or native UUID
+field exists. Default null config_dir must remain distinct from explicit ~/.claude.
+Exact source revisions/references and limitations are in
+../review-evidence/claude-native-discovery-contract.json. Missing launcher environment
+therefore is not a source integration blocker.
+
+Root assigned bounded Astra/high framing/implementation in the new isolated worktree
+/home/malcolmjones/Projects/CodexBar-worktrees/claude-native-fleet-gui-20261017, branch
+work/claude-native-fleet-gui-20261017, clean base410515a95. Task suffix
+codexbar-claude-native-fleet-gui-20261017-r1; root is sole Git/index owner, builder
+owns the declared Claude discovery/config/settings/provider-routing/identity fixture
+cone only. Shared docs remain root-owned. Native selection is one dependent lifecycle
+slice, so splitting its config/settings/routing among concurrent writers would create
+contract overlap; one Astra builder owns it. No other source lane is active.
+
+Intended behavior: discover enrolled native references, persist explicit selection
+in CodexBar and route the provider-local selected environment through existing native
+OAuth machinery and matching identity invalidation. Default behavior and independent
+token/web/API precedence remain unchanged. Missing/removed selection fails closed;
+enrollment cannot imply credential readiness or usage scope. Production source may
+reuse the metadata contract; this task executes only injected synthetic readers.
+No real binding/auth/config/Keychain access, login/provisioning or host operation.
+
+The excluded c61fa5f9 typed-status patch and its two P2 findings stay intact and
+unrepaired; it is not the base and must not be cherry-picked. This separate native GUI
+feature continues direct owner scope, not a P2 remediation sweep. Fresh launch
+admission CPU2.79%, RAM39.84GiB, one full core6.25%; one start. Laptop interim44a43f592
+checkout remains immutable until its terminal result. Full make test persistent-store
+hold, missing CI, owner-only extraction and signing/activation boundaries remain.
+No new final source-ready SHA or native rerun is requested yet.
