@@ -1,7 +1,7 @@
 import CodexBarCore
 import SwiftUI
 
-/// One-line menu row for an inactive account in the compact multi-account layout:
+/// Compact menu row for a collapsed account in the multi-account layout:
 /// label on the left, constraint summary plus a mini headroom bar on the right.
 /// Clicking the row expands it into the full usage card.
 struct MenuCardCompactAccountRowView: View {
