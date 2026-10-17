@@ -69,7 +69,7 @@ struct GeminiLoginScratchTests {
     @Test
     func `cancellation after launch removes the script immediately`() async {
         let files = ScratchFixture()
-        let task = Task {
+        let task = Task { @Sendable [files] in
             await GeminiLoginRunner.launchScript(
                 "synthetic script", fileManager: files, forkIdentity: ScratchFixture.identity,
                 write: { content, url in try files.write(Data(content.utf8), to: url) },
@@ -154,7 +154,7 @@ struct GeminiLoginScratchTests {
     @Test
     func `already cancelled login creates no script and never opens Terminal`() async {
         let files = ScratchFixture()
-        let task = Task {
+        let task = Task { @Sendable [files] in
             withUnsafeCurrentTask { $0?.cancel() }
             return await GeminiLoginRunner.launchScript(
                 "synthetic script", fileManager: files, forkIdentity: ScratchFixture.identity,
@@ -229,7 +229,7 @@ struct GeminiCurlScratchTests {
         var request = try URLRequest(url: #require(URL(string: "https://example.invalid/synthetic")))
         request.httpBody = Data("synthetic body".utf8)
         do {
-            let (data, response) = try await Task {
+            let (data, response) = try await Task { @Sendable [files, request, failure] in
                 try await GeminiStatusProbe.curlDataLoader(
                     for: request, fileManager: files, forkIdentity: ScratchFixture.identity,
                     write: { try files.write($0, to: $1) },
