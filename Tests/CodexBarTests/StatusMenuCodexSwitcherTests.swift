@@ -379,7 +379,7 @@ struct StatusMenuCodexSwitcherTests {
     }
 
     @Test
-    func `codex stacked multi account layout shows account cards`() throws {
+    func `codex stacked layout shows active card and expandable secondary account`() throws {
         self.disableMenuCardsForTesting()
         let settings = self.makeSettings()
         settings.statusChecksEnabled = false
@@ -413,6 +413,13 @@ struct StatusMenuCodexSwitcherTests {
         let fetcher = UsageFetcher()
         let store = UsageStore(fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
         let projection = settings.codexVisibleAccountProjection
+        #expect(projection.visibleAccounts.map(\.id) == ["live@example.com", "managed@example.com"])
+        #expect(projection.visibleAccounts.map(\.selectionSource) == [
+            .liveSystem,
+            .managedAccount(id: managedAccountID),
+        ])
+        #expect(projection.visibleAccounts.map(\.isActive) == [true, false])
+        #expect(projection.activeVisibleAccountID == "live@example.com")
         store.codexAccountSnapshots = projection.visibleAccounts.enumerated().map { index, account in
             CodexAccountUsageSnapshot(
                 account: account,
@@ -429,15 +436,33 @@ struct StatusMenuCodexSwitcherTests {
             statusBar: self.makeStatusBarForTesting())
         defer { controller.releaseStatusItemsForTesting() }
 
+        let display = try #require(controller.codexAccountMenuDisplay(for: .codex))
+        #expect(display.accounts.map(\.id) == ["live@example.com", "managed@example.com"])
+        #expect(display.snapshots.map(\.account.id) == ["live@example.com", "managed@example.com"])
+        #expect(display.activeVisibleAccountID == "live@example.com")
+
         let menu = controller.makeMenu(for: .codex)
         controller.menuWillOpen(menu)
 
         #expect(menu.items.compactMap { $0.view as? CodexAccountSwitcherView }.first == nil)
-        #expect(self.representedIDs(in: menu).filter { $0.hasPrefix("menuCard") } == ["menuCard-0", "menuCard-1"])
+        #expect(self.representedIDs(in: menu).filter {
+            $0.hasPrefix("codexAccount") || $0.hasPrefix("menuCard")
+        } == ["codexAccountCard-live@example.com", "codexAccountCompact-managed@example.com"])
+
+        controller.compactAccountExpandedIDs = [
+            ProviderAccountIdentity(source: "codex-account", opaqueID: "managed@example.com"),
+        ]
+        controller.invalidateMenus()
+        controller.menuWillOpen(menu)
+
+        #expect(menu.items.compactMap { $0.view as? CodexAccountSwitcherView }.first == nil)
+        #expect(self.representedIDs(in: menu).filter {
+            $0.hasPrefix("codexAccount") || $0.hasPrefix("menuCard")
+        } == ["codexAccountCard-live@example.com", "codexAccountCard-managed@example.com"])
     }
 
     @Test
-    func `codex stacked multi account layout shows account cards before per account snapshots load`() throws {
+    func `codex stacked layout keeps both accounts expandable before per account snapshots load`() throws {
         self.disableMenuCardsForTesting()
         let settings = self.makeSettings()
         settings.statusChecksEnabled = false
@@ -467,7 +492,14 @@ struct StatusMenuCodexSwitcherTests {
             codexHomePath: "/Users/test/.codex",
             observedAt: Date())
         settings.codexActiveSource = .liveSystem
-        _ = settings.codexVisibleAccountProjection
+        let projection = settings.codexVisibleAccountProjection
+        #expect(projection.visibleAccounts.map(\.id) == ["live@example.com", "managed@example.com"])
+        #expect(projection.visibleAccounts.map(\.selectionSource) == [
+            .liveSystem,
+            .managedAccount(id: managedAccountID),
+        ])
+        #expect(projection.visibleAccounts.map(\.isActive) == [true, false])
+        #expect(projection.activeVisibleAccountID == "live@example.com")
 
         let fetcher = UsageFetcher()
         let store = UsageStore(fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
@@ -481,11 +513,35 @@ struct StatusMenuCodexSwitcherTests {
             statusBar: self.makeStatusBarForTesting())
         defer { controller.releaseStatusItemsForTesting() }
 
+        let display = try #require(controller.codexAccountMenuDisplay(for: .codex))
+        #expect(display.accounts.map(\.id) == ["live@example.com", "managed@example.com"])
+        #expect(display.activeVisibleAccountID == "live@example.com")
+        #expect(store.codexAccountSnapshots.isEmpty)
+        #expect(display.snapshots.isEmpty)
+
         let menu = controller.makeMenu(for: .codex)
         controller.menuWillOpen(menu)
 
         #expect(menu.items.compactMap { $0.view as? CodexAccountSwitcherView }.first == nil)
-        #expect(self.representedIDs(in: menu).filter { $0.hasPrefix("menuCard") } == ["menuCard-0", "menuCard-1"])
+        #expect(self.representedIDs(in: menu).filter {
+            $0.hasPrefix("codexAccount") || $0.hasPrefix("menuCard")
+        } == ["codexAccountCard-live@example.com", "codexAccountCompact-managed@example.com"])
+
+        controller.compactAccountExpandedIDs = [
+            ProviderAccountIdentity(source: "codex-account", opaqueID: "managed@example.com"),
+        ]
+        controller.invalidateMenus()
+        controller.menuWillOpen(menu)
+
+        #expect(menu.items.compactMap { $0.view as? CodexAccountSwitcherView }.first == nil)
+        #expect(self.representedIDs(in: menu).filter {
+            $0.hasPrefix("codexAccount") || $0.hasPrefix("menuCard")
+        } == ["codexAccountCard-live@example.com", "codexAccountCard-managed@example.com"])
+        #expect(store.codexAccountSnapshots.isEmpty)
+        let expandedDisplay = try #require(controller.codexAccountMenuDisplay(for: .codex))
+        #expect(expandedDisplay.accounts.map(\.id) == ["live@example.com", "managed@example.com"])
+        #expect(expandedDisplay.activeVisibleAccountID == "live@example.com")
+        #expect(expandedDisplay.snapshots.isEmpty)
     }
 
     @Test
