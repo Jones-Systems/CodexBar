@@ -91,6 +91,67 @@ struct GeminiLoginScratchTests {
     }
 
     @Test
+    func `cancellation during cleanup scheduling removes immediately and keeps delayed cleanup scoped`() async {
+        let files = ScratchFixture()
+        let sentinel = files.temporaryDirectory.appendingPathComponent("another-invocation.command")
+        files.seed(Data(), at: sentinel)
+        let task = Task {
+            var cleanup: (@Sendable () -> Void)?
+            var opened: URL?
+            _ = await GeminiLoginRunner.launchScript(
+                "synthetic script", fileManager: files, forkIdentity: ScratchFixture.identity,
+                write: { content, url in try files.write(Data(content.utf8), to: url) },
+                open: { opened = $0 },
+                scheduleCleanup: { delay, callback in
+                    #expect(delay == 10)
+                    cleanup = callback
+                    withUnsafeCurrentTask { $0?.cancel() }
+                })
+            #expect(files.filePaths == [sentinel.path])
+            #expect(cleanup != nil)
+            cleanup?()
+            #expect(files.filePaths == [sentinel.path])
+            #expect(opened != nil)
+            #expect(Set(files.removed) == Set(opened.map { [$0.path] } ?? []))
+        }
+        await task.value
+    }
+
+    @Test
+    func `sendable delayed cleanup preserves another pending login script`() async throws {
+        let files = ScratchFixture()
+        var cleanups: [@Sendable () -> Void] = []
+        var opened: [URL] = []
+        for _ in 0..<2 {
+            let result = await GeminiLoginRunner.launchScript(
+                "synthetic script", fileManager: files, forkIdentity: ScratchFixture.identity,
+                write: { content, url in try files.write(Data(content.utf8), to: url) },
+                open: { opened.append($0) },
+                scheduleCleanup: { delay, callback in
+                    #expect(delay == 10)
+                    cleanups.append(callback)
+                })
+            guard case .success = result.outcome else {
+                Issue.record("Expected simulated Terminal success")
+                return
+            }
+        }
+        defer { cleanups.forEach { $0() } }
+        try #require(opened.count == 2 && cleanups.count == 2)
+        #expect(opened[0] != opened[1])
+        let firstCleanup = cleanups[0]
+        await withTaskGroup(of: Void.self) { group in
+            for _ in 0..<2 {
+                group.addTask { firstCleanup() }
+            }
+        }
+        #expect(files.filePaths == [opened[1].path])
+        #expect(Set(files.removed) == [opened[0].path])
+        cleanups[1]()
+        #expect(files.filePaths.isEmpty)
+    }
+
+    @Test
     func `already cancelled login creates no script and never opens Terminal`() async {
         let files = ScratchFixture()
         let task = Task {

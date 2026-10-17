@@ -98,10 +98,11 @@ enum GeminiLoginRunner {
         let tempDir = JonesProviderScratchRoot.directory(
             temporaryDirectory: fileManager.temporaryDirectory, identity: forkIdentity)
         let scriptURL = tempDir.appendingPathComponent("gemini_login_\(UUID().uuidString).command")
+        let cleanup = ScriptCleanup(fileManager: fileManager, scriptURL: scriptURL)
         var cleanupScheduled = false
         defer {
             if !cleanupScheduled || Task.isCancelled {
-                try? fileManager.removeItem(at: scriptURL)
+                cleanup.remove()
             }
         }
         do {
@@ -117,18 +118,37 @@ enum GeminiLoginRunner {
                 try Task.checkCancellation()
                 try await open(scriptURL)
             } onCancel: {
-                try? fileManager.removeItem(at: scriptURL)
+                cleanup.remove()
             }
             try Task.checkCancellation()
 
             // Terminal needs time to read the script. This callback owns only this file for ten seconds.
             scheduleCleanup(10) {
-                try? fileManager.removeItem(at: scriptURL)
+                cleanup.remove()
             }
             cleanupScheduled = true
             return Result(outcome: .success)
         } catch {
             return Result(outcome: .launchFailed(error.localizedDescription))
+        }
+    }
+
+    /// Only this script's removal crosses concurrency boundaries, after synchronous file preparation.
+    /// The lock serializes cancellation, deferred and delayed removal using the original injected manager.
+    private final class ScriptCleanup: @unchecked Sendable {
+        private let fileManager: FileManager
+        private let scriptURL: URL
+        private let lock = NSLock()
+
+        init(fileManager: FileManager, scriptURL: URL) {
+            self.fileManager = fileManager
+            self.scriptURL = scriptURL
+        }
+
+        func remove() {
+            self.lock.withLock {
+                try? self.fileManager.removeItem(at: self.scriptURL)
+            }
         }
     }
 
