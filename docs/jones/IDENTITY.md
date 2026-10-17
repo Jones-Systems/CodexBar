@@ -86,6 +86,9 @@ unchanged; fork roots start empty and never migrate stock state.
 | `UserProviderPlugins` loader and compilation cache | `HOME/.config/codexbar/providers/`, `HOME/Library/Caches/CodexBar/plugins/` | `HOME/.config/codexbar-jones/providers/`, `HOME/Library/Caches/CodexBar Jones/plugins/` |
 | `FileLogHandler` | `HOME/Library/Logs/CodexBar/CodexBar.log` | `HOME/Library/Logs/CodexBar Jones/CodexBar.log` |
 | `MainThreadHangWatchdog` samples | `HOME/Library/Logs/CodexBar/` | `HOME/Library/Logs/CodexBar Jones/` |
+| `JonesDiagnosticDestination` export hooks | existing TEMP probe/purchase/dashboard filenames | same filenames under platform `Library/Logs/CodexBar Jones/Diagnostics/`; retained exports |
+| `MiMoLocalUsageFallback` | `HOME/.codexbar/mimo-local-usage.json` | `HOME/.codexbar-jones/mimo-local-usage.json`; explicit override retains precedence |
+| `JonesProviderScratchRoot` Gemini/Aliyun hooks | existing TEMP script/directory names | same names under `TEMP/CodexBar Jones/provider-scratch/`; cleanup ownership below |
 
 Atomic temporary files, lock files, SQLite WAL/SHM and other children inherit the
 parent directory in these rows. Existing test-only temporary isolation and explicit
@@ -119,13 +122,14 @@ No credential is accessed by identity resolution or tests.
 This is a source candidate with explicit incomplete-isolation gates. Do not call
 it a fully qualified trial or launch it while these gates remain unresolved.
 
-1. **Fixed debug exports outside this writer cone:** `UsageStore.debugDumpClaude`
-   and `dumpLog` write `TEMP/codexbar-<provider>-probe.txt`;
-   `OpenAICreditsPurchaseWindowController` writes `TEMP/codexbar-buy-credits.log`;
-   `OpenAIDashboardFetcher.writeDebugArtifacts` writes
-   `TEMP/codex-openai-dashboard-<seconds>.{html,txt}`. These are shared names/root
-   and need a separately scoped hook or an explicit trial decision excluding the
-   affected feature. Merely avoiding the button is not isolation proof.
+1. **Diagnostic exports, source-addressed:** the Claude/provider probe files,
+   purchase debug log and dashboard HTML/text now use
+   `Library/Logs/CodexBar Jones/Diagnostics/` under packaged Jones identity.
+   Stock paths remain exact. Creation/write errors do not fall back to shared
+   temporary storage. These are retained diagnostic exports: probe files overwrite,
+   purchase logs keep their existing reset behavior, and timestamped dashboard
+   exports remain until explicitly removed. Eight synthetic test methods are
+   authored; compilation and native qualification remain pending.
 2. **External MiMo tracker:** the reader now defaults to
    `HOME/.codexbar-jones/mimo-local-usage.json` with Jones identity and retains
    `HOME/.codexbar/mimo-local-usage.json` without it. `MIMO_LOCAL_USAGE_PATH`
@@ -140,19 +144,26 @@ it a fully qualified trial or launch it while these gates remain unresolved.
    ```
 
    This does not alter tracker inputs or authorize real-session access.
-3. **Other runtime scratch outside this cone:** Gemini login creates
-   `TEMP/gemini_login_<UUID>.command`; Gemini curl writes
-   `TEMP/codexbar-gemini-curl-<UUID>/`; Aliyun cookie fallback writes
-   `TEMP/aliyun-oneconsole-chromium-cookies-<UUID>/` including copied DB sidecars.
-   Unique names reduce collisions but are not fork-root confinement. Existing
-   cleanup remains unchanged and has not been qualified for this trial.
-4. **Framework-managed state:** WebKit default/per-account persistent stores,
-   URLSession caches/cookies, OS logging, saved application state and system
-   preferences are not redirected by the source path helper. Bundle identity is
-   distinct, but actual macOS containment (especially bundled CLI WebKit stores)
-   requires native qualification. No file path or cross-app isolation is asserted
-   without that evidence. The OSLog subsystem string remains upstream; it is not
-   a credential service or a filesystem root.
+3. **Provider scratch, source-addressed:** Gemini login scripts, Gemini curl
+   directories and Aliyun copied cookie databases now use
+   `TEMP/CodexBar Jones/provider-scratch/` under packaged Jones identity. Stock
+   paths stay exact. Aliyun registers cleanup before any database/sidecar copy;
+   curl keeps its immediate defer; Gemini login removes failed/cancelled scripts.
+   Successful login scripts retain the existing ten-second delayed cleanup owned
+   by GeminiLoginRunner. This callback survives function return; app termination
+   and removal failures remain unqualified. Twenty-two synthetic cases are
+   authored, not executed. Native qualification and this retention disposition
+   remain gates; no real browser, credential or Terminal operation was performed.
+4. **Framework-managed state, partially hardened:** OpenAI dashboard WebKit
+   cache keys and persistent identifiers now include packaged fork identity,
+   account and scope. Missing-email overlay stores also receive identifiers;
+   stock default-store behavior is unchanged. Nine pure identifier tests are
+   authored, not executed. Shared HTTP state remains unresolved: StepFun relies
+   on the generic client's shared cookies, and other shared/default sessions
+   remain in CLI status, currency/pricing and Alibaba token-plan requests.
+   App, widget and bundled-CLI containment still requires native proof. OS
+   logging, saved application state and system preferences are not redirected
+   by this helper. The framework trial gate remains open.
 5. **Unbundled CLI / `swift run` / copied helper:** without enclosing packaged
    metadata these intentionally use upstream behavior. They must not be used for
    trial side effects. No environment opt-in or installation was added. Nonbundled

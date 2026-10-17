@@ -338,3 +338,37 @@ MiMoProviderTests and JonesStateRootTests. No intermediate laptop run is request
 This is a source checkpoint, not the final integrated candidate or a trial-gate pass.
 The other source lanes, native qualification, missing CI, owner-only extraction
 predicate and activation/signing/install boundaries remain unchanged.
+
+
+### Diagnostics, scratch and framework source checkpoint
+
+Released source lanes integrate without conflicts at
+`4bba4f480365d0dd3e66cdf4a7320f4e15021ff8`: diagnostics e2a8e0180,
+provider scratch a14a73669, and framework identifiers 12bffb719. Root verified all
+14 released file hashes, inspected the changes, and passed scoped SwiftFormat
+0.61.1 on the integrated fourteen-file union plus diff whitespace. CPU admission
+was 9.29% used, one full core 6.25%, available RAM 40.21 GiB; one serial check ran.
+Exact manifest, affected suites and limits are in
+`../review-evidence/trial-paths-source-4bba4f48.json`.
+
+Diagnostics leave shared TEMP for retained fork log exports, with no failure fallback.
+Scratch cleanup is registered before Aliyun copies and handles Gemini errors and
+cancellation. Successful Gemini scripts keep the existing ten-second callback;
+root accepts preserving this source behavior, not a claim of termination/removal
+proof. Laptop continuity retains final trial-retention disposition. Framework
+changes namespace WebKit identifiers, including missing-email stores; HTTP state
+ownership remains unresolved. StepFun depends on generic shared cookies, so no
+unbounded session rewrite was made. Native containment remains unqualified.
+No source gate is declared passed by tests that could not run. Persistent-store
+WebViewCache tests remain held; safe identifier tests may run independently.
+
+The independent UI/TIR review of exact a7381944 returned CAIR001/002/003, all P2:
+counts 1–3 lack collapse, six accounts bypass the five-account initial count, and
+provider-specific policy lacks an architecture marker. These retain their original
+blocking claims. The owner already directly requested coherent collapse for every
+account, five initially visible Codex accounts and required-check completion; root
+assigned only these acceptance corrections in the existing UI worktree. This is
+not authorization for an unrelated P2 sweep. Source TIR001/TIR002 corrections were
+confirmed, still pending native qualification at their original P2 severities.
+Astra/high bounded UI repair is active; Claude auth reuse remains active. No final
+candidate or intermediate laptop rerun is requested yet. No merge or live operation.
