@@ -41,7 +41,7 @@ struct CodexBarCoreResourcesTests {
         defer { try? FileManager.default.removeItem(at: root) }
 
         let sourceBundle = try #require(CodexBarCoreResources.bundle)
-        let target = root.appendingPathComponent("CodexBar_CodexBarCore.\(pathExtension)")
+        let target = root.appendingPathComponent("CodexBar_CodexBarCore.\(pathExtension)", isDirectory: true)
         try FileManager.default.copyItem(at: sourceBundle.bundleURL.resolvingSymlinksInPath(), to: target)
         let executableURL = root.appendingPathComponent("CodexBarCLI")
         try Data().write(to: executableURL)
