@@ -325,8 +325,9 @@ public struct OpenAIDashboardBrowserCookieImporter {
             throw ImportError.noMatchingAccount(found: [FoundAccount(sourceLabel: "Manual", email: signedInEmail)])
         case .unknown:
             if allowAnyAccount {
-                return try await self.persistToDefaultStore(
+                return try await self.persistToUnidentifiedAccountStore(
                     candidate: candidate,
+                    cacheScope: cacheScope,
                     deadline: deadline,
                     logger: log)
             }
@@ -552,8 +553,9 @@ public struct OpenAIDashboardBrowserCookieImporter {
         case .unknown:
             if context.allowAnyAccount {
                 log("Selected \(candidate.label) (signed in: unknown)")
-                if let result = try? await self.persistToDefaultStore(
+                if let result = try? await self.persistToUnidentifiedAccountStore(
                     candidate: candidate,
+                    cacheScope: context.cacheScope,
                     deadline: deadline,
                     logger: log)
                 {
@@ -814,12 +816,13 @@ public struct OpenAIDashboardBrowserCookieImporter {
         }
     }
 
-    private func persistToDefaultStore(
+    private func persistToUnidentifiedAccountStore(
         candidate: Candidate,
+        cacheScope: CookieHeaderCache.Scope?,
         deadline: Date?,
         logger: @escaping (String) -> Void) async throws -> ImportResult
     {
-        let persistent = OpenAIDashboardWebsiteDataStore.store(forAccountEmail: nil)
+        let persistent = OpenAIDashboardWebsiteDataStore.store(forAccountEmail: nil, scope: cacheScope)
         try await self.clearChatGPTCookies(in: persistent, deadline: deadline)
         try await self.setCookies(candidate.cookies, into: persistent, deadline: deadline)
 
