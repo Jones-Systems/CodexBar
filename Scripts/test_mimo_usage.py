@@ -2,6 +2,9 @@
 
 import importlib.util
 import json
+import os
+import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 import tempfile
@@ -16,11 +19,57 @@ def load_mimo_usage():
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Could not load {script_path}")
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    with patch.dict(os.environ, {"HOME": "/synthetic/mimo-home"}, clear=True):
+        spec.loader.exec_module(module)
     return module
 
 
 class MiMoUsageCacheTests(unittest.TestCase):
+    def test_tracker_default_and_explicit_output_use_only_synthetic_sessions(self):
+        script_path = Path(__file__).with_name("mimo-usage.py")
+        for output in (None, ".codexbar-jones/mimo-local-usage.json", "custom/usage.json"):
+            with self.subTest(output=output), tempfile.TemporaryDirectory(prefix="codexbar-mimo-path-") as root:
+                home = Path(root)
+                projects = home / "mimo" / ".claude" / "projects" / "fixture"
+                projects.mkdir(parents=True)
+                row = {
+                    "type": "assistant",
+                    "timestamp": "2026-01-01T00:00:00Z",
+                    "sessionId": "synthetic-session",
+                    "requestId": "synthetic-request",
+                    "message": {
+                        "id": "synthetic-message",
+                        "usage": {"input_tokens": 120, "output_tokens": 90},
+                    },
+                }
+                session = projects / "session.jsonl"
+                session.write_text(json.dumps(row) + "\n")
+                session_before = session.read_bytes()
+                stock_cache = home / ".codexbar" / "mimo-local-usage.json"
+                cache = home / output if output else stock_cache
+                sentinel = b'{"previous_stock_cache":true}\n'
+                if output:
+                    stock_cache.parent.mkdir()
+                    stock_cache.write_bytes(sentinel)
+                environment = {"HOME": root, "MIMO_CLAUDE_HOME": str(home / "mimo")}
+                if output:
+                    environment["MIMO_LOCAL_USAGE_PATH"] = str(cache)
+                result = subprocess.run(
+                    [sys.executable, "-B", str(script_path), "--update"],
+                    env=environment, capture_output=True, text=True, timeout=10,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(result.stdout, "")
+                payload = json.loads(cache.read_text())
+                self.assertEqual(payload["sessions_scanned"], 1)
+                self.assertEqual(payload["windows"]["all_time"]["input"], 120)
+                self.assertEqual(payload["windows"]["all_time"]["output"], 90)
+                self.assertEqual(payload["windows"]["all_time"]["messages"], 1)
+                self.assertEqual(session.read_bytes(), session_before)
+                self.assertEqual(list(cache.parent.iterdir()), [cache])
+                if output:
+                    self.assertEqual(stock_cache.read_bytes(), sentinel)
+
     def test_concurrent_writers_publish_without_colliding(self):
         module = load_mimo_usage()
         original_cache_path = module.CACHE_PATH

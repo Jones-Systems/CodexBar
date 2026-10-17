@@ -13,16 +13,24 @@ import Foundation
 ///
 /// See `docs/mimo.md` "Local fallback (opt-in)" for setup instructions.
 public enum MiMoLocalUsageFallback {
-    public static func defaultCachePath() -> String {
-        "\(NSHomeDirectory())/.codexbar/mimo-local-usage.json"
+    public static func defaultCachePath(
+        homeDirectory: String = NSHomeDirectory(),
+        identity: JonesStateRoot.Identity? = JonesStateRoot.identity) -> String
+    {
+        let directory = JonesStateRoot.path(".codexbar", identity: identity) // JONES(trial-identity)
+        return "\(homeDirectory)/\(directory)/mimo-local-usage.json"
     }
 
-    public static func cachePath(environment: [String: String]) -> String {
+    public static func cachePath(
+        environment: [String: String],
+        homeDirectory: String = NSHomeDirectory(),
+        identity: JonesStateRoot.Identity? = JonesStateRoot.identity) -> String
+    {
         guard let override = environment["MIMO_LOCAL_USAGE_PATH"]?
             .trimmingCharacters(in: .whitespacesAndNewlines),
             !override.isEmpty
         else {
-            return self.defaultCachePath()
+            return self.defaultCachePath(homeDirectory: homeDirectory, identity: identity)
         }
         return NSString(string: override).expandingTildeInPath
     }
