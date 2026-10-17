@@ -470,8 +470,9 @@ against fake Application Support files. It does not launch the app, read real se
 acquisitions without navigation. Controlled continuations exercise eviction/replacement, stale completion, timeout
 retry, store-scoped invalidation, and lease cleanup after cache loss. Host assertions check one cleanup request and
 registration with `WebKitTeardown`; they do not establish WebContent process termination or diagnose CPU/RSS incidents.
-The existing headless CI guards remain in place for these AppKit tests. The suite also contains older persistent-store
-factory tests; exclude those when running a nonpersistent-only focused check.
+The existing headless CI guards remain in place for these AppKit tests. Store-factory fixtures inject nonpersistent
+constructors into instance-owned production cache logic and record requested UUIDs to verify legacy identifiers and
+profile separation. These synthetic assertions do not qualify actual persistent storage or runtime containment.
 
 ### CI Aggregate Contract
 

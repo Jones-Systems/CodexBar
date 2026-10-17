@@ -759,3 +759,31 @@ provenance and one-parent laptop commands are in fixture-scratch-parent-c5454c8b
 Do not treat stubs as Swift behavior or run an intermediate native candidate. Claude GUI
 and WebKit fixture builders continue independently; final combined manifest/suite union
 will follow. Missing tooling/CI, extraction and runtime/signing/install gates remain.
+
+
+### Claude GUI and synthetic WebKit source integrated
+
+Claude source ab73cbaa794d7c0ca921c939be0ceeb97ab85da7 is published through PR11 parent e7ac58f8d4c436947331d195a36afdfa585600d1
+and integrated into PR12; WebKit source eecd20acf44717c6e6114be223b01337ad1c3598 yields
+combined source checkpoint d42d5312ebc3dee1cfadb8e0d93d9655a0686f3a. Claude discovery/persistence/picker routes enrolled
+native references with no independent-login lifecycle, preserves independent sources,
+and fails closed on stale enrollment. Native default leaves directory overrides absent;
+explicit ~/.claude remains distinct. Enrollment does not prove readiness/scope. Twenty-one
+new synthetic tests remain unrun; exact manifest/union in claude-native-gui-ab73cbaa.json.
+One focused Astra correctness review is in progress, task codexbar-claude-native-gui-correctness-20261017-r1;
+chosen for cross-profile authority/identity composition, not reviewer count. Excluded
+AFCS001/002 patch remains untouched. Root inspected the shared OAuthCredentials merge:
+only the pre-existing two trial-domain changes differ from the Claude source commit.
+
+WebKit repair extracts instance-owned lookup cache with mandatory constructors; production
+keeps default/persistent factories. Four affected fixtures now use nonpersistent stores,
+recording UUID constructor requests. All35 existing declarations/110 expectations/30CI
+guards preserved, three synthetic tests added. No native execution/persistent runtime proof.
+Exact hashes/dispositions in webkit-synthetic-eecd20ac.json. Full-suite hold remains until
+final native safety qualification, without assuming safety of other tests.
+
+Root formatter0.61.1 passed all58 integrated affected Swift files (8.25s), diff check passed.
+Initial launch hold CPU94.27% prevented review start; recovered sample1.89%/39.84GiB,
+onecore6.25%, allowed one review. No runtime/process intervention. Final source manifest
+is refreshed at this source checkpoint, but source-ready/native rerun awaits review.
+All CI/extraction/runtime/signing/install gates preserved. No VPS merge to fork main.
