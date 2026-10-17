@@ -160,3 +160,18 @@ uncommitted source bytes, not a new commit or executed native result.
 | `Tests/CodexBarTests/Jones/JonesCodexFleetPromotionTestSupport.swift` | `b7ebdaa6c7009079308952024a4064a2888442b03d88d050305a299222f57244` |
 | `Tests/CodexBarTests/Jones/JonesCodexFleetPromotionTests.swift` | `25c5f9ab9573bfe79b08f3c682ea9db4bafbe0946d690ed2ece63f89b6d7f667` |
 | `docs/jones/fleet-system-promotion-ledger.md` | `e20b03b103538e87038614baf5aed7231c1c26299a71ad88e26597953b168263` |
+
+## Root integration and focused review
+
+Source committed at `7805dac297e19d882e249434c9c0d52d056f05d2` and integrated
+without source differences at `0f06d9e4dedc733dd3c349f504f0fe4b11a80bb5`.
+Independent Astra/high correctness review found no actionable changed-surface
+findings; exact binding is `../review-evidence/fleet-system-copy-7805dac29.json`.
+This is source review only; native compilation, affected suites and lint gates remain.
+The existing private-registry endpoint-unavailable result remains a capability gap;
+no registration, endpoint repair or enrollment is claimed.
+
+Laptop handoff delivery gap: installed cross-host metadata binds peer environment
+`62b43f49-f7ac-46e8-a52c-8640a933c697`, rather than requested laptop environment
+`8750edf7-486b-41ac-81ce-cd50dfeb71eb`. No route/configuration or recipient change,
+and no cross-host send was attempted. Root supplies a self-contained handoff.
