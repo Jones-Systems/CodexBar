@@ -194,3 +194,23 @@ is 6.25% of host capacity. Native verification remains laptop-owned and is not
 substituted by missing-Swift results on the VPS. Current registered cross-host
 return route still targets a different peer environment; checkpoint reports are
 retained here and in Git for the coordinator's authorized VPS reader.
+
+### Claude source research checkpoint
+
+Sol research at PR11 c2a3118 and host-tooling Git objects
+`fc332722914b21dc86e1772c0736d511ef37e18a` found distinct native and automation
+contracts. Named native profiles require a directory-derived Claude Code Keychain
+service, while CodexBar currently hardcodes the default service. AFCL setup-token
+records and launcher-injected CLAUDE_CODE_OAUTH_TOKEN are separate from native
+subscription credentials. Their ability to authorize CodexBar usage/profile
+endpoints is unproved; neither copying automation envelopes into native stores nor
+assuming user:profile scope is supported. Owner-attested email digests do not prove
+native account UUID identity. This does not reproduce the reported stock-app error.
+
+Astra now owns bounded Claude source judgment and native-profile routing correction
+in `claude-authfleet-reuse-20261017`, branch of the same name prefixed `work/`,
+base c2a3118. Claude source/tests only, excluding UI planner/controller, trial-root
+helper and all live stores. Root owns Git. Native default, named profile, consent,
+cache/history and refresh routing must remain isolated. Metadata/fleet integration
+will be assessed without inventing automation-token usage capability. No runtime
+authentication or data access has occurred; Swift checks remain unavailable here.
