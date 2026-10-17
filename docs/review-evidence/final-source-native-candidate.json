@@ -172,7 +172,7 @@
         "behavior_tests": 0,
         "terminal": "original compile still draining at relay, no retry",
         "repair_task": "codexbar-gemini-cleanup-sendability-20261017-r1",
-        "source_repair": "active, no correction or native pass claimed"
+        "source_repair": "Source-addressed at8effc1ec, integrated PR12 at025c9bd8; native compile pending final candidate, not passed"
       }
     },
     "full_make_test": "HELD: unguarded persistent WebKit factory cases; no standard isolation or production runner full-suite exclusion seam",

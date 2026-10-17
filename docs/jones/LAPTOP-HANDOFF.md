@@ -88,9 +88,10 @@ is terminal. No final test pass, final candidate or source acceptance is implied
 That interim build has reported GeminiLoginRunner.swift120:22/126:22 compiler errors:
 fileManager (FileManager, non-Sendable in the macOS26.4 SDK) is captured by @Sendable
 onCancel/delayed-cleanup closures. Zero behavior tests ran; the original compile was
-still draining at relay and must not be retried unchanged. A separate bounded VPS
-repair lane is active. Preserve the pinned checkout until terminal, then await the
-new combined exact-head handoff. No source correction or passing rerun is claimed.
+still draining at relay and must not be retried unchanged. VPS source repair8effc1ec is integrated into PR12 at025c9bd8; it preserves the injected
+manager through a locked per-script cleanup capability. Native compilation remains
+pending. Preserve the pinned checkout until terminal, then await the new combined
+exact-head handoff after Claude GUI integration. No passing rerun is claimed.
 
 Full-suite hold is source-confirmed: OpenAIDashboardWebViewCacheTests lines108–129 and
 134–140 call persistent factories unguarded; lines89–106 and609–637 have only CI guards.

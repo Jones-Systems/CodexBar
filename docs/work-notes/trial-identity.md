@@ -654,3 +654,24 @@ then its verified parent head flows into PR12. Final manifest/affected Gemini sc
 and login suites will be refreshed on their combined candidate. No intermediate
 native rerun; original pinned build must first become terminal. Native/full-suite-
 safety/CI/extraction/signing/activation gates remain intact.
+
+
+### Gemini cleanup Sendable source correction integrated
+
+Released two-file repair `8effc1ecf8d3c7a02b7aeee6c76d94b3398bc1f1` integrates ONLY into
+PR12 at `025c9bd86ebfd764e7c785ebbb93136568ab0d4f`; PR11 ancestry is not changed.
+Root verified exact hashes and inspected the source/tests. The private ScriptCleanup
+capability retains the injected FileManager and exact script URL; a lock serializes
+cancellation, defer and delayed removal. No global FileManager conformance or real/
+default filesystem fallback is added. Existing synchronous preparation precedes
+cross-concurrency cleanup; write/permissions/open errors, immediate cancellation and
+awaited open/drain remain covered by source fixtures. Ten-second success retention
+is unchanged. New in-memory tests cover cancellation during scheduling and concurrent
+callbacks preserving a second invocation's script.
+
+Builder two-file SwiftFormat0.61.1 lint and whitespace passed. No Swift toolchain on
+VPS means no passing-after native compile/behavior claim. Full make test remains held
+for actual persistent WebKit-store cases; make check installer held. Exact source/
+diagnostic binding, hashes and affected Gemini scratch/login suites are in
+../review-evidence/gemini-cleanup-sendability-8effc1ec.json. Final union will include
+these paths after Claude GUI source returns. No intermediate native rerun requested.
