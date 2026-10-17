@@ -833,3 +833,28 @@ and eligible-merge authorization. Laptop prepares that narrow gate while VPS sou
 repair continues. Required CI remains absent, not green; neither local native evidence
 nor active workflow metadata clears it. Laptop44a checkout is idle/fixed awaiting final
 combined candidate after NFP-COR-001 repair/confirmation. All other gates persist.
+
+
+### Protected-boundary fixture process identity hold
+
+Laptop native verifier read-only at ac58662da identifies new P1 FSP-PROC-001 in
+Scripts/test_fixture_scratch_parent.py: readiness poll147 or communicate151 can reap
+leader, then unconditional finally166 killpg(pid,SIGKILL) lacks an anchored process-group
+identity and can signal a recycled PGID. Root inspected115–185 and confirmed the code.
+Exact source c5454c8b, SHA256ce137a7c31d818348c38d5f98fe0458fd532116f9a88434e33ad4b26192d0041.
+DO NOT execute the regression as-is. Prior50casePASS is historical behavioral evidence,
+not signal-safety proof; no unrelated effect is known and unsafe reproduction is held.
+Finding/binding/original severity and blocking effect are preserved in the existing
+fixture-scratch-parent-c5454c8b.json ledger; outcome remains blocked, not debt acceptance.
+
+Root assigned Astra/high bounded repair codexbar-fixture-process-identity-repair-20261017-r1
+in /home/malcolmjones/Projects/CodexBar-worktrees/fixture-process-identity-20261017,
+branch work/fixture-process-identity-20261017, cleanbase90613f2c8a5ed0c5ea95a7ce9665573e894eb5e8.
+Root sole Git/index owner; builder owns regression script/narrow synthetic ownership
+proof only, no shared docs or overlap with Claude repair. Require unreaped identity until
+all owned signaling ends, no group signal after a reaping poll/communicate/wait, all50
+cases and one-parent cleanup preserved. Source/fake-order proof precedes real synthetic
+execution; no unsafe original rerun, kill-by-name or broader process operation.
+Launch admissionCPU8.44%, RAM39.61GiB, onecore6.25%; one start. PR12-only integration
+and exact independent containment confirmation required. Source-ready remains held for
+both P1 repairs; CIpause/extraction/native-runtime/sign/install gates unchanged.

@@ -44,5 +44,21 @@
     "CI absent not green",
     "extraction owner predicate",
     "native runtime/signing/release/install/activation unqualified"
-  ]
+  ],
+  "execution_hold": {
+    "id": "FSP-PROC-001",
+    "original_severity": "P1",
+    "original_blocking_effect": "Protected-boundary execution hold; do not execute regression as-is",
+    "source_review_profile": "Laptop native verifier read-only, relayed by continuity coordinator506fc1fd; root source confirmation",
+    "source_review_evidence": "Current-thread laptop relay identifying lines147/151/166 and root read of115-185; originating local evidence not accessible VPS",
+    "reviewed_revision": "ac58662da5b5cf8f6b8883347d9a9e649239a3e9",
+    "source_commit": "c5454c8b7debb092638801d00b402bbc43298eba",
+    "source_blob_sha256": "ce137a7c31d818348c38d5f98fe0458fd532116f9a88434e33ad4b26192d0041",
+    "consequence": "poll/communicate may reap leader before unconditional finally killpg(pid,SIGKILL); recycled PGID could target unrelated processes",
+    "outcome": "remain blocked",
+    "repair_task": "codexbar-fixture-process-identity-repair-20261017-r1",
+    "prior_effect": "No unrelated process effect known; unsafe original regression not rerun",
+    "historical_results_limit": "50 passed cases prove prior synthetic behavior only, not signal identity safety"
+  },
+  "laptop_commands_status": "HELD: do not execute listed regression command until revised source and targeted containment confirmation"
 }

@@ -106,8 +106,11 @@ The laptop independently passed all three synthetic Scripts/test_mimo_usage.py c
 at44a43f59; no unchanged rerun is required. Both shell scripts now support one caller-owned workspace scratch parent via optional
 CODEXBAR_TEST_SCRATCH_PARENT, source c5454c8b integrated at e73b14de. See
 ../review-evidence/fixture-scratch-parent-c5454c8b.json for exact commands and hashes.
-Portable checks passed50 lifecycle cases and30 identity checks; native qualification
-still awaits the final combined candidate. Preserve
+Historical checks passed50 lifecycle cases and30 identity checks. NEW P1 execution hold:
+DO NOT EXECUTE Scripts/test_fixture_scratch_parent.py as-is: poll/communicate can reap
+the leader before unconditional finally killpg, allowing recycled-PGID signaling.
+Bounded repair codexbar-fixture-process-identity-repair-20261017-r1 is active; exact
+confirmation and native qualification await the revised final candidate. Preserve
 native rejected-case16 as unrun until actual Swift execution. Stub proof is not native.
 
 ## Open completion gates
