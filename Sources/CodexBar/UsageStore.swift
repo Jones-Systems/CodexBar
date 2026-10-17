@@ -1005,8 +1005,20 @@ extension UsageStore {
             browserDetection: self.browserDetection,
             keepCLISessionsAlive: self.settings.debugKeepCLISessionsAlive)
         let output = await fetcher.debugRawProbe(model: "sonnet")
-        let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("codexbar-claude-probe.txt")
-        try? output.write(to: url, atomically: true, encoding: .utf8)
+        // JONES(trial-diagnostics): retain overlay exports beside application logs.
+        let destination = JonesDiagnosticDestination.resolve(
+            legacyURL: URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("codexbar-claude-probe.txt"))
+        let url = destination.url
+        do {
+            try destination.write(output)
+        } catch {
+            if destination.isRetained {
+                self.knownLimitsAvailabilityByProvider.removeValue(forKey: .claude)
+                self.errors[.claude] = "Failed to save log: \(error.localizedDescription)"
+                return
+            }
+            // Preserve stock's best-effort export and open behavior without an overlay.
+        }
         await MainActor.run {
             let snippet = String(output.prefix(180)).replacingOccurrences(of: "\n", with: " ")
             self.knownLimitsAvailabilityByProvider.removeValue(forKey: .claude)
@@ -1018,9 +1030,12 @@ extension UsageStore {
     func dumpLog(toFileFor provider: UsageProvider) async -> URL? {
         let text = await self.debugLog(for: provider)
         let filename = "codexbar-\(provider.rawValue)-probe.txt"
-        let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(filename)
+        // JONES(trial-diagnostics): directory/write failure stays in this export's error lane.
+        let destination = JonesDiagnosticDestination.resolve(
+            legacyURL: URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(filename))
+        let url = destination.url
         do {
-            try text.write(to: url, atomically: true, encoding: .utf8)
+            try destination.write(text)
             _ = await MainActor.run { NSWorkspace.shared.open(url) }
             return url
         } catch {
