@@ -9,7 +9,8 @@ trial disposition and eligible merges. No installation or live switching is auth
 
 The laptop coordinator requested two further source slices after reading e23b813c8:
 workspace-grouped account presentation and AFCL command/auth-mode integration or
-truthful typed status. Both are active on VPS. Preserve e23b813c8 and older evidence;
+truthful typed status. Grouped source is now integrated (50a67106; native pending); AFCL is still active
+on VPS. Preserve e23b813c8 and older evidence;
 **do not treat a documentation-only head carrying this notice as the next native
 candidate**. Wait for the new exact source-ready SHA and refreshed manifest after
 both slices return. No intermediate checkout advance or native rerun is requested.

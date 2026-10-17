@@ -484,3 +484,28 @@ The prior final-source manifest is historical until these lanes compose. No new
 native candidate/rerun is requested yet. Laptop continues fixture-safety investigation;
 full make test cannot silently run persistent WebKit stores. Missing CI, owner-only
 extraction sequencing and signing/package/activation holds remain unchanged.
+
+
+### Grouped-account presentation source checkpoint
+
+Released grouped source `50a6710669b29401c911d1e0f7d7a4ab87467d8e` is published in
+PR11 at `410515a95b6240af335d4fa6648ca68ff92897a5` and integrated into PR12 at
+`fa3fb391c18847830e3082e4905b83107f542957`. Root verified all four source/test hashes
+and inspected the grouped projection, renderer and fixtures. Workspace sections keep
+their labels even when wholly folded; account rows share the global five-account
+budget. Per-group overflow reveals the existing provider-wide tail. Active/inactive
+collapse uses the existing identity/toggle/reset path; switching and core planner
+semantics are unchanged. Priority/error rows may exceed the initial target.
+
+Builder scoped SwiftFormat four-file lint and whitespace passed. Native tests were
+not run; Swift remains absent. Synthetic fixtures cover counts1–6,8,12, shared-email
+workspace identity, labels, global visibility/overflow, active selection, collapse/
+re-expansion and reset. No native rendering or interaction is claimed. Exact manifest
+and affected suites: ../review-evidence/grouped-presentation-50a67106.json.
+
+This addresses the grouped-presentation source gap, pending native acceptance.
+Historical 3bed0667/e23b813c8 manifests remain bound to their older source, including
+the exception they reported; this new checkpoint supersedes that exception only.
+AFCL source work remains active. No new native candidate/rerun is requested yet;
+refresh the full manifest and pinned handoff after AFCL returns. All merge, CI,
+extraction, native/full-suite-safety and activation holds remain intact.
