@@ -167,7 +167,7 @@
     "Full suite execution pending final candidate safety qualification; identified WebKit factory hazard source-addressed eecd20ac; existing CI guards retained, no silent coverage waiver"
   ],
   "remaining_product_gaps": [
-    "AFCL automation-token usage adapter remains unsupported by proved endpoint/scope contract; native profile selection does not imply automation-token support",
+    "AFCL installed flow includes native usage companion reusable by native selector if present; readiness unknown; automation-token endpoint/scope support remains separately unproved",
     "All new native behavior/GUI evidence pending",
     "Shared HTTP/native app/widget/unbundled CLI containment remains unqualified",
     "NFP-COR-001 P1 enrolled-executable fallback: repair active, not corrected",
@@ -266,5 +266,28 @@
     "upstream_monitor": "preserve disabled_fork",
     "next_gate": "Exact owner approval or owner authenticated UI initiating action; laptop preparing narrow gate; VPS does not re-enable/dispatch/settings-change"
   },
-  "portable_commands_status": "DO NOT execute regression as-is; FSP-PROC-001 blocks listed scratch-parent regression command pending repaired exact source confirmation"
+  "portable_commands_status": "DO NOT execute regression as-is; FSP-PROC-001 blocks listed scratch-parent regression command pending repaired exact source confirmation",
+  "AFCL_product_fit": {
+    "authority_effect": "none",
+    "source": "Laptop coordinator506fc1fd static installed wrapper/source evidence relay; not owner approval, not independent VPS installed-state verification",
+    "installed_release": "7aba0e03524bddd042cd538cf138e7e50f079caa",
+    "source_evidence": [
+      "~/.local/bin/afcl maps malcolm to default and invokes ~/.local/bin/auth-fleet login claude ALIAS",
+      "auth-fleet wrapper reaches auth-fleet/bin/auth-fleet Python module",
+      "src/host_tooling/auth_fleet/controller.py840-880 automation login then usage_login.execute(binding,login,aliases)866; inference_completed_usage_incomplete reported separately",
+      "usage_login.py1-6 laptop-local native subscription usage companions, not fleet-shipped, intended native CLI refresher",
+      "usage_login.py67-87 native subscription classification;147 native_cli(account) auth login --claudeai",
+      "laptop-provider-logins.md default config UNSET; Jace isolated config"
+    ],
+    "local_laptop_hash_evidence": "AFCL-INSTALLED-SOURCE.json; not assumed accessible VPS",
+    "product_fit": "Installed AFCL no longer automation-only: existing selected native Authfleet profile may reuse AFCL-established native subscription usage companion when present. Automation token endpoint/scope remains separately unsupported.",
+    "refresh_ownership": "Existing native Claude CLI credential ownership/delegated refresh is intended companion path; elected executable must remain enrolled and profile environment must match. NFP-COR-001 repair explicitly informed of this evidence.",
+    "structural_gap_status": "Bounded refresher seam assessment requested from active executable-repair builder; no broad review or separate duplicate lane",
+    "unknowns": [
+      "Actual companion presence/auth readiness",
+      "Native runtime usage/refresh success and external refresh interaction",
+      "Installed/source binding identity matching"
+    ],
+    "protected_operations": "None granted or performed; no wrapper/login/refresh execution or binding/auth/Keychain/profile reads"
+  }
 }

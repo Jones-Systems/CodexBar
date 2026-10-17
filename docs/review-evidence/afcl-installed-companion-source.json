@@ -1,0 +1,23 @@
+{
+  "authority_effect": "none",
+  "source": "Laptop coordinator506fc1fd static installed wrapper/source evidence relay; not owner approval, not independent VPS installed-state verification",
+  "installed_release": "7aba0e03524bddd042cd538cf138e7e50f079caa",
+  "source_evidence": [
+    "~/.local/bin/afcl maps malcolm to default and invokes ~/.local/bin/auth-fleet login claude ALIAS",
+    "auth-fleet wrapper reaches auth-fleet/bin/auth-fleet Python module",
+    "src/host_tooling/auth_fleet/controller.py840-880 automation login then usage_login.execute(binding,login,aliases)866; inference_completed_usage_incomplete reported separately",
+    "usage_login.py1-6 laptop-local native subscription usage companions, not fleet-shipped, intended native CLI refresher",
+    "usage_login.py67-87 native subscription classification;147 native_cli(account) auth login --claudeai",
+    "laptop-provider-logins.md default config UNSET; Jace isolated config"
+  ],
+  "local_laptop_hash_evidence": "AFCL-INSTALLED-SOURCE.json; not assumed accessible VPS",
+  "product_fit": "Installed AFCL no longer automation-only: existing selected native Authfleet profile may reuse AFCL-established native subscription usage companion when present. Automation token endpoint/scope remains separately unsupported.",
+  "refresh_ownership": "Existing native Claude CLI credential ownership/delegated refresh is intended companion path; elected executable must remain enrolled and profile environment must match. NFP-COR-001 repair explicitly informed of this evidence.",
+  "structural_gap_status": "Bounded refresher seam assessment requested from active executable-repair builder; no broad review or separate duplicate lane",
+  "unknowns": [
+    "Actual companion presence/auth readiness",
+    "Native runtime usage/refresh success and external refresh interaction",
+    "Installed/source binding identity matching"
+  ],
+  "protected_operations": "None granted or performed; no wrapper/login/refresh execution or binding/auth/Keychain/profile reads"
+}

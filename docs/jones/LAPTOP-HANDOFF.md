@@ -115,9 +115,14 @@ native rejected-case16 as unrun until actual Swift execution. Stub proof is not 
 
 ## Open completion gates
 
-AFCL automation-token reuse is **unimplemented**: its contract does not prove usage
-endpoint support or a granted user:profile scope. Native profile service routing
-must not be reported as resolving that separate owner requirement. Workspace-grouped
+Installed AFCL source evidence (release7aba0e03524bddd042cd538cf138e7e50f079caa) shows
+login also establishes a laptop-local native subscription usage companion, with native
+CLI refresh ownership. The native selector can reuse that companion when present;
+this fits the owner workflow without a second CodexBar login. Actual presence/readiness
+and native behavior remain UNKNOWN. See ../review-evidence/afcl-installed-companion-source.json.
+Automation-token usage-endpoint/granted-scope support remains unproved separately;
+do not imply that this limitation means AFCL lacks a native companion. Selected native
+CLI/profile refresh routing is subject to the NFP-COR-001 repair/confirmation. Workspace-grouped
 menus are source-addressed at50a67106 with a global five-account budget and collapsible
 active account; native behavior remains pending. Shared HTTP state ownership and
 native containment remain unresolved despite WebKit identifier hardening. All seven

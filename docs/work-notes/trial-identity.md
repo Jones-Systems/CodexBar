@@ -858,3 +858,24 @@ execution; no unsafe original rerun, kill-by-name or broader process operation.
 Launch admissionCPU8.44%, RAM39.61GiB, onecore6.25%; one start. PR12-only integration
 and exact independent containment confirmation required. Source-ready remains held for
 both P1 repairs; CIpause/extraction/native-runtime/sign/install gates unchanged.
+
+
+### Installed AFCL native companion evidence supersedes automation-only framing
+
+Laptop static installed-source relay binds release7aba0e03524bddd042cd538cf138e7e50f079caa:
+afcl maps malcolm->default and invokes auth-fleet login claude ALIAS; controller840–880
+calls usage_login.execute at866 after automation login and distinguishes incomplete usage
+login. usage_login describes laptop-local native subscription companions, not fleet-shipped,
+with native CLI refresher ownership, and invokes native_cli(account) auth login --claudeai.
+Prescribed default route is UNSET config, Jace isolated. No wrapper/login/refresh execution
+or binding/auth/Keychain/profile reads occurred. Root's earlier historical automation-only
+product-gap framing is superseded for this installed flow; underlying automation token
+usage-endpoint/scope limitation remains narrowly separate and unproved.
+
+Current GUI native selector can reuse an AFCL-established companion if present. Actual
+presence/readiness/runtime remain UNKNOWN. Exact source attribution/anchors and evidence
+limits preserved in afcl-installed-companion-source.json; laptop hashes stay local in
+AFCL-INSTALLED-SOURCE.json, not assumed available VPS. Active enrolled-executable builder
+received this evidence to account for companion/native CLI refresh ownership in its bounded
+P1 seam and report any structural gap. No additional broad review/duplicate source lane.
+Final manifest/handoff product-fit text updated without live permission expansion.

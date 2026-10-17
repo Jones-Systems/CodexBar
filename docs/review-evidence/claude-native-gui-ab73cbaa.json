@@ -92,5 +92,6 @@
       "outcome": "remain blocked",
       "disposition": "Standing P2 implementation deferral; unrepaired, no bounded-debt acceptance claimed. Preserve original delivery finding and report to laptop; do not remediate absent direct exact owner scope."
     }
-  ]
+  ],
+  "AFCL_installed_fit": "See afcl-installed-companion-source.json: installedAFCL7aba0e0 establishes native usage companion after inference login; selector may reuse it if present. CLI owns native refresh; no auth-readiness/runtime claim. NFP-COR-001 repair informed."
 }
