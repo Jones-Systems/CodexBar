@@ -593,7 +593,6 @@ struct LocalizationLanguageCatalogTests {
             "Password",
             "Plugins",
             "Provider",
-            "SSH",
             "Token",
             "%@ %@",
             "%@: %@",
