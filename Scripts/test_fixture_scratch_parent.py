@@ -8,6 +8,7 @@ native compilation, packaging, and real account state outside this regression.
 from contextlib import ExitStack, contextmanager
 import os
 import importlib.util
+import json
 from pathlib import Path
 import shutil
 import signal
@@ -244,6 +245,43 @@ def collect_owned_process(command, env, owned, ready=None, cancel=None, timeout=
         return status, stdout.read(), stderr.read()
 
 
+def collect_nested_process(command, env, owned, receipt, token, ready=None, cancel=None, timeout=20):
+    global _synthetic_cleanup_safe
+    previous_safe = _synthetic_cleanup_safe
+    # The outer group's reap says nothing about children that started separate sessions.
+    # Keep the tree on every exceptional path until the nested runner proves its own drain.
+    _synthetic_cleanup_safe = False
+    result = collect_owned_process(command, env, owned, ready, cancel, timeout)
+    status, stdout, stderr = result
+    try:
+        proof = json.loads(receipt.read_text())
+        if proof != {"token": token, "returncode": status, "drained": True}:
+            raise ValueError("nested drain receipt does not match this invocation")
+    except (OSError, ValueError) as error:
+        print(f"Nested process drain unproved; preserving {owned}: {error}", file=sys.stderr)
+        if status:
+            raise SystemExit(status if status > 0 else 128 - status) from error
+        raise RuntimeError("Nested process drain unproved") from error
+    _synthetic_cleanup_safe = previous_safe
+    return result
+
+
+def nested_runner_main(arguments):
+    runner_path, receipt, token, *runner_arguments = arguments
+    spec = importlib.util.spec_from_file_location("fixture_nested_runner", runner_path)
+    runner = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = runner
+    spec.loader.exec_module(runner)
+    sys.argv = [runner_path, *runner_arguments]
+    result = runner.main()
+    # main returns only after its command drain/parent-cleanup paths. An unproved
+    # drain suppresses this receipt even when the original failure status survives.
+    if runner._scratch_cleanup_safe:
+        with Path(receipt).open("x") as output:
+            json.dump({"token": token, "returncode": result, "drained": True}, output)
+    return result
+
+
 def executable(path, body):
     path.write_text(body)
     path.chmod(0o700)
@@ -300,10 +338,13 @@ if stage == 'discovery':
                    "PYTHONDONTWRITEBYTECODE": "1"}
             if supplied:
                 env[KEY] = str(caller)
-            status, stdout, stderr = collect_owned_process(
-                [sys.executable, "-B", str(runner_path), "--no-retry-non-timeout-failures",
+            token = str(time.monotonic_ns())
+            receipt = owned / ("runner-drained-" + token + ".json")
+            status, stdout, stderr = collect_nested_process(
+                [sys.executable, "-B", str(Path(__file__).resolve()), "--nested-runner",
+                 str(runner_path), str(receipt), token, "--no-retry-non-timeout-failures",
                  "--swift-command", sys.executable, "--swift-command-arg=" + str(fake)],
-                env, owned, ready, cancellation)
+                env, owned, receipt, token, ready, cancellation)
             if b"Preserving" in stderr or b"Cleanup also failed" in stderr:
                 _synthetic_cleanup_safe = False
             if child_pid.exists():
@@ -373,6 +414,149 @@ if stage == 'discovery':
         second.cleanup()
         assert not second.path.exists()
         count += 1
+    return count
+
+
+def nested_cleanup_observer():
+    spec = importlib.util.spec_from_file_location("fixture_nested_observer", ROOT / "Scripts/ci_swift_test_by_suite.py")
+    runner = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = runner
+    spec.loader.exec_module(runner)
+    return runner
+
+
+def nested_cleanup_child(case, owned):
+    observer = nested_cleanup_observer()
+    identity = observer.test_process(os.getpid())
+    if identity is None:
+        raise RuntimeError("Cannot capture synthetic child birth")
+    (owned / "live-child-fixture").write_text("preserve while this session is live")
+    (case / "child-identity.json").write_text(json.dumps({"pid": identity.pid, "birth": identity.birth}))
+    (case / "child-ready").touch()
+    deadline = time.monotonic() + 15
+    while not (case / "stop-child").exists() and time.monotonic() < deadline:
+        time.sleep(0.05)
+
+
+def nested_cleanup_fixture(case):
+    with owned_regression_directory(case) as name:
+        owned = Path(name)
+        (case / "owned-path").write_text(str(owned))
+        command = [sys.executable, "-B", str(Path(__file__).resolve()),
+                   "--nested-cleanup-command", str(case), str(owned)]
+        original_drain = cleanup_retained_group
+
+        def record_outer_drain(*arguments):
+            original_drain(*arguments)
+            (case / "outer-drained").touch()
+
+        with patch(__name__ + ".cleanup_retained_group", side_effect=record_outer_drain):
+            collect_nested_process(command, dict(os.environ), owned, owned / "no-drain-receipt", "cancellation-fixture")
+
+
+def nested_cleanup_regressions(parent):
+    global _synthetic_cleanup_safe
+    require_wait_ownership()
+    if (not parent.is_absolute() or parent.resolve(strict=True) != parent or not parent.is_dir()
+            or ROOT not in parent.parents):
+        raise ValueError("Nested cleanup regressions require an existing canonical workspace child")
+    observer = nested_cleanup_observer()
+    count = 0
+    for cancellation in CANCELLATION_SIGNALS:
+        previous_safe = _synthetic_cleanup_safe
+        with owned_regression_directory(parent) as name:
+            case = Path(name)
+            worker = None
+            identity = None
+            _synthetic_cleanup_safe = False
+            try:
+                worker = subprocess.Popen(
+                    [sys.executable, "-B", str(Path(__file__).resolve()), "--nested-cleanup-fixture", str(case)],
+                    start_new_session=True)
+                deadline = time.monotonic() + 5
+                while not (case / "child-ready").exists():
+                    if retained_status(worker) is not None or time.monotonic() >= deadline:
+                        raise AssertionError("Nested cancellation fixture did not become ready")
+                    time.sleep(0.02)
+                identity = json.loads((case / "child-identity.json").read_text())
+                child = observer.test_process(identity["pid"])
+                assert child is not None and not child.zombie and list(child.birth) == identity["birth"]
+                assert child.session == child.pid and child.session != worker.pid
+                # Signal only our direct, unreaped harness. Its separate-session child stays live.
+                assert retained_status(worker) is None
+                os.kill(worker.pid, cancellation)
+                assert worker.wait(timeout=7) == 128 + cancellation
+                owned = Path((case / "owned-path").read_text())
+                child = observer.test_process(identity["pid"])
+                assert child is not None and not child.zombie and list(child.birth) == identity["birth"]
+                assert owned.is_dir(), "harness cancellation removed a tree with a live separate-session child"
+                assert (owned / "live-child-fixture").read_text() == "preserve while this session is live"
+                count += 1
+            finally:
+                propagating = sys.exc_info()[0] is not None
+                try:
+                    # The private stop file and 15-second self-expiry require no descendant signal authority.
+                    (case / "stop-child").touch()
+                    if worker is not None and worker.returncode is None:
+                        if retained_status(worker) is None:
+                            os.kill(worker.pid, signal.SIGTERM)
+                        worker.wait(timeout=7)
+                    if not (case / "outer-drained").is_file():
+                        raise RuntimeError("Outer collector drain unavailable; preserve regression tree")
+                    if identity is None:
+                        raise RuntimeError("Nested child identity unavailable; preserve regression tree")
+                    deadline = time.monotonic() + 17
+                    while True:
+                        child = observer.test_process(identity["pid"])
+                        if child is None or child.zombie or list(child.birth) != identity["birth"]:
+                            break
+                        if time.monotonic() >= deadline:
+                            raise RuntimeError("Nested fixture child did not exit; preserve regression tree")
+                        time.sleep(0.05)
+                    _synthetic_cleanup_safe = previous_safe
+                except BaseException as error:
+                    if not propagating:
+                        raise
+                    print(f"Nested cancellation regression cleanup also failed: {error}", file=sys.stderr)
+        assert not case.exists()
+
+    # A collector exception must retain its exact original outcome with cleanup still denied.
+    with owned_regression_directory(parent) as name:
+        owned = Path(name)
+        for original in (subprocess.TimeoutExpired("synthetic", 1), RuntimeError("synthetic collector failure")):
+            previous_safe = _synthetic_cleanup_safe
+            try:
+                with patch(__name__ + ".collect_owned_process", side_effect=original):
+                    collect_nested_process([], {}, owned, owned / "missing-receipt", "exception-fixture")
+            except BaseException as error:
+                assert error is original
+                assert not _synthetic_cleanup_safe
+            else:
+                raise AssertionError("Collector exception was lost")
+            # No child was launched by this injected collector.
+            _synthetic_cleanup_safe = previous_safe
+            count += 1
+        receipt = owned / "drain-receipt.json"
+        receipt.write_text(json.dumps({"token": "completed-fixture", "returncode": 37, "drained": True}))
+        with patch(__name__ + ".collect_owned_process", return_value=(37, b"", b"")):
+            assert collect_nested_process([], {}, owned, receipt, "completed-fixture")[0] == 37
+        assert _synthetic_cleanup_safe
+        count += 1
+        for status in (0, 37):
+            previous_safe = _synthetic_cleanup_safe
+            try:
+                with patch(__name__ + ".collect_owned_process", return_value=(status, b"", b"")):
+                    collect_nested_process([], {}, owned, receipt, "mismatched-fixture")
+            except SystemExit as error:
+                assert status == 37 and error.code == 37
+            except RuntimeError:
+                assert status == 0
+            else:
+                raise AssertionError("Mismatched nested drain receipt was accepted")
+            assert not _synthetic_cleanup_safe
+            # The mocked collector created no process; retain no synthetic unknown after this assertion.
+            _synthetic_cleanup_safe = previous_safe
+            count += 1
     return count
 
 
@@ -540,6 +724,7 @@ output.chmod(0o700)
                     run(script, override, "cancel", 128 + sig, sig)
                     count += 1
         count += runner_lifecycle_cases(owned, workspace, caller)
+        count += nested_cleanup_regressions(owned)
         print(f"Fixture scratch parent: {count} synthetic lifecycle cases passed; no native Swift proof")
     assert not owned.exists(), "regression root leaked"
     assert parent.is_dir(), "caller parent removed"
@@ -548,4 +733,16 @@ output.chmod(0o700)
 if __name__ == "__main__":
     for sig in CANCELLATION_SIGNALS:
         signal.signal(sig, signal_exit)
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == "--nested-runner":
+        raise SystemExit(nested_runner_main(sys.argv[2:]))
+    if len(sys.argv) > 1 and sys.argv[1] == "--nested-cleanup-fixture":
+        nested_cleanup_fixture(Path(sys.argv[2]))
+    elif len(sys.argv) > 1 and sys.argv[1] == "--nested-cleanup-command":
+        child = subprocess.Popen(
+            [sys.executable, "-B", str(Path(__file__).resolve()), "--nested-cleanup-child", *sys.argv[2:]],
+            start_new_session=True)
+        child.wait(timeout=20)
+    elif len(sys.argv) > 1 and sys.argv[1] == "--nested-cleanup-child":
+        nested_cleanup_child(Path(sys.argv[2]), Path(sys.argv[3]))
+    else:
+        main()
