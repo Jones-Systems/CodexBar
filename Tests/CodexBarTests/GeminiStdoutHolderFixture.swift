@@ -239,6 +239,8 @@ final class GeminiStdoutHolderFixture {
     import traceback
 
     mode, path = sys.argv[1:3]
+    os.chdir(os.path.dirname(path))
+    path = os.path.basename(path)
     if mode.startswith("produce"):
         def record_failure(kind, error, stack):
             with open(path + ".error", "w") as handle:
