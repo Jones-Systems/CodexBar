@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
-# Fixtures render only the identity function and plist templates; packaging/signing never runs.
+# Fixtures exercise identity metadata and isolated session compilation; packaging/signing never runs.
 exec python3 - "$ROOT" <<'PYTEST'
 import hashlib
 from pathlib import Path
 import plistlib
 import re
+import resource
+import shutil
 import signal
 import subprocess
 import sys
@@ -57,6 +59,104 @@ def values(fixture, config="release", mode="adhoc", extra=None):
 count = 0
 with tempfile.TemporaryDirectory(prefix=".jones-identity-fixture-", dir=ROOT) as name:
     fixture = Path(name)
+    # Exercise the real standalone compile command without claiming a native Swift build.
+    tools = fixture / "tools"
+    tools.mkdir()
+    compiler = tools / "swiftc"
+    compiler.write_text("""#!/usr/bin/python3
+from pathlib import Path
+import os, sys
+args = sys.argv[1:]
+assert '-O' in args and '-parse-as-library' in args
+sources = [Path(arg) for arg in args if arg.endswith('.swift')]
+assert all(path.is_file() for path in sources)
+assert {path.name for path in sources} == {
+    'JonesStateRoot.swift', 'ProviderSessionStoreFile.swift', 'KeychainSecurity.swift',
+    'provider_session_file_proof.swift'}, 'standalone compile source dependency missing'
+output = Path(args[args.index('-o') + 1])
+assert Path(args[args.index('-module-cache-path') + 1]).parent == output.parent
+assert Path(os.environ['TMPDIR']) == output.parent
+Path(os.environ['PROOF_RECORD']).write_text(str(output.parent))
+if os.environ['PROOF_MODE'] == 'compile-failure':
+    sys.exit(37)
+output.write_text('''#!/usr/bin/python3
+from pathlib import Path
+import os, sys
+assert sys.argv[1] == 'launch'
+root = Path(sys.argv[2])
+assert root.parent == Path(sys.argv[0]).parent
+root.mkdir()
+(root / 'synthetic-session').write_text('fixture')
+sys.exit(41 if os.environ['PROOF_MODE'] == 'child-failure' else 0)
+''')
+output.chmod(0o700)
+""")
+    compiler.chmod(0o700)
+    record = fixture / "proof-root"
+    for mode, expected in (("success", 0), ("compile-failure", 37), ("child-failure", 41)):
+        result = subprocess.run(
+            ["bash", str(ROOT / "Scripts/test_provider_session_file_isolation.sh")],
+            env={"PATH": str(tools) + ":/usr/bin:/bin", "TMPDIR": str(fixture),
+                 "PROOF_MODE": mode, "PROOF_RECORD": str(record)},
+            capture_output=True)
+        assert result.returncode == expected, (mode, result.stderr.decode())
+        assert not Path(record.read_text()).exists(), mode + " leaked owned scratch"
+        count += 1
+    print("Standalone session fixture: compile source list and success/failure cleanup passed (stub compiler)")
+
+    # Compile the real identity policy when available; never translate its semantics into Python.
+    swiftc = shutil.which("swiftc")
+    if swiftc is None:
+        print("UNAVAILABLE: native JonesStateRoot metadata rejection proof (swiftc missing)")
+    else:
+        # Deliberate precondition failures must not leave crash core files.
+        resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+        (fixture / "home").mkdir()
+        probe_source = fixture / "identity-proof.swift"
+        probe_source.write_text('''import Foundation
+
+@main
+struct IdentityProof {
+    static func main() throws {
+        let args = CommandLine.arguments
+        let data = try Data(contentsOf: URL(fileURLWithPath: args[1]))
+        let info = try PropertyListSerialization.propertyList(from: data, format: nil) as! [String: Any]
+        let identity: JonesStateRoot.Identity?
+        if args[2] == "direct" {
+            identity = JonesStateRoot.identity(info: info)
+        } else {
+            identity = JonesStateRoot.resolveIdentity(
+                info: [:], executableURL: URL(fileURLWithPath: "/synthetic/Fixture.app/Contents/Helpers/CLI"),
+                readInfo: { _ in info })
+        }
+        print(identity?.bundleID ?? "absent")
+    }
+}
+''')
+        probe = fixture / "identity-proof"
+        native_env = {"PATH": "/usr/bin:/bin", "HOME": str(fixture / "home"),
+                      "TMPDIR": str(fixture), "SWIFT_BACKTRACE": "enable=no"}
+        subprocess.run([swiftc, "-O", "-parse-as-library", "-module-cache-path", str(fixture / "modules"),
+                        str(ROOT / "Sources/CodexBarCore/JonesStateRoot.swift"), str(probe_source),
+                        "-o", str(probe)], env=native_env, check=True)
+        metadata = {"JonesAppBundleID": "com.example.fixture", "JonesAppGroupID": "FIXTURE.com.example.fixture",
+                    "CodexBarTeamID": "FIXTURE", "JonesICloudID": "iCloud.com.example.fixture"}
+        for marker, expected in ((None, b"absent"), ("jones", b"com.example.fixture"),
+                                 (True, None), (False, None), (1, None), (0, None), ("unknown", None), ("", None)):
+            info = dict(metadata)
+            if marker is not None:
+                info["JonesStateKey"] = marker
+            plist = fixture / "identity.plist"
+            plist.write_bytes(plistlib.dumps(info))
+            for route in ("direct", "bundled-cli"):
+                result = subprocess.run([str(probe), str(plist), route], cwd=fixture, env=native_env,
+                                        capture_output=True)
+                if expected is None:
+                    assert result.returncode != 0, (marker, route, "invalid metadata fell back")
+                else:
+                    assert result.returncode == 0 and result.stdout.strip() == expected, (marker, route)
+                count += 1
+        print("Native JonesStateRoot: 16 valid/absent/invalid metadata cases passed")
     for config in ("release", "debug"):
         for mode in ("identity", "adhoc"):
             for target in TARGETS:
