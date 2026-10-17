@@ -1040,3 +1040,24 @@ initiallanereleased. Independentidentity/providerstandalones runseparately; coll
 remainheldandcheckout84cfixeduntilverifierrelease. Maccollectorrepaircontinueselsewhere.
 No newsource-ready or intermediatecompile requested; updatefinalmanifestafteritsreturn.
 Allfindings/gates/auth/native/installboundariesremain unchanged.
+
+
+### Independent84c native scripts and package-scoped dependency correction
+
+Laptop independentidentity-overlayPASS46(16actualSwiftmetadata+30portable/stub),9.12s,
+boundexactoldsourcehashes. Nativeidentity16 no longer unrun at84c; changedscriptstubs
+mustnotinheritthisPASS. Provider-sessionactualcompileFAILexit1/3.04s,zero behaviorcases:
+KeychainSecurity.swift62 cannotfindTestProcessSafety. Root confirmscompilelistomits
+Sources/CodexBarCore/TestProcessSafety.swift; packageenum/static requirescorrect
+-package-name too. Productionvisibility/detectionmustremain unchanged. Exact13dependency
+hashes/logsare laptopindependent-native, notavailableVPS. Parentemptyafterexistingcleanup,
+exactparentremoved/absenceverified, source/indexclean; write/processlaneRELEASED, HEAD84c
+idle. Priorinnerreapremainsunproved; no-livewriter/outerdrainreconciled, no oldPIDoperation.
+
+Root extended existing Maccollector Astra editcone to providercompilelist/packagecontext,
+identitycompilerstubsource/flagassertions and alreadyowned scratchcopiedinventory/stubs.
+Oneharnessowneravoids overlappingwriters; no newtask/reviewer. Allrealpolicy/nativecases,
+20ownership/50lifecycle/singleparentcleanupmustremain. Modifiedportableevidencefresh,
+actualprovidercompilewaitsMacSwift. Sourcefixnotpublicpolicyweakening. ExistingSwift
+compilecorrectionsremain integrated; combinednextcandidatewaits harnessrelease. Allother
+gates/P2deferrals/liveboundariespreserved; no intermediateMacrerun requested.
