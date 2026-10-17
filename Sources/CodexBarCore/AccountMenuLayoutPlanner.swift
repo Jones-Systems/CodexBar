@@ -8,15 +8,27 @@ import Foundation
 /// Pure projection: inputs are account snapshots plus menu expansion state,
 /// output is an ordered row plan. Rendering and interaction stay in the app layer.
 public enum AccountMenuLayoutPlanner {
-    /// Compact layout only engages once a provider has this many account rows;
+    /// By default, compact layout engages once a provider has this many account rows;
     /// below that the classic stacked cards still fit on screen.
     public static let compactLayoutMinimumAccountCount = 4
     public static let criticalHeadroomPercent: Double = 10
     public static let warningHeadroomPercent: Double = 50
-    /// Folding fewer healthy rows than this behind a summary row would not save
-    /// meaningful menu height.
+    /// By default, fold at least this many healthy rows to save meaningful menu height.
     public static let minimumCollapsedHealthyRowCount = 2
     static let constraintDetailWindowLimit = 2
+
+    public struct Policy: Equatable, Sendable {
+        public let compactLayoutMinimumAccountCount: Int
+        public let minimumCollapsedHealthyRowCount: Int
+
+        public init(
+            compactLayoutMinimumAccountCount: Int = AccountMenuLayoutPlanner.compactLayoutMinimumAccountCount,
+            minimumCollapsedHealthyRowCount: Int = AccountMenuLayoutPlanner.minimumCollapsedHealthyRowCount)
+        {
+            self.compactLayoutMinimumAccountCount = max(1, compactLayoutMinimumAccountCount)
+            self.minimumCollapsedHealthyRowCount = max(1, minimumCollapsedHealthyRowCount)
+        }
+    }
 
     public enum Severity: Equatable, Sendable {
         case critical
@@ -57,9 +69,10 @@ public enum AccountMenuLayoutPlanner {
         expandedAccountIDs: Set<ProviderAccountIdentity> = [],
         healthyTailExpanded: Bool = false,
         collapsedAccountIDs: Set<ProviderAccountIdentity> = [],
-        minimumVisibleAccountCount: Int = 0) -> Plan
+        minimumVisibleAccountCount: Int = 0,
+        policy: Policy = Policy()) -> Plan
     {
-        guard accounts.count >= self.compactLayoutMinimumAccountCount else {
+        guard accounts.count >= policy.compactLayoutMinimumAccountCount else {
             return Plan(rows: accounts.map { .card($0.id) }, usesCompactLayout: false)
         }
 
@@ -81,7 +94,7 @@ public enum AccountMenuLayoutPlanner {
         // unhealthy, best-candidate, or explicitly toggled accounts to meet a limit.
         let hiddenCount = min(collapsible.count, max(0, accounts.count - max(0, minimumVisibleAccountCount)))
         let collapsedIDs: Set<ProviderAccountIdentity> =
-            hiddenCount >= self.minimumCollapsedHealthyRowCount
+            hiddenCount >= policy.minimumCollapsedHealthyRowCount
                 ? Set(collapsible.suffix(hiddenCount).map(\.accountID))
                 : []
 
