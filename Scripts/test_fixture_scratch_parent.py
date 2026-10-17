@@ -5,10 +5,12 @@ No Swift semantics are tested. A minimal copied workspace and stub tools keep
 native compilation, packaging, and real account state outside this regression.
 """
 
+from contextlib import ExitStack
 import os
 from pathlib import Path
 import shutil
 import signal
+import socket
 import subprocess
 import sys
 import tempfile
@@ -20,6 +22,7 @@ KEY = "CODEXBAR_TEST_SCRATCH_PARENT"
 IDENTITY = "test_jones_identity_overlay.sh"
 PROVIDER = "test_provider_session_file_isolation.sh"
 CODEX = "test_codex_file_isolation_child.sh"
+HELPER = Path(__file__).with_name("fixture_process_anchor.py")
 
 
 def signal_exit(signum, _frame):
@@ -30,6 +33,8 @@ CANCELLATION_SIGNALS = (signal.SIGHUP, signal.SIGINT, signal.SIGTERM)
 
 
 def require_wait_ownership():
+    if sys.version_info < (3, 11):
+        raise RuntimeError("Fixture containment requires Python 3.11+ process_group (macOS: Python 3.13+)")
     # CPython exposes waitid on macOS starting with 3.13. Never fall back to poll.
     if not all(hasattr(os, name) for name in (
             "waitid", "P_PID", "WEXITED", "WNOHANG", "WNOWAIT", "CLD_EXITED")):
@@ -53,39 +58,85 @@ def signal_retained_group(process, signum):
     # ECHILD or any other observation error denies signaling. The retained wait
     # identity, not a numeric PID existence check, authorizes this owned group.
     retained_status(process)
-    try:
-        os.killpg(process.pid, signum)
-    except ProcessLookupError:
-        pass
+    os.killpg(process.pid, signum)
 
 
-def cleanup_retained_group(process):
-    # Observation failure denies both actions. Once wait ownership is proved,
-    # a signal error must not skip the one bounded reap of our direct child.
-    retained_status(process)
-    signal_error = None
-    try:
-        os.killpg(process.pid, signal.SIGKILL)
-    except ProcessLookupError:
-        pass
-    except BaseException as error:
-        signal_error = error
-    try:
-        process.wait(timeout=5)
-    except BaseException as reap_error:
-        print(f"Synthetic leader {process.pid} reap unproved: {reap_error}; "
-              "descendant cleanup unknown", file=sys.stderr)
-        if signal_error is not None:
-            raise signal_error from reap_error
-        raise
-    if signal_error is not None:
-        # Darwin's killpg1 excludes SZOMB members and can return EPERM for a
-        # zombie-only group. EPERM also covers real denials: it proves neither
-        # permission nor absence of descendants. Reaping is separate evidence.
-        # Apple xnu-10002.81.5: bsd/kern/kern_sig.c, killpg1/killpg1_callback.
-        print(f"Synthetic leader {process.pid} reaped; group signal failed: {signal_error}; "
-              "descendant cleanup unknown", file=sys.stderr)
-        raise signal_error
+def cleanup_retained_group(process, anchor=None, control=None):
+    owned, errors, reaped = [], [], []
+    ownership_lost = False
+    signaled = False
+    for child in (process, anchor):
+        if child is None:
+            continue
+        try:
+            status = retained_status(child)
+            owned.append(child)
+            if child is anchor and status is not None:
+                errors.append(RuntimeError("Synthetic group anchor exited before cleanup"))
+        except BaseException as error:
+            ownership_lost = True
+            errors.append(error)
+    # Both children are direct, sole-wait-owned identities. The gated command
+    # leads their private group; the sibling anchor stays live even when the
+    # command exits. Darwin therefore has a live eligible member at final kill.
+    # An unexpected anchor exit remains a failure even if draining succeeds.
+    if not ownership_lost:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+            signaled = True
+        except BaseException as error:
+            errors.append(error)
+    if control is not None:
+        # EOF releases only this invocation's anchor even if signaling failed.
+        # It never signals anything itself, including after either child reap.
+        try:
+            control.close()
+        except BaseException as error:
+            errors.append(error)
+    deadline = time.monotonic() + 5
+    for child in owned:
+        try:
+            result = child.wait(timeout=max(0, deadline - time.monotonic()))
+            reaped.append(child)
+            if child is anchor and signaled and result != -signal.SIGKILL:
+                errors.append(RuntimeError("Synthetic anchor did not terminate from final group SIGKILL"))
+        except BaseException as error:
+            errors.append(error)
+    if errors:
+        for child, label in ((process, "leader"), (anchor, "anchor")):
+            if child is not None:
+                outcome = "reaped" if child in reaped else "reap unproved"
+                print(f"Synthetic {label} {child.pid} {outcome}; descendant cleanup unknown", file=sys.stderr)
+        for error in errors:
+            print(f"Synthetic cleanup error: {error}", file=sys.stderr)
+        if len(errors) > 1:
+            raise errors[0] from errors[1]
+        raise errors[0]
+
+
+def wait_helper_ready(control, children):
+    control.setblocking(False)
+    deadline = time.monotonic() + 5
+    while True:
+        for child in children:
+            if retained_status(child) is not None:
+                raise RuntimeError("Synthetic helper exited before readiness")
+        try:
+            message = control.recv(1)
+        except BlockingIOError:
+            message = None
+        if message == b"R":
+            return
+        if message is not None:
+            raise RuntimeError("Invalid synthetic helper readiness")
+        if time.monotonic() >= deadline:
+            raise TimeoutError("Synthetic helper readiness timed out")
+        time.sleep(0.02)
+
+
+def require_live_anchor(anchor):
+    if retained_status(anchor) is not None:
+        raise RuntimeError("Synthetic group anchor exited before cleanup")
 
 
 def collect_owned_process(command, env, owned, ready=None, cancel=None, timeout=20):
@@ -101,40 +152,65 @@ def collect_owned_process(command, env, owned, ready=None, cancel=None, timeout=
 
     # Files cannot fill a pipe or wait for descendant-held descriptors to close.
     # Both are unlinked/closed by this invocation, under its exact scratch root.
-    with tempfile.TemporaryFile(dir=owned) as stdout, tempfile.TemporaryFile(dir=owned) as stderr:
+    with ExitStack() as resources:
+        stdout = resources.enter_context(tempfile.TemporaryFile(dir=owned))
+        stderr = resources.enter_context(tempfile.TemporaryFile(dir=owned))
+        gate, gate_child = (resources.enter_context(s) for s in socket.socketpair())
+        control, control_child = (resources.enter_context(s) for s in socket.socketpair())
         previous = {}
         process = None
+        anchor = None
         try:
             for sig in CANCELLATION_SIGNALS:
                 previous[sig] = signal.signal(sig, cancellation)
             try:
-                # Defer ordinary cancellation through Popen's return/assignment;
-                # an interrupt must not lose the only handle to a created child.
-                process = subprocess.Popen(command, env=env, stdout=stdout, stderr=stderr, start_new_session=True)
+                # Gate exec until a sibling anchor joins the command's group.
+                # A shared session is required by setpgid; neither child joins
+                # the collector's own group. Every handle is assigned while
+                # cancellation is deferred, and neither child is reaped early.
+                process = subprocess.Popen(
+                    [sys.executable, "-B", str(HELPER), "command", str(gate_child.fileno()), *command],
+                    env=env, stdout=stdout, stderr=stderr, process_group=0, pass_fds=(gate_child.fileno(),))
+                gate_child.close()
+                wait_helper_ready(gate, (process,))
+                anchor = subprocess.Popen(
+                    [sys.executable, "-B", str(HELPER), "anchor", str(control_child.fileno())],
+                    env=env, stdout=stdout, stderr=stderr, process_group=process.pid,
+                    pass_fds=(control_child.fileno(),))
+                control_child.close()
+                wait_helper_ready(control, (process, anchor))
                 deferring = False
                 if deferred:
                     signal_exit(deferred[0], None)
+                gate.sendall(b"G")
+                gate.close()
                 if cancel is not None:
                     deadline = time.monotonic() + 15
                     while not ready.exists():
+                        require_live_anchor(anchor)
                         if retained_status(process) is not None or time.monotonic() >= deadline:
                             raise AssertionError("synthetic cancellation seam not reached")
                         time.sleep(0.02)
+                    require_live_anchor(anchor)
                     signal_retained_group(process, cancel)
                 deadline = time.monotonic() + timeout
-                while (status := retained_status(process)) is None:
+                while True:
+                    require_live_anchor(anchor)
+                    status = retained_status(process)
+                    if status is not None:
+                        break
                     if time.monotonic() >= deadline:
                         raise subprocess.TimeoutExpired(command, timeout)
                     time.sleep(0.02)
             finally:
                 deferring = True
                 if process is not None:
-                    # The last group signal attempt precedes the ONLY reap.
-                    # Signal denial does not waive reaping or become success;
-                    # unknown wait ownership still fails closed before either.
+                    # The final group signal precedes BOTH direct-child reaps.
+                    # Signal errors still fail; each proved child gets a wait,
+                    # even when ownership of the other child was lost.
                     propagating = sys.exc_info()[0] is not None
                     try:
-                        cleanup_retained_group(process)
+                        cleanup_retained_group(process, anchor, control)
                     except BaseException as error:
                         if not propagating:
                             raise
