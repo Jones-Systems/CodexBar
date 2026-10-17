@@ -52,8 +52,8 @@ struct ClaudeNativeProfileIntegrationTests {
                 #expect(environment["CLAUDE_CONFIG_DIR"] == ClaudeFleetProfileDiscoveryTests.home
                     .path + "/.claude-t3/jace")
                 #expect(environment["ANTHROPIC_AUTH_TOKEN"] == nil)
-                #expect(try settings.configStore.load()?.providerConfig(for: .claude)?
-                    .claudeNativeProfileAlias == "jace")
+                let savedConfig = try settings.configStore.load()
+                #expect(savedConfig?.providerConfig(for: .claude)?.claudeNativeProfileAlias == "jace")
             }
         }
     }
