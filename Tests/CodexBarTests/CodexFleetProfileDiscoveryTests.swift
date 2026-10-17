@@ -1,5 +1,10 @@
 import Foundation
 import Testing
+#if canImport(Darwin)
+import Darwin
+#else
+import Glibc
+#endif
 @testable import CodexBarCore
 
 struct CodexFleetProfileDiscoveryTests {
@@ -116,15 +121,33 @@ struct CodexFleetProfileDiscoveryTests {
     @Test
     func `secure reader rejects unsafe metadata fixtures without following symlinks`() throws {
         let manager = FileManager.default
-        let root = manager.temporaryDirectory.resolvingSymlinksInPath()
-            .appendingPathComponent("CodexFleetProfileDiscoveryTests-" + UUID().uuidString)
-        try manager.createDirectory(at: root, withIntermediateDirectories: true)
-        defer { try? manager.removeItem(at: root) }
+        let fixture = manager.temporaryDirectory
+            .appendingPathComponent("CodexFleetProfileDiscoveryTests-" + UUID().uuidString, isDirectory: true)
+        try manager.createDirectory(
+            at: fixture, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
+        defer {
+            do { try manager.removeItem(at: fixture) } catch { Issue.record(error, "Fixture cleanup failed") }
+        }
+        // Foundation's resolver may strip /private on macOS, reintroducing a symlinked ancestor.
+        // Resolve only our existing fixture with POSIX realpath; never normalize the reader's input.
+        let physicalPath = try #require(realpath(fixture.path, nil), "Fixture realpath failed: errno=\(errno)")
+        defer { free(physicalPath) }
+        let root = URL(fileURLWithPath: String(cString: physicalPath), isDirectory: true)
         let file = root.appendingPathComponent("binding.json")
-        #expect(try CodexFleetProfileDiscovery.readBinding(url: file, maximumBytes: 10) == nil)
+        let missingBinding = try CodexFleetProfileDiscovery.readBinding(url: file, maximumBytes: 10)
+        #expect(missingBinding == nil, "Missing synthetic binding at \(file.path)")
         try Data("{}".utf8).write(to: file)
         try manager.setAttributes([.posixPermissions: 0o600], ofItemAtPath: file.path)
-        #expect(try CodexFleetProfileDiscovery.readBinding(url: file, maximumBytes: 10) == Data("{}".utf8))
+        var info = stat()
+        let status = lstat(file.path, &info)
+        try #require(status == 0, "Synthetic binding lstat failed: errno=\(errno)")
+        #expect(info.st_mode & mode_t(S_IFMT) == mode_t(S_IFREG))
+        #expect(info.st_mode & 0o7777 == 0o600)
+        #expect(info.st_uid == getuid())
+        #expect(info.st_nlink == 1)
+        #expect(info.st_size == 2)
+        let privateBinding = try CodexFleetProfileDiscovery.readBinding(url: file, maximumBytes: 10)
+        #expect(privateBinding == Data("{}".utf8), "Private synthetic binding at \(file.path)")
         #expect(throws: (any Error).self) {
             try CodexFleetProfileDiscovery.readBinding(url: file, maximumBytes: 1)
         }
