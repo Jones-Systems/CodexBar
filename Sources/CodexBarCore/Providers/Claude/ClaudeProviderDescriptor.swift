@@ -255,6 +255,9 @@ public enum ClaudeProviderDescriptor {
             // fall through to an ambient CLI, browser session, or global API key and be labeled as that account.
             return []
         }
+        if ClaudeNativeProfileSelection.isSelected(environment: context.env) {
+            return ClaudeNativeProfileFetchStrategy.strategies(context: context)
+        }
         if context.claudeOwnerCLIRecoveryOnly {
             return [ClaudeCLIFetchStrategy(
                 useWebExtras: false,
@@ -376,6 +379,9 @@ public enum ClaudeProviderDescriptor {
     }
 
     fileprivate static func webEnrichmentAccess(context: ProviderFetchContext) -> WebEnrichmentAccess {
+        if ClaudeNativeProfileSelection.isSelected(environment: context.env) {
+            return WebEnrichmentAccess(isAvailable: false, manualCookieHeader: nil)
+        }
         switch context.settings?.claude?.cookieSource {
         case .off?:
             return WebEnrichmentAccess(isAvailable: false, manualCookieHeader: nil)
@@ -688,8 +694,10 @@ struct ClaudeOAuthFetchStrategy: ProviderFetchStrategy {
             runtime: context.runtime,
             dataSource: .oauth,
             oauthKeychainPromptCooldownEnabled: context.sourceMode == .auto,
-            oauthSafeCredentialSourcesOnly: context.sourceMode == .auto,
-            preserveInvalidOAuthCache: context.sourceMode == .oauth,
+            oauthSafeCredentialSourcesOnly: context.sourceMode == .auto
+                || ClaudeNativeProfileSelection.isSelected(environment: context.env),
+            preserveInvalidOAuthCache: context.sourceMode == .oauth
+                || ClaudeNativeProfileSelection.isSelected(environment: context.env),
             allowBackgroundDelegatedRefresh: false,
             useWebExtras: useWebExtras,
             manualCookieHeader: webEnrichmentAccess.manualCookieHeader,

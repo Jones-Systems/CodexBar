@@ -18,7 +18,8 @@ extension UsageStore {
     /// stays external-process-owned and never exposes credentials to CodexBar.
     func shouldFetchClaudeSwapAccounts() -> Bool {
         self.isEnabled(.claude) && self.settings.claudeSwapEnabled &&
-            !self.settings.claudeSwapExecutablePath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            !self.settings.claudeSwapExecutablePath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+            !ClaudeNativeProfileSelection.isSelected(environment: self.claudeNativeProfileFetchEnvironment())
     }
 
     /// The active claude-swap account's usage snapshot when the adapter owns Claude
@@ -177,7 +178,6 @@ extension UsageStore {
     }
 
     private func isCurrentClaudeSwapConfiguration(executablePath: String) -> Bool {
-        self.isEnabled(.claude) && self.settings.claudeSwapEnabled &&
-            self.settings.claudeSwapExecutablePath == executablePath
+        self.shouldFetchClaudeSwapAccounts() && self.settings.claudeSwapExecutablePath == executablePath
     }
 }

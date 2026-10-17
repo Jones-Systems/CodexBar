@@ -25,6 +25,12 @@ extension UsageStore {
         browserDetection: BrowserDetection,
         configuration: ClaudeDebugLogConfiguration) async -> String
     {
+        if ClaudeNativeProfileSelection.isSelected(environment: configuration.environment) {
+            return ClaudeNativeProfileSelection.isUnavailable(environment: configuration.environment)
+                ? ClaudeNativeProfileSelectionError.unavailable.localizedDescription
+                : "Selected Claude native profile: use Refresh and its fetch diagnostics. " +
+                "Legacy browser and ambient-profile debug probes are excluded."
+        }
         struct OAuthDebugProbe: Sendable {
             let hasCredentials: Bool
             let ownerRawValue: String
