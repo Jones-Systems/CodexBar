@@ -2,6 +2,7 @@
 """Focused ownership proof. Default runs fakes only; --live adds owned POSIX fixtures."""
 
 from contextlib import ExitStack
+import errno
 import io
 import os
 from pathlib import Path
@@ -175,6 +176,74 @@ class OrderingTests(unittest.TestCase):
         self.kill_hook = Mock(side_effect=ProcessLookupError())
         self.collect()
         self.assert_finished()
+
+    def test_permission_denied_reaps_terminal_leader_but_fails_cleanup(self):
+        denied = PermissionError(errno.EPERM, "group signal denied")
+        self.kill_hook = Mock(side_effect=denied)
+        with patch.object(fixture.sys, "stderr", new_callable=io.StringIO) as diagnostic:
+            with self.assertRaises(PermissionError) as error:
+                self.collect()
+        self.assertIs(error.exception, denied)
+        self.assert_finished()
+        self.assertIn("leader 123 reaped", diagnostic.getvalue())
+        self.assertIn("descendant cleanup unknown", diagnostic.getvalue())
+
+    def test_permission_denied_with_pending_leader_still_attempts_bounded_reap(self):
+        self.status = None
+        self.kill_hook = Mock(side_effect=PermissionError(errno.EPERM, "group signal denied"))
+        with patch.object(fixture.time, "monotonic", side_effect=[0, 21]):
+            with patch.object(fixture.sys, "stderr", new_callable=io.StringIO) as diagnostic:
+                with self.assertRaises(subprocess.TimeoutExpired):
+                    self.collect()
+        self.assert_finished()
+        self.assertIn("leader 123 reaped", diagnostic.getvalue())
+        self.assertIn("cleanup also failed", diagnostic.getvalue())
+
+    def test_signal_denial_and_reap_failure_preserve_both_errors_without_retry(self):
+        for reap_error in (subprocess.TimeoutExpired("synthetic", 5), OSError(errno.EIO, "wait failed")):
+            with self.subTest(reap_error=reap_error):
+                self.events.clear()
+                self.process.wait.reset_mock()
+                denied = PermissionError(errno.EPERM, "group signal denied")
+                self.kill_hook = Mock(side_effect=denied)
+                self.process.wait.side_effect = reap_error
+                with patch.object(fixture.sys, "stderr", new_callable=io.StringIO) as diagnostic:
+                    with self.assertRaises(PermissionError) as error:
+                        self.collect()
+                self.assertIs(error.exception, denied)
+                self.assertIs(error.exception.__cause__, reap_error)
+                self.assertEqual(self.events.count(signal.SIGKILL), 1)
+                self.process.wait.assert_called_once_with(timeout=5)
+                self.assertIn("leader 123 reap unproved", diagnostic.getvalue())
+                self.assertIn("descendant cleanup unknown", diagnostic.getvalue())
+                self.assertIn(str(reap_error), diagnostic.getvalue())
+                self.assertNotIn("leader 123 reaped", diagnostic.getvalue())
+                self.assertEqual(list(Path(self.owned).iterdir()), [])
+
+    def test_other_group_signal_error_does_not_skip_owned_reap(self):
+        failure = OSError(errno.EIO, "signal failed")
+        self.kill_hook = Mock(side_effect=failure)
+        with patch.object(fixture.sys, "stderr", new_callable=io.StringIO):
+            with self.assertRaises(OSError) as error:
+                self.collect()
+        self.assertIs(error.exception, failure)
+        self.assert_finished()
+
+    def test_primary_failure_survives_signal_denial_and_reap_failure(self):
+        primary = ValueError("readiness failed")
+        ready = Mock(exists=Mock(side_effect=primary))
+        self.kill_hook = Mock(side_effect=PermissionError(errno.EPERM, "group signal denied"))
+        self.process.wait.side_effect = subprocess.TimeoutExpired("synthetic", 5)
+        with patch.object(fixture.sys, "stderr", new_callable=io.StringIO) as diagnostic:
+            with self.assertRaises(ValueError) as error:
+                self.collect(ready=ready, cancel=signal.SIGTERM)
+        self.assertIs(error.exception, primary)
+        self.assertEqual(self.events.count(signal.SIGKILL), 1)
+        self.process.wait.assert_called_once_with(timeout=5)
+        self.assertIn("leader 123 reap unproved", diagnostic.getvalue())
+        self.assertIn("group signal denied", diagnostic.getvalue())
+        self.assertIn("timed out", diagnostic.getvalue())
+        self.assertIn("cleanup also failed", diagnostic.getvalue())
 
     def test_unsupported_waitid_fails_before_spawn(self):
         with patch.object(fixture.os, "waitid"):

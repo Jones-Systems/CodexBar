@@ -33,10 +33,11 @@ trap 'exit 143' TERM
 export TMPDIR="$PROOF_DIR"
 
 # Compile the real path policy and runtime detector without DEBUG; only unrelated Keychain linkage is stubbed.
-swiftc -O -parse-as-library -module-cache-path "$PROOF_DIR/modules" \
+swiftc -O -parse-as-library -package-name CodexBar -module-cache-path "$PROOF_DIR/modules" \
   "$ROOT_DIR/Sources/CodexBarCore/JonesStateRoot.swift" \
   "$ROOT_DIR/Sources/CodexBarCore/ProviderSessionStoreFile.swift" \
   "$ROOT_DIR/Sources/CodexBarCore/KeychainSecurity.swift" \
+  "$ROOT_DIR/Sources/CodexBarCore/TestProcessSafety.swift" \
   "$ROOT_DIR/Scripts/fixtures/provider_session_file_proof.swift" \
   -o "$PROOF_DIR/provider-session-file-child"
 "$PROOF_DIR/provider-session-file-child" launch "$PROOF_DIR/fixtures"

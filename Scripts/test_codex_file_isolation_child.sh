@@ -4,6 +4,10 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROOF_DIR="$(mktemp -d "${TMPDIR:-/tmp}/codex-file-child.XXXXXX")"
 trap 'rm -rf "$PROOF_DIR"' EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+export TMPDIR="$PROOF_DIR"
 
 # Compile the actual policy and detector without DEBUG. Only unrelated link dependencies are stubbed;
 # this is policy/child proof, not a release build of the entire app or credential store.
@@ -81,10 +85,11 @@ struct Proof {
 }
 SWIFT
 
-swiftc -O -parse-as-library \
+swiftc -O -parse-as-library -package-name CodexBar -module-cache-path "$PROOF_DIR/modules" \
   "$ROOT_DIR/Sources/CodexBarCore/CodexCredentialFileAccess.swift" \
   "$ROOT_DIR/Sources/CodexBarCore/CodexPriorityDatabasePath.swift" \
   "$ROOT_DIR/Sources/CodexBarCore/CodexHomeScope.swift" \
   "$ROOT_DIR/Sources/CodexBarCore/KeychainSecurity.swift" \
+  "$ROOT_DIR/Sources/CodexBarCore/TestProcessSafety.swift" \
   "$PROOF_DIR/Proof.swift" -o "$PROOF_DIR/codex-file-child"
 "$PROOF_DIR/codex-file-child" launch "$PROOF_DIR/fixtures"

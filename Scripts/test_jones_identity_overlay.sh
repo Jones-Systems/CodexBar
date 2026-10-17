@@ -83,10 +83,11 @@ from pathlib import Path
 import os, sys
 args = sys.argv[1:]
 assert '-O' in args and '-parse-as-library' in args
+assert args.count('-package-name') == 1 and args[args.index('-package-name') + 1] == 'CodexBar'
 sources = [Path(arg) for arg in args if arg.endswith('.swift')]
 assert all(path.is_file() for path in sources)
 assert {path.name for path in sources} == {
-    'JonesStateRoot.swift', 'ProviderSessionStoreFile.swift', 'KeychainSecurity.swift',
+    'JonesStateRoot.swift', 'ProviderSessionStoreFile.swift', 'KeychainSecurity.swift', 'TestProcessSafety.swift',
     'provider_session_file_proof.swift'}, 'standalone compile source dependency missing'
 output = Path(args[args.index('-o') + 1])
 assert Path(args[args.index('-module-cache-path') + 1]).parent == output.parent

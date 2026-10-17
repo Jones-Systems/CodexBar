@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parent.parent
 KEY = "CODEXBAR_TEST_SCRATCH_PARENT"
 IDENTITY = "test_jones_identity_overlay.sh"
 PROVIDER = "test_provider_session_file_isolation.sh"
+CODEX = "test_codex_file_isolation_child.sh"
 
 
 def signal_exit(signum, _frame):
@@ -56,6 +57,35 @@ def signal_retained_group(process, signum):
         os.killpg(process.pid, signum)
     except ProcessLookupError:
         pass
+
+
+def cleanup_retained_group(process):
+    # Observation failure denies both actions. Once wait ownership is proved,
+    # a signal error must not skip the one bounded reap of our direct child.
+    retained_status(process)
+    signal_error = None
+    try:
+        os.killpg(process.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+    except BaseException as error:
+        signal_error = error
+    try:
+        process.wait(timeout=5)
+    except BaseException as reap_error:
+        print(f"Synthetic leader {process.pid} reap unproved: {reap_error}; "
+              "descendant cleanup unknown", file=sys.stderr)
+        if signal_error is not None:
+            raise signal_error from reap_error
+        raise
+    if signal_error is not None:
+        # Darwin's killpg1 excludes SZOMB members and can return EPERM for a
+        # zombie-only group. EPERM also covers real denials: it proves neither
+        # permission nor absence of descendants. Reaping is separate evidence.
+        # Apple xnu-10002.81.5: bsd/kern/kern_sig.c, killpg1/killpg1_callback.
+        print(f"Synthetic leader {process.pid} reaped; group signal failed: {signal_error}; "
+              "descendant cleanup unknown", file=sys.stderr)
+        raise signal_error
 
 
 def collect_owned_process(command, env, owned, ready=None, cancel=None, timeout=20):
@@ -99,13 +129,12 @@ def collect_owned_process(command, env, owned, ready=None, cancel=None, timeout=
             finally:
                 deferring = True
                 if process is not None:
-                    # Final authorized group signal precedes the ONLY reap, on
-                    # success, timeout, cancellation and every exception path.
-                    # If ownership is unknown, signal_retained_group fails closed.
+                    # The last group signal attempt precedes the ONLY reap.
+                    # Signal denial does not waive reaping or become success;
+                    # unknown wait ownership still fails closed before either.
                     propagating = sys.exc_info()[0] is not None
                     try:
-                        signal_retained_group(process, signal.SIGKILL)
-                        process.wait(timeout=5)
+                        cleanup_retained_group(process)
                     except BaseException as error:
                         if not propagating:
                             raise
@@ -142,7 +171,7 @@ def main():
         workspace = owned / "workspace"
         workspace.mkdir()
         for relative in (
-                f"Scripts/{IDENTITY}", f"Scripts/{PROVIDER}", "Scripts/package_app.sh",
+                f"Scripts/{IDENTITY}", f"Scripts/{PROVIDER}", f"Scripts/{CODEX}", "Scripts/package_app.sh",
                 "Scripts/sign-and-notarize.sh", ".mac-release.jones.env.example",
                 "WidgetExtension/Info.plist",
                 "WidgetExtension/CodexBarWidgetExtension.xcodeproj/project.pbxproj"):
@@ -153,6 +182,10 @@ def main():
                 "Sources/CodexBarCore/JonesStateRoot.swift",
                 "Sources/CodexBarCore/ProviderSessionStoreFile.swift",
                 "Sources/CodexBarCore/KeychainSecurity.swift",
+                "Sources/CodexBarCore/TestProcessSafety.swift",
+                "Sources/CodexBarCore/CodexCredentialFileAccess.swift",
+                "Sources/CodexBarCore/CodexPriorityDatabasePath.swift",
+                "Sources/CodexBarCore/CodexHomeScope.swift",
                 "Scripts/fixtures/provider_session_file_proof.swift"):
             target = workspace / relative
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -173,7 +206,7 @@ def main():
         identity_tools.mkdir()
         provider_tools.mkdir()
         for directory in (identity_tools, provider_tools):
-            for tool in ("bash", "python3", "dirname", "mktemp", "rm"):
+            for tool in ("bash", "python3", "dirname", "mktemp", "rm", "cat"):
                 target = shutil.which(tool)
                 assert target, tool + " unavailable"
                 (directory / tool).symlink_to(target)
@@ -199,7 +232,19 @@ else:
 """)
         executable(provider_tools / "swiftc", """#!/usr/bin/env python3
 import os, pathlib, sys, time
-output = pathlib.Path(sys.argv[sys.argv.index('-o') + 1])
+args = sys.argv[1:]
+assert '-O' in args and '-parse-as-library' in args
+assert args.count('-package-name') == 1 and args[args.index('-package-name') + 1] == 'CodexBar'
+sources = [pathlib.Path(arg) for arg in args if arg.endswith('.swift')]
+assert all(path.is_file() for path in sources)
+expected = {'KeychainSecurity.swift', 'TestProcessSafety.swift'}
+if os.environ['FIXTURE_SCRIPT'] == 'test_codex_file_isolation_child.sh':
+    expected |= {'CodexCredentialFileAccess.swift', 'CodexPriorityDatabasePath.swift', 'CodexHomeScope.swift', 'Proof.swift'}
+else:
+    expected |= {'JonesStateRoot.swift', 'ProviderSessionStoreFile.swift', 'provider_session_file_proof.swift'}
+assert {path.name for path in sources} == expected, 'standalone compile source dependency missing'
+output = pathlib.Path(args[args.index('-o') + 1])
+assert pathlib.Path(args[args.index('-module-cache-path') + 1]).parent == output.parent
 assert output.parent == pathlib.Path(os.environ['TMPDIR'])
 pathlib.Path(os.environ['RECORD']).write_text(str(output.parent))
 if os.environ['MODE'] == 'compile-failure':
@@ -226,7 +271,7 @@ output.chmod(0o700)
             env = {"PATH": str(identity_tools if script == IDENTITY else provider_tools),
                    "HOME": str(owned / "synthetic-home"), "TMPDIR": str(outside),
                    "BASELINE": str(baseline_file), "RECORD": str(record),
-                   "READY": str(ready), "MODE": mode}
+                   "READY": str(ready), "MODE": mode, "FIXTURE_SCRIPT": script}
             if override is not None:
                 env[KEY] = override
             status, stdout, stderr = collect_owned_process(
@@ -238,7 +283,8 @@ output.chmod(0o700)
                 assert b"30 checks passed" in stdout
             if record.exists():
                 proof = Path(record.read_text())
-                assert proof.parent == (workspace if override is None else Path(override))
+                expected_parent = outside if script == CODEX else (workspace if override is None else Path(override))
+                assert proof.parent == expected_parent
                 assert not proof.exists(), "owned provider child leaked"
             if override is not None and expected == 1 and mode == "success":
                 assert b"Invalid CODEXBAR_TEST_SCRATCH_PARENT" in stderr, (override, stderr.decode())
@@ -268,6 +314,12 @@ output.chmod(0o700)
                 for sig in (signal.SIGHUP, signal.SIGINT, signal.SIGTERM):
                     run(script, override, "cancel", 128 + sig, sig)
                     count += 1
+        for mode, status in (("success", 0), ("compile-failure", 37), ("child-failure", 41)):
+            run(CODEX, None, mode, status)
+            count += 1
+        for sig in CANCELLATION_SIGNALS:
+            run(CODEX, None, "cancel", 128 + sig, sig)
+            count += 1
         print(f"Fixture scratch parent: {count} synthetic lifecycle cases passed; no native Swift proof")
     assert not owned.exists(), "regression root leaked"
     assert parent.is_dir(), "caller parent removed"
