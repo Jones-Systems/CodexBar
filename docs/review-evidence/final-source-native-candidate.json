@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "authority_effect": "none",
-  "source_candidate": "cc94d3ebcacc655edf13347a9e071ad47d5dcd23",
+  "source_candidate": "735c159b43d5300f9e3d1f55b1f18cc9b3bd6b93",
   "base": "21c34561387b26f76d0a27e9f00d1538fbc0926f",
   "parent_PR11_head": "4f62ba08bd6c22940bd79189b451464ba2df3ba5",
   "source_paths": {
@@ -74,7 +74,8 @@
     "Tests/CodexBarTests/MiMoUsageScriptTests.swift": "e6cce43581d749046d495b2ab71d7bffe133b5f23af96d1eccc8c5869e0f251e",
     "Tests/CodexBarTests/OpenAIDashboardWebViewCacheTests.swift": "613658a8fab7610ba2edf23ef0fa1b6892d0ecc30e1619aee34ef0ca195d6faf",
     "TestsLinux/ClaudeNativeProfileServiceLinuxTests.swift": "ed3d4dd0eece275fb0533e81b58a245abfb20bcc278bd48b82744d338757c497",
-    "TestsLinux/JonesDiagnosticDestinationTests.swift": "08c19629bfb481a44f7dbd4f089735f221ec1618d0c7a8bc8e9fd05936ec1d79"
+    "TestsLinux/JonesDiagnosticDestinationTests.swift": "08c19629bfb481a44f7dbd4f089735f221ec1618d0c7a8bc8e9fd05936ec1d79",
+    "Tests/CodexBarTests/LocalizationLanguageCatalogTests.swift": "445bdd40ef7c3b9fea1ddddf3edd0698af0f8fa7c3ae3c95ba4c0c52ed4fae42"
   },
   "checks": {
     "SwiftFormat_0_61_1": "PASS61 integratedSwiftfiles includingTestsLinux --lint --cache ignore,9.69s",
@@ -168,7 +169,8 @@
     "StatusMenuCompactAccountLayoutTests",
     "StatusMenuInstantOpenTests",
     "StatusMenuOpenRefreshTests",
-    "UsageStorePlanUtilizationClaudeIdentityBoundaryTests"
+    "UsageStorePlanUtilizationClaudeIdentityBoundaryTests",
+    "LocalizationLanguageCatalogTests"
   ],
   "native_additional_coverage": [
     "Claude existing credential-ownership, Keychain-isolation/policy, profile-cache, delegated-refresh/profile-isolation, consent/history-routing suites after fixture admission",
@@ -548,5 +550,18 @@
     "historical80": "46PASS/0FAIL/34unexecuted",
     "new_union_count": 81,
     "preliminary_dependencies_unchanged": true
+  },
+  "native_r7_candidate": {
+    "integration": "735c159b43d5300f9e3d1f55b1f18cc9b3bd6b93",
+    "delta_from": "405b6765d7ba4da09affb894e2e8d5fe6feea3da",
+    "changed_paths": [
+      "Tests/CodexBarTests/LocalizationLanguageCatalogTests.swift"
+    ],
+    "affected_suite": "LocalizationLanguageCatalogTests first",
+    "evidence": "italian-catalog-expectation.json",
+    "historical81": "67PASS/0FAIL/14unexecuted; localization suite additional failure",
+    "new_union_count": 82,
+    "preliminary_dependencies_unchanged": true,
+    "source_lane": "Local isolated child branch work/native-catalog-repair-506fc1fd; root sole Git owner; VPS branches untouched after SSH agent failure before relay delivery."
   }
 }

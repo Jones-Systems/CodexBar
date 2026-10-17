@@ -6,6 +6,30 @@ Authority effect: none. Source stays on VPS. Laptop thread
 trial disposition and eligible merges. No live authentication, installation or switching
 operation is granted by this handoff.
 
+## Native-r7 local catalog expectation candidate
+
+Source checkpoint `735c159b43d5300f9e3d1f55b1f18cc9b3bd6b93` is a local isolated
+child of published405b6765; PR11 parent4f62ba08 remains unchanged. VPS relays failed
+before delivery due SSH agent signing failure. Laptop root owns this separate source
+branch, work/native-catalog-repair-506fc1fd; all VPS branches/worktrees are preserved.
+This section supersedes prior source-only-on-VPS routing for this one-line local lane.
+It grants no protected operation and does not claim the VPS received a transfer.
+
+The standalone SSH catalog key is absent from both English and Italian catalogs;
+only its obsolete intentionallyUnchanged expectation is removed. No production or
+catalog change. All71 source hashes and union82 include this test. Run the localization
+suite first under existing synthetic isolation/oneparent/admission/retries0; if PASS,
+run accepted full qualification once. Six preliminary proofs/MiMo may carry only by
+matching dependencies. Revised native results UNRUN; make check remains unavailable.
+
+Native-r6 target7PASS83.41s/fullgroup27PASS; full485.85s reached51PASS groups then
+one localization assertion failed.6097SwiftTesting+65XCTest reported, target7 repeats
+not added unique; historical81=67PASS/0FAIL/14unexecuted. Original12=11PASS, only
+StatusMenuCodexSwitcherTests unexecuted. Three explicit gated native/live-proof skips
+retained without grants; no timeouts/retries. Exact scratch removed/absence verified,
+lane released/source-index clean. All merge/CI/lint/extraction/deferred/sign/install/live
+gates remain. See italian-catalog-expectation.json. Older directions are historical.
+
 ## Native-r6 Codex physical-path fixture candidate
 
 Latest source checkpoint `cc94d3ebcacc655edf13347a9e071ad47d5dcd23`, PR11 parent

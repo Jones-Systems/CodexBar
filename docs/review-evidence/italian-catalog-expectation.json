@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "authority_effect": "none",
+  "source_candidate": "735c159b43d5300f9e3d1f55b1f18cc9b3bd6b93",
+  "failed_native_candidate": "405b6765d7ba4da09affb894e2e8d5fe6feea3da",
+  "failure": "LocalizationLanguageCatalogTests Italian intentionallyUnchanged expected-minus-actual SSH; actual-minus-expected empty",
+  "source_evidence": "Standalone SSH key absent in both current English and Italian Localizable.strings; obsolete expectation only. Other SSH-containing sentence keys remain unchanged.",
+  "change": "Remove exactly the SSH element from the intentionallyUnchanged set; no catalog, production, assertion-mechanism or runtime change.",
+  "failing_before": "Full isolated make test FAIL exit2 after485.85s at group52 after51PASS; 6097SwiftTesting+65XCTest reported, zero retries/timeouts.",
+  "historical_coverage81": "67PASS/0FAIL/14unexecuted; original12 11PASS and StatusMenuCodexSwitcherTests unexecuted",
+  "skips": "Three explicitly gated native/live proof tests retained without grants",
+  "checks": {
+    "git_diff_check": "PASS",
+    "native_focused": "UNRUN on revised candidate",
+    "make_test": "UNRUN on revised candidate",
+    "make_check": "HELD missing pinned tools; no tool installation authorized"
+  },
+  "ownership": "Laptop root thread506fc1fd-d94f-4616-84f4-7751eda0aec8 owns isolated local source child lane. Prior VPS source/remote branches preserved.",
+  "transport": "Failure and release relays were not delivered: SSH agent signing communication failure, Permission denied publickey, exit255 before remote auth/dispatch. Subsequent bounded read failed identically. No auth repair attempted.",
+  "remaining": "CI fork pause, lint prerequisites, extraction, deferred findings and signing/package/install/live gates unchanged; no delivery success claim."
+}
