@@ -944,3 +944,36 @@ No tests/live operations were run by reviewer. OriginalP1/severity/blocking effe
 historically; outcome remediate-and-review-new-revision is source-confirmed, not a native
 pass or runtime/merge qualification. NFP-COR-002 P2 remains deferred/unrepaired. Process-
 identity confirmation still active, so no final native handoff yet; all other gates persist.
+
+
+### Final source-ready checkpoint for laptop native verification
+
+Independent Astra confirmation codexbar-fixture-process-identity-confirmation-20261017-r1
+supports FSP-PROC-001 source remediation at b9d2ca08a923c03b972de5f607b8963a06f8a498;
+originalP1/revision/blocking effect retained with immutable result in existing fixture
+ledger. WNOWAIT/non-reaping observation retains leader identity; cleanupSIGKILL before
+solewait; no subsequent group signals. Missing capability fails before spawn. No remaining
+protected-boundary stop found for original defect, not native Mac success. New FSP-PROC-002
+P2 nonblocking interruptible handler-restoration window is deferred/unrepaired under
+standing policy; exact source/severity/consequence retained, no new repair loop.
+
+Root final integrated formatter0.61.1 passed59Swiftfiles in9.76s; diffcheck passed.
+Source75c03d065bc14c641228da117724f88734cb6027 contains exact PR11parentc0f7ffa78,
+ClaudeGUI/native-default mapping+enrolled-executable correction, groupedfive/collapse,
+Gemini Sendable repair, one-parent shell fixtures+retained-processidentity and nonpersistent
+WebKit fixtures. Final manifest refreshed64source paths and79deduplicatednative suites.
+BuilderLinux20ownership+50lifecycle and prior30portableidentity evidence retained; MiMo3
+laptop44a unchanged, no rerun. NewSwiftcases remain UNRUN. Fullsuite identifiedpersistent
+factory hazard removed at source-routing level; laptop can qualify contained fixtures then
+run admittedfullsuite with acceptedisolation, reporting any exact residualhold honestly.
+No generic permanent source-fixable hold or silent coverage waiver.
+
+SOURCE-READY means ready for exact native verification, not merge/install/runtime proof.
+Laptop is solecontinuity/native/eligiblemerge owner. BothPRs open,nondraft,checks[] asfreshgh
+readback; forkActions pause remains separateowner gate. PR632/658alreadymerged. No VPSmerge.
+NFP-COR-002 P2history andFSP-PROC-002 P2handlerwindow remain deferredunrepaired; AFCS001/002
+excludedpatchunchanged. OriginalTIR001/TIR002 andCAIRsourcecorrection evidence preserved.
+Seven trialcategories/native/release/signing/install/extractionpredicate retained. Python3.13+
+macOS waitid/WNOWAIT prerequisite explicit; no toolinstall. Native16identity/providerchecks
+remain unrun. No liveauth/provider/Keychain/browser/app/sign/install/process/fleetoperation.
+Return route remains unavailable to exactlaptopenv; durableGit/thread handoff is deliveryroute.

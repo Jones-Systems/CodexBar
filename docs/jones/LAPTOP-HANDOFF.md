@@ -1,151 +1,156 @@
 # Laptop native verification and continuity handoff
 
-Authority effect: none. This replaces the old c2a3118 PR11-only handoff. Source stays
-on VPS; laptop thread `506fc1fd-d94f-4616-84f4-7751eda0aec8` in environment
-`8750edf7-486b-41ac-81ce-cd50dfeb71eb` retains continuity, native verification,
-trial disposition and eligible merges. No installation or live switching is authorized.
+Authority effect: none. Source stays on VPS. Laptop thread
+`506fc1fd-d94f-4616-84f4-7751eda0aec8`, environment
+`8750edf7-486b-41ac-81ce-cd50dfeb71eb`, owns continuity, native verification,
+trial disposition and eligible merges. No live authentication, installation or switching
+operation is granted by this handoff.
 
-## Source continuation notice
+## Exact candidate and ownership
 
-All three follow-up source lanes are integrated: Claude native GUI selection ab73cbaa,
-single-parent shell fixtures c5454c8b and nonpersistent WebKit fixtures eecd20ac, plus
-Gemini Sendable correction8effc1ec. Independent Claude correctness review found NFP-COR-001 P1 (delegated refresh can
-fallback to a non-enrolled executable), source-remediated at eb9bb968 and independently
-confirmed with no new scoped findings; native execution pending, and NFP-COR-002
-P2 (identityless success can reopen previous history), deferred and unrepaired under
-the finding policy. Original severities/blocking claims remain in
-../review-evidence/claude-native-gui-ab73cbaa.json. Await repair and exact confirmation,
-then the source-ready message before a native checkout advance;
-this documentation checkpoint is not native acceptance or a request for an interim run.
+Source is ready for native verification. Use the **exact published PR12 head in the
+accompanying VPS source-ready message**, whose source checkpoint is
+`75c03d065bc14c641228da117724f88734cb6027`; subsequent commits contain documentation only.
+PR12: https://github.com/Jones-Systems/CodexBar/pull/12,
+branch `work/codexbar-trial-identity-20261016`, base `work/fleet-auth-discovery-20261016`.
+Its exact PR11 parent is `c0f7ffa78afb8d5016404461495ec9a469cf8232`, base fork main.
+PR11: https://github.com/Jones-Systems/CodexBar/pull/11.
 
-## Candidate binding
+Verify ancestry, cleanliness and every source hash in
+`docs/review-evidence/final-source-native-candidate.json` before advancing the dedicated
+non-main laptop checkout. Root remains sole Git owner of declared VPS worktrees; no
+laptop source edits or duplicate builders. Preserve historical 55197235, 21c3456 and
+44a43f59 evidence and existing worktrees. This is not merge, installation or runtime success.
 
-Use the **exact published PR12 head in the accompanying VPS source-ready message**,
-not a moving branch. PR12: https://github.com/Jones-Systems/CodexBar/pull/12,
-branch `work/codexbar-trial-identity-20261016`, base
-`work/fleet-auth-discovery-20261016`. Its integrated source checkpoint is
-`75c03d065bc14c641228da117724f88734cb6027`; later publication adds evidence/docs only.
-Verify ancestry and every source-file hash in
-`docs/review-evidence/final-source-native-candidate.json` before the pinned run.
-If the message SHA is unavailable, resolve/read back the exact PR12 head and verify
-that manifest before acting; do not assume a changing head or older baseline is final.
+## Included source and evidence
 
-PR11 parent is `c0f7ffa78afb8d5016404461495ec9a469cf8232`, base fork main.
-PR12 contains that exact parent, identity repairs and all source lanes. Preserve
-historical 55197235 and 21c3456 evidence, existing worktrees and unrelated changes.
-Root is sole Git/index owner of declared VPS worktrees; do not edit the pinned source.
+The candidate includes Authfleet discovery/System Account copy, auth cancellation/drain,
+account order and CAAM removal; coherent collapsed active account and five initial
+Codex accounts in both flat and workspace-grouped menus; trial TIR001/TIR002 repairs;
+MiMo reader/writer agreement, retained diagnostics and provider scratch ownership;
+Gemini Sendable cleanup correction; Claude native service/cache/profile routing;
+Authfleet Claude discovery/persisted settings selection and nonpersistent WebKit fixtures.
 
-## Source and verification evidence
+The installed AFCL source relay at release `7aba0e03524bddd042cd538cf138e7e50f079caa`
+shows native subscription usage companions after inference login. The native selector
+can reuse that companion when present, without a new CodexBar login lifecycle. Default
+`config_dir: null` leaves directory overrides UNSET; explicit `~/.claude` remains a
+different secure-storage/cache identity. Jace uses its named profile. CLI ownership is
+retained for native refresh; CodexBar does not invoke `auth login --claudeai`. Actual
+companion presence, readiness, usage scope and refresh success remain unknown.
+Automation-token usage-endpoint support remains separately unproved; this is not evidence
+that AFCL lacks a native companion. See `afcl-installed-companion-source.json`.
 
-Included: Authfleet discovery/System Account copy and cancellation drain; account
-ordering; coherent flat-list collapse down to one account and five initial healthy
-Codex accounts; trial identity TIR001/TIR002 source corrections; MiMo cache agreement;
-retained diagnostic destinations; Gemini/Aliyun scratch cleanup; WebKit identifier
-namespacing; named native Claude profile service/cache/recovery routing.
+NFP-COR-001 original P1 (delegated refresh falling back outside enrolled CLI) is
+source-remediated at `eb9bb9683f6b226c672876e88e493987663995bc` and independently
+confirmed. Valid passive OAuth does not require CLI availability. Both availability
+and `/status` resolve the selected enrolled executable and fail closed when unavailable.
+FSP-PROC-001 original P1 (reaped leader then recycled-PGID signaling) is source-remediated
+at `b9d2ca08a923c03b972de5f607b8963a06f8a498` and independently confirmed. WNOWAIT keeps
+leader identity until every group signal completes, then the sole reap occurs. Never run
+the historical unsafe version. Original finding identities/severities/blocking claims
+remain in the component ledgers; source confirmation does not prove native behavior.
 
-Claude source `7cfd882e` received independent Astra/high correctness review with no
-supported findings. Its PR12 composition retains the existing two trial-owned
-application-defaults/tombstone domain hooks. UI CAIR001/002/003 remain P2 under their
-original a7381944 binding, now source-addressed, native pending. Original TIR P2
-severities/blocking effects remain preserved. See the three component evidence files
-and final manifest; no source review establishes runtime behavior.
+Deferred and unrepaired: NFP-COR-002 P2 identityless successful CLI results can reopen
+previous sticky account history; FSP-PROC-002 P2 nonblocking signal-handler restoration
+window. The excluded AFCS001/AFCS002 patch remains untouched and outside these PRs.
+No finding severity was reduced or runtime debt silently accepted.
 
-VPS final-source checks: scoped SwiftFormat0.61.1 passed38 Swift files; whitespace
-passed; identity overlay passed30 portable checks (stub-compiler source-list/cleanup,
-not native Swift); MiMo writer passed3 synthetic tests. Invocation scratch cleanup
-was verified. make test failed exit2 before discovery because Swift is absent;
-zero tests executed. make check remains held because missing tools require installation.
+VPS checks: final scoped SwiftFormat0.61.1 passed all59 affected Swift files; diff check
+passed. Builder Linux/Python3.13.5 passed20 ownership tests (16 mock +4 live synthetic)
+and all50 scratch lifecycle cases; prior30 real-source portable identity checks used
+compiler stubs. These are not native Swift evidence. No redundant unchanged rerun.
+Swift is unavailable on VPS. `make check` remains held for missing tools/install effects.
 
-## Native run
+Component evidence lives in `docs/review-evidence/`: final-source-native-candidate.json,
+claude-native-gui-ab73cbaa.json, fixture-scratch-parent-c5454c8b.json,
+webkit-synthetic-eecd20ac.json, gemini-cleanup-sendability-8effc1ec.json,
+grouped-presentation-50a67106.json and the earlier exact finding/path ledgers.
 
-Continue accepted serial, fixture-isolated mechanics with fresh Mac capacity evidence
-and invocation-owned workspace scratch, preserving logs then exact cleanup. No tool
-installation or Homebrew Node repair. Preserve Keychain suppression, Codex-file and
-session-file isolation, exclude live/fixture grants and disable non-timeout retries.
-Run discovery and the deduplicated admitted affected groups through existing runner
-functions. Full make test is HELD: actual persistent WebKit-store cases lack standard
-isolation or a production-runner full-suite exclusion seam. Do not run or count
-unsafe groups. Report this as partial affected verification, never a full-suite pass.
-Report absent suite names as absent, not passed. Existing credential/history suites must retain their documented
-synthetic overrides. Do not run broad persistent WebKit-store cases; the safe
-JonesFrameworkIsolationTests create identifiers only. If full make test would cross
-that boundary, report the precise held group rather than silently running or passing it.
+## Native verification
 
-Report exact SHA, commands, discovery/test counts, failures/skips/unavailable/held
-checks, cleanup and manifest match. Source fixes return to VPS. Static installed-app
-compatibility evidence is already complete; do not repeat it. Stock behavior is owner
-observation, not candidate installation or switching proof.
+Use fresh Mac admission and accepted serial fixture-isolated runner mechanics. Create
+ONE invocation-owned canonical workspace scratch parent, export both
+`CODEXBAR_TEST_SCRATCH_PARENT` and `TMPDIR` to it, preserve required logs outside it,
+and finally remove exactly that owned parent. Never delete the caller parent inside a
+nested script. No tool installation or broken Homebrew Node repair is authorized.
 
-## Current native evidence, exact bindings
+First verify the Python interpreter exposes `waitid`, `P_PID`, `WEXITED`, `WNOHANG`,
+`WNOWAIT`, and `CLD_EXITED`; on macOS this requires Python3.13+. Unsupported capability
+fails before spawning. Report an unavailable interpreter instead of installing one or
+reintroducing PID-existence signaling. Then, within the existing parent lifetime:
 
-Laptop reports baseline `21c34561387b26f76d0a27e9f00d1538fbc0926f` compilation/discovery
-PASS, attempt1, exit0, elapsed1876.72s: 10,371 identifiers, 1,015 runner selections,
-zero unknown lines and ZERO behavior tests. Invocation scratch removed, source/index
-unchanged, build cache retained. This does not qualify later source changes.
+```bash
+export CODEXBAR_TEST_SCRATCH_PARENT="$owned_workspace_parent"
+export TMPDIR="$CODEXBAR_TEST_SCRATCH_PARENT"
+python3 -B Scripts/test_fixture_process_ownership.py --live "$CODEXBAR_TEST_SCRATCH_PARENT"
+python3 -B Scripts/test_fixture_scratch_parent.py "$CODEXBAR_TEST_SCRATCH_PARENT"
+bash Scripts/test_jones_identity_overlay.sh
+bash Scripts/test_provider_session_file_isolation.sh
+```
 
-Interim `44a43f5928154e08b4ce14724c2a1231b88143a9` is terminal FAIL, exit1 after128.77s,
-zero discovery/tests. Its checkout remains fixed, source/index clean; scratch removed,
-cache retained and no live process remains. No final source acceptance is implied.
+Use the admitted interpreter consistently for `python3` in nested scripts. Shell checks
+require actual Swift paths on Mac. The16 native identity rejected cases and provider
+proof are still unrun until executed; stub source-list proof is not native proof.
 
-That interim build has reported GeminiLoginRunner.swift120:22/126:22 compiler errors:
-fileManager (FileManager, non-Sendable in the macOS26.4 SDK) is captured by @Sendable
-onCancel/delayed-cleanup closures. Zero behavior tests ran; the original compile was
-terminal as recorded above and must not be retried unchanged. VPS source repair8effc1ec is integrated into PR12 at025c9bd8; it preserves the injected
-manager through a locked per-script cleanup capability. Native compilation remains
-pending. Preserve the fixed checkout and await the new combined
-exact-head handoff after Claude GUI and fixture containment integration. No passing rerun is claimed.
+Preserve `CODEXBAR_SUPPRESS_TEST_KEYCHAIN_ACCESS=1`, Codex-file/session isolation,
+exclude live/fixture grants, disable non-timeout retries, and keep credential/history
+suite synthetic overrides. Run compile/discovery and the deduplicated affected union in
+final-source-native-candidate.json, including the12 original account recovery/drain
+suites, new Claude selection/refresh cases, Gemini scratch/login, grouped menus, and
+WebKit cache/identifier fixtures. Report absent suite names as absent, not passed.
 
-Full-suite hold is source-confirmed: OpenAIDashboardWebViewCacheTests lines108–129 and
-134–140 call persistent factories unguarded; lines89–106 and609–637 have only CI guards.
-OpenAIDashboardWebsiteDataStore uses default() at27 and persistent forIdentifier at35;
-clearCache at71–72 drops references only. No ordinary isolation/TMPDIR override or
-production-runner full-suite exclusion seam exists. That hazard is source-addressed by eecd20ac: fixtures use mandatory injected nonpersistent constructors and verify requested UUIDs. See ../review-evidence/webkit-synthetic-eecd20ac.json. Native safety qualification remains pending; no actual persistent-runtime containment or full-suite pass is established.
-Identifier-only JonesFrameworkIsolationTests remain safe. Existing admitted affected
-runner groups may proceed, with partial coverage reported exactly.
+The known persistent WebKit fixture hazard is now removed at source-routing level by
+`eecd20acf44717c6e6114be223b01337ad1c3598`: instance-owned production cache logic takes
+mandatory injected constructors; all four affected fixtures use nonpersistent stores
+and assert recorded constructor UUIDs, retaining35 existing declarations/110 expectations/
+30 CI guards and adding3 tests. Native compile/runtime is unproved. Laptop may qualify
+this contained seam and run the admitted full suite under accepted isolation; any
+remaining concrete unsafe group must be held and reported precisely, without silent
+skips or a fabricated full pass. Synthetic cache proof does not qualify production
+persistent WebKit or shared HTTP containment.
 
-The laptop independently passed all three synthetic Scripts/test_mimo_usage.py cases
-at44a43f59; no unchanged rerun is required. Both shell scripts now support one caller-owned workspace scratch parent via optional
-CODEXBAR_TEST_SCRATCH_PARENT, source c5454c8b integrated at e73b14de. See
-../review-evidence/fixture-scratch-parent-c5454c8b.json for exact commands and hashes.
-Historical checks passed50 lifecycle cases and30 identity checks. NEW P1 execution hold:
-DO NOT EXECUTE Scripts/test_fixture_scratch_parent.py as-is: poll/communicate can reap
-the leader before unconditional finally killpg, allowing recycled-PGID signaling.
-Source repairb9d2ca08 retains identity with waitid/WNOWAIT until signaling is complete.
-Targeted independent confirmation is active; execution hold remains until that result.
-On macOS use Python3.13+ with waitid/WNOWAIT; unsupported capability fails before spawn.
-Native qualification awaits the final candidate. Preserve
-native rejected-case16 as unrun until actual Swift execution. Stub proof is not native.
+Report exact candidate SHA, manifest match, commands, discovery/test counts, failures,
+skips, unavailable/held checks, scratch cleanup, and source/index status. Return source
+failures to VPS. Static installed-desktop compatibility is already complete; stock
+behavior is owner observation, not candidate installation proof.
 
-## Open completion gates
+## Historical native evidence
 
-Installed AFCL source evidence (release7aba0e03524bddd042cd538cf138e7e50f079caa) shows
-login also establishes a laptop-local native subscription usage companion, with native
-CLI refresh ownership. The native selector can reuse that companion when present;
-this fits the owner workflow without a second CodexBar login. Actual presence/readiness
-and native behavior remain UNKNOWN. See ../review-evidence/afcl-installed-companion-source.json.
-Automation-token usage-endpoint/granted-scope support remains unproved separately;
-do not imply that this limitation means AFCL lacks a native companion. Selected native
-CLI/profile refresh routing is subject to the NFP-COR-001 repair/confirmation. Workspace-grouped
-menus are source-addressed at50a67106 with a global five-account budget and collapsible
-active account; native behavior remains pending. Shared HTTP state ownership and
-native containment remain unresolved despite WebKit identifier hardening. All seven
-trial categories retain their exact dispositions in IDENTITY.md/final JSON.
+Baseline `21c34561387b26f76d0a27e9f00d1538fbc0926f`: compilation/discovery PASS attempt1,
+exit0 after1876.72s;10,371 identifiers/1,015 runner selections, zero unknown lines and
+ZERO behavior tests. Scratch removed, source/index unchanged, cache retained.
+Interim `44a43f5928154e08b4ce14724c2a1231b88143a9`: FAIL exit1 after128.77s, only Gemini
+FileManager120/126 Sendable diagnostics; zero discovery/tests. Scratch removed,
+source/index clean, cache retained, no live process. Gemini source8effc1ec fixes the
+capture with a locked cleanup capability retaining the injected manager, native pending.
+Three synthetic MiMo Python tests passed on laptop44a; affected code is unchanged,
+so no unchanged rerun is needed. None of this qualifies the new candidate.
 
-Required CI is absent, not green. Prior bounded investigation found no runs/checks,
-with organization-policy inspection denied403. Subsequent laptop public Actions UI evidence
-identifies a fork-wide pause due to Actions usage scale (repoID1356759930); active/API
-enabled metadata does not clear it. No setting changed. Preserve upstream-monitor
-disabled_fork. Re-enable/dispatch/settings changes require exact owner approval or
-owner authenticated UI initiation; laptop is preparing that separate gate. Native local results
-cannot waive ac.trial-gates. Do not repeat close/reopen, settings or permission changes.
-Extraction remains read-only until PR11 AND trial identity merge to fork main, or
-explicit M Jones release of ac.custom-base-settled.001; coordinator takeover is no waiver.
+## Remaining gates and delivery
 
-No real auth/config/binding/Keychain reads, credential copies, account switching,
-provider/usage calls, browser imports, app lifecycle/smoke wrappers, signing, package,
-release, installation, launchctl, sudo or fleet propagation belongs to this verification
-lane. Do not claim installability or operational success without direct evidence.
+Both PRs remain OPEN/non-draft with checks[] at latest readback. Fork Actions UI states
+workflows paused due to usage scale, repoID1356759930. Active/API-enabled metadata does
+not clear it. No setting was changed. Preserve upstream-monitor disabled_fork. Exact
+owner approval or authenticated owner UI initiation is needed to lift pause; laptop
+prepares that separate gate. Do not re-enable/dispatch/change settings from this handoff.
+Local native results cannot waive required CI or `ac.trial-gates`.
 
-Delivery gap: the registered VPS bridge targets another environment. No send to the
-laptop was attempted. Consume this Git handoff and the exact-head source-ready message
-through the existing authorized laptop-to-VPS route; receipt is not native success.
+Extraction remains read-only until BOTH PR11 and identity PR12 merge to fork main or
+M Jones explicitly releases `ac.custom-base-settled.001`; coordinator takeover does not
+waive this owner-only predicate. VPS does not merge behind the laptop coordinator.
+PR632/658 are already merged; they do not establish product completion.
+
+All seven trial categories retain their source/native dispositions in IDENTITY.md and
+the final manifest: retained diagnostics, MiMo tracker activation, scratch failure/
+termination qualification, framework/shared HTTP containment, unbundled/copied CLI,
+explicit/provider-owned paths and native/release qualification. Native app/widget/CLI
+containment, ordinary desktop switching/external refresh interaction and signing/
+package/release/install/launch remain unqualified with their separate operation gates.
+No live auth/config/binding/Keychain reads, credential copies, account switches,
+provider/usage/browser calls, app lifecycle/smoke, signing/package/install/release,
+launchctl/sudo or fleet propagation is authorized by this verification handoff.
+
+The registered VPS bridge targets a different environment; no laptop send was attempted.
+Consume this Git handoff and exact source-ready message through the already authorized
+laptop-to-VPS route. Receipt is not native success.

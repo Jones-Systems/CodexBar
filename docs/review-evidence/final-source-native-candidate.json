@@ -71,14 +71,15 @@
     "Tests/CodexBarTests/OpenAIDashboardWebViewCacheTests.swift": "613658a8fab7610ba2edf23ef0fa1b6892d0ecc30e1619aee34ef0ca195d6faf"
   },
   "checks": {
-    "SwiftFormat_0_61_1": "PASS58 final integrated Swift files --lint --cache ignore,8.25s",
+    "SwiftFormat_0_61_1": "PASS59 final integrated Swift files --lint --cache ignore,9.76s",
     "diff_whitespace": "PASS",
-    "scratch_harness": "Repairb9d2ca08 Linux/Python3.13.5 PASS20ownership+50lifecycle; independent confirmation pending; nativeMacunrun",
+    "scratch_harness": "Builder Linux/Python3.13.5 PASS20ownership+50lifecycle atb9d2ca08; independent exact-source confirmation supported; nativeMacunrun",
     "MiMo_writer": "Laptop PASS3 at44a43f59; affected MiMo source unchanged since then",
     "native": "UNRUN on new candidate; Swift unavailable VPS",
     "make_test": "HELD pending integrated synthetic WebKit safety qualification and native checks; not passing",
     "make_check": "HELD installer/no-tool-install boundary",
-    "independent_Claude_review": "NFP-COR-001 source-remediated eb9bb968 and independently confirmed; native unrun. NFP-COR-002 P2 deferred/unrepaired."
+    "independent_Claude_review": "NFP-COR-001 source-remediated eb9bb968 and independently confirmed; native unrun. NFP-COR-002 P2 deferred/unrepaired.",
+    "independent_process_review": "FSP-PROC-001 source-remediated and independently confirmed b9d2ca08; nonblockingFSP-PROC-002 P2 deferred/unrepaired"
   },
   "native_affected_suites": [
     "AccountMenuLayoutPlannerTests",
@@ -166,14 +167,15 @@
     "menu hosting/recycling and close/reopen reset coverage"
   ],
   "portable_commands": [
-    "export CODEXBAR_TEST_SCRATCH_PARENT=\"$owned_workspace_parent\"; export TMPDIR=\"$CODEXBAR_TEST_SCRATCH_PARENT\" (caller owns one parent lifecycle)",
+    "export CODEXBAR_TEST_SCRATCH_PARENT=\"$owned_workspace_parent\"; export TMPDIR=\"$CODEXBAR_TEST_SCRATCH_PARENT\" (caller creates/finally removes one existing canonical strict workspace descendant)",
+    "python3 -B Scripts/test_fixture_process_ownership.py --live \"$CODEXBAR_TEST_SCRATCH_PARENT\" (capability preflight first; Python3.13+ macOS)",
     "python3 -B Scripts/test_fixture_scratch_parent.py \"$CODEXBAR_TEST_SCRATCH_PARENT\"",
     "bash Scripts/test_jones_identity_overlay.sh",
     "bash Scripts/test_provider_session_file_isolation.sh (actual Swift path; native prerequisite)",
-    "MiMo3 already passed on laptop44a; rerun only if affected source changes"
+    "MiMo3 already passed laptop44a; no unchanged rerun"
   ],
   "held_native_suites": [
-    "Full suite execution pending final candidate safety qualification; identified WebKit factory hazard source-addressed eecd20ac; existing CI guards retained, no silent coverage waiver"
+    "Native qualification is UNRUN; identified persistent WebKit factory hazard source-addressed eecd20ac. Laptop may qualify contained fixtures and run admitted full suite using accepted isolation; inspect/report exact other residual hold instead of silent skips."
   ],
   "remaining_product_gaps": [
     "AFCL installed flow includes native usage companion reusable by native selector if present; readiness unknown; automation-token endpoint/scope support remains separately unproved",
@@ -181,7 +183,8 @@
     "Shared HTTP/native app/widget/unbundled CLI containment remains unqualified",
     "NFP-COR-001 originalP1 source-remediated and independently confirmed eb9bb968; native execution pending",
     "NFP-COR-002 P2 identityless success history mixing: deferred unrepaired, see exact review ledger",
-    "FSP-PROC-001 P1 recycled process-group signaling risk: execution hold, bounded source repair active"
+    "FSP-PROC-001 originalP1 source-remediated/confirmed b9d2ca08; native Mac behavior pending",
+    "FSP-PROC-002 P2 handler restoration window: nonblocking, deferred/unrepaired"
   ],
   "trial_gates": {
     "diagnostics": "source addressed, retained-export native proof pending",
@@ -263,7 +266,7 @@
     "make_check": "held: installer/no-tool-install boundary",
     "scratch": "invocation-owned TemporaryDirectory under worktree .build/source-qualification, absence verified"
   },
-  "delivery_stage": "Integrated source75c03d06; Claude P1 source-confirmed, FSP-PROC-001 containment confirmation pending; await exact native handoff",
+  "delivery_stage": "SOURCE-READY FOR EXACT NATIVE VERIFICATION; not merge/install/release ready; no native pass claimed",
   "CI_pause_evidence": {
     "source": "Agent relay from laptop coordinator506fc1fd; not owner approval; local evidence not assumed accessible VPS",
     "url": "https://github.com/Jones-Systems/CodexBar/actions",
@@ -275,7 +278,7 @@
     "upstream_monitor": "preserve disabled_fork",
     "next_gate": "Exact owner approval or owner authenticated UI initiating action; laptop preparing narrow gate; VPS does not re-enable/dispatch/settings-change"
   },
-  "portable_commands_status": "Await independent processownership confirmation; macOS interpreter must support waitid/WNOWAIT(Python3.13+), fail before spawn otherwise",
+  "portable_commands_status": "Use one caller-owned workspace parent, supported Python3.13+ on macOS; preserve native fixture admission and exact cleanup. Original unsafe regression remains historical, never execute it.",
   "AFCL_product_fit": {
     "authority_effect": "none",
     "source": "Laptop coordinator506fc1fd static installed wrapper/source evidence relay; not owner approval, not independent VPS installed-state verification",
@@ -298,5 +301,22 @@
       "Installed/source binding identity matching"
     ],
     "protected_operations": "None granted or performed; no wrapper/login/refresh execution or binding/auth/Keychain/profile reads"
+  },
+  "merge_gates_readback": {
+    "PR11": {
+      "sha": "c0f7ffa78afb8d5016404461495ec9a469cf8232",
+      "state": "OPEN",
+      "draft": false,
+      "base": "main",
+      "checks": []
+    },
+    "PR12_before_final_documentation": {
+      "sha": "3ea38e4e7d5e0e4f2e3c7fa1c88e9ee0a6535536",
+      "state": "OPEN",
+      "draft": false,
+      "base": "work/fleet-auth-discovery-20261016",
+      "checks": []
+    },
+    "qualification": "CI absent while fork Actions paused; no qualifying merge"
   }
 }
