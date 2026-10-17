@@ -93,7 +93,8 @@ struct PreparedPromotionContext {
     let snapshot: CodexAccountReconciliationSnapshot
     let managedAccounts: ManagedCodexAccountSet
     let storedManagedAccounts: [PreparedStoredManagedAccount]
-    let target: PreparedStoredManagedAccount
+    // JONES(fleet-system-promotion): fleet material has no managed storage identity.
+    let target: JonesPreparedPromotionTarget
     let live: PreparedLiveAccount
 }
 
@@ -105,6 +106,7 @@ struct PreparedPromotionContextBuilder {
     private let authMaterialReader: any CodexAuthMaterialReading
     private let baseEnvironment: [String: String]
     private let fileManager: FileManager
+    private let fleetAdmission: JonesCodexFleetPromotionAdmission?
 
     init(
         store: any ManagedCodexAccountStoring,
@@ -112,7 +114,8 @@ struct PreparedPromotionContextBuilder {
         snapshotLoader: any CodexAccountReconciliationSnapshotLoading,
         authMaterialReader: any CodexAuthMaterialReading,
         baseEnvironment: [String: String] = ProcessInfo.processInfo.environment,
-        fileManager: FileManager = .default)
+        fileManager: FileManager = .default,
+        fleetAdmission: JonesCodexFleetPromotionAdmission? = nil)
     {
         self.store = store
         self.workspaceResolver = workspaceResolver
@@ -120,23 +123,56 @@ struct PreparedPromotionContextBuilder {
         self.authMaterialReader = authMaterialReader
         self.baseEnvironment = baseEnvironment
         self.fileManager = fileManager
+        self.fleetAdmission = fleetAdmission
     }
 
     func build(targetID: UUID) async throws -> PreparedPromotionContext {
+        try await self.build(target: .managedAccount(targetID))
+    }
+
+    // JONES(fleet-system-promotion): membership and destination admission precede credential reads.
+    func build(target requestedTarget: JonesCodexSystemPromotionTarget) async throws -> PreparedPromotionContext {
+        try Task.checkCancellation()
+        if case let .fleetProfile(target) = requestedTarget {
+            guard let fleetAdmission else { throw CodexAccountPromotionError.fleetTargetUnavailable }
+            _ = try fleetAdmission.validate(target)
+        }
         let snapshot = self.snapshotLoader.loadSnapshot()
         let managedAccounts = try self.store.loadAccounts()
         var preparedAccounts: [PreparedStoredManagedAccount] = []
         preparedAccounts.reserveCapacity(managedAccounts.accounts.count)
         for account in managedAccounts.accounts {
             let preparedAccount = try await self.prepareStoredManagedAccount(account)
+            try Task.checkCancellation()
             preparedAccounts.append(preparedAccount)
         }
 
-        guard let target = preparedAccounts.first(where: { $0.persisted.id == targetID }) else {
-            throw CodexAccountPromotionError.targetManagedAccountNotFound
+        let target: JonesPreparedPromotionTarget
+        let liveHomeURL: URL
+        switch requestedTarget {
+        case let .managedAccount(id):
+            guard let managed = preparedAccounts.first(where: { $0.persisted.id == id }) else {
+                throw CodexAccountPromotionError.targetManagedAccountNotFound
+            }
+            target = .managed(managed)
+            liveHomeURL = self.liveHomeURL()
+        case let .fleetProfile(fleet):
+            guard let fleetAdmission else { throw CodexAccountPromotionError.fleetTargetUnavailable }
+            _ = try fleetAdmission.validate(fleet)
+            let homeURL = URL(fileURLWithPath: fleet.canonicalHomePath, isDirectory: true)
+            let state = await self.prepareManagedHomeState(homeURL: homeURL)
+            try Task.checkCancellation()
+            switch state {
+            case .missing: throw CodexAccountPromotionError.fleetTargetAuthMissing
+            case .unreadable: throw CodexAccountPromotionError.fleetTargetAuthUnreadable
+            case let .readable(material):
+                try JonesCodexFleetPromotionAdmission.validateIdentity(material, target: fleet)
+                target = .fleet(fleet, material)
+            }
+            liveHomeURL = fleetAdmission.defaultHomeURL
         }
 
-        let live = await self.prepareLiveAccount()
+        let live = await self.prepareLiveAccount(homeURL: liveHomeURL)
         return PreparedPromotionContext(
             snapshot: snapshot,
             managedAccounts: managedAccounts,
@@ -174,8 +210,7 @@ struct PreparedPromotionContextBuilder {
         }
     }
 
-    private func prepareLiveAccount() async -> PreparedLiveAccount {
-        let liveHomeURL = self.liveHomeURL()
+    private func prepareLiveAccount(homeURL liveHomeURL: URL) async -> PreparedLiveAccount {
         let readResult = self.readAuthData(homeURL: liveHomeURL)
         switch readResult {
         case .missing:

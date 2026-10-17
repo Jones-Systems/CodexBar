@@ -68,7 +68,8 @@ struct MenuDescriptor {
         case statusPage
         case changelog
         case addCodexAccount
-        case requestCodexSystemPromotion(UUID)
+        // JONES(fleet-system-promotion): typed provenance survives menu activation.
+        case requestCodexSystemPromotion(JonesCodexSystemPromotionTarget)
         case addProviderAccount(UsageProvider)
         case switchAccount(UsageProvider)
         case openTerminal(command: String)

@@ -1,4 +1,5 @@
 import AppKit
+import CodexBarCore
 
 extension StatusItemController {
     func selector(for action: MenuDescriptor.MenuAction) -> (Selector, Any?) {
@@ -11,8 +12,9 @@ extension StatusItemController {
         case .changelog: (#selector(self.openChangelog), nil)
         case .addCodexAccount: (#selector(self.addManagedCodexAccountFromMenu(_:)), nil)
         case let .addProviderAccount(provider): (#selector(self.runSwitchAccount(_:)), provider.rawValue)
-        case let .requestCodexSystemPromotion(managedAccountID):
-            (#selector(self.requestCodexSystemPromotionFromMenu(_:)), managedAccountID.uuidString)
+        // JONES(fleet-system-promotion): preserve the complete target in representedObject.
+        case let .requestCodexSystemPromotion(target):
+            (#selector(self.requestCodexSystemPromotionFromMenu(_:)), target)
         case let .switchAccount(provider): (#selector(self.runSwitchAccount(_:)), provider.rawValue)
         case let .openTerminal(command): (#selector(self.openTerminalCommand(_:)), command)
         case let .loginToProvider(url): (#selector(self.openLoginToProvider(_:)), url)
