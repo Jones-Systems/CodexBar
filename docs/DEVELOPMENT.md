@@ -207,6 +207,15 @@ identity cannot be proved, it preserves the parent and reports failure. A parent
 `CODEXBAR_TEST_SCRATCH_PARENT` is borrowed: the runner validates it but never removes it. Its caller
 owns final cleanup after all owned children drain. A supplied workspace root must identify this worktree.
 
+For an aggregate command that must keep its original selection and parallelism, use
+`./Scripts/test.sh --command swift test --parallel`. This mode runs the command once,
+without discovery, sharding, or retries, inside the same fixture-parent and process-drain
+lifecycle. It keeps the enclosing CI job's deadline rather than the per-shard timeout.
+It rejects discovery/shard selectors. The plugin engine A/B script uses this mode around
+both existing engine passes, sharing one invocation parent and retaining `--skip-build`
+for the second pass. Both CI entry points inherit the same file/Keychain isolation as
+the ordinary test runner; neither depends on environment left by a previous CI step.
+
 Direct `swift test` commands require both variables naming existing canonical directories: workspace
 root and a strict workspace-descendant fixture parent. Prepare that parent through the invoking
 harness, preserve evidence, and remove only that exact owned parent after child-drain proof. Missing,

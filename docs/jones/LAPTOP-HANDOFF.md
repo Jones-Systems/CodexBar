@@ -6,6 +6,28 @@ Authority effect: none. VPS owns its existing source branches; laptop root owns 
 trial disposition and eligible merges. No live authentication, installation or switching
 operation is granted by this handoff.
 
+## Accepted CI isolation continuation
+
+The October 18 source continuation routes Linux's unchanged `swift test --parallel`
+command and both plugin engine passes through `Scripts/test.sh --command`. The common
+runner owns the fixture parent, inherited isolation, descendant drain and verified
+cleanup; command mode performs no discovery, sharding or retry. Plugin filters and
+second-pass `--skip-build` are unchanged. Default sharded execution remains unchanged.
+The five synthetic CI-command regressions cover exact arguments/environment, shared
+A/B parent, failure propagation, borrowed-parent retention and shard-selector rejection;
+they are included in portable lint. They do not repair or qualify the deferred full
+scratch/identity/sharding proofs.
+
+Root retains sole Git ownership of the existing PR #13 repair branch; no child lane was
+started. PR #11 and #12 heads are unchanged. Focused native A/B and current full-suite
+verification are pending at this source checkpoint. The authorized ordinary-user VPS
+SSH route is available, but `swift` is unavailable on its PATH; no Linux Swift suite
+was started and no tool was installed. No local Linux container runtime is installed.
+Fork Actions remain gated; empty checks are not passes. Missing pinned lint tools,
+NFCR-COR-002/003, NFP-COR-002, FSP-PROC-002, privacy/trial/runtime and explicit merge
+holds remain in force. No Mini operation, runner change, Actions enablement, install,
+credential access or merge is part of this continuation.
+
 ## Native full-suite pass and remaining gates
 
 Tested head `374529b6723af36c919d9b4167ffd94ed8f53936`, source checkpoint `c2c52e09d8084489c01306175899fc368a589eb8`: full `make test` passed in 755.446 seconds, with all 86 groups and 1,030 selections. All 86 supplemental entries and the original 12 recovery/account suites passed. Two filename aliases map to the actual StatusMenuTests suite and explicitly verified individual cases. The run reported 10,324 Swift Testing tests and 147 XCTest tests, six existing gated skips, and zero runner timeouts, fallbacks or manual retries. The three focused menu suites passed 30 Swift Testing tests and four XCTest tests in 83.420 seconds. Exact commands and environments are included in `docs/review-evidence/native-r12-pass.json`; raw logs remain in the laptop's native-r12 evidence directory.

@@ -6,8 +6,10 @@ cd "$ROOT_DIR"
 
 FILTER='ProviderPluginRuntimeTests|ProviderPluginParityTests|ProviderPluginDetailsParityTests|ProviderPluginExtensionParityTests|Sub2APIPluginGoldenTests|UserProviderPluginPortableTests'
 
-echo "plugin engine A/B: QuickJS default"
-env -u CODEXBAR_PLUGIN_ENGINE swift test --filter "$FILTER"
+exec ./Scripts/test.sh --command /bin/sh -eu -c '
+  echo "plugin engine A/B: QuickJS default"
+  env -u CODEXBAR_PLUGIN_ENGINE swift test --filter "$1"
 
-echo "plugin engine A/B: JavaScriptCore rollback"
-CODEXBAR_PLUGIN_ENGINE=jsc swift test --skip-build --filter "$FILTER"
+  echo "plugin engine A/B: JavaScriptCore rollback"
+  CODEXBAR_PLUGIN_ENGINE=jsc swift test --skip-build --filter "$1"
+' plugin-engine-tests "$FILTER"

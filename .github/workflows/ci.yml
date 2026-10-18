@@ -528,7 +528,7 @@ jobs:
         run: swift build -c release --product CodexBarCLI --static-swift-stdlib
 
       - name: Swift Test (Linux only)
-        run: swift test --parallel
+        run: ./Scripts/test.sh --command swift test --parallel
 
       - name: Smoke test CodexBarCLI
         shell: bash

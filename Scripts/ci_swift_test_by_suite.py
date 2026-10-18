@@ -166,6 +166,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--list-only", action="store_true")
     parser.add_argument("--swift-command", default="swift")
     parser.add_argument("--swift-command-arg", action="append", default=[])
+    parser.add_argument(
+        "--command", nargs=argparse.REMAINDER,
+        help="run an unchanged command once inside the fixture lifecycle, without discovery or sharding",
+    )
     return parser.parse_args()
 
 
@@ -824,6 +828,16 @@ def retry_selections_individually(
 def run_suites() -> int:
     total_started = time.monotonic()
     args = parse_args()
+    if args.command is not None:
+        if not args.command:
+            print("--command requires an executable", file=sys.stderr)
+            return 2
+        if args.list_only or args.limit_groups is not None or args.shard_index is not None or args.shard_count is not None:
+            print("--command cannot be combined with discovery or shard selection", file=sys.stderr)
+            return 2
+        # Aggregate commands retain their enclosing job's deadline and original test selection.
+        # The existing command owner still drains descendants before fixture cleanup.
+        return run_command(args.command)
     stats = RunStats(
         group_size=args.group_size,
         shard_index=args.shard_index,
