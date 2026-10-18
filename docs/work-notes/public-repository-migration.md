@@ -69,6 +69,14 @@ it is unrelated. Installed `github/gh-stack` is v0.2.1; link/merge help inspecte
 The atomic merge CLI's basic checks do not replace readiness or a proved
 expected-head contract.
 
+Continuation inspection of official `github/gh-stack` v0.2.1 source established
+that its async merge client omits `sha`, while its API reference supports that
+guard. The spec now directs any accepted stack merge to the supported guarded
+API rather than the unguarded CLI command. Native link/unlink capabilities are
+available for remapping this thread's current 11/12/13 associations after the
+rename; this avoids stale links addressing new-repository PRs after name reuse.
+No merge or association mutation was attempted.
+
 PR14 names source owner thread `718b02d7-0d4b-4670-b05f-57a5db28178d`, which is
 not readable in this native environment. PR3 names historical JCV-A019/JCV-W142.
 Neither identity is a freshly verified owner transfer. Preserve their source
@@ -117,6 +125,12 @@ No repository was renamed, created, deleted or detached; no workflows were
 enabled and no PR was merged. Refresh identities/ref manifest before the first
 approved operation. The coordinator must preserve this goal rather than start
 the original account work again.
+
+The first goal continuation revalidated the same old repository ID/name and all
+five unchanged PR heads. It added the native-link transition and guarded async
+merge evidence above. The namespace/CI/tool exceptions have not been approved;
+the automated goal continuation is not an approval. With these preparations
+complete, the next consequential migration effect remains held for that reply.
 
 Registration status: `registration_unavailable`. Native thread/environment and
 project identity are established, but an enrolled host key and last accepted

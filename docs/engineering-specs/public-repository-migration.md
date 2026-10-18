@@ -79,6 +79,10 @@ Primary references: [detachment](https://docs.github.com/en/pull-requests/how-to
 7. Recreate old #11, #12, #13 in dependency order and old #14/#3 independently.
    Preserve #3 as draft. Record old ID/number → new ID/number mappings. Register
    every worked PR with this thread and cross-link exact legacy discussions.
+   Before name reuse, reconcile this thread's existing native PR links: after
+   verified rename, link each legacy URL and unlink its old-name association.
+   Verify the resulting native list before creating replacement PRs; old-name
+   links must not silently identify different PRs in the new repository.
 8. Use installed `github/gh-stack` v0.2.1 only after freezing before/after refs,
    OIDs, diffs, writers and membership. Link full new PR URLs, then read the native
    stack endpoint to verify complete order and all member refs. No rebase or force.
@@ -90,6 +94,18 @@ Primary references: [detachment](https://docs.github.com/en/pull-requests/how-to
     and PR identities, using merge commits and native expected-head guards.
     Recheck required checks, reviews, resolved conversations and source ownership;
     read back each merged state, merge commit and destination base afterward.
+
+The installed stack extension's v0.2.1 async merge implementation sends merge
+method/action but no head SHA. Do not use its merge command to satisfy an
+expected-head requirement. The official versioned
+[async merge API reference](https://github.com/github/gh-stack/blob/v0.2.1/docs/src/content/docs/reference/merge-api.md)
+documents a `sha` request field. If this route is accepted for the qualified
+native stack, bind the exact top head through that field and reconcile the
+response's method/action/expected-head values. Freeze and recheck every member
+and source owner as well; a top-head guard is not a guard on every mutable member.
+Retain an accepted pending UUID and observe that same request through its
+native result endpoint. An existing-request conflict is reconciliation, not
+permission to submit another merge or fall back to the synchronous PR endpoint.
 
 The old repository currently has no protected main branch or rulesets. Absence
 of protection is not an accepted merge policy. Do not add or weaken rulesets,
