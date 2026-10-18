@@ -19,14 +19,33 @@ they are included in portable lint. They do not repair or qualify the deferred f
 scratch/identity/sharding proofs.
 
 Root retains sole Git ownership of the existing PR #13 repair branch; no child lane was
-started. PR #11 and #12 heads are unchanged. Focused native A/B and current full-suite
-verification are pending at this source checkpoint. The authorized ordinary-user VPS
-SSH route is available, but `swift` is unavailable on its PATH; no Linux Swift suite
-was started and no tool was installed. No local Linux container runtime is installed.
-Fork Actions remain gated; empty checks are not passes. Missing pinned lint tools,
+started. Source checkpoint `1a3037561c867735ca5858e01168ff6f160b179c` is published.
+PR #11 and #12 heads are unchanged. Current verification is recorded in
+[the CI isolation receipt](../review-evidence/ci-isolation-r1.json):
+
+- Five synthetic entry-point regressions passed in 5.70 seconds. The old plugin script
+  at `d17288a2` fails the same synthetic isolation assertion with a missing scratch-parent
+  variable; this baseline proof used no native Swift or live state.
+- Native plugin A/B passed 79 tests in six suites per engine. Total 1224.35 seconds,
+  including the reported 1184.85-second rebuild; test execution was 5.046/5.354 seconds.
+- Full `make test` passed all 86 groups / 1030 selections in 783.05 seconds wall time,
+  with zero failed groups, timeouts or retries. Swift Testing reported 10324 tests.
+  A uniform recount gives 149 XCTest cases including 26 gated skips in both this run
+  and native-r12; earlier 147 summaries omitted singular-test rows. The six Swift
+  Testing gated skip identities also match. No owned test or skip was removed.
+- All four invocation parents were removed after command drain and absence verified.
+  Python AST, shell syntax and diff whitespace checks passed. Raw logs stay local;
+  the public receipt contains hashes, commands, environment and admission evidence.
+
+The authorized ordinary-user VPS SSH route is available, but `swift` is unavailable
+on its PATH; no Linux Swift suite was started and no tool was installed. No Docker or
+Podman command is available on the laptop PATH. `make check` remains held for missing
+pinned tools. Fork Actions/checks remain unverified; empty checks are not passes.
 NFCR-COR-002/003, NFP-COR-002, FSP-PROC-002, privacy/trial/runtime and explicit merge
-holds remain in force. No Mini operation, runner change, Actions enablement, install,
-credential access or merge is part of this continuation.
+holds remain in force. The full scratch/identity/sharding proofs are still deferred.
+No Mini operation, runner change, Actions enablement, installation, credential access
+or merge is part of this continuation. Framework/compiler scratch and historical
+external cleanup/prior-state unknowns remain separate.
 
 ## Native full-suite pass and remaining gates
 
