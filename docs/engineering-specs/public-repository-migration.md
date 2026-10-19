@@ -115,9 +115,10 @@ bypass checks, or delete branches as part of this migration.
 <!-- codex-section:begin id="spec.public-repository-migration#ctx.operator-effects.001" -->
 ## Operator interaction inventory and approval envelope
 
-This record has `Authority effect: none`. Existing owner direction covers the
-public independent destination, source preparation and PR migration. Exact
-additional approval is needed for the following effects, before their first use:
+This record has `Authority effect: none`. The owner's subsequent explicit
+approval covers the public destination and the following reviewed namespace,
+CI and repository-local tooling effects. The continuity note records that
+approval; do not request it again for covered execution mechanics.
 
 | Boundary | Exact proposed effect | Limit and readback |
 | --- | --- | --- |
@@ -129,9 +130,40 @@ additional approval is needed for the following effects, before their first use:
 | Merge | Establish a bounded merge contract after new repository/PR IDs and qualified heads are known | Enumerate PRs, allowed base/method, applicable check identities, review requirement, resolved threads, expected-head guard and direct readback; no bypass |
 
 Approval of migration does not waive trial/runtime gates or defer a required
-check silently. The literal earlier no-install/no-sudo/no-usage constraints stay
-effective until their bounded exceptions are explicitly accepted. The current
-CI is not activated merely because the new repository is standalone.
+check silently. Earlier installation/elevation/CLI-call exclusions retain their
+limits outside these accepted exceptions. CI activation is an explicitly
+approved, separately verified effect.
+
+### Current workstream merge binding
+
+This is an execution binding for the owner's approved migration and all related
+PR delivery, not a new standing repository policy. Its repository is
+`Jones-Systems/CodexBar`, ID `1425008735`, node `R_kgDOVO_oXw`; its allowed PRs
+are #1–#5, individually bound to native IDs and `work/` refs in the
+[migration receipt](../review-evidence/public-repository-migration.json).
+Review the current incremental and cumulative changed paths before landing.
+In-scope source/CI repairs may advance heads, with fresh qualification each time.
+
+Use merge commits into current server-side `main`, no bypass, no deletion or
+history rewrite. The selected exact-candidate `pull_request` CI execution must
+belong to workflow ID `388934113`, app ID `15368`, with all applicable jobs green:
+`changes`, `lint`, both `swift-test-macos` shards, `build-linux-musl-cli`, both
+`build-linux-cli` matrix jobs and aggregate `lint-build-test`. Record any legitimate
+conditional skip against the whole candidate's gate predicate. A draft skip or
+missing required job is not success. No independent review is required by
+default; any current native required review still applies. Resolve every review
+thread and preserve the exact disposition of deferred findings and missing proofs.
+
+For stack #6, freeze all writers and recheck complete native membership #1/#2/#3,
+every lower head/base and ancestry, and the cumulative tree immediately before
+the guarded native atomic merge. Complete passing evidence for repaired top #3
+may qualify mapped lower failures; do not land a broken prefix. Use the supported
+async API with exact top `sha`, `merge_method: merge`, `merge_action: direct_merge`
+and `bypass_rules: false`, after verifying the current API contract. Retain the
+UUID and observe that operation; pending/enqueued is not merged. A top guard
+does not replace the lower-member freeze/readback. Use individually guarded
+merges for independent #4/#5; after base movement reassess their integration.
+Read back every merged PR, merge commit and inclusion in `main`.
 <!-- codex-section:end id="spec.public-repository-migration#ctx.operator-effects.001" -->
 
 <!-- codex-section:begin id="spec.public-repository-migration#ac.completion.001" -->

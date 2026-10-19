@@ -38,6 +38,36 @@ and source branches are preserved. Research children performed read-only work.
 <!-- codex-section:begin id="worknote.public-repository-migration#ctx.evidence.001" -->
 ## Current evidence
 
+The approved migration is now executed. Old repository ID `1356759930` is
+`Jones-Systems/CodexBar-legacy-fork`; new public independent repository ID
+`1425008735` is `Jones-Systems/CodexBar`. All 431 branch heads and 135 tag objects
+(658 advertised records including peeled targets) matched the preserved source
+manifest after the atomic import. Original PR IDs/discussions remain intact.
+
+Old/new PR mapping is 11→1, 12→2, 13→3, 14→4, 3→5. All replacements are linked
+natively, and all originals have a link to their replacement. Native stack #6
+was verified to contain #1/#2/#3 in order with unchanged refs and incremental
+diff sizes. Original native links and both owned bare origins now address the
+legacy repository; explicit `standalone` remotes address the destination.
+
+The monitor and release workflows are `disabled_manually`; only CI is active.
+Real destination CI jobs have started. PR5 was preserved as draft during import,
+then readied for qualification after confirming its declared safety-core scope
+is complete. Production Git/SSH/host/UI integrations are later work, not a claim
+of this slice. Astra/high bound the approved #1–#5 merge contract in the spec;
+no further approval prompt is needed for those covered qualified merges.
+
+Repo-local pinned lint tools are installed, plus an official checksum-verified
+Node v24.9.0 in the owned tool directory because ambient Homebrew Node fails on
+a missing simdjson dylib. No global dependency was repaired. Initial `make check`
+revealed a stale generated parser hash; independent SwiftFormat found four files
+and SwiftLint found 214 violations across 36 files. A declared source repair lane
+owns only those paths, the generated hash and two necessary same-module helper
+extractions. No required coverage/rule is removed. Final-head verification and
+merges are still pending. See the [public receipt](../review-evidence/public-repository-migration.json).
+
+The pre-migration observations below remain historical source evidence.
+
 The public fork is repository ID `1356759930`, parent `steipete/CodexBar`.
 Authenticated API reports repository admin permission, Actions enabled, no
 rulesets and unprotected main. CI/release workflow states are active; the
