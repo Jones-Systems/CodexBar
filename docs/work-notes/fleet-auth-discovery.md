@@ -227,3 +227,36 @@ The original blocking claim concerns complete discovery-identity isolation;
 no credential exposure or operational effect was demonstrated. It is deferred
 under the standing P2-P4 instruction, uncorrected, without a mid-workflow owner
 question. No additional supported findings or further review round were added.
+
+PR #7 published `9c8cd86b6ef95039831c555d82db7e690c00fbe2`. Its lint job
+`118368983725` in run `39343052876` failed SwiftLint argument-formatting and
+function/type/file-size checks. The completed job log is retained locally under
+`.build/fleet-repair-evidence/publication-r1`; no tool installation is needed.
+Lint repairs use the existing friendly-labels worktree under root's sole Git
+ownership, preserving every test and moving cohesive unchanged declarations
+instead of changing rule limits or adding suppressions.
+
+R4 completed against source/test bytes matching that exact published head:
+31 XCTest cases passed; 677 Swift Testing cases in 49 suites reported six issues
+in four tests. All requested selectors executed. Native-profile aggregation,
+selected-account cache, short-label, and credential-cache-isolation suites passed.
+The Codex stale-selection regression exposed cached hydration during stale-result
+owner reconciliation; its original assertions remain the regression contract.
+Three new menu tests omitted the existing lazy menu-population seam before
+inspecting rows; their setup is corrected without weakening assertions.
+The harness verified process drain and removed its exact invocation fixture
+parent. Detailed results remain in `checkpoint-r4/result.json`; this failed
+checkpoint is not superseded by the earlier R3 pass.
+
+Repair checkpoint `3c8df9e33fff721114bf57ba443ec482f0a193d0` preserves all
+tests and assertions. Stale owner reconciliation disables cache hydration;
+explicit selection and refresh preparation retain it. Four menu setup sites
+now use the existing lazy open-time population seam, including an exclusion
+case that otherwise passed vacuously against an empty menu. The extracted
+declarations preserve their behavior and actor context. `make check` passed
+with SwiftLint reporting zero violations in 2,160 files. All five pinned lint
+tools were reused without downloads; synthetic harness cleanup and fixture
+absence were verified. This result is bound to the second worktree's exact
+source hashes, normally fast-forwarded into the install-transition worktree.
+The repaired native union and full `make test` remain due; the original
+FICR-COR001 P2 is unchanged and deferred.
