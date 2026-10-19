@@ -68,6 +68,7 @@ public struct NetdataLoopbackClient: Sendable {
         components.path = "/api/v3/data"
         components.queryItems = [
             URLQueryItem(name: "contexts", value: context),
+            URLQueryItem(name: "nodes", value: self.expectedMachineGUID),
             URLQueryItem(name: "after", value: "-20"),
             URLQueryItem(name: "points", value: "1"),
             URLQueryItem(name: "format", value: "json2"),

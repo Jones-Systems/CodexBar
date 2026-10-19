@@ -30,6 +30,7 @@ struct NetdataLoopbackClientLinuxTests {
             #expect(parts.path == "/api/v3/data")
             #expect(parts.queryItems == [
                 URLQueryItem(name: "contexts", value: index == 0 ? "system.cpu" : "mem.available"),
+                URLQueryItem(name: "nodes", value: Self.guid),
                 URLQueryItem(name: "after", value: "-20"),
                 URLQueryItem(name: "points", value: "1"),
                 URLQueryItem(name: "format", value: "json2"),
@@ -42,6 +43,15 @@ struct NetdataLoopbackClientLinuxTests {
             #expect(request.value(forHTTPHeaderField: "Cache-Control") == "no-store")
             #expect(request.cachePolicy == .reloadIgnoringLocalCacheData)
         }
+    }
+
+    @Test
+    func `parent with several hosts returns only the configured host`() async throws {
+        let transport = RecordingTransport(multipleHosts: true)
+        let result = try await self.client(transport).fetch(now: Self.now)
+        #expect(result.evidence.availability == .available)
+        #expect(result.cpuPercent == 8)
+        #expect(result.memoryAvailableBytes == 512 * 1_048_576)
     }
 
     @Test(arguments: ["http://localhost", "http://127.0.0.1:19999", "http://[::1]:19999"])
@@ -155,17 +165,20 @@ struct NetdataLoopbackClientLinuxTests {
         let failedContext: String?
         let cancel: Bool
         let urlError: Bool
+        let multipleHosts: Bool
 
         init(
             failure: Failure? = nil,
             failedContext: String? = "system.cpu",
             cancel: Bool = false,
-            urlError: Bool = false)
+            urlError: Bool = false,
+            multipleHosts: Bool = false)
         {
             self.failure = failure
             self.failedContext = failedContext
             self.cancel = cancel
             self.urlError = urlError
+            self.multipleHosts = multipleHosts
         }
 
         func data(for request: URLRequest) async throws -> (Data, URLResponse) {
@@ -195,9 +208,15 @@ struct NetdataLoopbackClientLinuxTests {
                 : ["avail"]
             let unit = context == "system.cpu" ? "percentage" : "MiB"
             let guid = failure == .wrongNode ? "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee" : NetdataLoopbackClientLinuxTests.guid
+            let selectedNode = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                .queryItems?.first(where: { $0.name == "nodes" })?.value
+            var nodes = [["mg": guid]]
+            if self.multipleHosts, selectedNode != NetdataLoopbackClientLinuxTests.guid {
+                nodes.append(["mg": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"])
+            }
             let body: [String: Any] = [
                 "api": 3,
-                "summary": ["nodes": [["mg": guid]], "contexts": [["id": failure == .wrongContext ? "other" : context]]],
+                "summary": ["nodes": nodes, "contexts": [["id": failure == .wrongContext ? "other" : context]]],
                 "view": ["dimensions": ["ids": dimensions, "units": Array(repeating: unit, count: dimensions.count)]],
                 "result": [
                     "labels": ["time"] + dimensions,
