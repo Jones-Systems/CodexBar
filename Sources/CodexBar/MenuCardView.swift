@@ -1235,8 +1235,10 @@ extension UsageMenuCardView.Model {
         input: Input,
         subtitle: (text: String, style: SubtitleStyle)) -> RedactedText
     {
+        // Labels change presentation only; tracked identity still uses the original account email.
+        let label = input.accountDisplayLabel?.trimmingCharacters(in: .whitespacesAndNewlines)
         let email = PersonalInfoRedactor.redactEmail(
-            Self.email(from: input),
+            label?.isEmpty == false ? label : Self.email(from: input),
             isEnabled: input.hidePersonalInfo)
         let subtitleText = PersonalInfoRedactor.redactEmails(in: subtitle.text, isEnabled: input.hidePersonalInfo)
             ?? subtitle.text

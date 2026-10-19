@@ -15,6 +15,7 @@ extension UsageMenuCardView.Model {
         let tokenError: String?
         let account: AccountInfo
         let accountIsAuthoritative: Bool
+        let accountDisplayLabel: String?
         let planOverride: String?
         let isRefreshing: Bool
         let lastError: String?
@@ -62,6 +63,7 @@ extension UsageMenuCardView.Model {
             tokenError: String?,
             account: AccountInfo,
             accountIsAuthoritative: Bool = false,
+            accountDisplayLabel: String? = nil,
             planOverride: String? = nil,
             isRefreshing: Bool,
             lastError: String?,
@@ -106,6 +108,7 @@ extension UsageMenuCardView.Model {
             self.tokenError = tokenError
             self.account = account
             self.accountIsAuthoritative = accountIsAuthoritative
+            self.accountDisplayLabel = accountDisplayLabel
             self.planOverride = planOverride
             self.isRefreshing = isRefreshing
             self.lastError = lastError
