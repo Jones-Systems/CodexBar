@@ -1,49 +1,63 @@
 # Repository Guidelines
 
-## Project Structure & Modules
-- `Sources/CodexBar`: Swift 6 menu bar app (usage/credits probes, icon renderer, settings). Keep changes small and reuse existing helpers.
-- `Tests/CodexBarTests`: XCTest coverage for usage parsing, status probes, icon patterns; mirror new logic with focused tests.
-- `Scripts`: build/package helpers (`package_app.sh`, `sign-and-notarize.sh`, `make_appcast.sh`, `build_icon.sh`, `compile_and_run.sh`). Release wrappers call `Scripts/mac-release`, which resolves `MAC_RELEASE_TOOL` or the shared `agent-scripts` checkout.
-- `docs`: release notes and process (`docs/RELEASING.md`, screenshots). Root-level zips/appcast are generated artifacts—avoid editing except during releases.
+## Scope and routes
 
-## Build, Test, Run
-- Dev loop: `./Scripts/compile_and_run.sh` kills old instances, builds, packages, relaunches `CodexBar.app`, and confirms it stays running; add `--test` for the sharded full suite.
-- Quick build/test: `swift build` (debug) or `swift build -c release`; `make test` for the sharded full suite.
-- Package locally: `./Scripts/package_app.sh` to refresh `CodexBar.app`, then restart with `pkill -x CodexBar || pkill -f CodexBar.app || true; cd /Users/steipete/Projects/codexbar && open -n /Users/steipete/Projects/codexbar/CodexBar.app`.
-- Release flow: `./Scripts/release.sh`; app metadata lives in `.mac-release.env`, repo build/signing stays in `Scripts/sign-and-notarize.sh`, and validation steps live in `docs/RELEASING.md`.
+This is the Jones Systems CodexBar fork. SwiftPM uses Swift tools 6.2 and targets
+macOS 14+. The app is macOS-only; shared core and CLI code also support Linux.
+Source support does not establish installed-binary behavior or live provider availability.
 
-## Coding Style & Naming
-- Enforce SwiftFormat/SwiftLint: run `swiftformat Sources Tests` and `swiftlint --strict`. 4-space indent, 120-char lines, explicit `self` is intentional—do not remove.
-- Favor small, typed structs/enums; maintain existing `MARK` organization. Use descriptive symbols; match current commit tone.
+- `Sources/CodexBar`: app state, menu bar, settings, and rendering.
+- `Sources/CodexBarCore`: shared provider, parsing, configuration, and usage logic.
+- `Sources/CodexBarCLI`, `Sources/CodexBarWidget`, and `WidgetExtension`: CLI and widgets.
+- `Tests/CodexBarTests` and `TestsLinux`: native and portable coverage.
+- `Scripts`: build, test, packaging, and release helpers.
 
-## Testing Guidelines
-- Add/extend XCTest cases under `Tests/CodexBarTests/*Tests.swift` (`FeatureNameTests` with `test_caseDescription` methods).
-- Swift Testing: prefer backticked sentence names; no camelCase.
-- Model names in tests/code: released models or clearly fictitious names only; never expose unreleased names.
-- Always run `make test` before handoff; add focused `swift test --filter ...` runs for parser/provider fixes when possible.
-- After any code change, run `make check` and fix all reported format/lint issues before handoff.
-- Prefer CLI/focused tests over app-bundle live tests when behavior can be verified without relaunching CodexBar.
-- Never run tests/checks or ad-hoc validation that can display macOS Keychain prompts. Live provider probes, browser-cookie imports, `codexbar usage` against real accounts, and real SecItem reads must be explicitly requested; otherwise use parser tests, stubs, test stores, or `KeychainNoUIQuery`.
-- App-group migration tests must inject dictionary-backed defaults, both snapshot URLs, a synthetic home, and a contained recording FileManager. UUID defaults suites and Keychain isolation flags do not isolate defaults search domains or filesystem access. Ordinary SettingsStore tests must not discover shared defaults or run app-group migration.
-- macOS CI is brittle around headless AppKit status/menu tests. Prefer covering menu behavior through stable state/model seams (`MenuDescriptor`, `ProvidersPane`, `CodexAccountsSectionState`, etc.) instead of constructing live `NSStatusBar`/`NSMenu` flows unless the AppKit wiring itself is the thing under test.
+Read the relevant sections before acting:
 
-## Commit & PR Guidelines
-- Commit messages: short imperative clauses (e.g., “Improve usage probe”, “Fix icon dimming”); keep commits scoped.
-- PRs/patches should list summary, commands run, screenshots/GIFs for UI changes, and linked issue/reference when relevant.
+- Source/test changes: [coding conventions](docs/DEVELOPMENT.md#coding-conventions-and-tests)
+  and [verification and handoff](docs/DEVELOPMENT.md#verification-and-handoff).
+- Build/run or UI validation: [development quick start](docs/DEVELOPMENT.md#quick-start)
+  and [runtime validation](docs/DEVELOPMENT.md#runtime-validation-and-command-effects).
+- Credential/session tests: the applicable fixture section in the
+  [development guide](docs/DEVELOPMENT.md).
+- Provider changes: [provider authoring](docs/provider.md).
+- Fork onboarding and provenance: [fork quick start](docs/FORK_QUICK_START.md).
+- Credential prompts: [Keychain boundaries](docs/keychain-prompts.md).
+- Release work: [release process](docs/RELEASING.md).
 
-## Agent Notes
-- Use the provided scripts and package manager (SwiftPM); avoid adding dependencies or tooling without confirmation.
-- Menu bar automation: capture the target screen first and verify the CodexBar icon is visibly onscreen. Reject `click-extra` success when coordinates fall outside display bounds; hidden menu extras are not click proof.
-- Validate UI/runtime behavior against the freshly built bundle; restart via the pkill+open command above to avoid running stale binaries.
-- To guarantee the right bundle is running after a rebuild, use: `pkill -x CodexBar || pkill -f CodexBar.app || true; cd /Users/steipete/Projects/codexbar && open -n /Users/steipete/Projects/codexbar/CodexBar.app`.
-- For CLI-testable provider/parser/settings behavior, use CLI/focused tests instead of `Scripts/package_app.sh` or `./Scripts/compile_and_run.sh`.
-- Run `./Scripts/compile_and_run.sh` only when UI/runtime behavior needs bundle-level validation; it builds, tests, packages, relaunches, and verifies the app stays running.
-- Widget/Tahoe UI issues: use Parallels macOS VM plus screenshots/clicks for autonomous verification.
-- Release script: keep it in the foreground; do not background it—wait until it finishes.
-- Sparkle release key: use `.mac-release.env` `MAC_RELEASE_SIGNING_KEY_FILE`, the legacy `AGCY8w5vHirVfGGDGc8Szc5iuOqupZSh9pMj/Qs67XI=` key. Do not use `sparkle-private-key-KEEP-SECURE.txt`; that is VibeTunnel's mismatched key.
-- Swift concurrency: treat sibling `async let` tasks as a review red flag when one child is required and another is optional/best-effort. Prefer sequential awaits or a drained `withThrowingTaskGroup` that surfaces required failures and explicitly contains optional failures; crash stacks mentioning `swift_task_dealloc` or `asyncLet_finish_after_task_completion` should trigger an audit of nearby `async let` usage.
-- Prefer modern SwiftUI/Observation macros: use `@Observable` models with `@State` ownership and `@Bindable` in views; avoid `ObservableObject`, `@ObservedObject`, and `@StateObject`.
-- Favor modern macOS 15+ APIs over legacy/deprecated counterparts when refactoring (Observation, new display link APIs, updated menu item styling, etc.).
-- Keep provider data siloed: when rendering usage or account info for a provider (Claude vs Codex), never display identity/plan fields sourced from a different provider.
-- Claude CLI status line is custom + user-configurable; never rely on it for usage parsing by default. A user-enabled, opt-in statusLine JSON feed is permitted as an explicit data source (owner ruling, #2733): it must be off by default, clearly labeled as sourced from the user's own statusLine config, and fail soft when the format drifts.
-- Cookie imports: default Chrome-only when possible to avoid other browser prompts; override via browser list when needed.
+Keep changes small and reuse existing helpers. Use SwiftPM and the provided scripts;
+do not add dependencies or tooling without confirmation. Root zips and appcast files
+are generated release artifacts; avoid editing them outside release work.
+`CLAUDE.md` remains a symlink to this file.
+
+Always run `make test` before handoff. After any code change, run `make check` and fix
+every reported format/lint issue. Report unavailable or failed checks truthfully.
+
+## Safety and isolation
+
+Never run tests/checks or ad-hoc validation that can display macOS Keychain prompts. Live provider probes, browser-cookie imports, `codexbar usage` against real accounts, and real SecItem reads must be explicitly requested; otherwise use parser tests, stubs, test stores, or `KeychainNoUIQuery`.
+An isolation flag is not permission for live access.
+
+App-group migration tests must inject dictionary-backed defaults, both snapshot URLs,
+a synthetic home, and a contained recording FileManager. UUID defaults suites and
+Keychain isolation flags do not isolate defaults search domains or filesystem access.
+Ordinary SettingsStore tests must not discover shared defaults or run app-group migration.
+Load the development guide's relevant fixture section before credential or session tests.
+
+Prefer CLI/focused tests for provider, parser, and settings behavior that does not need
+an app bundle. Build/run wrappers can terminate processes, inspect signing identities,
+package, and launch an app; release packaging also invokes a launch smoke check.
+Read their documented effects before use. Documentation and script availability do
+not authorize process termination, live account access, signing, or publication.
+
+## Provider contracts
+
+Keep provider data siloed: never display identity or plan fields from another provider.
+
+Claude CLI status lines are custom and user-configurable; never use them for usage parsing
+by default. An explicit user-enabled statusLine JSON feed is permitted (owner ruling,
+#2733): it must be off by default, clearly labeled as sourced from the user's own
+statusLine configuration, and fail soft when the format drifts.
+
+Default cookie imports to Chrome-only when possible to avoid other browser prompts;
+override through the browser list when needed.

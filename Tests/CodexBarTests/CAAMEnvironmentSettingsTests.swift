@@ -11,7 +11,10 @@ struct CAAMEnvironmentSettingsTests {
         let settings = Self.makeSettingsStore(suite: suite)
         defer { Self.clearSettingsStore(settings, suite: suite) }
         let store = Self.makeUsageStore(settings: settings)
-        let pane = ProvidersPane(settings: settings, store: store)
+        let pane = ProvidersPane(
+            settings: settings,
+            store: store,
+            caamEnvironmentCoordinator: CAAMEnvironmentCoordinator())
 
         let state = pane._test_codexEnvironmentsSectionState()
 
@@ -26,7 +29,10 @@ struct CAAMEnvironmentSettingsTests {
         let settings = Self.makeSettingsStore(suite: suite)
         defer { Self.clearSettingsStore(settings, suite: suite) }
         let store = Self.makeUsageStore(settings: settings)
-        let pane = ProvidersPane(settings: settings, store: store)
+        let pane = ProvidersPane(
+            settings: settings,
+            store: store,
+            caamEnvironmentCoordinator: CAAMEnvironmentCoordinator())
         let configurations = [
             CAAMEnvironmentConfiguration(id: "vps", label: "VPS", connection: .ssh(destination: "vps")),
             CAAMEnvironmentConfiguration(id: "laptop", label: "Laptop", connection: .local()),
@@ -49,7 +55,10 @@ struct CAAMEnvironmentSettingsTests {
         let settings = Self.makeSettingsStore(suite: suite)
         defer { Self.clearSettingsStore(settings, suite: suite) }
         let store = Self.makeUsageStore(settings: settings)
-        let pane = ProvidersPane(settings: settings, store: store)
+        let pane = ProvidersPane(
+            settings: settings,
+            store: store,
+            caamEnvironmentCoordinator: CAAMEnvironmentCoordinator())
         let unsafe = [
             CAAMEnvironmentConfiguration(
                 id: "vps",
@@ -64,12 +73,14 @@ struct CAAMEnvironmentSettingsTests {
     }
 
     @Test
-    func `coordinator refresh projects a bounded snapshot`() async {
+    func `coordinator refresh projects a bounded snapshot`() async throws {
         let runner = CAAMSettingsTestRunner(stdout: Self.snapshotJSON)
         let client = CAAMEnvironmentClient(
             runner: runner,
             resolveLocalGateway: { _ in "/usr/local/bin/caam-codexbar" })
-        let coordinator = CAAMEnvironmentCoordinator(client: client)
+        let observedAt = try CAAMEnvironmentContract.decodeSnapshot(
+            Data(Self.snapshotJSON.utf8), expectedEnvironmentID: "laptop").observedAt
+        let coordinator = CAAMEnvironmentCoordinator(client: client, now: { observedAt })
         let configuration = CAAMEnvironmentConfiguration(
             id: "laptop",
             label: "Laptop",

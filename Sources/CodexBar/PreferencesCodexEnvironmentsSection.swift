@@ -16,6 +16,7 @@ struct CodexEnvironmentsSectionState: Equatable {
 @MainActor
 struct CodexEnvironmentsSectionView: View {
     let state: CodexEnvironmentsSectionState
+    let coordinator: CAAMEnvironmentCoordinator
     let saveConfigurations: ([CAAMEnvironmentConfiguration]) -> String?
     let refresh: () -> Void
 
@@ -32,10 +33,28 @@ struct CodexEnvironmentsSectionView: View {
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(self.state.rows) { row in
-                    CodexEnvironmentRowView(
-                        row: row,
-                        canRemove: !self.state.isRefreshing,
-                        remove: { self.removeEnvironment(id: row.id) })
+                    VStack(alignment: .leading, spacing: 8) {
+                        CodexEnvironmentRowView(
+                            row: row,
+                            canRemove: self.coordinator.canChangeConfigurations(
+                                from: self.state.configurations,
+                                to: self.state.configurations.filter { $0.id != row.id }),
+                            remove: { self.removeEnvironment(id: row.id) })
+                        if let configuration = self.state.configurations.first(where: { $0.id == row.id }) {
+                            CAAMEnvironmentControlsView(configuration: configuration, coordinator: self.coordinator)
+                        }
+                    }
+                }
+            }
+
+            ForEach(self.coordinator.retainedConfigurations(outside: self.state.configurations)) { configuration in
+                GroupBox(L("Retained unresolved operation")) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("\(configuration.label) · \(configuration.id)").font(.caption.weight(.semibold))
+                        Text(L("Status and recovery remain bound to the original environment configuration."))
+                            .font(.caption)
+                        CAAMEnvironmentControlsView(configuration: configuration, coordinator: self.coordinator)
+                    }
                 }
             }
 
@@ -177,6 +196,11 @@ private struct CodexEnvironmentRowView: View {
                         .font(.caption)
                         .foregroundStyle(.orange)
                 }
+                if let runtime = self.row.runtimeState {
+                    Text(String(format: L("Runtime state: %@"), runtime.rawValue))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
 
             Spacer(minLength: 8)
@@ -220,6 +244,7 @@ private struct CodexEnvironmentRowView: View {
         case .incompatible: L("Update required")
         case .recoveryRequired: L("Recovery required")
         case .unavailable: L("Unavailable")
+        case .stale: L("Stale")
         }
     }
 
@@ -227,7 +252,7 @@ private struct CodexEnvironmentRowView: View {
         switch self.row.availability {
         case .ready: .green
         case .degraded: .yellow
-        case .incompatible, .recoveryRequired, .unavailable: .orange
+        case .incompatible, .recoveryRequired, .unavailable, .stale: .orange
         }
     }
 }

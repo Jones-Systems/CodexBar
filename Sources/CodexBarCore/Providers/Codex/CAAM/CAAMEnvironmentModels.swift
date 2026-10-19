@@ -300,6 +300,7 @@ public enum CAAMEnvironmentAvailability: Sendable, Equatable {
     case incompatible
     case recoveryRequired
     case unavailable
+    case stale
 }
 
 public struct CAAMEnvironmentRowState: Sendable, Equatable, Identifiable {

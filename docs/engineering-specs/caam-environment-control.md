@@ -18,7 +18,11 @@ Consumers: CodexBar implementation, CAAM gateway implementation, reviewers, veri
 Authority effect: none
 <!-- codex-section:end id="spec.caam-environment-control#ctx.artifact-header.001" -->
 
-Specification revision: 1
+Specification revision: 2
+
+Revision 2 adds the combined control workflow and observability-hub candidate below. The
+first-PR and prior merge language is historical; the current owner authorization permits
+one draft PR to `Jones-Systems/CodexBar:main`, no merge and no live account operation.
 
 <!-- codex-section:begin id="spec.caam-environment-control#ctx.outcome-and-scope.001" -->
 ## Outcome, scope, and finish line
@@ -280,3 +284,100 @@ The first PR may contain planning artifacts, a versioned inactive protocol, envi
 
 The initial publication request authorized creating/using a task fork, committing the declared paths, refreshing and forward-merging canonical upstream main, pushing the exact task branch normally, and opening one draft PR. The owner's later merge request authorizes merging PR #1 into `Jones-Systems/CodexBar:main` after its required checks pass. Neither request authorizes upstream submission to `steipete/CodexBar`, signing, notarization, release, Homebrew publication, device installation, SSH gateway provisioning, live credential access, live account switching, daemon termination, or automatic software update.
 <!-- codex-section:end id="spec.caam-environment-control#ctx.delivery-boundaries.001" -->
+
+<!-- codex-section:begin id="spec.caam-environment-control#ctx.observability-candidate.002" -->
+## Combined controls and observability candidate
+
+The accepted [v1 control contract](../contracts/caam-codexbar-control-v1.md) remains the wire authority.
+The read-only dependency is `Jones-Systems/CAAM` at
+`work/caam-codexbar-gateway@8fdf44a1c2c3af0d36b934d79725608945790f32`.
+Its implementation was not accessible during this pass; capability advertisement is not
+independent conformance evidence. Production mutation qualification therefore defaults to an
+empty set of exact environment configurations. There is no settings switch that bypasses this
+qualification. Read-only discovery, plans, status lookup, model/UI work, fixtures, and caching
+remain independently useful. The candidate does not claim full-project activation acceptance.
+
+### Control state and confirmation boundaries
+
+`CAAMControlSession` owns a pure state machine, separate from transport and SwiftUI. Plans bind
+the environment, source revision/current profile, eligible target, affected profiles, digest,
+reload consequence, and expiry. Confirming consumes a unique confirmation once; execution
+receives a new operation UUID and idempotency UUID. Fallback and interrupted-operation recovery
+have separate confirmation kinds and typed commands. Recovery retains the original operation UUID.
+
+Unknown mutation effects remain unresolved through refresh and application restart. A snapshot
+with an empty pending journal does not prove a locally ambiguous operation completed. Only a
+bound, semantically valid terminal operation result with a fresh postcondition snapshot can settle
+it. A failed status or recovery request cannot erase the original operation. Manual-required
+state disables automatic recovery. A rollback is reported as rollback, not successful switching.
+
+The application coordinator is a single UI-actor instance with sequential, bounded refresh and
+operation coordination. It publishes each completed environment independently, coalesces refresh
+requests, and rejects late results from a changed configuration generation. It does not block
+the application waiting for subprocess completion. Intent receipts are persisted on a separate
+actor before any possible mutation launch, with only validated configuration selectors and UUIDs.
+The bounded atomic receipt file is private to the user (0600; newly created parent 0700).
+Failed persistence disables mutations; unresolved records remain available for lookup against
+their original configuration even if the configured environment list changes externally.
+
+The transport preserves native exit status and UTF-8 validity. A valid error envelope on nonzero
+exit can establish a typed effect; a success envelope on nonzero exit cannot. Timeout, cancellation,
+oversize, invalid encoding, and invalid responses after possible launch remain unknown-effect.
+UI errors use closed descriptions and validated codes, never raw stdout, stderr, or remote messages.
+
+### Cache and freshness policy
+
+CAAM mutation evidence expires after 60 seconds, with a maximum five-second future-clock allowance.
+Successful snapshots remain displayable for at most 15 minutes, measured against both their source
+timestamp and receipt time. Refresh failure marks retained values stale rather than fresh or zero.
+No background poll is added: configured environments refresh on section appearance when needed,
+or explicitly on user request. Fifteen-second UI timeline ticks update presentation age only.
+
+Environment configuration remains bounded to 32 records and each snapshot to 64 profiles and
+64 KiB. The coordinator bounds retained observations and does not silently evict an unresolved
+operation. Full configuration identity, not a reused ID, binds cached evidence and qualification.
+
+### Observability ledgers and views
+
+`ObservabilityHub` aggregates already-published local values. It never performs a network request,
+credential lookup, session scan, account switch, or host-process inspection. There is deliberately
+no combined utilization or spend total across unlike measurements.
+
+| View | Evidence shown | Boundary |
+| --- | --- | --- |
+| Overview | CAAM service state; provider quota windows, confidence, source/time; separate cost and metered amounts | Preserve currency, window and estimate/vendor/mixed provenance; unavailable is not zero |
+| Accounts | Environment-local profiles and redacted identities with health/source/time | Only matching provider and stable ID establish cross-environment identity; no email/name join |
+| Systems | Host-default versus runtime-effective profile and recovery state | Unknown runtime remains unknown; host-resource ledger is separate |
+| Work | At most 100 already-loaded local session records, materialized only on this tab | Historical partial evidence, never a live job queue; no private session IDs or paths in the view |
+
+Provider inputs are bounded to 64. Provider cache timestamps older than five minutes or following
+a refresh failure are labeled stale. Synthetic placeholder quota values and non-finite/negative
+numeric costs are unavailable. Existing historical cost publications are not attributed to a CAAM
+account and are not presented as billing receipts. The hub avoids display helpers that can resolve
+disk-backed identity or cookie caches. Current provider-configuration publication revision is checked
+before admitting cost records; provider identity and account control remain separate authorities.
+
+### Netdata boundary
+
+No Netdata endpoint contract, configured collector, or response fixture exists in this tree.
+`NetdataReadOnlyFacade` therefore reports unsupported host telemetry, with no observation timestamp
+and no fabricated CPU/memory values. Systems offers a user-entered dashboard link, never stored or
+prefilled from guessed host data. URLs require HTTPS, or HTTP on a literal loopback target; credentials,
+query parameters, fragments, control characters, invalid ports, and other schemes are rejected.
+Opening that link neither imports telemetry nor verifies host identity. No installation or Netdata
+service modification is part of this candidate.
+
+### Candidate verification and residual gates
+
+New fixture suites cover stale/capability gating, plan expiry and confirmation reuse, exact response
+binding, nonzero typed errors, invalid UTF-8, bounded output, unknown-effect lookup, recovery/fallback
+separation, receipt restart/failure behavior, lazy aggregation, provenance, and safe dashboard links.
+App tests exercise coalescing and late-result suppression through synthetic runners and fixed clocks.
+Implicit CAAM subprocesses and real receipt-store access are disabled under existing test-process detection.
+
+The [single evolving Work Note](../work-notes/caam-environment-control.md) records actual check outcomes,
+sequential self-review dispositions, incidents, and publication evidence. Source inspection and portable
+catalog checks do not replace Swift compilation, native tests, or macOS UI proof. English fallback keys
+are explicitly marked pending linguistic review. External CAAM conformance/activation, Netdata collector
+qualification, and native platform evidence remain separate gates; none authorizes a live mutation here.
+<!-- codex-section:end id="spec.caam-environment-control#ctx.observability-candidate.002" -->

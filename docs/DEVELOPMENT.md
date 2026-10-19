@@ -10,29 +10,84 @@ read_when:
 
 ## Quick Start
 
-### Building and Running
+The package declares Swift tools 6.2 and macOS 14+. macOS app packaging also builds
+the widget extension through Xcode. Linux supports shared-core and CLI work; it
+cannot validate the macOS menu bar app.
+
+### Source Build and Tests
 
 ```bash
-# Full build, package, and launch (recommended)
-./Scripts/compile_and_run.sh
+# Build source without packaging or launching the app
+swift build
 
-# Also run the sharded test suite before packaging/relaunching
-./Scripts/compile_and_run.sh --test
+# Run the isolated, sharded full suite
+make test
 
-# Just build and package (no tests)
-./Scripts/package_app.sh
-
-# Launch existing app (no rebuild)
-./Scripts/launch.sh
+# Required after code changes
+make check
 ```
+
+For focused tests, preserve the isolation described under
+[Codex credential fixtures](#codex-credential-fixtures) and
+[provider session fixtures](#provider-session-fixtures). Never enable live Keychain
+or account access to make routine verification pass.
+
+### Bundle Validation
+
+Use bundle validation when the changed behavior requires it and the task covers its
+runtime effects. `Scripts/compile_and_run.sh` builds, packages, relaunches, and verifies
+the app; tests run only with `--test`.
+
+Read [runtime validation and command effects](#runtime-validation-and-command-effects)
+before using compile/run, launch, packaging, or related Makefile targets. They can
+terminate existing processes, inspect signing identities, or launch an app.
 
 ### Development Workflow
 
-1. **Make code changes** in `Sources/CodexBar/`
-2. **Run** `./Scripts/compile_and_run.sh --test` to test, rebuild, and launch
-3. **Check logs** in Console.app (filter by "codexbar")
-4. **Optional file log**: enable Debug → Logging → "Enable file logging" to write
-   `~/Library/Logs/CodexBar/CodexBar.log` (verbosity defaults to "Verbose")
+1. Make a focused change in the owning app, core, CLI, widget, or test module.
+2. Verify through parser, model, CLI, or isolated fixture seams where possible.
+3. Run `make test` before handoff and `make check` after code changes.
+4. When runtime validation is needed and authorized, validate the freshly built bundle
+   and verify the actual running bundle identity.
+5. For intentional runtime diagnosis, use Console.app filtered by “codexbar”.
+   Debug → Logging → “Enable file logging” writes
+   `~/Library/Logs/CodexBar/CodexBar.log`; its default verbosity is “Verbose”.
+
+### Runtime Validation and Command Effects
+
+Prefer `swift build` or `swift build -c release` and isolated tests for source
+verification. CLI-testable provider/parser/settings work does not require
+`Scripts/package_app.sh` or `Scripts/compile_and_run.sh`.
+
+Use `Scripts/compile_and_run.sh` only when UI/runtime behavior needs bundle-level
+validation and its effects are covered by the task. It terminates existing CodexBar
+instances and matching Claude probes, can inspect signing identities, packages,
+relaunches, and checks that the app stays running. It runs the sharded tests only
+with `--test`. Its termination patterns can affect processes outside this checkout.
+
+`Scripts/launch.sh` also terminates existing instances before launching this checkout's
+bundle. `make start`, `make start-debug`, and `make restart` invoke the compile/run wrapper.
+`make stop` and `make start-release` use broad process termination; `make start-release`
+also retains a maintainer-specific absolute path. Removing old documentation snippets
+does not change these executable effects.
+
+`Scripts/package_app.sh` defaults to release packaging. Release packaging invokes
+`Scripts/verify_packaged_app_launch.sh`, which can launch a copied app under a sandbox.
+The check may be skipped without `sandbox-exec` or inconclusive without an Aqua session.
+Packaging success alone does not prove interactive UI behavior. `make release` invokes
+release packaging, not the complete publication workflow.
+
+Validate UI/runtime behavior against the freshly built bundle. Verify the actual running
+bundle after an authorized restart so a stale or different installed copy cannot supply
+the evidence. Before menu bar automation, capture the target screen and confirm the
+CodexBar icon is visibly onscreen. Reject `click-extra` success when its coordinates
+fall outside display bounds; hidden menu extras are not click proof.
+
+For Widget/Tahoe UI issues, use a Parallels macOS VM with screenshots/clicks for autonomous
+verification when that environment and operation are authorized.
+
+These commands and documentation do not grant permission to terminate unrelated
+processes, access live accounts or credentials, sign, or publish.
 
 ## Keychain Prompts (Development)
 
@@ -121,11 +176,16 @@ See the canonical [provider authoring guide](provider.md#adding-a-new-provider) 
 7. Add focused tests under `Tests/CodexBarTests/` and, for CLI/core behavior that must run on Linux, `TestsLinux/`.
 
 ### Debug Cookie Issues
-1. Enable Debug → Logging → "Enable file logging" or raise verbosity in the app settings.
-2. Reproduce with `./Scripts/compile_and_run.sh`.
-3. Check logs in Console.app:
-   - Filter: `subsystem:com.steipete.codexbar category:augment`
-   - Importer messages include the `[augment-cookie]` prefix
+
+Begin with provider parser tests, stubs, and isolated session fixtures. Browser-cookie
+imports and live provider probes require an explicit request; rebuilding the app
+does not supply that permission.
+
+For an authorized live reproduction, enable Debug → Logging → “Enable file logging”
+or raise the configured verbosity, verify the running bundle, and inspect Console.app
+with `subsystem:com.steipete.codexbar category:augment`. Importer messages include
+the `[augment-cookie]` prefix. See [Keychain prompts](keychain-prompts.md) before
+credential-related diagnosis.
 
 ### Debug Menu Bar Placement
 
@@ -427,27 +487,82 @@ verifier argument. `CodexBarLinuxTests` includes the portable `AntigravityLocalh
 both macOS and Linux. It checks session reuse and concurrent synthetic loopback failures without credentials;
 this coverage does not establish or fix the cause of Linux dispatch crashes.
 
-### Format Code
+### Coding Conventions and Tests
+
+Keep changes small and reuse existing helpers. Favor typed structs/enums, descriptive
+symbols, and the existing `MARK` organization. Use four-space indentation and
+120-character lines. Explicit `self` is intentional; do not remove it.
+
+Prefer modern SwiftUI/Observation: `@Observable` models, `@State` ownership, and
+`@Bindable` views. Avoid `ObservableObject`, `@ObservedObject`, and `@StateObject`.
+Prefer modern macOS 15+ APIs over legacy or deprecated equivalents when refactoring,
+with availability handling that preserves the package's macOS 14 minimum.
+
+Treat sibling `async let` tasks as a review red flag when one child is required and
+another is optional or best-effort. Prefer sequential awaits or a drained
+`withThrowingTaskGroup` that surfaces required failures and contains optional failures.
+Crash stacks mentioning `swift_task_dealloc` or
+`asyncLet_finish_after_task_completion` require an audit of nearby `async let` usage.
+
+Mirror new logic with focused tests. XCTest files belong under
+`Tests/CodexBarTests/*Tests.swift`, with `FeatureNameTests` and
+`test_caseDescription` methods. For Swift Testing, prefer backticked sentence names,
+not camelCase. Add portable coverage under `TestsLinux` where appropriate.
+Use released or clearly fictitious model names in source and tests; never expose
+unreleased names.
+
+Headless macOS CI is brittle around live AppKit status/menu tests. Prefer stable
+state/model seams such as `MenuDescriptor`, `ProvidersPane`, and
+`CodexAccountsSectionState` over live `NSStatusBar` or `NSMenu` construction.
+Exercise AppKit wiring directly only when that wiring is the behavior under test.
+
+Formatting commands:
+
 ```bash
 swiftformat Sources Tests
 swiftlint --strict
 ```
 
+### Verification and Handoff
+
+Root `AGENTS.md` requires `make test` before handoff and `make check` after code changes,
+with all reported format/lint issues fixed. `make test` uses the sharded full-suite runner.
+Add focused `swift test --filter ...` runs for parser/provider fixes when possible;
+preserve the runner's Keychain, Codex-file, and provider-session isolation in direct
+commands. Never enable live access merely to make a check pass.
+
+Use the existing [runner containment](#run-tests-only),
+[adaptive refresh](#adaptive-refresh-fixtures),
+[Claude session](#claude-session-fixtures),
+[Codex credential](#codex-credential-fixtures), and
+[provider session](#provider-session-fixtures) contracts for the affected tests.
+The cost-scanner sections own scanner correctness and performance requirements.
+
+If a required toolchain or platform is unavailable, report the checks as unavailable,
+not passed. Do not substitute a live probe or app launch.
+
+Keep commits scoped and use short imperative messages, such as “Improve usage probe”
+or “Fix icon dimming”; match the existing commit tone. PRs and patches must state the
+change, commands run and their outcomes, screenshots/GIFs for UI changes, and relevant
+issues or references.
+
 ## Distribution
 
-### Local Development Build
-```bash
-./Scripts/package_app.sh
-# Creates: CodexBar.app with ad-hoc signing by default
-```
+`Scripts/package_app.sh` creates `CodexBar.app` with ad-hoc signing by default.
+It defaults to release mode, whose smoke check can launch a copied app; treat this
+as runtime validation, not just compilation.
 
-### Release Build (Notarized)
-```bash
-./Scripts/sign-and-notarize.sh
-# Creates: CodexBar-<version>.zip and CodexBar-<version>.dSYM.zip
-```
+`Scripts/sign-and-notarize.sh` builds and signs distribution artifacts and submits
+them for notarization. With the default universal architecture set, its outputs are
+`CodexBar-macos-universal-<version>.zip` and
+`CodexBar-macos-universal-<version>.dSYM.zip`; `Scripts/release_artifacts.sh` owns
+architecture-specific naming.
 
-See `docs/RELEASING.md` for full release process.
+`make release` only invokes release packaging. Full publication uses the external
+helper behind `Scripts/release.sh`. The checked-in release target still names
+upstream `steipete/CodexBar`; it does not establish a Jones Systems distribution.
+Read [the release process](RELEASING.md) and resolve the target and authority before
+signing, notarization, appcast updates, or publication.
 
 ## Troubleshooting
 
