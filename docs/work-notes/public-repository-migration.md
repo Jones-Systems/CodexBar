@@ -120,6 +120,13 @@ source or process-containment policy was changed to bypass the limitation.
 <!-- codex-section:begin id="worknote.public-repository-migration#ctx.continuation.001" -->
 ## Next effect and registration
 
+The owner subsequently explicitly approved the prepared migration, repository
+creation and all listed work, including the requested CI/tool exceptions, and
+instructed continuation without repeated approval prompts. This approval covers
+the bounded namespace and setup sequence in the engineering spec. Carry it
+through execution; retain readiness, identity, fixture and rollback checks.
+The old pending-approval observations below are historical, not a current hold.
+
 Preparation is complete enough to review the exact namespace and CI envelope.
 No repository was renamed, created, deleted or detached; no workflows were
 enabled and no PR was merged. Refresh identities/ref manifest before the first
