@@ -4,7 +4,7 @@ import CodexBarCore
 final class ClaudeProviderRuntime: ProviderRuntime {
     let id: UsageProvider = .claude
     private var lastSwapConfiguration: Configuration?
-    private var lastNativeProfileIdentity: String?
+    private(set) var lastNativeProfileIdentity: String?
     private(set) var nativeProfileTransitionPending = false
 
     func reconcileNativeProfileEnvironment(

@@ -376,7 +376,7 @@ extension SettingsStore {
     }
 
     var multiAccountMenuLayout: MultiAccountMenuLayout {
-        get { MultiAccountMenuLayout(rawValue: self.defaultsState.multiAccountMenuLayoutRaw) ?? .segmented }
+        get { MultiAccountMenuLayout(rawValue: self.defaultsState.multiAccountMenuLayoutRaw) ?? .stacked }
         set {
             self.defaultsState.multiAccountMenuLayoutRaw = newValue.rawValue
             self.userDefaults.set(newValue.rawValue, forKey: "multiAccountMenuLayout")

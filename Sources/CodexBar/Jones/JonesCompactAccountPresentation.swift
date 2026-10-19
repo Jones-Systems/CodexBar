@@ -8,14 +8,14 @@ enum JonesCompactAccountPresentation {
         collapsedAccountIDs: Set<ProviderAccountIdentity> = [],
         healthyTailExpanded: Bool = false) -> AccountMenuLayoutPlanner.Plan
     {
-        // Provider-specific by design: Codex uses toggles at every count and folds eligible overflow above five total.
+        // Provider-specific by design: Codex uses toggles at every count and keeps every account visible.
         let isCodex = provider == .codex
         return AccountMenuLayoutPlanner.plan(
             accounts: accounts,
             expandedAccountIDs: expandedAccountIDs,
             healthyTailExpanded: healthyTailExpanded,
             collapsedAccountIDs: collapsedAccountIDs,
-            minimumVisibleAccountCount: isCodex ? 5 : 0,
+            minimumVisibleAccountCount: isCodex ? Int.max : 0,
             policy: isCodex
                 ? .init(compactLayoutMinimumAccountCount: 1, minimumCollapsedHealthyRowCount: 1)
                 : .init())

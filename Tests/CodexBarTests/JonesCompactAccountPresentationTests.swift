@@ -42,23 +42,20 @@ struct JonesCompactAccountPresentationTests {
         }
     }
 
-    @Test(arguments: [0, 1, 2, 3, 4, 5, 6, 8, 12])
-    func `Codex initially shows up to five total accounts and folds even one overflow account`(count: Int) {
+    @Test(arguments: [0, 1, 2, 3, 4, 5, 6, 8, 9, 12])
+    func `Codex initially shows every account without a healthy tail fold`(count: Int) {
         let accounts = self.accounts(count: count)
         let codex = JonesCompactAccountPresentation.plan(for: .codex, accounts: accounts)
         #expect(codex.usesCompactLayout == (count > 0))
-        #expect(self.accountIDs(in: codex).count == min(count, 5))
+        #expect(self.accountIDs(in: codex).count == count)
         if count == 0 {
             #expect(codex.rows.isEmpty)
             return
         }
         #expect(codex.rows.first == .card(accounts[0].id))
         #expect(codex.rows.count { if case .card = $0 { true } else { false } } == 1)
-        if count > 5 {
-            #expect(codex.rows.last == .collapsedHealthy(count: count - 5))
-        } else {
-            #expect(codex.rows.count == count)
-        }
+        #expect(codex.rows.count == count)
+        #expect(!codex.rows.contains { if case .collapsedHealthy = $0 { true } else { false } })
     }
 
     @Test(arguments: [1, 2, 3, 4, 5, 6, 8, 12])
@@ -138,12 +135,11 @@ struct JonesCompactAccountPresentationTests {
         #expect(afterRemoval.rows.first == .card(switched[2].id))
     }
 
-    @Test(arguments: [6, 8, 12])
-    func `Codex overflow reveals remaining accounts in the same order`(count: Int) {
+    @Test(arguments: [6, 8, 9, 12])
+    func `Codex healthy tail expansion does not change the complete account list`(count: Int) {
         let accounts = self.accounts(count: count)
         let initial = JonesCompactAccountPresentation.plan(for: .codex, accounts: accounts)
-        #expect(self.accountIDs(in: initial).count == 5)
-        #expect(initial.rows.last == .collapsedHealthy(count: count - 5))
+        #expect(self.accountIDs(in: initial).count == count)
         let revealed = JonesCompactAccountPresentation.plan(
             for: .codex, accounts: accounts, healthyTailExpanded: true)
         #expect(Set(self.accountIDs(in: revealed)) == Set(accounts.map(\.id)))
@@ -201,7 +197,7 @@ struct JonesCompactAccountPresentationTests {
             healthyTailExpanded: expandedProviders.contains(.codex))
         #expect(reopened == JonesCompactAccountPresentation.plan(for: .codex, accounts: accounts))
         #expect(reopened.rows.first == .card(accounts[0].id))
-        #expect(self.accountIDs(in: reopened).count == min(count, 5))
+        #expect(self.accountIDs(in: reopened).count == count)
         #expect(!JonesCompactAccountPresentation.resetIfIdle(
             hasOpenMenus: false,
             expandedAccountIDs: &expandedIDs,
@@ -210,7 +206,7 @@ struct JonesCompactAccountPresentationTests {
     }
 
     @Test
-    func `five account target never hides constrained error or unknown usage rows`() {
+    func `Codex never hides constrained error or unknown usage rows`() {
         let fixtures = [
             self.accounts(count: 8, usedPercent: 60),
             self.accounts(count: 8, usedPercent: 95),

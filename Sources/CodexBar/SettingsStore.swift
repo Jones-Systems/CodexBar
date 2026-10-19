@@ -931,7 +931,7 @@ extension SettingsStore {
         if let layout = userDefaults.string(forKey: "multiAccountMenuLayout") {
             return layout
         }
-        let legacyShowAll = userDefaults.object(forKey: "showAllTokenAccountsInMenu") as? Bool ?? false
+        let legacyShowAll = userDefaults.object(forKey: "showAllTokenAccountsInMenu") as? Bool ?? true
         return legacyShowAll ? MultiAccountMenuLayout.stacked.rawValue : MultiAccountMenuLayout.segmented.rawValue
     }
 

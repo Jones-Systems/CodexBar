@@ -399,7 +399,10 @@ private struct UsageMenuCardHeaderView: View {
     private var liveSubtitle: MenuCardLiveSubtitle {
         let fallback = MenuCardLiveSubtitle(text: self.model.subtitleText, style: self.model.subtitleStyle)
         guard self.model.usesLiveSubtitle else { return fallback }
-        return self.refreshMonitor?.subtitle(for: self.model.provider, fallback: fallback) ?? fallback
+        return self.refreshMonitor?.subtitle(
+            for: self.model.provider,
+            hostedModel: self.model,
+            fallback: fallback) ?? fallback
     }
 
     private func subtitleColor(for style: UsageMenuCardView.Model.SubtitleStyle) -> Color {

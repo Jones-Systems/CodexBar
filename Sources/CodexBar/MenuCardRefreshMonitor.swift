@@ -131,12 +131,15 @@ final class MenuCardRefreshMonitor {
 
     func subtitle(
         for provider: UsageProvider,
+        hostedModel: UsageMenuCardView.Model,
         fallback: MenuCardLiveSubtitle) -> MenuCardLiveSubtitle
     {
         if self.isManualRefreshInFlight(for: provider) {
             return MenuCardLiveSubtitle(text: "\(L("Refreshing"))…", style: .loading)
         }
-        guard let model = self.resolveModel(provider) else { return fallback }
+        guard let model = self.resolveModel(provider),
+              hostedModel.hasCompatibleTrackedLayout(with: model)
+        else { return fallback }
         return MenuCardLiveSubtitle(text: model.subtitleText, style: model.subtitleStyle)
     }
 }

@@ -76,3 +76,122 @@ The owner requires one local CodexBar account selector that determines the accou
 CAAM retirement was integrated through merge 2fb2df0d6a965af247fad23a15d530554177f2fe (lane commit 082cd4943). This does not resolve the two findings preserved in account-fixes-ccafd932.json. First-trial readiness remains unproved.
 
 Final integrated portable verification: source-absence test (1), locale-checker tests (5), feature locale coverage (80 keys across 23 catalogs), SwiftFormat lint (35 surviving changed Swift files), and whitespace passed. Fresh CPU admission was 3.75% used, 41.68 GiB available, one fully used core 6.25% of host capacity; one serial check process. Temporary check storage was context-managed under .build and removed. Native checks remain unavailable as recorded above.
+
+
+## Current fleet-account presentation repair
+
+The owner tried the separate Jones app built from standalone main
+`7138b98b978381be69a08b0c7acedae6549a783c` and supplied four screenshots.
+Codex shows wrapped account tabs, Claude shows one selected native account,
+Overview shows one card per provider, and selecting a different Codex account
+can retain an empty usage card with a newly updated subtitle. The owner wants
+all enrolled Codex and Claude accounts listed together, with compact rows and
+optional expanded detail. Existing Jones preferences must survive updates.
+The owner explicitly authorizes installing and opening updated Jones builds;
+this does not authorize copying credentials, promoting a system account,
+reading protected stores, or terminating unrelated processes.
+
+The active worktree is the root-owned `work/codexbar-install-transition-506fc1fd`
+branch. The installed app is a copied artifact; source edits do not mutate it.
+The prior research and verification entries above are historical. The public
+standalone repository migration and PRs #1–#5 are merged. Native source checks
+previously passed; these new changes require their own verification. AFR-001
+and AFR-002 corrections were integrated before this candidate; their old
+source-bound review record remains preserved.
+
+Research uses two independent read-only source lanes, not live provider probes:
+
+- Account-menu evidence: unset multi-account layout is segmented; compact
+  Codex rendering and usage fan-out are gated by stacked layout. The existing
+  compact renderer supports selected-card collapse and five initial rows, but
+  a separate pre-planning six-account cap discards later accounts. Claude
+  native enrollment supplies a single-profile picker; claude-swap is a separate
+  external adapter. Overview maps one card per provider.
+- Account-usage evidence: per-home Codex fetching already scopes CODEX_HOME and
+  rejects stale or mismatched publication. A likely rendering defect retains
+  the placeholder when fresh quota changes the card's tracked geometry, while
+  the subtitle independently adopts fresh provider state. This is a source
+  hypothesis with a cheap synthetic reproduction, not a live-fetch failure
+  diagnosis. Native Claude has no per-profile fleet snapshot collection yet.
+
+Claude Frontier is explicitly selected. The Jace Opus 5.5/high planning task
+`codexbar-fleet-menu-opus-506fc1fd-7138-r1` owns the initial experience and
+technical recommendation; root owns synthesis encoding, Git and delivery.
+The recommendation is complete and encoded in the Engineering Spec. Builders have disjoint
+write cones and use synthetic profile discovery, injected transports and the
+repository's Keychain/Codex/session-file isolation. Tests run serially under
+fresh same-host admission; no tools are installed to make checks pass.
+
+Registration: `registration_unavailable` before submission. The current native
+thread/environment are known, but an enrolled host/project identity and last
+accepted registry revision have not been established in authorized context.
+No identity is guessed and no registration request was sent. The register-thread
+skill permits bounded implementation to continue with that limitation recorded.
+
+Next: consume the planning result, mature the existing Engineering Spec,
+implement the account view and refresh repair, run required checks, publish
+current-head CI evidence, and prepare the next local Jones build. Any new PR
+must satisfy a merge binding that covers it; the migration's #1–#5-only binding
+is not silently expanded. Existing deferred findings and unrelated held scratch
+remain outside this repair.
+
+
+Implementation checkpoint: Slice A owns hosted-card refresh/readiness and its
+focused tests. Slice B owns Codex layout defaults, complete account lists and
+bounded fetch fan-out plus focused tests. Root owns shared .build/test state;
+builders do not start competing SwiftPM builds. Claude aggregation follows B;
+Overview follows both account projections. The native planning result reported
+a shortened HEAD typo; the authoritative source is the exact root-verified
+`7138b98b978381be69a08b0c7acedae6549a783c`, not that shortened text.
+
+
+Owner follow-up: quota eventually appears after selecting another Codex account;
+this narrows the symptom to latency/presentation rather than proving failed
+account authentication. Selection invokes a new scoped refresh, while existing
+per-account memory/disk snapshot caches are present. Preserve cached values with
+honest freshness during refresh; do not remove identity/authorization guards to
+make a cache hit. The account-view buttons select CodexBar's observation source;
+they do not promote the laptop's system authentication. System Account promotion
+remains a separate explicit operation outside this repair's runtime validation.
+
+The owner also requests short friendly account labels, with personal label
+preferences kept local rather than hardcoded personal identities/emails in
+public source. The exact local display labels are supplied in the native owner
+message; generic public code should consume aliases or a local display override.
+A bounded existing-label/API investigation is in progress before its writer cone
+is assigned.
+
+Checkpoint r1 compiled the changed app but stopped on two readiness dictionary
+keys using UsageProvider rather than ProviderInstanceID. Zero tests executed;
+this is a failed check, not cache-isolation proof. Its direct process drain and
+owned fixture-root removal passed. The narrow source/test key correction is
+complete and r2 reuses the same focused selection. Claude aggregation remains
+held until the synthetic cache proof actually passes.
+
+Checkpoint r2 also stopped before test execution: the new readiness test's
+nested selector needed explicit main-actor isolation. The narrow annotation is
+corrected. The harness proved process drain and removed its invocation fixture
+parent; r3 repeats the same focused selection with the correction. No cache
+proof is claimed from compilation. The verifier owns the serial build/test
+lease and records exact source digests under `.build/fleet-repair-evidence`.
+
+Friendly labels have an isolated writer worktree, branch
+`work/codexbar-friendly-labels-506fc1fd`, based on the same exact main revision.
+Root remains its sole Git owner. This permits source work without changing files
+under the native compiler. Label precedence is a local override, a validated
+fleet alias, then a generic stable account discriminator. Raw provider identity
+remains available to ownership/freshness guards; display labels cannot change
+snapshot matching. Personal preferences are not embedded in public source.
+
+The document-section frontdoor was unavailable: its source CLI reported
+`invalid_repository` for this verified linked worktree. Manual section-marker
+validation passed for both existing artifacts. This is a tooling limitation,
+not a successful native section-tool check.
+
+Checkpoint r3 compiled successfully in 115.97 seconds. Its loaded test binary
+passed the three Claude cache-isolation tests, including both parameterized
+selection directions: four actual cases. This clears Slice C's cache prerequisite;
+the remainder of the focused union is still pending at this checkpoint. Slice C
+may now implement serial side-profile fetching without claiming live account
+availability. Friendly-label source is separately checkpointed before normal
+integration into this branch.

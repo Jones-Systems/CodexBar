@@ -216,6 +216,76 @@ struct StatusMenuCodexSwitcherPresentationTests {
         #expect(self.representedIDs(in: menu).count(where: { $0.hasPrefix("codexWorkspace-") }) == 3)
     }
 
+    @Test(arguments: [6, 9])
+    func `Codex stacked menu shows every account without tabs or folds`(count: Int) throws {
+        self.disableMenuCardsForTesting()
+        let settings = self.makeSettings()
+        settings.statusChecksEnabled = false
+        settings.refreshFrequency = .manual
+        settings.mergeIcons = false
+        settings.multiAccountMenuLayout = .stacked
+        self.enableOnlyCodex(settings)
+        let managed = (1..<count).map { index in
+            ManagedCodexAccount(
+                id: UUID(),
+                email: "account\(index)@example.com",
+                managedHomePath: TestFixtureScratch.root.appendingPathComponent("unused-home-\(index)").path,
+                createdAt: 1,
+                updatedAt: 2,
+                lastAuthenticatedAt: 2)
+        }
+        let storeURL = try self.makeManagedAccountStoreURL(accounts: managed)
+        defer {
+            settings._test_managedCodexAccountStoreURL = nil
+            settings._test_liveSystemCodexAccount = nil
+            try? FileManager.default.removeItem(at: storeURL)
+        }
+        settings._test_managedCodexAccountStoreURL = storeURL
+        settings._test_liveSystemCodexAccount = ObservedSystemCodexAccount(
+            email: "active@example.com",
+            codexHomePath: TestFixtureScratch.root.appendingPathComponent("unused-live-home").path,
+            observedAt: Date())
+        settings.codexActiveSource = .liveSystem
+        let fetcher = UsageFetcher()
+        let store = UsageStore(fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
+        store.codexAccountSnapshots = settings.codexVisibleAccountProjection.visibleAccounts.map { account in
+            CodexAccountUsageSnapshot(
+                account: account,
+                snapshot: self.snapshot(email: account.email),
+                error: nil,
+                sourceLabel: "synthetic")
+        }
+        let controller = StatusItemController(
+            store: store,
+            settings: settings,
+            account: fetcher.loadAccountInfo(),
+            updater: DisabledUpdaterController(),
+            preferencesSelection: PreferencesSelection(),
+            statusBar: testStatusBar())
+        defer { controller.releaseStatusItemsForTesting() }
+        let display = try #require(controller.codexAccountMenuDisplay(for: .codex))
+        #expect(display.accounts.count == count)
+        #expect(!display.showSwitcher)
+        #expect(store.limitedCodexVisibleAccounts(
+            display.accounts, activeVisibleAccountID: display.activeVisibleAccountID).count == count)
+        let menu = controller.makeMenu(for: .codex)
+        controller.menuWillOpen(menu)
+        let ids = self.representedIDs(in: menu)
+        #expect(ids.count { $0.hasPrefix("codexAccountCard-") } == 1)
+        #expect(ids.count { $0.hasPrefix("codexAccountCompact-") } == count - 1)
+        #expect(!ids.contains("codexAccountCollapsed"))
+        #expect(!menu.items.contains { $0.view is CodexAccountSwitcherView })
+
+        let activeID = try #require(display.activeVisibleAccountID)
+        controller.compactAccountCollapsedIDs.insert(
+            ProviderAccountIdentity(source: "codex-account", opaqueID: activeID))
+        let collapsed = controller.compactAccountPlan(
+            for: .codex, accounts: StatusItemController.projectedCodexAccounts(display: display))
+        let activeIdentity = ProviderAccountIdentity(source: "codex-account", opaqueID: activeID)
+        #expect(!collapsed.rows.contains(.card(activeIdentity)))
+        #expect(collapsed.rows.count { if case .compact = $0 { true } else { false } } == count)
+    }
+
     @Test
     func `codex stacked menu surfaces account health labels`() throws {
         self.disableMenuCardsForTesting()

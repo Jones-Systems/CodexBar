@@ -395,6 +395,7 @@ struct StatusMenuSwitcherRefreshTests {
         let inFlight = controller.menuCardRefreshMonitor.model(for: .codex, fallback: emptyFallback)
         let subtitle = controller.menuCardRefreshMonitor.subtitle(
             for: .codex,
+            hostedModel: try #require(controller.menuCardModel(for: .codex)),
             fallback: MenuCardLiveSubtitle(text: emptyFallback.subtitleText, style: emptyFallback.subtitleStyle))
 
         #expect(emptyFallback.metrics.isEmpty)

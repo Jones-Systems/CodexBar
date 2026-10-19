@@ -159,7 +159,14 @@ private struct CodexManagedVisibleAccountRuntimeState {
 }
 
 extension UsageStore {
-    static let tokenAccountMenuSnapshotLimit = 6
+    static let maxConcurrentAccountFetches = 3
+
+    static func accountMenuDisplayLimit(for provider: UsageProvider) -> Int? {
+        switch provider {
+        case .codex, .claude: nil
+        default: 6
+        }
+    }
 
     func freshCodexVisibleAccountsForSnapshotHydration() -> [CodexVisibleAccount] {
         self.freshCodexVisibleAccountProjectionForAccountRefresh().visibleAccounts
@@ -572,7 +579,7 @@ extension UsageStore {
             }
             return
         }
-        let limitedAccounts = self.limitedTokenAccounts(accounts, selected: selectedAccount)
+        let limitedAccounts = self.limitedTokenAccounts(provider: provider, accounts, selected: selectedAccount)
         let effectiveSelected = selectedAccount
 
         // Capture the prior per-account snapshot state so we can preserve last-good
@@ -692,10 +699,11 @@ extension UsageStore {
     }
 
     func limitedTokenAccounts(
+        provider: UsageProvider,
         _ accounts: [ProviderTokenAccount],
         selected: ProviderTokenAccount?) -> [ProviderTokenAccount]
     {
-        let limit = Self.tokenAccountMenuSnapshotLimit
+        guard let limit = Self.accountMenuDisplayLimit(for: provider) else { return accounts }
         if accounts.count <= limit {
             return accounts
         }
@@ -716,7 +724,7 @@ extension UsageStore {
             ? CodexAccountPresentationOrdering.orderedAccounts(
                 accounts, snapshots: snapshots, activeVisibleAccountID: activeVisibleAccountID)
             : self.settings.orderedCodexAccounts(accounts)
-        let limit = Self.tokenAccountMenuSnapshotLimit
+        guard let limit = Self.accountMenuDisplayLimit(for: .codex) else { return accounts }
         if accounts.count <= limit {
             return accounts
         }
@@ -804,27 +812,22 @@ extension UsageStore {
             return results
         }
 
-        return await withTaskGroup(
-            of: TokenAccountFetchResult.self,
-            returning: [TokenAccountFetchResult].self)
-        { group in
-            for request in requests {
-                group.addTask {
-                    let outcome = await request.descriptor.fetchOutcome(context: request.context)
-                    return TokenAccountFetchResult(
-                        index: request.index,
-                        account: request.account,
-                        outcome: outcome)
-                }
-            }
-
-            var results: [TokenAccountFetchResult] = []
-            results.reserveCapacity(requests.count)
-            for await result in group {
-                results.append(result)
-            }
-            return results.sorted { $0.index < $1.index }
+        let completed = await Self.boundedOrderedTaskGroup(
+            limit: Self.maxConcurrentAccountFetches,
+            requests: requests)
+        { request in
+            let outcome = await request.descriptor.fetchOutcome(context: request.context)
+            return TokenAccountFetchResult(index: request.index, account: request.account, outcome: outcome)
         }
+        // Unscheduled accounts retain their prior snapshots just like cancelled in-flight accounts.
+        let completedIndices = Set(completed.map(\.index))
+        let cancelled = requests.filter { !completedIndices.contains($0.index) }.map { request in
+            TokenAccountFetchResult(
+                index: request.index,
+                account: request.account,
+                outcome: ProviderFetchOutcome(result: .failure(CancellationError()), attempts: []))
+        }
+        return (completed + cancelled).sorted { $0.index < $1.index }
     }
 
     private func fetchCodexVisibleAccountOutcomes(
@@ -873,63 +876,85 @@ extension UsageStore {
                 resetCreditsFetcher: self.codexResetCreditsFetcher(workspaceAccountID: context.codexWorkspaceID))
         }
 
-        return await withTaskGroup(
-            of: CodexAccountFetchResult.self,
-            returning: [CodexAccountFetchResult].self)
-        { group in
-            for request in requests {
-                group.addTask {
-                    let fetchOutcome: CodexWeeklyConfirmationFetch = {
-                        let baseOutcome = await request.descriptor.fetchOutcome(context: request.context)
-                        return await Self.attachingCodexResetCreditsIfNeeded(
-                            to: baseOutcome,
-                            env: request.context.env,
-                            fetcher: request.resetCreditsFetcher)
-                    }
-                    let initialOutcome = await fetchOutcome()
-                    let admission: CodexWeeklyResetPublicationAdmission?
-                    if Self.codexUsageOutcomeMatchesVisibleAccount(
-                        initialOutcome,
-                        account: request.account)
-                    {
-                        let admitted = await Self.codexOutcomeAdmittedForPublication(
-                            initialOutcome: initialOutcome,
-                            previousSnapshot: request.previousSnapshot,
-                            previousSourceLabel: request.previousSourceLabel,
-                            missingWindowBackfillSnapshot: request.missingWindowBackfillSnapshot,
-                            pendingCandidate: request.pendingWeeklyResetCandidate,
-                            fetchConfirmation: fetchOutcome)
-                        if let outcome = admitted.outcome,
-                           Self.codexUsageOutcomeMatchesVisibleAccount(outcome, account: request.account)
-                        {
-                            admission = CodexWeeklyResetPublicationAdmission(
-                                outcome: outcome,
-                                pendingCandidate: admitted.pendingCandidate)
-                        } else {
-                            admission = CodexWeeklyResetPublicationAdmission(
-                                outcome: nil,
-                                pendingCandidate: admitted.pendingCandidate,
-                                withheldSuccess: admitted.withheldSuccess)
-                        }
-                    } else {
-                        admission = nil
-                    }
-                    return CodexAccountFetchResult(
-                        index: request.index,
-                        account: request.account,
-                        outcome: admission?.outcome,
-                        limitResetOwnerKey: request.limitResetOwnerKey,
-                        pendingWeeklyResetCandidate: admission?.pendingCandidate,
-                        withheldSuccess: admission?.withheldSuccess)
+        return await Self.boundedOrderedTaskGroup(
+            limit: Self.maxConcurrentAccountFetches,
+            requests: requests)
+        { request in
+            let fetchOutcome: CodexWeeklyConfirmationFetch = {
+                let baseOutcome = await request.descriptor.fetchOutcome(context: request.context)
+                return await Self.attachingCodexResetCreditsIfNeeded(
+                    to: baseOutcome,
+                    env: request.context.env,
+                    fetcher: request.resetCreditsFetcher)
+            }
+            let initialOutcome = await fetchOutcome()
+            let admission: CodexWeeklyResetPublicationAdmission?
+            if Self.codexUsageOutcomeMatchesVisibleAccount(
+                initialOutcome,
+                account: request.account)
+            {
+                let admitted = await Self.codexOutcomeAdmittedForPublication(
+                    initialOutcome: initialOutcome,
+                    previousSnapshot: request.previousSnapshot,
+                    previousSourceLabel: request.previousSourceLabel,
+                    missingWindowBackfillSnapshot: request.missingWindowBackfillSnapshot,
+                    pendingCandidate: request.pendingWeeklyResetCandidate,
+                    fetchConfirmation: fetchOutcome)
+                if let outcome = admitted.outcome,
+                   Self.codexUsageOutcomeMatchesVisibleAccount(outcome, account: request.account)
+                {
+                    admission = CodexWeeklyResetPublicationAdmission(
+                        outcome: outcome,
+                        pendingCandidate: admitted.pendingCandidate)
+                } else {
+                    admission = CodexWeeklyResetPublicationAdmission(
+                        outcome: nil,
+                        pendingCandidate: admitted.pendingCandidate,
+                        withheldSuccess: admitted.withheldSuccess)
+                }
+            } else {
+                admission = nil
+            }
+            return CodexAccountFetchResult(
+                index: request.index,
+                account: request.account,
+                outcome: admission?.outcome,
+                limitResetOwnerKey: request.limitResetOwnerKey,
+                pendingWeeklyResetCandidate: admission?.pendingCandidate,
+                withheldSuccess: admission?.withheldSuccess)
+        }
+    }
+
+    private nonisolated static func boundedOrderedTaskGroup<Request: Sendable, Result: Sendable>(
+        limit: Int,
+        requests: [Request],
+        operation: @escaping @Sendable (Request) async -> Result) async -> [Result]
+    {
+        precondition(limit > 0)
+        return await withTaskGroup(of: (Int, Result).self) { group in
+            var nextIndex = 0
+            func enqueueNext() {
+                guard !Task.isCancelled, nextIndex < requests.count else { return }
+                let index = nextIndex
+                let request = requests[index]
+                if group.addTaskUnlessCancelled(operation: { (index, await operation(request)) }) {
+                    nextIndex += 1
                 }
             }
-
-            var results: [CodexAccountFetchResult] = []
-            results.reserveCapacity(requests.count)
-            for await result in group {
-                results.append(result)
+            for _ in 0..<min(limit, requests.count) {
+                enqueueNext()
             }
-            return results.sorted { $0.index < $1.index }
+            var results: [(Int, Result)] = []
+            results.reserveCapacity(requests.count)
+            while let result = await group.next() {
+                results.append(result)
+                if Task.isCancelled {
+                    group.cancelAll()
+                } else {
+                    enqueueNext()
+                }
+            }
+            return results.sorted { $0.0 < $1.0 }.map(\.1)
         }
     }
 

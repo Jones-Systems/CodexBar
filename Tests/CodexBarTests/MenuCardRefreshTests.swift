@@ -6,7 +6,7 @@ import Testing
 struct MenuCardRefreshTests {
     private static func makeModel(
         provider: UsageProvider,
-        snapshot: UsageSnapshot,
+        snapshot: UsageSnapshot?,
         isRefreshing: Bool,
         now: Date) throws -> UsageMenuCardView.Model
     {
@@ -30,6 +30,35 @@ struct MenuCardRefreshTests {
             showOptionalCreditsAndExtraUsage: true,
             hidePersonalInfo: false,
             now: now))
+    }
+
+    @MainActor
+    @Test
+    func `live subtitle requires the hosted layout and account identity`() throws {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        var placeholder = try Self.makeModel(provider: .codex, snapshot: nil, isRefreshing: false, now: now)
+        placeholder.accountIdentityFingerprint = "selected-account"
+        let snapshot = UsageSnapshot(
+            primary: RateWindow(usedPercent: 21, windowMinutes: 300, resetsAt: nil, resetDescription: nil),
+            secondary: nil,
+            updatedAt: now)
+        var resolved = try Self.makeModel(provider: .codex, snapshot: snapshot, isRefreshing: false, now: now)
+        resolved.accountIdentityFingerprint = "selected-account"
+        let monitor = MenuCardRefreshMonitor(resolveModel: { _ in resolved }, isProviderRefreshActive: { _ in false })
+        let fallback = MenuCardLiveSubtitle(text: "Hosted subtitle", style: .info)
+
+        #expect(placeholder.metrics.isEmpty)
+        #expect(!resolved.metrics.isEmpty)
+        #expect(monitor.subtitle(for: .codex, hostedModel: placeholder, fallback: fallback).text == fallback.text)
+        #expect(monitor.subtitle(for: .codex, hostedModel: resolved, fallback: fallback).text == resolved.subtitleText)
+
+        var otherAccount = resolved
+        otherAccount.accountIdentityFingerprint = "other-account"
+        #expect(monitor.subtitle(for: .codex, hostedModel: otherAccount, fallback: fallback).text == fallback.text)
+
+        monitor.beginManualRefresh(frozenModels: [.codex: placeholder], provider: .codex)
+        #expect(monitor.subtitle(for: .codex, hostedModel: placeholder, fallback: fallback).text == "Refreshing…")
+        monitor.endManualRefresh(for: .codex)
     }
 
     @Test
