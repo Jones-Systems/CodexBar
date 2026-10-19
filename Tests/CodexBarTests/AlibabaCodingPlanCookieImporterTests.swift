@@ -77,7 +77,7 @@ struct AlibabaCodingPlanCookieImporterTests {
     func `cookie import candidates honor provided browser order`() throws {
         BrowserCookieAccessGate.resetForTesting()
 
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: temp) }
 
@@ -112,7 +112,7 @@ struct AlibabaCodingPlanCookieImporterTests {
     func `default cookie import candidates skip keychain browsers during tests`() throws {
         BrowserCookieAccessGate.resetForTesting()
 
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: temp) }
 

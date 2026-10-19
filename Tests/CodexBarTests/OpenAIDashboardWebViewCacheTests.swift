@@ -87,57 +87,138 @@ struct OpenAIDashboardWebViewCacheTests {
         if self.shouldSkipOnCI() {
             return
         }
-        OpenAIDashboardWebsiteDataStore.clearCacheForTesting()
+        let factory = NonpersistentWebsiteDataStoreFactory()
+        let stores = factory.makeCache()
 
-        let store1 = OpenAIDashboardWebsiteDataStore.store(forAccountEmail: "test@example.com")
-        let store2 = OpenAIDashboardWebsiteDataStore.store(forAccountEmail: "test@example.com")
-        let store3 = OpenAIDashboardWebsiteDataStore.store(forAccountEmail: "TEST@EXAMPLE.COM") // Case insensitive
+        let store1 = stores.store(forAccountEmail: "test@example.com", identity: nil)
+        let store2 = stores.store(forAccountEmail: "test@example.com", identity: nil)
+        let store3 = stores.store(forAccountEmail: "TEST@EXAMPLE.COM", identity: nil) // Case insensitive
 
         #expect(store1 === store2, "Same email should return same instance")
         #expect(store1 === store3, "Email comparison should be case-insensitive")
 
         // Different email should return different instance
-        let store4 = OpenAIDashboardWebsiteDataStore.store(forAccountEmail: "other@example.com")
+        let store4 = stores.store(forAccountEmail: "other@example.com", identity: nil)
         #expect(store1 !== store4, "Different emails should return different instances")
-
-        OpenAIDashboardWebsiteDataStore.clearCacheForTesting()
+        #expect(factory.requestedIdentifiers.count == 2)
+        #expect(factory.defaultStoreCallCount == 0)
     }
 
     @Test
-    func `same email profile homes use distinct website data stores`() {
-        OpenAIDashboardWebsiteDataStore.clearCacheForTesting()
-        defer { OpenAIDashboardWebsiteDataStore.clearCacheForTesting() }
+    func `same email profile homes use distinct website data stores`() throws {
+        let factory = NonpersistentWebsiteDataStoreFactory()
+        let stores = factory.makeCache()
 
         let profileA = CookieHeaderCache.Scope.profileHome("/tmp/codex-profile-a")
         let profileB = CookieHeaderCache.Scope.profileHome("/tmp/codex-profile-b")
-        let storeA = OpenAIDashboardWebsiteDataStore.store(
+        let storeA = stores.store(
             forAccountEmail: "shared@example.com",
-            scope: profileA)
-        let storeAAgain = OpenAIDashboardWebsiteDataStore.store(
+            scope: profileA,
+            identity: nil)
+        let storeAAgain = stores.store(
             forAccountEmail: "SHARED@example.com",
-            scope: profileA)
-        let storeB = OpenAIDashboardWebsiteDataStore.store(
+            scope: profileA,
+            identity: nil)
+        let storeB = stores.store(
             forAccountEmail: "shared@example.com",
-            scope: profileB)
-        let liveStore = OpenAIDashboardWebsiteDataStore.store(forAccountEmail: "shared@example.com")
+            scope: profileB,
+            identity: nil)
+        let liveStore = stores.store(forAccountEmail: "shared@example.com", identity: nil)
 
         #expect(storeA === storeAAgain)
         #expect(storeA !== storeB)
         #expect(storeA !== liveStore)
         #expect(storeB !== liveStore)
-        #expect(storeA.identifier != storeB.identifier)
-        #expect(storeA.identifier != liveStore.identifier)
-        #expect(storeB.identifier != liveStore.identifier)
+        let identifierA = try #require(factory.identifiers[ObjectIdentifier(storeA)])
+        let identifierB = try #require(factory.identifiers[ObjectIdentifier(storeB)])
+        let liveIdentifier = try #require(factory.identifiers[ObjectIdentifier(liveStore)])
+        #expect(identifierA != identifierB)
+        #expect(identifierA != liveIdentifier)
+        #expect(identifierB != liveIdentifier)
+        #expect(factory.requestedIdentifiers.count == 3)
+        #expect(factory.defaultStoreCallCount == 0)
     }
 
     @Test
     func `live website data store preserves legacy email identifier`() {
-        OpenAIDashboardWebsiteDataStore.clearCacheForTesting()
-        defer { OpenAIDashboardWebsiteDataStore.clearCacheForTesting() }
+        let factory = NonpersistentWebsiteDataStoreFactory()
+        let stores = factory.makeCache()
 
-        let store = OpenAIDashboardWebsiteDataStore.store(forAccountEmail: " SHARED@EXAMPLE.COM ")
+        let store = stores.store(forAccountEmail: " SHARED@EXAMPLE.COM ", identity: nil)
 
-        #expect(store.identifier?.uuidString == "CC61BD27-6855-439F-9D11-F470B7977B90")
+        #expect(factory.identifiers[ObjectIdentifier(store)]?.uuidString == "CC61BD27-6855-439F-9D11-F470B7977B90")
+        #expect(factory.requestedIdentifiers.count == 1)
+        #expect(factory.defaultStoreCallCount == 0)
+        #expect(!store.isPersistent)
+    }
+
+    @Test
+    func `missing stock email uses only the injected default store`() {
+        let factory = NonpersistentWebsiteDataStoreFactory()
+        let stores = factory.makeCache()
+        let emails: [String?] = [nil, "", " \n\t"]
+        let scopes: [CookieHeaderCache.Scope?] = [nil, .profileHome("/fixture/profile")]
+        for email in emails {
+            for scope in scopes {
+                let store = stores.store(forAccountEmail: email, scope: scope, identity: nil)
+                #expect(store === factory.fallbackStore)
+                #expect(!store.isPersistent)
+            }
+        }
+        #expect(factory.defaultStoreCallCount == emails.count * scopes.count)
+        #expect(factory.requestedIdentifiers.isEmpty)
+    }
+
+    @Test
+    func `fork and stock lookups keep separate stores in the same cache`() {
+        let factory = NonpersistentWebsiteDataStoreFactory()
+        let stores = factory.makeCache()
+        let identity = JonesStateRoot.Identity(
+            bundleID: "com.example.jones.fixture",
+            groupID: "group.com.example.jones.fixture",
+            teamID: "FIXTURETEAM",
+            iCloudID: "iCloud.com.example.jones.fixture")
+        let stock = stores.store(forAccountEmail: "shared@example.com", identity: nil)
+        let fork = stores.store(forAccountEmail: " SHARED@EXAMPLE.COM ", identity: identity)
+        let noAccount = stores.store(forAccountEmail: nil, identity: identity)
+        let noAccountAgain = stores.store(forAccountEmail: " \n\t", identity: identity)
+
+        #expect(stock !== fork)
+        #expect(fork !== noAccount)
+        #expect(stock !== noAccount)
+        #expect(noAccount === noAccountAgain)
+        #expect(factory.identifiers[ObjectIdentifier(fork)]?.uuidString == "7224CFBE-B179-45A3-B604-E65AC9D81978")
+        #expect(factory.identifiers[ObjectIdentifier(noAccount)]?.uuidString == "660E737C-0E5F-49B3-99EF-9210CC88E9A5")
+        #expect(factory.requestedIdentifiers.count == 3)
+        #expect(factory.defaultStoreCallCount == 0)
+    }
+
+    @Test
+    func `store cache invalidation preserves other entries and fixture independence`() throws {
+        let factory = NonpersistentWebsiteDataStoreFactory()
+        let stores = factory.makeCache()
+        let otherFactory = NonpersistentWebsiteDataStoreFactory()
+        let otherStores = otherFactory.makeCache()
+        let first = stores.store(forAccountEmail: "test@example.com", identity: nil)
+        let second = stores.store(forAccountEmail: "other@example.com", identity: nil)
+        let independent = otherStores.store(forAccountEmail: "test@example.com", identity: nil)
+        #expect(first !== independent)
+
+        stores.removeStore(forAccountEmail: " TEST@EXAMPLE.COM ", identity: nil)
+        let replacement = stores.store(forAccountEmail: "test@example.com", identity: nil)
+        #expect(first !== replacement)
+        #expect(second === stores.store(forAccountEmail: "other@example.com", identity: nil))
+        let firstIdentifier = try #require(factory.identifiers[ObjectIdentifier(first)])
+        let replacementIdentifier = try #require(factory.identifiers[ObjectIdentifier(replacement)])
+        #expect(firstIdentifier == replacementIdentifier)
+        #expect(factory.requestedIdentifiers.count == 3)
+
+        stores.removeAll()
+        #expect(replacement !== stores.store(forAccountEmail: "test@example.com", identity: nil))
+        #expect(second !== stores.store(forAccountEmail: "other@example.com", identity: nil))
+        #expect(independent === otherStores.store(forAccountEmail: "test@example.com", identity: nil))
+        #expect(factory.requestedIdentifiers.count == 5)
+        #expect(otherFactory.requestedIdentifiers.count == 1)
     }
 
     // MARK: - WebView Reuse Tests
@@ -603,24 +684,26 @@ struct OpenAIDashboardWebViewCacheTests {
         cache.clearAllForTesting()
     }
 
-    // MARK: - Integration Test with Real Data Store Factory
+    // MARK: - Integration Test with Synthetic Data Store Factory
 
     @Test
     func `Sequential fetches with OpenAIDashboardWebsiteDataStore should reuse WebView`() async throws {
         if self.shouldSkipOnCI() {
             return
         }
-        OpenAIDashboardWebsiteDataStore.clearCacheForTesting()
+        let factory = NonpersistentWebsiteDataStoreFactory()
+        let stores = factory.makeCache()
         let cache = OpenAIDashboardWebViewCache()
+        defer { cache.clearAllForTesting() }
         let url = try #require(URL(string: "about:blank"))
         let email = "integration-test@example.com"
 
         var webViews: [WKWebView] = []
 
-        // Simulate 3 sequential fetches using the real data store factory
-        // This tests that OpenAIDashboardWebsiteDataStore returns stable instances
+        // Exercise production lookup logic with fixture-owned nonpersistent stores.
+        // Repeated lookups must reuse the store even when unpreserved WebViews are released.
         for _ in 0..<3 {
-            let store = OpenAIDashboardWebsiteDataStore.store(forAccountEmail: email)
+            let store = stores.store(forAccountEmail: email, identity: nil)
             let lease = try await cache.acquire(
                 websiteDataStore: store,
                 usageURL: url,
@@ -632,9 +715,8 @@ struct OpenAIDashboardWebViewCacheTests {
         #expect(webViews[0] !== webViews[1])
         #expect(webViews[1] !== webViews[2])
         #expect(cache.entryCount == 0, "Unpreserved sequential fetches should not keep a WebView resident")
-
-        cache.clearAllForTesting()
-        OpenAIDashboardWebsiteDataStore.clearCacheForTesting()
+        #expect(factory.requestedIdentifiers.count == 1)
+        #expect(factory.defaultStoreCallCount == 0)
     }
 }
 
@@ -924,6 +1006,29 @@ extension OpenAIDashboardWebViewCacheTests {
         fixture.expectCleanup(firstPreparation.webView)
         fixture.expectCleanup(secondPreparation.webView)
         #expect(fixture.cache.entryCount == 0)
+    }
+}
+
+/// Records the identifiers requested by production lookup logic without opening persistent stores.
+@MainActor
+private final class NonpersistentWebsiteDataStoreFactory {
+    private(set) lazy var fallbackStore = WKWebsiteDataStore.nonPersistent()
+    private(set) var defaultStoreCallCount = 0
+    private(set) var requestedIdentifiers: [UUID] = []
+    private(set) var identifiers: [ObjectIdentifier: UUID] = [:]
+
+    func makeCache() -> OpenAIDashboardWebsiteDataStore.StoreCache {
+        OpenAIDashboardWebsiteDataStore.StoreCache(
+            defaultStore: {
+                self.defaultStoreCallCount += 1
+                return self.fallbackStore
+            },
+            identifiedStore: { identifier in
+                let store = WKWebsiteDataStore.nonPersistent()
+                self.requestedIdentifiers.append(identifier)
+                self.identifiers[ObjectIdentifier(store)] = identifier
+                return store
+            })
     }
 }
 

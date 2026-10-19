@@ -524,15 +524,14 @@ extension StatusItemController: StatusItemMenuPersistentActionDelegate {
     }
 
     @objc func requestCodexSystemPromotionFromMenu(_ sender: NSMenuItem) {
-        guard let rawManagedAccountID = sender.representedObject as? String,
-              let managedAccountID = UUID(uuidString: rawManagedAccountID)
-        else {
+        // JONES(fleet-system-promotion): do not reconstruct fleet identity from a label or UUID.
+        guard let target = sender.representedObject as? JonesCodexSystemPromotionTarget else {
             return
         }
 
         Task { @MainActor [weak self] in
             guard let self else { return }
-            let result = await self.codexAccountPromotionCoordinator.promote(managedAccountID: managedAccountID)
+            let result = await self.codexAccountPromotionCoordinator.promote(target: target)
             if case let .failure(error) = result {
                 self.presentLoginAlert(title: error.title, message: error.message)
             }
@@ -783,6 +782,7 @@ extension StatusItemController: StatusItemMenuPersistentActionDelegate {
     func describe(_ outcome: CodexLoginRunner.Result.Outcome) -> String {
         switch outcome {
         case .success: "success"
+        case .cancelled: "cancelled"
         case .timedOut: "timedOut"
         case let .failed(status): "failed(status: \(status))"
         case .missingBinary: "missingBinary"

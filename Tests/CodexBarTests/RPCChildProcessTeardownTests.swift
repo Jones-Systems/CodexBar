@@ -49,7 +49,7 @@ struct RPCChildProcessTeardownTests {
 
     @Test
     func `Codex RPC reports a normal failure when its child closes stdin`() async throws {
-        let scriptURL = FileManager.default.temporaryDirectory
+        let scriptURL = TestFixtureScratch.root
             .appendingPathComponent("codex-closed-stdin-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: scriptURL) }
 
@@ -110,7 +110,7 @@ struct RPCChildProcessTeardownTests {
 
     @Test
     func `Codex RPC shutdown kills an app-server child that ignores SIGTERM`() async throws {
-        let temporaryDirectory = FileManager.default.temporaryDirectory
+        let temporaryDirectory = TestFixtureScratch.root
         let scriptURL = temporaryDirectory.appendingPathComponent("codex-stub-\(UUID().uuidString)")
         let pidURL = temporaryDirectory.appendingPathComponent("codex-stub-pid-\(UUID().uuidString)")
         defer {
@@ -169,7 +169,7 @@ struct RPCChildProcessTeardownTests {
 
     @Test
     func `Grok RPC shutdown kills a stdio child that ignores SIGTERM`() async throws {
-        let temporaryDirectory = FileManager.default.temporaryDirectory
+        let temporaryDirectory = TestFixtureScratch.root
         let scriptURL = temporaryDirectory.appendingPathComponent("grok-stub-\(UUID().uuidString)")
         let pidURL = temporaryDirectory.appendingPathComponent("grok-stub-pid-\(UUID().uuidString)")
         defer {

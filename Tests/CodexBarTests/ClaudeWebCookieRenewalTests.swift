@@ -547,7 +547,7 @@ struct ClaudeWebCookieRenewalTests {
         "sessionKey=sk-ant-renewed-token; Path=/; HttpOnly; Secure; SameSite=Lax"
 
     private func withIsolatedCookieCache<T>(_ operation: () async throws -> T) async rethrows -> T {
-        let legacyBase = FileManager.default.temporaryDirectory
+        let legacyBase = TestFixtureScratch.root
             .appendingPathComponent("claude-web-renewal-\(UUID().uuidString)", isDirectory: true)
         return try await KeychainCacheStore.withServiceOverrideForTesting("claude-web-renewal-\(UUID().uuidString)") {
             try await CookieHeaderCache.withLegacyBaseURLOverrideForTesting(legacyBase) {

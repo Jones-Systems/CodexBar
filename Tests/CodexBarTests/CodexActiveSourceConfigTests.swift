@@ -5,6 +5,21 @@ import Testing
 @Suite(.serialized)
 struct CodexActiveSourceConfigTests {
     @Test
+    func `Codex account order survives disk reload without affecting another provider`() throws {
+        let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let url = root.appendingPathComponent("config.json")
+        var codex = ProviderConfig(id: .codex)
+        codex.codexAccountOrder = ["profile:/synthetic/second", "managed:synthetic-first"]
+        let writer = CodexBarConfigStore(fileURL: url)
+        try writer.save(CodexBarConfig(providers: [codex, ProviderConfig(id: .claude)]))
+        let reader = CodexBarConfigStore(fileURL: url)
+        let loaded = try #require(try reader.load())
+        #expect(loaded.providerConfig(for: .codex)?.codexAccountOrder == codex.codexAccountOrder)
+        #expect(loaded.providerConfig(for: .claude)?.codexAccountOrder == nil)
+    }
+
+    @Test
     func `legacy config without codex active source decodes to nil`() throws {
         let legacyJSON = """
         {

@@ -203,7 +203,7 @@ extension CostUsageScanner {
 enum CostUsageClaudeCacheIO {
     private static func defaultCacheRoot() -> URL {
         let root = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        return root.appendingPathComponent("CodexBar", isDirectory: true)
+        return root.appendingPathComponent(JonesStateRoot.path("CodexBar"), isDirectory: true) // JONES(trial-identity)
     }
 
     // Provider-specific by design: Claude/Vertex cost caching still uses the legacy JSON artifact pending its own

@@ -7,7 +7,7 @@ struct ClaudeWebRefreshResilienceTests {
     @Test
     func `web challenge respects failure gate while keeping prior Claude snapshot`() async throws {
         try await ClaudeOAuthCredentialsStore.withIsolatedCredentialsFileTrackingForTesting {
-            let tempDir = FileManager.default.temporaryDirectory
+            let tempDir = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
             try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
             let fileURL = tempDir.appendingPathComponent("missing-credentials.json")
@@ -45,7 +45,7 @@ struct ClaudeWebRefreshResilienceTests {
     @Test
     func `web unauthorized respects failure gate while keeping prior Claude snapshot`() async throws {
         try await ClaudeOAuthCredentialsStore.withIsolatedCredentialsFileTrackingForTesting {
-            let tempDir = FileManager.default.temporaryDirectory
+            let tempDir = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
             try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
             let fileURL = tempDir.appendingPathComponent("missing-credentials.json")
@@ -84,7 +84,7 @@ struct ClaudeWebRefreshResilienceTests {
     @Test
     func `web unauthorized without prior Claude snapshot still surfaces failure`() async throws {
         try await ClaudeOAuthCredentialsStore.withIsolatedCredentialsFileTrackingForTesting {
-            let tempDir = FileManager.default.temporaryDirectory
+            let tempDir = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
             try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
             let fileURL = tempDir.appendingPathComponent("missing-credentials.json")
@@ -112,7 +112,7 @@ struct ClaudeWebRefreshResilienceTests {
     @Test
     func `web parse failure clears prior Claude snapshot when surfaced`() async throws {
         try await ClaudeOAuthCredentialsStore.withIsolatedCredentialsFileTrackingForTesting {
-            let tempDir = FileManager.default.temporaryDirectory
+            let tempDir = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
             try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
             let fileURL = tempDir.appendingPathComponent("missing-credentials.json")

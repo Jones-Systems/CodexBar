@@ -45,7 +45,7 @@ struct CursorSessionStoreTests {
     }
 
     private static func fixtureDirectory() -> URL {
-        FileManager.default.temporaryDirectory
+        TestFixtureScratch.root
             .appendingPathComponent("cursor-session-\(UUID().uuidString)", isDirectory: true)
     }
 

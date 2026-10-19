@@ -390,7 +390,7 @@ struct CodexUsageFetcherFallbackTests {
             sys.stderr.write("unexpected non app-server Codex invocation\\n")
             sys.exit(92)
         """
-        let url = FileManager.default.temporaryDirectory
+        let url = TestFixtureScratch.root
             .appendingPathComponent("codex-fallback-stub-\(UUID().uuidString)", isDirectory: false)
         try Data(script.utf8).write(to: url)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
@@ -461,7 +461,7 @@ struct CodexUsageFetcherFallbackTests {
             sys.stderr.write("unexpected non app-server Codex invocation\\n")
             sys.exit(92)
         """
-        let url = FileManager.default.temporaryDirectory
+        let url = TestFixtureScratch.root
             .appendingPathComponent("codex-plan-only-stub-\(UUID().uuidString)", isDirectory: false)
         try Data(script.utf8).write(to: url)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
@@ -520,7 +520,7 @@ struct CodexUsageFetcherFallbackTests {
             sys.stderr.write("unexpected non app-server Codex invocation\\n")
             sys.exit(92)
         """
-        let url = FileManager.default.temporaryDirectory
+        let url = TestFixtureScratch.root
             .appendingPathComponent("codex-credits-only-stub-\(UUID().uuidString)", isDirectory: false)
         try Data(script.utf8).write(to: url)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
@@ -552,7 +552,7 @@ struct CodexUsageFetcherFallbackTests {
           esac
         done
         """
-        let url = FileManager.default.temporaryDirectory
+        let url = TestFixtureScratch.root
             .appendingPathComponent("codex-hung-stub-\(UUID().uuidString)", isDirectory: false)
         try Data(script.utf8).write(to: url)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)

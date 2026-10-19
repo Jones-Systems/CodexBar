@@ -1,0 +1,29 @@
+{
+  "authority_effect": "none",
+  "source_commit": "320562d63fd28bba14efef9997ec27beb428989c",
+  "PR11_head": "195f66a6471e381a3baccbe1022251cde5f26d8b",
+  "PR12_integration": "bfd35ef493aff3925bf0e14cc8379d6930e70b1b",
+  "changed_paths": {
+    "Tests/CodexBarTests/ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests.swift": "a1374eea4e7256ce090ea31c6c52cf923b6e116a49f27abf50c3adf4dc66eaba"
+  },
+  "diagnosis": "Three synthetic fixtures seeded default process-profile legacy caches but loaded explicit config profiles. CacheEntry identity includes credentials path and selected Keychain service; migration requires identity match. Source mismatch proved; native repair unconfirmed.",
+  "correction": "Seed selected profile-scoped cache key and explicit matching profileIdentifier in all three fixtures. All ownership/reownership, rotation, history lineage, restart source and refresh-failure assertions retained. Other six tests/helpers unchanged. No production changes.",
+  "checks": {
+    "formatter": "PASS scoped existing SwiftFormat",
+    "diff_and_static": "PASS",
+    "native": "UNRUN revised nine-test suite; Swift unavailable VPS",
+    "make_check": "UNRUN missing pinned tools/no installation"
+  },
+  "native_r4": {
+    "head": "60c64879f02805c37509c25625303610618ea70e",
+    "target": "ClaudeFleetProfileDiscoveryTests7/7PASS82.04s; alsoPASS fullgroup17",
+    "full": "FAILexit2/148.66s;17groupsPASS/group18FAIL;1029selections86groupsdiscoveryPASS;zero timeout/retry",
+    "counts": "1951SwiftTesting+59XCTest reported; targetrepeat7 not added unique",
+    "historical79": "17PASS/0FAIL/62unexecuted; ownership suite failure additional actual coverage outside79",
+    "original12": "all unexecuted",
+    "cleanup": "Laptop explicit release, exact parent removed/absence verified, no cleanup unknown, tracked/index clean all68hashesmatch"
+  },
+  "affected_union": "Historical79 plus directlyaffected ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests =80 suites. Preserve historical79 counts.",
+  "carryforward": "Sixpreproofs and MiMo dependencyhashes unchanged; verifier match before reuse. Two TestsLinux suites actually MacPASS.",
+  "gates": "Deferred NFP-COR-002/FSP-PROC-002 P2, CI forkpause, lintinstallation, extraction, signing/activation/live boundaries unchanged"
+}

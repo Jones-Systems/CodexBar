@@ -30,7 +30,7 @@ final class MenuLayoutScreenshotRenderTests: XCTestCase {
         }
         let directory = URL(fileURLWithPath: dir, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("catalan-proof-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -246,7 +246,7 @@ final class MenuLayoutScreenshotRenderTests: XCTestCase {
         XCTAssertTrue(SettingsStore.isRunningTests)
         guard SettingsStore.isRunningTests else { return }
         XCTAssertTrue(CodexCredentialFileAccess.isTestContext)
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("layout-override-proof-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }

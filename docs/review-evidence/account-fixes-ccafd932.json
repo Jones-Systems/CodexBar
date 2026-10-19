@@ -1,0 +1,38 @@
+{
+  "review_id": "account-fixes-review-ccafd932-r1",
+  "source_review_profile": "codex-v3-code-reviewer",
+  "source_native_task": "/root/account_fixes_review",
+  "reviewed_revision": "ccafd932fa8e7f9160ab1dd133677e8d622b45bc",
+  "model": "gpt-6-astra",
+  "reasoning_effort": "high",
+  "findings": [
+    {
+      "id": "AFR-001",
+      "original_severity": "P2",
+      "title": "An unavailable selected profile hides every recovery account",
+      "confidence": "high",
+      "original_blocking_effect": "Blocks the specified ability to recover by explicitly selecting another existing account.",
+      "evidence": [
+        "Sources/CodexBarCore/Providers/Codex/CodexAccountReconciliation.swift:280"
+      ],
+      "source_reasoning": "The unavailable-selected-profile branch returns an empty snapshot even when other configured profiles or managed accounts remain healthy. Projection has no rows; settings removes its active picker and the menu loses its switcher. selectCodexVisibleAccount resolves through that empty projection. Existing tests do not exercise surviving alternatives.",
+      "required_property": "Keep safe alternative account enumeration and explicit reselection available while blocking fetches for the missing selected target."
+    },
+    {
+      "id": "AFR-002",
+      "original_severity": "P2",
+      "title": "Ambient cancellation releases shared-auth exclusion before the old process exits",
+      "confidence": "high for overlap; no live overwrite observed",
+      "original_blocking_effect": "Blocks cancellation/retry correctness for the shared ambient Codex home.",
+      "evidence": [
+        "Sources/CodexBar/PreferencesProvidersPane.swift:393",
+        "Sources/CodexBar/CodexLoginRunner.swift:129",
+        "Sources/CodexBar/CodexAccountPromotionService.swift:249"
+      ],
+      "source_reasoning": "Cancellation discards the ambient task handle and clears the promotion gate immediately. The runner terminates afterward with a two-second grace period, permitting another ambient login or promotion to write the shared home while the previous process is draining. Generation IDs prevent stale UI results but cannot prevent filesystem effects.",
+      "required_property": "Retain the draining ambient task and serialize subsequent ambient login/promotion writes until confirmed completion; an immediate retry can queue its launch."
+    }
+  ],
+  "verification": "Read-only source review; no test reruns, credential probes, live overwrite or native runtime evidence.",
+  "authority_effect": "none"
+}

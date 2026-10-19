@@ -33,7 +33,7 @@ struct ClaudeDirectUsageFallbackTests {
 
     @Test
     func `cli source falls back to direct usage when pty usage fails to load`() async throws {
-        let cliLogURL = FileManager.default.temporaryDirectory
+        let cliLogURL = TestFixtureScratch.root
             .appendingPathComponent("claude-direct-fallback-log-\(UUID().uuidString).txt")
         let log = InvocationLog(url: cliLogURL)
         let fakeCLI = try Self.makeDirectFallbackClaudeCLI(logURL: cliLogURL)
@@ -71,7 +71,7 @@ struct ClaudeDirectUsageFallbackTests {
 
     @Test
     func `direct usage timeout keeps original pty failure`() async throws {
-        let cliLogURL = FileManager.default.temporaryDirectory
+        let cliLogURL = TestFixtureScratch.root
             .appendingPathComponent("claude-direct-timeout-log-\(UUID().uuidString).txt")
         let log = InvocationLog(url: cliLogURL)
         let fakeCLI = try Self.makeDirectTimeoutClaudeCLI(logURL: cliLogURL)
@@ -155,7 +155,7 @@ struct ClaudeDirectUsageFallbackTests {
     }
 
     private static func makeClaudeCLI(name: String, logURL: URL, scriptBody: String) throws -> URL {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("\(name)-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let scriptURL = directory.appendingPathComponent("claude")

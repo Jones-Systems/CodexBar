@@ -28,7 +28,7 @@ struct SpendDashboardModelTests {
 
     @Test
     func `Codex account indices use app locale numerals`() throws {
-        let home = FileManager.default.temporaryDirectory
+        let home = TestFixtureScratch.root
             .appendingPathComponent("SpendDashboardModelTests-index-locale-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: home) }

@@ -1,0 +1,133 @@
+{
+  "head": "b35c499fc367ed5660f62f93c038f80369a9c7e8",
+  "path": "Tests/CodexBarTests/ProviderArchitectureGatekeeperTests.swift",
+  "before_sha256": "72aa35f8a35258df0bd3a3355097ae9261f560883c77787f2bdaf0e274dc0463",
+  "after_sha256": "1a40e8c0022ff58e2484cfdc72e726ada55c87b44b226de39a0528b39d414e68",
+  "static_anchor_check_sha256": "6aa345e0c2782cb634ad2c43508eeaba0af4a7b2b6bb7c79097b55c4c7bb3966",
+  "unchanged_check_command": "python3 -B .build/migration-architecture-repair/check_anchors.py",
+  "before_anchors": {
+    "matching": 391,
+    "stale": 13,
+    "exit": 1
+  },
+  "after_anchors": {
+    "matching": 404,
+    "stale": 0,
+    "exit": 0
+  },
+  "outside_catalog_sha256": "9062802ec4947cac3d6ac001bd1f5890dd06988409c69076bd5d89dacd1ab62b",
+  "outside_catalog_byte_equal": true,
+  "test_count": 41,
+  "justifications_unchanged": true,
+  "justification_disposition": "keep near code: existing exact app-runtime bridge explanation remains true for both regrouped clusters; all other reasons untouched",
+  "aggregate_allowed_occurrences_by_provider": {
+    "alibaba": 2,
+    "alibabatokenplan": 9,
+    "amp": 7,
+    "antigravity": 12,
+    "bedrock": 2,
+    "chutes": 1,
+    "claude": 94,
+    "codex": 226,
+    "copilot": 4,
+    "crof": 5,
+    "cursor": 18,
+    "deepseek": 19,
+    "devin": 1,
+    "doubao": 5,
+    "factory": 7,
+    "gemini": 9,
+    "grok": 11,
+    "kilo": 9,
+    "kimi": 4,
+    "kiro": 10,
+    "litellm": 2,
+    "manus": 1,
+    "mimo": 2,
+    "minimax": 14,
+    "mistral": 10,
+    "notion": 1,
+    "ollama": 4,
+    "openai": 7,
+    "opencode": 4,
+    "opencodego": 5,
+    "openrouter": 6,
+    "perplexity": 3,
+    "poe": 2,
+    "qoder": 2,
+    "stepfun": 3,
+    "sub2api": 9,
+    "synthetic": 2,
+    "vertexai": 2,
+    "warp": 5,
+    "xai": 4,
+    "zai": 6,
+    "zenmux": 2
+  },
+  "aggregate_allowed_occurrences_total": 551,
+  "regrouped_occurrences": {
+    "codex": 2,
+    "claude": 1,
+    "deepseek": 2
+  },
+  "cluster_gap": 12,
+  "cluster_window": 40,
+  "source_bodies_and_negative_fixtures": "byte-identical outside catalog arrays",
+  "compile_and_native_tests": "Not run: reserved to coordinator. Static anchor check is not scanner execution.",
+  "scope": "Only assigned catalog metadata edited; no production/test logic changes.",
+  "schema": "codexbar.migration-architecture-repair/v1",
+  "authority_effect": "none",
+  "original_hosted_failure": {
+    "pr": 1,
+    "head": "4f62ba08bd6c22940bd79189b451464ba2df3ba5",
+    "run": 39189121249,
+    "macos_shard0_job": 117857840899,
+    "aggregate_job": 117864984978,
+    "aggregate": "Reports existing lint, musl and macOS failures; not a distinct implementation defect"
+  },
+  "historical_repair_preserved": "docs/review-evidence/architecture-gate-expectations.json retains original provenance; later source layout/import changes require this metadata refresh",
+  "checks": [
+    {
+      "name": "static anchors",
+      "exit": 0,
+      "limitation": "Invocation-owned diagnostic checker; not native scanner execution or a replacement CI check"
+    },
+    {
+      "name": "pinned SwiftFormat --lint",
+      "exit": 0
+    },
+    {
+      "name": "pinned SwiftLint --strict --no-cache",
+      "exit": 0
+    },
+    {
+      "name": "git diff --check",
+      "exit": 0
+    }
+  ],
+  "cleanup": "Synchronous scoped checks completed; each owned scratch parent removed and absence verified",
+  "prior_native_candidate": {
+    "head": "b35c499fc367ed5660f62f93c038f80369a9c7e8",
+    "make_check": "PASS 83.64s",
+    "hosted_lint": "PASS",
+    "make_test": "CANCELLED during discovery at495.8s due to proved source mismatch; zero groups executed",
+    "plugin_AB": "not started",
+    "cancellation_drain": "Reconciled; all35observed processes and exact fixture parent absent"
+  },
+  "required_next": [
+    "Complete ProviderArchitectureGatekeeperTests on repaired revision",
+    "make check",
+    "make test",
+    "plugin engine A/B",
+    "Current full hosted CI before merge"
+  ],
+  "retained_findings": [
+    "NFCR-COR-002",
+    "NFP-COR-002",
+    "FSP-PROC-002",
+    "TIR001",
+    "TIR002",
+    "EXPOSURE001"
+  ],
+  "delivery_url": "https://github.com/Jones-Systems/CodexBar/pull/3"
+}

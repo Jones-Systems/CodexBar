@@ -10,7 +10,7 @@ struct CodexAccountsSettingsSectionTests {
     func `codex accounts section shows live badge only for live only multi account row`() throws {
         let settings = Self.makeSettingsStore(suite: "CodexAccountsSettingsSectionTests-live-badge")
         let store = Self.makeUsageStore(settings: settings)
-        let managedStoreURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let managedStoreURL = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: managedStoreURL) }
 
         let managedAccount = ManagedCodexAccount(
@@ -100,7 +100,7 @@ struct CodexAccountsSettingsSectionTests {
     func `selecting merged visible account from settings keeps live system source`() async throws {
         let settings = Self.makeSettingsStore(suite: "CodexAccountsSettingsSectionTests-select-merged")
         let store = Self.makeUsageStore(settings: settings)
-        let managedStoreURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let managedStoreURL = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: managedStoreURL) }
 
         let managedAccount = ManagedCodexAccount(
@@ -134,7 +134,7 @@ struct CodexAccountsSettingsSectionTests {
     func `settings account selection can target the managed row when same email rows split by identity`() async throws {
         let settings = Self.makeSettingsStore(suite: "CodexAccountsSettingsSectionTests-select-split")
         let store = Self.makeUsageStore(settings: settings)
-        let managedStoreURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let managedStoreURL = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let managedHome = CodexCredentialFixtures.root.appendingPathComponent(
             UUID().uuidString,
             isDirectory: true)
@@ -186,7 +186,7 @@ struct CodexAccountsSettingsSectionTests {
     func `codex accounts section disables add and reauth while managed authentication is in flight`() async throws {
         let settings = Self.makeSettingsStore(suite: "CodexAccountsSettingsSectionTests-in-flight")
         let store = Self.makeUsageStore(settings: settings)
-        let managedStoreURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let managedStoreURL = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: managedStoreURL) }
 
         let managedAccountID = try #require(UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-111111111111"))
@@ -203,7 +203,7 @@ struct CodexAccountsSettingsSectionTests {
             accounts: [managedAccount]))
         settings._test_managedCodexAccountStoreURL = managedStoreURL
 
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let runner = BlockingManagedCodexLoginRunnerForSettingsSectionTests()
         let service = ManagedCodexAccountService(
@@ -293,9 +293,9 @@ struct CodexAccountsSettingsSectionTests {
         email: String)
         -> ManagedCodexAccountCoordinator
     {
-        let storeURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let storeURL = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let store = FileManagedCodexAccountStore(fileURL: storeURL)
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString, isDirectory: true)
         settings._test_managedCodexAccountStoreURL = storeURL
         let service = ManagedCodexAccountService(
             store: store,

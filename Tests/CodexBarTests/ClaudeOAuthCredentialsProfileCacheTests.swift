@@ -54,7 +54,7 @@ struct ClaudeOAuthCredentialsProfileCacheTests {
 
     @Test
     func `newer cache from another profile never overrides older credentials file`() throws {
-        let tempRoot = FileManager.default.temporaryDirectory
+        let tempRoot = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let profileA = tempRoot.appendingPathComponent("profile-a", isDirectory: true)
         let profileB = tempRoot.appendingPathComponent("profile-b", isDirectory: true)
@@ -96,7 +96,7 @@ struct ClaudeOAuthCredentialsProfileCacheTests {
 
     @Test
     func `profile caches survive switching Claude config directories`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let profileA = root.appendingPathComponent("profile-a", isDirectory: true)
         let profileB = root.appendingPathComponent("profile-b", isDirectory: true)
@@ -146,7 +146,7 @@ struct ClaudeOAuthCredentialsProfileCacheTests {
 
     @Test
     func `file fingerprint from one profile does not clear cache only sibling`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let profileA = root.appendingPathComponent("profile-a", isDirectory: true)
         let profileB = root.appendingPathComponent("profile-b", isDirectory: true)
@@ -185,7 +185,7 @@ struct ClaudeOAuthCredentialsProfileCacheTests {
 
     @Test
     func `invalidating one profile preserves another profile cache`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let profileA = root.appendingPathComponent("profile-a", isDirectory: true)
         let profileB = root.appendingPathComponent("profile-b", isDirectory: true)
@@ -223,7 +223,7 @@ struct ClaudeOAuthCredentialsProfileCacheTests {
 
     @Test
     func `deferred cleanup for one profile does not erase another profile cache`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let profileA = root.appendingPathComponent("profile-a", isDirectory: true)
         let profileB = root.appendingPathComponent("profile-b", isDirectory: true)
@@ -261,7 +261,7 @@ struct ClaudeOAuthCredentialsProfileCacheTests {
 
     @Test
     func `legacy default profile cache migrates without losing refreshed credentials`() throws {
-        let tempDir = FileManager.default.temporaryDirectory
+        let tempDir = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDir) }
@@ -325,7 +325,7 @@ struct ClaudeOAuthCredentialsProfileCacheTests {
 
     @Test
     func `failed legacy deletion cannot resurrect after profile invalidation`() throws {
-        let tempDir = FileManager.default.temporaryDirectory
+        let tempDir = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDir) }
@@ -390,7 +390,7 @@ struct ClaudeOAuthCredentialsProfileCacheTests {
 
     @Test
     func `pending legacy cleanup cannot shield migrated cache from file change`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -440,7 +440,7 @@ struct ClaudeOAuthCredentialsProfileCacheTests {
 
     @Test
     func `cache disabled invalidation conditionally retires legacy default entry`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -505,7 +505,7 @@ struct ClaudeOAuthCredentialsProfileCacheTests {
             .standardizedFileURL.path
         #expect(releasedFingerprint.path == historicalCredentialsPath)
 
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -549,7 +549,7 @@ struct ClaudeOAuthCredentialsProfileCacheTests {
 
     @Test
     func `legacy cache without profile identity fails closed for custom profile`() throws {
-        let tempDir = FileManager.default.temporaryDirectory
+        let tempDir = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDir) }
@@ -599,7 +599,7 @@ struct ClaudeOAuthCredentialsProfileCacheTests {
 
     @Test
     func `rejected credentials file stays quarantined per profile until its fingerprint changes`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let profileA = root.appendingPathComponent("profile-a", isDirectory: true)
         let profileB = root.appendingPathComponent("profile-b", isDirectory: true)

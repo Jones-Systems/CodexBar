@@ -238,7 +238,7 @@ struct TTYCommandRunnerEnvTests {
     @Test
     func `sets working directory when provided`() throws {
         let fm = FileManager.default
-        let dir = fm.temporaryDirectory.appendingPathComponent("codexbar-tty-\(UUID().uuidString)", isDirectory: true)
+        let dir = TestFixtureScratch.root.appendingPathComponent("codexbar-tty-\(UUID().uuidString)", isDirectory: true)
         try fm.createDirectory(at: dir, withIntermediateDirectories: true)
 
         let runner = TTYCommandRunner()
@@ -401,7 +401,7 @@ struct TTYCommandRunnerEnvTests {
     @Test
     func `auto responds to trust prompt`() throws {
         let fm = FileManager.default
-        let dir = fm.temporaryDirectory.appendingPathComponent("codexbar-tty-\(UUID().uuidString)", isDirectory: true)
+        let dir = TestFixtureScratch.root.appendingPathComponent("codexbar-tty-\(UUID().uuidString)", isDirectory: true)
         try fm.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: dir) }
 
@@ -437,7 +437,7 @@ struct TTYCommandRunnerEnvTests {
 
     private static func makeFakeClaudeCLI(fileName: String = "claude") throws -> URL {
         let fm = FileManager.default
-        let dir = fm.temporaryDirectory.appendingPathComponent("codexbar-tty-\(UUID().uuidString)", isDirectory: true)
+        let dir = TestFixtureScratch.root.appendingPathComponent("codexbar-tty-\(UUID().uuidString)", isDirectory: true)
         try fm.createDirectory(at: dir, withIntermediateDirectories: true)
         let scriptURL = dir.appendingPathComponent(fileName)
         let script = """
@@ -532,7 +532,7 @@ struct TTYCommandRunnerEnvTests {
     @Test
     func `deadline drain preserves timeout while collecting late output`() throws {
         let fm = FileManager.default
-        let dir = fm.temporaryDirectory.appendingPathComponent("codexbar-tty-\(UUID().uuidString)", isDirectory: true)
+        let dir = TestFixtureScratch.root.appendingPathComponent("codexbar-tty-\(UUID().uuidString)", isDirectory: true)
         try fm.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: dir) }
 
@@ -560,7 +560,7 @@ struct TTYCommandRunnerEnvTests {
     @Test
     func `PTY closure keeps waiting for child exit before deadline`() throws {
         let fm = FileManager.default
-        let dir = fm.temporaryDirectory.appendingPathComponent("codexbar-tty-\(UUID().uuidString)", isDirectory: true)
+        let dir = TestFixtureScratch.root.appendingPathComponent("codexbar-tty-\(UUID().uuidString)", isDirectory: true)
         try fm.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: dir) }
 
@@ -607,7 +607,7 @@ struct TTYCommandRunnerEnvTests {
     @Test
     func `stops when output is idle`() throws {
         let fm = FileManager.default
-        let dir = fm.temporaryDirectory.appendingPathComponent("codexbar-tty-\(UUID().uuidString)", isDirectory: true)
+        let dir = TestFixtureScratch.root.appendingPathComponent("codexbar-tty-\(UUID().uuidString)", isDirectory: true)
         try fm.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: dir) }
 

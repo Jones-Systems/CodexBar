@@ -6,6 +6,7 @@ struct CodexLoginRunner {
     struct Result: Equatable {
         enum Outcome: Equatable {
             case success
+            case cancelled
             case timedOut
             case failed(status: Int32)
             case missingBinary
@@ -16,6 +17,7 @@ struct CodexLoginRunner {
         let output: String
     }
 
+    @concurrent
     static func run(
         homePath: String? = nil,
         timeout: TimeInterval = 120,
@@ -23,67 +25,69 @@ struct CodexLoginRunner {
         environment: [String: String] = ProcessInfo.processInfo.environment,
         loginPATH: [String]? = LoginShellPathCache.shared.current) async -> Result
     {
-        await Task(priority: .userInitiated) {
-            var env = environment
-            env["PATH"] = PathBuilder.effectivePATH(
-                purposes: [.rpc, .tty, .nodeTooling],
-                env: env,
-                loginPATH: loginPATH)
-            env = CodexHomeScope.scopedEnvironment(base: env, codexHome: homePath)
+        guard !Task.isCancelled else { return Result(outcome: .cancelled, output: "") }
+        var env = environment
+        env["PATH"] = PathBuilder.effectivePATH(
+            purposes: [.rpc, .tty, .nodeTooling],
+            env: env,
+            loginPATH: loginPATH)
+        env = CodexHomeScope.scopedEnvironment(base: env, codexHome: homePath)
 
-            guard let executable = BinaryLocator.resolveCodexBinary(
-                env: env,
-                loginPATH: loginPATH)
-            else {
-                return Result(outcome: .missingBinary, output: "")
-            }
+        guard let executable = BinaryLocator.resolveCodexBinary(
+            env: env,
+            loginPATH: loginPATH)
+        else {
+            return Result(outcome: .missingBinary, output: "")
+        }
 
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-            process.arguments = [executable, "login"]
-            process.environment = env
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = [executable, "login"]
+        process.environment = env
 
-            let stdout = Pipe()
-            let stderr = Pipe()
-            process.standardOutput = stdout
-            process.standardError = stderr
-            let stdoutCapture = ProcessPipeCapture(pipe: stdout)
-            let stderrCapture = ProcessPipeCapture(pipe: stderr)
+        let stdout = Pipe()
+        let stderr = Pipe()
+        process.standardOutput = stdout
+        process.standardError = stderr
+        let stdoutCapture = ProcessPipeCapture(pipe: stdout)
+        let stderrCapture = ProcessPipeCapture(pipe: stderr)
 
-            let termination = ProcessTermination()
-            process.terminationHandler = { _ in
-                termination.resolve(timedOut: false)
-            }
+        let termination = ProcessTermination()
+        process.terminationHandler = { _ in
+            termination.resolve(timedOut: false)
+        }
 
-            var processGroup: pid_t?
-            do {
-                try process.run()
-                processGroup = self.attachProcessGroup(process)
-            } catch {
-                return Result(outcome: .launchFailed(error.localizedDescription), output: "")
-            }
-            stdoutCapture.start()
-            stderrCapture.start()
+        var processGroup: pid_t?
+        do {
+            try process.run()
+            processGroup = self.attachProcessGroup(process)
+        } catch {
+            return Result(outcome: .launchFailed(error.localizedDescription), output: "")
+        }
+        stdoutCapture.start()
+        stderrCapture.start()
 
-            let timedOut = await self.wait(timeout: timeout, termination: termination)
-            if timedOut {
-                self.terminate(process, processGroup: processGroup)
-            }
+        let timedOut = await self.wait(timeout: timeout, termination: termination)
+        if timedOut {
+            self.terminate(process, processGroup: processGroup)
+        }
 
-            let output = await self.combinedOutput(
-                stdout: stdoutCapture,
-                stderr: stderrCapture,
-                timeout: outputDrainTimeout)
-            if timedOut {
-                return Result(outcome: .timedOut, output: output)
-            }
+        let output = await self.combinedOutput(
+            stdout: stdoutCapture,
+            stderr: stderrCapture,
+            timeout: outputDrainTimeout)
+        if Task.isCancelled {
+            return Result(outcome: .cancelled, output: output)
+        }
+        if timedOut {
+            return Result(outcome: .timedOut, output: output)
+        }
 
-            let status = process.terminationStatus
-            if status == 0 {
-                return Result(outcome: .success, output: output)
-            }
-            return Result(outcome: .failed(status: status), output: output)
-        }.value
+        let status = process.terminationStatus
+        if status == 0 {
+            return Result(outcome: .success, output: output)
+        }
+        return Result(outcome: .failed(status: status), output: output)
     }
 
     private final class ProcessTermination: @unchecked Sendable {
@@ -129,7 +133,11 @@ struct CodexLoginRunner {
                 termination.resolve(timedOut: true)
             }
         }
-        let timedOut = await termination.wait()
+        let timedOut = await withTaskCancellationHandler {
+            await termination.wait()
+        } onCancel: {
+            termination.resolve(timedOut: true)
+        }
         timeoutTask.cancel()
         return timedOut
     }
@@ -159,6 +167,8 @@ struct CodexLoginRunner {
             }
             kill(process.processIdentifier, SIGKILL)
         }
+        // Reap the owned login before its caller can remove the attempt's isolated home.
+        process.waitUntilExit()
     }
 
     private static func attachProcessGroup(_ process: Process) -> pid_t? {

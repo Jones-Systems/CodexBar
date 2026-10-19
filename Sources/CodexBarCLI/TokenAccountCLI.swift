@@ -40,6 +40,7 @@ struct TokenAccountCLIContext {
     let accountsByProvider: [UsageProvider: ProviderTokenAccountData]
     private let baseEnvironment: [String: String]
     private let managedCodexAccountStoreURL: URL?
+    private let codexFleetProfileDiscovery: @Sendable () -> CodexFleetProfileDiscovery.Result
 
     init(
         selection: TokenAccountCLISelection,
@@ -47,12 +48,16 @@ struct TokenAccountCLIContext {
         verbose _: Bool,
         resolutionScope: TokenAccountCLIResolutionScope = .configuredAccounts,
         baseEnvironment: [String: String] = ProcessInfo.processInfo.environment,
-        managedCodexAccountStoreURL: URL? = nil) throws
+        managedCodexAccountStoreURL: URL? = nil,
+        codexFleetProfileDiscovery: @escaping @Sendable () -> CodexFleetProfileDiscovery.Result = {
+            CodexFleetProfileDiscovery.discover()
+        }) throws
     {
         self.selection = selection
         self.config = config
         self.baseEnvironment = baseEnvironment
         self.managedCodexAccountStoreURL = managedCodexAccountStoreURL
+        self.codexFleetProfileDiscovery = codexFleetProfileDiscovery
         self.accountsByProvider = switch resolutionScope {
         case .configuredAccounts:
             Dictionary(uniqueKeysWithValues: config.providers.compactMap { provider in
@@ -279,14 +284,22 @@ struct TokenAccountCLIContext {
                 try FileManagedCodexAccountStore().loadAccounts()
             }
         }
+        let fleetPaths = self.codexFleetProfileHomePaths
+        let explicitPaths = self.providerConfig(for: .codex)?.codexProfileHomePaths ?? []
         return DefaultCodexAccountReconciler(
             storeLoader: storeLoader,
             activeSource: activeSource ?? self.providerConfig(for: .codex)?.codexActiveSource ?? .liveSystem,
             baseEnvironment: self.baseEnvironment,
-            profileHomePaths: self.providerConfig(for: .codex)?.codexProfileHomePaths ?? [],
+            profileHomePaths: explicitPaths + fleetPaths,
+            fleetProfileHomePaths: fleetPaths,
             managedEnvironmentBuilder: { environment, account in
                 CodexHomeScope.scopedEnvironment(base: environment, codexHome: account.managedHomePath)
             })
+    }
+
+    private var codexFleetProfileHomePaths: [String] {
+        guard case let .available(paths) = self.codexFleetProfileDiscovery() else { return [] }
+        return paths
     }
 
     private func codexHomePath(for activeSourceOverride: CodexActiveSource?) -> String? {
@@ -309,11 +322,7 @@ struct TokenAccountCLIContext {
             }
             return accounts?.account(id: id)?.managedHomePath
         case let .profileHome(path):
-            guard let normalizedPath = CodexHomeScope.normalizedHomePath(path) else { return nil }
-            let configuredPaths = self.providerConfig(for: .codex)?.codexProfileHomePaths ?? []
-            return configuredPaths.contains {
-                CodexHomeScope.normalizedHomePath($0) == normalizedPath
-            } ? normalizedPath : nil
+            return CodexHomeScope.normalizedHomePath(path)
         }
     }
 }

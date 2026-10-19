@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "authority_effect": "none",
+  "source_candidate": "50a6710669b29401c911d1e0f7d7a4ab87467d8e",
+  "base": "283e3b587b896d2c10bc7d04d1b04d4dc725883c",
+  "PR11_checkpoint": "410515a95b6240af335d4fa6648ca68ff92897a5",
+  "PR12_integration": "fa3fb391c18847830e3082e4905b83107f542957",
+  "paths": {
+    "Sources/CodexBar/Jones/JonesCompactAccountPresentation.swift": "2cc1991337393d7f1145123ea797950826f233108be1624fa8f078098fb86580",
+    "Sources/CodexBar/StatusItemController+CodexStackedMenu.swift": "13ad2d3fcbc1731d8884a6ef7f0c06d9679f3065e11c2a0db56940bbd8fb0f7b",
+    "Sources/CodexBar/StatusItemController+CompactAccountMenu.swift": "9084b7f2676e0335abf8af49fa7fa8031058d602b4ea49a08b02e21615b10f37",
+    "Tests/CodexBarTests/JonesGroupedCompactAccountPresentationTests.swift": "c894707b103fae823b905a2050b57e8acb1b7eff332fd920f19eef22f898d209"
+  },
+  "intent": "Grouped Codex compact presentation with global five-account budget, retained workspace labels and existing identity/toggle/reset/switching semantics",
+  "checks": {
+    "builder_scoped_SwiftFormat_0_61_1": "PASS four files --lint --cache ignore",
+    "root_manifest": "four released paths verified",
+    "diff_whitespace": "PASS",
+    "native": "unavailable on VPS; synthetic fixtures authored, not run",
+    "make_test": "not rerun at intermediate checkpoint; missing Swift prerequisite unchanged",
+    "make_check": "held: no installers authorized"
+  },
+  "affected_suites": [
+    "JonesGroupedCompactAccountPresentationTests",
+    "JonesCompactAccountPresentationTests",
+    "AccountMenuLayoutPlannerTests",
+    "StatusMenuCompactAccountLayoutTests",
+    "StatusMenuClaudeSwapCompactTests"
+  ],
+  "unknowns": [
+    "native rendering and interactions",
+    "close/reopen verification",
+    "full native test safety and execution"
+  ],
+  "remaining_dependency": "AFCL source lane active; this is not the next native candidate"
+}

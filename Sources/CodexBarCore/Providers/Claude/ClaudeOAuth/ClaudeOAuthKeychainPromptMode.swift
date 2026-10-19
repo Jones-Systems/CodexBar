@@ -26,7 +26,8 @@ public enum ClaudeOAuthKeychainPromptPreference {
     private static let userDefaultsKey = "claudeOAuthKeychainPromptMode"
 
     static var applicationDefaultsDomain: String {
-        self.resolveApplicationDefaultsDomain(
+        if let identity = JonesStateRoot.identity { return identity.bundleID } // JONES(trial-identity)
+        return self.resolveApplicationDefaultsDomain(
             bundleIdentifier: Bundle.main.bundleIdentifier,
             bundleURL: Bundle.main.bundleURL,
             executableURL: Bundle.main.executableURL,

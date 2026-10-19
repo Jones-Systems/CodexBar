@@ -513,7 +513,7 @@ struct CopilotBudgetWebFetcherTests {
         CookieHeaderCache.store(provider: .copilot, cookieHeader: "user_session=cached", sourceLabel: "Chrome")
         defer { CookieHeaderCache.clear(provider: .copilot) }
 
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: temp) }
 
@@ -562,7 +562,7 @@ struct CopilotBudgetWebFetcherTests {
         CookieHeaderCache.store(provider: .copilot, cookieHeader: "user_session=cached", sourceLabel: "Chrome")
         defer { CookieHeaderCache.clear(provider: .copilot) }
 
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: temp) }
 

@@ -719,7 +719,7 @@ struct FactoryStatusProbeFetchTests {
     }
 
     private static func isolateFactorySessionStore() async throws -> URL {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("codexbar-factory-tests", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let fileURL = directory.appendingPathComponent("\(UUID().uuidString).json")

@@ -231,7 +231,7 @@ struct CursorImportedSessionScanningTests {
         let probe = CursorStatusProbe(browserDetection: BrowserDetection(cacheTTL: 0))
         let background = Self.makeSessionInfo(sourceLabel: "Background", cookieValue: "background")
         let service = "cursor-login-race-\(UUID().uuidString)"
-        let legacyBase = FileManager.default.temporaryDirectory
+        let legacyBase = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
 
         await KeychainCacheStore.withServiceOverrideForTesting(service) {
@@ -272,7 +272,7 @@ struct CursorImportedSessionScanningTests {
         let probe = CursorStatusProbe(browserDetection: BrowserDetection(cacheTTL: 0))
         let session = Self.makeSessionInfo(sourceLabel: "Background", cookieValue: "background")
         let service = "cursor-login-same-credential-race-\(UUID().uuidString)"
-        let legacyBase = FileManager.default.temporaryDirectory
+        let legacyBase = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
 
         try await KeychainCacheStore.withServiceOverrideForTesting(service) {
@@ -310,7 +310,7 @@ struct CursorImportedSessionScanningTests {
         let replacement = "fixtureSession=replacement"
         let attempts = LockedArray<String>()
         let service = "cursor-login-replacement-race-\(UUID().uuidString)"
-        let legacyBase = FileManager.default.temporaryDirectory
+        let legacyBase = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
 
         try await KeychainCacheStore.withServiceOverrideForTesting(service) {
@@ -350,7 +350,7 @@ struct CursorImportedSessionScanningTests {
         let probe = CursorStatusProbe(browserDetection: BrowserDetection(cacheTTL: 0))
         let session = Self.makeSessionInfo(sourceLabel: "Background", cookieValue: "background")
         let service = "cursor-keychain-unavailable-\(UUID().uuidString)"
-        let legacyBase = FileManager.default.temporaryDirectory
+        let legacyBase = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
 
         try await KeychainCacheStore.withServiceOverrideForTesting(service) {

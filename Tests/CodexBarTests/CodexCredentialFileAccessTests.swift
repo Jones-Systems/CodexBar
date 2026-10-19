@@ -292,7 +292,7 @@ struct CodexCredentialFileAccessTests {
     func `Codex metadata defaults are isolated and explicit overrides survive`() throws {
         let accounts = FileManagedCodexAccountStore.defaultURL()
         let workspaces = CodexOpenAIWorkspaceIdentityCache.defaultURL()
-        let temporary = FileManager.default.temporaryDirectory.standardizedFileURL.pathComponents
+        let temporary = TestFixtureScratch.root.standardizedFileURL.pathComponents
         #expect(accounts.standardizedFileURL.pathComponents.starts(with: temporary))
         #expect(workspaces.standardizedFileURL.pathComponents.starts(with: temporary))
         #expect(accounts != FileManagedCodexAccountStore.defaultURL())

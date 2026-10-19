@@ -128,8 +128,62 @@ struct ClaudeConfigPathsTests {
             workingDirectory: workingDirectory) == home.appendingPathComponent(".claude/.credentials.json"))
     }
 
+    @Test
+    func `native keychain service separates unset and explicitly selected default roots`() {
+        let home = ["HOME": "/synthetic/home"]
+        #expect(ClaudeConfigPaths.keychainService(environment: home) == "Claude Code-credentials")
+        #expect(ClaudeConfigPaths.keychainService(environment: [
+            "HOME": "/synthetic/home", "CLAUDE_CONFIG_DIR": "",
+        ]) == "Claude Code-credentials")
+        #expect(ClaudeConfigPaths.keychainService(environment: [
+            "HOME": "/synthetic/home", "CLAUDE_CONFIG_DIR": "/synthetic/home/.claude",
+        ]) == "Claude Code-credentials-2eb62ada")
+        #expect(ClaudeConfigPaths.keychainService(environment: [
+            "CLAUDE_CONFIG_DIR": "/synthetic/home/.claude-t3/jace",
+        ]) == "Claude Code-credentials-9a9e7cae")
+    }
+
+    @Test
+    func `secure storage service override is independent and explicit empty selects default`() {
+        let profile = "/synthetic/home/.claude-t3/jace"
+        #expect(ClaudeConfigPaths.keychainService(environment: [
+            "CLAUDE_CONFIG_DIR": profile, "CLAUDE_SECURESTORAGE_CONFIG_DIR": "/synthetic/secure",
+        ]) == "Claude Code-credentials-2d16d9a4")
+        #expect(ClaudeConfigPaths.keychainService(environment: [
+            "CLAUDE_CONFIG_DIR": profile, "CLAUDE_SECURESTORAGE_CONFIG_DIR": "",
+        ]) == "Claude Code-credentials")
+    }
+
+    @Test(arguments: ["/synthetic/café", "/synthetic/cafe\u{301}"])
+    func `native service hashes NFC normalized absolute path`(path: String) {
+        #expect(ClaudeConfigPaths.keychainService(environment: [
+            "CLAUDE_CONFIG_DIR": path,
+        ]) == "Claude Code-credentials-fdc632a8")
+    }
+
+    @Test
+    func `native service keeps tilde literal and resolves against owner working directory`() {
+        #expect(ClaudeConfigPaths.keychainService(
+            environment: ["CLAUDE_CONFIG_DIR": "~/.claude-profile"],
+            workingDirectory: URL(fileURLWithPath: "/synthetic/probe")) == "Claude Code-credentials-ac725474")
+    }
+
+    @Test
+    func `same credential file with different native service cannot share a cache identity`() {
+        ClaudeOAuthCredentialsStore.withEnvironmentCredentialsURLForTesting {
+            let implicit = ["HOME": "/synthetic/home"]
+            let explicit = ["HOME": "/synthetic/home", "CLAUDE_CONFIG_DIR": "/synthetic/home/.claude"]
+            #expect(ClaudeConfigPaths.credentialsURL(environment: implicit)
+                == ClaudeConfigPaths.credentialsURL(environment: explicit))
+            #expect(ClaudeOAuthCredentialsStore.credentialsProfileIdentifier(environment: implicit)
+                != ClaudeOAuthCredentialsStore.credentialsProfileIdentifier(environment: explicit))
+            #expect(ClaudeOAuthCredentialsStore.claudeKeychainFingerprintStorageKey(environment: implicit)
+                != ClaudeOAuthCredentialsStore.claudeKeychainFingerprintStorageKey(environment: explicit))
+        }
+    }
+
     private static func makeTemporaryDirectory() throws -> URL {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("codexbar-claude-paths-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         return directory

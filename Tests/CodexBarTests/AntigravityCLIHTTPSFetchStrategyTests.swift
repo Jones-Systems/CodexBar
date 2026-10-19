@@ -199,7 +199,7 @@ struct AntigravityCLIHTTPSFetchStrategyTests {
 
     @Test
     func `auto strategy pipeline preserves oauth fallback for shared credentials file`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("antigravity-shared-auto-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -345,7 +345,7 @@ struct AntigravityCLIHTTPSFetchStrategyTests {
 
     @Test
     func `cli local strategy availability requires binary`() async throws {
-        let binaryURL = FileManager.default.temporaryDirectory
+        let binaryURL = TestFixtureScratch.root
             .appendingPathComponent("codexbar-antigravity-\(UUID().uuidString)")
         try Data("#!/bin/sh\n".utf8).write(to: binaryURL)
         try FileManager.default.setAttributes(
@@ -916,7 +916,7 @@ struct AntigravityCLIHTTPSFetchStrategyTests {
     {
         var effectiveEnv = env
         effectiveEnv["HOME"] = effectiveEnv["HOME"] ??
-            FileManager.default.temporaryDirectory
+            TestFixtureScratch.root
             .appendingPathComponent("codexbar-antigravity-empty-home-\(UUID().uuidString)", isDirectory: true)
             .path
         return ProviderFetchContext(

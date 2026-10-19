@@ -45,7 +45,7 @@ struct CostUsageStoreExecutorIsolationTests {
 
 extension CostUsageStoreExecutorIsolationTests {
     private static func makeRoot() throws -> URL {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("CodexBar-CostUsageStoreExecutorTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         return root

@@ -120,7 +120,7 @@ struct BrowserDetectionTests {
 
     @Test
     func `cookie client permits isolated chromium stores during tests`() throws {
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let profile = temp
             .appendingPathComponent("Library/Application Support/Google/Chrome/Default/Network")
         try FileManager.default.createDirectory(at: profile, withIntermediateDirectories: true)
@@ -142,7 +142,7 @@ struct BrowserDetectionTests {
     func `filter preserves order`() {
         BrowserCookieAccessGate.resetForTesting()
 
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         try? FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: temp) }
 
@@ -168,7 +168,7 @@ struct BrowserDetectionTests {
         BrowserCookieAccessGate.resetForTesting()
         defer { BrowserCookieAccessGate.resetForTesting() }
 
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let chromeCookies = temp
             .appendingPathComponent("Library/Application Support/Google/Chrome/Default/Network/Cookies")
         try FileManager.default.createDirectory(
@@ -216,7 +216,7 @@ struct BrowserDetectionTests {
 
     @Test
     func `chrome requires profile data`() throws {
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: temp) }
 
@@ -239,7 +239,7 @@ struct BrowserDetectionTests {
 
     @Test
     func `Vivaldi uses its Chromium profile and Safe Storage metadata`() throws {
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let profile = temp
             .appendingPathComponent("Library")
             .appendingPathComponent("Application Support")
@@ -262,7 +262,7 @@ struct BrowserDetectionTests {
     func `process filters chromium candidates despite false global keychain override`() throws {
         guard ProcessInfo.processInfo.environment["CODEXBAR_ALLOW_TEST_KEYCHAIN_ACCESS"] != "1" else { return }
 
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: temp) }
 
@@ -531,7 +531,7 @@ struct BrowserDetectionTests {
 
     @Test
     func `dia requires profile data`() throws {
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: temp) }
 
@@ -554,7 +554,7 @@ struct BrowserDetectionTests {
 
     @Test
     func `removed browser with stale cookies is not a candidate`() throws {
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let cookies = temp
             .appendingPathComponent("Library/Application Support/Dia/User Data/Default/Network/Cookies")
         try FileManager.default.createDirectory(
@@ -572,7 +572,7 @@ struct BrowserDetectionTests {
 
     @Test
     func `browser uninstall invalidates cookie source immediately`() throws {
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let cookies = temp
             .appendingPathComponent("Library/Application Support/Google/Chrome/Default/Network/Cookies")
         try FileManager.default.createDirectory(
@@ -602,7 +602,7 @@ struct BrowserDetectionTests {
 
     @Test
     func `registered browser outside Applications is a candidate`() throws {
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let cookies = temp
             .appendingPathComponent("Library/Application Support/Google/Chrome/Default/Network/Cookies")
         try FileManager.default.createDirectory(
@@ -673,7 +673,7 @@ struct BrowserDetectionTests {
 
     @Test
     func `interactive source treats a missing production profile path as fresh`() throws {
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: temp) }
 
@@ -692,7 +692,7 @@ struct BrowserDetectionTests {
 
     @Test
     func `stale registered browser outside Applications is not a candidate`() throws {
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let cookies = temp
             .appendingPathComponent("Library/Application Support/Google/Chrome/Default/Network/Cookies")
         try FileManager.default.createDirectory(
@@ -745,7 +745,7 @@ struct BrowserDetectionTests {
 
     @Test
     func `firefox requires default profile dir`() throws {
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: temp) }
 
@@ -790,7 +790,7 @@ struct BrowserDetectionTests {
 
     @Test
     func `zen accepts uppercase default profile dir`() throws {
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let temp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: temp) }
 

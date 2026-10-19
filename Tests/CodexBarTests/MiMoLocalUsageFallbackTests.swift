@@ -3,6 +3,40 @@ import Testing
 @testable import CodexBarCore
 
 struct MiMoLocalUsageFallbackTests {
+    private static let identity = JonesStateRoot.Identity(
+        bundleID: "com.example.mimo-fixture",
+        groupID: "FIXTURE.com.example.mimo-fixture",
+        teamID: "FIXTURE",
+        iCloudID: "iCloud.com.example.mimo-fixture")
+
+    @Test
+    func `default cache follows packaged identity without changing the home`() {
+        let home = "/synthetic/CodexBar/.codexbar/home"
+        #expect(MiMoLocalUsageFallback.defaultCachePath(homeDirectory: home, identity: nil)
+            == "\(home)/.codexbar/mimo-local-usage.json")
+        #expect(MiMoLocalUsageFallback.defaultCachePath(homeDirectory: home, identity: Self.identity)
+            == "\(home)/.codexbar-jones/mimo-local-usage.json")
+        for identity: JonesStateRoot.Identity? in [nil, Self.identity] {
+            let expected = MiMoLocalUsageFallback.defaultCachePath(homeDirectory: home, identity: identity)
+            for environment in [[:], ["MIMO_LOCAL_USAGE_PATH": ""], ["MIMO_LOCAL_USAGE_PATH": " \n\t "]] {
+                #expect(MiMoLocalUsageFallback.cachePath(
+                    environment: environment, homeDirectory: home, identity: identity) == expected)
+            }
+        }
+    }
+
+    @Test
+    func `explicit cache path keeps precedence under either identity`() {
+        for identity: JonesStateRoot.Identity? in [nil, Self.identity] {
+            for path in ["/synthetic/.codexbar/explicit.json", "relative/usage.json"] {
+                #expect(MiMoLocalUsageFallback.cachePath(
+                    environment: ["MIMO_LOCAL_USAGE_PATH": " \(path)\n"],
+                    homeDirectory: "/synthetic/home",
+                    identity: identity) == path)
+            }
+        }
+    }
+
     @Test
     func `returns nil when cache file is missing`() {
         let snap = MiMoLocalUsageFallback.snapshot(
@@ -13,7 +47,7 @@ struct MiMoLocalUsageFallbackTests {
 
     @Test
     func `returns nil when cache file is malformed JSON`() throws {
-        let dir = FileManager.default.temporaryDirectory
+        let dir = TestFixtureScratch.root
             .appendingPathComponent("mimo-fallback-test-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
@@ -26,7 +60,7 @@ struct MiMoLocalUsageFallbackTests {
 
     @Test
     func `returns nil when cache schema is incomplete`() throws {
-        let dir = FileManager.default.temporaryDirectory
+        let dir = TestFixtureScratch.root
             .appendingPathComponent("mimo-fallback-test-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
@@ -39,7 +73,7 @@ struct MiMoLocalUsageFallbackTests {
 
     @Test
     func `parses all token buckets without fabricating a quota window`() throws {
-        let dir = FileManager.default.temporaryDirectory
+        let dir = TestFixtureScratch.root
             .appendingPathComponent("mimo-fallback-test-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
@@ -92,7 +126,7 @@ struct MiMoLocalUsageFallbackTests {
 
     @Test
     func `idle week keeps local accounting in the plan summary`() throws {
-        let dir = FileManager.default.temporaryDirectory
+        let dir = TestFixtureScratch.root
             .appendingPathComponent("mimo-fallback-test-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
@@ -166,7 +200,7 @@ struct MiMoLocalUsageFallbackTests {
         fileModificationDate: Date? = nil,
         now: Date) throws -> MiMoUsageSnapshot
     {
-        let dir = FileManager.default.temporaryDirectory
+        let dir = TestFixtureScratch.root
             .appendingPathComponent("mimo-fallback-test-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }

@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "authority_effect": "none",
+  "tested_head": "374529b6723af36c919d9b4167ffd94ed8f53936",
+  "source_checkpoint": "c2c52e09d8084489c01306175899fc368a589eb8",
+  "manifest_paths": 306,
+  "commands": {
+    "focused": {
+      "command": [
+        "swift",
+        "test",
+        "--no-parallel",
+        "--filter",
+        "^CodexBarTests\\.(StatusMenuCodexSwitcherTests|JonesCompactAccountPresentationTests|StatusMenuCompactAccountLayoutTests)/"
+      ],
+      "result": "PASS",
+      "seconds": 83.42,
+      "Swift_Testing": 30,
+      "XCTest": 4,
+      "exact_invocation": {
+        "command": [
+          "swift",
+          "test",
+          "--no-parallel",
+          "--filter",
+          "^CodexBarTests\\.(StatusMenuCodexSwitcherTests|JonesCompactAccountPresentationTests|StatusMenuCompactAccountLayoutTests)/"
+        ],
+        "revision": "374529b6723af36c919d9b4167ffd94ed8f53936",
+        "cwd": "/Users/malcolmjones/Projects/CodexBar-completion-506fc1fd",
+        "attempt": 1,
+        "environment_delta": {
+          "CODEXBAR_TEST_WORKSPACE_ROOT": "/Users/malcolmjones/Projects/CodexBar-completion-506fc1fd",
+          "TMPDIR": "/Users/malcolmjones/Projects/CodexBar-completion-506fc1fd/.build/completion-native-r12-cel1_xll",
+          "CODEXBAR_TEST_SCRATCH_PARENT": "/Users/malcolmjones/Projects/CodexBar-completion-506fc1fd/.build/completion-native-r12-cel1_xll",
+          "CODEXBAR_SUPPRESS_TEST_KEYCHAIN_ACCESS": "1",
+          "CODEXBAR_TEST_CODEX_FILE_ISOLATION": "1",
+          "CODEXBAR_TEST_SESSION_FILE_ISOLATION": "1",
+          "CODEXBAR_TEST_RETRY_NON_TIMEOUT_FAILURES": "0",
+          "CODEXBAR_TEST_GROUP_SIZE": "12",
+          "CODEXBAR_TEST_SUITE_TIMEOUT": "180",
+          "PYTHONDONTWRITEBYTECODE": "1",
+          "CODEXBAR_VERIFICATION_SWIFT_TRACE": "/Users/malcolmjones/Projects/CodexBar-completion-506fc1fd/verification-evidence-completion/native-r12/swift-invocations.log",
+          "PATH": "<owned scratch>/bin:/Library/Frameworks/Python.framework/Versions/3.13/bin:<inherited PATH>"
+        },
+        "removed_environment_keys": [],
+        "CI_present": false,
+        "GITHUB_ACTIONS_present": false
+      }
+    },
+    "full": {
+      "command": [
+        "make",
+        "test"
+      ],
+      "attempts": 1,
+      "result": "PASS",
+      "exit": 0,
+      "seconds": 755.446,
+      "discovered_selections": 1030,
+      "groups_passed": 86,
+      "Swift_Testing_reported": 10324,
+      "XCTest_reported": 147,
+      "timeouts": 0,
+      "fallbacks": 0,
+      "manual_retries": 0,
+      "exact_invocation": {
+        "command": [
+          "make",
+          "test"
+        ],
+        "revision": "374529b6723af36c919d9b4167ffd94ed8f53936",
+        "cwd": "/Users/malcolmjones/Projects/CodexBar-completion-506fc1fd",
+        "attempt": 1,
+        "environment_delta": {
+          "CODEXBAR_TEST_WORKSPACE_ROOT": "/Users/malcolmjones/Projects/CodexBar-completion-506fc1fd",
+          "TMPDIR": "/Users/malcolmjones/Projects/CodexBar-completion-506fc1fd/.build/completion-native-r12-cel1_xll",
+          "CODEXBAR_TEST_SCRATCH_PARENT": "/Users/malcolmjones/Projects/CodexBar-completion-506fc1fd/.build/completion-native-r12-cel1_xll",
+          "CODEXBAR_SUPPRESS_TEST_KEYCHAIN_ACCESS": "1",
+          "CODEXBAR_TEST_CODEX_FILE_ISOLATION": "1",
+          "CODEXBAR_TEST_SESSION_FILE_ISOLATION": "1",
+          "CODEXBAR_TEST_RETRY_NON_TIMEOUT_FAILURES": "0",
+          "CODEXBAR_TEST_GROUP_SIZE": "12",
+          "CODEXBAR_TEST_SUITE_TIMEOUT": "180",
+          "PYTHONDONTWRITEBYTECODE": "1",
+          "CODEXBAR_VERIFICATION_SWIFT_TRACE": "/Users/malcolmjones/Projects/CodexBar-completion-506fc1fd/verification-evidence-completion/native-r12/swift-invocations.log",
+          "PATH": "<owned scratch>/bin:/Library/Frameworks/Python.framework/Versions/3.13/bin:<inherited PATH>"
+        },
+        "removed_environment_keys": [],
+        "CI_present": false,
+        "GITHUB_ACTIONS_present": false
+      }
+    }
+  },
+  "coverage": {
+    "named_supplemental": 86,
+    "all_passed": true,
+    "original_recovery_account_suites": 12,
+    "all_original_passed": true,
+    "alias_note": "Two manifest extension filenames InstantOpen/OpenRefresh map to StatusMenuTests; actualsuite and29/31individualdeclaredtests explicitlyPASS, aliasesrecorded."
+  },
+  "explicit_skips": [
+    "\u279c Test \"writes redacted real scan proof for GPT56 historical pricing\" skipped: \"Set CODEXBAR_SPEND_PROOF_DIR to write historical pricing proof artifacts.\"",
+    "\u279c Test \"writes redacted live Grok catalog proof\" skipped: \"Set CODEXBAR_LIVE_GROK_CATALOG_PROOF=1 to scan local Grok sessions.\"",
+    "\u279c Test \"concurrent override writes, resets, and reads are race-free\" skipped.",
+    "\u279c Test \"codex account email is present\" skipped: \"Set LIVE_TEST=1 to run live Codex account checks.\"",
+    "\u279c Test \"live token plan usage resolves\" skipped: \"Set QWEN_CLOUD_LIVE_TEST=1 and QWEN_CLOUD_COOKIE to run live Qwen Cloud checks.\"",
+    "\u279c Test \"concurrent stub handler writes and reads are race-free\" skipped."
+  ],
+  "isolation": "One canonical workspace parent, both workspace/scratch variables and TMPDIR, Keychain/Codex/session isolation, jobs1/default180/group12, no inheritedlivegrants. No liveprovider/privatecredentialoperations.",
+  "containment": "522observedcostpathscontained;focusedGeminiartifactsabsent. Bothownedouterdrainsproved/exactparentidentityremoved/absenceverified/cachelogsretained/all306hashes/sourceindexclean/process+WRITEreleased. Framework/compilerinternal scratch andhistoricalunknowns remainseparate.",
+  "local_raw_evidence": "verification-evidence-completion/native-r12/ summary/commands/coverage/aliases/counts/holds/carry/cleanup/postconditions/SHA; raw logs retained on laptop, not assertedaccessibleVPS.",
+  "held": {
+    "make_check": "HELD0attempts: pinnedSwiftFormat0.61.1/SwiftLint0.65.0/oxlint1.76.0/oxfmt0.61.0 absent; TypeScript5.9.3 required local layout invokes installer; originalnoinstall constraint remains.",
+    "CI": "PR11/12/13 checksEMPTY, forkActions paused; ownerauthenticated enablement pending; no settingschange/CIgreenclaim.",
+    "P2_full_proofs": "NFCR-COR-002 compilerstub source mismatch andNFCR-COR-003 list-onlystdout mismatch deferred/unfixed; fullscratch/identity/shardingproofs0attempts. NFP-COR-002/FSP-PROC-002 also deferred/unfixed.",
+    "delivery": "Noeligiblemergeuntilrequiredchecks/reviews/thread/docgates; noextractuntilPR11+12mergedforkmainorownerrelease.",
+    "activation": "Sevenruntime/trialgates/signing/package/install/launch/accountswitching unqualified; no suchoperationperformed.",
+    "VPS_relay": "SSHsigningagentfailedbeforedispatch; transfer/currentresult notdelivered, existingVPSbranchespreserved."
+  }
+}

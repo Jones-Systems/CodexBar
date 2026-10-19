@@ -35,7 +35,7 @@ struct OpenCodeGoLinuxTests {
 
     @Test
     func localReaderLoadsOpenCodeDatabase() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("OpenCodeGoLinuxTests-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

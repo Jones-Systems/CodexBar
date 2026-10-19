@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "authority_effect": "none",
+  "task": "codexbar-claude-native-discovery-contract-20261017-r1",
+  "source_revisions": {
+    "host_tooling": "fc332722914b21dc86e1772c0736d511ef37e18a",
+    "CodexBar": "410515a95b6240af335d4fa6648ca68ff92897a5"
+  },
+  "contract": {
+    "schema": "host-tooling.auth-fleet-binding/v1",
+    "path": "~/.local/share/host-tooling/runtime/auth-fleet-binding.json",
+    "classification": "private metadata, mode0600; no credential bytes; real file not read",
+    "fields": [
+      "provider",
+      "alias",
+      "store",
+      "config_dir",
+      "native_cli",
+      "path",
+      "metadata_path"
+    ],
+    "claude_aliases": [
+      "default",
+      "jace"
+    ],
+    "malcolm": "input synonym for default, not a persisted third account",
+    "native_stores": [
+      "claude-file",
+      "claude-keychain"
+    ],
+    "default_config_dir": null,
+    "jace_config_dir": "<home>/.claude-t3/jace",
+    "not_proven": [
+      "native readiness",
+      "credential mode in use",
+      "selected GUI profile",
+      "native account UUID"
+    ]
+  },
+  "references": {
+    "core": "src/host_tooling/auth_fleet/core.py:15\u201317,145\u2013150,173\u2013222,249\u2013264",
+    "selection": "src/host_tooling/auth_fleet/node.py:14\u201319",
+    "native_store": "src/host_tooling/auth_fleet/stores.py:95\u2013101",
+    "installer": "tools/install-auth-fleet.py:146\u2013151,189\u2013194",
+    "existing_binding_consumer": "Sources/CodexBarCore/Providers/Codex/CodexFleetProfileDiscovery.swift:24\u201383 (Claude skipped at62)",
+    "routing_precedent": "Sources/CodexBar/ProviderRegistry.swift:162\u2013199",
+    "native_profile_identity": "ClaudeAccountProfile.swift:29\u201364,85\u2013100"
+  },
+  "result": "Existing producer supports enrolled Claude native profile reference discovery; add CodexBar-owned persisted selection/settings and selected environment routing. No producer change needed for that bounded behavior.",
+  "limitations": [
+    "No separate public discovery projection found",
+    "Enrolled reference is not authenticated account",
+    "Default unset differs from explicit ~/.claude for Keychain service hashing",
+    "No real source/credential availability verified"
+  ],
+  "operations": "read-only source research; no tests, protected reads or account commands"
+}

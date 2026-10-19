@@ -635,7 +635,7 @@ struct ManagedCodexAccountServiceTests {
     @Test
     func `auth failure cleanup uses managed root safety check`() async throws {
         let root = CodexCredentialFixtures.root.appendingPathComponent(UUID().uuidString, isDirectory: true)
-        let outsideHome = FileManager.default.temporaryDirectory.appendingPathComponent(
+        let outsideHome = TestFixtureScratch.root.appendingPathComponent(
             UUID().uuidString,
             isDirectory: true)
         defer {
@@ -800,7 +800,7 @@ struct ManagedCodexAccountServiceTests {
     @Test
     func `remove drops account but leaves unsafe home untouched`() async throws {
         let root = CodexCredentialFixtures.root.appendingPathComponent(UUID().uuidString, isDirectory: true)
-        let outsideRoot = FileManager.default.temporaryDirectory.appendingPathComponent(
+        let outsideRoot = TestFixtureScratch.root.appendingPathComponent(
             UUID().uuidString,
             isDirectory: true)
         try FileManager.default.createDirectory(at: outsideRoot, withIntermediateDirectories: true)
@@ -849,7 +849,7 @@ private final class InMemoryManagedCodexAccountStore: ManagedCodexAccountStoring
     }
 
     func ensureFileExists() throws -> URL {
-        FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
     }
 }
 
@@ -870,7 +870,7 @@ private final class FailingManagedCodexAccountStore: ManagedCodexAccountStoring,
     }
 
     func ensureFileExists() throws -> URL {
-        FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
     }
 }
 

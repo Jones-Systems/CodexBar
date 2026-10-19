@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "authority_effect": "none",
+  "source_candidate": "8effc1ecf8d3c7a02b7aeee6c76d94b3398bc1f1",
+  "base": "7eadfdd80c01b239b91ad9a64e5af2a0274ca19d",
+  "PR12_integration": "025c9bd86ebfd764e7c785ebbb93136568ab0d4f",
+  "paths": {
+    "Sources/CodexBar/GeminiLoginRunner.swift": "329b1646a418b17898ba24ee8642d781b54f65c139bcd8c69e6eff957102f802",
+    "Tests/CodexBarTests/JonesProviderScratchTests.swift": "48e43ea47254fe43b938e007096ee744b4994f5ad6ca4544b6ed16aedf8f856a"
+  },
+  "defect_binding": {
+    "native_source": "44a43f5928154e08b4ce14724c2a1231b88143a9",
+    "toolchain": "AppleSwift6.3/macOS26.4SDK",
+    "locations": [
+      "GeminiLoginRunner.swift:120:22",
+      "GeminiLoginRunner.swift:126:22"
+    ],
+    "diagnostic": "FileManager non-Sendable captured in @Sendable closure [SendableClosureCaptures]"
+  },
+  "implementation": "Private ScriptCleanup capability retains injected manager and exact script URL; lock serializes removal in cancellation/deferred/delayed callbacks; no FileManager global conformance or default fallback",
+  "checks": {
+    "builder_scoped_SwiftFormat_0_61_1": "PASS two files",
+    "root_manifest": "verified both released digests",
+    "diff_whitespace": "PASS",
+    "native_compilation": "unavailable on VPS; no passing-after claim",
+    "synthetic_tests": "two new in-memory regressions authored, not run",
+    "make_test": "HELD confirmed persistent WebKit-store cases",
+    "make_check": "held no installers"
+  },
+  "affected_suites": [
+    "GeminiLoginScratchTests",
+    "GeminiLoginRunnerTests",
+    "JonesProviderScratchTests",
+    "GeminiCurlScratchTests"
+  ],
+  "semantics": "Existing write/permissions/open-failure cleanup, immediate cancellation and awaited open/drain retained; successful ten-second retention unchanged; callback uses injected filesystem",
+  "qualification": "Source correction only; final combined native SHA pending Claude GUI lane; no intermediate rerun requested"
+}

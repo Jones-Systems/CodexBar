@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "authority_effect": "none",
+  "source_checkpoint": "70c1f766510166df450b3a14c0031ca290637951",
+  "failed_revision": "95cfdd64dad7b9ba4167344f9d1d8d0b435f3bb9",
+  "diagnosis": "Owned log11179/11181: resolved and expected copiedbundle locations match, but expected URL lacks directory slash. Bundle resolver and validated allocator unchanged/correct; no wrong location observed. Earlier environment pass cause not established.",
+  "fix": "Only adjacent fixture target now passes isDirectory:true before copying. Exact resolvingSymlinks URL equality assertion and both bundle/resources cases remain unchanged.",
+  "path": "Tests/CodexBarTests/CodexBarCoreResourcesTests.swift",
+  "sha256": "50a186ebe205102dea8b2b32c327b5125585cabe1815af87ca3c46587e60356b",
+  "checks": {
+    "diff_whitespace": "PASS",
+    "native_revised": "PASS7tests/2suites/4parameterinvocations76.99s at960;fullrunresourcegroup26PASS. Fullrunlaterfailedunrelatedcostfixture."
+  },
+  "scope": "Root mechanical one-line lane after Astra fix-ready diagnosis; no production resolver/helper/assertion or sibling cleanup change."
+}

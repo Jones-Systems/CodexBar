@@ -132,7 +132,7 @@ struct CodexBarConfigMigratorTests {
         defaults.removePersistentDomain(forName: suite)
         defer { defaults.removePersistentDomain(forName: suite) }
 
-        let base = FileManager.default.temporaryDirectory
+        let base = TestFixtureScratch.root
             .appendingPathComponent("codexbar-tests", isDirectory: true)
             .appendingPathComponent(suite, isDirectory: true)
         try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
@@ -394,7 +394,7 @@ private final class CountingTokenAccountStore: ProviderTokenAccountStoring, @unc
     func storeAccounts(_: [UsageProvider: ProviderTokenAccountData]) throws {}
 
     func ensureFileExists() throws -> URL {
-        FileManager.default.temporaryDirectory.appendingPathComponent("codexbar-empty-accounts.json")
+        TestFixtureScratch.root.appendingPathComponent("codexbar-empty-accounts.json")
     }
 }
 

@@ -78,7 +78,7 @@ struct KimiDesktopAuthTokenTests {
     }
 
     private static func makeEnvironment() throws -> (root: URL, databaseURL: URL) {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("KimiDesktopAuthTokenTests-\(UUID().uuidString)", isDirectory: true)
         let directory = root
             .appendingPathComponent("Library", isDirectory: true)

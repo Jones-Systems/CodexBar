@@ -240,7 +240,7 @@ struct CodexBaselineCharacterizationTests {
     @Test
     func `Codex CLI strategy fetches usage and credits with one app-server process`() async {
         let stubCLI = self.makeStubCodexCLI()
-        let counterURL = FileManager.default.temporaryDirectory
+        let counterURL = TestFixtureScratch.root
             .appendingPathComponent("codex-stub-counter-\(UUID().uuidString)", isDirectory: false)
         defer { try? FileManager.default.removeItem(at: counterURL) }
 

@@ -864,11 +864,8 @@ struct CodexBarTests {
 
     @Test
     func `account info parses snake case auth token`() throws {
-        let tmp = try FileManager.default.url(
-            for: .itemReplacementDirectory,
-            in: .userDomainMask,
-            appropriateFor: URL(fileURLWithPath: NSTemporaryDirectory()),
-            create: true)
+        let tmp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: false)
         defer { try? FileManager.default.removeItem(at: tmp) }
 
         let token = Self.fakeJWT(email: "user@example.com", plan: "pro")
@@ -887,11 +884,8 @@ struct CodexBarTests {
 
     @Test
     func `account info parses legacy camel case auth token`() throws {
-        let tmp = try FileManager.default.url(
-            for: .itemReplacementDirectory,
-            in: .userDomainMask,
-            appropriateFor: URL(fileURLWithPath: NSTemporaryDirectory()),
-            create: true)
+        let tmp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: false)
         defer { try? FileManager.default.removeItem(at: tmp) }
 
         let token = Self.fakeJWT(email: "user@example.com", plan: "pro")

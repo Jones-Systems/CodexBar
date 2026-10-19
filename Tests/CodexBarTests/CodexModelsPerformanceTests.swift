@@ -8,7 +8,7 @@ import Testing
 struct CodexModelsPerformanceTests {
     @Test
     func `workspace scale snapshot build stays within end to end budget`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-workspace-performance-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let sessionsRoot = root.appendingPathComponent("sessions", isDirectory: true)

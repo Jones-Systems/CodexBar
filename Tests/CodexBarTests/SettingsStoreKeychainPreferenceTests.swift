@@ -116,7 +116,7 @@ struct SettingsStoreKeychainPreferenceTests {
             environment: ProcessInfo.processInfo.environment))
         try #require(!KeychainAccessGate.isDisabledByEnvironment())
         try #require(KeychainAccessGate.processDisableReason == nil)
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("SettingsStoreKeychainPreferenceTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer {

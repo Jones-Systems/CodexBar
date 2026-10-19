@@ -200,6 +200,37 @@ not establish the cause of a position that changes again after launch; that requ
 make test
 ```
 
+The runner prepares one canonical fixture parent strictly inside this worktree, exports
+`CODEXBAR_TEST_WORKSPACE_ROOT`, `CODEXBAR_TEST_SCRATCH_PARENT`, and `TMPDIR`, and removes its owned
+parent only after its commands drain. It verifies absence after removal. If process drain or directory
+identity cannot be proved, it preserves the parent and reports failure. A parent supplied through
+`CODEXBAR_TEST_SCRATCH_PARENT` is borrowed: the runner validates it but never removes it. Its caller
+owns final cleanup after all owned children drain. A supplied workspace root must identify this worktree.
+
+For an aggregate command that must keep its original selection and parallelism, use
+`./Scripts/test.sh --command swift test --parallel`. This mode runs the command once,
+without discovery, sharding, or retries, inside the same fixture-parent and process-drain
+lifecycle. It keeps the enclosing CI job's deadline rather than the per-shard timeout.
+It rejects discovery/shard selectors. The plugin engine A/B script uses this mode around
+both existing engine passes, sharing one invocation parent and retaining `--skip-build`
+for the second pass. Both CI entry points inherit the same file/Keychain isolation as
+the ordinary test runner; neither depends on environment left by a previous CI step.
+
+Direct `swift test` commands require both variables naming existing canonical directories: workspace
+root and a strict workspace-descendant fixture parent. Prepare that parent through the invoking
+harness, preserve evidence, and remove only that exact owned parent after child-drain proof. Missing,
+nonexistent, aliased, or escaping parents fail before fixture allocation; direct tests have no ambient
+temporary-directory fallback. Keep the Keychain, Codex-file and session-file isolation flags enabled
+for synthetic verification, and remove inherited live/fixture grants as the runner does.
+
+`TestFixtureScratch` supplies allocation bases across all three test targets, including `TestsLinux`
+and `TestsPlugin` on macOS, and source defaults that select test isolation. Explicit fixture overrides
+and injected in-memory filesystems retain their semantics. Isolated Codex support-directory selection
+uses the validated parent; a `TMPDIR` override is retained only when it is an existing canonical path
+at or below that parent. An inherited external `TMPDIR` selects the parent instead. Ordinary runtime
+path selection is unchanged. This routes repository fixture allocations; compiler, SwiftPM and framework
+internal scratch need separate evidence and are not proved contained by these variables alone.
+
 Suite commands retain the default 180-second deadline, including SwiftPM startup and discovery.
 The runner reports elapsed time and owned PIDs every 30 seconds even when test output is buffered.
 It tracks process birth identities and descendants, including helpers that create separate process
@@ -239,9 +270,9 @@ native signal support, permission failures, and I/O errors fail cleanup without 
 
 This is a bounded metadata polling tracker, not a daemon sandbox. A new session whose leader and attached
 ancestry both disappear entirely between observations cannot be discovered reliably. Snapshot enumeration
-is not atomic, and unreadable, never-observed descendants cannot be attributed. The initial `swift test list`
-discovery/build path is unchanged; the 180-second bound applies to each suite/group command, including its
-startup. `Scripts/test_swift_test_sharding.sh` includes synthetic containment tests; they do not launch
+is not atomic, and unreadable, never-observed descendants cannot be attributed. Initial `swift test list`
+discovery/build and Sparkle metadata commands use the same owned-process drain before fixture-parent
+cleanup. The 180-second bound applies to each suite/group command, including its startup. `Scripts/test_swift_test_sharding.sh` includes synthetic containment tests; they do not launch
 Swift, the app, or provider probes. Its native pthread regression runs only on Linux and uses the system C
 compiler; macOS runs the corresponding metadata unit tests and reports the native case as skipped.
 macOS also runs native audit-token fixtures: deliberately wrong generations leave owned children alive,
@@ -427,7 +458,7 @@ URL override to its owned root, so cache reads, writes, and clears stay local to
 `_loadForUsageForTesting` adds only its explicit
 home fixture to the current scope; configured external roots still need explicit authorization.
 Pure parsers and `fingerprint(data:)` need no scope. Default managed-account and workspace-cache
-stores use fresh temporary paths in tests; explicit file overrides retain their existing behavior.
+stores use fresh paths below the validated invocation parent in tests; explicit file overrides retain their existing behavior.
 
 Task-local scopes inherit through structured tasks, but not detached work. Capture the immutable
 `fixtureScope` and explicitly re-enter it in a detached task when fixture access is required; lost
@@ -450,7 +481,7 @@ The optimized child-policy proof above also verifies this fallback, independentl
 
 ### Provider session fixtures
 
-Cursor, Augment, Factory, and Notion session stores select a process-local temporary directory under Swift Testing
+Cursor, Augment, Factory, and Notion session stores select a process-local directory below the validated fixture parent under Swift Testing
 or XCTest, before creating directories, loading saved files, or repairing permissions. The runtime guard is also
 compiled in release builds; allowing real Keychain access does not disable this file isolation. Production filenames
 and owner-only persistence remain unchanged.
@@ -470,8 +501,9 @@ against fake Application Support files. It does not launch the app, read real se
 acquisitions without navigation. Controlled continuations exercise eviction/replacement, stale completion, timeout
 retry, store-scoped invalidation, and lease cleanup after cache loss. Host assertions check one cleanup request and
 registration with `WebKitTeardown`; they do not establish WebContent process termination or diagnose CPU/RSS incidents.
-The existing headless CI guards remain in place for these AppKit tests. The suite also contains older persistent-store
-factory tests; exclude those when running a nonpersistent-only focused check.
+The existing headless CI guards remain in place for these AppKit tests. Store-factory fixtures inject nonpersistent
+constructors into instance-owned production cache logic and record requested UUIDs to verify legacy identifiers and
+profile separation. These synthetic assertions do not qualify actual persistent storage or runtime containment.
 
 ### CI Aggregate Contract
 

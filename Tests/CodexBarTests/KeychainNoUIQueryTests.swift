@@ -103,7 +103,7 @@ struct KeychainNoUIQueryTests {
     @Test
     func `trusted application validation rejects a replacement binary at the same path`() throws {
         let fileManager = FileManager.default
-        let directory = fileManager.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("codexbar-keychain-acl-\(UUID().uuidString)", isDirectory: true)
         try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? fileManager.removeItem(at: directory) }

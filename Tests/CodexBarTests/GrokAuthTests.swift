@@ -149,7 +149,7 @@ struct GrokAuthTests {
 
     @Test
     func `token file to open is grok auth json when present`() throws {
-        let home = FileManager.default.temporaryDirectory
+        let home = TestFixtureScratch.root
             .appendingPathComponent("CodexBar-GrokTokenFile-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: home) }
@@ -164,7 +164,7 @@ struct GrokAuthTests {
 
     @Test
     func `token file to open is grok home when auth json is missing`() {
-        let home = FileManager.default.temporaryDirectory
+        let home = TestFixtureScratch.root
             .appendingPathComponent("CodexBar-GrokTokenMissing-\(UUID().uuidString)", isDirectory: true)
         let opened = GrokCredentialsStore.tokenFileURLToOpen(env: ["GROK_HOME": home.path])
         #expect(opened.standardizedFileURL.path == home.standardizedFileURL.path)

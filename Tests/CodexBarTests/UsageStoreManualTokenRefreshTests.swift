@@ -503,7 +503,7 @@ struct UsageStoreManualTokenRefreshTests {
                 enabled: enabledProviders.contains(provider))
         }
 
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-tests", isDirectory: true)
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let environment = [

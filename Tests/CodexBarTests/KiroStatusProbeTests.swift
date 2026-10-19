@@ -83,7 +83,7 @@ struct KiroStatusProbeTests {
 
     @Test
     func `accepted pipe output cannot overrun the usage deadline`() async throws {
-        let pipePIDFile = FileManager.default.temporaryDirectory
+        let pipePIDFile = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-deadline-\(UUID().uuidString).pid")
         let cliURL = try self.makeCLI(
             """
@@ -352,9 +352,9 @@ extension KiroStatusProbeTests {
 
     @Test
     func `pipe cleanup finishes before PTY fallback starts`() async throws {
-        let childPIDFile = FileManager.default.temporaryDirectory
+        let childPIDFile = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-pipe-child-\(UUID().uuidString).pid")
-        let ptyMarker = FileManager.default.temporaryDirectory
+        let ptyMarker = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-pty-fallback-\(UUID().uuidString).started")
         let cliURL = try self.makeCLI(
             """
@@ -408,7 +408,7 @@ extension KiroStatusProbeTests {
 
     @Test
     func `shutdown registry terminates an active pipe probe`() async throws {
-        let pipePIDFile = FileManager.default.temporaryDirectory
+        let pipePIDFile = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-shutdown-\(UUID().uuidString).pid")
         let cliURL = try self.makeCLI(
             """
@@ -582,7 +582,7 @@ extension KiroStatusProbeTests {
 
     @Test
     func `fetch rejects account markers from failed whoami`() async throws {
-        let whoAmIFailed = FileManager.default.temporaryDirectory
+        let whoAmIFailed = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-failed-whoami-\(UUID().uuidString).started")
         let cliURL = try self.makeCLI(
             """
@@ -620,9 +620,9 @@ extension KiroStatusProbeTests {
 
     @Test
     func `fetch rejects valid-looking usage from failed command`() async throws {
-        let whoAmISucceeded = FileManager.default.temporaryDirectory
+        let whoAmISucceeded = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-successful-whoami-\(UUID().uuidString).started")
-        let usageFailed = FileManager.default.temporaryDirectory
+        let usageFailed = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-failed-usage-\(UUID().uuidString).started")
         let cliURL = try self.makeCLI(
             """
@@ -774,7 +774,7 @@ extension KiroStatusProbeTests {
 
     @Test
     func `fetch cancellation during context probe is preserved`() async throws {
-        let contextStarted = FileManager.default.temporaryDirectory
+        let contextStarted = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-context-\(UUID().uuidString).started")
         let cliURL = try self.makeCLI(
             """
@@ -833,7 +833,7 @@ extension KiroStatusProbeTests {
 
     @Test
     func `cancellation during pipe cleanup wins over an expired context deadline`() async throws {
-        let cleanupStarted = FileManager.default.temporaryDirectory
+        let cleanupStarted = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-cleanup-\(UUID().uuidString).started")
         let unblockCleanup = DispatchSemaphore(value: 0)
         let registry = KiroTestProcessRegistry(
@@ -895,7 +895,7 @@ extension KiroStatusProbeTests {
 
     @Test
     func `fetch cancellation while waiting for account probe is preserved`() async throws {
-        let accountStarted = FileManager.default.temporaryDirectory
+        let accountStarted = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-account-\(UUID().uuidString).started")
         let cliURL = try self.makeCLI(
             """
@@ -953,7 +953,7 @@ extension KiroStatusProbeTests {
 
     @Test
     func `fetch returns promptly when usage helper spawns a detached child`() async throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-pipe-\(UUID().uuidString)", isDirectory: true)
         let childPIDFile = root.appendingPathComponent("child.pid")
         let cliURL = root.appendingPathComponent("kiro-cli")
@@ -1088,7 +1088,7 @@ extension KiroStatusProbeTests {
     }
 
     private func makeCLI(_ script: String) throws -> URL {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-cli-\(UUID().uuidString)", isDirectory: true)
         let cliURL = root.appendingPathComponent("kiro-cli")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -1551,7 +1551,7 @@ extension KiroStatusProbeTests {
 extension KiroStatusProbeTests {
     @Test
     func `fetch cancellation while joining account after usage failure is preserved`() async throws {
-        let accountStarted = FileManager.default.temporaryDirectory
+        let accountStarted = TestFixtureScratch.root
             .appendingPathComponent("codexbar-kiro-failed-usage-account-\(UUID().uuidString).started")
         let usageFailed = accountStarted.appendingPathExtension("usage-failed")
         let cliURL = try self.makeCLI(

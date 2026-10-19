@@ -371,7 +371,10 @@ public enum OpenAIDashboardCacheStore {
         guard let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
             return nil
         }
-        let dir = root.appendingPathComponent("com.steipete.codexbar", isDirectory: true)
+        let dir = root
+            .appendingPathComponent(
+                JonesStateRoot.path("com.steipete.codexbar"),
+                isDirectory: true) // JONES(trial-identity)
         return dir.appendingPathComponent("openai-dashboard.json")
     }
 }

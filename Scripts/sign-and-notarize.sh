@@ -5,6 +5,13 @@ APP_NAME="CodexBar"
 APP_IDENTITY="Developer ID Application: Peter Steinberger (Y5PE65HELJ)"
 APP_BUNDLE="CodexBar.app"
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
+# JONES(trial-identity): never re-sign a trial with the upstream identity.
+if [[ -f "$ROOT/.mac-release.jones.env" ]]; then
+  source "$ROOT/.mac-release.jones.env"
+  : "${JONES_SIGNING_IDENTITY:?Fork signing identity must be explicitly supplied}"
+  [[ "$JONES_SIGNING_IDENTITY" != *Y5PE65HELJ* ]] || exit 1
+  APP_IDENTITY="$JONES_SIGNING_IDENTITY"
+fi
 source "$ROOT/version.env"
 source "$ROOT/Scripts/release_artifacts.sh"
 source "$ROOT/Scripts/package_product_paths.sh"

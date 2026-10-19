@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "authority_effect": "none",
+  "base_source": "ba4ca5f27381900bde998f70619be4903dd4d6f0",
+  "historical_anchor_source": "082cd4943ef723d72aeaef01af2aa2c2f85dbe79",
+  "failed_check": "ProviderArchitectureGatekeeperTests cross-provider construct catalog, native-r7 group65",
+  "changed_path": "Tests/CodexBarTests/ProviderArchitectureGatekeeperTests.swift",
+  "candidate_sha256": "72aa35f8a35258df0bd3a3355097ae9261f560883c77787f2bdaf0e274dc0463",
+  "static_evidence": {
+    "full_line_identical_remaps": 56,
+    "allowed_remaps": 43,
+    "suppression_remaps": 13,
+    "reviewed_fingerprint_updates": 3,
+    "exact_one_occurrence_additions": 2,
+    "candidate_anchor_matches": 404,
+    "retained_tests": 41,
+    "scanner_and_negative_coverage": "byte-identical outside catalog metadata",
+    "diff_whitespace": "PASS"
+  },
+  "scope": "Exact anchors/fingerprints/justifications only; no production source or scanner relaxation. Existing provider sets retained.",
+  "native_validation": "HELD until fixture containment repair reviewed and new verification capsule issued",
+  "ownership": "Astra/high one-file builder explicitly released write ownership to coordinator/root; no native execution or Git mutation."
+}

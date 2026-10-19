@@ -604,7 +604,7 @@ struct CostUsageJsonlScannerTests {
     }
 
     private func makeTemporaryRoot() throws -> URL {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(
+        let root = TestFixtureScratch.root.appendingPathComponent(
             "codexbar-cost-usage-jsonl-\(UUID().uuidString)",
             isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

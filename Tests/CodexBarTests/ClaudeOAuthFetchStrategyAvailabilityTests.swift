@@ -570,7 +570,7 @@ struct ClaudeOAuthFetchStrategyAvailabilityTests {
                     ClaudeOAuthKeychainAccessGate.resetForTesting()
                 }
 
-                let tempDir = FileManager.default.temporaryDirectory
+                let tempDir = TestFixtureScratch.root
                     .appendingPathComponent(UUID().uuidString, isDirectory: true)
                 try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
                 let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -598,7 +598,7 @@ struct ClaudeOAuthFetchStrategyAvailabilityTests {
 
     @Test
     func `auto mode expired Claude CLI creds env provided CLI override returns available`() async throws {
-        let tempDir = FileManager.default.temporaryDirectory
+        let tempDir = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         let cliURL = tempDir.appendingPathComponent("claude")
@@ -643,7 +643,7 @@ struct ClaudeOAuthFetchStrategyAvailabilityTests {
                     ClaudeOAuthKeychainAccessGate.resetForTesting()
                 }
 
-                let tempDir = FileManager.default.temporaryDirectory
+                let tempDir = TestFixtureScratch.root
                     .appendingPathComponent(UUID().uuidString, isDirectory: true)
                 try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
                 let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -793,7 +793,7 @@ struct ClaudeOAuthFetchStrategyAvailabilityTests {
     }
 
     private static func makeExecutableClaudeStub() throws -> String {
-        let url = FileManager.default.temporaryDirectory
+        let url = TestFixtureScratch.root
             .appendingPathComponent("claude-extra-credit-\(UUID().uuidString)")
         try Data("#!/bin/sh\nexit 0\n".utf8).write(to: url)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
@@ -801,7 +801,7 @@ struct ClaudeOAuthFetchStrategyAvailabilityTests {
     }
 
     private func withIsolatedCookieCache<T>(_ operation: () async throws -> T) async rethrows -> T {
-        let legacyBase = FileManager.default.temporaryDirectory
+        let legacyBase = TestFixtureScratch.root
             .appendingPathComponent("claude-oauth-enrichment-\(UUID().uuidString)", isDirectory: true)
         let service = "claude-oauth-enrichment-\(UUID().uuidString)"
         return try await KeychainCacheStore.withServiceOverrideForTesting(service) {

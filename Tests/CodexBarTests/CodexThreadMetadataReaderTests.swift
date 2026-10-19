@@ -11,7 +11,7 @@ import Testing
 struct CodexThreadMetadataReaderTests {
     @Test
     func `reader loads titles and agent paths without writing to codex state`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codex-thread-metadata-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -28,7 +28,7 @@ struct CodexThreadMetadataReaderTests {
 
     @Test
     func `reader honors configured sqlite home before the environment`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codex-thread-metadata-config-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -61,7 +61,7 @@ struct CodexThreadMetadataReaderTests {
 
     @Test
     func `reader accepts quoted sqlite key and multiline path`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codex-thread-metadata-multiline-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -82,7 +82,7 @@ struct CodexThreadMetadataReaderTests {
 
     @Test
     func `reader preserves parent traversal after a symlink`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codex-thread-metadata-symlink-\(UUID().uuidString)", isDirectory: true)
         let target = root.appendingPathComponent("target/project", isDirectory: true)
         let state = root.appendingPathComponent("target/state", isDirectory: true)
@@ -103,7 +103,7 @@ struct CodexThreadMetadataReaderTests {
 
     @Test
     func `reader resolves relative sqlite environment against the session cwd`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codex-thread-metadata-env-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -125,7 +125,7 @@ struct CodexThreadMetadataReaderTests {
 
     @Test
     func `reader prefers the latest explicit thread name over the sqlite title`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codex-thread-metadata-name-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -151,7 +151,7 @@ struct CodexThreadMetadataReaderTests {
 
     @Test
     func `reader returns an explicit thread name without sqlite state`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codex-thread-metadata-index-only-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }

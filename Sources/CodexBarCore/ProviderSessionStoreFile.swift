@@ -3,7 +3,7 @@ import Foundation
 enum ProviderSessionStoreFile {
     static let isolationEnvironmentKey = "CODEXBAR_TEST_SESSION_FILE_ISOLATION"
 
-    private static let testDirectory = FileManager.default.temporaryDirectory
+    private static let testDirectory = TestFixtureScratch.root
         .appendingPathComponent("codexbar-session-tests-\(UUID().uuidString)", isDirectory: true)
 
     static func url(
@@ -23,7 +23,8 @@ enum ProviderSessionStoreFile {
         {
             testDirectory ?? self.testDirectory
         } else {
-            applicationSupportDirectory().appendingPathComponent("CodexBar", isDirectory: true)
+            applicationSupportDirectory()
+                .appendingPathComponent(JonesStateRoot.path("CodexBar"), isDirectory: true) // JONES(trial-identity)
         }
         return directory.appendingPathComponent(filename)
     }

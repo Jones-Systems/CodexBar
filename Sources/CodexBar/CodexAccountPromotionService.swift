@@ -130,7 +130,12 @@ struct CodexAccountPromotionResult: Equatable {
         case imported(managedAccountID: UUID)
     }
 
-    let targetManagedAccountID: UUID
+    // JONES(fleet-system-promotion): results retain the actual requested provenance.
+    let target: JonesCodexSystemPromotionTarget
+    var targetManagedAccountID: UUID? {
+        self.target.managedAccountID
+    }
+
     let outcome: Outcome
     let displacedLiveDisposition: DisplacedLiveDisposition
     let didMutateLiveAuth: Bool
@@ -138,6 +143,12 @@ struct CodexAccountPromotionResult: Equatable {
 }
 
 enum CodexAccountPromotionError: Error, Equatable {
+    // JONES(fleet-system-promotion): fail closed without managed enrollment or fallback.
+    case fleetTargetUnavailable
+    case fleetTargetIdentityChanged
+    case fleetTargetAuthMissing
+    case fleetTargetAuthUnreadable
+    case fleetDestinationAmbiguous
     case targetManagedAccountNotFound
     case targetManagedAccountAuthMissing
     case targetManagedAccountAuthUnreadable
@@ -151,8 +162,40 @@ enum CodexAccountPromotionError: Error, Equatable {
     case liveAuthSwapFailed
 }
 
+/// A cancelled login remains a writer until its runner confirms termination and reap.
+/// UI generations cannot provide this exclusion across panes or direct service calls.
+@MainActor
+final class CodexSharedAuthWriter {
+    static let shared = CodexSharedAuthWriter()
+    private var isHeld = false
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+
+    #if DEBUG
+    var _test_waitingWriterCount: Int {
+        self.waiters.count
+    }
+    #endif
+
+    func acquire() async {
+        if !self.isHeld {
+            self.isHeld = true
+            return
+        }
+        await withCheckedContinuation { self.waiters.append($0) }
+    }
+
+    func release() {
+        if self.waiters.isEmpty {
+            self.isHeld = false
+        } else {
+            self.waiters.removeFirst().resume()
+        }
+    }
+}
+
 @MainActor
 final class CodexAccountPromotionService {
+    let sharedAuthWriter: CodexSharedAuthWriter
     private let store: any ManagedCodexAccountStoring
     private let homeFactory: any ManagedCodexHomeProducing
     private let identityReader: any ManagedCodexIdentityReading
@@ -164,6 +207,7 @@ final class CodexAccountPromotionService {
     private let accountScopedRefresher: any CodexAccountScopedRefreshing
     private let baseEnvironment: [String: String]
     private let fileManager: FileManager
+    private let fleetAdmission: JonesCodexFleetPromotionAdmission
 
     init(
         store: any ManagedCodexAccountStoring,
@@ -176,8 +220,16 @@ final class CodexAccountPromotionService {
         activeSourceWriter: any CodexActiveSourceWriting,
         accountScopedRefresher: any CodexAccountScopedRefreshing,
         baseEnvironment: [String: String] = ProcessInfo.processInfo.environment,
-        fileManager: FileManager = .default)
+        fileManager: FileManager = .default,
+        sharedAuthWriter: CodexSharedAuthWriter = .shared,
+        fleetHomePaths: @escaping @MainActor () -> [String]? = JonesCodexFleetPromotionAdmission.discoverHomePaths,
+        defaultHomeURL: URL? = nil)
     {
+        self.fleetAdmission = JonesCodexFleetPromotionAdmission(
+            loadFleetHomePaths: fleetHomePaths,
+            defaultHomeURL: defaultHomeURL ?? CodexHomeScope.ambientHomeURL(env: [:], fileManager: fileManager),
+            ambientHomeURL: CodexHomeScope.ambientHomeURL(env: baseEnvironment, fileManager: fileManager))
+        self.sharedAuthWriter = sharedAuthWriter
         self.store = store
         self.homeFactory = homeFactory
         self.identityReader = identityReader
@@ -212,37 +264,63 @@ final class CodexAccountPromotionService {
     }
 
     func promoteManagedAccount(id: UUID) async throws -> CodexAccountPromotionResult {
+        try await self.promote(target: .managedAccount(id))
+    }
+
+    // JONES(fleet-system-promotion): both target kinds retain shared-writer serialization.
+    func promote(target: JonesCodexSystemPromotionTarget) async throws -> CodexAccountPromotionResult {
+        await self.sharedAuthWriter.acquire()
+        defer { self.sharedAuthWriter.release() }
+        try Task.checkCancellation()
         let contextBuilder = PreparedPromotionContextBuilder(
             store: self.store,
             workspaceResolver: self.workspaceResolver,
             snapshotLoader: self.snapshotLoader,
             authMaterialReader: self.authMaterialReader,
             baseEnvironment: self.baseEnvironment,
-            fileManager: self.fileManager)
-        let context = try await contextBuilder.build(targetID: id)
+            fileManager: self.fileManager,
+            fleetAdmission: self.fleetAdmission)
+        let context = try await contextBuilder.build(target: target)
+        try Task.checkCancellation()
 
-        if let resultingActiveSource = self.convergedActiveSource(for: context) {
+        // Fleet selection must validate and copy the canonical bytes even for the same identity.
+        if case .managedAccount = target, let resultingActiveSource = self.convergedActiveSource(for: context) {
             self.activeSourceWriter.writeCodexActiveSource(resultingActiveSource)
             await self.accountScopedRefresher.refreshCodexAccountScopedState(allowDisabled: true)
             return CodexAccountPromotionResult(
-                targetManagedAccountID: id,
+                target: target,
                 outcome: .convergedNoOp,
                 displacedLiveDisposition: .none,
                 didMutateLiveAuth: false,
                 resultingActiveSource: resultingActiveSource)
         }
 
-        guard !context.target.selectedWorkspaceDiffersFromAuthDefault else {
+        guard context.target.managedAccount?.selectedWorkspaceDiffersFromAuthDefault != true else {
             throw CodexAccountPromotionError.targetManagedAccountWorkspaceDiffersFromAuthDefault
         }
 
-        let targetAuthMaterial = try self.requiredTargetAuthMaterial(from: context.target)
+        let targetAuthMaterial: PreparedAuthMaterial
+        let protectedHomes: [URL]
+        switch context.target {
+        case let .managed(account):
+            targetAuthMaterial = try self.requiredTargetAuthMaterial(from: account)
+            protectedHomes = []
+        case let .fleet(fleet, material):
+            protectedHomes = try self.fleetAdmission.validate(fleet) + [context.live.homeURL]
+            // Preparation can suspend for workspace lookup. Reject source rotation before any write.
+            guard let current = try self.authMaterialReader.readAuthData(homeURL: material.homeURL),
+                  current == material.rawData
+            else { throw CodexAccountPromotionError.fleetTargetIdentityChanged }
+            targetAuthMaterial = material
+        }
+        try Task.checkCancellation()
         let preservationPlan = CodexDisplacedLivePreservationPlanner().makePlan(context: context)
         let executionResult = try CodexDisplacedLivePreservationExecutor(
             store: self.store,
             homeFactory: self.homeFactory,
             authMaterialReader: self.authMaterialReader,
-            fileManager: self.fileManager)
+            fileManager: self.fileManager,
+            protectedHomes: protectedHomes)
             .execute(plan: preservationPlan, context: context)
 
         do {
@@ -255,7 +333,7 @@ final class CodexAccountPromotionService {
         await self.accountScopedRefresher.refreshCodexAccountScopedState(allowDisabled: true)
 
         return CodexAccountPromotionResult(
-            targetManagedAccountID: id,
+            target: target,
             outcome: .promoted,
             displacedLiveDisposition: executionResult.displacedLiveDisposition,
             didMutateLiveAuth: true,
@@ -267,6 +345,7 @@ final class CodexAccountPromotionService {
     }
 
     private func convergedActiveSource(for context: PreparedPromotionContext) -> CodexActiveSource? {
+        guard let target = context.target.managedAccount else { return nil }
         if let liveAuthIdentity = context.live.authIdentity {
             let targetIdentity = context.target.remoteIdentity
             guard CodexIdentityMatcher.matches(
@@ -283,7 +362,7 @@ final class CodexAccountPromotionService {
             }
 
             if liveAuthIdentity.providerAccountID != nil {
-                return .managedAccount(id: context.target.persisted.id)
+                return .managedAccount(id: target.persisted.id)
             }
 
             return nil
@@ -294,8 +373,8 @@ final class CodexAccountPromotionService {
         }
 
         guard CodexIdentityMatcher.matches(
-            context.snapshot.managedRemoteIdentity(for: context.target.persisted),
-            lhsEmail: context.snapshot.runtimeEmail(for: context.target.persisted),
+            context.snapshot.managedRemoteIdentity(for: target.persisted),
+            lhsEmail: context.snapshot.runtimeEmail(for: target.persisted),
             context.snapshot.runtimeIdentity(for: liveSystemAccount),
             rhsEmail: liveSystemAccount.email)
         else {

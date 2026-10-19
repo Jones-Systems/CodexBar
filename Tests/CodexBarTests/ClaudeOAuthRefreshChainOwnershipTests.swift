@@ -36,7 +36,7 @@ struct ClaudeOAuthRefreshChainOwnershipTests {
     private func makeProfile(accountUuid: String?, credentialsData: Data? = nil) throws
         -> (directory: URL, environment: [String: String])
     {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         if let accountUuid {
@@ -58,7 +58,7 @@ struct ClaudeOAuthRefreshChainOwnershipTests {
     private func makeProfileWithRawConfig(_ rawConfig: Data) throws
         -> (directory: URL, environment: [String: String])
     {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         try rawConfig.write(to: directory.appendingPathComponent(".claude.json"))

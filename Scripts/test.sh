@@ -41,4 +41,6 @@ if [[ -n "${CODEXBAR_TEST_SHARD_INDEX:-}" || -n "${CODEXBAR_TEST_SHARD_COUNT:-}"
   )
 fi
 
+# The Python runner owns one workspace fixture parent and drains its commands before cleanup.
+# An explicitly supplied parent stays caller-owned.
 exec python3 "${ROOT_DIR}/Scripts/ci_swift_test_by_suite.py" "${ARGS[@]}" "$@"

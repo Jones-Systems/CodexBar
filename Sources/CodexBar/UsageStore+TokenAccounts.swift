@@ -712,10 +712,10 @@ extension UsageStore {
         snapshots: [CodexAccountUsageSnapshot] = [],
         activeVisibleAccountID: String?) -> [CodexVisibleAccount]
     {
-        let accounts = CodexAccountPresentationOrdering.orderedAccounts(
-            accounts,
-            snapshots: snapshots,
-            activeVisibleAccountID: activeVisibleAccountID)
+        let accounts = self.settings.codexAccountOrder.isEmpty
+            ? CodexAccountPresentationOrdering.orderedAccounts(
+                accounts, snapshots: snapshots, activeVisibleAccountID: activeVisibleAccountID)
+            : self.settings.orderedCodexAccounts(accounts)
         let limit = Self.tokenAccountMenuSnapshotLimit
         if accounts.count <= limit {
             return accounts

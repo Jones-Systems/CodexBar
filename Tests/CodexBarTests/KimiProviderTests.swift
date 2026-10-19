@@ -37,7 +37,7 @@ private func makeKimiFetchContext(
 }
 
 private func makeTemporaryKimiCodeHome() throws -> URL {
-    let home = FileManager.default.temporaryDirectory
+    let home = TestFixtureScratch.root
         .appendingPathComponent("CodexBar-KimiCode-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(
         at: home,

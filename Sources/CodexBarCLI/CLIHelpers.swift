@@ -169,10 +169,10 @@ extension CodexBarCLI {
     }
 
     static func resetTimeDisplayStyleFromDefaults() -> ResetTimeDisplayStyle {
-        let domains = [
+        let domains = JonesStateRoot.defaultsDomains([ // JONES(trial-identity)
             "com.steipete.codexbar",
             "com.steipete.codexbar.debug",
-        ]
+        ])
         for domain in domains {
             if let value = UserDefaults(suiteName: domain)?.object(forKey: "resetTimesShowAbsolute") as? Bool {
                 return value ? .absolute : .countdown
@@ -183,10 +183,10 @@ extension CodexBarCLI {
     }
 
     static func weeklyProgressWorkDaysFromDefaults() -> Int? {
-        let domains = [
+        let domains = JonesStateRoot.defaultsDomains([ // JONES(trial-identity)
             "com.steipete.codexbar",
             "com.steipete.codexbar.debug",
-        ]
+        ])
         for domain in domains {
             if let value = UserDefaults(suiteName: domain)?.object(forKey: "weeklyProgressWorkDays") as? Int {
                 return value
@@ -203,10 +203,10 @@ extension CodexBarCLI {
     }
 
     static func boolFromAppDefaults(_ key: String) -> Bool? {
-        let domains = [
+        let domains = JonesStateRoot.defaultsDomains([ // JONES(trial-identity)
             "com.steipete.codexbar",
             "com.steipete.codexbar.debug",
-        ]
+        ])
         for domain in domains {
             if let value = UserDefaults(suiteName: domain)?.object(forKey: key) as? Bool {
                 return value
@@ -216,10 +216,10 @@ extension CodexBarCLI {
     }
 
     static func stringFromAppDefaults(_ key: String) -> String? {
-        let domains = [
+        let domains = JonesStateRoot.defaultsDomains([ // JONES(trial-identity)
             "com.steipete.codexbar",
             "com.steipete.codexbar.debug",
-        ]
+        ])
         for domain in domains {
             if let value = UserDefaults(suiteName: domain)?.string(forKey: key), !value.isEmpty {
                 return value

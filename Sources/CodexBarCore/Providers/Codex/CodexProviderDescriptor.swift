@@ -132,6 +132,9 @@ public enum CodexProviderDescriptor {
     }
 
     private static func resolveStrategies(context: ProviderFetchContext) async -> [any ProviderFetchStrategy] {
+        if context.settings?.codex?.profileAccountTargetUnavailable == true {
+            return [CodexUnavailableProfileStrategy()]
+        }
         let pat = CodexPATFetchStrategy()
         let cli = CodexCLIUsageStrategy()
         let oauth = CodexOAuthFetchStrategy()
@@ -264,15 +267,47 @@ public struct CodexUsageStrategy: Equatable, Sendable {
     public let dataSource: CodexUsageDataSource
 }
 
+enum CodexProfileSelectionError: LocalizedError {
+    case unavailable
+
+    var errorDescription: String? {
+        "The selected Codex profile is unavailable or removed. Restore its configuration or select another account."
+    }
+
+    static func requireAvailable(_ context: ProviderFetchContext) throws {
+        guard context.settings?.codex?.profileAccountTargetUnavailable != true else {
+            throw unavailable
+        }
+    }
+}
+
+struct CodexUnavailableProfileStrategy: ProviderFetchStrategy {
+    let id: String = "codex.profile-unavailable"
+    let kind: ProviderFetchKind = .localProbe
+
+    func isAvailable(_ context: ProviderFetchContext) async -> Bool {
+        context.settings?.codex?.profileAccountTargetUnavailable == true
+    }
+
+    func fetch(_: ProviderFetchContext) async throws -> ProviderFetchResult {
+        throw CodexProfileSelectionError.unavailable
+    }
+
+    func shouldFallback(on _: Error, context _: ProviderFetchContext) -> Bool {
+        false
+    }
+}
+
 struct CodexCLIUsageStrategy: ProviderFetchStrategy {
     let id: String = "codex.cli"
     let kind: ProviderFetchKind = .cli
 
     func isAvailable(_ context: ProviderFetchContext) async -> Bool {
-        Self.resolvedBinary(env: context.env) != nil
+        context.settings?.codex?.profileAccountTargetUnavailable != true && Self.resolvedBinary(env: context.env) != nil
     }
 
     func fetch(_ context: ProviderFetchContext) async throws -> ProviderFetchResult {
+        try CodexProfileSelectionError.requireAvailable(context)
         let snapshot = try await context.fetcher.loadLatestCLIAccountSnapshot()
         guard let usage = snapshot.usage else {
             guard context.includeCredits, let credits = snapshot.credits else {
@@ -338,7 +373,8 @@ struct CodexOAuthNativeRefreshCLIStrategy: ProviderFetchStrategy {
         // workspace account header. Falling back to it would therefore report the auth.json
         // workspace under a different selected workspace. Keep this path unavailable until the
         // owner CLI can carry that scope explicitly.
-        guard context.codexWorkspaceID == nil,
+        guard context.settings?.codex?.profileAccountTargetUnavailable != true,
+              context.codexWorkspaceID == nil,
               context.sourceMode == .oauth,
               self.binaryResolver(context) != nil,
               let credentials = try? CodexOAuthCredentialsStore.loadForUsage(
@@ -362,12 +398,14 @@ struct CodexOAuthFetchStrategy: ProviderFetchStrategy {
     let kind: ProviderFetchKind = .oauth
 
     func isAvailable(_ context: ProviderFetchContext) async -> Bool {
-        (try? CodexOAuthCredentialsStore.loadForUsage(
+        guard context.settings?.codex?.profileAccountTargetUnavailable != true else { return false }
+        return (try? CodexOAuthCredentialsStore.loadForUsage(
             env: context.env,
             allowExternalSources: context.settings?.codex?.allowExternalOAuthSources == true)) != nil
     }
 
     func fetch(_ context: ProviderFetchContext) async throws -> ProviderFetchResult {
+        try CodexProfileSelectionError.requireAvailable(context)
         let credentials = try CodexOAuthCredentialsStore.loadForUsage(
             env: context.env,
             allowExternalSources: context.settings?.codex?.allowExternalOAuthSources == true)

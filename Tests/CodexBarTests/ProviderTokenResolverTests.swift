@@ -87,7 +87,7 @@ struct ProviderTokenResolverTests {
     }
 
     private func makeKiloAuthFile(contents: String) throws -> URL {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let fileURL = directory.appendingPathComponent("auth.json", isDirectory: false)
@@ -147,7 +147,7 @@ struct ProviderTokenResolverTests {
     }
 
     private func makeCodebuffCredentialsFile(contents: String) throws -> URL {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let fileURL = directory.appendingPathComponent("credentials.json", isDirectory: false)

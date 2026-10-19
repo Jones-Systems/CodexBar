@@ -134,7 +134,7 @@ extension CodexAccountScopedRefreshTests {
     }
 
     func makeManagedAccountStoreURL(accounts: [ManagedCodexAccount]) throws -> URL {
-        let storeURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let storeURL = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let store = FileManagedCodexAccountStore(fileURL: storeURL)
         try store.storeAccounts(ManagedCodexAccountSet(
             version: FileManagedCodexAccountStore.currentVersion,

@@ -66,7 +66,7 @@ struct CodexAccountFingerprintReconciliationTests {
             createdAt: 1,
             updatedAt: 2,
             lastAuthenticatedAt: 3)
-        let storeURL = FileManager.default.temporaryDirectory
+        let storeURL = TestFixtureScratch.root
             .appendingPathComponent("codex-managed-store-\(UUID().uuidString).json")
         try Self.writeManagedCodexStore(
             ManagedCodexAccountSet(version: FileManagedCodexAccountStore.currentVersion, accounts: [first, second]),
@@ -96,7 +96,7 @@ struct CodexAccountFingerprintReconciliationTests {
     @Test
     func `legacy fingerprint merges missing managed home with live provider account`() throws {
         let accountID = try #require(UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-444444444444"))
-        let missingHome = FileManager.default.temporaryDirectory
+        let missingHome = TestFixtureScratch.root
             .appendingPathComponent("missing-managed-codex-home-\(UUID().uuidString)", isDirectory: true)
         try? FileManager.default.removeItem(at: missingHome)
         let legacy = ManagedCodexAccount(
@@ -138,7 +138,7 @@ struct CodexAccountFingerprintReconciliationTests {
     @Test
     func `selected workspace fingerprint merges missing managed home with matching live owner`() throws {
         let accountID = try #require(UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-555555555555"))
-        let missingHome = FileManager.default.temporaryDirectory
+        let missingHome = TestFixtureScratch.root
             .appendingPathComponent("missing-selected-codex-home-\(UUID().uuidString)", isDirectory: true)
         try? FileManager.default.removeItem(at: missingHome)
         let selected = ManagedCodexAccount(

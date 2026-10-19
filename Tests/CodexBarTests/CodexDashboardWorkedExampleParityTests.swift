@@ -351,7 +351,7 @@ struct CodexDashboardWorkedExampleParityTests {
     private func withIsolatedDashboardCache<T>(
         _ operation: () async throws -> T) async rethrows -> T
     {
-        let cacheURL = FileManager.default.temporaryDirectory
+        let cacheURL = TestFixtureScratch.root
             .appendingPathComponent("codexbar-dashboard-\(UUID().uuidString).json")
         defer { try? FileManager.default.removeItem(at: cacheURL) }
         return try await OpenAIDashboardCacheStore.$cacheURLOverride.withValue(cacheURL) {
@@ -419,7 +419,7 @@ struct CodexDashboardWorkedExampleParityTests {
         settings._test_liveSystemCodexAccount = nil
         settings._test_codexReconciliationEnvironment = nil
         settings.historicalTrackingEnabled = true
-        let historyURL = FileManager.default.temporaryDirectory
+        let historyURL = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("usage-history.jsonl")
         let planStore = testPlanUtilizationHistoryStore(
@@ -522,7 +522,7 @@ struct CodexDashboardWorkedExampleParityTests {
     }
 
     private func makeManagedAccountStoreURL(accounts: [ManagedCodexAccount]) throws -> URL {
-        let storeURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let storeURL = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let store = FileManagedCodexAccountStore(fileURL: storeURL)
         try store.storeAccounts(ManagedCodexAccountSet(
             version: FileManagedCodexAccountStore.currentVersion,

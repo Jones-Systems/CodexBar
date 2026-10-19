@@ -6,7 +6,7 @@ import Testing
 struct CostUsageJsonlPerformanceTests {
     @Test
     func `scanner benchmark beats front buffer baseline`() throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(
+        let root = TestFixtureScratch.root.appendingPathComponent(
             "codexbar-cost-usage-bench-\(UUID().uuidString)",
             isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

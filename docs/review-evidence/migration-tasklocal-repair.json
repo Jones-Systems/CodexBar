@@ -1,0 +1,198 @@
+{
+  "schema": "codexbar.migration-tasklocal-repair/v1",
+  "authority_effect": "none",
+  "preimage_revision": "b8d2a0076ed1e6e47cf6e03031a75abe2e847593",
+  "introduced_by": "e6cfc39876882956298267712124c60077f78a9a",
+  "pull_request": "https://github.com/Jones-Systems/CodexBar/pull/3",
+  "hosted_failure": {
+    "run": 39192058451,
+    "macos_shard0_job": 117867158786,
+    "macos_shard1_job": 117867158742,
+    "both": "Same nine compiler errors; native test execution not reached",
+    "successful_jobs": [
+      "changes",
+      "lint",
+      "build-linux-cli (linux-x64, ubuntu-24.04)",
+      "build-linux-cli (linux-arm64, ubuntu-24.04-arm)",
+      "build-linux-musl-cli"
+    ]
+  },
+  "local_failure": {
+    "phase": "focused ProviderArchitectureGatekeeperTests",
+    "attempt": 1,
+    "exit_code": 1,
+    "elapsed_seconds": 900.1813708340051,
+    "native_tests_executed": 0,
+    "compiler_errors": [
+      {
+        "path": "Tests/CodexBarTests/ClaudeNativeKeychainProfileTests.swift",
+        "line": 70,
+        "column": 93,
+        "level": "error",
+        "message": "cannot convert value of type '(OSStatus, AnyObject?)' (aka '(Int32, Optional<AnyObject>)') to closure result type 'T'",
+        "log_line": 572
+      },
+      {
+        "path": "Tests/CodexBarTests/ClaudeNativeKeychainProfileTests.swift",
+        "line": 70,
+        "column": 103,
+        "level": "error",
+        "message": "missing argument labels 'file:line:' in call",
+        "log_line": 580
+      },
+      {
+        "path": "Tests/CodexBarTests/ClaudeNativeKeychainProfileTests.swift",
+        "line": 70,
+        "column": 105,
+        "level": "error",
+        "message": "contextual closure type '() throws -> (OSStatus, AnyObject?)' (aka '() throws -> (Int32, Optional<AnyObject>)') expects 0 arguments, but 1 was used in closure body",
+        "log_line": 588
+      },
+      {
+        "path": "Tests/CodexBarTests/ClaudeNativeKeychainProfileTests.swift",
+        "line": 72,
+        "column": 46,
+        "level": "error",
+        "message": "invalid conversion from throwing function of type '@Sendable () throws -> (OSStatus, AnyObject?)' (aka '@Sendable () throws -> (Int32, Optional<AnyObject>)') to non-throwing function type '@Sendable ([String : Any]) -> (OSStatus, AnyObject?)' (aka '@Sendable (Dictionary<String, Any>) -> (Int32, Optional<AnyObject>)')",
+        "log_line": 596
+      },
+      {
+        "path": "Tests/CodexBarTests/ClaudeNativeKeychainProfileTests.swift",
+        "line": 72,
+        "column": 46,
+        "level": "error",
+        "message": "contextual type for closure argument list expects 1 argument, which cannot be implicitly ignored",
+        "log_line": 604
+      },
+      {
+        "path": "Tests/CodexBarTests/ClaudeNativeKeychainProfileTests.swift",
+        "line": 76,
+        "column": 45,
+        "level": "error",
+        "message": "cannot convert value of type 'T' to closure result type '(OSStatus, AnyObject?)' (aka '(Int32, Optional<AnyObject>)')",
+        "log_line": 612
+      },
+      {
+        "path": "Tests/CodexBarTests/ClaudeNativeProfileFetchTests.swift",
+        "line": 235,
+        "column": 63,
+        "level": "error",
+        "message": "no exact matches in call to instance method 'withValue'",
+        "log_line": 620
+      },
+      {
+        "path": "Tests/CodexBarTests/CodexFleetProfileIntegrationTests.swift",
+        "line": 355,
+        "column": 49,
+        "level": "error",
+        "message": "no exact matches in call to instance method 'withValue'",
+        "log_line": 2676
+      },
+      {
+        "path": "Tests/CodexBarTests/CodexFleetProfileIntegrationTests.swift",
+        "line": 382,
+        "column": 17,
+        "level": "error",
+        "message": "cannot convert value of type '()' to closure result type 'Data'",
+        "log_line": 2686
+      }
+    ],
+    "process_drain_proved": true,
+    "scratch_removed_absence_verified": true,
+    "later_phases": "Not started after first failure"
+  },
+  "diagnosis": "Three TaskLocal.withValue generic first arguments are closure values; rewriting them as multiple trailing closures changed binding. Exactly three such rewrites in the full introducing commit; neighboring concrete-closure helpers remain unchanged.",
+  "repair": "Use explicitly typed local @Sendable override closures, then withValue(variable) with the existing operation. Add explicit return to the now multi-statement generic Keychain fixture wrapper.",
+  "files": {
+    "Tests/CodexBarTests/ClaudeNativeKeychainProfileTests.swift": {
+      "before_sha256": "468b42b59e104b8951c410107e4cb28a959eb4ee1823895ecf6375f2f7606d87",
+      "after_sha256": "85c5585bf3f6a79e21df55cecc6655aa0471c2b1a717ba0b660a558e3a3dbb6e",
+      "unchanged_counts": {
+        "test_function_names": 8,
+        "test_annotations": 5,
+        "expect_assertions": 27,
+        "require_assertions": 0,
+        "issue_records": 0,
+        "comments": 1
+      },
+      "only_exact_typed_local_and_withValue_rewrite": true
+    },
+    "Tests/CodexBarTests/ClaudeNativeProfileFetchTests.swift": {
+      "before_sha256": "bc323ce9c427482c95f983484fcc46d551675b878080149c1dc8f95e7d45ad4b",
+      "after_sha256": "58e439e8d76d11e9e1825eda162f141688a99e653c611722cfe9257d7db24910",
+      "unchanged_counts": {
+        "test_function_names": 12,
+        "test_annotations": 5,
+        "expect_assertions": 23,
+        "require_assertions": 5,
+        "issue_records": 5,
+        "comments": 2
+      },
+      "only_exact_typed_local_and_withValue_rewrite": true
+    },
+    "Tests/CodexBarTests/CodexFleetProfileIntegrationTests.swift": {
+      "before_sha256": "a0063631dc5a6ea9984208ca442b09fecd6da42d7fe720e753d7c2262fbb4cb5",
+      "after_sha256": "4be4d526736fa5b9e85652eeb72741e5943b17991c192fb310a67f52436dac78",
+      "unchanged_counts": {
+        "test_function_names": 15,
+        "test_annotations": 10,
+        "expect_assertions": 60,
+        "require_assertions": 5,
+        "issue_records": 2,
+        "comments": 0
+      },
+      "only_exact_typed_local_and_withValue_rewrite": true
+    }
+  },
+  "invariants": "Override and operation bodies unchanged, @Sendable/throwing/async types match source TaskLocal declarations; custom concrete closure helper forms unchanged. Explicit return preserves generic fixture result.",
+  "checks": [
+    {
+      "name": "format-write",
+      "command": [
+        "swiftformat",
+        "Tests/CodexBarTests/ClaudeNativeKeychainProfileTests.swift",
+        "Tests/CodexBarTests/ClaudeNativeProfileFetchTests.swift",
+        "Tests/CodexBarTests/CodexFleetProfileIntegrationTests.swift",
+        "--cache",
+        "ignore"
+      ],
+      "exit": 0
+    },
+    {
+      "name": "format-lint",
+      "command": [
+        "swiftformat",
+        "Tests/CodexBarTests/ClaudeNativeKeychainProfileTests.swift",
+        "Tests/CodexBarTests/ClaudeNativeProfileFetchTests.swift",
+        "Tests/CodexBarTests/CodexFleetProfileIntegrationTests.swift",
+        "--lint",
+        "--cache",
+        "ignore"
+      ],
+      "exit": 0
+    },
+    {
+      "name": "lint",
+      "command": [
+        "swiftlint",
+        "lint",
+        "--strict",
+        "--no-cache",
+        "--reporter",
+        "json",
+        "Tests/CodexBarTests/ClaudeNativeKeychainProfileTests.swift",
+        "Tests/CodexBarTests/ClaudeNativeProfileFetchTests.swift",
+        "Tests/CodexBarTests/CodexFleetProfileIntegrationTests.swift"
+      ],
+      "exit": 0
+    }
+  ],
+  "tool_versions": {
+    "swiftformat": "0.61.1",
+    "swiftlint": "0.65.0"
+  },
+  "diff_check_exit": 0,
+  "tool_scratch": "One invocation-owned workspace scratch parent removed and absence verified after all check processes exited.",
+  "native_qualification": "PENDING on repaired commit: three affected suites and complete architecture gate, make check, full make test, plugin engine A/B; format/lint success does not establish compile success.",
+  "publication_record": "Subsequent exact head, native results and CI outcomes belong to the owning PR delivery record; no previous-source result is promoted to a current pass."
+}

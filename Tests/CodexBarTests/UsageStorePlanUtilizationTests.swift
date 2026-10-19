@@ -1295,7 +1295,7 @@ struct UsageStorePlanUtilizationTests {
 
     @Test
     func `runtime does not load unsupported plan history file`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let directoryURL = root
             .appendingPathComponent("com.steipete.codexbar", isDirectory: true)
@@ -1321,7 +1321,7 @@ struct UsageStorePlanUtilizationTests {
 
     @Test
     func `store drops invalid zero minute and empty histories when loading and saving`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let directoryURL = root
             .appendingPathComponent("com.steipete.codexbar", isDirectory: true)
@@ -1379,7 +1379,7 @@ struct UsageStorePlanUtilizationTests {
 
     @Test
     func `store round trips account buckets with series entries`() {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let directoryURL = root
             .appendingPathComponent("com.steipete.codexbar", isDirectory: true)
@@ -1412,7 +1412,7 @@ struct UsageStorePlanUtilizationTests {
 
     @Test
     func `store persists an invalidated pair identity without histories`() {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let directoryURL = root
             .appendingPathComponent("com.steipete.codexbar", isDirectory: true)
@@ -1428,7 +1428,7 @@ struct UsageStorePlanUtilizationTests {
 
     @Test
     func `store preserves unchanged provider file identity`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let directoryURL = root
             .appendingPathComponent("com.steipete.codexbar", isDirectory: true)
@@ -1451,7 +1451,7 @@ struct UsageStorePlanUtilizationTests {
 
     @Test
     func `changing one provider leaves unchanged sibling file untouched`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let directoryURL = root
             .appendingPathComponent("com.steipete.codexbar", isDirectory: true)
@@ -1483,7 +1483,7 @@ struct UsageStorePlanUtilizationTests {
 
     @Test
     func `saving empty provider removes existing history file`() {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let directoryURL = root
             .appendingPathComponent("com.steipete.codexbar", isDirectory: true)
@@ -1501,7 +1501,7 @@ struct UsageStorePlanUtilizationTests {
 
     @Test
     func `saving replaces malformed provider history with canonical document`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let directoryURL = root
             .appendingPathComponent("com.steipete.codexbar", isDirectory: true)
@@ -1573,8 +1573,8 @@ extension UsageStorePlanUtilizationTests {
         defaults.removePersistentDomain(forName: suiteName)
         let configStore = testConfigStore(suiteName: suiteName)
         let planHistoryStore = testPlanUtilizationHistoryStore(suiteName: suiteName)
-        let temporaryRoot = FileManager.default.temporaryDirectory.standardizedFileURL.path
-        let managedStoreURL = FileManager.default.temporaryDirectory
+        let temporaryRoot = TestFixtureScratch.root.standardizedFileURL.path
+        let managedStoreURL = TestFixtureScratch.root
             .appendingPathComponent("\(suiteName)-managed-codex-accounts.json")
         precondition(configStore.fileURL.standardizedFileURL.path.hasPrefix(temporaryRoot))
         precondition(configStore.fileURL.standardizedFileURL != CodexBarConfigStore.defaultURL().standardizedFileURL)

@@ -157,7 +157,7 @@ private struct MigrationFixture {
     }
 
     init() throws {
-        self.root = FileManager.default.temporaryDirectory
+        self.root = TestFixtureScratch.root
             .appendingPathComponent("AppGroupSupportTests-\(UUID().uuidString)", isDirectory: true)
         self.fileManager = MigrationFileManager(root: self.root)
         try FileManager.default.createDirectory(at: self.root, withIntermediateDirectories: true)

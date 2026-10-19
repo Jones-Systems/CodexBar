@@ -34,7 +34,7 @@ struct ClaudeDebugDiagnosticsTests {
     func `debug log uses planner derived order and reasons`() async throws {
         let suite = "ClaudeDebugDiagnosticsTests-\(UUID().uuidString)"
         let service = "com.steipete.codexbar.cache.tests.\(UUID().uuidString)"
-        let tempDir = FileManager.default.temporaryDirectory
+        let tempDir = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         let credentialsURL = tempDir.appendingPathComponent("credentials.json")
@@ -94,7 +94,7 @@ struct ClaudeDebugDiagnosticsTests {
     func `debug log reports no planner selected source when auto has no available sources`() async throws {
         let suite = "ClaudeDebugDiagnosticsTests-\(UUID().uuidString)"
         let service = "com.steipete.codexbar.cache.tests.\(UUID().uuidString)"
-        let tempDir = FileManager.default.temporaryDirectory
+        let tempDir = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         let missingCredentialsURL = tempDir.appendingPathComponent("missing-credentials.json")
@@ -173,7 +173,7 @@ struct ClaudeDebugDiagnosticsTests {
     func `debug log uses runtime OAuth availability for token account routing`() async throws {
         let suite = "ClaudeDebugDiagnosticsTests-\(UUID().uuidString)"
         let service = "com.steipete.codexbar.cache.tests.\(UUID().uuidString)"
-        let tempDir = FileManager.default.temporaryDirectory
+        let tempDir = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         let missingCredentialsURL = tempDir.appendingPathComponent("missing-credentials.json")
@@ -232,7 +232,7 @@ struct ClaudeDebugDiagnosticsTests {
     func `debug log preserves CLI probe overrides across detached work`() async throws {
         let suite = "ClaudeDebugDiagnosticsTests-\(UUID().uuidString)"
         let service = "com.steipete.codexbar.cache.tests.\(UUID().uuidString)"
-        let tempDir = FileManager.default.temporaryDirectory
+        let tempDir = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         let missingCredentialsURL = tempDir.appendingPathComponent("missing-credentials.json")
@@ -301,7 +301,7 @@ struct ClaudeDebugDiagnosticsTests {
     func `debug log uses user initiated interaction for OAuth prompt gate`() async throws {
         let suite = "ClaudeDebugDiagnosticsTests-\(UUID().uuidString)"
         let service = "com.steipete.codexbar.cache.tests.\(UUID().uuidString)"
-        let tempDir = FileManager.default.temporaryDirectory
+        let tempDir = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         let missingCredentialsURL = tempDir.appendingPathComponent("missing-credentials.json")
@@ -366,7 +366,7 @@ struct ClaudeDebugDiagnosticsTests {
     func `debug log invalidates cached planner output when Claude settings change`() async throws {
         let suite = "ClaudeDebugDiagnosticsTests-\(UUID().uuidString)"
         let service = "com.steipete.codexbar.cache.tests.\(UUID().uuidString)"
-        let tempDir = FileManager.default.temporaryDirectory
+        let tempDir = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         let missingCredentialsURL = tempDir.appendingPathComponent("missing-credentials.json")

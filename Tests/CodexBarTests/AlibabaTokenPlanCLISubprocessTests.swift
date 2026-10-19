@@ -5,7 +5,7 @@ import Testing
 struct AlibabaTokenPlanCLISubprocessTests {
     @Test
     func `real Bailian subprocess receives regional arguments and publishes both quota windows`() async throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("alibaba-token-plan-cli-live-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -40,7 +40,7 @@ struct AlibabaTokenPlanCLISubprocessTests {
 
     @Test
     func `CLI probe child process never sees ambient secrets`() async throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("alibaba-token-plan-cli-env-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -75,7 +75,7 @@ struct AlibabaTokenPlanCLISubprocessTests {
 
     @Test
     func `cancelled CLI probe surfaces CancellationError instead of commandFailed`() async throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("alibaba-token-plan-cli-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }

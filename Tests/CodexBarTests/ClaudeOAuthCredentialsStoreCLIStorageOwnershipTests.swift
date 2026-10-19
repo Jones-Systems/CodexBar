@@ -95,7 +95,7 @@ struct ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests {
             ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting()
             defer { ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting() }
 
-            let tempDir = FileManager.default.temporaryDirectory
+            let tempDir = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
             try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
             defer { try? FileManager.default.removeItem(at: tempDir) }
@@ -106,25 +106,23 @@ struct ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests {
                     try await ClaudeOAuthCredentialsStore.withCredentialsURLOverrideForTesting(fileURL) {
                         try await ClaudeOAuthCredentialsStore.withKeychainAccessOverrideForTesting(true) {
                             ClaudeOAuthCredentialsStore.invalidateCache()
-                            let legacyCacheKey = KeychainCacheStore.Key.oauth(provider: .claude)
+                            let profileIdentifier = ClaudeOAuthCredentialsStore.credentialsProfileIdentifier(
+                                environment: environment)
                             let profileCacheKey = ClaudeOAuthCredentialsStore.cacheKeyForTesting(
-                                profileIdentifier: ClaudeOAuthCredentialsStore
-                                    .credentialsProfileIdentifier(environment: environment))
-                            defer {
-                                KeychainCacheStore.clear(key: legacyCacheKey)
-                                KeychainCacheStore.clear(key: profileCacheKey)
-                            }
+                                profileIdentifier: profileIdentifier)
+                            defer { KeychainCacheStore.clear(key: profileCacheKey) }
 
                             let expiredData = self.makeCredentialsData(
                                 accessToken: "expired-codexbar-only",
                                 expiresAt: Date(timeIntervalSinceNow: -3600),
                                 refreshToken: "cached-refresh-token")
                             KeychainCacheStore.store(
-                                key: legacyCacheKey,
+                                key: profileCacheKey,
                                 entry: ClaudeOAuthCredentialsStore.CacheEntry(
                                     data: expiredData,
                                     storedAt: Date(timeIntervalSinceNow: 60),
-                                    owner: .codexbar))
+                                    owner: .codexbar,
+                                    profileIdentifier: profileIdentifier))
 
                             var tokenRefreshRequestCount = 0
                             let refreshed = try await self.withClaudeOAuthTokenRefreshStub(handler: { request in
@@ -227,7 +225,7 @@ struct ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests {
             ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting()
             defer { ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting() }
 
-            let tempDir = FileManager.default.temporaryDirectory
+            let tempDir = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
             try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
             defer { try? FileManager.default.removeItem(at: tempDir) }
@@ -236,19 +234,12 @@ struct ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests {
             try await ClaudeOAuthCredentialsStore.withIsolatedCredentialsFileTrackingForTesting {
                 try await ClaudeOAuthCredentialsStore.withCredentialsURLOverrideForTesting(fileURL) {
                     try await ClaudeOAuthCredentialsStore.withKeychainAccessOverrideForTesting(true) {
-                        let cacheKey = ClaudeOAuthCredentialsStore.cacheKeyForTesting(
-                            profileIdentifier: ClaudeOAuthCredentialsStore.credentialsProfileIdentifier(
-                                environment: environment))
-                        defer { KeychainCacheStore.clear(key: cacheKey) }
                         ClaudeOAuthCredentialsStore.invalidateCache()
-                        let legacyCacheKey = KeychainCacheStore.Key.oauth(provider: .claude)
+                        let profileIdentifier = ClaudeOAuthCredentialsStore.credentialsProfileIdentifier(
+                            environment: environment)
                         let profileCacheKey = ClaudeOAuthCredentialsStore.cacheKeyForTesting(
-                            profileIdentifier: ClaudeOAuthCredentialsStore
-                                .credentialsProfileIdentifier(environment: environment))
-                        defer {
-                            KeychainCacheStore.clear(key: legacyCacheKey)
-                            KeychainCacheStore.clear(key: profileCacheKey)
-                        }
+                            profileIdentifier: profileIdentifier)
+                        defer { KeychainCacheStore.clear(key: profileCacheKey) }
                         let expiredData = self.makeCredentialsData(
                             accessToken: "access-before-rotation",
                             expiresAt: Date(timeIntervalSinceNow: -3600),
@@ -256,11 +247,12 @@ struct ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests {
                         let originalCredentials = try ClaudeOAuthCredentials.parse(data: expiredData)
                         let originalHistoryOwner = try #require(originalCredentials.historyOwnerIdentifier)
                         KeychainCacheStore.store(
-                            key: legacyCacheKey,
+                            key: profileCacheKey,
                             entry: ClaudeOAuthCredentialsStore.CacheEntry(
                                 data: expiredData,
                                 storedAt: Date(),
-                                owner: .codexbar))
+                                owner: .codexbar,
+                                profileIdentifier: profileIdentifier))
 
                         let refreshedRecord = try await ClaudeOAuthCredentialsStore
                             .withIsolatedMemoryCacheForTesting {
@@ -332,7 +324,7 @@ struct ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests {
             ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting()
             defer { ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting() }
 
-            let tempDir = FileManager.default.temporaryDirectory
+            let tempDir = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
             try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
             let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -387,7 +379,7 @@ struct ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests {
             ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting()
             defer { ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting() }
 
-            let tempDir = FileManager.default.temporaryDirectory
+            let tempDir = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
             try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
             let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -445,7 +437,7 @@ struct ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests {
             ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting()
             defer { ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting() }
 
-            let tempDir = FileManager.default.temporaryDirectory
+            let tempDir = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
             try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
             defer { try? FileManager.default.removeItem(at: tempDir) }
@@ -456,7 +448,10 @@ struct ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests {
                     await ClaudeOAuthCredentialsStore.withCredentialsURLOverrideForTesting(fileURL) {
                         await ClaudeOAuthCredentialsStore.withKeychainAccessOverrideForTesting(true) {
                             ClaudeOAuthCredentialsStore.invalidateCache()
-                            let cacheKey = KeychainCacheStore.Key.oauth(provider: .claude)
+                            let profileIdentifier = ClaudeOAuthCredentialsStore.credentialsProfileIdentifier(
+                                environment: environment)
+                            let cacheKey = ClaudeOAuthCredentialsStore.cacheKeyForTesting(
+                                profileIdentifier: profileIdentifier)
                             defer { KeychainCacheStore.clear(key: cacheKey) }
 
                             let expiredData = self.makeCredentialsData(
@@ -468,7 +463,8 @@ struct ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests {
                                 entry: ClaudeOAuthCredentialsStore.CacheEntry(
                                     data: expiredData,
                                     storedAt: Date(timeIntervalSinceNow: 60),
-                                    owner: .codexbar))
+                                    owner: .codexbar,
+                                    profileIdentifier: profileIdentifier))
 
                             await ClaudeOAuthRefreshFailureGate.$shouldAttemptOverride.withValue(false) {
                                 do {
@@ -504,7 +500,7 @@ struct ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests {
             ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting()
             defer { ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting() }
 
-            let tempDir = FileManager.default.temporaryDirectory
+            let tempDir = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
             try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
             let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -569,7 +565,7 @@ struct ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests {
             KeychainCacheStore.setTestStoreForTesting(true)
             defer { KeychainCacheStore.setTestStoreForTesting(false) }
 
-            let tempDir = FileManager.default.temporaryDirectory
+            let tempDir = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
             try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
             defer { try? FileManager.default.removeItem(at: tempDir) }
@@ -641,7 +637,7 @@ struct ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests {
             ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting()
             defer { ClaudeOAuthCredentialsStore._resetCredentialsFileTrackingForTesting() }
 
-            let tempDir = FileManager.default.temporaryDirectory
+            let tempDir = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
             try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
             let fileURL = tempDir.appendingPathComponent("credentials.json")
@@ -710,7 +706,7 @@ struct ClaudeOAuthCredentialsStoreCLIStorageOwnershipTests {
     @Test
     func `selected profile file ignores unrelated global mcp O auth state`() async throws {
         let service = "com.steipete.codexbar.cache.tests.\(UUID().uuidString)"
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let profile = root.appendingPathComponent("selected-profile", isDirectory: true)
         try FileManager.default.createDirectory(at: profile, withIntermediateDirectories: true)

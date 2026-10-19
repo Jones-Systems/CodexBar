@@ -280,7 +280,7 @@ private struct GrokAccountFixture: Sendable {
     let home: URL
 
     init() throws {
-        self.home = FileManager.default.temporaryDirectory
+        self.home = TestFixtureScratch.root
             .appendingPathComponent("CodexBar-GrokAccountContext-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: self.home, withIntermediateDirectories: true)
     }

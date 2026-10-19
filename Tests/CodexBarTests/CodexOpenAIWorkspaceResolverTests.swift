@@ -122,7 +122,7 @@ struct CodexOpenAIWorkspaceResolverTests {
 
     @Test
     func `workspace identity cache persists and normalizes workspace ids`() throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let fileURL = root.appendingPathComponent("codex-openai-workspaces.json")
 

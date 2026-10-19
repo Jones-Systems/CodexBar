@@ -1,0 +1,37 @@
+{
+  "authority_effect": "none",
+  "source_commit": "50986b6ec1d440435cc4f4ea22cd81c6467bc902",
+  "integration": "a6a4ef4660b5bfab91d786b06bbe4105bf5fb039",
+  "source_paths": {
+    "Scripts/fixture_process_anchor.py": "9b429b274bc1e56f1bf50766da3e9fc08a7f977fc6d18787f40ceda50d4868d0",
+    "Scripts/test_fixture_process_ownership.py": "0321ae9647163235423a19fba634aba268d5173ef113075dd57b5c5bf5bb37ac",
+    "Scripts/test_fixture_scratch_parent.py": "8806d4e6a405641348c270341778bf2c28fc666c72590353171e65c4bc4dffc3"
+  },
+  "interim_unit_candidate": "e1034c277bc94806388af6644d76feab1e7dc4ce",
+  "unit_inputs_changed": false,
+  "implementation": [
+    "Gated direct-child command leads a private process group; sibling direct-child anchor joins and acknowledges readiness before command exec",
+    "Live anchor retained through final group signal; both sole-owned children reaped only afterward with shared five-second wait budget",
+    "Signal denial remains failure; control EOF releases anchor; independent retained waits and explicit unknown/error reporting preserved"
+  ],
+  "builder_evidence": {
+    "ownership_helper": "Linux45/45 PASS; all original20 identities and four live bodies retained",
+    "lifecycle": "Linux56/56 PASS; committed lifecycle main unchanged",
+    "syntax_and_whitespace": "PASS",
+    "scratch_cleanup": "all invocation parents removed, absence verified"
+  },
+  "native": "UNRUN new collector; exact laptop interim compile/unit lane remains independently pinned until terminal",
+  "historical_effect": "Original failed Mac invocation explicit inner reap remains unproved. No old PID operation authorized. Prior parent cleanup and outer known-child drain reconciled by laptop.",
+  "deferred_findings": [
+    "FSP-PROC-002 P2 unchanged/unrepaired",
+    "NFP-COR-002 P2 unchanged/unrepaired"
+  ],
+  "holds": [
+    "Mac collector qualification",
+    "Full native suite and affected79-suite evidence",
+    "make check missing pinned tools/no installation",
+    "fork Actions pause; zero checks not green",
+    "custom-base extraction predicate",
+    "sign/package/install/launch/live switching qualification"
+  ]
+}

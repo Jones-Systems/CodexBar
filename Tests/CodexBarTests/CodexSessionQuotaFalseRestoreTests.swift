@@ -707,7 +707,7 @@ extension CodexSessionQuotaFalseRestoreTests {
             canRemove: true)
         let notifier = SessionQuotaNotifierSpy()
         let store = Self.makeStore(notifier: notifier)
-        let isolatedCodexHome = FileManager.default.temporaryDirectory
+        let isolatedCodexHome = TestFixtureScratch.root
             .appendingPathComponent("CodexSessionQuotaFalseRestoreTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: isolatedCodexHome, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: isolatedCodexHome) }

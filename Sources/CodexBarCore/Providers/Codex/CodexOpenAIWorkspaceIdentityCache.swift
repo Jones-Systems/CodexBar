@@ -85,13 +85,13 @@ public struct CodexOpenAIWorkspaceIdentityCache: @unchecked Sendable {
         #endif
 
         if CodexCredentialFileAccess.isTestContext {
-            return FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+            return TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
                 .appendingPathComponent("codex-openai-workspaces.json")
         }
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.homeDirectoryForCurrentUser
         return base
-            .appendingPathComponent("CodexBar", isDirectory: true)
+            .appendingPathComponent(JonesStateRoot.path("CodexBar"), isDirectory: true) // JONES(trial-identity)
             .appendingPathComponent("codex-openai-workspaces.json")
     }
 }

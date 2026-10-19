@@ -340,7 +340,7 @@ struct CookieHeaderCacheConditionalMutationTests {
 
     private func withIsolatedCookieCache<T>(_ operation: () -> T) -> T {
         KeychainCacheStore.withServiceOverrideForTesting("cookie-conditional-\(UUID().uuidString)") {
-            let legacyBase = FileManager.default.temporaryDirectory
+            let legacyBase = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
             return CookieHeaderCache.withLegacyBaseURLOverrideForTesting(legacyBase) {
                 KeychainCacheStore.setTestStoreForTesting(true)

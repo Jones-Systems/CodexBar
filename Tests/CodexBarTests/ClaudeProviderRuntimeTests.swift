@@ -111,7 +111,7 @@ struct ClaudeProviderRuntimeTests {
     @Test
     func `explicit account activation is serialized through claude swap and refreshes Claude`() async throws {
         let (settings, store) = self.makeStore()
-        let marker = FileManager.default.temporaryDirectory
+        let marker = TestFixtureScratch.root
             .appendingPathComponent("claude-swap-switch-args-\(UUID().uuidString)")
         let executable = try self.makeSwitchExecutable(marker: marker)
         let metadata = try #require(ProviderRegistry.shared.metadata[.claude])
@@ -300,7 +300,7 @@ struct ClaudeProviderRuntimeTests {
     }
 
     private func makeFakeExecutable() throws -> String {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("claude-runtime-tests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let url = directory.appendingPathComponent("cswap")
@@ -326,7 +326,7 @@ struct ClaudeProviderRuntimeTests {
         executablePath: String,
         countURL: URL)
     {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("claude-swap-version-recovery-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let executable = directory.appendingPathComponent("cswap")
@@ -353,7 +353,7 @@ struct ClaudeProviderRuntimeTests {
     }
 
     private func makeSwitchExecutable(marker: URL) throws -> String {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("claude-switch-runtime-tests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let url = directory.appendingPathComponent("cswap")
@@ -368,7 +368,7 @@ struct ClaudeProviderRuntimeTests {
     }
 
     private func makeUnavailableListExecutable() throws -> String {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("claude-unavailable-runtime-tests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let url = directory.appendingPathComponent("cswap")
@@ -390,7 +390,7 @@ struct ClaudeProviderRuntimeTests {
     }
 
     private func makeFailedSwitchExecutable() throws -> String {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("claude-failed-switch-runtime-tests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let url = directory.appendingPathComponent("cswap")

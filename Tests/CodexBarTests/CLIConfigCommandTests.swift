@@ -278,7 +278,7 @@ struct CLIConfigCommandTests {
 
     @Test
     func `config dump command redacts fixture secrets unless explicitly requested`() throws {
-        let fixtureDirectory = FileManager.default.temporaryDirectory
+        let fixtureDirectory = TestFixtureScratch.root
             .appendingPathComponent("codexbar-config-dump-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: fixtureDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: fixtureDirectory) }

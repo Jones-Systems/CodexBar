@@ -7,7 +7,7 @@ import Testing
 struct UsageStoreWidgetSnapshotTests {
     @Test(arguments: [300, 43200])
     func `widget snapshot keeps Ollama period labels consistent`(minutes: Int) async throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         let settings = testSettingsStore(
             suiteName: "UsageStoreWidgetSnapshotTests-ollama-\(minutes)",
             config: testConfigWithAllProvidersDisabled())

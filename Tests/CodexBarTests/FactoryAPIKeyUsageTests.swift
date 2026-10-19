@@ -19,7 +19,7 @@ struct FactorySettingsReaderTests {
 
     @Test
     func `falls back to factory dot env file`() throws {
-        let home = FileManager.default.temporaryDirectory
+        let home = TestFixtureScratch.root
             .appendingPathComponent("codexbar-factory-home-\(UUID().uuidString)", isDirectory: true)
         let factoryDir = home.appendingPathComponent(".factory", isDirectory: true)
         try FileManager.default.createDirectory(at: factoryDir, withIntermediateDirectories: true)
@@ -35,7 +35,7 @@ struct FactorySettingsReaderTests {
 
     @Test
     func `environment wins over factory dot env`() throws {
-        let home = FileManager.default.temporaryDirectory
+        let home = TestFixtureScratch.root
             .appendingPathComponent("codexbar-factory-home-\(UUID().uuidString)", isDirectory: true)
         let factoryDir = home.appendingPathComponent(".factory", isDirectory: true)
         try FileManager.default.createDirectory(at: factoryDir, withIntermediateDirectories: true)

@@ -12,7 +12,7 @@ import Glibc
 struct BoundedChildProcessProofTests {
     @Test
     func `synthetic PTY child overflow propagates and cleans up the process`() throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("CodexBarBoundedProcessProof-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -57,7 +57,7 @@ struct BoundedChildProcessProofTests {
 
     @Test
     func `synthetic Grok RPC child returns a normal framed response`() async throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("CodexBarBoundedRPCProof-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -94,7 +94,7 @@ struct BoundedChildProcessProofTests {
 
     @Test
     func `synthetic Grok RPC child overflow terminates the process`() async throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("CodexBarBoundedRPCOverflowProof-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }

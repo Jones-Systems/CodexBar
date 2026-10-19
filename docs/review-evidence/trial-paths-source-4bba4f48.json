@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "authority_effect": "none",
+  "source_candidate": "4bba4f480365d0dd3e66cdf4a7320f4e15021ff8",
+  "base": "7a83e6f4959df2f9bfa7d5a8c3d2ca04ab4b2641",
+  "source_commits": {
+    "diagnostics": "e2a8e01801a5b0c1e1eea4f95a69e4b4a721235e",
+    "scratch": "a14a73669aca38965e8b81a41e6f5d76f6b72e1c",
+    "framework": "12bffb7197400ba7f1462a45c1651dcdb1d28e72"
+  },
+  "paths": {
+    "Sources/CodexBar/GeminiLoginRunner.swift": "a48dcc42470de5bc7189ccb5edec676e073a49f65a57d26b234653f7fd34f3ff",
+    "Sources/CodexBar/OpenAICreditsPurchaseWindowController.swift": "67ea10d551feea28ef94cc8d3e3b75bcd3982125cce7e019d542ea173cda9b92",
+    "Sources/CodexBar/UsageStore.swift": "daa34ae2c1596e7bf3a6afa553cdf0e1d5ff958fe36361028897afd2de948d19",
+    "Sources/CodexBarCore/Jones/JonesDiagnosticDestination.swift": "1bfba7eaf90b73423af55a42e3eb7806070b22e8908d85d0128dc21fc23cd524",
+    "Sources/CodexBarCore/Jones/JonesFrameworkIsolation.swift": "9189e12954698a2375096d8ba32b71def21f2d2fadb0420afa5751ff0ce0d4c9",
+    "Sources/CodexBarCore/Jones/JonesProviderScratchRoot.swift": "0478495023a2dbb744fd35e386634ecb704f73761d12097fcb61a3fd275ee683",
+    "Sources/CodexBarCore/OpenAIWeb/OpenAIDashboardBrowserCookieImporter.swift": "997e28d1f8cae680148504c0d41bda351537851c8f5369f729e04edf259efbc4",
+    "Sources/CodexBarCore/OpenAIWeb/OpenAIDashboardFetcher.swift": "6ece213d1fc6cf5bf43db45af40b88a6f2cecfd45b21ba9ccd9881ac66fb9776",
+    "Sources/CodexBarCore/OpenAIWeb/OpenAIDashboardWebsiteDataStore.swift": "cdccfa13ecbbd6ffc0e343966948210f262894213f20a78dc59d84300e08ebf8",
+    "Sources/CodexBarCore/Providers/Gemini/GeminiStatusProbe+DataLoader.swift": "e2633cd61ffd4503d9d81e5b976f06f8ba5c35f4e97d783ce2d1a47bf06b51b6",
+    "Sources/CodexBarCore/Providers/Shared/AliyunOneConsole/AliyunOneConsoleChromiumCookieFallbackImporter.swift": "416d4cfdab7092304767b290a3401f5a8229a706b2fd641c27cf6eea9ea6af83",
+    "Tests/CodexBarTests/Jones/JonesFrameworkIsolationTests.swift": "ebee68096330ae660d95f29f1d9792d44f95fb0f92a4e098ff60d5882cc5ed57",
+    "Tests/CodexBarTests/JonesProviderScratchTests.swift": "51bc42e013b0d200001841db1ef241b80928f99ed1eb875260abc1b31d8c0ac9",
+    "TestsLinux/JonesDiagnosticDestinationTests.swift": "08c19629bfb481a44f7dbd4f089735f221ec1618d0c7a8bc8e9fd05936ec1d79"
+  },
+  "checks": {
+    "root_scoped_SwiftFormat_0_61_1": "PASS 14 files --lint --cache ignore",
+    "diff_check": "PASS",
+    "builder_tests": "8 diagnostic methods / 24 expanded cases, 22 scratch cases, 9 framework identifier methods authored; unexecuted",
+    "native": "unavailable: Swift absent on VPS",
+    "make_check": "held: no tool installation authorized"
+  },
+  "qualification": {
+    "diagnostics": "source addressed; retained exports, native pending",
+    "scratch": "source addressed; existing successful Gemini ten-second callback retained; termination/removal failure unproved",
+    "framework": "partial hardening only; HTTP state ownership and native containment unresolved"
+  },
+  "affected_suites": [
+    "JonesDiagnosticDestinationTests",
+    "ProviderArchitectureGatekeeperTests",
+    "StatusItemPurchaseURLTests",
+    "JonesProviderScratchTests",
+    "GeminiLoginScratchTests",
+    "AliyunCookieScratchTests",
+    "GeminiCurlScratchTests",
+    "GeminiLoginRunnerTests",
+    "GeminiStatusProbeAPITests",
+    "AlibabaCodingPlanCookieImporterTests",
+    "JonesFrameworkIsolationTests",
+    "OpenAIDashboardBrowserCookieImporterTests"
+  ],
+  "held_suite": "OpenAIDashboardWebViewCacheTests includes real persistent-store cases; do not run broadly under fixture-only authorization",
+  "gates": [
+    "final integrated native candidate pending",
+    "missing CI remains blocking",
+    "owner-only extraction predicate unchanged",
+    "no activation/signing/package/install/account-operation authority added"
+  ]
+}

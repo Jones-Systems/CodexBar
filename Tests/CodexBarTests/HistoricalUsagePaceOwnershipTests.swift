@@ -267,7 +267,7 @@ extension HistoricalUsagePaceTests {
         let store = try Self.makeUsageStoreForHistoricalTests(
             suite: "HistoricalUsagePaceTests-saved-managed-accounts",
             historicalUsageHistoryStore: historyStore)
-        let managedStoreURL = FileManager.default.temporaryDirectory
+        let managedStoreURL = TestFixtureScratch.root
             .appendingPathComponent("HistoricalUsagePaceTests-\(UUID().uuidString)-managed-accounts.json")
         let managedStore = FileManagedCodexAccountStore(fileURL: managedStoreURL)
         try managedStore.storeAccounts(ManagedCodexAccountSet(

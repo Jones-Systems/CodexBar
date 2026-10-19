@@ -787,7 +787,7 @@ struct KiloUsageFetcherTests {
     }
 
     private func makeTemporaryHomeDirectory() throws -> URL {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         return directory

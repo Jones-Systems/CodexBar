@@ -1004,7 +1004,7 @@ struct AlibabaTokenPlanCLIUsageTests {
 
     @Test
     func `detects only an executable bl on PATH`() throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("alibaba-token-plan-cli-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }

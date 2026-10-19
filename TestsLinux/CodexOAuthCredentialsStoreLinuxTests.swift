@@ -7,7 +7,7 @@ struct CodexOAuthCredentialsStoreLinuxTests {
     @Test
     func saveKeepsAuthJSONPrivate() throws {
         #if os(macOS) || os(Linux)
-        let codexHome = FileManager.default.temporaryDirectory
+        let codexHome = TestFixtureScratch.root
             .appendingPathComponent("codex-oauth-permissions-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: codexHome) }
 

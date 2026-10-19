@@ -6,7 +6,7 @@ import Testing
 struct CostUsageJsonlShapeBenchmarkTests {
     @Test
     func `scanner benchmark covers codex session history shape`() throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(
+        let root = TestFixtureScratch.root.appendingPathComponent(
             "codexbar-cost-jsonl-shape-\(UUID().uuidString)",
             isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

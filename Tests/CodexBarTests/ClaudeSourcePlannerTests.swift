@@ -145,7 +145,7 @@ struct ClaudeSourcePlannerTests {
 
     @Test
     func `CLI resolver falls back to PATH when Claude CLI path override is invalid`() throws {
-        let tempDir = FileManager.default.temporaryDirectory
+        let tempDir = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         let binaryURL = tempDir.appendingPathComponent("claude")

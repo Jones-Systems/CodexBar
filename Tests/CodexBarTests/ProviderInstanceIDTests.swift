@@ -67,7 +67,7 @@ struct ProviderInstanceIDTests {
     func `distinct dynamic instances persist isolated history files`() throws {
         let first = try #require(ProviderInstanceID(rawValue: "acme-primary"))
         let second = try #require(ProviderInstanceID(rawValue: "acme-secondary"))
-        let directoryURL = FileManager.default.temporaryDirectory
+        let directoryURL = TestFixtureScratch.root
             .appendingPathComponent("ProviderInstanceIDTests-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: directoryURL) }
         let store = PlanUtilizationHistoryStore(directoryURL: directoryURL)

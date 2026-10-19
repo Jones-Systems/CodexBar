@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "profile": "codex-v3-code-reviewer (native generic role fallback)",
+  "source": "T3 delegated Astra/high independent review",
+  "task_id": "node:delegated-task:command%3Amcp%3Ad4fad46f-6f60-4566-8a66-ad626d212917%3Adelegate-task%3Acodexbar-fleet-copy-correctness-20261017-r1",
+  "candidate": "7805dac297e19d882e249434c9c0d52d056f05d2",
+  "base": "e6837457ce42e0d1782e8c5b4399280277975e2d",
+  "changed_paths": [
+    "Sources/CodexBar/CodexAccountPromotionCoordinator.swift",
+    "Sources/CodexBar/CodexAccountPromotionExecution.swift",
+    "Sources/CodexBar/CodexAccountPromotionPlanning.swift",
+    "Sources/CodexBar/CodexAccountPromotionPreparation.swift",
+    "Sources/CodexBar/CodexAccountPromotionService.swift",
+    "Sources/CodexBar/Jones/JonesCodexFleetPromotionAdmission.swift",
+    "Sources/CodexBar/MenuDescriptor.swift",
+    "Sources/CodexBar/Providers/Codex/CodexProviderImplementation.swift",
+    "Sources/CodexBar/StatusItemController+Actions.swift",
+    "Sources/CodexBar/StatusItemController+MenuActionMapping.swift",
+    "Sources/CodexBarCore/Jones/JonesCodexSystemPromotionTarget.swift",
+    "Sources/CodexBarCore/Providers/Codex/CodexVisibleAccountProjection.swift",
+    "Tests/CodexBarTests/CodexAccountPromotionExecutionTests.swift",
+    "Tests/CodexBarTests/CodexAccountPromotionPreparationTests.swift",
+    "Tests/CodexBarTests/CodexAccountPromotionTestSupport.swift",
+    "Tests/CodexBarTests/CodexSystemPromotionUITests.swift",
+    "Tests/CodexBarTests/Jones/JonesCodexFleetPromotionBoundaryTests.swift",
+    "Tests/CodexBarTests/Jones/JonesCodexFleetPromotionMenuTests.swift",
+    "Tests/CodexBarTests/Jones/JonesCodexFleetPromotionTestSupport.swift",
+    "Tests/CodexBarTests/Jones/JonesCodexFleetPromotionTests.swift",
+    "docs/jones/fleet-system-promotion-ledger.md",
+    "docs/work-notes/fleet-system-promotion.md"
+  ],
+  "changed_path_count": 22,
+  "changed_path_tuple_sha256": "c55160f2d8694070ad5dd4fbdb5a1c48ed337a5ce3b26f1a38ccef2b3a29bf44",
+  "digest_encoding": "git diff --name-only order, UTF-8, LF after every path",
+  "findings": [],
+  "result": "No actionable changed-surface correctness findings.",
+  "limits": [
+    "Native compilation/tests unavailable on VPS; zero tests executed.",
+    "Operational copying, external refresh safety, installation and live switching remain unverified.",
+    "TIR001/TIR002 excluded and remain deferred."
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "source_candidate": "a7381944376a5d191274a617e95fb3a2b607ab13",
+  "base": "21c34561387b26f76d0a27e9f00d1538fbc0926f",
+  "paths": {
+    "Scripts/test_jones_identity_overlay.sh": "b682d9b294af2817d8d7db87c927c7f7fb9e4f0dc8bacf3d22cf19eb9326ef75",
+    "Scripts/test_provider_session_file_isolation.sh": "768b2f68ed00d19a5d85d623f7a67ca568e490bc5ea2351f18bd7c6392078a33",
+    "Sources/CodexBar/Jones/JonesCompactAccountPresentation.swift": "9213c587383268dc089d6e9202d345fc541973b1655f54d5b292a5fcaaa14f8f",
+    "Sources/CodexBar/MenuCardCompactAccountRow.swift": "5fb09537d2287db2c748872a9512d34162c555b3a47d7e7b7c9a5879fcd2780e",
+    "Sources/CodexBar/StatusItemController+CompactAccountMenu.swift": "464ce31b820b961d510acb02588b2424bbfc5bc51a62797a056e1e7c7706be9f",
+    "Sources/CodexBar/StatusItemController.swift": "8490807f1d0795793739a32b82630778917875874521268759eca30d47ce90ba",
+    "Sources/CodexBarCore/AccountMenuLayoutPlanner.swift": "b69570b9c258d31217acadd6df18a9cf0c21cebc271cb136be46a9daa0685aca",
+    "Sources/CodexBarCore/JonesStateRoot.swift": "86d9ed9a35e0601c45dd29d694d324e78e6960e1b197e8ba14ebc39f4887c2f1",
+    "Tests/CodexBarTests/AccountMenuLayoutPlannerTests.swift": "bcf9c455186df537c36ea5bd4ec1aba5e1f57963f4752e62cd808767cfc31b04",
+    "Tests/CodexBarTests/JonesCompactAccountPresentationTests.swift": "c2ba0aad17cd6bba5f462b2c041c617730c034d8032d18c3383b0666dcd05320",
+    "Tests/CodexBarTests/JonesStateRootTests.swift": "72933e9e04680825fd64d8d4169b8bfab38ac3e0af4b2b34666b75d029ccf303",
+    "docs/work-notes/trial-identity.md": "83852b24f737b9cc063ffe992cf37dec5283310fed4eb1b3309b6dd8f4852a88"
+  },
+  "checks": {
+    "UI_SwiftFormat_0_61_1": "7 files passed by builder",
+    "TIR_SwiftFormat_0_61_1": "2 files passed by root",
+    "overlay_portable": "30 passed; stub compiler validates source list and cleanup; actual Swift unavailable",
+    "native_UI_tests": "10 new tests unexecuted",
+    "native_TIR_proofs": "16 optional cases unexecuted",
+    "make_test": "unavailable: Swift missing",
+    "make_check": "held: no installers/tool installs authorized"
+  },
+  "TIR001": {
+    "original_severity": "P2",
+    "original_review": "4ff8b5040930da2dd74b97b6d69b746a96544a0a",
+    "disposition": "source repair published; native qualification pending"
+  },
+  "TIR002": {
+    "original_severity": "P2",
+    "original_review": "4ff8b5040930da2dd74b97b6d69b746a96544a0a",
+    "disposition": "source repair published; native qualification pending"
+  },
+  "independent_review": {
+    "source": "codexbar-ui-tir-correctness-20261017-r1",
+    "reviewed_candidate": "a7381944376a5d191274a617e95fb3a2b607ab13",
+    "base": "21c34561387b26f76d0a27e9f00d1538fbc0926f",
+    "lens": "correctness; native generic-role fallback; Astra/high; read-only",
+    "checks_executed": false,
+    "manifest_sha256": "f77ce611305f988e04d7f66d99ca1c85615e08fd3ea127e5b6eaffd12888753b",
+    "findings": [
+      {
+        "id": "CAIR001",
+        "original_severity": "P2",
+        "location": "Sources/CodexBarCore/AccountMenuLayoutPlanner.swift:62",
+        "blocking_claim": "Active/top collapse and coherent re-expansion unavailable at counts 1\u20133",
+        "disposition": "addressed in source c6b29cc2021f8415bc8467558689118a68e824aa; native qualification pending"
+      },
+      {
+        "id": "CAIR002",
+        "original_severity": "P2",
+        "location": "Sources/CodexBarCore/AccountMenuLayoutPlanner.swift:82",
+        "blocking_claim": "Six healthy accounts bypass five-account initial presentation because one hidden candidate is discarded",
+        "disposition": "addressed in source c6b29cc2021f8415bc8467558689118a68e824aa; native qualification pending"
+      },
+      {
+        "id": "CAIR003",
+        "original_severity": "P2",
+        "location": "Sources/CodexBar/Jones/JonesCompactAccountPresentation.swift:16",
+        "blocking_claim": "New Codex comparison lacks justification required by ProviderArchitectureGatekeeperTests",
+        "disposition": "addressed in source c6b29cc2021f8415bc8467558689118a68e824aa; native qualification pending"
+      }
+    ],
+    "TIR001_TIR002": "Confirmed addressed in source; original P2 severities/blocking claims preserved; native qualification pending",
+    "limits": "Native interactions, Swift compilation and full checks unproved; no independent operational success claim"
+  },
+  "acceptance_correction": {
+    "source": "c6b29cc2021f8415bc8467558689118a68e824aa",
+    "PR11_checkpoint": "3c2e3b7f55ea069f42374427c52dd2c73b8d3d2d",
+    "PR12_integration": "adce95773ec8fb03d2c275e53b262ad95260abef",
+    "paths": {
+      "Sources/CodexBar/Jones/JonesCompactAccountPresentation.swift": "de15bd9bf03ad511483c79105f94c0297f5c2b79f2813017e23f83d65493bdbe",
+      "Sources/CodexBarCore/AccountMenuLayoutPlanner.swift": "2cbe06da00e04d79828da7174ef5161ca878591415fc5d8e7fc64540083c1c5f",
+      "Tests/CodexBarTests/AccountMenuLayoutPlannerTests.swift": "0cc064e3f3d8a8e59dbc5f0050faea35c94089fb2f911146ad863264f1ac5004",
+      "Tests/CodexBarTests/JonesCompactAccountPresentationTests.swift": "6f9f87734c7b94b6d914b3e673ef7e9be2f86dabc6786a9aab50d831545d58da"
+    },
+    "checks": "builder scoped SwiftFormat0.61.1 and diff check PASS; root manifest verified; native unexecuted",
+    "exceptions": [
+      "priority rows and explicit toggles may exceed five",
+      "workspace-grouped menus retain existing stacked fallback"
+    ],
+    "independent_post_repair_review": "not performed; direct source correction and fixture qualification pending"
+  }
+}

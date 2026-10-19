@@ -230,7 +230,7 @@ struct MiMoFirefoxSessionCookieImporterTests {
     }
 
     private func makeFirefoxProfile() throws -> (temp: URL, profile: URL, backups: URL) {
-        let temp = FileManager.default.temporaryDirectory
+        let temp = TestFixtureScratch.root
             .appendingPathComponent("mimo-firefox-limit-\(UUID().uuidString)", isDirectory: true)
         let profile = temp.appendingPathComponent("default-release", isDirectory: true)
         let backups = profile.appendingPathComponent("sessionstore-backups", isDirectory: true)

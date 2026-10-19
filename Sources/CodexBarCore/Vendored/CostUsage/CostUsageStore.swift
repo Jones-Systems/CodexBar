@@ -155,7 +155,7 @@ actor CostUsageStore {
         busyTimeoutMilliseconds: Int32 = 5000)
     {
         let root = cacheRoot ?? FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("CodexBar", isDirectory: true)
+            .appendingPathComponent(JonesStateRoot.path("CodexBar"), isDirectory: true) // JONES(trial-identity)
         self.databaseURL = root
             .appendingPathComponent("cost-usage", isDirectory: true)
             .appendingPathComponent(Self.databaseFilename, isDirectory: false)

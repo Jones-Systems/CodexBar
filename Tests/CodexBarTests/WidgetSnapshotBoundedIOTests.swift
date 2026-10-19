@@ -102,7 +102,7 @@ struct WidgetSnapshotBoundedIOTests {
     }
 
     private static func makeTemporaryDirectory() throws -> URL {
-        let url = FileManager.default.temporaryDirectory
+        let url = TestFixtureScratch.root
             .appendingPathComponent("WidgetSnapshotBoundedIOTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         return url

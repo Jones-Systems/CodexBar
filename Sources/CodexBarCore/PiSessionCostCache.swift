@@ -6,7 +6,7 @@ enum PiSessionCostCacheIO {
 
     private static func defaultCacheRoot() -> URL {
         let root = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        return root.appendingPathComponent("CodexBar", isDirectory: true)
+        return root.appendingPathComponent(JonesStateRoot.path("CodexBar"), isDirectory: true) // JONES(trial-identity)
     }
 
     static func cacheFileURL(cacheRoot: URL? = nil) -> URL {

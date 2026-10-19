@@ -425,7 +425,7 @@ struct CodexPresentationCharacterizationTests {
     @Test
     func `live OpenAI web targeting does not reuse stale managed Codex snapshot identity`() {
         let settings = self.makeSettingsStore(suite: "CodexPresentationCharacterizationTests-stale-managed-snapshot")
-        let isolatedHome = FileManager.default.temporaryDirectory
+        let isolatedHome = TestFixtureScratch.root
             .appendingPathComponent("codex-presentation-openai-web-\(UUID().uuidString)", isDirectory: true)
         try? FileManager.default.createDirectory(at: isolatedHome, withIntermediateDirectories: true)
         let managedAccount = ManagedCodexAccount(

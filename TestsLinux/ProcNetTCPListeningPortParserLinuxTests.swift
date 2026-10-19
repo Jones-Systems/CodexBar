@@ -81,7 +81,7 @@ struct ProcNetTCPListeningPortParserLinuxTests {
     @Test
     func `reads process scoped TCP tables`() throws {
         let fileManager = FileManager.default
-        let procRoot = fileManager.temporaryDirectory
+        let procRoot = TestFixtureScratch.root
             .appendingPathComponent("codexbar-proc-\(UUID().uuidString)")
         let processRoot = procRoot.appendingPathComponent("42")
         let fdDirectory = processRoot.appendingPathComponent("fd")

@@ -6,8 +6,10 @@ import WebKit
 final class OpenAICreditsPurchaseWindowController: NSWindowController, WKNavigationDelegate, WKScriptMessageHandler {
     private static let defaultSize = NSSize(width: 980, height: 760)
     private static let logHandlerName = "codexbarLog"
-    private static let debugLogURL = URL(fileURLWithPath: NSTemporaryDirectory())
-        .appendingPathComponent("codexbar-buy-credits.log")
+    // JONES(trial-diagnostics): change the parent directory, retaining the original log filename.
+    private static let debugLogDestination = JonesDiagnosticDestination.resolve(
+        legacyURL: URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("codexbar-buy-credits.log"))
+    private static let debugLogURL = debugLogDestination.url
     private static let autoStartScript = """
     (() => {
       if (window.__codexbarAutoBuyCreditsStarted) return 'already';
@@ -500,6 +502,12 @@ final class OpenAICreditsPurchaseWindowController: NSWindowController, WKNavigat
         let timestamp = ISO8601DateFormatter().string(from: Date())
         let line = "[\(timestamp)] \(LogRedactor.redact(message))\n"
         guard let data = line.data(using: .utf8) else { return }
+        // JONES(trial-diagnostics): a diagnostic failure must not affect purchasing or use a shared fallback.
+        do {
+            try Self.debugLogDestination.prepareDirectory()
+        } catch {
+            return
+        }
         if FileManager.default.fileExists(atPath: Self.debugLogURL.path) {
             if let handle = try? FileHandle(forWritingTo: Self.debugLogURL) {
                 handle.seekToEndOfFile()

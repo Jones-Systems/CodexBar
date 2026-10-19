@@ -1,6 +1,17 @@
 import Foundation
 
 extension ProviderConfig {
+    public var claudeNativeProfileAlias: String? {
+        get {
+            guard self.extensionValues["claudeNativeProfileAlias"] != nil else { return nil }
+            guard let alias: String = self.extensionValue(forKey: "claudeNativeProfileAlias"), !alias.isEmpty else {
+                return "<invalid>"
+            }
+            return alias
+        }
+        set { self.setExtensionValue(newValue, forKey: "claudeNativeProfileAlias") }
+    }
+
     public var claudeSwapEnabled: Bool? {
         get { self.extensionValue(forKey: "claudeSwapEnabled") }
         set { self.setExtensionValue(newValue, forKey: "claudeSwapEnabled") }

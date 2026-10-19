@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "authority_effect": "none",
+  "source_checkpoint": "c2c52e09d8084489c01306175899fc368a589eb8",
+  "failed_revision": "556cfca93532356a27275c2726bf64c12e151701",
+  "path": "Tests/CodexBarTests/StatusMenuCodexSwitcherTests.swift",
+  "sha256": "42a274ec9418547d478223792533511e44c8153cace459c7b282fe67a221d6c6",
+  "diagnosis": "OldtestsfilteronlymenuCardIDswhileacceptedthreshold1CodexpolicyusescodexAccountCard-/codexAccountCompact-. CurrentpolicytestsPASSr11. Logdoesnotproveunfilteredmembership, so strongerassertionsestablishit.",
+  "fix": "Bothloaded/pendingcasesrequireexactprojectionaccounts/selectionsource/activeidentity/order,exactinitialcard+compactrows,nolegacy/collapsedrows,noswitcher;expandsecondarythroughstate/invalidate/reopenexistingseam andrequiretwoexactcards. Pendingpersnapshotexplicitlyemptybeforeafter.",
+  "checks": {
+    "diff_whitespace": "PASS",
+    "native_revised": "PASS fullmake at374529b6/all86groups; affectedfocusedchecksPASS atboundprior/currentheads, see native-r12-pass.json"
+  },
+  "scope": "Astrahighonefilebuilderreleased;rootselfreview;no production/helper/deferredP2change."
+}

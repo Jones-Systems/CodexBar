@@ -1,3 +1,4 @@
+import CodexBarCore
 import Foundation
 import Testing
 
@@ -127,7 +128,7 @@ struct DocumentationLinkTests {
 
     @Test
     func `markdown fragments resolve to rendered heading anchors`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appending(path: "DocumentationLinkTests-\(UUID().uuidString)", directoryHint: .isDirectory)
         let docs = root.appending(path: "docs", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: docs, withIntermediateDirectories: true)

@@ -1,3 +1,4 @@
+import CodexBarCore
 import Foundation
 import Observation
 
@@ -11,7 +12,14 @@ struct CodexSystemAccountPromotionUserFacingError: Error, Equatable {
 final class CodexAccountPromotionCoordinator {
     let service: CodexAccountPromotionService
     weak var managedAccountCoordinator: ManagedCodexAccountCoordinator?
-    private(set) var isAuthenticatingLiveAccount = false
+    private var externalLiveAuthenticationCount = 0
+    var isAuthenticatingLiveAccount: Bool {
+        self.liveAuthenticationTask != nil || self.externalLiveAuthenticationCount > 0
+    }
+
+    private(set) var isLiveAuthenticationRequested = false
+    private var liveAuthenticationID: UUID?
+    private var liveAuthenticationTask: Task<CodexLoginRunner.Result, Never>?
     private(set) var isPromotingSystemAccount = false
     private(set) var userFacingError: CodexSystemAccountPromotionUserFacingError?
 
@@ -36,6 +44,13 @@ final class CodexAccountPromotionCoordinator {
     func promote(managedAccountID: UUID)
         async -> Result<CodexAccountPromotionResult, CodexSystemAccountPromotionUserFacingError>
     {
+        await self.promote(target: .managedAccount(managedAccountID))
+    }
+
+    // JONES(fleet-system-promotion): retain the existing interaction and drain gates.
+    func promote(target: JonesCodexSystemPromotionTarget)
+        async -> Result<CodexAccountPromotionResult, CodexSystemAccountPromotionUserFacingError>
+    {
         self.userFacingError = nil
 
         guard !self.isInteractionBlocked() else {
@@ -48,7 +63,7 @@ final class CodexAccountPromotionCoordinator {
         defer { self.isPromotingSystemAccount = false }
 
         do {
-            let result = try await self.service.promoteManagedAccount(id: managedAccountID)
+            let result = try await self.service.promote(target: target)
             return .success(result)
         } catch {
             let mapped = Self.mapUserFacingError(error)
@@ -57,12 +72,47 @@ final class CodexAccountPromotionCoordinator {
         }
     }
 
+    func authenticateLiveAccount(using runner: any CodexAmbientLoginRunning) async -> CodexLoginRunner.Result? {
+        guard !self.isLiveAuthenticationRequested, !self.isPromotingSystemAccount else { return nil }
+        let authenticationID = UUID()
+        let previousTask = self.liveAuthenticationTask
+        let writer = self.service.sharedAuthWriter
+        self.liveAuthenticationID = authenticationID
+        self.isLiveAuthenticationRequested = true
+        let task = Task {
+            // Retain the cancelled attempt, including any queued predecessor, until it drains.
+            _ = await previousTask?.value
+            await writer.acquire()
+            defer { writer.release() }
+            guard !Task.isCancelled else { return CodexLoginRunner.Result(outcome: .cancelled, output: "") }
+            return await runner.run(timeout: 120)
+        }
+        self.liveAuthenticationTask = task
+        let result = await withTaskCancellationHandler {
+            await task.value
+        } onCancel: {
+            task.cancel()
+        }
+        guard self.liveAuthenticationID == authenticationID else { return nil }
+        let shouldDeliver = self.isLiveAuthenticationRequested && !Task.isCancelled && result.outcome != .cancelled
+        self.liveAuthenticationTask = nil
+        self.liveAuthenticationID = nil
+        self.isLiveAuthenticationRequested = false
+        return shouldDeliver ? result : nil
+    }
+
+    func cancelLiveAuthentication() {
+        self.isLiveAuthenticationRequested = false
+        self.liveAuthenticationTask?.cancel()
+        // Keep the task and promotion gate until the runner has actually finished.
+    }
+
     func clearError() {
         self.userFacingError = nil
     }
 
     func setLiveReauthenticationInProgress(_ isInProgress: Bool) {
-        self.isAuthenticatingLiveAccount = isInProgress
+        self.externalLiveAuthenticationCount = max(0, self.externalLiveAuthenticationCount + (isInProgress ? 1 : -1))
     }
 
     func isInteractionBlocked() -> Bool {
@@ -82,6 +132,12 @@ final class CodexAccountPromotionCoordinator {
 
         if let error = error as? CodexAccountPromotionError {
             let message = switch error {
+            case .fleetTargetUnavailable, .fleetTargetIdentityChanged:
+                L("That account is no longer available in CodexBar. Refresh the account list and try again.")
+            case .fleetTargetAuthMissing, .fleetTargetAuthUnreadable:
+                "CodexBar could not read the canonical Authfleet credentials. Restore them in Authfleet and try again."
+            case .fleetDestinationAmbiguous:
+                "CodexBar cannot safely identify the default Codex home. Open CodexBar without a CODEX_HOME override."
             case .targetManagedAccountNotFound:
                 L("That account is no longer available in CodexBar. Refresh the account list and try again.")
             case .targetManagedAccountAuthMissing:

@@ -5,7 +5,7 @@ import Testing
 struct AntigravityOAuthCredentialsStoreTests {
     @Test
     func `oauth client discovery reads renamed legacy bundle`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -30,7 +30,7 @@ struct AntigravityOAuthCredentialsStoreTests {
 
     @Test
     func `oauth client discovery reads renamed gemini bundle identifier`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -55,7 +55,7 @@ struct AntigravityOAuthCredentialsStoreTests {
 
     @Test
     func `oauth client discovery reads gemini native binary artifact`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -81,7 +81,7 @@ struct AntigravityOAuthCredentialsStoreTests {
 
     @Test
     func `oauth client discovery skips gemini app with foreign bundle identifier`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -107,7 +107,7 @@ struct AntigravityOAuthCredentialsStoreTests {
 
     @Test
     func `oauth client discovery reads standalone antigravity 2 bundle`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -136,7 +136,7 @@ struct AntigravityOAuthCredentialsStoreTests {
 
     @Test
     func `oauth client discovery reads antigravity extension language server`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -175,7 +175,7 @@ struct AntigravityOAuthCredentialsStoreTests {
 
     @Test
     func `oauth client discovery pairs lone binary secret with trailing client id`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 

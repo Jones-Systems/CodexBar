@@ -17,7 +17,7 @@ struct AntigravityOfflineStoreTests {
 
     @Test
     func `counts db files in conversations directory`() throws {
-        let tmp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let tmp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tmp) }
         let conv = AntigravityOfflineStore.conversationsDirectory(home: tmp, env: [:])
@@ -33,7 +33,7 @@ struct AntigravityOfflineStoreTests {
 
     @Test
     func `falls back to tokscale cache when no db`() throws {
-        let tmp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let tmp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tmp) }
         let cache = AntigravityOfflineStore.tokscaleCacheDirectory(home: tmp)
@@ -45,7 +45,7 @@ struct AntigravityOfflineStoreTests {
 
     @Test
     func `prefers db count over cache`() throws {
-        let tmp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let tmp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tmp) }
         let conv = AntigravityOfflineStore.conversationsDirectory(home: tmp, env: [:])

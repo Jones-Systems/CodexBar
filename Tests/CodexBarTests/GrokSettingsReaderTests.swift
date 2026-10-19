@@ -24,7 +24,7 @@ struct GrokSettingsReaderTests {
 
     @Test
     func `prefers a pasted SuperGrok token when auth json is expired`() throws {
-        let home = FileManager.default.temporaryDirectory
+        let home = TestFixtureScratch.root
             .appendingPathComponent("CodexBar-GrokExpiredAuth-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: home) }
@@ -115,7 +115,7 @@ struct GrokSettingsReaderTests {
 
     @Test
     func `selected pasted SuperGrok token wins over a valid auth json file`() throws {
-        let home = FileManager.default.temporaryDirectory
+        let home = TestFixtureScratch.root
             .appendingPathComponent("CodexBar-GrokSelectedBearer-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: home) }

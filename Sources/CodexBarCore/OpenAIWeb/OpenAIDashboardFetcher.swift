@@ -851,18 +851,23 @@ public struct OpenAIDashboardFetcher {
     static func writeDebugArtifacts(html: String, bodyText: String?, logger: (String) -> Void) {
         let stamp = Int(Date().timeIntervalSince1970)
         let dir = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-        let htmlURL = dir.appendingPathComponent("codex-openai-dashboard-\(stamp).html")
+        // JONES(trial-diagnostics): retain overlay artifacts with logs; stock keeps its exact TEMP paths.
+        let htmlDestination = JonesDiagnosticDestination.resolve(
+            legacyURL: dir.appendingPathComponent("codex-openai-dashboard-\(stamp).html"))
+        let htmlURL = htmlDestination.url
         do {
-            try html.write(to: htmlURL, atomically: true, encoding: .utf8)
+            try htmlDestination.write(html)
             logger("Dumped HTML: \(htmlURL.path)")
         } catch {
             logger("Failed to dump HTML: \(error.localizedDescription)")
         }
 
         if let bodyText, !bodyText.isEmpty {
-            let textURL = dir.appendingPathComponent("codex-openai-dashboard-\(stamp).txt")
+            let textDestination = JonesDiagnosticDestination.resolve(
+                legacyURL: dir.appendingPathComponent("codex-openai-dashboard-\(stamp).txt"))
+            let textURL = textDestination.url
             do {
-                try bodyText.write(to: textURL, atomically: true, encoding: .utf8)
+                try textDestination.write(bodyText)
                 logger("Dumped text: \(textURL.path)")
             } catch {
                 logger("Failed to dump text: \(error.localizedDescription)")

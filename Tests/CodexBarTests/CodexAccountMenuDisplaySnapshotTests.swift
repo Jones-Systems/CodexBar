@@ -51,6 +51,48 @@ struct CodexAccountMenuDisplaySnapshotTests {
             projection: CodexVisibleAccountProjection.make(from: snapshot))
     }
 
+    @Test(arguments: [MultiAccountMenuLayout.segmented, .stacked])
+    func `menu exposes sole recovery account without selecting it or loading auth`(
+        layout: MultiAccountMenuLayout) throws
+    {
+        let settings = self.makeSettings()
+        self.enableOnlyCodex(settings)
+        settings.multiAccountMenuLayout = layout
+        let source = CodexActiveSource.profileHome(path: "/fixture/removed")
+        let snapshot = CodexAccountReconciliationSnapshot(
+            storedAccounts: [],
+            activeStoredAccount: nil,
+            liveSystemAccount: ObservedSystemCodexAccount(
+                email: "recovery@example.com", codexHomePath: "/fixture/live", observedAt: Date()),
+            matchingStoredAccountForLiveSystemAccount: nil,
+            activeSource: source,
+            hasUnreadableAddedAccountStore: false)
+        let probe = CodexAccountSnapshotLoaderProbe(snapshot: snapshot)
+        settings._test_codexAccountSnapshotLoader = { _ in probe.load() }
+        defer { settings._test_codexAccountSnapshotLoader = nil }
+        settings.codexActiveSource = source
+        settings.cachedCodexAccountMenuProjection = self.cachedProjection(snapshot: snapshot, loadedAt: Date())
+        let store = UsageStore(
+            fetcher: UsageFetcher(), browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
+        let controller = StatusItemController(
+            store: store,
+            settings: settings,
+            account: AccountInfo(email: nil, plan: nil),
+            updater: DisabledUpdaterController(),
+            preferencesSelection: PreferencesSelection(),
+            statusBar: .system)
+        defer { controller.releaseStatusItemsForTesting() }
+        let callsBeforeDisplay = probe.callCount
+        let display = try #require(controller.codexAccountMenuDisplay(for: .codex))
+        #expect(display.accounts.map(\.email) == ["recovery@example.com"])
+        #expect(display.activeVisibleAccountID == nil)
+        #expect(display.showSwitcher)
+        #expect(probe.callCount == callsBeforeDisplay)
+        try settings.selectDisplayedCodexVisibleAccount(#require(display.accounts.first))
+        #expect(settings.codexActiveSource == .liveSystem)
+        #expect(probe.callCount == callsBeforeDisplay)
+    }
+
     @Test
     func `cold menu projection read never loads auth state`() async {
         let settings = self.makeSettings()

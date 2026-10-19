@@ -167,7 +167,7 @@ extension [CodexVisibleAccount] {
         var sections: [CodexAccountWorkspaceSection] = []
         for account in self {
             let title = account.menuWorkspaceLabel ?? "Personal"
-            if let index = sections.firstIndex(where: { $0.title == title }) {
+            if let index = sections.indices.last, sections[index].title == title {
                 var accounts = sections[index].accounts
                 accounts.append(account)
                 sections[index] = CodexAccountWorkspaceSection(title: title, accounts: accounts)

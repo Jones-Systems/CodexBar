@@ -25,7 +25,7 @@ struct DeferredMenuInteractionRefreshTailTests {
                 enabled: provider == .codex)
         }
 
-        let isolatedRoot = FileManager.default.temporaryDirectory
+        let isolatedRoot = TestFixtureScratch.root
             .appendingPathComponent("codexbar-deferred-refresh-tests", isDirectory: true)
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let environment = [

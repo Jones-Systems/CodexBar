@@ -35,7 +35,7 @@ struct ClaudeEducationAvailabilityTests {
     @Test
     func `subscription-only response is informational across Claude surfaces`() async throws {
         try await ClaudeOAuthCredentialsStore.withIsolatedCredentialsFileTrackingForTesting {
-            let tempDir = FileManager.default.temporaryDirectory
+            let tempDir = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
             try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
             let fileURL = tempDir.appendingPathComponent("missing-credentials.json")

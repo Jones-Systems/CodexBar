@@ -1407,17 +1407,31 @@ extension ClaudeStatusProbe {
             || TTYCommandRunner.which(binaryPathOrName) != nil
     }
 
+    private static let isolatedProbeDirectory = TestFixtureScratch.root
+        .appendingPathComponent("claude-probe-tests-\(UUID().uuidString)", isDirectory: true)
+
     static func probeWorkingDirectoryURL() -> URL {
         let fm = FileManager.default
+        if TestProcessSafety.isRunningUnderTests()
+            || ProcessInfo.processInfo.environment["CODEXBAR_TEST_SESSION_FILE_ISOLATION"] == "1"
+        {
+            let directory = self.isolatedProbeDirectory
+            do {
+                try fm.createDirectory(at: directory, withIntermediateDirectories: true)
+            } catch {
+                fatalError("Cannot create contained Claude test working directory: \(error)")
+            }
+            return directory
+        }
         let base = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first ?? fm.temporaryDirectory
         let dir = base
-            .appendingPathComponent("CodexBar", isDirectory: true)
+            .appendingPathComponent(JonesStateRoot.path("CodexBar"), isDirectory: true) // JONES(trial-identity)
             .appendingPathComponent("ClaudeProbe", isDirectory: true)
         do {
             try fm.createDirectory(at: dir, withIntermediateDirectories: true)
             return dir
         } catch {
-            return fm.temporaryDirectory
+            return JonesStateRoot.identity == nil ? fm.temporaryDirectory : dir // JONES(trial-identity)
         }
     }
 

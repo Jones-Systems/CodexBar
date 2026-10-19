@@ -130,7 +130,7 @@ struct ClaudeVersionRecoveryTests {
         _ operation: () async throws -> T) async throws -> T
     {
         try await ClaudeOAuthCredentialsStore.withIsolatedCredentialsFileTrackingForTesting {
-            let missingURL = FileManager.default.temporaryDirectory
+            let missingURL = TestFixtureScratch.root
                 .appendingPathComponent(UUID().uuidString, isDirectory: true)
                 .appendingPathComponent("missing-credentials.json")
             return try await ClaudeOAuthCredentialsStore.withCredentialsURLOverrideForTesting(missingURL) {

@@ -40,8 +40,8 @@ final class CodexAccountPromotionTestContainer {
         try FileManager.default.createDirectory(at: self.managedHomesURL, withIntermediateDirectories: true)
         _ = try self.fileStore.ensureFileExists()
 
-        let defaults = UserDefaults(suiteName: suiteName)!
-        defaults.removePersistentDomain(forName: suiteName)
+        // JONES(fleet-system-promotion): synthetic defaults have no persistent search-domain fallback.
+        let defaults = InMemoryUserDefaults()
         defaults.set(true, forKey: "providerDetectionCompleted")
         self.settings = SettingsStore(
             userDefaults: defaults,
@@ -78,7 +78,7 @@ final class CodexAccountPromotionTestContainer {
         self.settings._test_managedCodexAccountStoreURL = nil
         self.settings._test_liveSystemCodexAccount = nil
         self.settings._test_codexReconciliationEnvironment = nil
-        self.settings.userDefaults.removePersistentDomain(forName: self.suiteName)
+        self.settings._test_codexFleetProfileDiscovery = nil
         try? FileManager.default.removeItem(at: self.rootURL)
     }
 
@@ -87,7 +87,12 @@ final class CodexAccountPromotionTestContainer {
         liveAuthSwapper: (any CodexLiveAuthSwapping)? = nil,
         activeSourceWriter: (any CodexActiveSourceWriting)? = nil,
         snapshotLoader: (any CodexAccountReconciliationSnapshotLoading)? = nil,
-        accountScopedRefresher: (any CodexAccountScopedRefreshing)? = nil)
+        accountScopedRefresher: (any CodexAccountScopedRefreshing)? = nil,
+        sharedAuthWriter: CodexSharedAuthWriter = .shared,
+        authMaterialReader: any CodexAuthMaterialReading = DefaultCodexAuthMaterialReader(),
+        fleetHomePaths: @escaping @MainActor () -> [String]? = { nil },
+        baseEnvironment: [String: String]? = nil,
+        defaultHomeURL: URL? = nil)
         -> CodexAccountPromotionService
     {
         CodexAccountPromotionService(
@@ -97,14 +102,35 @@ final class CodexAccountPromotionTestContainer {
             workspaceResolver: self.workspaceResolver,
             snapshotLoader: snapshotLoader
                 ?? SettingsStoreCodexAccountReconciliationSnapshotLoader(settingsStore: self.settings),
-            authMaterialReader: DefaultCodexAuthMaterialReader(),
+            authMaterialReader: authMaterialReader,
             liveAuthSwapper: liveAuthSwapper ?? DefaultCodexLiveAuthSwapper(),
             activeSourceWriter: activeSourceWriter
                 ?? SettingsStoreCodexActiveSourceWriter(settingsStore: self.settings),
             accountScopedRefresher: accountScopedRefresher
                 ?? UsageStoreCodexAccountScopedRefresher(usageStore: self.usageStore),
-            baseEnvironment: self.baseEnvironment,
-            fileManager: .default)
+            baseEnvironment: baseEnvironment ?? self.baseEnvironment,
+            fileManager: .default,
+            sharedAuthWriter: sharedAuthWriter,
+            fleetHomePaths: fleetHomePaths,
+            defaultHomeURL: defaultHomeURL ?? self.liveHomeURL)
+    }
+
+    // JONES(fleet-system-promotion): canonical fixture homes are outside managed storage.
+    func createFleetProfile(
+        alias: String = "jace",
+        email: String = "jace@example.com",
+        accountID: String = "acct-jace") throws -> ObservedSystemCodexAccount
+    {
+        let home = self.rootURL.appendingPathComponent("fleet", isDirectory: true)
+            .appendingPathComponent(alias, isDirectory: true)
+        let data = try self.writeOAuthAuthFile(homeURL: home, email: email, plan: "Pro", accountID: accountID)
+        return ObservedSystemCodexAccount(
+            email: email,
+            workspaceAccountID: accountID,
+            authFingerprint: CodexAuthFingerprint.fingerprint(data: data),
+            codexHomePath: home.path,
+            observedAt: Date(),
+            identity: .providerAccount(id: accountID))
     }
 
     func installDynamicCodexUsageLoader(usedPercent: Double = 12) {

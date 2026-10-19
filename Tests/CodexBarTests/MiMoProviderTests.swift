@@ -749,7 +749,7 @@ extension MiMoProviderTests {
 
     @Test
     func `mimo local strategy works when web cookies are disabled or invalid`() async throws {
-        let dir = FileManager.default.temporaryDirectory
+        let dir = TestFixtureScratch.root
             .appendingPathComponent("mimo-local-strategy-test-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
@@ -793,7 +793,7 @@ extension MiMoProviderTests {
 
     @Test
     func `mimo malformed local cache stays available and reports its cache error`() async throws {
-        let dir = FileManager.default.temporaryDirectory
+        let dir = TestFixtureScratch.root
             .appendingPathComponent("mimo-invalid-local-strategy-test-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
@@ -811,7 +811,7 @@ extension MiMoProviderTests {
 
     @Test
     func `mimo explicit web mode does not use local fallback`() async throws {
-        let dir = FileManager.default.temporaryDirectory
+        let dir = TestFixtureScratch.root
             .appendingPathComponent("mimo-web-mode-test-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
@@ -1426,7 +1426,7 @@ extension MiMoProviderTests {
 
     @Test
     func `firefox session restore input is size bounded`() throws {
-        let file = FileManager.default.temporaryDirectory
+        let file = TestFixtureScratch.root
             .appendingPathComponent("mimo-firefox-oversized-\(UUID().uuidString).jsonlz4")
         defer { try? FileManager.default.removeItem(at: file) }
         try Data(repeating: 0x41, count: 5).write(to: file)
@@ -1476,7 +1476,7 @@ extension MiMoProviderTests {
         profile: URL,
         backups: URL)
     {
-        let temp = FileManager.default.temporaryDirectory
+        let temp = TestFixtureScratch.root
             .appendingPathComponent("\(prefix)-\(UUID().uuidString)", isDirectory: true)
         let profile = temp
             .appendingPathComponent("Library/Application Support/Firefox/Profiles/n757crxy.default-release-1")

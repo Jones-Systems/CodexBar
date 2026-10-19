@@ -96,7 +96,7 @@ struct CursorAntigravityLocalReaderTests {
     }
 
     private static func writeTemporary(_ contents: String, extension fileExtension: String) throws -> URL {
-        let url = FileManager.default.temporaryDirectory
+        let url = TestFixtureScratch.root
             .appendingPathComponent("cursor-antigravity-reader-\(UUID().uuidString).\(fileExtension)")
         try contents.write(to: url, atomically: true, encoding: .utf8)
         return url

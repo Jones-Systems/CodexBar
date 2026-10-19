@@ -473,7 +473,7 @@ public struct AntigravityOAuthCredentialsStore: @unchecked Sendable {
 
     public static func defaultDirectoryURL(home: URL = FileManager.default.homeDirectoryForCurrentUser) -> URL {
         home
-            .appendingPathComponent(".codexbar", isDirectory: true)
+            .appendingPathComponent(JonesStateRoot.path(".codexbar"), isDirectory: true) // JONES(trial-identity)
             .appendingPathComponent("antigravity", isDirectory: true)
     }
 

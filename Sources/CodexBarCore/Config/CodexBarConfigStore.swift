@@ -83,7 +83,8 @@ public struct CodexBarConfigStore: @unchecked Sendable {
     public static func defaultURL(
         home: URL = FileManager.default.homeDirectoryForCurrentUser,
         environment: [String: String] = ProcessInfo.processInfo.environment,
-        fileManager: FileManager = .default) -> URL
+        fileManager: FileManager = .default,
+        forkIdentity: JonesStateRoot.Identity? = JonesStateRoot.identity) -> URL // JONES(trial-identity)
     {
         if let override = environment[pathEnvironmentKey]?.trimmingCharacters(in: .whitespacesAndNewlines),
            !override.isEmpty
@@ -91,6 +92,9 @@ public struct CodexBarConfigStore: @unchecked Sendable {
             let expanded = (override as NSString).expandingTildeInPath
             return URL(fileURLWithPath: expanded)
         }
+
+        if let forkURL = JonesStateRoot
+            .configURL(home: home, identity: forkIdentity) { return forkURL } // JONES(trial-identity)
 
         if let xdgConfigHome = environment[xdgConfigHomeEnvironmentKey]?
             .trimmingCharacters(in: .whitespacesAndNewlines),

@@ -40,7 +40,7 @@ struct CodexLocalProjectUsageTests {
 
     @Test
     func `project root resolver keeps sibling paths distinct`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-project-root-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let app = root.appendingPathComponent("app", isDirectory: true)
@@ -66,7 +66,7 @@ struct CodexLocalProjectUsageTests {
 
     @Test
     func `local data scope avoids persisting raw Codex home paths`() {
-        let home = FileManager.default.temporaryDirectory
+        let home = TestFixtureScratch.root
             .appendingPathComponent("workspaces-private-home", isDirectory: true)
         let options = CostUsageScanner.Options(
             codexSessionsRoot: home.appendingPathComponent("sessions", isDirectory: true))
@@ -144,7 +144,7 @@ struct CodexLocalProjectUsageTests {
 
     @Test
     func `project root resolver treats git file worktree as most specific project`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-project-worktree-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let app = root.appendingPathComponent("app", isDirectory: true)
@@ -167,7 +167,7 @@ struct CodexLocalProjectUsageTests {
 
     @Test
     func `project root resolver preserves missing logged CWD when no git root exists`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-missing-cwd-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -181,7 +181,7 @@ struct CodexLocalProjectUsageTests {
 
     @Test
     func `project root resolver preserves a deleted CWD below an existing repository`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let repository = root.appendingPathComponent("project", isDirectory: true)
@@ -198,7 +198,7 @@ struct CodexLocalProjectUsageTests {
 
     @Test
     func `project root resolver canonicalizes a live symlinked repository`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let repository = root.appendingPathComponent("project", isDirectory: true)

@@ -27,8 +27,6 @@ struct ProvidersPane: View {
     @State private var settingsLastAppActiveRunAtByID: [String: Date] = [:]
     @State private var activeConfirmation: ProviderSettingsConfirmationState?
     @State private var codexAccountsNotice: CodexAccountsSectionNotice?
-    @State private var isAuthenticatingLiveCodexAccount = false
-    @State private var caamEnvironmentCoordinator: CAAMEnvironmentCoordinator
     @State private var netdataObservabilityBridge: NetdataObservabilityBridge
 
     init(
@@ -39,7 +37,6 @@ struct ProvidersPane: View {
         managedCodexAccountCoordinator: ManagedCodexAccountCoordinator = ManagedCodexAccountCoordinator(),
         codexAccountPromotionCoordinator: CodexAccountPromotionCoordinator? = nil,
         codexAmbientLoginRunner: any CodexAmbientLoginRunning = DefaultCodexAmbientLoginRunner(),
-        caamEnvironmentCoordinator: CAAMEnvironmentCoordinator? = nil,
         netdataObservabilityBridge: NetdataObservabilityBridge? = nil,
         runProviderLoginFlow: @escaping @MainActor (UsageProvider) async -> Void = { _ in })
     {
@@ -53,8 +50,6 @@ struct ProvidersPane: View {
                 usageStore: store,
                 managedAccountCoordinator: managedCodexAccountCoordinator)
         self.codexAmbientLoginRunner = codexAmbientLoginRunner
-        self._caamEnvironmentCoordinator = State(
-            initialValue: caamEnvironmentCoordinator ?? CAAMEnvironmentCoordinator.applicationCoordinator())
         self._netdataObservabilityBridge = State(
             initialValue: netdataObservabilityBridge ?? NetdataObservabilityBridge())
         self.runProviderLoginFlow = runProviderLoginFlow
@@ -85,6 +80,10 @@ struct ProvidersPane: View {
                 if let state = self.codexAccountsSectionState(for: self.provider) {
                     CodexAccountsSectionView(
                         state: state,
+                        moveAccount: { account, offset in
+                            self.settings.moveCodexAccount(account, by: offset, in: state.visibleAccounts)
+                        },
+                        cancelAuthentication: { self.cancelCodexAuthentication() },
                         setActiveVisibleAccount: { visibleAccountID in
                             Task { @MainActor in
                                 await self.selectCodexVisibleAccount(id: visibleAccountID)
@@ -108,30 +107,10 @@ struct ProvidersPane: View {
                                 await self.addManagedCodexAccount()
                             }
                         })
-                    TimelineView(.periodic(from: .now, by: 15)) { context in
-                        CodexEnvironmentsSectionView(
-                            state: self.caamEnvironmentCoordinator.state(
-                                configurations: self.settings.codexCAAMEnvironments, at: context.date),
-                            coordinator: self.caamEnvironmentCoordinator,
-                            saveConfigurations: { configurations in
-                                self.saveCodexEnvironmentConfigurations(configurations)
-                            },
-                            refresh: {
-                                Task { @MainActor in
-                                    await self.caamEnvironmentCoordinator.refresh(
-                                        configurations: self.settings.codexCAAMEnvironments)
-                                }
-                            })
-                    }
                     CodexObservabilityHubView(
-                        coordinator: self.caamEnvironmentCoordinator,
-                        configurations: self.settings.codexCAAMEnvironments,
+                        accountInputs: { self.observabilityAccountInputs() },
                         providerInputs: { self.observabilityProviderInputs() },
                         netdataBridge: self.netdataObservabilityBridge)
-                        .task {
-                            await self.caamEnvironmentCoordinator.refresh(
-                                configurations: self.settings.codexCAAMEnvironments, force: false)
-                        }
                 }
             })
             .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
@@ -269,33 +248,16 @@ struct ProvidersPane: View {
         }
 
         return CodexAccountsSectionState(
-            visibleAccounts: projection.visibleAccounts,
+            visibleAccounts: self.settings.orderedCodexAccounts(projection.visibleAccounts),
             activeVisibleAccountID: projection.activeVisibleAccountID,
             liveVisibleAccountID: projection.liveVisibleAccountID,
             hasUnreadableManagedAccountStore: projection.hasUnreadableAddedAccountStore,
             isAuthenticatingManagedAccount: self.managedCodexAccountCoordinator.isAuthenticatingManagedAccount,
             authenticatingManagedAccountID: self.managedCodexAccountCoordinator.authenticatingManagedAccountID,
             isRemovingManagedAccount: self.managedCodexAccountCoordinator.isRemovingManagedAccount,
-            isAuthenticatingLiveAccount: self.isAuthenticatingLiveCodexAccount,
+            isAuthenticatingLiveAccount: self.codexAccountPromotionCoordinator.isLiveAuthenticationRequested,
             isPromotingSystemAccount: self.codexAccountPromotionCoordinator.isPromotingSystemAccount,
             notice: self.codexAccountsNotice ?? degradedNotice)
-    }
-
-    func codexEnvironmentsSectionState() -> CodexEnvironmentsSectionState {
-        self.caamEnvironmentCoordinator.state(configurations: self.settings.codexCAAMEnvironments)
-    }
-
-    func saveCodexEnvironmentConfigurations(_ configurations: [CAAMEnvironmentConfiguration]) -> String? {
-        guard self.caamEnvironmentCoordinator.canChangeConfigurations(
-            from: self.settings.codexCAAMEnvironments, to: configurations)
-        else { return L("Refresh and resolve pending operations before changing this environment.") }
-        do {
-            try self.settings.setCodexCAAMEnvironments(configurations)
-            self.caamEnvironmentCoordinator.configurationsDidChange(configurations)
-            return nil
-        } catch {
-            return error.localizedDescription
-        }
     }
 
     func selectCodexVisibleAccount(id: String) async {
@@ -328,6 +290,8 @@ struct ProvidersPane: View {
             let account = try await self.managedCodexAccountCoordinator.authenticateManagedAccount()
             self.selectCodexVisibleAccountForAuthenticatedManagedAccount(account)
             await self.refreshCodexProvider()
+        } catch is CancellationError {
+            return
         } catch {
             self.codexAccountsNotice = self.codexAccountsNotice(for: error)
         }
@@ -343,6 +307,8 @@ struct ProvidersPane: View {
                 _ = try await self.managedCodexAccountCoordinator
                     .authenticateManagedAccount(existingAccountID: accountID)
                 await self.refreshCodexProvider()
+            } catch is CancellationError {
+                return
             } catch {
                 self.codexAccountsNotice = self.codexAccountsNotice(for: error)
             }
@@ -353,20 +319,20 @@ struct ProvidersPane: View {
             return
         }
 
-        self.isAuthenticatingLiveCodexAccount = true
-        self.codexAccountPromotionCoordinator.setLiveReauthenticationInProgress(true)
-        defer {
-            self.isAuthenticatingLiveCodexAccount = false
-            self.codexAccountPromotionCoordinator.setLiveReauthenticationInProgress(false)
-        }
-
-        let result = await self.codexAmbientLoginRunner.run(timeout: 120)
+        guard let result = await self.codexAccountPromotionCoordinator.authenticateLiveAccount(
+            using: self.codexAmbientLoginRunner) else { return }
         if let info = CodexLoginAlertPresentation.alertInfo(for: result) {
             self.presentLoginAlert(title: info.title, message: info.message)
             return
         }
 
         await self.refreshCodexProvider()
+    }
+
+    func cancelCodexAuthentication() {
+        self.managedCodexAccountCoordinator.cancelAuthentication()
+        self.codexAccountPromotionCoordinator.cancelLiveAuthentication()
+        self.codexAccountsNotice = CodexAccountsSectionNotice(text: L("Login cancelled."), tone: .secondary)
     }
 
     func removeManagedCodexAccount(id: UUID) async {

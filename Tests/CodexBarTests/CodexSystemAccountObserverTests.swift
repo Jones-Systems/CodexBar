@@ -68,7 +68,7 @@ struct CodexSystemAccountObserverTests {
     @Test
     func `observer uses cached workspace label for provider account`() throws {
         let home = CodexCredentialFixtures.root.appendingPathComponent(UUID().uuidString, isDirectory: true)
-        let cacheURL = FileManager.default.temporaryDirectory
+        let cacheURL = TestFixtureScratch.root
             .appendingPathComponent("codex-openai-workspaces-\(UUID().uuidString).json")
         defer {
             try? FileManager.default.removeItem(at: home)

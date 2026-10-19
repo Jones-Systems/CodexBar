@@ -153,7 +153,7 @@ struct ClaudeCLIBackgroundAvailabilityTests {
         // No profile is created here: the config file is verifiably absent, so
         // `ClaudeAccountProfile.identifiedSessionScope` returns nil and `captureMarker` can never produce a
         // marker for this environment — there is nothing to establish, revoke, or bind a background attempt to.
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-claude-unidentified-profile-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -364,7 +364,7 @@ struct ClaudeCLIBackgroundAvailabilityTests {
         configURL: URL,
         environment: [String: String])
     {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-claude-background-profile-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let configURL = root.appendingPathComponent(".config.json")

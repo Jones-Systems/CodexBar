@@ -86,7 +86,7 @@ struct ManagedCodexHomeFactory: ManagedCodexHomeProducing {
         let base = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? fileManager.homeDirectoryForCurrentUser
         return base
-            .appendingPathComponent("CodexBar", isDirectory: true)
+            .appendingPathComponent(JonesStateRoot.path("CodexBar"), isDirectory: true) // JONES(trial-identity)
             .appendingPathComponent("managed-codex-homes", isDirectory: true)
     }
 }
@@ -239,6 +239,7 @@ final class ManagedCodexAccountService {
         timeout: TimeInterval = 120)
         async throws -> ManagedCodexAccount
     {
+        try Task.checkCancellation()
         let snapshot = try self.store.loadAccounts()
         let homeURL = self.homeFactory.makeHomeURL()
         try self.fileManager.createDirectory(at: homeURL, withIntermediateDirectories: true)
@@ -247,6 +248,7 @@ final class ManagedCodexAccountService {
 
         do {
             let result = await self.loginRunner.run(homePath: homeURL.path, timeout: timeout)
+            try Task.checkCancellation()
             guard case .success = result.outcome else { throw ManagedCodexAccountServiceError.loginFailed(result) }
 
             let identity = try self.identityReader.loadAccountIdentity(homePath: homeURL.path)
@@ -265,6 +267,7 @@ final class ManagedCodexAccountService {
                 email: rawEmail,
                 homePath: homeURL.path,
                 authenticatedProviderAccountID: authenticatedProviderAccountID)
+            try Task.checkCancellation()
             let providerAccountID = selectedWorkspace?.workspaceAccountID ?? authenticatedProviderAccountID
             let workspaceIdentity: CodexOpenAIWorkspaceIdentity? = if let selectedWorkspace {
                 selectedWorkspace
@@ -274,6 +277,7 @@ final class ManagedCodexAccountService {
                     providerAccountID: providerAccountID)
             }
 
+            try Task.checkCancellation()
             let now = Date().timeIntervalSince1970
             let existing = self.reconciledExistingAccount(
                 authenticatedEmail: rawEmail,
@@ -314,6 +318,7 @@ final class ManagedCodexAccountService {
             try self.store.storeAccounts(updatedSnapshot)
         } catch {
             try? self.removeManagedHomeIfSafe(atPath: homeURL.path)
+            if Task.isCancelled { throw CancellationError() }
             throw error
         }
 
@@ -354,6 +359,7 @@ final class ManagedCodexAccountService {
         authenticatedProviderAccountID: String?) async throws -> CodexOpenAIWorkspaceIdentity?
     {
         let workspaces = await self.workspaceResolver.availableWorkspaceIdentities(homePath: homePath)
+        try Task.checkCancellation()
         guard workspaces.count > 1 else {
             return workspaces.first { $0.workspaceAccountID == authenticatedProviderAccountID }
         }

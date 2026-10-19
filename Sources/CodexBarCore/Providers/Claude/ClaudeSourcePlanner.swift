@@ -138,6 +138,17 @@ public enum ClaudeCLIResolver {
         loginPATH: [String]? = LoginShellPathCache.shared.current)
         -> String?
     {
+        // Enrollment binds executable authority for both usage and delegated OAuth refresh.
+        // Recheck on every resolution so a removed binary cannot fall through to ambient discovery.
+        if ClaudeNativeProfileSelection.isSelected(environment: environment) {
+            guard !ClaudeNativeProfileSelection.isUnavailable(environment: environment),
+                  let enrolledBinary = environment["CLAUDE_CLI_PATH"],
+                  enrolledBinary.hasPrefix("/"),
+                  FileManager.default.isExecutableFile(atPath: enrolledBinary)
+            else { return nil }
+            return enrolledBinary
+        }
+
         #if DEBUG
         if let override = self.resolvedBinaryPathOverrideForTesting {
             return FileManager.default.isExecutableFile(atPath: override) ? override : nil

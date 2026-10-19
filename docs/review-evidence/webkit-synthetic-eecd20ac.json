@@ -1,0 +1,26 @@
+{
+  "authority_effect": "none",
+  "source_commit": "eecd20acf44717c6e6114be223b01337ad1c3598",
+  "integration_commit": "d42d5312ebc3dee1cfadb8e0d93d9655a0686f3a",
+  "source_paths": {
+    "Sources/CodexBarCore/OpenAIWeb/OpenAIDashboardWebsiteDataStore.swift": "b20eab2238b4140208d30b9a565af5cf4ad68a9ac646509c15d5fd46c3b804df",
+    "Tests/CodexBarTests/OpenAIDashboardWebViewCacheTests.swift": "613658a8fab7610ba2edf23ef0fa1b6892d0ecc30e1619aee34ef0ca195d6faf"
+  },
+  "design": "Instance-owned StoreCache with mandatory injected constructors and explicit identity; production still uses default/persistent constructors and same lookup/removal semantics; synthetic fixtures use nonPersistent only and record constructor UUIDs.",
+  "preserved_existing": {
+    "test_declarations": 35,
+    "expectations": 110,
+    "CI_guards": 30
+  },
+  "new_tests": 3,
+  "checks": {
+    "builder": "SwiftFormat0.61.1/diff/textual source preservation PASS; no scratch",
+    "root": "hash match, diff inspection, integrated formatter58 PASS"
+  },
+  "native": "UNRUN: compilation and WebKit execution unavailable VPS; full make test held pending final native safety qualification; other-test safety not inferred",
+  "affected_native_suites": [
+    "OpenAIDashboardWebViewCacheTests",
+    "JonesFrameworkIsolationTests"
+  ],
+  "runtime": "Actual persistent runtime containment remains unqualified; CI/extraction/signing/install gates unchanged"
+}

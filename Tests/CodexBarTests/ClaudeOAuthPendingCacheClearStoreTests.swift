@@ -8,7 +8,7 @@ struct ClaudeOAuthPendingCacheClearStoreTests {
     func `legacy ownership recheck persists for only its invalidated profile`() throws {
         let domain = "ClaudeOAuthPendingLegacyRecheckTests.\(UUID().uuidString)"
         let key = "pending"
-        let tempDirectory = FileManager.default.temporaryDirectory
+        let tempDirectory = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let userDefaults = try #require(UserDefaults(suiteName: domain))
         defer {
@@ -51,7 +51,7 @@ struct ClaudeOAuthPendingCacheClearStoreTests {
     func `profile lock failure remains owned by the invalidated profile`() throws {
         let domain = "ClaudeOAuthPendingProfileLockFailureTests.\(UUID().uuidString)"
         let key = "pending"
-        let tempDirectory = FileManager.default.temporaryDirectory
+        let tempDirectory = TestFixtureScratch.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         let blockedLockDirectory = tempDirectory.appendingPathComponent("not-a-directory")

@@ -25,7 +25,7 @@ final class AntigravityLocalFixture: Sendable {
     }
 
     init() throws {
-        self.root = FileManager.default.temporaryDirectory.appendingPathComponent("antigravity-proof-\(UUID())")
+        self.root = TestFixtureScratch.root.appendingPathComponent("antigravity-proof-\(UUID())")
         try FileManager.default.createDirectory(at: self.root, withIntermediateDirectories: true)
     }
 

@@ -1,3 +1,5 @@
+> Historical integration note: the CAAM wiring described below was subsequently retired. Generic Netdata telemetry, units, freshness, and caching remain active; see [CAAM retirement](../engineering-specs/caam-retirement.md).
+
 # Netdata in-memory Observability bridge
 
 <!-- codex-section:begin id="worknote.netdata-observability-bridge#ctx.artifact-header.001" -->

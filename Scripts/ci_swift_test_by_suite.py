@@ -11,11 +11,96 @@ import os
 from pathlib import Path
 import re
 import signal
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from collections.abc import Iterable
 from dataclasses import dataclass
+
+
+SCRATCH_PARENT_KEY = "CODEXBAR_TEST_SCRATCH_PARENT"
+WORKSPACE_ROOT_KEY = "CODEXBAR_TEST_WORKSPACE_ROOT"
+_scratch_cleanup_safe = True
+CANCELLATION_SIGNALS = (signal.SIGHUP, signal.SIGINT, signal.SIGTERM)
+
+
+def canonical_directory(raw: str | None, key: str) -> Path:
+    if not raw or any(character in raw for character in ("\n", "\r", "\0")):
+        raise ValueError(f"Missing or invalid {key}")
+    path = Path(raw)
+    if (not path.is_absolute() or ".." in path.parts or str(path) != raw
+            or path.resolve(strict=True) != path or not path.is_dir()):
+        raise ValueError(f"{key} must be an existing canonical directory")
+    return path
+
+
+def fixture_scratch_parent(environment: dict[str, str]) -> Path:
+    workspace = canonical_directory(environment.get(WORKSPACE_ROOT_KEY), WORKSPACE_ROOT_KEY)
+    parent = canonical_directory(environment.get(SCRATCH_PARENT_KEY), SCRATCH_PARENT_KEY)
+    if workspace not in parent.parents:
+        raise ValueError("CODEXBAR_TEST_SCRATCH_PARENT must be strictly inside the workspace")
+    return parent
+
+
+class FixtureScratchParent:
+    def __init__(self):
+        self.path: Path | None = None
+        self.identity: tuple[int, int] | None = None
+        self.owned = False
+        self.previous = {key: os.environ.get(key) for key in (SCRATCH_PARENT_KEY, WORKSPACE_ROOT_KEY, "TMPDIR")}
+
+    def prepare(self) -> None:
+        workspace = Path(__file__).resolve().parent.parent
+        supplied_workspace = os.environ.get(WORKSPACE_ROOT_KEY)
+        if supplied_workspace is not None and canonical_directory(supplied_workspace, WORKSPACE_ROOT_KEY) != workspace:
+            raise ValueError("CODEXBAR_TEST_WORKSPACE_ROOT must identify this runner's workspace")
+        os.environ[WORKSPACE_ROOT_KEY] = str(workspace)
+        if SCRATCH_PARENT_KEY in os.environ:
+            self.path = fixture_scratch_parent(dict(os.environ))
+        else:
+            self.path = Path(tempfile.mkdtemp(prefix=".test-fixtures-", dir=workspace))
+            self.owned = True
+            info = self.path.stat()
+            self.identity = (info.st_dev, info.st_ino)
+            os.environ[SCRATCH_PARENT_KEY] = str(self.path)
+        os.environ["TMPDIR"] = str(self.path)
+        print(f"Fixture scratch parent ({'owned' if self.owned else 'borrowed'}): {self.path}", file=sys.stderr, flush=True)
+
+    def cleanup(self) -> None:
+        try:
+            if self.path is None:
+                return
+            if not _scratch_cleanup_safe:
+                raise RuntimeError(f"Preserving fixture scratch parent; process drain is unproved: {self.path}")
+            if not self.owned:
+                return
+            info = self.path.lstat()
+            if (self.path.is_symlink() or not self.path.is_dir()
+                    or (info.st_dev, info.st_ino) != self.identity
+                    or self.path.resolve(strict=True) != self.path):
+                raise RuntimeError(f"Preserving fixture scratch parent; directory identity changed: {self.path}")
+            shutil.rmtree(self.path)
+            if os.path.lexists(self.path):
+                raise RuntimeError(f"Fixture scratch parent cleanup failed: {self.path}")
+            print(f"Fixture scratch parent removed and absence verified: {self.path}", file=sys.stderr, flush=True)
+        finally:
+            for key, value in self.previous.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
+
+
+class CommandDrainError(RuntimeError):
+    def __init__(self, message: str, returncode: int):
+        super().__init__(message)
+        self.returncode = returncode
+
+
+def cancellation_exit(signum, _frame):
+    raise SystemExit(128 + signum)
 
 
 @dataclass(frozen=True)
@@ -81,6 +166,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--list-only", action="store_true")
     parser.add_argument("--swift-command", default="swift")
     parser.add_argument("--swift-command-arg", action="append", default=[])
+    parser.add_argument(
+        "--command", nargs=argparse.REMAINDER,
+        help="run an unchanged command once inside the fixture lifecycle, without discovery or sharding",
+    )
     return parser.parse_args()
 
 
@@ -432,17 +521,32 @@ def stop_unreaped_child(process: subprocess.Popen) -> None:
     process.wait(timeout=2)
 
 
-def run_command(command: list[str], timeout: int | None = None) -> int:
+def run_command(command: list[str], timeout: int | None = None, *, stdout=None, stderr=None) -> int:
+    global _scratch_cleanup_safe
     if sys.platform != "darwin" and not sys.platform.startswith("linux"):
         raise RuntimeError("Swift test process containment requires macOS or Linux")
     if not all(hasattr(os, name) for name in ("waitid", "P_PID", "WEXITED", "WNOHANG", "WNOWAIT")):
         raise RuntimeError("Swift test process containment requires waitid with WNOWAIT")
-    print(f"+ {' '.join(command)}", flush=True)
+    print(f"+ {' '.join(command)}", file=sys.stderr, flush=True)
     started = time.monotonic()
     ownership = None
     process = None
+    result_code = None
+    launching = True
+    deferred_signals = []
+
+    def cancellation(signum, frame):
+        if launching:
+            deferred_signals.append(signum)
+        else:
+            cancellation_exit(signum, frame)
+
+    previous_handlers = {sig: signal.signal(sig, cancellation) for sig in CANCELLATION_SIGNALS}
     try:
-        process = subprocess.Popen(command, start_new_session=True)
+        process = subprocess.Popen(command, start_new_session=True, stdout=stdout, stderr=stderr)
+        launching = False
+        if deferred_signals:
+            cancellation_exit(deferred_signals[0], None)
         root = test_process(process.pid)
         if root is None:
             exited = unreaped_exit_code(process) is not None
@@ -457,33 +561,70 @@ def run_command(command: list[str], timeout: int | None = None) -> int:
             owned = ownership.refresh(observing=True)
             result = unreaped_exit_code(process)
             if result is not None:
+                result_code = result
                 return result
             now = time.monotonic()
             if timeout is not None and now - started >= timeout:
-                print(f"::warning::Command timed out after {timeout}s: {' '.join(command)}", flush=True)
+                print(f"::warning::Command timed out after {timeout}s: {' '.join(command)}", file=sys.stderr, flush=True)
+                result_code = 124
                 return 124
             if now >= next_diagnostic:
-                print(f"Swift test command pid={process.pid} elapsed={now - started:.1f}s owned={sorted(owned)}", flush=True)
+                print(f"Swift test command pid={process.pid} elapsed={now - started:.1f}s owned={sorted(owned)}", file=sys.stderr, flush=True)
                 next_diagnostic = now + 30
             wait = 0.5 if timeout is None else min(0.5, max(0, timeout - (now - started)))
             time.sleep(wait)
     finally:
         # SwiftPM children can create their own groups; killing only the root group leaks them.
         propagating_error = sys.exc_info()[0] is not None
-        previous_interrupt = signal.signal(signal.SIGINT, signal.SIG_IGN)
+        for sig in CANCELLATION_SIGNALS:
+            signal.signal(sig, signal.SIG_IGN)
         try:
             if process is None:
                 pass
             elif ownership is None:
+                # Direct-child cleanup cannot establish unobserved descendant ownership.
+                _scratch_cleanup_safe = False
                 stop_unreaped_child(process)
             else:
                 ownership.drain(process)
         except BaseException as error:
+            _scratch_cleanup_safe = False
             if not propagating_error:
-                raise
+                raise CommandDrainError(str(error), result_code or 1) from error
             print(f"Cleanup also failed: {type(error).__name__}: {error}", file=sys.stderr, flush=True)
         finally:
-            signal.signal(signal.SIGINT, previous_interrupt)
+            for sig, handler in previous_handlers.items():
+                signal.signal(sig, handler)
+
+
+def run_captured_command(command: list[str]) -> subprocess.CompletedProcess[str]:
+    parent = fixture_scratch_parent(dict(os.environ))
+    # Regular files cannot deadlock on a full pipe or a descendant-held output descriptor.
+    outputs = []
+    result = None
+    try:
+        for _ in range(2):
+            outputs.append(tempfile.NamedTemporaryFile(mode="w+t", prefix=".command-output-", dir=parent, delete=False))
+        stdout, stderr = outputs
+        result = run_command(command, stdout=stdout, stderr=stderr)
+        stdout.seek(0)
+        stderr.seek(0)
+        return subprocess.CompletedProcess(command, result, stdout.read(), stderr.read())
+    finally:
+        propagating_error = sys.exc_info()[0] is not None
+        cleanup_error = None
+        for output in outputs:
+            try:
+                output.close()
+                if _scratch_cleanup_safe:
+                    Path(output.name).unlink()
+                else:
+                    print(f"Preserving command output after unproved drain: {output.name}", file=sys.stderr, flush=True)
+            except OSError as error:
+                cleanup_error = error
+                print(f"Command output cleanup failed for {output.name}: {error}", file=sys.stderr, flush=True)
+        if cleanup_error is not None and not propagating_error:
+            raise CommandDrainError(str(cleanup_error), result or 1) from cleanup_error
 
 
 def is_missing_sparkle_runtime_failure(result: subprocess.CompletedProcess[str]) -> bool:
@@ -511,11 +652,7 @@ def sparkle_runtime_matches_source(destination: Path, source: Path) -> bool:
 
 
 def repair_sparkle_test_runtime(swift_command: list[str]) -> bool:
-    result = subprocess.run(
-        [*swift_command, "build", "--show-bin-path"],
-        capture_output=True,
-        text=True,
-    )
+    result = run_captured_command([*swift_command, "build", "--show-bin-path"])
     if result.returncode != 0:
         return False
     lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
@@ -554,15 +691,15 @@ def repair_sparkle_test_runtime(swift_command: list[str]) -> bool:
 
 def swift_test_list(swift_command: list[str]) -> list[TestSelection]:
     command = [*swift_command, "test", "list"]
-    result = subprocess.run(command, capture_output=True, text=True)
+    result = run_captured_command(command)
     if result.returncode != 0 and is_missing_sparkle_runtime_failure(result):
         if repair_sparkle_test_runtime(swift_command):
-            print("Recovered SwiftPM Sparkle test runtime; retrying discovery once.", flush=True)
-            result = subprocess.run(command, capture_output=True, text=True)
+            print("Recovered SwiftPM Sparkle test runtime; retrying discovery once.", file=sys.stderr, flush=True)
+            result = run_captured_command(command)
     if result.returncode != 0:
-        print(f"+ {swift_command[0]} test list", flush=True)
+        print(f"+ {swift_command[0]} test list", file=sys.stderr, flush=True)
         if result.stdout:
-            print(result.stdout, end="" if result.stdout.endswith("\n") else "\n", flush=True)
+            print(result.stdout, end="" if result.stdout.endswith("\n") else "\n", file=sys.stderr, flush=True)
         if result.stderr:
             print(result.stderr, end="" if result.stderr.endswith("\n") else "\n", file=sys.stderr, flush=True)
         result.check_returncode()
@@ -657,7 +794,7 @@ def filtered_suites_for_environment(suites: list[TestSelection]) -> list[TestSel
     skipped = {"CodexBarTests.CLIEntryTests"}
     filtered = [suite for suite in suites if suite.suite_name not in skipped]
     if len(filtered) != len(suites):
-        print(f"Skipping macOS CI-only suites: {', '.join(sorted(skipped))}", flush=True)
+        print(f"Skipping macOS CI-only suites: {', '.join(sorted(skipped))}", file=sys.stderr, flush=True)
     return filtered
 
 
@@ -688,9 +825,19 @@ def retry_selections_individually(
     return 0
 
 
-def main() -> int:
+def run_suites() -> int:
     total_started = time.monotonic()
     args = parse_args()
+    if args.command is not None:
+        if not args.command:
+            print("--command requires an executable", file=sys.stderr)
+            return 2
+        if args.list_only or args.limit_groups is not None or args.shard_index is not None or args.shard_count is not None:
+            print("--command cannot be combined with discovery or shard selection", file=sys.stderr)
+            return 2
+        # Aggregate commands retain their enclosing job's deadline and original test selection.
+        # The existing command owner still drains descendants before fixture cleanup.
+        return run_command(args.command)
     stats = RunStats(
         group_size=args.group_size,
         shard_index=args.shard_index,
@@ -728,6 +875,7 @@ def main() -> int:
         print(
             f"Discovered {len(suites)} test selections; running {stats.selected_selections} selections "
             f"in {len(suite_groups)} groups{shard_suffix}",
+            file=sys.stderr,
             flush=True,
         )
         if args.list_only:
@@ -794,6 +942,48 @@ def main() -> int:
         if not args.list_only:
             print_timing_summary(stats)
             append_github_summary(stats)
+
+
+def main() -> int:
+    global _scratch_cleanup_safe
+    _scratch_cleanup_safe = True
+    scratch = FixtureScratchParent()
+    preparing = True
+    deferred_signals = []
+
+    def cancellation(signum, frame):
+        if preparing:
+            deferred_signals.append(signum)
+        else:
+            cancellation_exit(signum, frame)
+
+    previous_handlers = {sig: signal.signal(sig, cancellation) for sig in CANCELLATION_SIGNALS}
+    result = 1
+    try:
+        scratch.prepare()
+        preparing = False
+        if deferred_signals:
+            cancellation_exit(deferred_signals[0], None)
+        result = run_suites()
+    except (subprocess.CalledProcessError, CommandDrainError) as error:
+        print(str(error), file=sys.stderr, flush=True)
+        result = error.returncode
+    except SystemExit as error:
+        result = error.code if isinstance(error.code, int) else 1
+    except Exception as error:
+        print(f"{type(error).__name__}: {error}", file=sys.stderr, flush=True)
+    finally:
+        for sig in CANCELLATION_SIGNALS:
+            signal.signal(sig, signal.SIG_IGN)
+        try:
+            scratch.cleanup()
+        except Exception as error:
+            print(f"Fixture cleanup failed: {error}", file=sys.stderr, flush=True)
+            result = result or 1
+        finally:
+            for sig, handler in previous_handlers.items():
+                signal.signal(sig, handler)
+    return result if result >= 0 else 128 - result
 
 
 if __name__ == "__main__":

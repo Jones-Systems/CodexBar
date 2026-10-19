@@ -36,13 +36,17 @@ enum GeminiLoginRunner {
         guard !consumerTierDeprecationObserved else {
             return Result(outcome: .consumerTierDeprecated)
         }
-        return await Task(priority: .userInitiated) {
+        let task = Task(priority: .userInitiated) {
             let env = ProcessInfo.processInfo.environment
             guard let binary = BinaryLocator.resolveGeminiBinary(
                 env: env,
                 loginPATH: LoginShellPathCache.shared.current)
             else {
                 return Result(outcome: .missingBinary)
+            }
+
+            guard !Task.isCancelled else {
+                return Result(outcome: .launchFailed(CancellationError().localizedDescription))
             }
 
             // Clear existing credentials before auth (enables clean account switch)
@@ -60,28 +64,97 @@ enum GeminiLoginRunner {
             "\(binary)"
             """
 
-            let tempDir = FileManager.default.temporaryDirectory
-            let scriptURL = tempDir.appendingPathComponent("gemini_login_\(UUID().uuidString).command")
+            return await Self.launchScript(
+                scriptContent,
+                scratchContext: .init(fileManager: .default, forkIdentity: JonesStateRoot.identity),
+                write: { content, url in
+                    try content.write(to: url, atomically: true, encoding: .utf8)
+                },
+                open: { url in
+                    let config = NSWorkspace.OpenConfiguration()
+                    config.activates = true
+                    try await NSWorkspace.shared.open(url, configuration: config)
+                },
+                scheduleCleanup: { delay, cleanup in
+                    DispatchQueue.global().asyncAfter(deadline: .now() + delay, execute: cleanup)
+                })
+        }
+        return await withTaskCancellationHandler {
+            await task.value
+        } onCancel: {
+            task.cancel()
+        }
+    }
 
-            do {
-                try scriptContent.write(to: scriptURL, atomically: true, encoding: .utf8)
-                try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: scriptURL.path)
+    struct ScratchContext {
+        let fileManager: FileManager
+        let forkIdentity: JonesStateRoot.Identity?
+    }
 
-                let config = NSWorkspace.OpenConfiguration()
-                config.activates = true
-                try await NSWorkspace.shared.open(scriptURL, configuration: config)
-
-                // Clean up script after Terminal has time to read it
-                let scriptPath = scriptURL.path
-                DispatchQueue.global().asyncAfter(deadline: .now() + 10) {
-                    try? FileManager.default.removeItem(atPath: scriptPath)
-                }
-
-                return Result(outcome: .success)
-            } catch {
-                return Result(outcome: .launchFailed(error.localizedDescription))
+    static func launchScript(
+        _ content: String,
+        scratchContext: ScratchContext,
+        write: (String, URL) throws -> Void,
+        open: (URL) async throws -> Void,
+        scheduleCleanup: (TimeInterval, @escaping @Sendable () -> Void) -> Void) async -> Result
+    {
+        let fileManager = scratchContext.fileManager
+        let forkIdentity = scratchContext.forkIdentity
+        let tempDir = JonesProviderScratchRoot.directory(
+            temporaryDirectory: fileManager.temporaryDirectory, identity: forkIdentity)
+        let scriptURL = tempDir.appendingPathComponent("gemini_login_\(UUID().uuidString).command")
+        let cleanup = ScriptCleanup(fileManager: fileManager, scriptURL: scriptURL)
+        var cleanupScheduled = false
+        defer {
+            if !cleanupScheduled || Task.isCancelled {
+                cleanup.remove()
             }
-        }.value
+        }
+        do {
+            try Task.checkCancellation()
+            if forkIdentity != nil {
+                try fileManager.createDirectory(
+                    at: tempDir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+            }
+            try write(content, scriptURL)
+            try fileManager.setAttributes([.posixPermissions: 0o755], ofItemAtPath: scriptURL.path)
+            try Task.checkCancellation()
+            try await withTaskCancellationHandler {
+                try Task.checkCancellation()
+                try await open(scriptURL)
+            } onCancel: {
+                cleanup.remove()
+            }
+            try Task.checkCancellation()
+
+            // Terminal needs time to read the script. This callback owns only this file for ten seconds.
+            scheduleCleanup(10) {
+                cleanup.remove()
+            }
+            cleanupScheduled = true
+            return Result(outcome: .success)
+        } catch {
+            return Result(outcome: .launchFailed(error.localizedDescription))
+        }
+    }
+
+    /// Only this script's removal crosses concurrency boundaries, after synchronous file preparation.
+    /// The lock serializes cancellation, deferred and delayed removal using the original injected manager.
+    private final class ScriptCleanup: @unchecked Sendable {
+        private let fileManager: FileManager
+        private let scriptURL: URL
+        private let lock = NSLock()
+
+        init(fileManager: FileManager, scriptURL: URL) {
+            self.fileManager = fileManager
+            self.scriptURL = scriptURL
+        }
+
+        func remove() {
+            self.lock.withLock {
+                try? self.fileManager.removeItem(at: self.scriptURL)
+            }
+        }
     }
 
     /// Watch for credentials file to be created, then call callback once

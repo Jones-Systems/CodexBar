@@ -1,0 +1,120 @@
+{
+  "authority_effect": "none",
+  "source_commit": "c5454c8b7debb092638801d00b402bbc43298eba",
+  "integration_commit": "e73b14de3c3baa3fa99a3c48212f3211c0db725f",
+  "task": "codexbar-fixture-scratch-parent-20261017-r1",
+  "contract": "Optional CODEXBAR_TEST_SCRATCH_PARENT: existing canonical absolute directory strictly inside workspace; explicit invalid values fail closed; each script owns only unique descendant; caller parent preserved; unset behavior retained; nested identity provider scenarios use identity fixture descendant.",
+  "source_paths": {
+    "Scripts/test_jones_identity_overlay.sh": "3d60beb1521b655a191dced02c9ab0840c58016a61c2909b2fd364b9bb86dbfc",
+    "Scripts/test_provider_session_file_isolation.sh": "30555b8480072b5e6bff1f1a743d55c2798e494e79e7bebf2952391bd38aaf8a",
+    "Scripts/test_fixture_scratch_parent.py": "ce137a7c31d818348c38d5f98fe0458fd532116f9a88434e33ad4b26192d0041"
+  },
+  "builder_evidence": {
+    "synthetic_lifecycle_cases_passed": 50,
+    "portable_real_source_identity_checks_passed": 30,
+    "native_compiler": "stub scenarios only; not native Swift proof",
+    "syntax": "shell/Python PASS",
+    "diff_check": "PASS",
+    "elapsed_seconds": 8.69,
+    "scratch": "owned parent removed; parent/sibling preservation covered",
+    "failing_before": "Original identity script accepted explicit empty override",
+    "admission": {
+      "cpu_percent": 8.13,
+      "available_ram_GiB": 40.26,
+      "one_core_percent": 6.25,
+      "serial_processes": 1
+    }
+  },
+  "root_evidence": "Exact manifest match, diff/source inspection and git diff --check PASS; no redundant test rerun",
+  "native_unrun": [
+    "16-case identity proof",
+    "provider session proof"
+  ],
+  "laptop_commands": [
+    "export CODEXBAR_TEST_SCRATCH_PARENT=\"$owned_workspace_parent\"",
+    "export TMPDIR=\"$CODEXBAR_TEST_SCRATCH_PARENT\"",
+    "python3 -B Scripts/test_fixture_scratch_parent.py \"$CODEXBAR_TEST_SCRATCH_PARENT\"",
+    "bash Scripts/test_jones_identity_overlay.sh",
+    "bash Scripts/test_provider_session_file_isolation.sh"
+  ],
+  "caller_lifetime": "caller creates and finally removes one workspace parent; override requires Python3",
+  "holds": [
+    "full make test pending WebKit synthetic seam",
+    "make check installer unavailable/held",
+    "CI absent not green",
+    "extraction owner predicate",
+    "native runtime/signing/release/install/activation unqualified"
+  ],
+  "execution_hold": {
+    "id": "FSP-PROC-001",
+    "original_severity": "P1",
+    "original_blocking_effect": "Protected-boundary execution hold; do not execute regression as-is",
+    "source_review_profile": "Laptop native verifier read-only, relayed by continuity coordinator506fc1fd; root source confirmation",
+    "source_review_evidence": "Current-thread laptop relay identifying lines147/151/166 and root read of115-185; originating local evidence not accessible VPS",
+    "reviewed_revision": "ac58662da5b5cf8f6b8883347d9a9e649239a3e9",
+    "source_commit": "c5454c8b7debb092638801d00b402bbc43298eba",
+    "source_blob_sha256": "ce137a7c31d818348c38d5f98fe0458fd532116f9a88434e33ad4b26192d0041",
+    "consequence": "poll/communicate may reap leader before unconditional finally killpg(pid,SIGKILL); recycled PGID could target unrelated processes",
+    "outcome": "remediate and review a new revision",
+    "repair_task": "codexbar-fixture-process-identity-repair-20261017-r1",
+    "prior_effect": "No unrelated process effect known; unsafe original regression not rerun",
+    "historical_results_limit": "50 passed cases prove prior synthetic behavior only, not signal identity safety",
+    "repair_commit": "b9d2ca08a923c03b972de5f607b8963a06f8a498",
+    "confirmation_task": "codexbar-fixture-process-identity-confirmation-20261017-r1",
+    "repair_design": "WNOWAIT retains unreaped leader identity through final group signal before sole reap; observation failure denies signaling; deferred cancellation for acquisition/cleanup and owned TemporaryFiles for output",
+    "repair_manifest": {
+      "Scripts/test_fixture_scratch_parent.py": "7f055a4d3ae566991cd1fb4931d8016c56c746ab31d61903574b037ee80f4468",
+      "Scripts/test_fixture_process_ownership.py": "62c2cbd6895d4b92cb58dc563f6b3438ca7a36e7a84f03e6872967503b98ea54"
+    },
+    "builder_evidence": "Linux/Python3.13.5 PASS20ownership(16mock+4live synthetic) and50lifecycle; exactscratch cleanup; unsafehistoricalsource mockreproonly",
+    "platform_prerequisite": "macOS Python3.13+ waitid/WNOWAIT; unsupported capability fails before spawn; native Mac unrun",
+    "source_disposition": "Source-confirmed b9d2ca08a923c03b972de5f607b8963a06f8a498; original recycled-PGID execution stop resolved for repaired supported-capability synthetic runner. Native macOS qualification remains separate.",
+    "confirmation": {
+      "source_profile": "Astra/high targeted independent correctness; generic T3 review role fallback",
+      "task": "codexbar-fixture-process-identity-confirmation-20261017-r1",
+      "immutable_result": "context-transfer:type:subagent_result:source-thread:thread%3Adelegated-task%3Acommand%253Amcp%253Ad4fad46f-6f60-4566-8a66-ad626d212917%253Adelegate-task%253Acodexbar-fixture-process-identity-confirmation-20261017-r1:target-thread:0488f286-4c8b-4932-9b44-67ef47cb70a3:367f9d9d-3628-41e7-901c-1b0a9cea8b29",
+      "reviewed_revision": "b9d2ca08a923c03b972de5f607b8963a06f8a498",
+      "base": "90613f2c8a5ed0c5ea95a7ce9665573e894eb5e8",
+      "result": "supported; no remaining protected-boundary stop for original recycled-PGID defect",
+      "anchors": [
+        "retained_status40 WNOWAIT",
+        "cleanup99 signals before sole wait",
+        "unsupported capability before spawn"
+      ],
+      "execution": "reviewer did not execute; builder Linux evidence only"
+    }
+  },
+  "laptop_commands_status": "HELD pending Mac-compatible signal-error/sole-reap repair and exact prior-effect reconciliation; no retry or unknown-PID probe/signal",
+  "deferred_findings": [
+    {
+      "id": "FSP-PROC-002",
+      "source_review_profile": "Astra/high targeted independent correctness; generic T3 review role fallback",
+      "source_review_result": "context-transfer:type:subagent_result:source-thread:thread%3Adelegated-task%3Acommand%253Amcp%253Ad4fad46f-6f60-4566-8a66-ad626d212917%253Adelegate-task%253Acodexbar-fixture-process-identity-confirmation-20261017-r1:target-thread:0488f286-4c8b-4932-9b44-67ef47cb70a3:367f9d9d-3628-41e7-901c-1b0a9cea8b29",
+      "reviewed_revision": "b9d2ca08a923c03b972de5f607b8963a06f8a498",
+      "original_severity": "P2",
+      "original_blocking_effect": "nonblocking observation; does not reintroduce post-reap signaling or block P1 confirmation",
+      "path": "Scripts/test_fixture_scratch_parent.py:114",
+      "consequence": "Handler restoration is interruptible: after restoring SIGHUP another SIGHUP can raise SystemExit before SIGINT/SIGTERM restore; if caller catches it, deferred handlers may remain installed",
+      "test_gap": "restoration window not covered",
+      "outcome": "accept or rescope as bounded debt",
+      "authority_basis": "standing P2 implementation deferral in applicable AGENTS/review-finding-disposition; limited to nonblocking source/native-verification delivery, no runtime/operational waiver",
+      "debt_owner": "CodexBar workstream continuity owner",
+      "revisit_trigger": "Direct owner instruction to remediate or future scoped changes to handler restoration",
+      "disposition": "Deferred/unrepaired; original severity/consequence retained"
+    }
+  ],
+  "Mac_native_followup": {
+    "tests": 20,
+    "passed": 19,
+    "failed": "test_large_outputs_do_not_block_on_pipe_capacity at test_fixture_process_ownership.py210",
+    "error": "PermissionError errno1 EPERM from os.killpg at collector56, finalSIGKILL107 after retained terminal leader observation",
+    "platform": "macOS Python3.13.3",
+    "passed_detail": "16 mocks + other3live, including exited leader descendant cleanup",
+    "failed_PID": "not logged",
+    "sole_reap": "UNPROVED; wait skipped on signal exception",
+    "outer_runner": "drained/reported no error; not proof inner reap",
+    "retry": false,
+    "recovery": "No additional process signals/probes; caller-owned parent retained until no-live-effects reconciled",
+    "execution": "shared collector scratch regression HELD"
+  }
+}

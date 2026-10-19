@@ -24,8 +24,7 @@ private enum ObservabilityHubTab: String, CaseIterable, Identifiable {
 
 @MainActor
 struct CodexObservabilityHubView: View {
-    @Bindable var coordinator: CAAMEnvironmentCoordinator
-    let configurations: [CAAMEnvironmentConfiguration]
+    let accountInputs: () -> [HubAccountObservation]
     let providerInputs: () -> [HubProviderInput]
     @Bindable var netdataBridge: NetdataObservabilityBridge
     @State private var tab: ObservabilityHubTab = .overview
@@ -39,11 +38,14 @@ struct CodexObservabilityHubView: View {
             }
             .pickerStyle(.segmented)
             TimelineView(.periodic(from: .now, by: 15)) { context in
+                let accounts = self.accountInputs()
+                let hosts = self.netdataBridge.hostsByEnvironmentID(now: context.date)
                 let snapshot = ObservabilityHub.aggregate(
-                    sessions: self.configurations.map { self.coordinator.session(for: $0) },
+                    services: self.systemObservations(accounts: accounts, hosts: hosts),
+                    accounts: accounts,
                     providers: self.providerInputs(),
                     includeWork: self.tab == .work,
-                    hostsByEnvironmentID: self.netdataBridge.hostsByEnvironmentID(now: context.date),
+                    hostsByEnvironmentID: hosts,
                     now: context.date)
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 12) {
@@ -66,15 +68,32 @@ struct CodexObservabilityHubView: View {
         }
     }
 
+    private func systemObservations(
+        accounts: [HubAccountObservation], hosts: [String: HubHostObservation]) -> [HubServiceObservation]
+    {
+        let local = HubServiceObservation(
+            id: "local",
+            label: L("This Mac"),
+            currentProfile: accounts.first { $0.environmentID == "local" && $0.hostDefault }?.profile,
+            evidence: HubEvidence(source: "Existing local account projection", observedAt: nil, availability: .partial))
+        let remote = hosts.keys.sorted().filter { $0 != "local" }.map { id in
+            HubServiceObservation(
+                id: id,
+                label: id,
+                evidence: HubEvidence(source: "No service observation", observedAt: nil, availability: .unavailable))
+        }
+        return [local] + remote
+    }
+
     private func overview(_ snapshot: ObservabilityHubSnapshot, now: Date) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(L("Service and local state")).font(.subheadline.weight(.semibold))
             if snapshot.services.isEmpty {
-                Text(L("No CAAM environments configured.")).font(.caption)
+                Text(L("No system observations are available.")).font(.caption)
             }
             ForEach(snapshot.services) { service in
                 HStack(alignment: .top) {
-                    Text(service.row.label)
+                    Text(service.label)
                     Spacer()
                     HubEvidenceView(evidence: service.evidence)
                 }
@@ -115,10 +134,10 @@ struct CodexObservabilityHubView: View {
             Divider()
             Text(L("Host resources")).font(.subheadline.weight(.semibold))
             if snapshot.services.isEmpty {
-                Text(L("No CAAM environments configured.")).font(.caption)
+                Text(L("No system observations are available.")).font(.caption)
             }
             ForEach(snapshot.services) { service in
-                self.hostResources(environmentID: service.id, label: service.row.label, now: now)
+                self.hostResources(environmentID: service.id, label: service.label, now: now)
             }
         }
     }
@@ -139,7 +158,7 @@ struct CodexObservabilityHubView: View {
                     format: L("Separate metered amount: %@ (not added)"),
                     UsageFormatter.currencyString(metered, currencyCode: cost.currency)))
             }
-            Text(L("Historical provider cache; not a billing receipt or an identified CAAM account."))
+            Text(L("Historical provider cache; not a billing receipt or an identified account."))
             HubEvidenceView(evidence: cost.evidence)
         }
         .font(.caption2)
@@ -171,17 +190,17 @@ struct CodexObservabilityHubView: View {
 
     private func systems(_ snapshot: ObservabilityHubSnapshot, now: Date) -> some View {
         Group {
-            if snapshot.services.isEmpty { Text(L("No CAAM environments configured.")) }
+            if snapshot.services.isEmpty { Text(L("No system observations are available.")) }
             ForEach(snapshot.services) { service in
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(service.row.label).font(.subheadline.weight(.semibold))
-                    Text(String(format: L("Host default: %@"), service.row.currentProfile ?? L("Unknown")))
+                    Text(service.label).font(.subheadline.weight(.semibold))
+                    Text(String(format: L("Host default: %@"), service.currentProfile ?? L("Unknown")))
                     Text(String(
                         format: L("Runtime effective profile: %@"),
                         service.runtimeEffectiveProfile ?? L("Unknown")))
                     HubEvidenceView(evidence: service.evidence)
-                    self.hostResources(environmentID: service.id, label: service.row.label, now: now)
-                    NetdataDashboardLinkView(configuration: self.configurations.first { $0.id == service.id })
+                    self.hostResources(environmentID: service.id, label: service.label, now: now)
+                    NetdataDashboardLinkView(environmentID: service.id)
                 }
                 .font(.caption)
             }
@@ -270,7 +289,7 @@ private struct HubEvidenceView: View {
 }
 
 private struct NetdataDashboardLinkView: View {
-    let configuration: CAAMEnvironmentConfiguration?
+    let environmentID: String
     @State private var destination = ""
 
     var body: some View {
@@ -286,6 +305,6 @@ private struct NetdataDashboardLinkView: View {
             Text(L("Opening a dashboard does not import telemetry or verify this host."))
                 .foregroundStyle(.secondary)
         }
-        .onChange(of: self.configuration) { _, _ in self.destination = "" }
+        .onChange(of: self.environmentID) { _, _ in self.destination = "" }
     }
 }

@@ -6,7 +6,7 @@ import Testing
 struct AntigravityOfflineFallbackProofTests {
     @Test
     func `counts db in app-data directory`() throws {
-        let tmp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let tmp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tmp) }
         let appData = AntigravityOfflineStore.appDataDirectory(home: tmp, env: [:])
@@ -19,7 +19,7 @@ struct AntigravityOfflineFallbackProofTests {
 
     @Test
     func `counts db in app-data conversations subdirectory`() throws {
-        let tmp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let tmp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tmp) }
         let appDataConv = AntigravityOfflineStore.appDataDirectory(home: tmp, env: [:])
@@ -31,7 +31,7 @@ struct AntigravityOfflineFallbackProofTests {
 
     @Test
     func `offline snapshot does not carry selected OAuth email`() async throws {
-        let tmp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let tmp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tmp) }
         let conv = AntigravityOfflineStore.conversationsDirectory(home: tmp, env: [:])
@@ -57,7 +57,7 @@ struct AntigravityOfflineFallbackProofTests {
 
     @Test
     func `oauth shouldFallback when offline data exists`() async {
-        let tmp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let tmp = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         try? FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tmp) }
         let conv = AntigravityOfflineStore.conversationsDirectory(home: tmp, env: [:])
@@ -82,7 +82,7 @@ struct AntigravityOfflineFallbackProofTests {
     {
         var effectiveEnv = env
         effectiveEnv["HOME"] = effectiveEnv["HOME"]
-            ?? FileManager.default.temporaryDirectory
+            ?? TestFixtureScratch.root
             .appendingPathComponent(
                 "codexbar-antigravity-empty-home-\(UUID().uuidString)",
                 isDirectory: true)

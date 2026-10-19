@@ -74,7 +74,7 @@ struct AntigravityJSONLNumberTests {
     }
 
     private func report(literal: String, field: String) throws -> AntigravityLocalReader.DailyReportResult {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("antigravity-number-\(UUID())")
+        let root = TestFixtureScratch.root.appendingPathComponent("antigravity-number-\(UUID())")
         defer { try? FileManager.default.removeItem(at: root) }
         let context = AntigravityLocalReader.Context(environment: ["HOME": root.path])
         try FileManager.default.createDirectory(at: context.cacheRoot, withIntermediateDirectories: true)

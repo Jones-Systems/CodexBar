@@ -969,7 +969,7 @@ struct ClaudeAutoFetcherCharacterizationTests {
     }
 
     private static func makeFakeClaudeCLI(logURL: URL) throws -> URL {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("claude-auto-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let scriptURL = directory.appendingPathComponent("claude")
@@ -1011,7 +1011,7 @@ struct ClaudeAutoFetcherCharacterizationTests {
     }
 
     private func withNoOAuthCredentials<T>(operation: () async throws -> T) async rethrows -> T {
-        let missingCredentialsURL = FileManager.default.temporaryDirectory
+        let missingCredentialsURL = TestFixtureScratch.root
             .appendingPathComponent("missing-claude-creds-\(UUID().uuidString).json")
         return try await KeychainCacheStore.withServiceOverrideForTesting("rat-107-\(UUID().uuidString)") {
             KeychainCacheStore.setTestStoreForTesting(true)
@@ -1064,7 +1064,7 @@ struct ClaudeAutoFetcherCharacterizationTests {
     @Test
     func `app Auto prefers safe OAuth before CLI and web`() async throws {
         let usageResponse = try Self.makeOAuthUsageResponse()
-        let cliLogURL = FileManager.default.temporaryDirectory
+        let cliLogURL = TestFixtureScratch.root
             .appendingPathComponent("claude-auto-cli-log-\(UUID().uuidString).txt")
         let log = InvocationLog(url: cliLogURL)
         let fakeCLI = try Self.makeFakeClaudeCLI(logURL: cliLogURL)
@@ -1107,7 +1107,7 @@ struct ClaudeAutoFetcherCharacterizationTests {
 
     @Test(arguments: [false, true])
     func `app Auto cancellation never advances beyond OAuth`(wrappedTransportCancellation: Bool) async throws {
-        let cliLogURL = FileManager.default.temporaryDirectory
+        let cliLogURL = TestFixtureScratch.root
             .appendingPathComponent("claude-auto-cancel-log-\(UUID().uuidString).txt")
         let log = InvocationLog(url: cliLogURL)
         let fakeCLI = try Self.makeFakeClaudeCLI(logURL: cliLogURL)
@@ -1153,7 +1153,7 @@ struct ClaudeAutoFetcherCharacterizationTests {
 
     @Test
     func `app runtime auto prefers CLI before web when OAuth unavailable`() async throws {
-        let cliLogURL = FileManager.default.temporaryDirectory
+        let cliLogURL = TestFixtureScratch.root
             .appendingPathComponent("claude-auto-web-log-\(UUID().uuidString).txt")
         let log = InvocationLog(url: cliLogURL)
         let fakeCLI = try Self.makeFakeClaudeCLI(logURL: cliLogURL)
@@ -1227,7 +1227,7 @@ struct ClaudeAutoFetcherCharacterizationTests {
 
     @Test
     func `CLI runtime auto prefers web before CLI when OAuth unavailable`() async throws {
-        let cliLogURL = FileManager.default.temporaryDirectory
+        let cliLogURL = TestFixtureScratch.root
             .appendingPathComponent("claude-auto-cli-runtime-web-log-\(UUID().uuidString).txt")
         let log = InvocationLog(url: cliLogURL)
         let fakeCLI = try Self.makeFakeClaudeCLI(logURL: cliLogURL)

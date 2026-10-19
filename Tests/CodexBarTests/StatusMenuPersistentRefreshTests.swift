@@ -124,7 +124,7 @@ struct StatusMenuPersistentRefreshTests {
     }
 
     private static func isolatedEnvironment() -> [String: String] {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("codexbar-tests", isDirectory: true)
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         return [

@@ -1,7 +1,28 @@
 import Foundation
 import Testing
+@testable import CodexBarCore
 
 struct MiMoUsageScriptTests {
+    @Test
+    func `tracker and reader agree for stock Jones and explicit cache paths`() throws {
+        let identity = JonesStateRoot.Identity(
+            bundleID: "com.example.mimo-fixture",
+            groupID: "FIXTURE.com.example.mimo-fixture",
+            teamID: "FIXTURE",
+            iCloudID: "iCloud.com.example.mimo-fixture")
+        let cases: [(JonesStateRoot.Identity?, String?)] = [
+            (nil, nil), (identity, nil), (nil, "custom/usage.json"), (identity, "custom/usage.json"),
+        ]
+        for (identity, cacheOverride) in cases {
+            let usage = try self.runScript(
+                files: ["session.jsonl": [self.assistantRow(outputTokens: 90)]],
+                identity: identity,
+                cacheOverride: cacheOverride)
+            self.assertUsage(
+                usage, expected: .init(input: 120, cacheCreate: 10, cacheRead: 5, output: 90, messages: 1))
+        }
+    }
+
     @Test
     func `script keeps final cumulative streaming usage`() throws {
         let rows = [
@@ -96,8 +117,12 @@ struct MiMoUsageScriptTests {
             expected: .init(input: 120, cacheCreate: 10, cacheRead: 5, output: 90, messages: 1))
     }
 
-    private func runScript(files: [String: [[String: Any]]]) throws -> [String: Any] {
-        let root = FileManager.default.temporaryDirectory
+    private func runScript(
+        files: [String: [[String: Any]]],
+        identity: JonesStateRoot.Identity? = nil,
+        cacheOverride: String? = "usage.json") throws -> [String: Any]
+    {
+        let root = TestFixtureScratch.root
             .appendingPathComponent("mimo-usage-script-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -117,14 +142,40 @@ struct MiMoUsageScriptTests {
             try jsonl.write(to: session, atomically: true, encoding: .utf8)
         }
 
-        let cache = root.appendingPathComponent("usage.json")
+        let readerEnvironment = cacheOverride.map {
+            ["MIMO_LOCAL_USAGE_PATH": root.appendingPathComponent($0).path]
+        } ?? [:]
+        let cache = URL(fileURLWithPath: MiMoLocalUsageFallback.cachePath(
+            environment: readerEnvironment, homeDirectory: root.path, identity: identity))
+        let otherCache = root.appendingPathComponent(
+            identity == nil ? ".codexbar-jones/mimo-local-usage.json" : ".codexbar/mimo-local-usage.json")
+        try FileManager.default.createDirectory(
+            at: otherCache.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let sentinel = Data("{\"stock_or_other_identity\":\"unchanged\"}".utf8)
+        try sentinel.write(to: otherCache)
+        #expect(MiMoLocalUsageFallback.snapshot(cachePath: cache.path) == nil)
+
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.arguments = ["python3", self.scriptURL.path, "--update"]
-        process.environment = ProcessInfo.processInfo.environment.merging([
+        process.arguments = ["python3", "-B", self.scriptURL.path, "--update"]
+        var writerEnvironment = [
+            "PATH": ProcessInfo.processInfo.environment["PATH"] ?? "/usr/bin:/bin",
+            "HOME": root.path,
             "MIMO_CLAUDE_HOME": mimoHome.path,
-            "MIMO_LOCAL_USAGE_PATH": cache.path,
-        ]) { _, new in new }
+            "CODEXBAR_SUPPRESS_TEST_KEYCHAIN_ACCESS": "1",
+            "CODEXBAR_TEST_CODEX_FILE_ISOLATION": "1",
+            TestFixtureScratch.parentEnvironmentKey: TestFixtureScratch.root.path,
+            TestFixtureScratch.workspaceEnvironmentKey: ProcessInfo.processInfo.environment[
+                TestFixtureScratch.workspaceEnvironmentKey,
+            ]!,
+            "CODEXBAR_TEST_SESSION_FILE_ISOLATION": "1",
+        ]
+        // The external tracker uses its existing explicit output override for the packaged fork.
+        if identity != nil || cacheOverride != nil {
+            writerEnvironment["MIMO_LOCAL_USAGE_PATH"] = readerEnvironment["MIMO_LOCAL_USAGE_PATH"]
+                ?? root.appendingPathComponent(".codexbar-jones/mimo-local-usage.json").path
+        }
+        process.environment = writerEnvironment
         let stderr = Pipe()
         process.standardError = stderr
 
@@ -135,9 +186,14 @@ struct MiMoUsageScriptTests {
             bytes: stderr.fileHandleForReading.readDataToEndOfFile(),
             encoding: .utf8))
         #expect(process.terminationStatus == 0, Comment(rawValue: errorText))
+        #expect(try Data(contentsOf: otherCache) == sentinel)
+        let snapshot = try #require(MiMoLocalUsageFallback.snapshot(cachePath: cache.path))
+        #expect(snapshot.planCode?.contains("Local") == true)
+        #expect(snapshot.planCode?.contains("\(files.count) sessions") == true)
 
-        let payload = try #require(
-            JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as? [String: Any])
+        let cacheData = try Data(contentsOf: cache)
+        let cacheObject = try JSONSerialization.jsonObject(with: cacheData)
+        let payload = try #require(cacheObject as? [String: Any])
         let windows = try #require(payload["windows"] as? [String: Any])
         return try #require(windows["all_time"] as? [String: Any])
     }

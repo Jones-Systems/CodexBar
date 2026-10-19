@@ -323,8 +323,14 @@ struct CodexWorkspaceUsageSidecar: Sendable {
         try? FileManager.default.removeItem(at: URL(fileURLWithPath: self.databaseURL().path + "-shm"))
     }
 
+    private static func defaultCacheRoot() -> URL {
+        let root = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        return JonesStateRoot.identity == nil ? root : root
+            .appendingPathComponent("CodexBar Jones") // JONES(trial-identity)
+    }
+
     private func databaseURL() -> URL {
-        let root = self.cacheRoot ?? FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let root = self.cacheRoot ?? Self.defaultCacheRoot() // JONES(trial-identity)
         return root
             .appendingPathComponent("local-usage", isDirectory: true)
             .appendingPathComponent("codex-workspaces-v1.sqlite", isDirectory: false)

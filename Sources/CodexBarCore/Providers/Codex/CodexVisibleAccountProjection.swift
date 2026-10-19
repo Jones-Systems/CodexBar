@@ -12,6 +12,8 @@ public struct CodexVisibleAccount: Equatable, Identifiable, Sendable {
     public private(set) var displayDiscriminator: String?
     public let workspaceAccountID: String?
     public let authFingerprint: String?
+    // JONES(fleet-system-promotion): retain target provenance independently of usage selection.
+    public let systemPromotionTarget: JonesCodexSystemPromotionTarget?
     public let storedAccountID: UUID?
     public let selectionSource: CodexActiveSource
     public let isActive: Bool
@@ -30,13 +32,15 @@ public struct CodexVisibleAccount: Equatable, Identifiable, Sendable {
         isActive: Bool,
         isLive: Bool,
         canReauthenticate: Bool,
-        canRemove: Bool)
+        canRemove: Bool,
+        systemPromotionTarget: JonesCodexSystemPromotionTarget? = nil)
     {
         self.id = id
         self.email = email
         self.workspaceLabel = Self.normalizeWorkspaceLabel(workspaceLabel)
         self.workspaceAccountID = workspaceAccountID
         self.authFingerprint = CodexAuthFingerprint.normalize(authFingerprint)
+        self.systemPromotionTarget = systemPromotionTarget ?? storedAccountID.map { .managedAccount($0) }
         self.storedAccountID = storedAccountID
         self.selectionSource = selectionSource
         self.isActive = isActive
@@ -137,6 +141,10 @@ public struct CodexVisibleAccountProjection: Equatable, Sendable {
         self.hasUnreadableAddedAccountStore = hasUnreadableAddedAccountStore
     }
 
+    public var showsAccountSelection: Bool {
+        self.visibleAccounts.count > 1 || (self.activeVisibleAccountID == nil && !self.visibleAccounts.isEmpty)
+    }
+
     public func source(forVisibleAccountID id: String) -> CodexActiveSource? {
         self.visibleAccounts.first { $0.id == id }?.selectionSource
     }
@@ -151,29 +159,7 @@ extension DefaultCodexAccountReconciler {
 extension CodexVisibleAccountProjection {
     public static func make(from snapshot: CodexAccountReconciliationSnapshot) -> CodexVisibleAccountProjection {
         let resolvedActiveSource = CodexActiveSourceResolver.resolve(from: snapshot).resolvedSource
-        var drafts: [VisibleAccountDraft] = []
-
-        for storedAccount in snapshot.storedAccounts {
-            let normalizedEmail = snapshot.runtimeEmail(for: storedAccount)
-            let remoteIdentity = snapshot.managedRemoteIdentity(for: storedAccount)
-            let remoteWorkspaceAccountID: String? = switch remoteIdentity {
-            case let .providerAccount(id):
-                ManagedCodexAccount.normalizeWorkspaceAccountID(id)
-            case .emailOnly, .unresolved:
-                nil
-            }
-            drafts.append(VisibleAccountDraft(
-                email: normalizedEmail,
-                workspaceLabel: Self.normalizeWorkspaceLabel(storedAccount.workspaceLabel),
-                workspaceAccountID: remoteWorkspaceAccountID,
-                authFingerprint: storedAccount.authFingerprint,
-                storedAccountID: storedAccount.id,
-                selectionSource: .managedAccount(id: storedAccount.id),
-                isLive: false,
-                canReauthenticate: true,
-                canRemove: true,
-                identity: remoteIdentity))
-        }
+        var drafts = Self.storedAccountDrafts(from: snapshot)
 
         if let liveSystemAccount = snapshot.liveSystemAccount {
             let normalizedEmail = Self.normalizeVisibleEmail(liveSystemAccount.email)
@@ -235,11 +221,33 @@ extension CodexVisibleAccountProjection {
         })
         for profileAccount in snapshot.profileHomeAccounts {
             let profilePath = CodexHomeScope.normalizedHomePath(profileAccount.codexHomePath)
-            guard let profilePath,
-                  profilePath != livePath,
-                  !managedPaths.contains(profilePath)
-            else {
+            guard let profilePath else { continue }
+            let isFleetProfile = snapshot.fleetProfileHomePaths.contains(profilePath)
+            guard isFleetProfile || (profilePath != livePath && !managedPaths.contains(profilePath)) else {
                 continue
+            }
+            if isFleetProfile {
+                let profileIdentity = snapshot.runtimeIdentity(for: profileAccount)
+                drafts.removeAll { draft in
+                    // Preserve an explicitly selected source until the user selects its fleet replacement.
+                    guard draft.selectionSource != resolvedActiveSource else { return false }
+                    switch draft.selectionSource {
+                    case .liveSystem:
+                        return livePath == profilePath
+                    case let .managedAccount(id):
+                        let sameHome = snapshot.storedAccounts.first { $0.id == id }.flatMap {
+                            CodexHomeScope.normalizedHomePath($0.managedHomePath)
+                        } == profilePath
+                        let missingMatchingAuth = draft.authFingerprint == nil && CodexIdentityMatcher.matches(
+                            draft.identity,
+                            lhsEmail: draft.email,
+                            profileIdentity,
+                            rhsEmail: profileAccount.email)
+                        return sameHome || missingMatchingAuth
+                    case .profileHome:
+                        return false
+                    }
+                }
             }
             drafts.append(VisibleAccountDraft(
                 email: Self.normalizeVisibleEmail(profileAccount.email),
@@ -251,7 +259,10 @@ extension CodexVisibleAccountProjection {
                 isLive: false,
                 canReauthenticate: false,
                 canRemove: false,
-                identity: snapshot.runtimeIdentity(for: profileAccount)))
+                identity: snapshot.runtimeIdentity(for: profileAccount),
+                systemPromotionTarget: JonesCodexFleetPromotionTarget(
+                    profile: profileAccount,
+                    fleetHomePaths: snapshot.fleetProfileHomePaths).map { .fleetProfile($0) }))
         }
 
         let groupedByEmail = Dictionary(grouping: drafts.indices, by: { drafts[$0].email })
@@ -277,7 +288,8 @@ extension CodexVisibleAccountProjection {
                 isActive: isActive,
                 isLive: draft.isLive,
                 canReauthenticate: draft.canReauthenticate,
-                canRemove: draft.canRemove)
+                canRemove: draft.canRemove,
+                systemPromotionTarget: draft.systemPromotionTarget)
         }.sorted { lhs, rhs in
             if lhs.email != rhs.email {
                 return lhs.email < rhs.email
@@ -296,6 +308,35 @@ extension CodexVisibleAccountProjection {
             activeVisibleAccountID: visibleAccounts.first { $0.isActive }?.id,
             liveVisibleAccountID: visibleAccounts.first { $0.isLive }?.id,
             hasUnreadableAddedAccountStore: snapshot.hasUnreadableAddedAccountStore)
+    }
+
+    private static func storedAccountDrafts(
+        from snapshot: CodexAccountReconciliationSnapshot) -> [VisibleAccountDraft]
+    {
+        var drafts: [VisibleAccountDraft] = []
+        for storedAccount in snapshot.storedAccounts {
+            let normalizedEmail = snapshot.runtimeEmail(for: storedAccount)
+            let remoteIdentity = snapshot.managedRemoteIdentity(for: storedAccount)
+            let remoteWorkspaceAccountID: String? = switch remoteIdentity {
+            case let .providerAccount(id):
+                ManagedCodexAccount.normalizeWorkspaceAccountID(id)
+            case .emailOnly, .unresolved:
+                nil
+            }
+            drafts.append(VisibleAccountDraft(
+                email: normalizedEmail,
+                workspaceLabel: Self.normalizeWorkspaceLabel(storedAccount.workspaceLabel),
+                workspaceAccountID: remoteWorkspaceAccountID,
+                authFingerprint: storedAccount.authFingerprint,
+                storedAccountID: storedAccount.id,
+                selectionSource: .managedAccount(id: storedAccount.id),
+                isLive: false,
+                canReauthenticate: true,
+                canRemove: true,
+                identity: remoteIdentity))
+        }
+
+        return drafts
     }
 
     private static func normalizeVisibleEmail(_ email: String) -> String {
@@ -334,4 +375,5 @@ private struct VisibleAccountDraft {
     let canReauthenticate: Bool
     let canRemove: Bool
     let identity: CodexIdentity
+    var systemPromotionTarget: JonesCodexSystemPromotionTarget?
 }

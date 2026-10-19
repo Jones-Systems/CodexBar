@@ -1,22 +1,34 @@
 import Foundation
 
 /// Plans the compact ("smart") multi-account menu layout used when a provider
-/// surfaces many account rows: the active account keeps its full usage card,
+/// surfaces many account rows: the active account starts with its full usage card,
 /// inactive accounts collapse to one-line rows sorted most-constrained-first,
 /// and a long healthy tail folds behind a single summary row.
 ///
 /// Pure projection: inputs are account snapshots plus menu expansion state,
 /// output is an ordered row plan. Rendering and interaction stay in the app layer.
 public enum AccountMenuLayoutPlanner {
-    /// Compact layout only engages once a provider has this many account rows;
+    /// By default, compact layout engages once a provider has this many account rows;
     /// below that the classic stacked cards still fit on screen.
     public static let compactLayoutMinimumAccountCount = 4
     public static let criticalHeadroomPercent: Double = 10
     public static let warningHeadroomPercent: Double = 50
-    /// Folding fewer healthy rows than this behind a summary row would not save
-    /// meaningful menu height.
+    /// By default, fold at least this many healthy rows to save meaningful menu height.
     public static let minimumCollapsedHealthyRowCount = 2
     static let constraintDetailWindowLimit = 2
+
+    public struct Policy: Equatable, Sendable {
+        public let compactLayoutMinimumAccountCount: Int
+        public let minimumCollapsedHealthyRowCount: Int
+
+        public init(
+            compactLayoutMinimumAccountCount: Int = AccountMenuLayoutPlanner.compactLayoutMinimumAccountCount,
+            minimumCollapsedHealthyRowCount: Int = AccountMenuLayoutPlanner.minimumCollapsedHealthyRowCount)
+        {
+            self.compactLayoutMinimumAccountCount = max(1, compactLayoutMinimumAccountCount)
+            self.minimumCollapsedHealthyRowCount = max(1, minimumCollapsedHealthyRowCount)
+        }
+    }
 
     public enum Severity: Equatable, Sendable {
         case critical
@@ -55,13 +67,20 @@ public enum AccountMenuLayoutPlanner {
     public static func plan(
         accounts: [ProviderAccountUsageSnapshot],
         expandedAccountIDs: Set<ProviderAccountIdentity> = [],
-        healthyTailExpanded: Bool = false) -> Plan
+        healthyTailExpanded: Bool = false,
+        collapsedAccountIDs: Set<ProviderAccountIdentity> = [],
+        minimumVisibleAccountCount: Int = 0,
+        policy: Policy = Policy()) -> Plan
     {
-        guard accounts.count >= self.compactLayoutMinimumAccountCount else {
+        guard accounts.count >= policy.compactLayoutMinimumAccountCount else {
             return Plan(rows: accounts.map { .card($0.id) }, usesCompactLayout: false)
         }
 
-        var rows: [Row] = accounts.filter(\.isActive).map { .card($0.id) }
+        var rows: [Row] = accounts.filter(\.isActive).map { account in
+            collapsedAccountIDs.contains(account.id)
+                ? .compact(self.compactRow(for: account, isBestCandidate: false))
+                : .card(account.id)
+        }
 
         let inactive = accounts.filter { !$0.isActive }
         let compactRows = self.sortedCompactRows(for: inactive)
@@ -69,15 +88,18 @@ public enum AccountMenuLayoutPlanner {
         let collapsible = healthyTailExpanded
             ? []
             : compactRows.filter { $0.severity == .healthy && !$0.isBestCandidate && !$0.hasError &&
-                !expandedAccountIDs.contains($0.accountID)
+                !expandedAccountIDs.contains($0.accountID) && !collapsedAccountIDs.contains($0.accountID)
             }
+        // Keep the most constrained eligible rows visible, without hiding active,
+        // unhealthy, best-candidate, or explicitly toggled accounts to meet a limit.
+        let hiddenCount = min(collapsible.count, max(0, accounts.count - max(0, minimumVisibleAccountCount)))
         let collapsedIDs: Set<ProviderAccountIdentity> =
-            collapsible.count >= self.minimumCollapsedHealthyRowCount
-                ? Set(collapsible.map(\.accountID))
+            hiddenCount >= policy.minimumCollapsedHealthyRowCount
+                ? Set(collapsible.suffix(hiddenCount).map(\.accountID))
                 : []
 
         for row in compactRows where !collapsedIDs.contains(row.accountID) {
-            if expandedAccountIDs.contains(row.accountID) {
+            if expandedAccountIDs.contains(row.accountID), !collapsedAccountIDs.contains(row.accountID) {
                 rows.append(.card(row.accountID))
             } else {
                 rows.append(.compact(row))

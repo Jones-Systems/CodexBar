@@ -661,7 +661,7 @@ struct AntigravityCLISessionTests {
 
     @Test
     func `pty launcher uses home and closes unrelated descriptors`() throws {
-        let tempDirectory = FileManager.default.temporaryDirectory
+        let tempDirectory = TestFixtureScratch.root
             .appendingPathComponent("antigravity-spawn-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDirectory) }
@@ -719,7 +719,7 @@ struct AntigravityCLISessionTests {
 
     @Test
     func `spawned PTY drain is bounded per call`() throws {
-        let temp = FileManager.default.temporaryDirectory
+        let temp = TestFixtureScratch.root
             .appendingPathComponent("antigravity-drain-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: temp) }
         try Data(repeating: 1, count: 8192 * 65).write(to: temp)
@@ -1100,7 +1100,7 @@ extension AntigravityCLISessionTests {
 
     @Test
     func `file store migrates legacy record and preserves independent owners`() throws {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("CodexBarAntigravitySessionTests-\(UUID().uuidString)", isDirectory: true)
         let fileURL = directory.appendingPathComponent("agy-session.json")
         defer { try? FileManager.default.removeItem(at: directory) }

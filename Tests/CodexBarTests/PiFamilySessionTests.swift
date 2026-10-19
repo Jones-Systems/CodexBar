@@ -323,7 +323,7 @@ struct PiFamilySessionTests {
     }
 
     private static func temporaryDirectory(named name: String) throws -> URL {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("\(name)-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         return directory

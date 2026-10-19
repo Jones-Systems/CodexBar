@@ -1,3 +1,4 @@
+import CodexBarCore
 import Foundation
 
 struct GeminiTestEnvironment {
@@ -13,7 +14,7 @@ struct GeminiTestEnvironment {
     private let antigravityDir: URL
 
     init() throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let geminiDir = root.appendingPathComponent(".gemini")
         try FileManager.default.createDirectory(at: geminiDir, withIntermediateDirectories: true)

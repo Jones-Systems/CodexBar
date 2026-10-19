@@ -47,7 +47,7 @@ struct CodexManagedRoutingTests {
             createdAt: 1,
             updatedAt: 1,
             lastAuthenticatedAt: 1)
-        let storeURL = FileManager.default.temporaryDirectory
+        let storeURL = TestFixtureScratch.root
             .appendingPathComponent("codex-managed-override-\(UUID().uuidString).json")
         let store = FileManagedCodexAccountStore(fileURL: storeURL)
         try store.storeAccounts(ManagedCodexAccountSet(
@@ -81,7 +81,7 @@ struct CodexManagedRoutingTests {
             createdAt: 1,
             updatedAt: 1,
             lastAuthenticatedAt: 1)
-        let storeURL = FileManager.default.temporaryDirectory
+        let storeURL = TestFixtureScratch.root
             .appendingPathComponent("codex-managed-snapshot-override-\(UUID().uuidString).json")
         let store = FileManagedCodexAccountStore(fileURL: storeURL)
         try store.storeAccounts(ManagedCodexAccountSet(
@@ -394,7 +394,7 @@ struct CodexManagedRoutingTests {
             createdAt: 1,
             updatedAt: 1,
             lastAuthenticatedAt: 1)
-        let storeURL = FileManager.default.temporaryDirectory
+        let storeURL = TestFixtureScratch.root
             .appendingPathComponent("codex-managed-routing-\(UUID().uuidString).json")
         let store = FileManagedCodexAccountStore(fileURL: storeURL)
         try store.storeAccounts(ManagedCodexAccountSet(
@@ -434,7 +434,7 @@ struct CodexManagedRoutingTests {
             createdAt: 1,
             updatedAt: 1,
             lastAuthenticatedAt: 1)
-        let storeURL = FileManager.default.temporaryDirectory
+        let storeURL = TestFixtureScratch.root
             .appendingPathComponent("codex-managed-snapshot-\(UUID().uuidString).json")
         let store = FileManagedCodexAccountStore(fileURL: storeURL)
         try store.storeAccounts(ManagedCodexAccountSet(
@@ -497,7 +497,7 @@ struct CodexManagedRoutingTests {
             createdAt: 1,
             updatedAt: 1,
             lastAuthenticatedAt: 1)
-        let storeURL = FileManager.default.temporaryDirectory
+        let storeURL = TestFixtureScratch.root
             .appendingPathComponent("codex-managed-live-present-\(UUID().uuidString).json")
         let store = FileManagedCodexAccountStore(fileURL: storeURL)
         try store.storeAccounts(ManagedCodexAccountSet(
@@ -588,7 +588,7 @@ struct CodexManagedRoutingTests {
             createdAt: 1,
             updatedAt: 1,
             lastAuthenticatedAt: 1)
-        let storeURL = FileManager.default.temporaryDirectory
+        let storeURL = TestFixtureScratch.root
             .appendingPathComponent("codex-managed-usage-override-\(UUID().uuidString).json")
         let managedStore = FileManagedCodexAccountStore(fileURL: storeURL)
         try managedStore.storeAccounts(ManagedCodexAccountSet(

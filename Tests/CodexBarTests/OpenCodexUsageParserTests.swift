@@ -76,7 +76,7 @@ struct OpenCodexUsageParserTests {
     @Test
     func `does not resolve a default home while tests are running`() {
         #expect(OpenCodexUsageLog.usageLogURL(environment: ["TESTING_LIBRARY_VERSION": "1"]) == nil)
-        let home = FileManager.default.temporaryDirectory
+        let home = TestFixtureScratch.root
             .appendingPathComponent("OpenCodexUsageParserTests-\(UUID().uuidString)", isDirectory: true)
         let url = OpenCodexUsageLog.usageLogURL(environment: ["OPENCODEX_HOME": home.path])
         #expect(url == home.appendingPathComponent("usage.jsonl"))
@@ -100,7 +100,7 @@ struct OpenCodexUsageParserTests {
 
     @Test
     func `aggregates a fixture log into an independent snapshot`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("OpenCodexUsageAggregatorTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -139,14 +139,14 @@ struct OpenCodexUsageParserTests {
 
     @Test
     func `missing usage log parses as empty`() throws {
-        let url = FileManager.default.temporaryDirectory
+        let url = TestFixtureScratch.root
             .appendingPathComponent("OpenCodexUsageParserMissing-\(UUID().uuidString).jsonl")
         #expect(try OpenCodexUsageParser.parse(fileURL: url).isEmpty)
     }
 
     @Test(.enabled(if: geteuid() != 0))
     func `unreadable usage log throws instead of returning empty`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("OpenCodexUsageParserUnreadable-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let url = root.appendingPathComponent("usage.jsonl")
@@ -238,7 +238,7 @@ struct OpenCodexUsageParserTests {
 
     @Test
     func `duplicate request ids replace instead of aborting the cache write`() throws {
-        let root = FileManager.default.temporaryDirectory
+        let root = TestFixtureScratch.root
             .appendingPathComponent("OpenCodexUsageStoreDedupe-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }

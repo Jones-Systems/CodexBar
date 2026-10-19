@@ -265,7 +265,7 @@ struct WindsurfStatusProbeTests {
     }
 
     private static func makeTemporaryDatabase(jsonData: Data) throws -> URL {
-        let directory = FileManager.default.temporaryDirectory
+        let directory = TestFixtureScratch.root
             .appendingPathComponent("windsurf-status-probe-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let dbURL = directory.appendingPathComponent("state.vscdb")

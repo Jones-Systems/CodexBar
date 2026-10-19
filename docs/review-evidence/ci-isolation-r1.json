@@ -1,0 +1,217 @@
+{
+  "authority_effect": "none",
+  "source_revision": "1a3037561c867735ca5858e01168ff6f160b179c",
+  "pr": "https://github.com/Jones-Systems/CodexBar/pull/13",
+  "platform": "laptop macOS arm64",
+  "swift": "Apple Swift 6.3 (swiftlang-6.3.0.123.5)",
+  "python": "3.13.3",
+  "source_files_sha256": {
+    ".github/workflows/ci.yml": "7137a14b43f8d28bfaca8e719d5e716462578b8c90534cfc22bb63542edd667a",
+    "Scripts/ci_swift_test_by_suite.py": "059ce0eec9a78b6b44c7a5045a506cab48939ae87911fc650d309d45481f0326",
+    "Scripts/lint.sh": "5471bb18436f1ee1cdfdf3b94ffc16d0ca9d95210a64546864cb382e4695b81f",
+    "Scripts/test-plugin-engines.sh": "cd6fa802cad0159a957748ded2878b41cebd8010157ba18ebc68dc108d4c4004",
+    "Scripts/test_ci_isolated_commands.py": "4e1080197f1a19d9336eccadb83234da6ff4604e382aca3cdb5f43ed1901ca4e",
+    "Scripts/test.sh": "3b2a7e7df9c2364d457f65d59825bed779f5894d2985a503df42031b2245ee0b"
+  },
+  "native_swift_test_declarations_and_package_inputs_unchanged_from": "d17288a295db9659b610a89d7847d361b43cf552",
+  "local_evidence_directory": "verification-evidence-completion/ci-isolation-r1",
+  "serial_swift_driver_source": "import os\nfrom pathlib import Path\nimport sys\n\nparent = Path(os.environ['CODEXBAR_TEST_SCRATCH_PARENT'])\nworkspace = Path(os.environ['CODEXBAR_TEST_WORKSPACE_ROOT'])\nassert workspace == Path.cwd().resolve() and workspace in parent.parents\nbin_dir = parent / 'serial-tools'\nbin_dir.mkdir()\nadapter = bin_dir / 'swift'\nadapter.write_text('''#!/bin/bash\nset -euo pipefail\nsubcommand=\"$1\"\nshift\ncase \"$subcommand\" in\n  test|build) exec /usr/bin/swift \"$subcommand\" --jobs 1 \"$@\" ;;\n  *) exec /usr/bin/swift \"$subcommand\" \"$@\" ;;\nesac\n''')\nadapter.chmod(0o700)\nos.environ['PATH'] = str(bin_dir) + os.pathsep + os.environ['PATH']\nos.execvpe(sys.argv[1], sys.argv[1:], os.environ)\n",
+  "synthetic_baseline_driver_source": "from pathlib import Path\nimport subprocess\nimport sys\nimport unittest\n\nsys.path.insert(0, str(Path.cwd() / 'Scripts'))\nimport test_ci_isolated_commands as proof\n\nbaseline = 'd17288a295db9659b610a89d7847d361b43cf552'\noriginal_setup = proof.IsolatedCICommandsTests.setUp\nold_sources = {name: subprocess.check_output(['git', 'show', baseline + ':Scripts/' + name], text=True)\n               for name in ('test.sh', 'test-plugin-engines.sh', 'ci_swift_test_by_suite.py')}\n\ndef baseline_setup(self):\n    original_setup(self)\n    for name, source in old_sources.items():\n        (self.workspace / 'Scripts' / name).write_text(source)\n\nproof.IsolatedCICommandsTests.setUp = baseline_setup\nsuite = unittest.TestSuite([proof.IsolatedCICommandsTests('test_plugin_passes_share_parent_and_preserve_filters')])\nresult = unittest.TextTestRunner(verbosity=2).run(suite)\nassert result.testsRun == 1 and len(result.failures) == 1 and not result.errors\nassert 'CODEXBAR_TEST_SCRATCH_PARENT' in result.failures[0][1]\nprint('EXPECTED BASELINE FAILURE: old plugin entry point omitted CODEXBAR_TEST_SCRATCH_PARENT; synthetic command only')\n",
+  "results": {
+    "plugin-ab": {
+      "outcome": "PASS",
+      "command": [
+        "./Scripts/test.sh",
+        "--command",
+        "python3",
+        "-B",
+        "verification-evidence-completion/ci-isolation-r1/with-serial-swift.py",
+        "./Scripts/test-plugin-engines.sh"
+      ],
+      "timing_prefix": [
+        "/usr/bin/time",
+        "-p"
+      ],
+      "environment_unsets": [
+        "CODEXBAR_ALLOW_TEST_KEYCHAIN_ACCESS",
+        "LIVE_TEST",
+        "CODEXBAR_TEST_SCRATCH_PARENT",
+        "CODEXBAR_TEST_WORKSPACE_ROOT",
+        "CODEXBAR_TEST_SHARD_INDEX",
+        "CODEXBAR_TEST_SHARD_COUNT"
+      ],
+      "environment_set": {
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "CODEXBAR_TEST_RETRY_NON_TIMEOUT_FAILURES": "0"
+      },
+      "wrapper_exit_code": 0,
+      "wall_seconds": 1224.35,
+      "cleanup": "PASS: command drain and exact owned-parent removal/absence verified",
+      "raw_log_sha256": "6948e8b01d48e04587aced7bd4129d429ff6beea2bc2abdef98876fcc42a6c21",
+      "build_seconds": 1184.85,
+      "engine_results": [
+        {
+          "engine": "QuickJS",
+          "tests": 79,
+          "suites": 6,
+          "test_seconds": 5.046
+        },
+        {
+          "engine": "JavaScriptCore",
+          "tests": 79,
+          "suites": 6,
+          "test_seconds": 5.354
+        }
+      ]
+    },
+    "harness": {
+      "outcome": "PASS",
+      "command": [
+        "./Scripts/test.sh",
+        "--command",
+        "python3",
+        "-B",
+        "Scripts/test_ci_isolated_commands.py"
+      ],
+      "timing_prefix": [
+        "/usr/bin/time",
+        "-p"
+      ],
+      "environment_unsets": [
+        "CODEXBAR_ALLOW_TEST_KEYCHAIN_ACCESS",
+        "LIVE_TEST",
+        "CODEXBAR_TEST_SCRATCH_PARENT",
+        "CODEXBAR_TEST_WORKSPACE_ROOT",
+        "CODEXBAR_TEST_SHARD_INDEX",
+        "CODEXBAR_TEST_SHARD_COUNT"
+      ],
+      "environment_set": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "wrapper_exit_code": 0,
+      "wall_seconds": 5.7,
+      "cleanup": "PASS: command drain and exact owned-parent removal/absence verified",
+      "raw_log_sha256": "2515130cc9cbe285e24f94b8f77b6918ae8b2c0cf52c0b7b34660690ed5b858e",
+      "tests_passed": 5
+    },
+    "make-test": {
+      "outcome": "PASS",
+      "command": [
+        "./Scripts/test.sh",
+        "--command",
+        "python3",
+        "-B",
+        "verification-evidence-completion/ci-isolation-r1/with-serial-swift.py",
+        "make",
+        "test"
+      ],
+      "timing_prefix": [
+        "/usr/bin/time",
+        "-p"
+      ],
+      "environment_unsets": [
+        "CODEXBAR_ALLOW_TEST_KEYCHAIN_ACCESS",
+        "LIVE_TEST",
+        "CODEXBAR_TEST_SCRATCH_PARENT",
+        "CODEXBAR_TEST_WORKSPACE_ROOT",
+        "CODEXBAR_TEST_SHARD_INDEX",
+        "CODEXBAR_TEST_SHARD_COUNT",
+        "CODEXBAR_PLUGIN_ENGINE"
+      ],
+      "environment_set": {
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "CODEXBAR_TEST_RETRY_NON_TIMEOUT_FAILURES": "0"
+      },
+      "wrapper_exit_code": 0,
+      "wall_seconds": 783.05,
+      "cleanup": "PASS: command drain and exact owned-parent removal/absence verified",
+      "raw_log_sha256": "8967c503a405c8690d6ce9ed53d3657225544f5495c8484ad8f0953d4c16bf22",
+      "selections": 1030,
+      "groups": 86,
+      "first_pass_successful_groups": 86,
+      "failed_groups": 0,
+      "timeouts": 0,
+      "retries": 0,
+      "reported_swift_testing_tests": 10324,
+      "reported_xctest_cases": 149,
+      "xctest_gated_skips": 26,
+      "swift_testing_gated_skips": 6,
+      "same_counts_and_skip_identities_as_native_r12": true
+    },
+    "baseline": {
+      "outcome": "PASS: expected failure reproduced against old scripts with synthetic Swift",
+      "command": [
+        "./Scripts/test.sh",
+        "--command",
+        "python3",
+        "-B",
+        "verification-evidence-completion/ci-isolation-r1/baseline-proof.py"
+      ],
+      "timing_prefix": [
+        "/usr/bin/time",
+        "-p"
+      ],
+      "environment_unsets": [
+        "CODEXBAR_ALLOW_TEST_KEYCHAIN_ACCESS",
+        "LIVE_TEST",
+        "CODEXBAR_TEST_SCRATCH_PARENT",
+        "CODEXBAR_TEST_WORKSPACE_ROOT",
+        "CODEXBAR_TEST_SHARD_INDEX",
+        "CODEXBAR_TEST_SHARD_COUNT"
+      ],
+      "environment_set": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "wrapper_exit_code": 0,
+      "wall_seconds": 1.63,
+      "cleanup": "PASS: command drain and exact owned-parent removal/absence verified",
+      "raw_log_sha256": "3a5d99ef3440a523a52a93df3b7c413ff6cede3ff1dfab5a518efdf828799a5e",
+      "baseline_revision": "d17288a295db9659b610a89d7847d361b43cf552",
+      "expected_failing_tests": 1,
+      "failure": "KeyError: CODEXBAR_TEST_SCRATCH_PARENT in synthetic Swift invoked by old plugin script"
+    }
+  },
+  "admission": {
+    "effective_cores": 12,
+    "one_core_percent": 8.333333333333334,
+    "serial_test_starts_per_sample": 1,
+    "plugin-ab": {
+      "cpu_used_percent": 28.262676641729012,
+      "memory_pressure": "normal",
+      "swap_mib_per_second": 0
+    },
+    "harness": {
+      "cpu_used_percent": 33.69294605809129,
+      "memory_pressure": "normal",
+      "swap_mib_per_second": 0.18552353265111893
+    },
+    "make-test": {
+      "cpu_used_percent": 29.774812343619683,
+      "memory_pressure": "normal",
+      "swap_mib_per_second": 0.06209553298545268
+    },
+    "baseline": {
+      "cpu_used_percent": 37.5,
+      "memory_pressure": "warning",
+      "swap_mib_per_second": 1.0376878308092912
+    }
+  },
+  "count_correction": "The same parser reports 149 XCTest cases, including 26 gated skips, for both native-r12 and this run. Earlier 147 summaries omitted singular-test summary rows. The six Swift Testing skip identities also match; no test or skip was added or removed.",
+  "static_checks": [
+    "Python AST: PASS",
+    "bash syntax: PASS",
+    "git diff --check: PASS"
+  ],
+  "unavailable_or_held": {
+    "linux_swift_suite": "UNAVAILABLE: authorized ordinary-user VPS SSH returned Linux, but command -v swift exited 1; no supported installed Swift test route proved. No Docker/Podman command on local PATH. No install attempted.",
+    "make_check": "HELD, zero attempts: required SwiftFormat 0.61.1, SwiftLint 0.65.0, oxlint 1.76.0, oxfmt 0.61.0 and TypeScript 5.9.3 are absent at repository-required locations; no-install constraint retained.",
+    "github_ci": "UNVERIFIED: fork Actions gate retained and published source checkpoint check rollup empty; no watcher armed for absent checks.",
+    "deferred_findings": [
+      "NFCR-COR-002",
+      "NFCR-COR-003",
+      "NFP-COR-002",
+      "FSP-PROC-002"
+    ],
+    "other_holds": "Full scratch/identity/sharding proofs, privacy, seven trial/runtime gates, signing/packaging/install/live-account actions and explicit merge hold remain. Historical external cleanup/prior-state and compiler/framework scratch are not qualified by this receipt."
+  }
+}
