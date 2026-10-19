@@ -20,11 +20,17 @@ struct ClaudeNativeProfileFetchTests {
 
     private func context(environment: [String: String], source: ProviderSourceMode = .auto) -> ProviderFetchContext {
         ProviderFetchContext(
-            runtime: .app, sourceMode: source, includeCredits: false,
-            webTimeout: 1, webDebugDumpHTML: false, verbose: false, env: environment,
+            runtime: .app,
+            sourceMode: source,
+            includeCredits: false,
+            webTimeout: 1,
+            webDebugDumpHTML: false,
+            verbose: false,
+            env: environment,
             settings: .make(claude: ClaudeProviderSettings(
                 usageDataSource: .auto, webExtrasEnabled: true, cookieSource: .auto, manualCookieHeader: nil)),
-            fetcher: UsageFetcher(environment: environment), claudeFetcher: NoFetch(),
+            fetcher: UsageFetcher(environment: environment),
+            claudeFetcher: NoFetch(),
             browserDetection: BrowserDetection(cacheTTL: 0))
     }
 
@@ -67,7 +73,8 @@ struct ClaudeNativeProfileFetchTests {
             let context = self.context(environment: environment)
             try await ProviderInteractionContext.$current.withValue(.userInitiated) {
                 let record = try ClaudeOAuthCredentialsStore.loadRecord(
-                    environment: environment, allowKeychainPrompt: false,
+                    environment: environment,
+                    allowKeychainPrompt: false,
                     allowClaudeKeychainRepairWithoutPrompt: false)
                 #expect(record.owner == .claudeCLI)
                 #expect(record.credentials.isExpired)
@@ -225,18 +232,20 @@ struct ClaudeNativeProfileFetchTests {
         response: OAuthUsageResponse,
         operation: () async throws -> Void) async throws
     {
-        try await ClaudeUsageFetcher.$fetchOAuthUsageOverride.withValue({ token, _ in
+        try await ClaudeUsageFetcher.$fetchOAuthUsageOverride.withValue { token, _ in
             #expect(token == "synthetic-native")
             return response
-        }) {
+        } operation: {
             try await ClaudeOAuthDelegatedRefreshCoordinator.withIsolatedStateForTesting {
-                try await ClaudeOAuthDelegatedRefreshCoordinator.withKeychainFingerprintOverrideForTesting({ nil }) {
+                try await ClaudeOAuthDelegatedRefreshCoordinator.withKeychainFingerprintOverrideForTesting {
+                    nil
+                } operation: {
                     // Keep a regressed resolver from launching even the sentinel through the native PTY/session stack.
                     // The real coordinator and its availability gate still run; reaching the touch is a test failure.
-                    try await ClaudeOAuthDelegatedRefreshCoordinator.withTouchAuthPathOverrideForTesting({ _, _ in
+                    try await ClaudeOAuthDelegatedRefreshCoordinator.withTouchAuthPathOverrideForTesting { _, _ in
                         Issue.record("Selected native refresh must not touch an alternate executable")
                         throw CancellationError()
-                    }) {
+                    } operation: {
                         try await operation()
                     }
                 }

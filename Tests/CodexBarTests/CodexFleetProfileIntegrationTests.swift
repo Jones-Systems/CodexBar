@@ -105,7 +105,8 @@ struct CodexFleetProfileIntegrationTests {
         let root = CodexCredentialFixtures.root
         let removed = root.appendingPathComponent("removed").path
         let live = ObservedSystemCodexAccount(
-            email: "recovery@example.com", codexHomePath: root.appendingPathComponent("ambient").path,
+            email: "recovery@example.com",
+            codexHomePath: root.appendingPathComponent("ambient").path,
             observedAt: Date())
         let snapshot = DefaultCodexAccountReconciler(
             storeLoader: { throw FileManagedCodexAccountStoreError.unsupportedVersion(999) },
@@ -248,14 +249,51 @@ struct CodexFleetProfileIntegrationTests {
         let root = CodexCredentialFixtures.root
         let home = root.appendingPathComponent("fleet").path
         let otherHome = root.appendingPathComponent("other-fleet").path
-        let cases: [(String?, String, String?, String, Bool)] = [
-            ("acct-managed", "managed@example.com", "acct-other", "managed@example.com", false),
-            ("acct-managed", "managed@example.com", "acct-managed", "other@example.com", false),
-            (nil, "managed@example.com", nil, "managed@example.com", false),
-            ("acct-managed", "managed@example.com", nil, "managed@example.com", false),
-            ("acct-managed", "managed@example.com", "acct-managed", "managed@example.com", true),
+        struct IdentityCase {
+            let managedID: String?
+            let managedEmail: String
+            let profileID: String?
+            let profileEmail: String
+            let ambiguous: Bool
+        }
+        let cases = [
+            IdentityCase(
+                managedID: "acct-managed",
+                managedEmail: "managed@example.com",
+                profileID: "acct-other",
+                profileEmail: "managed@example.com",
+                ambiguous: false),
+            IdentityCase(
+                managedID: "acct-managed",
+                managedEmail: "managed@example.com",
+                profileID: "acct-managed",
+                profileEmail: "other@example.com",
+                ambiguous: false),
+            IdentityCase(
+                managedID: nil,
+                managedEmail: "managed@example.com",
+                profileID: nil,
+                profileEmail: "managed@example.com",
+                ambiguous: false),
+            IdentityCase(
+                managedID: "acct-managed",
+                managedEmail: "managed@example.com",
+                profileID: nil,
+                profileEmail: "managed@example.com",
+                ambiguous: false),
+            IdentityCase(
+                managedID: "acct-managed",
+                managedEmail: "managed@example.com",
+                profileID: "acct-managed",
+                profileEmail: "managed@example.com",
+                ambiguous: true),
         ]
-        for (managedID, managedEmail, profileID, profileEmail, ambiguous) in cases {
+        for fixture in cases {
+            let managedID = fixture.managedID
+            let managedEmail = fixture.managedEmail
+            let profileID = fixture.profileID
+            let profileEmail = fixture.profileEmail
+            let ambiguous = fixture.ambiguous
             let managed = ManagedCodexAccount(
                 id: UUID(),
                 email: managedEmail,
@@ -314,10 +352,10 @@ struct CodexFleetProfileIntegrationTests {
             claudeFetcher: ClaudeUsageFetcher(browserDetection: browserDetection),
             browserDetection: browserDetection)
         let access = UnavailableProfileAccessProbe()
-        await CodexCredentialFileAccess.$testIO.withValue({ _, _ in
+        await CodexCredentialFileAccess.$testIO.withValue { _, _ in
             access.recordIO()
             return Data()
-        }) {
+        } operation: {
             let nativeRefresh = CodexOAuthNativeRefreshCLIStrategy(binaryResolver: { _ in
                 access.recordLaunch()
                 Issue.record("Unavailable selection must not resolve or launch the CLI")

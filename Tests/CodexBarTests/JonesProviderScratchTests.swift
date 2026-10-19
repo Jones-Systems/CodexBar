@@ -20,7 +20,8 @@ struct GeminiLoginScratchTests {
         let files = ScratchFixture(failure: failure)
         var scheduled = false
         let result = await GeminiLoginRunner.launchScript(
-            "synthetic script", fileManager: files, forkIdentity: ScratchFixture.identity,
+            "synthetic script",
+            scratchContext: .init(fileManager: files, forkIdentity: ScratchFixture.identity),
             write: { content, url in try files.write(Data(content.utf8), to: url) },
             open: { _ in try files.failIfNeeded("launch") },
             scheduleCleanup: { _, _ in scheduled = true })
@@ -40,7 +41,8 @@ struct GeminiLoginScratchTests {
         var delay: TimeInterval?
         var opened: URL?
         let result = await GeminiLoginRunner.launchScript(
-            "synthetic script", fileManager: files, forkIdentity: overlay ? ScratchFixture.identity : nil,
+            "synthetic script",
+            scratchContext: .init(fileManager: files, forkIdentity: overlay ? ScratchFixture.identity : nil),
             write: { content, url in try files.write(Data(content.utf8), to: url) },
             open: { opened = $0 },
             scheduleCleanup: { delay = $0; cleanup = $1 })
@@ -71,7 +73,8 @@ struct GeminiLoginScratchTests {
         let files = ScratchFixture()
         let task = Task { @Sendable [files] in
             await GeminiLoginRunner.launchScript(
-                "synthetic script", fileManager: files, forkIdentity: ScratchFixture.identity,
+                "synthetic script",
+                scratchContext: .init(fileManager: files, forkIdentity: ScratchFixture.identity),
                 write: { content, url in try files.write(Data(content.utf8), to: url) },
                 open: { _ in
                     #expect(!files.filePaths.isEmpty)
@@ -99,7 +102,8 @@ struct GeminiLoginScratchTests {
             var cleanup: (@Sendable () -> Void)?
             var opened: URL?
             _ = await GeminiLoginRunner.launchScript(
-                "synthetic script", fileManager: files, forkIdentity: ScratchFixture.identity,
+                "synthetic script",
+                scratchContext: .init(fileManager: files, forkIdentity: ScratchFixture.identity),
                 write: { content, url in try files.write(Data(content.utf8), to: url) },
                 open: { opened = $0 },
                 scheduleCleanup: { delay, callback in
@@ -124,7 +128,8 @@ struct GeminiLoginScratchTests {
         var opened: [URL] = []
         for _ in 0..<2 {
             let result = await GeminiLoginRunner.launchScript(
-                "synthetic script", fileManager: files, forkIdentity: ScratchFixture.identity,
+                "synthetic script",
+                scratchContext: .init(fileManager: files, forkIdentity: ScratchFixture.identity),
                 write: { content, url in try files.write(Data(content.utf8), to: url) },
                 open: { opened.append($0) },
                 scheduleCleanup: { delay, callback in
@@ -157,7 +162,8 @@ struct GeminiLoginScratchTests {
         let task = Task { @Sendable [files] in
             withUnsafeCurrentTask { $0?.cancel() }
             return await GeminiLoginRunner.launchScript(
-                "synthetic script", fileManager: files, forkIdentity: ScratchFixture.identity,
+                "synthetic script",
+                scratchContext: .init(fileManager: files, forkIdentity: ScratchFixture.identity),
                 write: { _, _ in Issue.record("Cancelled login must not write") },
                 open: { _ in Issue.record("Cancelled login must not launch") },
                 scheduleCleanup: { _, _ in Issue.record("Cancelled login must not retain") })
@@ -173,7 +179,9 @@ struct GeminiLoginScratchTests {
 
 struct AliyunCookieScratchTests {
     @Test(arguments: ["copy", "read", "cancel", ""])
-    func `database scratch is cleaned after copy failure read failure cancellation and success`(failure: String) throws {
+    func `database scratch is cleaned after copy failure read failure cancellation and success`(failure: String)
+        throws
+    {
         let files = ScratchFixture(failure: failure)
         let source = files.root.appendingPathComponent("browser/Cookies")
         for suffix in ["", "-wal", "-shm"] {
@@ -231,7 +239,9 @@ struct GeminiCurlScratchTests {
         do {
             let (data, response) = try await Task { @Sendable [files, request, failure] in
                 try await GeminiStatusProbe.curlDataLoader(
-                    for: request, fileManager: files, forkIdentity: ScratchFixture.identity,
+                    for: request,
+                    fileManager: files,
+                    forkIdentity: ScratchFixture.identity,
                     write: { try files.write($0, to: $1) },
                     run: { config, timeout in
                         #expect(config.path.contains("/CodexBar Jones/provider-scratch/"))
@@ -259,9 +269,11 @@ struct GeminiCurlScratchTests {
         let files = ScratchFixture()
         let request = try URLRequest(url: #require(URL(string: "https://example.invalid/synthetic")))
         _ = try await GeminiStatusProbe.curlDataLoader(
-            for: request, fileManager: files, forkIdentity: nil,
+            for: request,
+            fileManager: files,
+            forkIdentity: nil,
             write: { data, url in
-                let config = String(decoding: data, as: UTF8.self)
+                let config = try #require(String(bytes: data, encoding: .utf8))
                 #expect(config.contains("url = \"https://example.invalid/synthetic\""))
                 #expect(config.contains("write-out = \"__CODEXBAR_HTTP_STATUS__:%{http_code}\""))
                 try files.write(data, to: url)
@@ -280,8 +292,10 @@ struct GeminiCurlScratchTests {
 /// All operations are in memory, including partial failures; no browser, auth, or home files are read.
 private final class ScratchFixture: FileManager, @unchecked Sendable {
     static let identity = JonesStateRoot.Identity(
-        bundleID: "com.example.scratch", groupID: "FIXTURE.com.example.scratch",
-        teamID: "FIXTURE", iCloudID: "iCloud.com.example.scratch")
+        bundleID: "com.example.scratch",
+        groupID: "FIXTURE.com.example.scratch",
+        teamID: "FIXTURE",
+        iCloudID: "iCloud.com.example.scratch")
 
     enum FixtureError: Error { case injected }
 

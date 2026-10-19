@@ -72,12 +72,14 @@ struct CodexObservabilityHubView: View {
         accounts: [HubAccountObservation], hosts: [String: HubHostObservation]) -> [HubServiceObservation]
     {
         let local = HubServiceObservation(
-            id: "local", label: L("This Mac"),
+            id: "local",
+            label: L("This Mac"),
             currentProfile: accounts.first { $0.environmentID == "local" && $0.hostDefault }?.profile,
             evidence: HubEvidence(source: "Existing local account projection", observedAt: nil, availability: .partial))
         let remote = hosts.keys.sorted().filter { $0 != "local" }.map { id in
             HubServiceObservation(
-                id: id, label: id,
+                id: id,
+                label: id,
                 evidence: HubEvidence(source: "No service observation", observedAt: nil, availability: .unavailable))
         }
         return [local] + remote

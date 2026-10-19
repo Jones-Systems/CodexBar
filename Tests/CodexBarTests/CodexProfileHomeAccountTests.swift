@@ -257,7 +257,9 @@ struct CodexProfileHomeAccountTests {
         let alternatives = (0..<alternativeCount).map { root.appendingPathComponent("alternative-\($0)") }
         for (index, home) in alternatives.enumerated() {
             try Self.writeCodexAuthFile(
-                homeURL: home, email: "alternative-\(index)@example.com", plan: "pro",
+                homeURL: home,
+                email: "alternative-\(index)@example.com",
+                plan: "pro",
                 accountID: "acct-alternative-\(index)")
         }
         settings._test_codexReconciliationEnvironment = ["CODEX_HOME": root.appendingPathComponent("empty-live").path]

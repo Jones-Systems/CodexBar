@@ -23,7 +23,7 @@ package enum TestFixtureScratch {
         }
     }
 
-    // Borrowed for the process lifetime. The runner/caller alone owns this parent's cleanup.
+    /// Borrowed for the process lifetime. The runner/caller alone owns this parent's cleanup.
     package static let root: URL = {
         do {
             return try TestFixtureScratch.resolve()

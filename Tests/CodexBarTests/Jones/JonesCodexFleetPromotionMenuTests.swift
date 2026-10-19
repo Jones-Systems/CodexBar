@@ -70,8 +70,11 @@ struct JonesCodexFleetPromotionMenuTests {
     func `arbitrary profiles and ambiguous identities cannot manufacture fleet menu targets`() {
         let home = CodexCredentialFixtures.root.appendingPathComponent("profile").path
         let profile = ObservedSystemCodexAccount(
-            email: "same@example.com", workspaceAccountID: "acct-same", authFingerprint: "synthetic",
-            codexHomePath: home, observedAt: Date())
+            email: "same@example.com",
+            workspaceAccountID: "acct-same",
+            authFingerprint: "synthetic",
+            codexHomePath: home,
+            observedAt: Date())
         #expect(JonesCodexFleetPromotionTarget(profile: profile, fleetHomePaths: []) == nil)
         let incomplete = ObservedSystemCodexAccount(
             email: "same@example.com", codexHomePath: home, observedAt: Date())
@@ -85,11 +88,14 @@ struct JonesCodexFleetPromotionMenuTests {
         let first = try fixture.createFleetProfile(alias: "first")
         let second = try fixture.createFleetProfile(alias: "second")
         let snapshot = CodexAccountReconciliationSnapshot(
-            storedAccounts: [], activeStoredAccount: nil, liveSystemAccount: nil,
+            storedAccounts: [],
+            activeStoredAccount: nil,
+            liveSystemAccount: nil,
             profileHomeAccounts: [first, second],
             fleetProfileHomePaths: [first.codexHomePath, second.codexHomePath],
             matchingStoredAccountForLiveSystemAccount: nil,
-            activeSource: .profileHome(path: first.codexHomePath), hasUnreadableAddedAccountStore: false)
+            activeSource: .profileHome(path: first.codexHomePath),
+            hasUnreadableAddedAccountStore: false)
         let projection = CodexVisibleAccountProjection.make(from: snapshot)
         #expect(projection.visibleAccounts.count == 2)
         let targets = projection.visibleAccounts.map(\.systemPromotionTarget)

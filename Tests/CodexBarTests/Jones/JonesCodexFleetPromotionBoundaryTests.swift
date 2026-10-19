@@ -24,7 +24,9 @@ struct JonesCodexFleetPromotionBoundaryTests {
     }
 
     @Test
-    func `preservation metadata failure retains copied managed auth but leaves system and fleet untouched`() async throws {
+    func `preservation metadata failure retains copied managed auth but leaves system and fleet untouched`() async
+        throws
+    {
         let fixture = try CodexAccountPromotionTestContainer(suiteName: "JonesFleet-preservation-failure")
         defer { fixture.tearDown() }
         let profile = try fixture.createFleetProfile()
@@ -100,8 +102,13 @@ struct JonesCodexFleetPromotionBoundaryTests {
         let protectedURL = CodexAuthFingerprint.authFileURL(homePath: protected.codexHomePath)
         let protectedBytes = try Data(contentsOf: protectedURL)
         let managed = ManagedCodexAccount(
-            id: UUID(), email: protected.email, providerAccountID: protected.workspaceAccountID,
-            managedHomePath: protected.codexHomePath, createdAt: 1, updatedAt: 1, lastAuthenticatedAt: 1)
+            id: UUID(),
+            email: protected.email,
+            providerAccountID: protected.workspaceAccountID,
+            managedHomePath: protected.codexHomePath,
+            createdAt: 1,
+            updatedAt: 1,
+            lastAuthenticatedAt: 1)
         try fixture.persistAccounts([managed])
         let old = try fixture.writeLiveOAuthAuthFile(
             email: protected.email, accountID: protected.workspaceAccountID, apiKey: "synthetic-new-bytes")
@@ -144,7 +151,8 @@ struct JonesCodexFleetPromotionBoundaryTests {
         let reader = JonesRecordingAuthReader()
         let snapshot = JonesRecordingSnapshotLoader()
         let service = fixture.makeService(
-            snapshotLoader: snapshot, authMaterialReader: reader,
+            snapshotLoader: snapshot,
+            authMaterialReader: reader,
             fleetHomePaths: { [profile.codexHomePath, profile.codexHomePath] })
         await #expect(throws: CodexAccountPromotionError.fleetTargetUnavailable) {
             try await service.promote(target: target)

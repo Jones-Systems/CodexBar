@@ -159,29 +159,7 @@ extension DefaultCodexAccountReconciler {
 extension CodexVisibleAccountProjection {
     public static func make(from snapshot: CodexAccountReconciliationSnapshot) -> CodexVisibleAccountProjection {
         let resolvedActiveSource = CodexActiveSourceResolver.resolve(from: snapshot).resolvedSource
-        var drafts: [VisibleAccountDraft] = []
-
-        for storedAccount in snapshot.storedAccounts {
-            let normalizedEmail = snapshot.runtimeEmail(for: storedAccount)
-            let remoteIdentity = snapshot.managedRemoteIdentity(for: storedAccount)
-            let remoteWorkspaceAccountID: String? = switch remoteIdentity {
-            case let .providerAccount(id):
-                ManagedCodexAccount.normalizeWorkspaceAccountID(id)
-            case .emailOnly, .unresolved:
-                nil
-            }
-            drafts.append(VisibleAccountDraft(
-                email: normalizedEmail,
-                workspaceLabel: Self.normalizeWorkspaceLabel(storedAccount.workspaceLabel),
-                workspaceAccountID: remoteWorkspaceAccountID,
-                authFingerprint: storedAccount.authFingerprint,
-                storedAccountID: storedAccount.id,
-                selectionSource: .managedAccount(id: storedAccount.id),
-                isLive: false,
-                canReauthenticate: true,
-                canRemove: true,
-                identity: remoteIdentity))
-        }
+        var drafts = Self.storedAccountDrafts(from: snapshot)
 
         if let liveSystemAccount = snapshot.liveSystemAccount {
             let normalizedEmail = Self.normalizeVisibleEmail(liveSystemAccount.email)
@@ -330,6 +308,35 @@ extension CodexVisibleAccountProjection {
             activeVisibleAccountID: visibleAccounts.first { $0.isActive }?.id,
             liveVisibleAccountID: visibleAccounts.first { $0.isLive }?.id,
             hasUnreadableAddedAccountStore: snapshot.hasUnreadableAddedAccountStore)
+    }
+
+    private static func storedAccountDrafts(
+        from snapshot: CodexAccountReconciliationSnapshot) -> [VisibleAccountDraft]
+    {
+        var drafts: [VisibleAccountDraft] = []
+        for storedAccount in snapshot.storedAccounts {
+            let normalizedEmail = snapshot.runtimeEmail(for: storedAccount)
+            let remoteIdentity = snapshot.managedRemoteIdentity(for: storedAccount)
+            let remoteWorkspaceAccountID: String? = switch remoteIdentity {
+            case let .providerAccount(id):
+                ManagedCodexAccount.normalizeWorkspaceAccountID(id)
+            case .emailOnly, .unresolved:
+                nil
+            }
+            drafts.append(VisibleAccountDraft(
+                email: normalizedEmail,
+                workspaceLabel: Self.normalizeWorkspaceLabel(storedAccount.workspaceLabel),
+                workspaceAccountID: remoteWorkspaceAccountID,
+                authFingerprint: storedAccount.authFingerprint,
+                storedAccountID: storedAccount.id,
+                selectionSource: .managedAccount(id: storedAccount.id),
+                isLive: false,
+                canReauthenticate: true,
+                canRemove: true,
+                identity: remoteIdentity))
+        }
+
+        return drafts
     }
 
     private static func normalizeVisibleEmail(_ email: String) -> String {

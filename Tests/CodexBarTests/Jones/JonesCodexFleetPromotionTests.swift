@@ -7,7 +7,9 @@ import Testing
 @MainActor
 struct JonesCodexFleetPromotionTests {
     @Test
-    func `fleet promotion copies canonical bytes and preserves displaced system without enrolling fleet`() async throws {
+    func `fleet promotion copies canonical bytes and preserves displaced system without enrolling fleet`() async
+        throws
+    {
         let fixture = try CodexAccountPromotionTestContainer(suiteName: "JonesFleet-copy")
         defer { fixture.tearDown() }
         let profile = try fixture.createFleetProfile()

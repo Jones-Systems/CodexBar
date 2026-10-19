@@ -41,8 +41,10 @@ struct JonesGroupedCompactAccountPresentationTests {
                 sourceLabel: "synthetic")
         }
         return CodexAccountMenuDisplay(
-            accounts: accounts, snapshots: snapshots,
-            activeVisibleAccountID: accounts.first(where: \.isActive)?.id, layout: .stacked)
+            accounts: accounts,
+            snapshots: snapshots,
+            activeVisibleAccountID: accounts.first(where: \.isActive)?.id,
+            layout: .stacked)
     }
 
     private func sections(
@@ -158,11 +160,15 @@ struct JonesGroupedCompactAccountPresentationTests {
         var providers: Set<ProviderInstanceID> = [.codex]
         let changed = self.sections(display, expanded: expanded, collapsed: collapsed, revealed: true)
         #expect(!JonesCompactAccountPresentation.resetIfIdle(
-            hasOpenMenus: true, expandedAccountIDs: &expanded, collapsedAccountIDs: &collapsed,
+            hasOpenMenus: true,
+            expandedAccountIDs: &expanded,
+            collapsedAccountIDs: &collapsed,
             expandedHealthyTailProviders: &providers))
         #expect(self.sections(display, expanded: expanded, collapsed: collapsed, revealed: true) == changed)
         #expect(JonesCompactAccountPresentation.resetIfIdle(
-            hasOpenMenus: false, expandedAccountIDs: &expanded, collapsedAccountIDs: &collapsed,
+            hasOpenMenus: false,
+            expandedAccountIDs: &expanded,
+            collapsedAccountIDs: &collapsed,
             expandedHealthyTailProviders: &providers))
         let reopened = self.sections(
             display, expanded: expanded, collapsed: collapsed, revealed: providers.contains(.codex))

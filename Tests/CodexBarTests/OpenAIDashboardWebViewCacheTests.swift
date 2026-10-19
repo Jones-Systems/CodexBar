@@ -113,13 +113,16 @@ struct OpenAIDashboardWebViewCacheTests {
         let profileB = CookieHeaderCache.Scope.profileHome("/tmp/codex-profile-b")
         let storeA = stores.store(
             forAccountEmail: "shared@example.com",
-            scope: profileA, identity: nil)
+            scope: profileA,
+            identity: nil)
         let storeAAgain = stores.store(
             forAccountEmail: "SHARED@example.com",
-            scope: profileA, identity: nil)
+            scope: profileA,
+            identity: nil)
         let storeB = stores.store(
             forAccountEmail: "shared@example.com",
-            scope: profileB, identity: nil)
+            scope: profileB,
+            identity: nil)
         let liveStore = stores.store(forAccountEmail: "shared@example.com", identity: nil)
 
         #expect(storeA === storeAAgain)
@@ -171,8 +174,10 @@ struct OpenAIDashboardWebViewCacheTests {
         let factory = NonpersistentWebsiteDataStoreFactory()
         let stores = factory.makeCache()
         let identity = JonesStateRoot.Identity(
-            bundleID: "com.example.jones.fixture", groupID: "group.com.example.jones.fixture",
-            teamID: "FIXTURETEAM", iCloudID: "iCloud.com.example.jones.fixture")
+            bundleID: "com.example.jones.fixture",
+            groupID: "group.com.example.jones.fixture",
+            teamID: "FIXTURETEAM",
+            iCloudID: "iCloud.com.example.jones.fixture")
         let stock = stores.store(forAccountEmail: "shared@example.com", identity: nil)
         let fork = stores.store(forAccountEmail: " SHARED@EXAMPLE.COM ", identity: identity)
         let noAccount = stores.store(forAccountEmail: nil, identity: identity)

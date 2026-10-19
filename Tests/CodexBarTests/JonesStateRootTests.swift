@@ -4,8 +4,10 @@ import Testing
 
 struct JonesStateRootTests {
     private static let identity = JonesStateRoot.Identity(
-        bundleID: "com.example.fixture", groupID: "FIXTURE.com.example.fixture",
-        teamID: "FIXTURE", iCloudID: "iCloud.com.example.fixture")
+        bundleID: "com.example.fixture",
+        groupID: "FIXTURE.com.example.fixture",
+        teamID: "FIXTURE",
+        iCloudID: "iCloud.com.example.fixture")
 
     private static var metadata: [String: Any] {
         [
@@ -41,7 +43,8 @@ struct JonesStateRootTests {
         let app = URL(fileURLWithPath: "/synthetic/Fixture.app")
         let plist = app.appendingPathComponent("Contents/Info.plist")
         let appIdentity = JonesStateRoot.resolveIdentity(
-            info: Self.metadata, executableURL: app.appendingPathComponent("Contents/MacOS/CodexBar"),
+            info: Self.metadata,
+            executableURL: app.appendingPathComponent("Contents/MacOS/CodexBar"),
             readInfo: { url in reads.append(url); return nil })
         let widgetIdentity = JonesStateRoot.resolveIdentity(
             info: Self.metadata,
@@ -49,7 +52,8 @@ struct JonesStateRootTests {
             readInfo: { url in reads.append(url); return nil })
         #expect(reads.isEmpty)
         let cliIdentity = JonesStateRoot.resolveIdentity(
-            info: [:], executableURL: app.appendingPathComponent("Contents/Helpers/CodexBarCLI"),
+            info: [:],
+            executableURL: app.appendingPathComponent("Contents/Helpers/CodexBarCLI"),
             readInfo: { url in
                 reads.append(url)
                 return url == plist ? Self.metadata : nil
@@ -65,11 +69,13 @@ struct JonesStateRootTests {
         #expect(JonesStateRoot.identity(info: ["CFBundleIdentifier": "com.steipete.codexbar"]) == nil)
         var reads: [URL] = []
         #expect(JonesStateRoot.resolveIdentity(
-            info: [:], executableURL: URL(fileURLWithPath: "/synthetic/bin/codexbar"),
+            info: [:],
+            executableURL: URL(fileURLWithPath: "/synthetic/bin/codexbar"),
             readInfo: { url in reads.append(url); return Self.metadata }) == nil)
         #expect(reads.isEmpty)
         #expect(JonesStateRoot.resolveIdentity(
-            info: [:], executableURL: URL(fileURLWithPath: "/synthetic/Stock.app/Contents/Helpers/CodexBarCLI"),
+            info: [:],
+            executableURL: URL(fileURLWithPath: "/synthetic/Stock.app/Contents/Helpers/CodexBarCLI"),
             readInfo: { _ in ["CFBundleIdentifier": "com.steipete.codexbar"] }) == nil)
     }
 
@@ -138,8 +144,10 @@ struct JonesStateRootTests {
                 .path == "/synthetic/explicit.json")
         }
         #expect(CodexBarConfigStore.defaultURL(
-            home: home, environment: ["XDG_CONFIG_HOME": "/synthetic/xdg"],
-            fileManager: fm, forkIdentity: Self.identity).path == home.path + "/.codexbar-jones/config.json")
+            home: home,
+            environment: ["XDG_CONFIG_HOME": "/synthetic/xdg"],
+            fileManager: fm,
+            forkIdentity: Self.identity).path == home.path + "/.codexbar-jones/config.json")
         #expect(fm.operations.isEmpty)
     }
 
@@ -150,8 +158,10 @@ struct JonesStateRootTests {
         let xdg = home.path + "/.config/codexbar/config.json"
         let legacy = home.path + "/.codexbar/config.json"
         #expect(CodexBarConfigStore.defaultURL(
-            home: home, environment: ["XDG_CONFIG_HOME": "/synthetic/xdg"],
-            fileManager: fm, forkIdentity: nil).path == "/synthetic/xdg/codexbar/config.json")
+            home: home,
+            environment: ["XDG_CONFIG_HOME": "/synthetic/xdg"],
+            fileManager: fm,
+            forkIdentity: nil).path == "/synthetic/xdg/codexbar/config.json")
         #expect(fm.operations.isEmpty)
         for (existing, expected) in [([xdg, legacy], xdg), ([legacy], legacy), ([], xdg)] {
             fm.existing = Set(existing)
@@ -167,9 +177,12 @@ struct JonesStateRootTests {
         let current = InMemoryUserDefaults()
         let legacy = InMemoryUserDefaults(values: ["widgetSelectedProvider": "codex"])
         let result = AppGroupSupport.migrateLegacyDataIfNeeded(
-            bundleID: Self.identity.bundleID, standardDefaults: standard, fileManager: fm,
+            bundleID: Self.identity.bundleID,
+            standardDefaults: standard,
+            fileManager: fm,
             homeDirectory: fm.homeDirectoryForCurrentUser,
-            currentDefaultsOverride: current, legacyDefaultsOverride: legacy,
+            currentDefaultsOverride: current,
+            legacyDefaultsOverride: legacy,
             currentSnapshotURLOverride: fm.root.appendingPathComponent("current/widget-snapshot.json"),
             legacySnapshotURLOverride: fm.root.appendingPathComponent("legacy/widget-snapshot.json"),
             forkIdentity: Self.identity)

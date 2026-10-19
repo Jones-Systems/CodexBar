@@ -329,13 +329,17 @@ struct AccountMenuLayoutPlannerTests {
         #expect(initial.rows.first == .card(accounts[0].id))
         #expect(initial.rows.count == count)
         let collapsed = AccountMenuLayoutPlanner.plan(
-            accounts: accounts, collapsedAccountIDs: [accounts[0].id],
-            minimumVisibleAccountCount: 5, policy: policy)
+            accounts: accounts,
+            collapsedAccountIDs: [accounts[0].id],
+            minimumVisibleAccountCount: 5,
+            policy: policy)
         #expect(self.compactRows(in: collapsed).first?.accountID == accounts[0].id)
         #expect(Array(collapsed.rows.dropFirst()) == Array(initial.rows.dropFirst()))
         let expanded = AccountMenuLayoutPlanner.plan(
-            accounts: accounts, expandedAccountIDs: [accounts[0].id],
-            minimumVisibleAccountCount: 5, policy: policy)
+            accounts: accounts,
+            expandedAccountIDs: [accounts[0].id],
+            minimumVisibleAccountCount: 5,
+            policy: policy)
         #expect(expanded == initial)
         #expect(AccountMenuLayoutPlanner.plan(accounts: accounts).rows == accounts.map { .card($0.id) })
     }
@@ -344,7 +348,8 @@ struct AccountMenuLayoutPlannerTests {
     func `opt in policy folds a single healthy overflow while default retains it`() {
         let accounts = self.screenshotFixture()
         let plan = AccountMenuLayoutPlanner.plan(
-            accounts: accounts, minimumVisibleAccountCount: 5,
+            accounts: accounts,
+            minimumVisibleAccountCount: 5,
             policy: .init(compactLayoutMinimumAccountCount: 1, minimumCollapsedHealthyRowCount: 1))
         #expect(plan.rows.first == .card(accounts[0].id))
         #expect(self.compactRows(in: plan).map(\.accountID) == [
@@ -381,7 +386,8 @@ struct AccountMenuLayoutPlannerTests {
                 accounts: accounts,
                 expandedAccountIDs: expanded ? [accounts[6].id] : [],
                 collapsedAccountIDs: expanded ? [] : [accounts[6].id],
-                minimumVisibleAccountCount: 5, policy: policy)
+                minimumVisibleAccountCount: 5,
+                policy: policy)
             #expect(toggled.rows.contains(.card(accounts[6].id)) == expanded)
             #expect(self.compactRows(in: toggled).contains { $0.accountID == accounts[6].id } == !expanded)
             #expect(toggled.rows.last == .collapsedHealthy(count: 1))

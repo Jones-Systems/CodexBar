@@ -66,12 +66,16 @@ struct JonesCompactAccountPresentationTests {
         let accounts = self.accounts(count: count, provider: .copilot)
         for tailExpanded in [false, true] {
             let unchanged = JonesCompactAccountPresentation.plan(
-                for: .copilot, accounts: accounts,
+                for: .copilot,
+                accounts: accounts,
                 expandedAccountIDs: [accounts[count - 1].id],
-                collapsedAccountIDs: [accounts[0].id], healthyTailExpanded: tailExpanded)
+                collapsedAccountIDs: [accounts[0].id],
+                healthyTailExpanded: tailExpanded)
             #expect(unchanged == AccountMenuLayoutPlanner.plan(
-                accounts: accounts, expandedAccountIDs: [accounts[count - 1].id],
-                healthyTailExpanded: tailExpanded, collapsedAccountIDs: [accounts[0].id]))
+                accounts: accounts,
+                expandedAccountIDs: [accounts[count - 1].id],
+                healthyTailExpanded: tailExpanded,
+                collapsedAccountIDs: [accounts[0].id]))
         }
     }
 
@@ -84,11 +88,15 @@ struct JonesCompactAccountPresentationTests {
         for accountID in self.accountIDs(in: initial) {
             for expanded in [false, true, false, true] {
                 JonesCompactAccountPresentation.setExpanded(
-                    expanded, accountID: accountID,
-                    expandedAccountIDs: &expandedIDs, collapsedAccountIDs: &collapsedIDs)
+                    expanded,
+                    accountID: accountID,
+                    expandedAccountIDs: &expandedIDs,
+                    collapsedAccountIDs: &collapsedIDs)
                 let plan = JonesCompactAccountPresentation.plan(
-                    for: .codex, accounts: accounts,
-                    expandedAccountIDs: expandedIDs, collapsedAccountIDs: collapsedIDs)
+                    for: .codex,
+                    accounts: accounts,
+                    expandedAccountIDs: expandedIDs,
+                    collapsedAccountIDs: collapsedIDs)
                 #expect(self.accountIDs(in: plan) == self.accountIDs(in: initial))
                 #expect(plan.rows.contains(.card(accountID)) == expanded)
                 #expect(plan.rows.contains { row in
@@ -106,20 +114,26 @@ struct JonesCompactAccountPresentationTests {
         var expandedIDs: Set<ProviderAccountIdentity> = []
         var collapsedIDs: Set<ProviderAccountIdentity> = []
         JonesCompactAccountPresentation.setExpanded(
-            false, accountID: original[0].id,
-            expandedAccountIDs: &expandedIDs, collapsedAccountIDs: &collapsedIDs)
+            false,
+            accountID: original[0].id,
+            expandedAccountIDs: &expandedIDs,
+            collapsedAccountIDs: &collapsedIDs)
         let switched = self.accounts(activeIndex: 2)
         let plan = JonesCompactAccountPresentation.plan(
-            for: .codex, accounts: switched,
-            expandedAccountIDs: expandedIDs, collapsedAccountIDs: collapsedIDs)
+            for: .codex,
+            accounts: switched,
+            expandedAccountIDs: expandedIDs,
+            collapsedAccountIDs: collapsedIDs)
         #expect(plan.rows.first == .card(switched[2].id))
         #expect(!plan.rows.contains(.card(original[0].id)))
         #expect(Set(self.accountIDs(in: plan)) == Set(switched.map(\.id)))
 
         let removed = Array(switched.dropFirst())
         let afterRemoval = JonesCompactAccountPresentation.plan(
-            for: .codex, accounts: removed,
-            expandedAccountIDs: expandedIDs, collapsedAccountIDs: collapsedIDs)
+            for: .codex,
+            accounts: removed,
+            expandedAccountIDs: expandedIDs,
+            collapsedAccountIDs: collapsedIDs)
         #expect(!self.accountIDs(in: afterRemoval).contains(original[0].id))
         #expect(afterRemoval.rows.first == .card(switched[2].id))
     }
@@ -141,11 +155,15 @@ struct JonesCompactAccountPresentationTests {
         for account in accounts {
             for expanded in [true, false] {
                 JonesCompactAccountPresentation.setExpanded(
-                    expanded, accountID: account.id,
-                    expandedAccountIDs: &expandedIDs, collapsedAccountIDs: &collapsedIDs)
+                    expanded,
+                    accountID: account.id,
+                    expandedAccountIDs: &expandedIDs,
+                    collapsedAccountIDs: &collapsedIDs)
                 let toggled = JonesCompactAccountPresentation.plan(
-                    for: .codex, accounts: accounts,
-                    expandedAccountIDs: expandedIDs, collapsedAccountIDs: collapsedIDs,
+                    for: .codex,
+                    accounts: accounts,
+                    expandedAccountIDs: expandedIDs,
+                    collapsedAccountIDs: collapsedIDs,
                     healthyTailExpanded: true)
                 #expect(self.accountIDs(in: toggled) == self.accountIDs(in: revealed))
                 #expect(toggled.rows.contains(.card(account.id)) == expanded)
@@ -162,7 +180,8 @@ struct JonesCompactAccountPresentationTests {
         var expandedProviders: Set<ProviderInstanceID> = [.codex]
         #expect(!JonesCompactAccountPresentation.resetIfIdle(
             hasOpenMenus: true,
-            expandedAccountIDs: &expandedIDs, collapsedAccountIDs: &collapsedIDs,
+            expandedAccountIDs: &expandedIDs,
+            collapsedAccountIDs: &collapsedIDs,
             expandedHealthyTailProviders: &expandedProviders))
         #expect(expandedIDs == (count > 1 ? [expandedID] : []))
         #expect(collapsedIDs == [accounts[0].id])
@@ -170,19 +189,23 @@ struct JonesCompactAccountPresentationTests {
 
         #expect(JonesCompactAccountPresentation.resetIfIdle(
             hasOpenMenus: false,
-            expandedAccountIDs: &expandedIDs, collapsedAccountIDs: &collapsedIDs,
+            expandedAccountIDs: &expandedIDs,
+            collapsedAccountIDs: &collapsedIDs,
             expandedHealthyTailProviders: &expandedProviders))
         #expect(expandedIDs.isEmpty && collapsedIDs.isEmpty && expandedProviders.isEmpty)
         let reopened = JonesCompactAccountPresentation.plan(
-            for: .codex, accounts: accounts,
-            expandedAccountIDs: expandedIDs, collapsedAccountIDs: collapsedIDs,
+            for: .codex,
+            accounts: accounts,
+            expandedAccountIDs: expandedIDs,
+            collapsedAccountIDs: collapsedIDs,
             healthyTailExpanded: expandedProviders.contains(.codex))
         #expect(reopened == JonesCompactAccountPresentation.plan(for: .codex, accounts: accounts))
         #expect(reopened.rows.first == .card(accounts[0].id))
         #expect(self.accountIDs(in: reopened).count == min(count, 5))
         #expect(!JonesCompactAccountPresentation.resetIfIdle(
             hasOpenMenus: false,
-            expandedAccountIDs: &expandedIDs, collapsedAccountIDs: &collapsedIDs,
+            expandedAccountIDs: &expandedIDs,
+            collapsedAccountIDs: &collapsedIDs,
             expandedHealthyTailProviders: &expandedProviders))
     }
 

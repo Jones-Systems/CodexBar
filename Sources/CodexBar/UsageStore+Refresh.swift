@@ -808,6 +808,25 @@ extension UsageStore {
         }
         guard let backfilled else { return }
         self.refreshClaudeVersionAfterUserInitiatedCLIFetch(provider: provider, strategyKind: result.strategyKind)
+        await self.recordProviderPlanUtilizationHistory(
+            provider: provider, result: result, snapshot: backfilled, context: context)
+        guard self.isCurrentProviderRefreshGeneration(provider, generation: context.generation) else { return }
+        if let runtime = self.providerRuntimes[provider.instanceID] {
+            let runtimeContext = ProviderRuntimeContext(
+                provider: provider, settings: self.settings, store: self)
+            runtime.providerDidRefresh(context: runtimeContext, provider: provider)
+        }
+        if provider == .codex {
+            self.recordCodexHistoricalSampleIfNeeded(snapshot: backfilled)
+        }
+    }
+
+    private func recordProviderPlanUtilizationHistory(
+        provider: UsageProvider,
+        result: ProviderFetchResult,
+        snapshot: UsageSnapshot,
+        context: ProviderRefreshOutcomeContext) async
+    {
         let isClaudeOAuthSample = provider == .claude && result.strategyKind == .oauth
         let claudeOAuthPersistentRefHash: String? = if isClaudeOAuthSample,
                                                        result.claudeOAuthKeychainPersistentRefHash == context
@@ -819,7 +838,7 @@ extension UsageStore {
         }
         await self.recordPlanUtilizationHistorySample(
             provider: provider,
-            snapshot: backfilled,
+            snapshot: snapshot,
             claudeOAuthPersistentRefHash: claudeOAuthPersistentRefHash,
             claudeOAuthHistoryOwnerIdentifier: isClaudeOAuthSample
                 ? result.claudeOAuthHistoryOwnerIdentifier
@@ -835,15 +854,6 @@ extension UsageStore {
             claudeOAuthActiveAccountObservation: context.claudeOAuthActiveAccountObservation,
             isClaudeOAuthSample: isClaudeOAuthSample,
             codexLimitResetOwnerKey: context.codexLimitResetOwnerKey)
-        guard self.isCurrentProviderRefreshGeneration(provider, generation: context.generation) else { return }
-        if let runtime = self.providerRuntimes[provider.instanceID] {
-            let runtimeContext = ProviderRuntimeContext(
-                provider: provider, settings: self.settings, store: self)
-            runtime.providerDidRefresh(context: runtimeContext, provider: provider)
-        }
-        if provider == .codex {
-            self.recordCodexHistoricalSampleIfNeeded(snapshot: backfilled)
-        }
     }
 
     private func applyProviderRefreshFailure(
@@ -1554,42 +1564,6 @@ extension UsageStore {
         default:
             return false
         }
-    }
-
-    static func startupConnectivityRetryDelay(forAttempt attempt: Int) -> TimeInterval? {
-        let delays: [TimeInterval] = [15, 45, 120, 300]
-        guard attempt >= 1, attempt <= delays.count else { return nil }
-        return delays[attempt - 1]
-    }
-
-    static func isStartupConnectivityRetryableError(_ error: Error) -> Bool {
-        if error is CancellationError {
-            return false
-        }
-
-        let nsError = error as NSError
-        if nsError.domain == NSURLErrorDomain {
-            switch nsError.code {
-            case NSURLErrorTimedOut,
-                 NSURLErrorNetworkConnectionLost,
-                 NSURLErrorNotConnectedToInternet,
-                 NSURLErrorCannotFindHost,
-                 NSURLErrorCannotConnectToHost,
-                 NSURLErrorDNSLookupFailed:
-                return true
-            default:
-                return false
-            }
-        }
-
-        let message = error.localizedDescription.lowercased()
-        return message.contains("timed out") ||
-            message.contains("timeout") ||
-            message.contains("network connection was lost") ||
-            message.contains("not connected to the internet") ||
-            message.contains("cannot find host") ||
-            message.contains("cannot connect to host") ||
-            message.contains("dns lookup")
     }
 
     private static func isClaudeUsageProbeTimeout(_ error: Error) -> Bool {

@@ -451,14 +451,23 @@ public enum ClaudeOAuthCredentialsStore {
                     return prompted
                 }
 
-                if let expiredRecord {
-                    return expiredRecord
-                }
-                if let lastError {
-                    throw lastError
-                }
-                throw ClaudeOAuthCredentialsStore.terminalMissingCredentialsError(environment: environment)
+                return try self.expiredRecordOrTerminalError(
+                    expiredRecord, lastError: lastError, environment: environment)
             }
+        }
+
+        private func expiredRecordOrTerminalError(
+            _ expiredRecord: ClaudeOAuthCredentialRecord?,
+            lastError: Error?,
+            environment: [String: String]) throws -> ClaudeOAuthCredentialRecord
+        {
+            if let expiredRecord {
+                return expiredRecord
+            }
+            if let lastError {
+                throw lastError
+            }
+            throw ClaudeOAuthCredentialsStore.terminalMissingCredentialsError(environment: environment)
         }
 
         private func prepareCachePolicy(environment: [String: String]) -> String {
@@ -581,8 +590,7 @@ public enum ClaudeOAuthCredentialsStore {
                         allowKeychainPrompt: allowKeychainPrompt,
                         respectKeychainPromptCooldown: respectKeychainPromptCooldown,
                         allowCacheKeychainWrite: allowCacheKeychainWrite,
-                        profileIdentifier: profileIdentifier,
-                        environment: environment)
+                        context: .init(profileIdentifier: profileIdentifier, environment: environment))
                     if let record {
                         promptAttemptResult = .record(record)
                     }
@@ -644,14 +652,20 @@ public enum ClaudeOAuthCredentialsStore {
                 historyOwnerIdentifier: entry.historyOwnerIdentifier)
         }
 
+        private struct InteractiveReadContext {
+            let profileIdentifier: String
+            let environment: [String: String]
+        }
+
         private func readClaudeKeychainInteractively(
             promptMode: ClaudeOAuthKeychainPromptMode,
             allowKeychainPrompt: Bool,
             respectKeychainPromptCooldown: Bool,
             allowCacheKeychainWrite: Bool,
-            profileIdentifier: String,
-            environment: [String: String]) throws -> ClaudeOAuthCredentialRecord?
+            context: InteractiveReadContext) throws -> ClaudeOAuthCredentialRecord?
         {
+            let profileIdentifier = context.profileIdentifier
+            let environment = context.environment
             #if DEBUG
             if let readOverride = ClaudeOAuthCredentialsStore.taskInteractiveClaudeKeychainReadOverride {
                 return try self.recordClaudeKeychainData(

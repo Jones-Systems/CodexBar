@@ -26,7 +26,9 @@ struct CodexLoginRunnerTests {
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: executable.path)
         let task = Task {
             await CodexLoginRunner.run(
-                homePath: root.path, timeout: 5, outputDrainTimeout: 0.1,
+                homePath: root.path,
+                timeout: 5,
+                outputDrainTimeout: 0.1,
                 environment: [
                     "PATH": root.path,
                     "CODEXBAR_TEST_READY": ready.path,

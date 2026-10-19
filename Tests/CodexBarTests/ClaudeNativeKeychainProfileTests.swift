@@ -67,12 +67,12 @@ struct ClaudeNativeKeychainProfileTests {
                             try ClaudeOAuthCredentialsStore.withClaudeKeychainFingerprintStoreOverrideForTesting(
                                 .init())
                             {
-                                try ClaudeOAuthKeychainQueryTiming.$queryOverrideForTesting.withValue({ query in
+                                try ClaudeOAuthKeychainQueryTiming.$queryOverrideForTesting.withValue { query in
                                     fixture.read(query)
-                                }) {
-                                    try KeychainAccessPreflight.withCheckGenericPasswordOverrideForTesting({ _, _ in
+                                } operation: {
+                                    try KeychainAccessPreflight.withCheckGenericPasswordOverrideForTesting { _, _ in
                                         .allowed
-                                    }) {
+                                    } operation: {
                                         try operation()
                                     }
                                 }
@@ -115,10 +115,10 @@ struct ClaudeNativeKeychainProfileTests {
 
         var preflightServices: [String] = []
         self.withNativeFixture(QueryFixture()) {
-            KeychainAccessPreflight.withCheckGenericPasswordOverrideForTesting({ service, _ in
+            KeychainAccessPreflight.withCheckGenericPasswordOverrideForTesting { service, _ in
                 preflightServices.append(service)
                 return .allowed
-            }) {
+            } operation: {
                 #expect(ClaudeOAuthCredentialsStore.preferredClaudeKeychainAccountForSecurityCLIRead(
                     interaction: .userInitiated, environment: Self.environment) == "synthetic-account")
             }

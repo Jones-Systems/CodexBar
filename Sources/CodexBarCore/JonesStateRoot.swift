@@ -39,8 +39,10 @@ public enum JonesStateRoot {
             return value
         }
         return Identity(
-            bundleID: value("JonesAppBundleID"), groupID: value("JonesAppGroupID"),
-            teamID: value("CodexBarTeamID"), iCloudID: value("JonesICloudID"))
+            bundleID: value("JonesAppBundleID"),
+            groupID: value("JonesAppGroupID"),
+            teamID: value("CodexBarTeamID"),
+            iCloudID: value("JonesICloudID"))
     }
 
     /// A bundled CLI has no Info.plist of its own. Read only its enclosing app's metadata.

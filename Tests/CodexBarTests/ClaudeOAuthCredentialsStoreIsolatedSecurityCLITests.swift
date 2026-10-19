@@ -12,12 +12,13 @@ struct ClaudeOAuthCredentialsStoreIsolatedSecurityCLITests {
             ClaudeOAuthCredentialsStore.isolatedSecurityCLIKeychainEnvironmentKey: "/synthetic/fixture.keychain-db",
             "CLAUDE_CONFIG_DIR": "/synthetic/home/.claude-t3/jace",
         ]
-        #expect(ClaudeOAuthCredentialsStore.securityCLIReadArguments(
-            account: "synthetic-account",
-            environment: environment) == [
+        let expectedArguments = [
             "find-generic-password", "-s", "Claude Code-credentials-9a9e7cae",
             "-a", "synthetic-account", "-w", "/synthetic/fixture.keychain-db",
-        ])
+        ]
+        #expect(ClaudeOAuthCredentialsStore.securityCLIReadArguments(
+            account: "synthetic-account",
+            environment: environment) == expectedArguments)
     }
 
     @Test

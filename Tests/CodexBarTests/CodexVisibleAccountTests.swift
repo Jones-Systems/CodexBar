@@ -13,14 +13,22 @@ struct CodexVisibleAccountTests {
         let configStore = CodexBarConfigStore(fileURL: root.appendingPathComponent("config.json"))
         try configStore.save(CodexBarConfig(providers: [ProviderConfig(id: .codex)]))
         let settings = SettingsStore(
-            userDefaults: InMemoryUserDefaults(), configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(), syntheticTokenStore: NoopSyntheticTokenStore(),
-            codexCookieStore: InMemoryCookieHeaderStore(), claudeCookieStore: InMemoryCookieHeaderStore(),
-            cursorCookieStore: InMemoryCookieHeaderStore(), opencodeCookieStore: InMemoryCookieHeaderStore(),
-            factoryCookieStore: InMemoryCookieHeaderStore(), minimaxCookieStore: InMemoryMiniMaxCookieStore(),
-            minimaxAPITokenStore: InMemoryMiniMaxAPITokenStore(), kimiTokenStore: InMemoryKimiTokenStore(),
-            augmentCookieStore: InMemoryCookieHeaderStore(), ampCookieStore: InMemoryCookieHeaderStore(),
-            copilotTokenStore: InMemoryCopilotTokenStore(), tokenAccountStore: InMemoryTokenAccountStore(),
+            userDefaults: InMemoryUserDefaults(),
+            configStore: configStore,
+            zaiTokenStore: NoopZaiTokenStore(),
+            syntheticTokenStore: NoopSyntheticTokenStore(),
+            codexCookieStore: InMemoryCookieHeaderStore(),
+            claudeCookieStore: InMemoryCookieHeaderStore(),
+            cursorCookieStore: InMemoryCookieHeaderStore(),
+            opencodeCookieStore: InMemoryCookieHeaderStore(),
+            factoryCookieStore: InMemoryCookieHeaderStore(),
+            minimaxCookieStore: InMemoryMiniMaxCookieStore(),
+            minimaxAPITokenStore: InMemoryMiniMaxAPITokenStore(),
+            kimiTokenStore: InMemoryKimiTokenStore(),
+            augmentCookieStore: InMemoryCookieHeaderStore(),
+            ampCookieStore: InMemoryCookieHeaderStore(),
+            copilotTokenStore: InMemoryCopilotTokenStore(),
+            tokenAccountStore: InMemoryTokenAccountStore(),
             keychainAccessPolicy: .init(setDisabled: { _ in }, isExplicitlyDisabled: { false }),
             performInitialProviderDetection: false)
         let first = self.profile("first@example.com", path: "/synthetic/first", visibleID: "first")
@@ -30,8 +38,10 @@ struct CodexVisibleAccountTests {
         #expect(reloaded.providerConfig(for: .codex)?.codexAccountOrder == settings.codexAccountOrder)
         #expect(settings.orderedCodexAccounts([first, second]).map(\.id) == ["second", "first"])
         let usage = UsageStore(
-            fetcher: UsageFetcher(), browserDetection: BrowserDetection(cacheTTL: 0),
-            settings: settings, startupBehavior: .testing)
+            fetcher: UsageFetcher(),
+            browserDetection: BrowserDetection(cacheTTL: 0),
+            settings: settings,
+            startupBehavior: .testing)
         #expect(usage.limitedCodexVisibleAccounts(
             [first, second], activeVisibleAccountID: first.id).map(\.id) == ["second", "first"])
         #expect(settings.codexActiveSource == .liveSystem)
@@ -69,9 +79,15 @@ struct CodexVisibleAccountTests {
         _ email: String, path: String, visibleID: String, workspace: String? = nil) -> CodexVisibleAccount
     {
         CodexVisibleAccount(
-            id: visibleID, email: email, workspaceLabel: workspace, storedAccountID: nil,
-            selectionSource: .profileHome(path: path), isActive: false, isLive: false,
-            canReauthenticate: false, canRemove: false)
+            id: visibleID,
+            email: email,
+            workspaceLabel: workspace,
+            storedAccountID: nil,
+            selectionSource: .profileHome(path: path),
+            isActive: false,
+            isLive: false,
+            canReauthenticate: false,
+            canRemove: false)
     }
 
     @Test

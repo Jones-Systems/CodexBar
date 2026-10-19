@@ -42,8 +42,11 @@ struct ClaudeNativeProfileFetchStrategy: ProviderFetchStrategy {
 
     static func strategies(context: ProviderFetchContext) -> [any ProviderFetchStrategy] {
         let cli = Self(base: ClaudeCLIFetchStrategy(
-            useWebExtras: false, includePrepaidBalance: false, manualCookieHeader: nil,
-            browserDetection: context.browserDetection, hasWebFallback: false))
+            useWebExtras: false,
+            includePrepaidBalance: false,
+            manualCookieHeader: nil,
+            browserDetection: context.browserDetection,
+            hasWebFallback: false))
         if context.sourceMode == .cli || context.claudeOwnerCLIRecoveryOnly { return [cli] }
         return [Self(base: ClaudeOAuthFetchStrategy()), cli]
     }

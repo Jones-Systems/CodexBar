@@ -4,8 +4,10 @@ import Testing
 
 struct MiMoLocalUsageFallbackTests {
     private static let identity = JonesStateRoot.Identity(
-        bundleID: "com.example.mimo-fixture", groupID: "FIXTURE.com.example.mimo-fixture",
-        teamID: "FIXTURE", iCloudID: "iCloud.com.example.mimo-fixture")
+        bundleID: "com.example.mimo-fixture",
+        groupID: "FIXTURE.com.example.mimo-fixture",
+        teamID: "FIXTURE",
+        iCloudID: "iCloud.com.example.mimo-fixture")
 
     @Test
     func `default cache follows packaged identity without changing the home`() {
@@ -29,7 +31,8 @@ struct MiMoLocalUsageFallbackTests {
             for path in ["/synthetic/.codexbar/explicit.json", "relative/usage.json"] {
                 #expect(MiMoLocalUsageFallback.cachePath(
                     environment: ["MIMO_LOCAL_USAGE_PATH": " \(path)\n"],
-                    homeDirectory: "/synthetic/home", identity: identity) == path)
+                    homeDirectory: "/synthetic/home",
+                    identity: identity) == path)
             }
         }
     }

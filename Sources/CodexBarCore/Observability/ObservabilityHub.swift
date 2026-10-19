@@ -58,9 +58,16 @@ public struct HubAccountObservation: Sendable, Equatable, Identifiable {
     public let evidence: HubEvidence
 
     public init(
-        environmentID: String, environmentLabel: String, profile: String,
-        provider: String?, stableID: String?, displayLabel: String?, hostDefault: Bool,
-        health: HubAccountHealth, evidence: HubEvidence, id: String? = nil)
+        environmentID: String,
+        environmentLabel: String,
+        profile: String,
+        provider: String?,
+        stableID: String?,
+        displayLabel: String?,
+        hostDefault: Bool,
+        health: HubAccountHealth,
+        evidence: HubEvidence,
+        id: String? = nil)
     {
         self.id = id ?? "\(environmentID):\(profile)"
         self.environmentID = environmentID
@@ -89,8 +96,11 @@ public struct HubServiceObservation: Sendable, Equatable, Identifiable {
     public let evidence: HubEvidence
 
     public init(
-        id: String, label: String, currentProfile: String? = nil,
-        runtimeEffectiveProfile: String? = nil, evidence: HubEvidence)
+        id: String,
+        label: String,
+        currentProfile: String? = nil,
+        runtimeEffectiveProfile: String? = nil,
+        evidence: HubEvidence)
     {
         self.id = id
         self.label = label

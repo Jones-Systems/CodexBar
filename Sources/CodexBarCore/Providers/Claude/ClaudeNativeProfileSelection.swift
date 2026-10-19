@@ -7,8 +7,11 @@ public enum ClaudeNativeProfileSelection {
     public static let identityKey = "CODEXBAR_CLAUDE_NATIVE_PROFILE_IDENTITY"
 
     public static func applies(
-        alias: String?, source: ClaudeUsageDataSource, hasTokenAccount: Bool,
-        hasManualCookie: Bool, environment: [String: String]) -> Bool
+        alias: String?,
+        source: ClaudeUsageDataSource,
+        hasTokenAccount: Bool,
+        hasManualCookie: Bool,
+        environment: [String: String]) -> Bool
     {
         guard alias != nil, !hasTokenAccount, source != .api, source != .web else { return false }
         if source == .auto {

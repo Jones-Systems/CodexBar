@@ -29,11 +29,13 @@ extension ClaudeProviderImplementation {
                     if ClaudeNativeProfileSelection.isUnavailable(environment: environment) {
                         return ClaudeNativeProfileSelectionError.unavailable.localizedDescription
                     }
-                    return "Selected native profile. Existing credentials and usage access are checked during refresh. " +
+                    return "Selected native profile. Existing credentials and usage access are checked " +
+                        "during refresh. " +
                         "Browser usage and extras are excluded from this profile."
                 }
                 switch discovery {
-                case .missing: return "No local Authfleet enrollment binding found. Existing source settings remain active."
+                case .missing:
+                    return "No local Authfleet enrollment binding found. Existing source settings remain active."
                 case .unavailable: return "Local Authfleet enrollment metadata is unavailable."
                 case .available: return nil
                 }

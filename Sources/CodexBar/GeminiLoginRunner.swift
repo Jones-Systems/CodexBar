@@ -66,8 +66,7 @@ enum GeminiLoginRunner {
 
             return await Self.launchScript(
                 scriptContent,
-                fileManager: .default,
-                forkIdentity: JonesStateRoot.identity,
+                scratchContext: .init(fileManager: .default, forkIdentity: JonesStateRoot.identity),
                 write: { content, url in
                     try content.write(to: url, atomically: true, encoding: .utf8)
                 },
@@ -87,14 +86,20 @@ enum GeminiLoginRunner {
         }
     }
 
+    struct ScratchContext {
+        let fileManager: FileManager
+        let forkIdentity: JonesStateRoot.Identity?
+    }
+
     static func launchScript(
         _ content: String,
-        fileManager: FileManager,
-        forkIdentity: JonesStateRoot.Identity?,
+        scratchContext: ScratchContext,
         write: (String, URL) throws -> Void,
         open: (URL) async throws -> Void,
         scheduleCleanup: (TimeInterval, @escaping @Sendable () -> Void) -> Void) async -> Result
     {
+        let fileManager = scratchContext.fileManager
+        let forkIdentity = scratchContext.forkIdentity
         let tempDir = JonesProviderScratchRoot.directory(
             temporaryDirectory: fileManager.temporaryDirectory, identity: forkIdentity)
         let scriptURL = tempDir.appendingPathComponent("gemini_login_\(UUID().uuidString).command")

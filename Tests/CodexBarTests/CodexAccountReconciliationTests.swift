@@ -23,14 +23,20 @@ struct CodexAccountReconciliationTests {
     func `missing profile keeps managed and live recovery accounts without changing selection`() {
         let root = CodexCredentialFixtures.root
         let managed = ManagedCodexAccount(
-            id: UUID(), email: "managed@example.com", managedHomePath: root.appendingPathComponent("managed").path,
-            createdAt: 1, updatedAt: 1, lastAuthenticatedAt: 1)
+            id: UUID(),
+            email: "managed@example.com",
+            managedHomePath: root.appendingPathComponent("managed").path,
+            createdAt: 1,
+            updatedAt: 1,
+            lastAuthenticatedAt: 1)
         let live = ObservedSystemCodexAccount(
             email: "live@example.com", codexHomePath: root.appendingPathComponent("live").path, observedAt: Date())
         let missing = CodexActiveSource.profileHome(path: root.appendingPathComponent("removed").path)
         let reconciler = DefaultCodexAccountReconciler(
             storeLoader: { ManagedCodexAccountSet(version: 1, accounts: [managed]) },
-            systemObserver: StubSystemObserver(account: live), activeSource: missing, baseEnvironment: [:])
+            systemObserver: StubSystemObserver(account: live),
+            activeSource: missing,
+            baseEnvironment: [:])
         let snapshot = reconciler.loadSnapshot()
         let projection = CodexVisibleAccountProjection.make(from: snapshot)
         #expect(CodexActiveSourceResolver.resolve(from: snapshot).resolvedSource == missing)
@@ -39,7 +45,9 @@ struct CodexAccountReconciliationTests {
         #expect(projection.source(forVisibleAccountID: "managed@example.com") == .managedAccount(id: managed.id))
         #expect(projection.source(forVisibleAccountID: "live@example.com") == .liveSystem)
     }
+}
 
+extension CodexAccountReconciliationTests {
     @Test
     @MainActor
     func `settings store exposes codex reconciliation accessors using managed and live overrides`() throws {

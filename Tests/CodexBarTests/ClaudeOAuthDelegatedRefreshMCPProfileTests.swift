@@ -95,22 +95,22 @@ struct ClaudeOAuthDelegatedRefreshMCPProfileTests {
                 await ClaudeOAuthKeychainReadStrategyPreference.withTaskOverrideForTesting(.securityCLIExperimental) {
                     await ClaudeOAuthDelegatedRefreshCoordinator.withIsolatedStateForTesting {
                         await ClaudeOAuthDelegatedRefreshCoordinator.withCLIAvailableOverrideForTesting(true) {
-                            await ClaudeOAuthDelegatedRefreshCoordinator.withTouchAuthPathOverrideForTesting({ _, env in
+                            await ClaudeOAuthDelegatedRefreshCoordinator.withTouchAuthPathOverrideForTesting { _, env in
                                 #expect(env == environment)
                                 touches.increment()
-                            }) {
-                                await ClaudeOAuthCredentialsStore.withSecurityCLIReadOverrideForTesting(.dynamic {
-                                    request in
-                                    if request.service == selectedService { return selected }
-                                    return touches.count() == 0 ? defaultBefore : defaultAfter
-                                }) {
-                                    await ProviderInteractionContext.$current.withValue(.userInitiated) {
-                                        await ClaudeOAuthDelegatedRefreshCoordinator.attempt(
-                                            now: Date(timeIntervalSince1970: 65000),
-                                            timeout: 0.1,
-                                            environment: environment)
+                            } operation: {
+                                await ClaudeOAuthCredentialsStore
+                                    .withSecurityCLIReadOverrideForTesting(.dynamic { request in
+                                        if request.service == selectedService { return selected }
+                                        return touches.count() == 0 ? defaultBefore : defaultAfter
+                                    }) {
+                                        await ProviderInteractionContext.$current.withValue(.userInitiated) {
+                                            await ClaudeOAuthDelegatedRefreshCoordinator.attempt(
+                                                now: Date(timeIntervalSince1970: 65000),
+                                                timeout: 0.1,
+                                                environment: environment)
+                                        }
                                     }
-                                }
                             }
                         }
                     }

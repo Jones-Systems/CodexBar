@@ -61,13 +61,19 @@ struct ClaudeNativeProfileSelectionTests {
         }
         for key in ClaudeAdminAPISettingsReader.apiKeyEnvironmentKeys {
             #expect(!ClaudeNativeProfileSelection.applies(
-                alias: "jace", source: .auto, hasTokenAccount: false, hasManualCookie: false,
+                alias: "jace",
+                source: .auto,
+                hasTokenAccount: false,
+                hasManualCookie: false,
                 environment: [key: "synthetic-admin-key"]))
         }
         #expect(!ClaudeNativeProfileSelection.applies(
             alias: "jace", source: .auto, hasTokenAccount: false, hasManualCookie: true, environment: [:]))
         #expect(ClaudeNativeProfileSelection.applies(
-            alias: "jace", source: .auto, hasTokenAccount: false, hasManualCookie: false,
+            alias: "jace",
+            source: .auto,
+            hasTokenAccount: false,
+            hasManualCookie: false,
             environment: ["ANTHROPIC_AUTH_TOKEN": "synthetic-automation"]))
     }
 

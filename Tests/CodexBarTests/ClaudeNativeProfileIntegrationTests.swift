@@ -14,13 +14,20 @@ struct ClaudeNativeProfileIntegrationTests {
         let configStore = CodexBarConfigStore(fileURL: root.appendingPathComponent("config.json"))
         try configStore.save(testConfigWithAllProvidersDisabled())
         let settings = SettingsStore(
-            userDefaults: InMemoryUserDefaults(), configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(), syntheticTokenStore: NoopSyntheticTokenStore(),
-            codexCookieStore: InMemoryCookieHeaderStore(), claudeCookieStore: InMemoryCookieHeaderStore(),
-            cursorCookieStore: InMemoryCookieHeaderStore(), opencodeCookieStore: InMemoryCookieHeaderStore(),
-            factoryCookieStore: InMemoryCookieHeaderStore(), minimaxCookieStore: InMemoryMiniMaxCookieStore(),
-            minimaxAPITokenStore: InMemoryMiniMaxAPITokenStore(), kimiTokenStore: InMemoryKimiTokenStore(),
-            augmentCookieStore: InMemoryCookieHeaderStore(), ampCookieStore: InMemoryCookieHeaderStore(),
+            userDefaults: InMemoryUserDefaults(),
+            configStore: configStore,
+            zaiTokenStore: NoopZaiTokenStore(),
+            syntheticTokenStore: NoopSyntheticTokenStore(),
+            codexCookieStore: InMemoryCookieHeaderStore(),
+            claudeCookieStore: InMemoryCookieHeaderStore(),
+            cursorCookieStore: InMemoryCookieHeaderStore(),
+            opencodeCookieStore: InMemoryCookieHeaderStore(),
+            factoryCookieStore: InMemoryCookieHeaderStore(),
+            minimaxCookieStore: InMemoryMiniMaxCookieStore(),
+            minimaxAPITokenStore: InMemoryMiniMaxAPITokenStore(),
+            kimiTokenStore: InMemoryKimiTokenStore(),
+            augmentCookieStore: InMemoryCookieHeaderStore(),
+            ampCookieStore: InMemoryCookieHeaderStore(),
             copilotTokenStore: InMemoryCopilotTokenStore(),
             tokenAccountStore: InMemoryTokenAccountStore(fileURL: root.appendingPathComponent("accounts.json")),
             antigravityOAuthCredentialsStore: AntigravityOAuthCredentialsStore(
@@ -35,14 +42,20 @@ struct ClaudeNativeProfileIntegrationTests {
             "ANTHROPIC_AUTH_TOKEN": "synthetic-automation",
         ]
         let store = UsageStore(
-            fetcher: UsageFetcher(environment: environment), browserDetection: BrowserDetection(cacheTTL: 0),
-            settings: settings, startupBehavior: .testing, environmentBase: environment,
-            widgetSnapshotURL: root.appendingPathComponent("widget.json"), widgetTimelineReloader: {})
+            fetcher: UsageFetcher(environment: environment),
+            browserDetection: BrowserDetection(cacheTTL: 0),
+            settings: settings,
+            startupBehavior: .testing,
+            environmentBase: environment,
+            widgetSnapshotURL: root.appendingPathComponent("widget.json"),
+            widgetTimelineReloader: {})
         try body(settings, store, root)
     }
 
     @Test
-    func `registry preserves ambient without selection and scopes explicit enrollment in separately launched GUI`() throws {
+    func `registry preserves ambient without selection and scopes explicit enrollment in separately launched GUI`()
+        throws
+    {
         try self.withFixture { settings, store, _ in
             let original = store.claudeNativeProfileFetchEnvironment()
             #expect(!ClaudeNativeProfileSelection.isSelected(environment: original))
@@ -76,7 +89,9 @@ struct ClaudeNativeProfileIntegrationTests {
     }
 
     @Test
-    func `profile transitions retire live identity usage resets widgets and fallback while preserving history data`() throws {
+    func `profile transitions retire live identity usage resets widgets and fallback while preserving history data`()
+        throws
+    {
         try self.withFixture { settings, store, _ in
             try ClaudeFleetProfileDiscovery.$discoveryOverride.withValue(ClaudeFleetProfileDiscoveryTests.discovery()) {
                 settings.claudeNativeProfileAlias = "default"
@@ -84,7 +99,8 @@ struct ClaudeNativeProfileIntegrationTests {
                 store.reconcileClaudeNativeProfileEnvironment(first)
                 let snapshot = UsageSnapshot(
                     primary: RateWindow(usedPercent: 42, windowMinutes: 300, resetsAt: nil, resetDescription: nil),
-                    secondary: nil, updatedAt: Date())
+                    secondary: nil,
+                    updatedAt: Date())
                 store._setSnapshotForTesting(snapshot, provider: .claude)
                 store.lastKnownResetSnapshots[.claude] = snapshot
                 store.claudeHistoryFallbackEligible = true
@@ -128,8 +144,14 @@ struct ClaudeNativeProfileIntegrationTests {
         let message = await UsageStore.debugClaudeLog(
             browserDetection: BrowserDetection(cacheTTL: 0),
             configuration: UsageStore.ClaudeDebugLogConfiguration(
-                runtime: .app, sourceMode: .auto, environment: environment, webExtrasEnabled: true,
-                usageDataSource: .auto, cookieSource: .auto, cookieHeader: "", keepCLISessionsAlive: false))
+                runtime: .app,
+                sourceMode: .auto,
+                environment: environment,
+                webExtrasEnabled: true,
+                usageDataSource: .auto,
+                cookieSource: .auto,
+                cookieHeader: "",
+                keepCLISessionsAlive: false))
         #expect(message == ClaudeNativeProfileSelectionError.unavailable.localizedDescription)
     }
 
@@ -137,13 +159,17 @@ struct ClaudeNativeProfileIntegrationTests {
     func `settings picker labels enrollment preserves missing selection and never starts login`() throws {
         try self.withFixture { settings, store, _ in
             let context = ProviderSettingsContext(
-                provider: .claude, settings: settings, store: store,
+                provider: .claude,
+                settings: settings,
+                store: store,
                 boolBinding: { key in Binding(get: { settings[keyPath: key] }, set: { settings[keyPath: key] = $0 }) },
                 stringBinding: { key in
                     Binding(get: { settings[keyPath: key] }, set: { settings[keyPath: key] = $0 })
                 },
-                statusText: { _ in nil }, setStatusText: { _, _ in },
-                lastAppActiveRunAt: { _ in nil }, setLastAppActiveRunAt: { _, _ in },
+                statusText: { _ in nil },
+                setStatusText: { _, _ in },
+                lastAppActiveRunAt: { _ in nil },
+                setLastAppActiveRunAt: { _, _ in },
                 requestConfirmation: { _ in Issue.record("No enrollment selection confirmation or login") })
             try ClaudeFleetProfileDiscovery.$discoveryOverride.withValue(ClaudeFleetProfileDiscoveryTests.discovery()) {
                 let picker = ClaudeProviderImplementation().nativeProfilePicker(context: context)
@@ -157,8 +183,11 @@ struct ClaudeNativeProfileIntegrationTests {
                 #expect(picker.options.contains { $0.id == "jace" && $0.title == "Unavailable saved profile" })
                 #expect(picker.dynamicSubtitle?()?.contains("unavailable") == true)
                 let action = ClaudeProviderImplementation().loginMenuAction(context: ProviderMenuLoginContext(
-                    provider: .claude, store: store, settings: settings,
-                    account: AccountInfo(email: nil, plan: nil), hasAccount: false))
+                    provider: .claude,
+                    store: store,
+                    settings: settings,
+                    account: AccountInfo(email: nil, plan: nil),
+                    hasAccount: false))
                 #expect(action?.label == "Manage selected native profile in Claude Settings…")
                 picker.binding.wrappedValue = ""
                 #expect(settings.claudeNativeProfileAlias == nil)

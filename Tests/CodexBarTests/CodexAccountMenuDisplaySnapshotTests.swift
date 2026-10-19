@@ -60,10 +60,12 @@ struct CodexAccountMenuDisplaySnapshotTests {
         settings.multiAccountMenuLayout = layout
         let source = CodexActiveSource.profileHome(path: "/fixture/removed")
         let snapshot = CodexAccountReconciliationSnapshot(
-            storedAccounts: [], activeStoredAccount: nil,
+            storedAccounts: [],
+            activeStoredAccount: nil,
             liveSystemAccount: ObservedSystemCodexAccount(
                 email: "recovery@example.com", codexHomePath: "/fixture/live", observedAt: Date()),
-            matchingStoredAccountForLiveSystemAccount: nil, activeSource: source,
+            matchingStoredAccountForLiveSystemAccount: nil,
+            activeSource: source,
             hasUnreadableAddedAccountStore: false)
         let probe = CodexAccountSnapshotLoaderProbe(snapshot: snapshot)
         settings._test_codexAccountSnapshotLoader = { _ in probe.load() }
@@ -73,8 +75,12 @@ struct CodexAccountMenuDisplaySnapshotTests {
         let store = UsageStore(
             fetcher: UsageFetcher(), browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
         let controller = StatusItemController(
-            store: store, settings: settings, account: AccountInfo(email: nil, plan: nil),
-            updater: DisabledUpdaterController(), preferencesSelection: PreferencesSelection(), statusBar: .system)
+            store: store,
+            settings: settings,
+            account: AccountInfo(email: nil, plan: nil),
+            updater: DisabledUpdaterController(),
+            preferencesSelection: PreferencesSelection(),
+            statusBar: .system)
         defer { controller.releaseStatusItemsForTesting() }
         let callsBeforeDisplay = probe.callCount
         let display = try #require(controller.codexAccountMenuDisplay(for: .codex))

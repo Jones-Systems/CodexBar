@@ -97,5 +97,4 @@ struct TestFixtureScratchTests {
         let support = try CodexStatusProbeIsolation.supportDirectory(environment: ["TMPDIR": child.path])
         #expect(support.deletingLastPathComponent().deletingLastPathComponent() == child)
     }
-
 }

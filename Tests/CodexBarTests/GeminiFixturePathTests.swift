@@ -18,13 +18,14 @@ struct GeminiFixturePathTests {
             geminiPackageJSONPath: fixture.homeURL.appendingPathComponent("package.json").path)
 
         let path = fixture.fnmFixturePath(geminiBinary: geminiBinary, inheritedPath: inheritedBin.path)
-        let environment = [
+        let environment = try [
             "PATH": path,
             "CODEXBAR_SUPPRESS_TEST_KEYCHAIN_ACCESS": "1",
             "CODEXBAR_TEST_CODEX_FILE_ISOLATION": "1",
             TestFixtureScratch.parentEnvironmentKey: TestFixtureScratch.root.path,
-            TestFixtureScratch.workspaceEnvironmentKey: ProcessInfo.processInfo.environment[
-                TestFixtureScratch.workspaceEnvironmentKey]!,
+            TestFixtureScratch.workspaceEnvironmentKey: #require(ProcessInfo.processInfo.environment[
+                TestFixtureScratch.workspaceEnvironmentKey,
+            ]),
         ]
         // Model a peer's /usr/bin/env lookup while the same fixture PATH override is active.
         for (arguments, expected) in [

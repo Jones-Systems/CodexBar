@@ -6,15 +6,18 @@ struct MiMoUsageScriptTests {
     @Test
     func `tracker and reader agree for stock Jones and explicit cache paths`() throws {
         let identity = JonesStateRoot.Identity(
-            bundleID: "com.example.mimo-fixture", groupID: "FIXTURE.com.example.mimo-fixture",
-            teamID: "FIXTURE", iCloudID: "iCloud.com.example.mimo-fixture")
+            bundleID: "com.example.mimo-fixture",
+            groupID: "FIXTURE.com.example.mimo-fixture",
+            teamID: "FIXTURE",
+            iCloudID: "iCloud.com.example.mimo-fixture")
         let cases: [(JonesStateRoot.Identity?, String?)] = [
             (nil, nil), (identity, nil), (nil, "custom/usage.json"), (identity, "custom/usage.json"),
         ]
         for (identity, cacheOverride) in cases {
             let usage = try self.runScript(
                 files: ["session.jsonl": [self.assistantRow(outputTokens: 90)]],
-                identity: identity, cacheOverride: cacheOverride)
+                identity: identity,
+                cacheOverride: cacheOverride)
             self.assertUsage(
                 usage, expected: .init(input: 120, cacheCreate: 10, cacheRead: 5, output: 90, messages: 1))
         }
@@ -163,7 +166,8 @@ struct MiMoUsageScriptTests {
             "CODEXBAR_TEST_CODEX_FILE_ISOLATION": "1",
             TestFixtureScratch.parentEnvironmentKey: TestFixtureScratch.root.path,
             TestFixtureScratch.workspaceEnvironmentKey: ProcessInfo.processInfo.environment[
-                TestFixtureScratch.workspaceEnvironmentKey]!,
+                TestFixtureScratch.workspaceEnvironmentKey,
+            ]!,
             "CODEXBAR_TEST_SESSION_FILE_ISOLATION": "1",
         ]
         // The external tracker uses its existing explicit output override for the packaged fork.
