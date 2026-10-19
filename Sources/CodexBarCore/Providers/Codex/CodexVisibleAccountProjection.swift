@@ -8,6 +8,8 @@ import Foundation
 public struct CodexVisibleAccount: Equatable, Identifiable, Sendable {
     public let id: String
     public let email: String
+    // Presentation metadata from enrolled profile homes; never an authentication or account identity.
+    public let fleetProfileAlias: String?
     public let workspaceLabel: String?
     public private(set) var displayDiscriminator: String?
     public let workspaceAccountID: String?
@@ -33,10 +35,12 @@ public struct CodexVisibleAccount: Equatable, Identifiable, Sendable {
         isLive: Bool,
         canReauthenticate: Bool,
         canRemove: Bool,
-        systemPromotionTarget: JonesCodexSystemPromotionTarget? = nil)
+        systemPromotionTarget: JonesCodexSystemPromotionTarget? = nil,
+        fleetProfileAlias: String? = nil)
     {
         self.id = id
         self.email = email
+        self.fleetProfileAlias = fleetProfileAlias
         self.workspaceLabel = Self.normalizeWorkspaceLabel(workspaceLabel)
         self.workspaceAccountID = workspaceAccountID
         self.authFingerprint = CodexAuthFingerprint.normalize(authFingerprint)
@@ -277,6 +281,14 @@ extension CodexVisibleAccountProjection {
                 draft.selectionSource == .profileHome(path: path)
             }
 
+            let fleetProfileAlias: String?
+            if case let .profileHome(path) = draft.selectionSource,
+               snapshot.fleetProfileHomePaths.contains(path)
+            {
+                fleetProfileAlias = URL(fileURLWithPath: path).lastPathComponent
+            } else {
+                fleetProfileAlias = nil
+            }
             return CodexVisibleAccount(
                 id: id,
                 email: draft.email,
@@ -289,7 +301,8 @@ extension CodexVisibleAccountProjection {
                 isLive: draft.isLive,
                 canReauthenticate: draft.canReauthenticate,
                 canRemove: draft.canRemove,
-                systemPromotionTarget: draft.systemPromotionTarget)
+                systemPromotionTarget: draft.systemPromotionTarget,
+                fleetProfileAlias: fleetProfileAlias)
         }.sorted { lhs, rhs in
             if lhs.email != rhs.email {
                 return lhs.email < rhs.email

@@ -1067,6 +1067,8 @@ extension StatusItemController {
             accounts: display.accounts,
             selectedAccountID: display.activeVisibleAccountID,
             width: width,
+            displayLabels: self.settings.codexAccountDisplayLabels(for: display.accounts),
+            hidePersonalInfo: self.settings.hidePersonalInfo,
             onSelect: { [weak self, weak menu] account in
                 guard let self else { return }
                 self.handleCodexVisibleAccountSelection(account, menu: menu)

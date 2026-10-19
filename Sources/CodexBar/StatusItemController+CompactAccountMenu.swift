@@ -71,7 +71,8 @@ extension StatusItemController {
     {
         let projected = Self.projectedCodexAccounts(
             display: display,
-            includeOptionalCredits: self.settings.showOptionalCreditsAndExtraUsage)
+            includeOptionalCredits: self.settings.showOptionalCreditsAndExtraUsage,
+            displayLabels: self.settings.codexAccountDisplayLabels(for: display.accounts))
         let plan = self.compactAccountPlan(for: .codex, accounts: projected)
         guard plan.usesCompactLayout else { return false }
         let snapshotsByAccountID = Dictionary(
@@ -94,6 +95,7 @@ extension StatusItemController {
                         errorOverride: health.label,
                         forceOverrideCard: accountSnapshot == nil,
                         accountOverride: self.accountInfo(for: account),
+                        accountDisplayLabelOverride: projectedAccount.displayLabel,
                         historySelectionOverride: self.store.codexPlanUtilizationHistorySelection(
                             forVisibleAccount: account),
                         creditsOverride: accountSnapshot?.credits)
@@ -280,7 +282,8 @@ extension StatusItemController {
 
     static func projectedCodexAccounts(
         display: CodexAccountMenuDisplay,
-        includeOptionalCredits: Bool = true) -> [ProviderAccountUsageSnapshot]
+        includeOptionalCredits: Bool = true,
+        displayLabels: [String: String] = [:]) -> [ProviderAccountUsageSnapshot]
     {
         let snapshotsByAccountID = Dictionary(uniqueKeysWithValues: display.snapshots.map { ($0.account.id, $0) })
         return display.accounts.map { account in
@@ -291,7 +294,7 @@ extension StatusItemController {
             return ProviderAccountUsageSnapshot(
                 id: ProviderAccountIdentity(source: "codex-account", opaqueID: account.id),
                 provider: .codex,
-                displayLabel: account.menuDisplayName,
+                displayLabel: displayLabels[account.id] ?? account.menuDisplayName,
                 isActive: isActive,
                 canActivate: !isActive,
                 snapshot: Self.snapshotIncludingMonthlyCredit(

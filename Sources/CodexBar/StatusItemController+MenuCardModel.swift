@@ -18,6 +18,7 @@ extension StatusItemController {
         errorOverride: String? = nil,
         forceOverrideCard: Bool = false,
         accountOverride: AccountInfo? = nil,
+        accountDisplayLabelOverride: String? = nil,
         historySelectionOverride: PlanUtilizationHistorySelection? = nil,
         planOverride: String? = nil,
         subtitleOverride: String? = nil,
@@ -117,6 +118,8 @@ extension StatusItemController {
             tokenError: tokenError,
             account: fallbackAccount,
             accountIsAuthoritative: accountOverride != nil,
+            accountDisplayLabel: accountDisplayLabelOverride
+                ?? (target == .codex && surface == .liveCard ? self.selectedCodexAccountDisplayLabel() : nil),
             planOverride: planOverride,
             isRefreshing: self.store.shouldShowRefreshingMenuCardIndicator(for: target),
             // Provider-level errors can belong to a different account, so
@@ -279,6 +282,20 @@ extension StatusItemController {
         }
         guard let snapshot else { return .unavailable }
         return self.store.planUtilizationHistorySelection(for: provider, snapshotOverride: snapshot)
+    }
+
+    private func selectedCodexAccountDisplayLabel() -> String {
+        if let projection = self.settings.codexVisibleAccountProjectionForMenuDisplay,
+           let account = projection.visibleAccounts.first(where: { $0.id == projection.activeVisibleAccountID })
+        {
+            return self.settings.codexAccountDisplayLabel(for: account)
+        }
+        let source = self.settings.codexActiveSource
+        let alias: String? = if case .liveSystem = source { "default" } else { nil }
+        return self.settings.accountDisplayLabel(
+            provider: .codex,
+            profileIdentity: JonesAccountDisplayLabel.codexProfileIdentity(for: source),
+            verifiedAlias: alias)
     }
 
     func accountInfo(for account: CodexVisibleAccount) -> AccountInfo {

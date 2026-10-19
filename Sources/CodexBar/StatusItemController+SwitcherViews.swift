@@ -1325,6 +1325,8 @@ final class TokenAccountSwitcherView: NSView {
 
 final class CodexAccountSwitcherView: NSView {
     private let accounts: [CodexVisibleAccount]
+    private let displayLabels: [String: String]
+    private let hidePersonalInfo: Bool
     private let onSelect: (CodexVisibleAccount) -> Void
     private var selectedAccountID: String
     private var pressedAccountID: String?
@@ -1344,9 +1346,13 @@ final class CodexAccountSwitcherView: NSView {
         accounts: [CodexVisibleAccount],
         selectedAccountID: String?,
         width: CGFloat,
+        displayLabels: [String: String] = [:],
+        hidePersonalInfo: Bool = false,
         onSelect: @escaping (CodexVisibleAccount) -> Void)
     {
         self.accounts = accounts
+        self.displayLabels = displayLabels
+        self.hidePersonalInfo = hidePersonalInfo
         self.onSelect = onSelect
         self.selectedAccountID = selectedAccountID ?? ""
         var columns = max(1, accounts.count > 3 ? Int(ceil(Double(accounts.count) / 2)) : accounts.count)
@@ -1409,7 +1415,9 @@ final class CodexAccountSwitcherView: NSView {
                     target: self,
                     action: #selector(self.handleSelect))
                 button.identifier = NSUserInterfaceItemIdentifier(account.id)
-                button.toolTip = account.menuDisplayName
+                button.toolTip = PersonalInfoRedactor.redactEmail(
+                    self.displayLabels[account.id] ?? account.menuDisplayName,
+                    isEnabled: self.hidePersonalInfo)
                 button.isBordered = false
                 button.setButtonType(.toggle)
                 button.controlSize = .small
@@ -1445,6 +1453,10 @@ final class CodexAccountSwitcherView: NSView {
 
     private func compactButtonTitle(for account: CodexVisibleAccount, buttonWidth: CGFloat) -> String {
         let availableTextWidth = max(24, buttonWidth - self.buttonHorizontalPadding)
+        if self.hidePersonalInfo { return PersonalInfoRedactor.emailPlaceholder }
+        if let label = self.displayLabels[account.id] {
+            return self.truncateTail(label, toFit: availableTextWidth)
+        }
         if self.textWidth(account.menuDisplayName) <= availableTextWidth {
             return account.menuDisplayName
         }
