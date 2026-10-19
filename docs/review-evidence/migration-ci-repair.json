@@ -1,0 +1,116 @@
+{
+  "schema": "codexbar.migration-ci-repair/v1",
+  "parent_head": "cbc4a489f8a3faedf5e744f089a740d9424cde1f",
+  "source_files_sha256": {
+    "Scripts/ci_swift_test_by_suite.py": "1b2a6996c0d784fbe7f77c3905e8aa167ff8047a775e16cdebf1ac0224923fc0",
+    "Scripts/test_fixture_scratch_parent.py": "65659197d7c71d97d3cbc7c3e675c2d962f07b446a91075ca6602bdfa8267262",
+    "Scripts/test_swift_test_process_cleanup.py": "eea4a6795ca26cd258f7712cc99ed525be64b74dba64f712d820c9717bc781b0",
+    "Scripts/test_swift_test_sharding.sh": "13f4cc840aa5f41431bca6071615ffccdc87b9dfac2426c2788fc9189c6c27e4",
+    "Sources/CodexBarCore/Providers/Claude/ClaudeFleetProfileDiscovery.swift": "b8db85017f3cc3e033cc1cb17a45eb7c0a6d93a1a7313a18cef89942c959e9ed",
+    "Sources/CodexBarCore/Providers/Codex/CodexFleetProfileDiscovery.swift": "7b5c391cde9bf184a7fff9fdabb885ff58ae8df51dd2432c60010eed092a3940"
+  },
+  "failed_before": [
+    {
+      "head": "4f62ba08bd6c22940bd79189b451464ba2df3ba5",
+      "run": 39189121249,
+      "job": 117857790352,
+      "failure": "165 strict SwiftLint violations; all path/rule pairs map to cumulative lint repair at parent head"
+    },
+    {
+      "head": "4f62ba08bd6c22940bd79189b451464ba2df3ba5",
+      "run": 39189121249,
+      "job": 117857840713,
+      "failure": "musl SDK has no Glibc module; conditional import repaired in both discovery files"
+    },
+    {
+      "head": "cbc4a489f8a3faedf5e744f089a740d9424cde1f",
+      "run": 39189773046,
+      "job": 117860170141,
+      "failure": "list-only stdout diagnostics break shard-union comparison; local make check attempt1 also failed at this comparison"
+    },
+    {
+      "source": "same parent plus three-script diagnostic repair",
+      "failure": "included SIGINT test expected KeyboardInterrupt instead of installed handler SystemExit(130); 95 tests, one error and one platform skip"
+    }
+  ],
+  "affected_checks": [
+    {
+      "group": "sharding",
+      "command": [
+        "bash",
+        "Scripts/test_swift_test_sharding.sh"
+      ],
+      "exit": 0,
+      "seconds": 52.27,
+      "drain_proved": true,
+      "included_process_cleanup_tests": 95,
+      "platform_skips": 1,
+      "stdout_selection_counts": [
+        6,
+        4,
+        10
+      ]
+    },
+    {
+      "group": "runner-lifecycle",
+      "command": [
+        "python3",
+        "-B",
+        "invocation-owned direct runner_lifecycle_cases seam"
+      ],
+      "exit": 0,
+      "seconds": 20.801,
+      "drain_proved": true,
+      "cases": 38
+    },
+    {
+      "group": "isolated-commands",
+      "command": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "-B",
+        "Scripts/test_ci_isolated_commands.py"
+      ],
+      "exit": 0,
+      "seconds": 5.087,
+      "drain_proved": true,
+      "tests": 5
+    }
+  ],
+  "test_preservation": {
+    "test_method_count_before": 95,
+    "test_method_count_after": 95,
+    "one_to_one_rename": {
+      "test_keyboard_interrupt_drains_children_and_propagates": "test_sigint_drains_children_and_preserves_exit_status"
+    },
+    "initialization_failure_class_unchanged": "ReviewRegressionTests"
+  },
+  "musl_static_checks": "Pinned SwiftFormat --lint, SwiftLint --strict --no-cache, and git diff --check passed; bytes after each import block unchanged",
+  "isolation": [
+    "CODEXBAR_SUPPRESS_TEST_KEYCHAIN_ACCESS=1",
+    "CODEXBAR_TEST_CODEX_FILE_ISOLATION=1",
+    "CODEXBAR_TEST_SESSION_FILE_ISOLATION=1"
+  ],
+  "scratch": "One invocation-owned canonical workspace parent for affected union; every group drained; exact parent removal and absence verified",
+  "finding_disposition": {
+    "NFCR-COR-003": {
+      "original_severity": "P2",
+      "original_source": "ecdb8643b6af1f6852152f32f827b254a75a2a2a",
+      "corrected_aspect": "list-only stdout contamination; raw union and explicit selection-name/count proof pass"
+    },
+    "retained_deferred": [
+      "NFCR-COR-002",
+      "NFP-COR-002",
+      "FSP-PROC-002",
+      "TIR001",
+      "TIR002",
+      "EXPOSURE001"
+    ]
+  },
+  "unavailable_or_pending_at_checkpoint": [
+    "Full scratch-parent/identity proof remains deferred under NFCR-COR-002; focused runner lifecycle seam only executed",
+    "Final candidate make check, make test, plugin A/B and hosted CI are due; final evidence belongs to destination PR3 delivery record",
+    "Musl compilation is not proved by static checks"
+  ],
+  "delivery_url": "https://github.com/Jones-Systems/CodexBar/pull/3",
+  "runtime_effects": "No app install, signing, packaging/release, launch, account switch or live credential/provider access"
+}

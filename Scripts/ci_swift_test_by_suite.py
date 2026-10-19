@@ -66,7 +66,7 @@ class FixtureScratchParent:
             self.identity = (info.st_dev, info.st_ino)
             os.environ[SCRATCH_PARENT_KEY] = str(self.path)
         os.environ["TMPDIR"] = str(self.path)
-        print(f"Fixture scratch parent ({'owned' if self.owned else 'borrowed'}): {self.path}", flush=True)
+        print(f"Fixture scratch parent ({'owned' if self.owned else 'borrowed'}): {self.path}", file=sys.stderr, flush=True)
 
     def cleanup(self) -> None:
         try:
@@ -84,7 +84,7 @@ class FixtureScratchParent:
             shutil.rmtree(self.path)
             if os.path.lexists(self.path):
                 raise RuntimeError(f"Fixture scratch parent cleanup failed: {self.path}")
-            print(f"Fixture scratch parent removed and absence verified: {self.path}", flush=True)
+            print(f"Fixture scratch parent removed and absence verified: {self.path}", file=sys.stderr, flush=True)
         finally:
             for key, value in self.previous.items():
                 if value is None:
@@ -527,7 +527,7 @@ def run_command(command: list[str], timeout: int | None = None, *, stdout=None, 
         raise RuntimeError("Swift test process containment requires macOS or Linux")
     if not all(hasattr(os, name) for name in ("waitid", "P_PID", "WEXITED", "WNOHANG", "WNOWAIT")):
         raise RuntimeError("Swift test process containment requires waitid with WNOWAIT")
-    print(f"+ {' '.join(command)}", flush=True)
+    print(f"+ {' '.join(command)}", file=sys.stderr, flush=True)
     started = time.monotonic()
     ownership = None
     process = None
@@ -565,11 +565,11 @@ def run_command(command: list[str], timeout: int | None = None, *, stdout=None, 
                 return result
             now = time.monotonic()
             if timeout is not None and now - started >= timeout:
-                print(f"::warning::Command timed out after {timeout}s: {' '.join(command)}", flush=True)
+                print(f"::warning::Command timed out after {timeout}s: {' '.join(command)}", file=sys.stderr, flush=True)
                 result_code = 124
                 return 124
             if now >= next_diagnostic:
-                print(f"Swift test command pid={process.pid} elapsed={now - started:.1f}s owned={sorted(owned)}", flush=True)
+                print(f"Swift test command pid={process.pid} elapsed={now - started:.1f}s owned={sorted(owned)}", file=sys.stderr, flush=True)
                 next_diagnostic = now + 30
             wait = 0.5 if timeout is None else min(0.5, max(0, timeout - (now - started)))
             time.sleep(wait)
@@ -694,12 +694,12 @@ def swift_test_list(swift_command: list[str]) -> list[TestSelection]:
     result = run_captured_command(command)
     if result.returncode != 0 and is_missing_sparkle_runtime_failure(result):
         if repair_sparkle_test_runtime(swift_command):
-            print("Recovered SwiftPM Sparkle test runtime; retrying discovery once.", flush=True)
+            print("Recovered SwiftPM Sparkle test runtime; retrying discovery once.", file=sys.stderr, flush=True)
             result = run_captured_command(command)
     if result.returncode != 0:
-        print(f"+ {swift_command[0]} test list", flush=True)
+        print(f"+ {swift_command[0]} test list", file=sys.stderr, flush=True)
         if result.stdout:
-            print(result.stdout, end="" if result.stdout.endswith("\n") else "\n", flush=True)
+            print(result.stdout, end="" if result.stdout.endswith("\n") else "\n", file=sys.stderr, flush=True)
         if result.stderr:
             print(result.stderr, end="" if result.stderr.endswith("\n") else "\n", file=sys.stderr, flush=True)
         result.check_returncode()
@@ -794,7 +794,7 @@ def filtered_suites_for_environment(suites: list[TestSelection]) -> list[TestSel
     skipped = {"CodexBarTests.CLIEntryTests"}
     filtered = [suite for suite in suites if suite.suite_name not in skipped]
     if len(filtered) != len(suites):
-        print(f"Skipping macOS CI-only suites: {', '.join(sorted(skipped))}", flush=True)
+        print(f"Skipping macOS CI-only suites: {', '.join(sorted(skipped))}", file=sys.stderr, flush=True)
     return filtered
 
 
@@ -875,6 +875,7 @@ def run_suites() -> int:
         print(
             f"Discovered {len(suites)} test selections; running {stats.selected_selections} selections "
             f"in {len(suite_groups)} groups{shard_suffix}",
+            file=sys.stderr,
             flush=True,
         )
         if args.list_only:

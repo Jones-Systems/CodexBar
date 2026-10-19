@@ -196,18 +196,36 @@ grep -Fq '| Selected groups | `1` |' "${GITHUB_STEP_SUMMARY}"
 
 reset_case shard-list-0
 run_harness --group-size 4 --timeout 10 --shard-index 0 --shard-count 2 --list-only \
-  > "${TEMP_DIR}/shard-list-0.log"
+  > "${TEMP_DIR}/shard-list-0.log" 2> "${TEMP_DIR}/shard-list-0.stderr"
 reset_case shard-list-1
 run_harness --group-size 4 --timeout 10 --shard-index 1 --shard-count 2 --list-only \
-  > "${TEMP_DIR}/shard-list-1.log"
+  > "${TEMP_DIR}/shard-list-1.log" 2> "${TEMP_DIR}/shard-list-1.stderr"
 cat "${TEMP_DIR}/shard-list-0.log" "${TEMP_DIR}/shard-list-1.log" \
-  | grep -v '^Discovered ' \
   | sort > "${TEMP_DIR}/shards-combined.log"
 reset_case shard-list-all
-run_harness --group-size 4 --timeout 10 --list-only \
-  | grep -v '^Discovered ' \
+run_harness --group-size 4 --timeout 10 --list-only 2> "${TEMP_DIR}/shard-list-all.stderr" \
   | sort > "${TEMP_DIR}/shards-expected.log"
 diff -u "${TEMP_DIR}/shards-expected.log" "${TEMP_DIR}/shards-combined.log"
+[[ "$(wc -l < "${TEMP_DIR}/shard-list-0.log")" -eq 6 ]]
+[[ "$(wc -l < "${TEMP_DIR}/shard-list-1.log")" -eq 4 ]]
+cat <<'EOF' | sort > "${TEMP_DIR}/selection-names.log"
+CodexBarTests.Alpha
+CodexBarTests.Beta
+CodexBarTests.Gamma
+CodexBarTests.Delta
+CodexBarTests.Epsilon
+CodexBarTests.Zeta
+CodexBarTests.Eta
+CodexBarTests.Theta
+CodexBarTests.`top level works`()
+CodexBarTests.`top/level slash works`()
+EOF
+diff -u "${TEMP_DIR}/selection-names.log" "${TEMP_DIR}/shards-expected.log"
+for name in shard-list-0 shard-list-1 shard-list-all; do
+  grep -Fq 'Discovered 10 test selections;' "${TEMP_DIR}/${name}.stderr"
+  grep -Fq 'Fixture scratch parent (' "${TEMP_DIR}/${name}.stderr"
+  grep -Fq '+ /bin/bash -c' "${TEMP_DIR}/${name}.stderr"
+done
 
 reset_case group-timeout
 export FAKE_SWIFT_MODE=group_timeout
@@ -268,12 +286,12 @@ mkdir -p \
   "${FAKE_SWIFT_BIN_PATH}/PackageFrameworks"
 touch "${FAKE_SWIFT_BIN_PATH}/Sparkle.framework/Versions/B/Sparkle"
 ln -s ../Wrong.framework "${FAKE_SWIFT_BIN_PATH}/PackageFrameworks/Sparkle.framework"
-run_harness --group-size 1 --limit-groups 1 --timeout 10 > "${TEMP_DIR}/sparkle-recovery.log"
+run_harness --group-size 1 --limit-groups 1 --timeout 10 > "${TEMP_DIR}/sparkle-recovery.log" 2> "${TEMP_DIR}/sparkle-recovery.stderr"
 [[ "$(readlink "${FAKE_SWIFT_BIN_PATH}/PackageFrameworks/Sparkle.framework")" == "../Sparkle.framework" ]]
 [[ "$(grep -c '^test list$' "${FAKE_SWIFT_LOG}")" -eq 2 ]]
 [[ "$(grep -c '^build --show-bin-path$' "${FAKE_SWIFT_LOG}")" -eq 1 ]]
 grep -Fq "Recovered SwiftPM Sparkle test runtime; retrying discovery once." \
-  "${TEMP_DIR}/sparkle-recovery.log"
+  "${TEMP_DIR}/sparkle-recovery.stderr"
 unset FAKE_SWIFT_BIN_PATH
 
 python3 "${ROOT_DIR}/Scripts/test_swift_test_process_cleanup.py"

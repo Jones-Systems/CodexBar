@@ -21,7 +21,7 @@ Authority effect: none
 
 The owner requested a public independent `Jones-Systems/CodexBar`, migration of
 open PRs, useful native stacking and eventual eligible merges, under Frontier
-mode. A goal is active. This supersedes the earlier bounded continuation's
+mode. The requested goal and delivery finish line remain in force. This supersedes the earlier bounded continuation's
 blanket no-merge finish line; readiness and protected effects remain separate.
 The [engineering spec](../engineering-specs/public-repository-migration.md)
 records the selected preservation mechanism and exact remaining approvals.
@@ -31,8 +31,12 @@ Thread `506fc1fd-d94f-4616-84f4-7751eda0aec8`, environment
 The dedicated linked worktree is `CodexBar-public-migration-506fc1fd`, branch
 `work/public-repository-migration-506fc1fd`, based on
 `99429988aefee925c0a2aaabf884e89792f25d7a`. Its write scope is migration
-documentation and invocation-owned metadata evidence. All preexisting worktrees
-and source branches are preserved. Research children performed read-only work.
+documentation and invocation-owned metadata evidence. The coordinator also owns
+`CodexBar-native-catalog-repair-506fc1fd` on
+`work/native-catalog-repair-506fc1fd` for declared CI source repairs and
+`CodexBar-completion-506fc1fd` for isolated verification. All preexisting
+worktrees and source branches are preserved; children have non-overlapping
+writer scopes and no Git mutation authority.
 <!-- codex-section:end id="worknote.public-repository-migration#ctx.intent.001" -->
 
 <!-- codex-section:begin id="worknote.public-repository-migration#ctx.evidence.001" -->
@@ -63,8 +67,42 @@ a missing simdjson dylib. No global dependency was repaired. Initial `make check
 revealed a stale generated parser hash; independent SwiftFormat found four files
 and SwiftLint found 214 violations across 36 files. A declared source repair lane
 owns only those paths, the generated hash and two necessary same-module helper
-extractions. No required coverage/rule is removed. Final-head verification and
-merges are still pending. See the [public receipt](../review-evidence/public-repository-migration.json).
+extractions. That repair and migration documentation were published in top PR3
+at `cbc4a489f8a3faedf5e744f089a740d9424cde1f`. Scoped formatting and strict
+SwiftLint passed. Every one of PR1's 165 hosted SwiftLint path/rule pairs maps to
+the cumulative repair manifest; lower-layer failures require passing cumulative
+top evidence before the atomic stack can qualify.
+
+At that published head, local `make check` and hosted lint both reproduced a
+list-only shard comparison failure: runner diagnostics entered stdout alongside
+selection names. The selection union itself matches. A declared three-script
+lane repairs the diagnostic stream contract and retains the union, lifecycle,
+retry and failure assertions. This necessary mandatory-check repair is covered
+by the owner's subsequent explicit completion and CI-repair instruction;
+NFCR-COR-003 retains its original P2 severity and source history. Its exact
+stdout-contamination aspect is corrected and passes the synthetic shard proof;
+this does not qualify broader deferred containment proofs. The raw union/name/diagnostic assertions first passed, exposing
+a stale included cancellation-test expectation: the installed SIGINT handler
+raises `SystemExit(130)`, while the test expected `KeyboardInterrupt`. Its repair
+asserts the exact signal status and retains all drain, identity, sentinel and
+bounded-time assertions. Production cancellation behavior is unchanged. The corrected sharding harness
+passes, including 95 process-cleanup tests with one platform skip; 38 focused
+runner lifecycle cases and five isolated-command tests also pass. All three
+groups ran serially under one canonical fixture parent, with proved process
+drain and exact parent absence. The
+[repair receipt](../review-evidence/migration-ci-repair.json) binds the commands,
+source hashes and retained limitations. No unrelated deferred finding is swept
+into the lane.
+
+Hosted musl compilation also failed because account discovery imported `Glibc`
+unconditionally outside Darwin. Both Codex and Claude discovery imports now
+follow the existing Darwin/Glibc/Musl conditional pattern; all bytes below the
+import blocks are unchanged, and scoped format/lint checks pass. Musl compilation
+still requires destination CI. No required coverage or rule is removed.
+At this source-repair checkpoint, final-head verification and merges remain
+pending. Subsequent exact-head native/CI results and merge postconditions belong
+to the [destination PR3](https://github.com/Jones-Systems/CodexBar/pull/3) delivery
+record. See the [import receipt](../review-evidence/public-repository-migration.json).
 
 The pre-migration observations below remain historical source evidence.
 
@@ -123,17 +161,26 @@ there is no unresolved implementation choice requiring recommendation voting.
 <!-- codex-section:begin id="worknote.public-repository-migration#ctx.verification.001" -->
 ## Verification and retained findings
 
-No source code was changed for migration preparation and no new native suite
-was started. Existing receipt `docs/review-evidence/ci-isolation-r1.json` records
+The published candidate `cbc4a489f8a3faedf5e744f089a740d9424cde1f` failed
+`make check` attempt 1 at the synthetic shard-union comparison. Parser hash,
+preceding portable package checks and all five isolated-command tests passed.
+The invocation drained its children and removed its exact owned scratch parent;
+full `make test` and plugin A/B were not started after that failure. This is
+failed evidence, not a passing full check.
+
+The following baseline remains valid only for its recorded source. Existing
+receipt `docs/review-evidence/ci-isolation-r1.json` records
 the full isolated Mac suite and both plugin engines passing at source
 `1a3037561c867735ca5858e01168ff6f160b179c`; tested code is identical in `99429988`.
-Those results do not establish destination CI. `make check` remains unavailable
-under the missing-tool/no-install constraint; the available VPS route lacks
-Swift. No empty rollup is counted as passing.
+Those results do not establish the repaired candidate or destination CI. The
+owner subsequently approved the required pinned tools, so the earlier
+missing-tool hold is superseded. No empty rollup is counted as passing.
 
-Preserve TIR001/TIR002 and the seven trial gates; deferred NFCR-COR-002/003,
-NFP-COR-002 and FSP-PROC-002; the missing full scratch/identity/sharding proofs;
-and EXPOSURE001's bounded public identity/path disclosure finding. No credential
+Preserve TIR001/TIR002 and the seven trial gates; deferred NFCR-COR-002,
+NFP-COR-002 and FSP-PROC-002; the missing full scratch/identity proofs; and
+NFCR-COR-003's original finding history with the exact stdout correction verified
+by the focused synthetic proof. No broader proof is inferred from a focused correction. Preserve
+EXPOSURE001's bounded public identity/path disclosure finding. No credential
 exposure was identified by that earlier bounded audit; this is not a guarantee
 about all history. The owner again explicitly chose public visibility.
 No finding is repaired or reclassified by changing GitHub repository type.

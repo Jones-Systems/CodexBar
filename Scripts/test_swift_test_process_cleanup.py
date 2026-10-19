@@ -283,8 +283,9 @@ class ProcessCleanupTests(unittest.TestCase):
                 with patch.object(runner.TestProcessOwnership, "refresh", refresh), \
                         patch.object(runner.TestProcessOwnership, "drain", drain):
                     if interrupt:
-                        with self.assertRaises(KeyboardInterrupt):
+                        with self.assertRaises(SystemExit) as interrupted:
                             runner.run_command(command, timeout=8)
+                        self.assertEqual(interrupted.exception.code, 128 + signal.SIGINT)
                     else:
                         # Successful fixtures include interpreter startup and ownership polling;
                         # exact deadline behavior is covered separately with a virtual clock.
@@ -345,7 +346,7 @@ class ProcessCleanupTests(unittest.TestCase):
     def test_failure_drains_lingering_child_and_preserves_exit_code(self):
         self.exercise("failure", 23)
 
-    def test_keyboard_interrupt_drains_children_and_propagates(self):
+    def test_sigint_drains_children_and_preserves_exit_status(self):
         self.exercise("timeout", None, interrupt=True)
 
 

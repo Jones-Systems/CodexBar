@@ -363,7 +363,7 @@ if stage == 'discovery':
                 if actual_parent.exists():
                     _synthetic_cleanup_safe = False
                 assert actual_parent.parent == workspace and not actual_parent.exists()
-                assert b"removed and absence verified" in stdout
+                assert b"removed and absence verified" in stderr
             count += 1
 
     for invalid in ("", ".", str(workspace), str(caller / "missing"), str(caller / "sibling"),
