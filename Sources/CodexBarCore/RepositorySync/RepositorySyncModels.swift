@@ -43,7 +43,9 @@ public struct RepositorySyncTarget: Codable, Equatable, Hashable, Sendable {
         try self.validate()
     }
 
-    public var path: String { self.rootPath + "/" + self.relativePath }
+    public var path: String {
+        self.rootPath + "/" + self.relativePath
+    }
 
     public func validate() throws {
         guard Self.isToken(self.environmentID), Self.isToken(self.configurationRevision),
@@ -85,7 +87,7 @@ public struct RepositorySyncTarget: Codable, Equatable, Hashable, Sendable {
     }
 
     private static func isBranch(_ value: String) -> Bool {
-        guard value.utf8.count <= 128, Self.isPath(value), !value.hasPrefix("-"),
+        guard value.utf8.count <= 128, self.isPath(value), !value.hasPrefix("-"),
               !value.contains(".."), !value.contains("@{"), value != "@", value != "HEAD",
               value.utf8.allSatisfy({
                   (65...90).contains($0) || (97...122).contains($0) || (48...57).contains($0) ||
@@ -161,7 +163,7 @@ public struct RepositorySyncSnapshot: Codable, Equatable, Sendable {
               self.actualBranch == self.target.branch, self.hazards.isEmpty,
               Self.isOID(self.headOID), Self.isOID(self.canonicalOID),
               self.headOID.count == self.canonicalOID.count,
-              (0...1000000).contains(self.ahead), (0...1000000).contains(self.behind)
+              (0...1_000_000).contains(self.ahead), (0...1_000_000).contains(self.behind)
         else { throw RepositorySyncError.unsafeState }
         let age = now.timeIntervalSince(self.observedAt)
         guard age.isFinite, age >= 0, age <= 60 else { throw RepositorySyncError.stalePlan }
@@ -266,7 +268,9 @@ public enum RepositorySyncState: String, Codable, Sendable {
     case notApplied
     case cancelled
 
-    public var isTerminal: Bool { self == .applied || self == .notApplied || self == .cancelled }
+    public var isTerminal: Bool {
+        self == .applied || self == .notApplied || self == .cancelled
+    }
 }
 
 public struct RepositorySyncRecord: Codable, Equatable, Sendable {
@@ -274,7 +278,9 @@ public struct RepositorySyncRecord: Codable, Equatable, Sendable {
     public internal(set) var state: RepositorySyncState = .pending
     public internal(set) var cancellationRequested = false
 
-    public init(plan: RepositorySyncPlan) { self.plan = plan }
+    public init(plan: RepositorySyncPlan) {
+        self.plan = plan
+    }
 }
 
 public struct RepositorySyncReceipt: Sendable {

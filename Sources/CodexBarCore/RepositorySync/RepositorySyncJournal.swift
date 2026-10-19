@@ -11,7 +11,7 @@ import Glibc
 /// The caller owns the directory and its ancestors. Never point this store into a repository working tree.
 public actor RepositorySyncJournal {
     private let directoryFD: Int32
-    private static let maximumBytes = 1048576
+    private static let maximumBytes = 1_048_576
     private static let maximumRecords = 256
 
     public init(directory: URL, createNew: Bool = false) throws {
@@ -156,7 +156,9 @@ public actor RepositorySyncJournal {
             guard contents.version == 1, records.count <= Self.maximumRecords,
                   Set(records.map(\.plan.operationID)).count == records.count
             else { throw RepositorySyncError.journalUnavailable }
-            for record in records { try record.plan.validate(at: record.plan.createdAt) }
+            for record in records {
+                try record.plan.validate(at: record.plan.createdAt)
+            }
             return records
         } catch {
             throw RepositorySyncError.journalUnavailable
