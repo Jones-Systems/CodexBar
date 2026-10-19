@@ -20,8 +20,11 @@ extension UsageStore {
         return self.claudeNativeProfileAccountSnapshots.map { account in
             guard let profile = state.profiles.first(where: { $0.alias == account.id.opaqueID }) else { return account }
             return self.nativeProfileAccount(
-                profile: profile, selectedAlias: state.selectedAlias, snapshot: account.snapshot,
-                error: account.error, sourceLabel: account.sourceLabel)
+                profile: profile,
+                selectedAlias: state.selectedAlias,
+                snapshot: account.snapshot,
+                error: account.error,
+                sourceLabel: account.sourceLabel)
         }
     }
 
@@ -29,7 +32,9 @@ extension UsageStore {
         guard let alias = self.settings.claudeNativeProfileAlias,
               self.settings.effectiveSelectedTokenAccount(for: .claude) == nil,
               ClaudeNativeProfileSelection.applies(
-                  alias: alias, source: self.settings.claudeUsageDataSource, hasTokenAccount: false,
+                  alias: alias,
+                  source: self.settings.claudeUsageDataSource,
+                  hasTokenAccount: false,
                   hasManualCookie: self.settings.claudeCookieSource == .manual && !self.settings.claudeCookieHeader
                       .isEmpty,
                   environment: self.environmentBase),
@@ -82,7 +87,8 @@ extension UsageStore {
 
         let identities = Dictionary(uniqueKeysWithValues: discovery.profiles.map { profile in
             (profile.alias, ClaudeNativeProfileSelection.environment(
-                base: self.environmentBase, alias: profile.alias,
+                base: self.environmentBase,
+                alias: profile.alias,
                 discovery: discovery)[ClaudeNativeProfileSelection.identityKey]!)
         })
         let previousIdentities = self.claudeNativeProfileAccountsState?.identities ?? [:]
@@ -90,14 +96,17 @@ extension UsageStore {
             ($0.id.opaqueID, $0)
         })
         self.claudeNativeProfileAccountsState = ClaudeNativeProfileAccountsState(
-            selectedAlias: selectedAlias, selectedIdentity: selectedIdentity,
+            selectedAlias: selectedAlias,
+            selectedIdentity: selectedIdentity,
             configRevision: self.settings.providerConfigRevision(for: .claude),
-            profiles: discovery.profiles, identities: identities)
+            profiles: discovery.profiles,
+            identities: identities)
         self.claudeNativeProfileAccountSnapshots = discovery.profiles.map { profile in
             let old = previousIdentities[profile.alias] == identities[profile.alias] ? previous[profile.alias] : nil
             let selected = profile.alias == selectedAlias
             return self.nativeProfileAccount(
-                profile: profile, selectedAlias: selectedAlias,
+                profile: profile,
+                selectedAlias: selectedAlias,
                 snapshot: selected ? self.snapshots[.claude] : old?.snapshot,
                 error: selected ? self.errors[.claude] : old?.error,
                 sourceLabel: selected ? self.lastSourceLabels[.claude] : old?.sourceLabel)
@@ -155,8 +164,11 @@ extension UsageStore {
                     sourceLabel = old?.sourceLabel
                 }
                 self.replaceNativeProfileRow(self.nativeProfileAccount(
-                    profile: profile, selectedAlias: selectedAlias, snapshot: snapshot,
-                    error: error, sourceLabel: sourceLabel))
+                    profile: profile,
+                    selectedAlias: selectedAlias,
+                    snapshot: snapshot,
+                    error: error,
+                    sourceLabel: sourceLabel))
                 self.claudeNativeProfileRefreshingAliases.remove(profile.alias)
                 self.claudeNativeProfileAccountsRevision &+= 1
             }
@@ -201,8 +213,11 @@ extension UsageStore {
               let selectedAlias = self.claudeNativeProfileAccountsState?.selectedAlias else { return }
         self.claudeNativeProfileAccountsState?.identities.removeValue(forKey: profile.alias)
         self.replaceNativeProfileRow(self.nativeProfileAccount(
-            profile: profile, selectedAlias: selectedAlias, snapshot: nil,
-            error: ClaudeNativeProfileSelectionError.unavailable.localizedDescription, sourceLabel: nil))
+            profile: profile,
+            selectedAlias: selectedAlias,
+            snapshot: nil,
+            error: ClaudeNativeProfileSelectionError.unavailable.localizedDescription,
+            sourceLabel: nil))
         self.claudeNativeProfileRefreshingAliases.remove(profile.alias)
         self.claudeNativeProfileAccountsRevision &+= 1
     }
@@ -214,8 +229,11 @@ extension UsageStore {
     }
 
     private func nativeProfileAccount(
-        profile: ClaudeFleetProfileDiscovery.Profile, selectedAlias: String,
-        snapshot: UsageSnapshot?, error: String?, sourceLabel: String?) -> ProviderAccountUsageSnapshot
+        profile: ClaudeFleetProfileDiscovery.Profile,
+        selectedAlias: String,
+        snapshot: UsageSnapshot?,
+        error: String?,
+        sourceLabel: String?) -> ProviderAccountUsageSnapshot
     {
         ProviderAccountUsageSnapshot(
             id: ProviderAccountIdentity(source: "claude-native-profile", opaqueID: profile.alias),
@@ -227,6 +245,9 @@ extension UsageStore {
                 verifiedAlias: profile.alias),
             accountEmail: snapshot?.accountEmail(for: .claude),
             isActive: profile.alias == selectedAlias,
-            canActivate: false, snapshot: snapshot, error: error, sourceLabel: sourceLabel)
+            canActivate: false,
+            snapshot: snapshot,
+            error: error,
+            sourceLabel: sourceLabel)
     }
 }

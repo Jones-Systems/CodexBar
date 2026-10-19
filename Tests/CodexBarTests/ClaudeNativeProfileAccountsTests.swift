@@ -19,13 +19,20 @@ enum ClaudeNativeProfileAccountsFixture {
         let configStore = CodexBarConfigStore(fileURL: root.appendingPathComponent("config.json"))
         try configStore.save(testConfigWithAllProvidersDisabled())
         let settings = SettingsStore(
-            userDefaults: InMemoryUserDefaults(), configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(), syntheticTokenStore: NoopSyntheticTokenStore(),
-            codexCookieStore: InMemoryCookieHeaderStore(), claudeCookieStore: InMemoryCookieHeaderStore(),
-            cursorCookieStore: InMemoryCookieHeaderStore(), opencodeCookieStore: InMemoryCookieHeaderStore(),
-            factoryCookieStore: InMemoryCookieHeaderStore(), minimaxCookieStore: InMemoryMiniMaxCookieStore(),
-            minimaxAPITokenStore: InMemoryMiniMaxAPITokenStore(), kimiTokenStore: InMemoryKimiTokenStore(),
-            augmentCookieStore: InMemoryCookieHeaderStore(), ampCookieStore: InMemoryCookieHeaderStore(),
+            userDefaults: InMemoryUserDefaults(),
+            configStore: configStore,
+            zaiTokenStore: NoopZaiTokenStore(),
+            syntheticTokenStore: NoopSyntheticTokenStore(),
+            codexCookieStore: InMemoryCookieHeaderStore(),
+            claudeCookieStore: InMemoryCookieHeaderStore(),
+            cursorCookieStore: InMemoryCookieHeaderStore(),
+            opencodeCookieStore: InMemoryCookieHeaderStore(),
+            factoryCookieStore: InMemoryCookieHeaderStore(),
+            minimaxCookieStore: InMemoryMiniMaxCookieStore(),
+            minimaxAPITokenStore: InMemoryMiniMaxAPITokenStore(),
+            kimiTokenStore: InMemoryKimiTokenStore(),
+            augmentCookieStore: InMemoryCookieHeaderStore(),
+            ampCookieStore: InMemoryCookieHeaderStore(),
             copilotTokenStore: InMemoryCopilotTokenStore(),
             tokenAccountStore: InMemoryTokenAccountStore(fileURL: root.appendingPathComponent("accounts.json")),
             antigravityOAuthCredentialsStore: AntigravityOAuthCredentialsStore(
@@ -43,9 +50,13 @@ enum ClaudeNativeProfileAccountsFixture {
         settings.mergeIcons = false
         let environment = ["HOME": root.path, "CODEX_HOME": root.appendingPathComponent("codex").path]
         let store = UsageStore(
-            fetcher: UsageFetcher(environment: environment), browserDetection: BrowserDetection(cacheTTL: 0),
-            settings: settings, startupBehavior: .testing, environmentBase: environment,
-            widgetSnapshotURL: root.appendingPathComponent("widget.json"), widgetTimelineReloader: {})
+            fetcher: UsageFetcher(environment: environment),
+            browserDetection: BrowserDetection(cacheTTL: 0),
+            settings: settings,
+            startupBehavior: .testing,
+            environmentBase: environment,
+            widgetSnapshotURL: root.appendingPathComponent("widget.json"),
+            widgetTimelineReloader: {})
         store._cancelPlanUtilizationHistoryLoadForTesting()
         defer { store.clearClaudeNativeProfileAccountState() }
         try await ClaudeFleetProfileDiscovery.$discoveryOverride.withValue(self.discovery(root: root)) {
@@ -74,23 +85,32 @@ enum ClaudeNativeProfileAccountsFixture {
     static func snapshot(_ percent: Double = 24, timestamp: TimeInterval = 1_800_000_000) -> UsageSnapshot {
         UsageSnapshot(
             primary: RateWindow(usedPercent: percent, windowMinutes: 300, resetsAt: nil, resetDescription: nil),
-            secondary: nil, updatedAt: Date(timeIntervalSince1970: timestamp),
+            secondary: nil,
+            updatedAt: Date(timeIntervalSince1970: timestamp),
             identity: ProviderIdentitySnapshot(
-                providerID: .claude, accountEmail: "synthetic@example.test", accountOrganization: nil,
+                providerID: .claude,
+                accountEmail: "synthetic@example.test",
+                accountOrganization: nil,
                 loginMethod: nil))
     }
 
     static func outcome(_ percent: Double = 24) -> ProviderFetchOutcome {
         ProviderFetchOutcome(result: .success(ProviderFetchResult(
-            usage: self.snapshot(percent), credits: nil, dashboard: nil,
-            sourceLabel: "CLI", strategyID: "synthetic-native", strategyKind: .cli)), attempts: [])
+            usage: self.snapshot(percent),
+            credits: nil,
+            dashboard: nil,
+            sourceLabel: "CLI",
+            strategyID: "synthetic-native",
+            strategyKind: .cli)), attempts: [])
     }
 }
 
 @MainActor
 struct ClaudeNativeProfileAccountsTests {
     @Test(arguments: [false, true])
-    func `discovery change during side fetch discards result and retires prior owner usage`(removed: Bool) async throws {
+    func `discovery change during side fetch discards result and retires prior owner usage`(removed: Bool)
+        async throws
+    {
         try await ClaudeNativeProfileAccountsFixture.run { _, store, root in
             store
                 ._test_claudeNativeProfileFetchOutcomeOverride = { _ in ClaudeNativeProfileAccountsFixture.outcome(67) }
@@ -191,7 +211,8 @@ struct ClaudeNativeProfileAccountsTests {
                     generation: request.generation,
                     enablementRevision: settings.providerEnablementRevision(for: .claude),
                     configRevision: settings.providerConfigRevision(for: .claude),
-                    tokenCostScopeSignature: nil, allowDisabled: false)
+                    tokenCostScopeSignature: nil,
+                    allowDisabled: false)
                 let refresh = Task {
                     await store.refreshClaudeNativeProfileAccountsAfterMain(generation: request.generation)
                 }
@@ -297,7 +318,8 @@ struct ClaudeNativeProfileAccountsTests {
             let context = ProviderRuntimeContext(provider: .claude, settings: settings, store: store)
             if stop { runtime.stop(context: context) } else {
                 settings.setProviderEnabled(
-                    provider: .claude, metadata: ProviderDescriptorRegistry.descriptor(for: .claude).metadata,
+                    provider: .claude,
+                    metadata: ProviderDescriptorRegistry.descriptor(for: .claude).metadata,
                     enabled: false)
                 runtime.settingsDidChange(context: context)
             }

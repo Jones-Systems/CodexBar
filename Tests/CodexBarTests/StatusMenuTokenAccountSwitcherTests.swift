@@ -206,8 +206,10 @@ final class StatusMenuTokenAccountSwitcherTests: XCTestCase {
                 pipeline: ProviderFetchPipeline { _ in [BoundedAccountFetchStrategy(transport: transport)] }),
             cli: base.descriptor.cli)
         store.providerSpecs[.claude] = ProviderSpec(
-            style: base.style, isEnabled: base.isEnabled,
-            descriptor: descriptor, makeFetchContext: base.makeFetchContext)
+            style: base.style,
+            isEnabled: base.isEnabled,
+            descriptor: descriptor,
+            makeFetchContext: base.makeFetchContext)
         return (store, accounts, transport)
     }
 

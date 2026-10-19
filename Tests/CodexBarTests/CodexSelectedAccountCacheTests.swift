@@ -49,9 +49,15 @@ struct CodexSelectedAccountCacheTests {
         let sibling = try #require(projection.visibleAccounts.first { !$0.isActive })
         let wrongWorkspace = self.replacingIdentity(of: active, workspace: "other-workspace")
         let removed = CodexVisibleAccount(
-            id: "removed", email: "removed@example.test", workspaceAccountID: "removed-workspace",
-            storedAccountID: nil, selectionSource: .profileHome(path: "/fixture/removed"),
-            isActive: false, isLive: false, canReauthenticate: false, canRemove: false)
+            id: "removed",
+            email: "removed@example.test",
+            workspaceAccountID: "removed-workspace",
+            storedAccountID: nil,
+            selectionSource: .profileHome(path: "/fixture/removed"),
+            isActive: false,
+            isLive: false,
+            canReauthenticate: false,
+            canRemove: false)
         fixture.store.codexAccountSnapshots = [wrongWorkspace, sibling, removed].map(self.cachedRow)
 
         #expect(fixture.store.hydrateSelectedCodexAccountSnapshot(
@@ -175,10 +181,16 @@ struct CodexSelectedAccountCacheTests {
         of account: CodexVisibleAccount, workspace: String? = nil, fingerprint: String? = nil) -> CodexVisibleAccount
     {
         CodexVisibleAccount(
-            id: account.id, email: account.email, workspaceAccountID: workspace ?? account.workspaceAccountID,
+            id: account.id,
+            email: account.email,
+            workspaceAccountID: workspace ?? account.workspaceAccountID,
             authFingerprint: fingerprint ?? account.authFingerprint,
-            storedAccountID: account.storedAccountID, selectionSource: account.selectionSource,
-            isActive: account.isActive, isLive: account.isLive, canReauthenticate: false, canRemove: false)
+            storedAccountID: account.storedAccountID,
+            selectionSource: account.selectionSource,
+            isActive: account.isActive,
+            isLive: account.isLive,
+            canReauthenticate: false,
+            canRemove: false)
     }
 
     private func installProvider(on store: UsageStore, loader: @escaping @Sendable () async throws -> UsageSnapshot) {
@@ -190,21 +202,31 @@ struct CodexSelectedAccountCacheTests {
         let root = TestFixtureScratch.root.appendingPathComponent("CodexSelectedAccountCacheTests-\(UUID().uuidString)")
         let profiles = ["north", "south"].map { alias in
             ObservedSystemCodexAccount(
-                email: "\(alias)@example.test", workspaceAccountID: "workspace-\(alias)",
-                authFingerprint: "fingerprint-\(alias)", codexHomePath: root.appendingPathComponent(alias).path,
-                observedAt: Self.cachedAt, identity: .providerAccount(id: "workspace-\(alias)"))
+                email: "\(alias)@example.test",
+                workspaceAccountID: "workspace-\(alias)",
+                authFingerprint: "fingerprint-\(alias)",
+                codexHomePath: root.appendingPathComponent(alias).path,
+                observedAt: Self.cachedAt,
+                identity: .providerAccount(id: "workspace-\(alias)"))
         }
         let loader = CacheAccountSnapshotLoader(profiles: profiles)
         let settings = SettingsStore(
             userDefaults: InMemoryUserDefaults(),
             configStore: testConfigStore(suiteName: "CodexSelectedAccountCacheTests-\(UUID().uuidString)"),
-            zaiTokenStore: NoopZaiTokenStore(), syntheticTokenStore: NoopSyntheticTokenStore(),
-            codexCookieStore: InMemoryCookieHeaderStore(), claudeCookieStore: InMemoryCookieHeaderStore(),
-            cursorCookieStore: InMemoryCookieHeaderStore(), opencodeCookieStore: InMemoryCookieHeaderStore(),
-            factoryCookieStore: InMemoryCookieHeaderStore(), minimaxCookieStore: InMemoryMiniMaxCookieStore(),
-            minimaxAPITokenStore: InMemoryMiniMaxAPITokenStore(), kimiTokenStore: InMemoryKimiTokenStore(),
-            augmentCookieStore: InMemoryCookieHeaderStore(), ampCookieStore: InMemoryCookieHeaderStore(),
-            copilotTokenStore: InMemoryCopilotTokenStore(), tokenAccountStore: InMemoryTokenAccountStore(),
+            zaiTokenStore: NoopZaiTokenStore(),
+            syntheticTokenStore: NoopSyntheticTokenStore(),
+            codexCookieStore: InMemoryCookieHeaderStore(),
+            claudeCookieStore: InMemoryCookieHeaderStore(),
+            cursorCookieStore: InMemoryCookieHeaderStore(),
+            opencodeCookieStore: InMemoryCookieHeaderStore(),
+            factoryCookieStore: InMemoryCookieHeaderStore(),
+            minimaxCookieStore: InMemoryMiniMaxCookieStore(),
+            minimaxAPITokenStore: InMemoryMiniMaxAPITokenStore(),
+            kimiTokenStore: InMemoryKimiTokenStore(),
+            augmentCookieStore: InMemoryCookieHeaderStore(),
+            ampCookieStore: InMemoryCookieHeaderStore(),
+            copilotTokenStore: InMemoryCopilotTokenStore(),
+            tokenAccountStore: InMemoryTokenAccountStore(),
             keychainAccessPolicy: SettingsStoreKeychainAccessPolicy(
                 setDisabled: { _ in }, isExplicitlyDisabled: { true }),
             performInitialProviderDetection: false)
@@ -222,8 +244,10 @@ struct CodexSelectedAccountCacheTests {
         let store = UsageStore(
             fetcher: UsageFetcher(environment: environment),
             browserDetection: BrowserDetection(homeDirectory: root.path, cacheTTL: 0),
-            settings: settings, codexAccountUsageSnapshotStore: persistence,
-            startupBehavior: .testing, environmentBase: environment)
+            settings: settings,
+            codexAccountUsageSnapshotStore: persistence,
+            startupBehavior: .testing,
+            environmentBase: environment)
         store._test_codexResetCreditsFetcherOverride = { _ in nil }
         store._test_widgetSnapshotSaveOverride = { _ in }
         return Fixture(settings: settings, store: store, persistence: persistence, loader: loader)
@@ -265,9 +289,12 @@ private final class CacheAccountSnapshotLoader: @unchecked Sendable {
     func load(source: CodexActiveSource) -> CodexAccountReconciliationSnapshot {
         self.lock.withLock { self.count += 1 }
         return CodexAccountReconciliationSnapshot(
-            storedAccounts: [], activeStoredAccount: nil, liveSystemAccount: nil,
+            storedAccounts: [],
+            activeStoredAccount: nil,
+            liveSystemAccount: nil,
             profileHomeAccounts: self.profiles,
             matchingStoredAccountForLiveSystemAccount: nil,
-            activeSource: source, hasUnreadableAddedAccountStore: false)
+            activeSource: source,
+            hasUnreadableAddedAccountStore: false)
     }
 }

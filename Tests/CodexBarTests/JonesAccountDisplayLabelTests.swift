@@ -9,8 +9,10 @@ struct JonesAccountDisplayLabelTests {
     @Test
     func `local override wins and verified aliases supply short labels`() {
         #expect(JonesAccountDisplayLabel.resolve(
-            provider: .codex, profileIdentity: "profile:one",
-            verifiedAlias: "north", override: "  Primary  ") == "Primary")
+            provider: .codex,
+            profileIdentity: "profile:one",
+            verifiedAlias: "north",
+            override: "  Primary  ") == "Primary")
         #expect(JonesAccountDisplayLabel.resolve(
             provider: .codex, profileIdentity: "profile:one", verifiedAlias: "north", override: "  ") == "North")
         #expect(JonesAccountDisplayLabel.resolve(
@@ -103,20 +105,28 @@ struct JonesAccountDisplayLabelTests {
         ]
         let settings = self.settings(defaults: InMemoryUserDefaults())
         settings.setAccountDisplayLabel(
-            "Primary", provider: .codex,
+            "Primary",
+            provider: .codex,
             profileIdentity: JonesAccountDisplayLabel.codexProfileIdentity(for: accounts[0]))
         let labels = settings.codexAccountDisplayLabels(for: accounts)
         var selected: CodexVisibleAccount?
         let view = CodexAccountSwitcherView(
-            accounts: accounts, selectedAccountID: accounts[0].id, width: 320,
-            displayLabels: labels, onSelect: { selected = $0 })
+            accounts: accounts,
+            selectedAccountID: accounts[0].id,
+            width: 320,
+            displayLabels: labels,
+            onSelect: { selected = $0 })
         #expect(view._test_buttonTitles() == ["Primary", "South"])
         #expect(view._test_buttonToolTips() == ["Primary", "South"])
         view._test_selectAccount(id: accounts[1].id)
         #expect(selected == accounts[1])
         let hidden = CodexAccountSwitcherView(
-            accounts: accounts, selectedAccountID: accounts[0].id, width: 320,
-            displayLabels: labels, hidePersonalInfo: true, onSelect: { _ in })
+            accounts: accounts,
+            selectedAccountID: accounts[0].id,
+            width: 320,
+            displayLabels: labels,
+            hidePersonalInfo: true,
+            onSelect: { _ in })
         #expect(hidden._test_buttonTitles() == ["", ""])
         #expect(hidden._test_buttonToolTips() == ["", ""])
     }
@@ -159,11 +169,16 @@ struct JonesAccountDisplayLabelTests {
         settings.setAccountDisplayLabel("Primary", provider: .codex, profileIdentity: "system")
         let fetcher = UsageFetcher(environment: [:])
         let store = UsageStore(
-            fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings,
-            startupBehavior: .testing, environmentBase: [:])
+            fetcher: fetcher,
+            browserDetection: BrowserDetection(cacheTTL: 0),
+            settings: settings,
+            startupBehavior: .testing,
+            environmentBase: [:])
         store._setSnapshotForTesting(self.snapshot(email: "owner@example.test", provider: .codex), provider: .codex)
         try withStatusItemControllerForTesting(
-            store: store, settings: settings, fetcher: fetcher,
+            store: store,
+            settings: settings,
+            fetcher: fetcher,
             account: AccountInfo(email: nil, plan: nil))
         { controller in
             let model = try #require(controller.menuCardModel(for: .codex))
@@ -202,9 +217,15 @@ struct JonesAccountDisplayLabelTests {
 
     private func account(path: String, alias: String? = nil) -> CodexVisibleAccount {
         CodexVisibleAccount(
-            id: path, email: "owner@example.test", storedAccountID: nil,
-            selectionSource: .profileHome(path: path), isActive: false, isLive: false,
-            canReauthenticate: false, canRemove: false, fleetProfileAlias: alias)
+            id: path,
+            email: "owner@example.test",
+            storedAccountID: nil,
+            selectionSource: .profileHome(path: path),
+            isActive: false,
+            isLive: false,
+            canReauthenticate: false,
+            canRemove: false,
+            fleetProfileAlias: alias)
     }
 
     private func snapshot(email: String, provider: UsageProvider) -> UsageSnapshot {
@@ -226,13 +247,20 @@ struct JonesAccountDisplayLabelTests {
             provider: provider,
             metadata: #require(ProviderDefaults.metadata[provider]),
             snapshot: self.snapshot(email: email, provider: provider),
-            credits: nil, creditsError: nil, dashboard: nil, dashboardError: nil,
-            tokenSnapshot: nil, tokenError: nil,
+            credits: nil,
+            creditsError: nil,
+            dashboard: nil,
+            dashboardError: nil,
+            tokenSnapshot: nil,
+            tokenError: nil,
             account: AccountInfo(email: email, plan: nil),
             accountDisplayLabel: label,
-            isRefreshing: false, lastError: nil,
-            usageBarsShowUsed: false, resetTimeDisplayStyle: .countdown,
-            tokenCostUsageEnabled: false, showOptionalCreditsAndExtraUsage: false,
+            isRefreshing: false,
+            lastError: nil,
+            usageBarsShowUsed: false,
+            resetTimeDisplayStyle: .countdown,
+            tokenCostUsageEnabled: false,
+            showOptionalCreditsAndExtraUsage: false,
             hidePersonalInfo: hidePersonalInfo,
             now: Date(timeIntervalSince1970: 1_782_000_000)))
     }

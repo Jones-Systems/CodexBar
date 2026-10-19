@@ -85,37 +85,6 @@ final class StatusItemController: NSObject, NSMenuDelegate, StatusItemControllin
     var menuRefreshEnabledOverrideForTesting: Bool?
     #endif
 
-    typealias Factory =
-        @MainActor (
-            UsageStore,
-            SettingsStore,
-            AccountInfo,
-            UpdaterProviding,
-            PreferencesSelection,
-            ManagedCodexAccountCoordinator,
-            CodexAccountPromotionCoordinator)
-        -> StatusItemControlling
-    // swiftlint:disable:next function_parameter_count
-    static func makeDefaultController(
-        store: UsageStore,
-        settings: SettingsStore,
-        account: AccountInfo,
-        updater: UpdaterProviding,
-        selection: PreferencesSelection,
-        managedCodexAccountCoordinator: ManagedCodexAccountCoordinator,
-        codexAccountPromotionCoordinator: CodexAccountPromotionCoordinator)
-        -> StatusItemControlling
-    {
-        StatusItemController(
-            store: store,
-            settings: settings,
-            account: account,
-            updater: updater,
-            preferencesSelection: selection,
-            managedCodexAccountCoordinator: managedCodexAccountCoordinator,
-            codexAccountPromotionCoordinator: codexAccountPromotionCoordinator)
-    }
-
     static let defaultFactory: Factory = StatusItemController.makeDefaultController
 
     static var factory: Factory = StatusItemController.defaultFactory
@@ -948,6 +917,39 @@ final class StatusItemController: NSObject, NSMenuDelegate, StatusItemControllin
         self.screenChangeVisibilityTask?.cancel()
         self.pendingScreenChangePreviousCount = nil
         NotificationCenter.default.removeObserver(self)
+    }
+}
+
+extension StatusItemController {
+    typealias Factory =
+        @MainActor (
+            UsageStore,
+            SettingsStore,
+            AccountInfo,
+            UpdaterProviding,
+            PreferencesSelection,
+            ManagedCodexAccountCoordinator,
+            CodexAccountPromotionCoordinator)
+        -> StatusItemControlling
+    // swiftlint:disable:next function_parameter_count
+    static func makeDefaultController(
+        store: UsageStore,
+        settings: SettingsStore,
+        account: AccountInfo,
+        updater: UpdaterProviding,
+        selection: PreferencesSelection,
+        managedCodexAccountCoordinator: ManagedCodexAccountCoordinator,
+        codexAccountPromotionCoordinator: CodexAccountPromotionCoordinator)
+        -> StatusItemControlling
+    {
+        StatusItemController(
+            store: store,
+            settings: settings,
+            account: account,
+            updater: updater,
+            preferencesSelection: selection,
+            managedCodexAccountCoordinator: managedCodexAccountCoordinator,
+            codexAccountPromotionCoordinator: codexAccountPromotionCoordinator)
     }
 }
 

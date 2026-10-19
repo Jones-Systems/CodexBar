@@ -281,13 +281,6 @@ extension CodexVisibleAccountProjection {
                 draft.selectionSource == .profileHome(path: path)
             }
 
-            let fleetProfileAlias: String? = if case let .profileHome(path) = draft.selectionSource,
-                                                snapshot.fleetProfileHomePaths.contains(path)
-            {
-                URL(fileURLWithPath: path).lastPathComponent
-            } else {
-                nil
-            }
             return CodexVisibleAccount(
                 id: id,
                 email: draft.email,
@@ -301,7 +294,9 @@ extension CodexVisibleAccountProjection {
                 canReauthenticate: draft.canReauthenticate,
                 canRemove: draft.canRemove,
                 systemPromotionTarget: draft.systemPromotionTarget,
-                fleetProfileAlias: fleetProfileAlias)
+                fleetProfileAlias: Self.fleetProfileAlias(
+                    for: draft.selectionSource,
+                    enrolledHomePaths: snapshot.fleetProfileHomePaths))
         }.sorted { lhs, rhs in
             if lhs.email != rhs.email {
                 return lhs.email < rhs.email
@@ -320,6 +315,11 @@ extension CodexVisibleAccountProjection {
             activeVisibleAccountID: visibleAccounts.first { $0.isActive }?.id,
             liveVisibleAccountID: visibleAccounts.first { $0.isLive }?.id,
             hasUnreadableAddedAccountStore: snapshot.hasUnreadableAddedAccountStore)
+    }
+
+    private static func fleetProfileAlias(for source: CodexActiveSource, enrolledHomePaths: [String]) -> String? {
+        guard case let .profileHome(path) = source, enrolledHomePaths.contains(path) else { return nil }
+        return URL(fileURLWithPath: path).lastPathComponent
     }
 
     private static func storedAccountDrafts(

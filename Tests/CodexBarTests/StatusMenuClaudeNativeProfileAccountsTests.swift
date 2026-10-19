@@ -11,9 +11,11 @@ struct StatusMenuClaudeNativeProfileAccountsTests {
     func `two native profiles render selected card and side row without switching or hidden tail`() async throws {
         try await ClaudeNativeProfileAccountsFixture.run { settings, store, root in
             settings.setAccountDisplayLabel(
-                "Side account", provider: .claude,
+                "Side account",
+                provider: .claude,
                 profileIdentity: JonesAccountDisplayLabel.claudeProfileIdentity(
-                    alias: "jace", home: root.path,
+                    alias: "jace",
+                    home: root.path,
                     configDirectory: root.appendingPathComponent(".claude-t3/jace").path))
             store.snapshots[.claude] = ClaudeNativeProfileAccountsFixture.snapshot(12)
             store
@@ -36,6 +38,7 @@ struct StatusMenuClaudeNativeProfileAccountsTests {
                 #expect(plan.rows.count == 2)
                 #expect(accounts.last?.displayLabel == "Side account")
                 let menu = controller.makeMenu(for: .claude)
+                controller.refreshMenuForOpenIfNeeded(menu, provider: .claude)
                 let ids = menu.items.compactMap { $0.representedObject as? String }
                     .filter { $0.hasPrefix("claudeNativeProfile") }
                 #expect(ids == ["claudeNativeProfileCard-default", "claudeNativeProfileCompact-jace"])
@@ -44,7 +47,7 @@ struct StatusMenuClaudeNativeProfileAccountsTests {
                 #expect(controller.claudeNativeProfileCardModel(for: side)?.email == "Side account")
                 #expect(controller.menuCardModel(for: .claude)?.email == "default")
                 settings.hidePersonalInfo = true
-                #expect(controller.claudeNativeProfileCardModel(for: side)?.email == "")
+                #expect(controller.claudeNativeProfileCardModel(for: side)?.email.isEmpty == true)
             }
         }
     }
@@ -101,9 +104,13 @@ struct StatusMenuClaudeNativeProfileAccountsTests {
     @Test(arguments: [false, true])
     func `compact loading accessibility preserves existing quota display`(hasUsage: Bool) {
         let model = MenuCardCompactAccountRowView.Model(
-            label: "Side account", headroomPercent: hasUsage ? 33 : nil,
-            severity: hasUsage ? .warning : nil, constraintDetail: nil,
-            hasError: false, showsBestBadge: false, isRefreshing: true)
+            label: "Side account",
+            headroomPercent: hasUsage ? 33 : nil,
+            severity: hasUsage ? .warning : nil,
+            constraintDetail: nil,
+            hasError: false,
+            showsBestBadge: false,
+            isRefreshing: true)
         let view = MenuCardCompactAccountRowView(model: model, progressColor: .blue, width: 320)
         #expect(view.accessibilityText.contains("Refreshing") == !hasUsage)
         #expect(view.accessibilityText.contains("33%") == hasUsage)
@@ -115,7 +122,9 @@ struct StatusMenuClaudeNativeProfileAccountsTests {
     }
 
     @Test
-    func `unavailable native row keeps its error and swap and token presentation policies stay unchanged`() async throws {
+    func `unavailable native row keeps its error and swap and token presentation policies stay unchanged`()
+        async throws
+    {
         try await ClaudeNativeProfileAccountsFixture.run { settings, store, _ in
             store._test_claudeNativeProfileFetchOutcomeOverride = { _ in
                 ProviderFetchOutcome(result: .failure(ClaudeNativeProfileSelectionError.unavailable), attempts: [])
@@ -137,7 +146,10 @@ struct StatusMenuClaudeNativeProfileAccountsTests {
                     return nil
                 }.first)
                 let rendering = StatusItemController.CompactAccountMenuRendering(
-                    plan: plan, accounts: accounts, idPrefix: "claudeNativeProfile", cardModel: { _ in nil },
+                    plan: plan,
+                    accounts: accounts,
+                    idPrefix: "claudeNativeProfile",
+                    cardModel: { _ in nil },
                     accountStatusText: [side.id: "Unavailable synthetic@example.test"])
                 let row = controller.compactAccountRowModel(for: compact, rendering: rendering)
                 #expect(row.constraintDetail == "Unavailable synthetic@example.test")
@@ -152,8 +164,12 @@ struct StatusMenuClaudeNativeProfileAccountsTests {
                     let other = accounts.map {
                         ProviderAccountUsageSnapshot(
                             id: ProviderAccountIdentity(source: source, opaqueID: $0.id.opaqueID),
-                            provider: .claude, displayLabel: $0.displayLabel, isActive: $0.isActive,
-                            canActivate: !$0.isActive, snapshot: $0.snapshot, error: $0.error,
+                            provider: .claude,
+                            displayLabel: $0.displayLabel,
+                            isActive: $0.isActive,
+                            canActivate: !$0.isActive,
+                            snapshot: $0.snapshot,
+                            error: $0.error,
                             sourceLabel: $0.sourceLabel)
                     }
                     #expect(!controller.compactAccountPlan(for: .claude, accounts: other).usesCompactLayout)

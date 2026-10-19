@@ -163,6 +163,7 @@ struct OverviewFleetAccountsTests {
             self.seedCodex(6, controller: controller)
             self.seedClaude(2, controller: controller)
             let menu = controller.makeMenu()
+            controller.refreshMenuForOpenIfNeeded(menu, provider: nil)
             let ids = self.identifiers(in: menu)
             let codexIndex = try #require(ids.firstIndex(of: "overviewRow-codex"))
             let accountIDs = ids.filter { $0.hasPrefix("overviewAccount-codex-") }
@@ -225,7 +226,9 @@ struct OverviewFleetAccountsTests {
         try self.withFixture(providers: [.codex, .gemini]) { controller in
             self.seedCodex(1, controller: controller)
             controller.store.snapshots[.gemini] = Self.snapshot(provider: .gemini)
-            let ids = self.identifiers(in: controller.makeMenu())
+            let overviewMenu = controller.makeMenu()
+            controller.refreshMenuForOpenIfNeeded(overviewMenu, provider: nil)
+            let ids = self.identifiers(in: overviewMenu)
             #expect(ids.contains("overviewRow-codex"))
             #expect(ids.contains("overviewRow-gemini"))
             #expect(!ids.contains { $0.hasPrefix("overviewAccount-") })
@@ -288,8 +291,13 @@ struct OverviewFleetAccountsTests {
             self.seedClaude(2, controller: controller)
             let id = ProviderAccountIdentity(source: "claude-native-profile", opaqueID: "secondary")
             controller.store.claudeNativeProfileAccountSnapshots[1] = ProviderAccountUsageSnapshot(
-                id: id, provider: .claude, displayLabel: "secondary", isActive: false,
-                snapshot: nil, error: nil, sourceLabel: nil)
+                id: id,
+                provider: .claude,
+                displayLabel: "secondary",
+                isActive: false,
+                snapshot: nil,
+                error: nil,
+                sourceLabel: nil)
             controller.store.claudeNativeProfileRefreshingAliases.insert("secondary")
             let row = try #require(controller.overviewFleetAccountRows(for: .claude).first)
             #expect(row.accountID == id)
@@ -330,7 +338,9 @@ struct OverviewFleetAccountsTests {
             #expect(controller.overviewProviderScopes(enabledProviders: providers).visible.count == 6)
             _ = controller.settings.setMergedOverviewProviderSelection(
                 provider: .codex, isSelected: false, activeProviders: providers)
-            let ids = self.identifiers(in: controller.makeMenu())
+            let menu = controller.makeMenu()
+            controller.refreshMenuForOpenIfNeeded(menu, provider: nil)
+            let ids = self.identifiers(in: menu)
             #expect(!ids.contains("overviewRow-codex"))
             #expect(!ids.contains { $0.hasPrefix("overviewAccount-codex-") })
             #expect(ids.count(where: { $0.hasPrefix("overviewRow-") }) <= 6)

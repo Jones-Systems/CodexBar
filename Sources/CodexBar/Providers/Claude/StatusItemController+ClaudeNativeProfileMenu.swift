@@ -16,7 +16,9 @@ extension StatusItemController {
                 accountStatusText: Dictionary(uniqueKeysWithValues: accounts.compactMap { account in
                     account.error.map { (account.id, $0) }
                 })),
-            to: menu, captureMenu: captureMenu, context: context)
+            to: menu,
+            captureMenu: captureMenu,
+            context: context)
     }
 
     func claudeNativeProfileCardModel(for account: ProviderAccountUsageSnapshot) -> UsageMenuCardView.Model? {

@@ -980,31 +980,6 @@ extension UsageStore {
         self.codexAccountUsageSnapshotStore?.store(currentSnapshots)
     }
 
-    private func updateSelectedCodexCachedFailure(_ error: Error, expectedGuard: CodexAccountScopedRefreshGuard) {
-        guard let cached = self.settings.cachedCodexAccountMenuProjection,
-              cached.activeSource == expectedGuard.source
-        else { return }
-        let projection = cached.projection
-        var records = self.prunedCodexAccountSnapshots(for: projection)
-        guard let activeID = projection.activeVisibleAccountID,
-              let index = records.firstIndex(where: { $0.id == activeID }),
-              Self.codexScopedRefreshGuardsMatchAccount(
-                  expectedGuard, Self.codexScopedRefreshGuard(for: records[index].account))
-        else { return }
-        let prior = records[index]
-        let message = self.tokenAccountSnapshotErrorMessage(error)
-        let preserve = Self.shouldPreserveCodexAccountSnapshotOnFailure(message)
-        records[index] = CodexAccountUsageSnapshot(
-            account: prior.account,
-            snapshot: preserve ? prior.snapshot : nil,
-            error: message,
-            sourceLabel: preserve ? prior.sourceLabel : nil,
-            credits: preserve ? prior.credits : nil,
-            weeklyResetCandidate: preserve ? prior.weeklyResetCandidate : nil)
-        self.codexAccountSnapshots = records
-        self.codexAccountUsageSnapshotStore?.store(records)
-    }
-
     private func clearDisabledProviderRefreshState(_ provider: UsageProvider) async {
         self.clearProviderRuntimeState(provider)
     }

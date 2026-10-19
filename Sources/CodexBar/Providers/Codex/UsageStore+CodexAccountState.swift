@@ -30,6 +30,31 @@ struct CodexAccountScopedRefreshGuard: Equatable {
 
 @MainActor
 extension UsageStore {
+    func updateSelectedCodexCachedFailure(_ error: Error, expectedGuard: CodexAccountScopedRefreshGuard) {
+        guard let cached = self.settings.cachedCodexAccountMenuProjection,
+              cached.activeSource == expectedGuard.source
+        else { return }
+        let projection = cached.projection
+        var records = self.prunedCodexAccountSnapshots(for: projection)
+        guard let activeID = projection.activeVisibleAccountID,
+              let index = records.firstIndex(where: { $0.id == activeID }),
+              Self.codexScopedRefreshGuardsMatchAccount(
+                  expectedGuard, Self.codexScopedRefreshGuard(for: records[index].account))
+        else { return }
+        let prior = records[index]
+        let message = self.tokenAccountSnapshotErrorMessage(error)
+        let preserve = Self.shouldPreserveCodexAccountSnapshotOnFailure(message)
+        records[index] = CodexAccountUsageSnapshot(
+            account: prior.account,
+            snapshot: preserve ? prior.snapshot : nil,
+            error: message,
+            sourceLabel: preserve ? prior.sourceLabel : nil,
+            credits: preserve ? prior.credits : nil,
+            weeklyResetCandidate: preserve ? prior.weeklyResetCandidate : nil)
+        self.codexAccountSnapshots = records
+        self.codexAccountUsageSnapshotStore?.store(records)
+    }
+
     func accountScopedTokenSnapshot(for provider: UsageProvider) -> CostUsageTokenSnapshot? {
         guard provider == .codex, !self.settings.codexLocalSessionCostLedgerEnabled else {
             return self.tokenSnapshots[provider.instanceID]
@@ -77,7 +102,8 @@ extension UsageStore {
     @discardableResult
     func prepareCodexAccountScopedRefreshIfNeeded(
         forceInvalidation: Bool = false,
-        currentGuardOverride: CodexAccountScopedRefreshGuard? = nil) -> Bool
+        currentGuardOverride: CodexAccountScopedRefreshGuard? = nil,
+        hydrateCachedUsage: Bool = true) -> Bool
     {
         let currentGuard = currentGuardOverride ?? self.freshCodexAccountScopedRefreshGuard(
             preferCurrentSnapshot: false,
@@ -90,7 +116,7 @@ extension UsageStore {
         } ?? false
         let tokenCostScopeChanged = self.invalidateCodexTokenSnapshotIfScopeChanged()
         guard forceInvalidation || accountChanged || tokenCostScopeChanged else {
-            guard self.snapshots[.codex] == nil else { return false }
+            guard hydrateCachedUsage, self.snapshots[.codex] == nil else { return false }
             return self.hydrateSelectedCodexAccountSnapshot(expectedGuard: currentGuard) != nil
         }
 
@@ -109,7 +135,7 @@ extension UsageStore {
 
         self.clearCodexOpenAIWebStateForAccountTransition(targetEmail: self.codexAccountEmailForOpenAIDashboard())
 
-        if !forceInvalidation {
+        if !forceInvalidation, hydrateCachedUsage {
             self.hydrateSelectedCodexAccountSnapshot(expectedGuard: currentGuard)
         }
         self.persistWidgetSnapshot(reason: "codex-account-invalidate")
@@ -244,8 +270,10 @@ extension UsageStore {
         let clearedUsage = self.reconcileCodexPublishedUsageOwner(
             with: currentGuard,
             persistWidgetSnapshot: false)
+        // Stale-result reconciliation must not publish cached rows after rejecting the selected result.
         let invalidatedAccountState = self.prepareCodexAccountScopedRefreshIfNeeded(
-            currentGuardOverride: currentGuard)
+            currentGuardOverride: currentGuard,
+            hydrateCachedUsage: false)
         if clearedUsage, !invalidatedAccountState {
             self.persistWidgetSnapshot(reason: "codex-account-invalidate")
         }
