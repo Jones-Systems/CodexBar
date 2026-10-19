@@ -1,0 +1,173 @@
+{
+  "schema": "codexbar.public-repository-migration/v1",
+  "legacy_repository": {
+    "id": 1356759930,
+    "name": "Jones-Systems/CodexBar-legacy-fork",
+    "preserved": true
+  },
+  "destination_repository": {
+    "id": 1425008735,
+    "node_id": "R_kgDOVO_oXw",
+    "name": "Jones-Systems/CodexBar",
+    "visibility": "public",
+    "fork": false
+  },
+  "import": {
+    "branch_heads": 431,
+    "tag_objects": 135,
+    "advertised_branch_tag_and_peeled_records": 658,
+    "manifest_sha256": "b99229acdac6c2c78e6f482e517f82f53f2ca38b7d6b14888f16b202c38d3761",
+    "exact_ref_equality_at_import": true,
+    "method": "atomic explicit branch/tag push without force or deletion"
+  },
+  "pull_request_mappings": [
+    {
+      "old_repository_id": 1356759930,
+      "old_number": 11,
+      "new_repository_id": 1425008735,
+      "new_number": 1,
+      "new_id": 4914874585,
+      "url": "https://github.com/Jones-Systems/CodexBar/pull/1",
+      "head": "4f62ba08bd6c22940bd79189b451464ba2df3ba5",
+      "base": "main",
+      "draft": false
+    },
+    {
+      "old_repository_id": 1356759930,
+      "old_number": 12,
+      "new_repository_id": 1425008735,
+      "new_number": 2,
+      "new_id": 4914874955,
+      "url": "https://github.com/Jones-Systems/CodexBar/pull/2",
+      "head": "405b6765d7ba4da09affb894e2e8d5fe6feea3da",
+      "base": "work/fleet-auth-discovery-20261016",
+      "draft": false
+    },
+    {
+      "old_repository_id": 1356759930,
+      "old_number": 13,
+      "new_repository_id": 1425008735,
+      "new_number": 3,
+      "new_id": 4914875224,
+      "url": "https://github.com/Jones-Systems/CodexBar/pull/3",
+      "head": "99429988aefee925c0a2aaabf884e89792f25d7a",
+      "base": "work/codexbar-trial-identity-20261016",
+      "draft": false
+    },
+    {
+      "old_repository_id": 1356759930,
+      "old_number": 14,
+      "new_repository_id": 1425008735,
+      "new_number": 4,
+      "new_id": 4914875494,
+      "url": "https://github.com/Jones-Systems/CodexBar/pull/4",
+      "head": "2fbbca5ed244a9a2873a0005c09f414a5063d6cf",
+      "base": "main",
+      "draft": false
+    },
+    {
+      "old_repository_id": 1356759930,
+      "old_number": 3,
+      "new_repository_id": 1425008735,
+      "new_number": 5,
+      "new_id": 4914875770,
+      "url": "https://github.com/Jones-Systems/CodexBar/pull/5",
+      "head": "b981e7e5c824451d9ab6c47a0513e926c3a32bc5",
+      "base": "main",
+      "draft": true
+    }
+  ],
+  "native_stack": {
+    "number": 6,
+    "id": 2287136,
+    "ordered_members": [
+      1,
+      2,
+      3
+    ],
+    "base": "main",
+    "verified_refs_and_incremental_diffs_unchanged": true
+  },
+  "workflow_states": {
+    "CI": {
+      "id": 388934113,
+      "state": "active"
+    },
+    "Release CLI": {
+      "id": 388934116,
+      "state": "disabled_manually"
+    },
+    "Monitor Upstream Changes": {
+      "id": 388934117,
+      "state": "disabled_manually"
+    }
+  },
+  "delivery_binding": {
+    "repository_id": 1425008735,
+    "allowed_prs": [
+      {
+        "number": 1,
+        "id": 4914874585,
+        "node_id": "PR_kwDOVO_oX88AAAABJPMI2Q",
+        "head_ref": "work/fleet-auth-discovery-20261016",
+        "head_sha": "4f62ba08bd6c22940bd79189b451464ba2df3ba5",
+        "base_ref": "main",
+        "base_sha": "5f4a4c9474d2c44e136275fe5c42689a6c6e7a56",
+        "draft": false
+      },
+      {
+        "number": 2,
+        "id": 4914874955,
+        "node_id": "PR_kwDOVO_oX88AAAABJPMKSw",
+        "head_ref": "work/codexbar-trial-identity-20261016",
+        "head_sha": "405b6765d7ba4da09affb894e2e8d5fe6feea3da",
+        "base_ref": "work/fleet-auth-discovery-20261016",
+        "base_sha": "4f62ba08bd6c22940bd79189b451464ba2df3ba5",
+        "draft": false
+      },
+      {
+        "number": 3,
+        "id": 4914875224,
+        "node_id": "PR_kwDOVO_oX88AAAABJPMLWA",
+        "head_ref": "work/native-catalog-repair-506fc1fd",
+        "head_sha": "99429988aefee925c0a2aaabf884e89792f25d7a",
+        "base_ref": "work/codexbar-trial-identity-20261016",
+        "base_sha": "405b6765d7ba4da09affb894e2e8d5fe6feea3da",
+        "draft": false
+      },
+      {
+        "number": 4,
+        "id": 4914875494,
+        "node_id": "PR_kwDOVO_oX88AAAABJPMMZg",
+        "head_ref": "work/netdata-node-binding-20261018",
+        "head_sha": "2fbbca5ed244a9a2873a0005c09f414a5063d6cf",
+        "base_ref": "main",
+        "base_sha": "5f4a4c9474d2c44e136275fe5c42689a6c6e7a56",
+        "draft": false
+      },
+      {
+        "number": 5,
+        "id": 4914875770,
+        "node_id": "PR_kwDOVO_oX88AAAABJPMNeg",
+        "head_ref": "work/repository-sync-orchestration-20260907",
+        "head_sha": "b981e7e5c824451d9ab6c47a0513e926c3a32bc5",
+        "base_ref": "main",
+        "base_sha": "5f4a4c9474d2c44e136275fe5c42689a6c6e7a56",
+        "draft": false
+      }
+    ],
+    "method": "merge",
+    "integration_base": "main",
+    "branch_prefix": "work/",
+    "workflow_id": 388934113,
+    "event": "pull_request",
+    "check_app_id": 15368,
+    "independent_reviews": 0,
+    "native_required_reviews_also_apply": true,
+    "all_review_threads_resolved": true,
+    "no_bypass": true,
+    "exact_current_head_guard": true,
+    "head_changes_require_fresh_qualification": true
+  },
+  "completion": "Repository/PR migration verified; source repair and current-head CI/merge qualification still in progress. No merge, installation or account-switching success claimed."
+}
