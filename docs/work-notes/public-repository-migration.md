@@ -114,6 +114,30 @@ records the exact file hash, invariant counts and original failure. The lower
 aggregate reports the already identified lint, musl and macOS failures; it is
 not a separate runtime defect.
 
+Current-head qualification at `b8d2a0076ed1e6e47cf6e03031a75abe2e847593`
+passed hosted lint, both glibc Linux jobs and the musl build in run
+`39192058451`. Both macOS shards failed compilation with the same nine errors
+across three fixture-test files. The local focused gatekeeper invocation also
+failed compilation after 900.18 seconds, executing zero tests; later native
+phases did not start. Process drain and exact scratch-parent removal were
+verified, and the verifier released its worktree.
+
+Read-only diagnosis traced all nine errors to three closure-valued
+`TaskLocal.withValue` arguments rewritten in lint repair `e6cfc398`.
+The declared three-file repair binds explicitly typed override values before
+passing them to `withValue`, preserving the closure bodies, operations,
+assertions and isolation. The generic fixture wrapper retains its return value.
+No production API, formatter rule or lint rule changes are required. All
+`withValue` changes in that lint commit were inspected; exactly these three
+changed the closure argument binding. The repaired revision still requires
+native compilation, the three affected suites, the full suite, `make check`
+and plugin A/B qualification before the accepted merge gates can be satisfied.
+Scoped SwiftFormat 0.61.1, strict SwiftLint 0.65.0 and whitespace checks pass.
+All 20 test annotations, 110 expectations, ten requirements and seven issue
+records are retained, with original closure and operation bodies unchanged.
+The [repair receipt](../review-evidence/migration-tasklocal-repair.json) binds
+source hashes, the failing compiler evidence and exact scoped check arguments.
+
 At this source-repair checkpoint, final-head verification and merges remain
 pending. Subsequent exact-head native/CI results and merge postconditions belong
 to the [destination PR3](https://github.com/Jones-Systems/CodexBar/pull/3) delivery

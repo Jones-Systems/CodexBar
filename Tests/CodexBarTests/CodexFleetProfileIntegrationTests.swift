@@ -352,10 +352,11 @@ struct CodexFleetProfileIntegrationTests {
             claudeFetcher: ClaudeUsageFetcher(browserDetection: browserDetection),
             browserDetection: browserDetection)
         let access = UnavailableProfileAccessProbe()
-        await CodexCredentialFileAccess.$testIO.withValue { _, _ in
+        let ioOverride: @Sendable (CodexCredentialFileAccess.Operation, URL) throws -> Data = { _, _ in
             access.recordIO()
             return Data()
-        } operation: {
+        }
+        await CodexCredentialFileAccess.$testIO.withValue(ioOverride) {
             let nativeRefresh = CodexOAuthNativeRefreshCLIStrategy(binaryResolver: { _ in
                 access.recordLaunch()
                 Issue.record("Unavailable selection must not resolve or launch the CLI")

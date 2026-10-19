@@ -232,10 +232,11 @@ struct ClaudeNativeProfileFetchTests {
         response: OAuthUsageResponse,
         operation: () async throws -> Void) async throws
     {
-        try await ClaudeUsageFetcher.$fetchOAuthUsageOverride.withValue { token, _ in
+        let fetchOverride: @Sendable (String, Bool) async throws -> OAuthUsageResponse = { token, _ in
             #expect(token == "synthetic-native")
             return response
-        } operation: {
+        }
+        try await ClaudeUsageFetcher.$fetchOAuthUsageOverride.withValue(fetchOverride) {
             try await ClaudeOAuthDelegatedRefreshCoordinator.withIsolatedStateForTesting {
                 try await ClaudeOAuthDelegatedRefreshCoordinator.withKeychainFingerprintOverrideForTesting {
                     nil

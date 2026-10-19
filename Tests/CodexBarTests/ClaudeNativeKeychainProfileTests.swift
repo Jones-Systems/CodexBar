@@ -59,7 +59,10 @@ struct ClaudeNativeKeychainProfileTests {
         _ fixture: QueryFixture,
         operation: () throws -> T) rethrows -> T
     {
-        try ClaudeOAuthDirectKeychainReadConsent.withTaskOverrideForTesting(true) {
+        let queryOverride: @Sendable ([String: Any]) -> (OSStatus, AnyObject?) = { query in
+            fixture.read(query)
+        }
+        return try ClaudeOAuthDirectKeychainReadConsent.withTaskOverrideForTesting(true) {
             try KeychainAccessGate.withTaskOverrideForTesting(false) {
                 try ClaudeOAuthKeychainPromptPreference.withTaskOverrideForTesting(.always) {
                     try ClaudeOAuthKeychainReadStrategyPreference.withTaskOverrideForTesting(.securityFramework) {
@@ -67,9 +70,7 @@ struct ClaudeNativeKeychainProfileTests {
                             try ClaudeOAuthCredentialsStore.withClaudeKeychainFingerprintStoreOverrideForTesting(
                                 .init())
                             {
-                                try ClaudeOAuthKeychainQueryTiming.$queryOverrideForTesting.withValue { query in
-                                    fixture.read(query)
-                                } operation: {
+                                try ClaudeOAuthKeychainQueryTiming.$queryOverrideForTesting.withValue(queryOverride) {
                                     try KeychainAccessPreflight.withCheckGenericPasswordOverrideForTesting { _, _ in
                                         .allowed
                                     } operation: {
