@@ -89,7 +89,10 @@ extension UsageStore {
             !Self.codexScopedRefreshGuardsMatchAccount($0, currentGuard)
         } ?? false
         let tokenCostScopeChanged = self.invalidateCodexTokenSnapshotIfScopeChanged()
-        guard forceInvalidation || accountChanged || tokenCostScopeChanged else { return false }
+        guard forceInvalidation || accountChanged || tokenCostScopeChanged else {
+            guard self.snapshots[.codex] == nil else { return false }
+            return self.hydrateSelectedCodexAccountSnapshot(expectedGuard: currentGuard) != nil
+        }
 
         let preserveSessionQuotaTransitionState = !forceInvalidation &&
             Self.codexSessionQuotaOwnersMatch(previousGuard, currentGuard)
@@ -106,8 +109,73 @@ extension UsageStore {
 
         self.clearCodexOpenAIWebStateForAccountTransition(targetEmail: self.codexAccountEmailForOpenAIDashboard())
 
+        if !forceInvalidation {
+            self.hydrateSelectedCodexAccountSnapshot(expectedGuard: currentGuard)
+        }
         self.persistWidgetSnapshot(reason: "codex-account-invalidate")
         return true
+    }
+
+    func prunedCodexAccountSnapshots(for projection: CodexVisibleAccountProjection) -> [CodexAccountUsageSnapshot] {
+        projection.visibleAccounts.compactMap { account in
+            let matches = self.codexAccountSnapshots.filter { row in
+                row.id == account.id && Self.currentCodexVisibleAccount(
+                    matching: row.account,
+                    projection: projection,
+                    allowProviderAccountAuthFingerprintMismatch: false)?.id == account.id
+            }
+            guard matches.count == 1, let row = matches.first else { return nil }
+            return CodexAccountUsageSnapshot(
+                account: account,
+                snapshot: row.snapshot,
+                error: row.error,
+                sourceLabel: row.sourceLabel,
+                credits: row.credits,
+                weeklyResetCandidate: row.weeklyResetCandidate)
+        }
+    }
+
+    @discardableResult
+    private func hydrateSelectedCodexAccountSnapshot(
+        expectedGuard: CodexAccountScopedRefreshGuard) -> CodexAccountUsageSnapshot?
+    {
+        guard let cached = self.settings.cachedCodexAccountMenuProjection,
+              cached.activeSource == expectedGuard.source
+        else { return nil }
+        return self.hydrateSelectedCodexAccountSnapshot(expectedGuard: expectedGuard, projection: cached.projection)
+    }
+
+    @discardableResult
+    func hydrateSelectedCodexAccountSnapshot(
+        expectedGuard: CodexAccountScopedRefreshGuard,
+        projection: CodexVisibleAccountProjection) -> CodexAccountUsageSnapshot?
+    {
+        self.codexAccountSnapshots = self.prunedCodexAccountSnapshots(for: projection)
+        guard let ownerKey = self.codexLimitResetOwnerKey(
+            expectedGuard: expectedGuard, visibleAccounts: projection.visibleAccounts),
+            let activeID = projection.activeVisibleAccountID
+        else { return nil }
+        // Provider-specific by design: Codex account refresh hydrates only a uniquely matching reconciled owner.
+        let matches = self.codexAccountSnapshots.filter { row in
+            row.snapshot != nil && row.id == activeID &&
+                Self.codexScopedRefreshGuardsMatchAccount(
+                    expectedGuard,
+                    Self.codexScopedRefreshGuard(for: row.account)) &&
+                self.codexLimitResetOwnerKey(
+                    forVisibleAccount: row.account, visibleAccounts: projection.visibleAccounts) == ownerKey
+        }
+        guard matches.count == 1, let prior = matches.first, let snapshot = prior.snapshot else { return nil }
+        // Reuse the caller's reconciled owner evidence; cached display must not trigger another auth read.
+        if self.snapshots[.codex] == nil {
+            self.snapshots[.codex] = snapshot
+            self.lastKnownResetSnapshots[.codex] = snapshot
+            self.errors[.codex] = prior.error
+            self.lastSourceLabels[.codex] = prior.sourceLabel
+            self.publishHydratedCodexCreditsIfNeeded(from: prior.credits, ownerGuard: expectedGuard)
+            self.lastCodexUsagePublicationGuard = expectedGuard
+            self.lastCodexAccountScopedRefreshGuard = expectedGuard
+        }
+        return prior
     }
 
     private func invalidateCodexTokenSnapshotIfScopeChanged() -> Bool {

@@ -12,9 +12,11 @@ struct ClaudeNativeProfileCredentialCacheIsolationTests {
             self.seed(profile: profiles[0], token: "synthetic-a")
             self.seed(profile: profiles[1], token: "synthetic-b")
 
-            for (profile, token) in [(profiles[0], "synthetic-a"), (profiles[1], "synthetic-b"),
-                                     (profiles[0], "synthetic-a")]
-            {
+            for (profile, token) in [
+                (profiles[0], "synthetic-a"),
+                (profiles[1], "synthetic-b"),
+                (profiles[0], "synthetic-a"),
+            ] {
                 try ClaudeOAuthCredentialsStore.withCredentialsProfileIdentifierOverrideForTesting(profile) {
                     let switched = try self.load(environment)
                     #expect(switched.credentials.accessToken == token)
@@ -55,11 +57,18 @@ struct ClaudeNativeProfileCredentialCacheIsolationTests {
     func `native selected main and serial side fetch use separate cache identities`(selectedAlias: String) throws {
         try self.withIsolatedCache { root in
             let discovery = ClaudeFleetProfileDiscovery.Result.available([
-                .init(alias: "default", home: root.path, configDirectory: nil,
-                      nativeCLI: root.appendingPathComponent("claude").path, store: "claude-keychain"),
-                .init(alias: "jace", home: root.path,
-                      configDirectory: root.appendingPathComponent(".claude-t3/jace").path,
-                      nativeCLI: root.appendingPathComponent("claude").path, store: "claude-keychain"),
+                .init(
+                    alias: "default",
+                    home: root.path,
+                    configDirectory: nil,
+                    nativeCLI: root.appendingPathComponent("claude").path,
+                    store: "claude-keychain"),
+                .init(
+                    alias: "jace",
+                    home: root.path,
+                    configDirectory: root.appendingPathComponent(".claude-t3/jace").path,
+                    nativeCLI: root.appendingPathComponent("claude").path,
+                    store: "claude-keychain"),
             ])
             let selected = ClaudeNativeProfileSelection.environment(
                 base: [:], alias: selectedAlias, discovery: discovery)
@@ -75,9 +84,11 @@ struct ClaudeNativeProfileCredentialCacheIsolationTests {
             self.seed(profile: selectedID, token: "synthetic-main")
             self.seed(profile: sideID, token: "synthetic-side")
 
-            for (environment, token) in [(selected, "synthetic-main"), (side, "synthetic-side"),
-                                         (selected, "synthetic-main")]
-            {
+            for (environment, token) in [
+                (selected, "synthetic-main"),
+                (side, "synthetic-side"),
+                (selected, "synthetic-main"),
+            ] {
                 let switched = try self.load(environment)
                 #expect(switched.credentials.accessToken == token)
                 #expect(switched.source == .cacheKeychain)
@@ -114,7 +125,8 @@ struct ClaudeNativeProfileCredentialCacheIsolationTests {
         for profile in profiles {
             let key = ClaudeOAuthCredentialsStore.cacheKeyForTesting(profileIdentifier: profile)
             _ = KeychainCacheStore.clear(key: key)
-            guard case .missing = KeychainCacheStore.load(key: key, as: ClaudeOAuthCredentialsStore.CacheEntry.self) else {
+            guard case .missing = KeychainCacheStore.load(key: key, as: ClaudeOAuthCredentialsStore.CacheEntry.self)
+            else {
                 Issue.record("Synthetic profile cache entry survived cleanup")
                 continue
             }
@@ -129,17 +141,18 @@ struct ClaudeNativeProfileCredentialCacheIsolationTests {
                 try KeychainAccessGate.withTaskOverrideForTesting(true) {
                     try ClaudeOAuthCredentialsStore.withKeychainAccessOverrideForTesting(true) {
                         try ClaudeOAuthKeychainPromptPreference.withTaskOverrideForTesting(.onlyOnUserAction) {
-                            try ClaudeOAuthCredentialsStore.withDirectKeychainReadConsentRevocationMarkerStoreForTesting(
-                                marker)
-                            {
-                                try ClaudeOAuthCredentialsStore.withEnvironmentCredentialsURLForTesting {
-                                    try ClaudeOAuthCredentialsStore.withIsolatedCredentialsFileTrackingForTesting {
-                                        try ClaudeOAuthCredentialsStore.withIsolatedMemoryCacheForTesting {
-                                            try operation(root)
+                            try ClaudeOAuthCredentialsStore
+                                .withDirectKeychainReadConsentRevocationMarkerStoreForTesting(
+                                    marker)
+                                {
+                                    try ClaudeOAuthCredentialsStore.withEnvironmentCredentialsURLForTesting {
+                                        try ClaudeOAuthCredentialsStore.withIsolatedCredentialsFileTrackingForTesting {
+                                            try ClaudeOAuthCredentialsStore.withIsolatedMemoryCacheForTesting {
+                                                try operation(root)
+                                            }
                                         }
                                     }
                                 }
-                            }
                         }
                     }
                 }

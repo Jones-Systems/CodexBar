@@ -164,7 +164,8 @@ struct ProviderRegistry {
         provider: UsageProvider,
         settings: SettingsStore,
         tokenOverride: TokenAccountOverride?,
-        codexActiveSourceOverride: CodexActiveSource? = nil) -> [String: String]
+        codexActiveSourceOverride: CodexActiveSource? = nil,
+        claudeNativeProfileAliasOverride: String? = nil) -> [String: String]
     {
         let account = ProviderTokenAccountSelection.selectedAccount(
             provider: provider,
@@ -198,7 +199,8 @@ struct ProviderRegistry {
         }
         // Provider-specific by design: an explicit enrolled Claude profile scopes only its usage environment.
         if provider == .claude {
-            env = settings.claudeNativeProfileEnvironment(base: env, hasTokenAccount: account != nil)
+            env = settings.claudeNativeProfileEnvironment(
+                base: env, hasTokenAccount: account != nil, aliasOverride: claudeNativeProfileAliasOverride)
         }
         return env
     }

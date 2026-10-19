@@ -1175,17 +1175,26 @@ private actor BlockingTokenAccountFetchStrategy {
 
 private struct BoundedAccountFetchStrategy: ProviderFetchStrategy {
     let transport: BoundedAccountFetchTransport
-    var id: String { "bounded-account-test" }
-    var kind: ProviderFetchKind { .cli }
+    var id: String {
+        "bounded-account-test"
+    }
 
-    func isAvailable(_: ProviderFetchContext) async -> Bool { true }
+    var kind: ProviderFetchKind {
+        .cli
+    }
+
+    func isAvailable(_: ProviderFetchContext) async -> Bool {
+        true
+    }
 
     func fetch(_ context: ProviderFetchContext) async throws -> ProviderFetchResult {
         let snapshot = try await self.transport.fetch(accountID: context.selectedTokenAccountID)
         return self.makeResult(usage: snapshot, sourceLabel: "bounded-account-test")
     }
 
-    func shouldFallback(on _: Error, context _: ProviderFetchContext) -> Bool { false }
+    func shouldFallback(on _: Error, context _: ProviderFetchContext) -> Bool {
+        false
+    }
 }
 
 private actor BoundedAccountFetchTransport {
@@ -1238,7 +1247,9 @@ private actor BoundedAccountFetchTransport {
 
     func releaseAll() {
         self.released = true
-        for (_, continuation) in self.pending.reversed() { continuation.resume() }
+        for (_, continuation) in self.pending.reversed() {
+            continuation.resume()
+        }
         self.pending.removeAll()
     }
 

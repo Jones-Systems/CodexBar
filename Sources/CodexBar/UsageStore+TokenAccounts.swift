@@ -937,7 +937,7 @@ extension UsageStore {
                 guard !Task.isCancelled, nextIndex < requests.count else { return }
                 let index = nextIndex
                 let request = requests[index]
-                if group.addTaskUnlessCancelled(operation: { (index, await operation(request)) }) {
+                if group.addTaskUnlessCancelled(operation: { await (index, operation(request)) }) {
                     nextIndex += 1
                 }
             }
@@ -963,7 +963,8 @@ extension UsageStore {
         override: TokenAccountOverride?,
         codexActiveSourceOverride: CodexActiveSource? = nil,
         includeCredits: Bool = false,
-        claudeOwnerCLIRecoveryOnly: Bool = false) -> ProviderFetchContext
+        claudeOwnerCLIRecoveryOnly: Bool = false,
+        claudeNativeProfileAliasOverride: String? = nil) -> ProviderFetchContext
     {
         let account = ProviderTokenAccountSelection.selectedAccount(
             provider: provider,
@@ -982,7 +983,8 @@ extension UsageStore {
             provider: provider,
             settings: self.settings,
             tokenOverride: override,
-            codexActiveSourceOverride: codexActiveSourceOverride)
+            codexActiveSourceOverride: codexActiveSourceOverride,
+            claudeNativeProfileAliasOverride: claudeNativeProfileAliasOverride)
         let fetcher = ProviderRegistry.makeFetcher(base: self.codexFetcher, provider: provider, env: env)
         let contextProvider = provider
         let publicationGeneration = self.providerRefreshPublicationContexts[provider.instanceID]?

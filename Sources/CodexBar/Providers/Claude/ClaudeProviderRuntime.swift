@@ -17,6 +17,7 @@ final class ClaudeProviderRuntime: ProviderRuntime {
         if invalidateInFlight { store.invalidateProviderRefreshRequests(.claude) }
         store.clearClaudeCredentialDerivedStateForCredentialSwap()
         store.clearClaudeSwapAccountState()
+        store.clearClaudeNativeProfileAccountState()
     }
 
     func nativeProfileUsagePublished() {
@@ -30,12 +31,16 @@ final class ClaudeProviderRuntime: ProviderRuntime {
     func stop(context: ProviderRuntimeContext) {
         self.lastSwapConfiguration = nil
         context.store.clearClaudeSwapAccountState()
+        context.store.clearClaudeNativeProfileAccountState()
     }
 
     func settingsDidChange(context: ProviderRuntimeContext) {
         self.reconcileNativeProfileEnvironment(
             context.store.claudeNativeProfileFetchEnvironment(), store: context.store, invalidateInFlight: true)
         self.reconcileSwapConfiguration(context: context)
+        if !context.store.isEnabled(.claude) {
+            context.store.clearClaudeNativeProfileAccountState()
+        }
     }
 
     private func reconcileSwapConfiguration(context: ProviderRuntimeContext) {

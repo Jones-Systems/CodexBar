@@ -144,7 +144,7 @@ extension StatusItemController {
         }
     }
 
-    private func codexAccountSnapshots(matching accounts: [CodexVisibleAccount]) -> [CodexAccountUsageSnapshot] {
+    func codexAccountSnapshots(matching accounts: [CodexVisibleAccount]) -> [CodexAccountUsageSnapshot] {
         accounts.compactMap { account in
             self.store.codexAccountSnapshots.first { snapshot in
                 snapshot.id == account.id &&

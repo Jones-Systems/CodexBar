@@ -1,0 +1,33 @@
+{
+  "review_id": "FICR-r4-001",
+  "source_review_profile": "codex-v3-code-reviewer",
+  "source_native_task": "/root/fleet_identity_lifecycle_review",
+  "reviewed_base_revision": "b6857cd06b42d55a5954d1782bd494b018b76ebb",
+  "reviewed_candidate": "Frozen uncommitted r4 source bytes, identified by the file hashes below; base HEAD alone is not the reviewed candidate.",
+  "model": "gpt-6-astra",
+  "reasoning_effort": "high",
+  "file_sha256": {
+    "Sources/CodexBar/Providers/Claude/UsageStore+ClaudeNativeProfileAccounts.swift": "bde9bb4b3cc018984f4d06434844f21116907f4398475c16db40a16dea12c837",
+    "Sources/CodexBar/UsageStore+Refresh.swift": "73c92704e3a5f9f1484dae935a51ce4473c45d80c97a8e8f59355e11ac9d934d"
+  },
+  "findings": [
+    {
+      "id": "FICR-COR001",
+      "original_severity": "P2",
+      "title": "Bind selected cached quota to the main fetch's enrollment identity",
+      "confidence": "high",
+      "original_blocking_effect": "Blocks claiming complete discovery-identity isolation for native-Claude aggregation; no credential exposure or operational effect demonstrated.",
+      "evidence": [
+        "Sources/CodexBar/Providers/Claude/UsageStore+ClaudeNativeProfileAccounts.swift:92",
+        "Sources/CodexBar/UsageStore+Refresh.swift:786"
+      ],
+      "source_reasoning": "Aggregation adopts the newly discovered selected identity and copies the main snapshot without comparing that snapshot's publication identity. If enrollment changes during the history-recording await after main publication, both aggregation discovery reads can agree on the new identity while selected quota still belongs to the previous identity.",
+      "closest_reproduction": "Not executed: publish a selected snapshot under discovery identity A, change the selected profile's nativeCLI to identity B through synthetic discovery before aggregation, and retain alias/config revision. Aggregation can associate A's snapshot with state B.",
+      "required_property": "Verify the main publication's selected identity before reusing its quota. On mismatch, withhold the selected cache pending a current main refresh without reconciling side environments through the main runtime.",
+      "disposition": "deferred",
+      "disposition_basis": "Standing owner instruction prohibits implementing P2-P4 review findings without explicit direction. No correction is claimed; original severity and blocking effect remain preserved."
+    }
+  ],
+  "verification": "One read-only focused source review; all 12 scoped before/after hashes matched r4/start.json. No additional supported findings. No tests, live probes, source changes or Git mutations by the reviewer. Native r4 results were pending.",
+  "authority_effect": "none"
+}

@@ -23,7 +23,8 @@ extension StatusItemController {
         planOverride: String? = nil,
         subtitleOverride: String? = nil,
         sourceLabelOverride: String? = nil,
-        creditsOverride: CreditsSnapshot? = nil) -> UsageMenuCardView.Model?
+        creditsOverride: CreditsSnapshot? = nil,
+        isRefreshingOverride: Bool? = nil) -> UsageMenuCardView.Model?
     {
         // Provider-specific by design: Codex is the historical card fallback when no enabled provider is available.
         let target = provider ?? self.store.enabledFirstPartyProvidersForDisplay().first ?? .codex
@@ -119,9 +120,11 @@ extension StatusItemController {
             account: fallbackAccount,
             accountIsAuthoritative: accountOverride != nil,
             accountDisplayLabel: accountDisplayLabelOverride
-                ?? (target == .codex && surface == .liveCard ? self.selectedCodexAccountDisplayLabel() : nil),
+                ?? (target == .codex && surface == .liveCard ? self.selectedCodexAccountDisplayLabel() : nil)
+                ?? (target == .claude && surface == .liveCard
+                    ? self.store.selectedClaudeNativeProfileDisplayLabel() : nil),
             planOverride: planOverride,
-            isRefreshing: self.store.shouldShowRefreshingMenuCardIndicator(for: target),
+            isRefreshing: isRefreshingOverride ?? self.store.shouldShowRefreshingMenuCardIndicator(for: target),
             // Provider-level errors can belong to a different account, so
             // override cards never inherit them (same rule as the snapshot,
             // token-cost, and source-label fallbacks above).

@@ -121,6 +121,7 @@ extension StatusItemController {
             "credits=\(self.store.credits == nil ? "0" : "1")",
             "planHistoryRevision=\(self.store.planUtilizationHistoryRevision)",
             "claudeSwapRevision=\(self.store.claudeSwapRevision)",
+            "claudeNativeProfileAccountsRevision=\(self.store.claudeNativeProfileAccountsRevision)",
         ]
 
         for provider in self.store.enabledFirstPartyProvidersForDisplay() {
@@ -148,18 +149,17 @@ extension StatusItemController {
     }
 
     private func menuCardLayoutReadinessSignature(for provider: UsageProvider) -> String {
-        let accountID: String?
-        switch provider {
+        let accountID: String? = switch provider {
         case .codex:
-            accountID = self.settings.codexVisibleAccountProjectionForMenuDisplay?.activeVisibleAccountID
+            self.settings.codexVisibleAccountProjectionForMenuDisplay?.activeVisibleAccountID
         case .claude:
-            accountID = [
+            [
                 self.settings.selectedTokenAccount(for: provider)?.id.uuidString ?? "none",
                 self.settings.claudeNativeProfileAlias ?? "none",
                 (self.store.providerRuntimes[.claude] as? ClaudeProviderRuntime)?.lastNativeProfileIdentity ?? "none",
             ].joined(separator: ";")
         default:
-            accountID = self.settings.selectedTokenAccount(for: provider)?.id.uuidString
+            self.settings.selectedTokenAccount(for: provider)?.id.uuidString
         }
         return [
             self.store.snapshots[provider.instanceID] == nil ? "empty" : "snapshot",

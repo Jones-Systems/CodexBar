@@ -170,3 +170,25 @@ explicit override and collision handling, and redaction with synthetic fixtures.
 The local installer may seed the owner-requested nonsecret display override only
 in the Jones settings domain; preserve unrelated preferences and fleet bindings.
 <!-- codex-section:end id="spec.fleet-auth-discovery#dec.friendly-labels.001" -->
+
+<!-- codex-section:begin id="spec.fleet-auth-discovery#dec.cached-selection.001" -->
+## Cached quota during observation selection
+
+Reuse the existing uniquely owner-matched quota hydration synchronously after
+outgoing account state is cleared, using the selection's already-created guard
+and projection. Do not add a credential read or weaken workspace/source identity
+checks. Keep the cached snapshot's original timestamp while refresh proceeds.
+
+The segmented path retains valid sibling account rows instead of clearing the
+whole collection. A successful single-account publication upserts its row and
+persists the retained collection through the existing store. Prune removed or
+changed owners against the current projection. A selected-account failure must
+still invalidate rejected authentication/ownership state; retained cache cannot
+resurrect quota that existing failure policy rejects. Keep transient-failure
+stale-data behavior, refresh generation guards and manual refresh semantics.
+
+Tests cover immediate matching hydration, wrong workspace rejection, revisiting
+multiple cached accounts, stale timestamps and authentication-failure eviction.
+This changes cache retention and presentation only, with no new storage, TTL,
+request suppression or system-account switching.
+<!-- codex-section:end id="spec.fleet-auth-discovery#dec.cached-selection.001" -->

@@ -281,13 +281,12 @@ extension CodexVisibleAccountProjection {
                 draft.selectionSource == .profileHome(path: path)
             }
 
-            let fleetProfileAlias: String?
-            if case let .profileHome(path) = draft.selectionSource,
-               snapshot.fleetProfileHomePaths.contains(path)
+            let fleetProfileAlias: String? = if case let .profileHome(path) = draft.selectionSource,
+                                                snapshot.fleetProfileHomePaths.contains(path)
             {
-                fleetProfileAlias = URL(fileURLWithPath: path).lastPathComponent
+                URL(fileURLWithPath: path).lastPathComponent
             } else {
-                fleetProfileAlias = nil
+                nil
             }
             return CodexVisibleAccount(
                 id: id,

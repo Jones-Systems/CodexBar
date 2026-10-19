@@ -25,6 +25,8 @@ extension StatusItemController {
         let cardModel: (ProviderAccountUsageSnapshot) -> UsageMenuCardView.Model?
         var planAction: ((ProviderAccountUsageSnapshot) -> (() -> Void)?)?
         var workspaceSections: [CodexAccountWorkspaceSection] = []
+        var refreshingAccountIDs: Set<ProviderAccountIdentity> = []
+        var accountStatusText: [ProviderAccountIdentity: String] = [:]
     }
 
     /// Renders the token-account list with the compact plan when it applies.
@@ -62,7 +64,7 @@ extension StatusItemController {
     }
 
     /// Renders the Codex account list with the compact plan when it applies.
-    /// Workspace groups share the global visibility budget and retain their section headers.
+    /// Workspace groups retain their section headers without hiding account rows.
     func addCompactCodexAccountMenuIfPlanned(
         display: CodexAccountMenuDisplay,
         to menu: NSMenu,
@@ -172,15 +174,7 @@ extension StatusItemController {
                 if previousRowWasCard {
                     menu.addItem(.separator())
                 }
-                let rowModel = MenuCardCompactAccountRowView.Model(
-                    label: PersonalInfoRedactor.redactEmail(
-                        compactRow.label,
-                        isEnabled: self.settings.hidePersonalInfo),
-                    headroomPercent: compactRow.headroomPercent,
-                    severity: compactRow.severity,
-                    constraintDetail: compactRow.constraintDetail,
-                    hasError: compactRow.hasError,
-                    showsBestBadge: compactRow.isBestCandidate)
+                let rowModel = self.compactAccountRowModel(for: compactRow, rendering: rendering)
                 let accountID = compactRow.accountID
                 menu.addItem(self.makeMenuCardItem(
                     MenuCardCompactAccountRowView(
@@ -255,6 +249,22 @@ extension StatusItemController {
         if self.addStorageMenuCardSection(to: menu, provider: context.currentProvider, width: context.menuWidth) {
             menu.addItem(.separator())
         }
+    }
+
+    func compactAccountRowModel(
+        for row: AccountMenuLayoutPlanner.CompactRow,
+        rendering: CompactAccountMenuRendering) -> MenuCardCompactAccountRowView.Model
+    {
+        MenuCardCompactAccountRowView.Model(
+            label: PersonalInfoRedactor.redactEmail(row.label, isEnabled: self.settings.hidePersonalInfo),
+            headroomPercent: row.headroomPercent,
+            severity: row.severity,
+            constraintDetail: rendering.accountStatusText[row.accountID].map {
+                PersonalInfoRedactor.redactEmails(in: $0, isEnabled: self.settings.hidePersonalInfo)
+            } ?? row.constraintDetail,
+            hasError: row.hasError,
+            showsBestBadge: row.isBestCandidate,
+            isRefreshing: rendering.refreshingAccountIDs.contains(row.accountID))
     }
 
     // MARK: - Projections

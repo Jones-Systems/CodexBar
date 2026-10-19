@@ -195,3 +195,35 @@ the remainder of the focused union is still pending at this checkpoint. Slice C
 may now implement serial side-profile fetching without claiming live account
 availability. Friendly-label source is separately checkpointed before normal
 integration into this branch.
+
+R3 final readback passed 26 XCTest cases plus 317 Swift Testing cases. This
+includes the nine-account/three-in-flight and cancellation regressions; those
+XCTest classes were present separately from Swift Testing's summary. Its owned
+fixture parent was removed after verified drain. The label suite and subsequent
+C/D/cache-retention source were not part of that compiled candidate and require
+the next focused union. Filenames extending another suite are not selectors:
+Overview submenu cases belong to `StatusMenuTests`, and weekly-reset cases to
+`CodexAccountScopedRefreshTests`.
+
+Source checkpoints: A/B/cache proof `9f83ad09`, friendly labels
+`e5fd486d88099e37cf2f78ddfad3ffee29d5dd1a`, normal integration
+`b6857cd06b42d55a5954d1782bd494b018b76ebb`. Root remains sole Git owner.
+The bounded cache-retention repair reuses synchronous uniquely matched owner
+hydration, retains valid sibling rows on segmented refresh, and preserves
+authentication-failure invalidation. Overview uses matching cached snapshots
+independently of the provider-tab layout. Neither path changes system login.
+
+The coherent C/D/cache candidate is frozen for r4's expanded native union.
+SwiftFormat 0.61.1 from the existing pinned cache formatted 15 of 42 owned Swift
+paths; no tool was installed. Full `make test` and `make check` remain due.
+Source publication may proceed while this bounded local verification runs;
+publication does not turn pending checks into passes.
+
+One independent focused correctness pass reviewed r4's exact frozen file hashes.
+It reported FICR-COR001, P2, preserved in
+`docs/review-evidence/ficr-r4-001.json`: a selected main snapshot may be associated
+with a newly changed enrollment identity between publication and aggregation.
+The original blocking claim concerns complete discovery-identity isolation;
+no credential exposure or operational effect was demonstrated. It is deferred
+under the standing P2-P4 instruction, uncorrected, without a mid-workflow owner
+question. No additional supported findings or further review round were added.

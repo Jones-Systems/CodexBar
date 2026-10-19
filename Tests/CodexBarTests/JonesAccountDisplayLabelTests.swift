@@ -222,9 +222,9 @@ struct JonesAccountDisplayLabelTests {
         hidePersonalInfo: Bool = false,
         email: String = "owner@example.test") throws -> UsageMenuCardView.Model
     {
-        UsageMenuCardView.Model.make(.init(
+        try UsageMenuCardView.Model.make(.init(
             provider: provider,
-            metadata: try #require(ProviderDefaults.metadata[provider]),
+            metadata: #require(ProviderDefaults.metadata[provider]),
             snapshot: self.snapshot(email: email, provider: provider),
             credits: nil, creditsError: nil, dashboard: nil, dashboardError: nil,
             tokenSnapshot: nil, tokenError: nil,

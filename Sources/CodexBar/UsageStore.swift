@@ -20,6 +20,7 @@ extension UsageStore {
         _ = self.claudeSwapAccountSnapshots
         _ = self.claudeSwapLastError
         _ = self.claudeSwapRevision
+        _ = self.claudeNativeProfileAccountsRevision
         _ = self.tokenSnapshots
         _ = self.tokenErrors
         _ = self.tokenRefreshInFlight
@@ -183,6 +184,16 @@ final class UsageStore {
     var claudeSwapRevision: UInt64 = 0
     @ObservationIgnored var claudeSwapRefreshTask: Task<Void, Never>?
     @ObservationIgnored var claudeSwapTransientState = ClaudeSwapTransientState()
+    var claudeNativeProfileAccountSnapshots: [ProviderAccountUsageSnapshot] = []
+    var claudeNativeProfileAccountsRevision: UInt64 = 0
+    var claudeNativeProfileRefreshingAliases: Set<String> = []
+    @ObservationIgnored var claudeNativeProfileAccountsTask: Task<Void, Never>?
+    @ObservationIgnored var claudeNativeProfileAccountsTaskID: UUID?
+    @ObservationIgnored var claudeNativeProfileAccountsState: ClaudeNativeProfileAccountsState?
+    @ObservationIgnored var _test_claudeNativeProfileFetchOutcomeOverride: (@MainActor (
+        ProviderFetchContext) async -> ProviderFetchOutcome)?
+    @ObservationIgnored var _test_claudeNativeProfileDiscoveryOverride: (@MainActor () -> ClaudeFleetProfileDiscovery
+        .Result)?
     var tokenSnapshots: [ProviderInstanceID: CostUsageTokenSnapshot] = [:]
     var tokenSnapshotPublications: [ProviderInstanceID: TokenSnapshotPublication] = [:]
     var tokenSnapshotPublicationRevisions: [ProviderInstanceID: UInt64] = [:]
