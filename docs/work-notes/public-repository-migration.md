@@ -99,6 +99,21 @@ unconditionally outside Darwin. Both Codex and Claude discovery imports now
 follow the existing Darwin/Glibc/Musl conditional pattern; all bytes below the
 import blocks are unchanged, and scoped format/lint checks pass. Musl compilation
 still requires destination CI. No required coverage or rule is removed.
+A later PR1 macOS shard failure exposed architecture-catalog drift. The original
+catalog repair remains present, but subsequent formatting/helper extraction and
+Musl imports left 13 of 404 exact anchors stale in the cumulative candidate.
+Two clusters must also be regrouped under the unchanged 12-line gap / 40-line
+window rules, preserving the aggregate Codex, Claude and DeepSeek occurrences.
+A declared one-file metadata lane refreshes those entries, preserving scanner
+logic, negative fixtures, justification text and all 41 tests. The same static
+anchor check fails before at 391/404 and passes after at 404/404. All 551 allowed
+provider occurrences are retained, and scoped format/strict lint pass. Native
+scanner execution remains due. The
+[follow-up receipt](../review-evidence/migration-architecture-repair.json)
+records the exact file hash, invariant counts and original failure. The lower
+aggregate reports the already identified lint, musl and macOS failures; it is
+not a separate runtime defect.
+
 At this source-repair checkpoint, final-head verification and merges remain
 pending. Subsequent exact-head native/CI results and merge postconditions belong
 to the [destination PR3](https://github.com/Jones-Systems/CodexBar/pull/3) delivery
@@ -167,6 +182,17 @@ preceding portable package checks and all five isolated-command tests passed.
 The invocation drained its children and removed its exact owned scratch parent;
 full `make test` and plugin A/B were not started after that failure. This is
 failed evidence, not a passing full check.
+
+At `b35c499fc367ed5660f62f93c038f80369a9c7e8`, canonical `make check`
+passed in 83.64 seconds and hosted lint passed. Full `make test` was cancelled
+through its exact owned wrapper after 495.8 seconds of discovery because the
+static architecture-catalog mismatch requires a new revision; no groups had
+executed, and plugin A/B did not start. Cancellation drain was reconciled: all
+35 observed invocation processes and the exact fixture parent were absent.
+This is partial/cancelled native evidence, not a full-suite pass. Final native
+qualification must bind the catalog-repaired revision. Discovery/build does not
+have a runner per-command timeout; this invocation retained the audited outer
+1800-second bound, while suite/group commands retain their 180-second default.
 
 The following baseline remains valid only for its recorded source. Existing
 receipt `docs/review-evidence/ci-isolation-r1.json` records
