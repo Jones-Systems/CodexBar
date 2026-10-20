@@ -313,3 +313,11 @@ identity. Scanner implementation and existing test bodies are unchanged; no
 new suppression or rule relaxation was added. SwiftFormat passed over the
 three affected Swift paths. The actual gatekeeper and Overview checks remain
 pending on this source candidate.
+
+R7 on `ab95df0ffff2e0bccf268c87bbda31d309cbc866` stopped before test
+execution because Swift Testing's `#require` expansion rejected the key-path
+predicate passed to `first(where:)` in the repaired fixture. Replace the three
+equivalent active-account lookups with ordinary predicate closures; retain the
+same assertions and selection semantics. Zero tests executed, so neither the
+architecture repair nor Overview is qualified by R7. Process drain and exact
+fixture-parent removal passed; subsequent checks were not started.

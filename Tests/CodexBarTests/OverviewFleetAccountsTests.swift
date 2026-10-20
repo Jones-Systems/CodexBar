@@ -129,7 +129,7 @@ struct OverviewFleetAccountsTests {
                 error: nil,
                 sourceLabel: "Synthetic")
         }
-        let activeAccount = try #require(accounts.first(where: \.isActive))
+        let activeAccount = try #require(accounts.first { $0.isActive })
         controller.store.snapshots[.codex] = Self.snapshot(provider: .codex, accountEmail: activeAccount.email)
         return accounts
     }
@@ -178,7 +178,7 @@ struct OverviewFleetAccountsTests {
             #expect(projection.visibleAccounts.count == 6)
             _ = controller.makeMenuDescriptor(provider: .codex, includeContextualActions: true)
             #expect(controller.settings.codexVisibleAccountProjectionForMenuDisplay == projection)
-            let activeID = try #require(accounts.first(where: \.isActive)?.id)
+            let activeID = try #require(accounts.first { $0.isActive }?.id)
             let menu = controller.makeMenu()
             controller.refreshMenuForOpenIfNeeded(menu, provider: nil)
             let ids = self.identifiers(in: menu)
@@ -240,7 +240,7 @@ struct OverviewFleetAccountsTests {
             #expect(rejectedRows.allSatisfy { $0.model.headroomPercent == nil })
             #expect(controller.settings.multiAccountMenuLayout == .segmented)
             #expect(controller.settings.codexVisibleAccountProjectionForMenuDisplay?
-                .activeVisibleAccountID == accounts.first(where: \.isActive)?.id)
+                .activeVisibleAccountID == accounts.first { $0.isActive }?.id)
         }
     }
 
