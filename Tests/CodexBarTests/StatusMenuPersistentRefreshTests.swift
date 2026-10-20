@@ -4,36 +4,6 @@ import SwiftUI
 import Testing
 @testable import CodexBar
 
-private final class RefreshShortcutRecorder: StatusItemMenuPersistentActionDelegate {
-    var refreshCount = 0
-    var refreshMenuIDs: [ObjectIdentifier] = []
-    var refreshMenuInteractionGenerations: [Int] = []
-    var settingsCount = 0
-    var quitCount = 0
-    var navigationDirections: [StatusItemMenuProviderNavigationDirection] = []
-
-    func performPersistentRefreshAction(
-        in menuID: ObjectIdentifier,
-        menuInteractionGeneration: Int)
-    {
-        self.refreshCount += 1
-        self.refreshMenuIDs.append(menuID)
-        self.refreshMenuInteractionGenerations.append(menuInteractionGeneration)
-    }
-
-    func performPersistentSettingsAction() {
-        self.settingsCount += 1
-    }
-
-    func performPersistentQuitAction() {
-        self.quitCount += 1
-    }
-
-    func performProviderNavigation(_ direction: StatusItemMenuProviderNavigationDirection) {
-        self.navigationDirections.append(direction)
-    }
-}
-
 @MainActor
 private final class UpdateReadyUpdater: UpdaterProviding {
     var automaticallyChecksForUpdates = false
@@ -91,11 +61,11 @@ enum BlockingEnrichmentStage: Sendable {
 @MainActor
 @Suite(.serialized)
 struct StatusMenuPersistentRefreshTests {
-    private func makeSettings() -> SettingsStore {
+    func makeSettings() -> SettingsStore {
         testSettingsStore(suiteName: "StatusMenuPersistentRefreshTests")
     }
 
-    private func makeController(
+    func makeController(
         settings: SettingsStore,
         updater: UpdaterProviding = DisabledUpdaterController(),
         account: AccountInfo? = nil) -> StatusItemController
@@ -325,22 +295,34 @@ struct StatusMenuPersistentRefreshTests {
     }
 
     @Test
-    func `refresh monitor follows refresh success and failure`() {
+    func `refresh monitor follows refresh success and failure`() throws {
         let settings = self.makeSettings()
         let controller = self.makeController(settings: settings)
         let monitor = controller.menuCardRefreshMonitor
         let fallback = MenuCardLiveSubtitle(text: "Fallback", style: .info)
 
-        #expect(monitor.subtitle(for: .codex, fallback: fallback).style == .info)
+        #expect(try monitor.subtitle(
+            for: .codex,
+            hostedModel: #require(controller.menuCardModel(for: .codex)),
+            fallback: fallback).style == .info)
 
         controller.store.refreshingProviders.insert(.codex)
-        #expect(monitor.subtitle(for: .codex, fallback: fallback).style == .loading)
+        #expect(try monitor.subtitle(
+            for: .codex,
+            hostedModel: #require(controller.menuCardModel(for: .codex)),
+            fallback: fallback).style == .loading)
 
         controller.store.refreshingProviders.remove(.codex)
         monitor.beginManualRefresh(frozenModels: [:], provider: nil)
-        #expect(monitor.subtitle(for: .codex, fallback: fallback).style == .info)
+        #expect(try monitor.subtitle(
+            for: .codex,
+            hostedModel: #require(controller.menuCardModel(for: .codex)),
+            fallback: fallback).style == .info)
         controller.store.refreshingProviders.insert(.codex)
-        #expect(monitor.subtitle(for: .codex, fallback: fallback).style == .loading)
+        #expect(try monitor.subtitle(
+            for: .codex,
+            hostedModel: #require(controller.menuCardModel(for: .codex)),
+            fallback: fallback).style == .loading)
         monitor.endManualRefresh()
         controller.store.refreshingProviders.remove(.codex)
 
@@ -353,19 +335,31 @@ struct StatusMenuPersistentRefreshTests {
                 resetDescription: nil),
             secondary: nil,
             updatedAt: now)
-        let success = monitor.subtitle(for: .codex, fallback: fallback)
+        let success = try monitor.subtitle(
+            for: .codex,
+            hostedModel: #require(controller.menuCardModel(for: .codex)),
+            fallback: fallback)
         #expect(success.style == .info)
         #expect(success.text == UsageFormatter.updatedString(from: now, now: Date()))
 
         controller.store.errors[.codex] = "Refresh failed"
-        let failure = monitor.subtitle(for: .codex, fallback: fallback)
+        let failure = try monitor.subtitle(
+            for: .codex,
+            hostedModel: #require(controller.menuCardModel(for: .codex)),
+            fallback: fallback)
         #expect(failure.style == .error)
         #expect(failure.text == "Refresh failed")
 
         monitor.beginManualRefresh(frozenModels: [:], provider: nil)
-        #expect(monitor.subtitle(for: .codex, fallback: fallback).style == .error)
+        #expect(try monitor.subtitle(
+            for: .codex,
+            hostedModel: #require(controller.menuCardModel(for: .codex)),
+            fallback: fallback).style == .error)
         controller.store.refreshingProviders.insert(.codex)
-        #expect(monitor.subtitle(for: .codex, fallback: fallback).style == .loading)
+        #expect(try monitor.subtitle(
+            for: .codex,
+            hostedModel: #require(controller.menuCardModel(for: .codex)),
+            fallback: fallback).style == .loading)
         controller.store.refreshingProviders.remove(.codex)
     }
 
@@ -376,15 +370,24 @@ struct StatusMenuPersistentRefreshTests {
         let monitor = controller.menuCardRefreshMonitor
         let codexModel = try #require(controller.menuCardModel(for: .codex))
         let fallback = MenuCardLiveSubtitle(text: "Claude idle", style: .info)
-        let expectedClaude = monitor.subtitle(for: .claude, fallback: fallback)
+        let expectedClaude = try monitor.subtitle(
+            for: .claude,
+            hostedModel: #require(controller.menuCardModel(for: .claude)),
+            fallback: fallback)
 
         monitor.beginManualRefresh(frozenModels: [.codex: codexModel], provider: .codex)
         defer { monitor.endManualRefresh(for: .codex) }
 
         #expect(monitor.isManualRefreshInFlight(for: .codex))
         #expect(!monitor.isManualRefreshInFlight(for: .claude))
-        #expect(monitor.subtitle(for: .codex, fallback: fallback).style == .loading)
-        let actualClaude = monitor.subtitle(for: .claude, fallback: fallback)
+        #expect(try monitor.subtitle(
+            for: .codex,
+            hostedModel: #require(controller.menuCardModel(for: .codex)),
+            fallback: fallback).style == .loading)
+        let actualClaude = try monitor.subtitle(
+            for: .claude,
+            hostedModel: #require(controller.menuCardModel(for: .claude)),
+            fallback: fallback)
         #expect(actualClaude.text == expectedClaude.text)
         #expect(actualClaude.style == expectedClaude.style)
     }
@@ -529,8 +532,9 @@ struct StatusMenuPersistentRefreshTests {
 
         #expect(!monitor.publishResolvedModelIfCompatible(for: .codex))
         #expect(monitor.isManualRefreshInFlight(for: .codex))
-        #expect(monitor.subtitle(
+        #expect(try monitor.subtitle(
             for: .codex,
+            hostedModel: #require(controller.menuCardModel(for: .codex)),
             fallback: MenuCardLiveSubtitle(text: "old", style: .info)).style == .loading)
         #expect(monitor.model(for: .codex, fallback: frozen).metrics.map(\.percent) == frozen.metrics.map(\.percent))
 
@@ -569,8 +573,9 @@ struct StatusMenuPersistentRefreshTests {
 
         #expect(monitor.publishResolvedModelIfCompatible(for: .codex))
         #expect(!monitor.isManualRefreshInFlight(for: .codex))
-        let subtitle = monitor.subtitle(
+        let subtitle = try monitor.subtitle(
             for: .codex,
+            hostedModel: #require(controller.menuCardModel(for: .codex)),
             fallback: MenuCardLiveSubtitle(text: "old", style: .info))
         #expect(subtitle.style == .error)
         #expect(monitor.model(for: .codex, fallback: frozen).metrics.map(\.percent) == frozen.metrics.map(\.percent))
@@ -892,7 +897,10 @@ extension StatusMenuPersistentRefreshTests {
         let model = try #require(controller.menuCardModel(for: .codex))
         let fallback = MenuCardLiveSubtitle(text: "Fallback", style: .error)
 
-        let liveSubtitle = controller.menuCardRefreshMonitor.subtitle(for: .codex, fallback: fallback)
+        let liveSubtitle = try controller.menuCardRefreshMonitor.subtitle(
+            for: .codex,
+            hostedModel: #require(controller.menuCardModel(for: .codex)),
+            fallback: fallback)
 
         #expect(liveSubtitle.text == model.subtitleText)
         #expect(liveSubtitle.style == model.subtitleStyle)
@@ -943,9 +951,15 @@ extension StatusMenuPersistentRefreshTests {
 
         #expect(replacementErrorHeight == errorHeight)
         let fallback = MenuCardLiveSubtitle(text: errorModel.subtitleText, style: errorModel.subtitleStyle)
-        #expect(controller.menuCardRefreshMonitor.subtitle(for: .codex, fallback: fallback).style == .error)
+        #expect(try controller.menuCardRefreshMonitor.subtitle(
+            for: .codex,
+            hostedModel: #require(controller.menuCardModel(for: .codex)),
+            fallback: fallback).style == .error)
         controller.store.refreshingProviders.insert(.codex)
-        #expect(controller.menuCardRefreshMonitor.subtitle(for: .codex, fallback: fallback).style == .loading)
+        #expect(try controller.menuCardRefreshMonitor.subtitle(
+            for: .codex,
+            hostedModel: #require(controller.menuCardModel(for: .codex)),
+            fallback: fallback).style == .loading)
         controller.store.refreshingProviders.remove(.codex)
         #expect(retryHeight == errorHeight)
     }
@@ -1166,139 +1180,16 @@ extension StatusMenuPersistentRefreshTests {
         #expect(controller.manualRefreshTasks[.global] == nil)
         #expect(refreshItem.isEnabled)
         let fallback = MenuCardLiveSubtitle(text: "Fallback", style: .info)
-        #expect(controller.menuCardRefreshMonitor.subtitle(for: .codex, fallback: fallback).style == .error)
-    }
-
-    @Test
-    func `status item menu intercepts persistent shortcuts without native item selection`() throws {
-        let menu = StatusItemMenu()
-        let recorder = RefreshShortcutRecorder()
-        menu.persistentActionDelegate = recorder
-        menu.menuInteractionGeneration = 42
-
-        #expect(try menu.performKeyEquivalent(with: self.keyEvent("r", keyCode: 15)) == true)
-        #expect(try menu.performKeyEquivalent(with: self.keyEvent(",", keyCode: 43)) == true)
-        #expect(try menu.performKeyEquivalent(with: self.keyEvent("q", keyCode: 12)) == true)
-
-        #expect(recorder.refreshCount == 1)
-        #expect(recorder.refreshMenuIDs == [ObjectIdentifier(menu)])
-        #expect(recorder.refreshMenuInteractionGenerations == [42])
-        #expect(recorder.settingsCount == 1)
-        #expect(recorder.quitCount == 1)
-    }
-}
-
-extension StatusMenuPersistentRefreshTests {
-    private func keyEvent(_ characters: String, keyCode: UInt16) throws -> NSEvent {
-        try #require(NSEvent.keyEvent(
-            with: .keyDown,
-            location: .zero,
-            modifierFlags: [.command],
-            timestamp: 0,
-            windowNumber: 0,
-            context: nil,
-            characters: characters,
-            charactersIgnoringModifiers: characters,
-            isARepeat: false,
-            keyCode: keyCode))
-    }
-
-    @Test
-    func `refresh row metrics match tuned native-style values`() {
-        let metrics = PersistentRefreshRowMetrics.defaults
-        #expect(metrics.rowHeight == 24)
-        #expect(metrics.selectionHorizontalInset == 5)
-        #expect(metrics.selectionVerticalInset == 0)
-        #expect(metrics.selectionCornerRadius == 7)
-        #expect(metrics.leadingPadding == 15)
-        #expect(metrics.trailingPadding == 8)
-        #expect(metrics.iconWidth == 16)
-        #expect(metrics.iconSymbolPointSize == 16)
-        #expect(metrics.iconSymbolWeight == .regular)
-        #expect(metrics.iconTitleSpacing == 4.5)
-        #expect(metrics.shortcutFontSize == 13)
-        #expect(metrics.shortcutXOffset == -9.5)
-        #expect(metrics.shortcutYOffset == 0)
-    }
-
-    @Test
-    func `refresh shortcut display has stable native-style column`() throws {
-        let previousRendering = StatusItemController.menuCardRenderingEnabled
-        StatusItemController.menuCardRenderingEnabled = true
-        defer { StatusItemController.menuCardRenderingEnabled = previousRendering }
-
-        let settings = self.makeSettings()
-        settings.refreshFrequency = .manual
-        settings.mergeIcons = false
-
-        let controller = self.makeController(settings: settings)
-        let menu = controller.makeMenu(for: .codex)
-        controller.menuWillOpen(menu)
-
-        let refreshItem = try #require(menu.items.first { $0.title == "Refresh" })
-        let refreshView = try #require(refreshItem.view as? PersistentRefreshMenuView)
-        refreshView.applySize(width: 320, height: PersistentRefreshRowMetrics.defaults.rowHeight)
-        refreshView.layoutSubtreeIfNeeded()
-
-        let shortcutField = try #require(
-            refreshView.subviews.compactMap { $0 as? NSTextField }.first { $0.stringValue == "⌘ R" })
-        #expect(shortcutField.alignment == .left)
-        #expect(shortcutField.lineBreakMode == .byClipping)
-        #expect(shortcutField.frame.width >= 40)
-        let shortcutFont = try #require(shortcutField.font)
-        #expect(abs(shortcutFont.pointSize - PersistentRefreshRowMetrics.defaults.shortcutFontSize) < 0.001)
-
-        let iconView = try #require(refreshView.subviews.compactMap { $0 as? NSImageView }.first)
-        let titleField = try #require(
-            refreshView.subviews.compactMap { $0 as? NSTextField }.first { $0.stringValue == "Refresh" })
-        #expect(iconView.frame.minX == PersistentRefreshRowMetrics.defaults.leadingPadding)
-        #expect(titleField.frame.minX == PersistentRefreshRowMetrics.defaults.leadingPadding
-            + PersistentRefreshRowMetrics.defaults.iconWidth
-            + PersistentRefreshRowMetrics.defaults.iconTitleSpacing)
-        #expect(iconView.frame.width == PersistentRefreshRowMetrics.defaults.iconWidth)
-        #expect(iconView.frame.height == PersistentRefreshRowMetrics.defaults.iconWidth)
-    }
-
-    @Test
-    func `refresh row width follows final rendered menu width`() {
-        let settings = self.makeSettings()
-        let controller = self.makeController(settings: settings)
-        defer { controller.releaseStatusItemsForTesting() }
-
-        let metrics = PersistentRefreshRowMetrics.defaults
-        let refreshView = PersistentRefreshMenuView(
-            title: "Refresh",
-            systemImageName: "arrow.clockwise",
-            shortcutText: "⌘ R")
-        refreshView.applySize(width: StatusItemController.menuCardBaseWidth, height: metrics.rowHeight)
-        refreshView.frame.origin.x = 4
-
-        let refreshItem = NSMenuItem()
-        refreshItem.title = "Refresh"
-        refreshItem.view = refreshView
-
-        let wideNativeItem = NSMenuItem(
-            title: String(repeating: "W", count: 60),
-            action: nil,
-            keyEquivalent: "")
-        let menu = NSMenu()
-        menu.addItem(refreshItem)
-        menu.addItem(wideNativeItem)
-
-        let expectedWidth = controller.renderedMenuWidth(for: menu)
-        #expect(expectedWidth > StatusItemController.menuCardBaseWidth)
-
-        controller.refreshMenuCardHeights(in: menu)
-
-        #expect(abs(refreshView.frame.width - expectedWidth) <= 0.5)
-        #expect(refreshView.frame.origin == .zero)
-        #expect(refreshView.frame.height == metrics.rowHeight)
+        #expect(try controller.menuCardRefreshMonitor.subtitle(
+            for: .codex,
+            hostedModel: #require(controller.menuCardModel(for: .codex)),
+            fallback: fallback).style == .error)
     }
 }
 
 extension StatusMenuPersistentRefreshTests {
     @Test
-    func `global manual refresh only marks active provider cards as refreshing`() {
+    func `global manual refresh only marks active provider cards as refreshing`() throws {
         let settings = self.makeSettings()
         let controller = self.makeController(settings: settings)
         let monitor = controller.menuCardRefreshMonitor
@@ -1311,17 +1202,26 @@ extension StatusMenuPersistentRefreshTests {
         #expect(monitor.isManualRefreshInFlight)
         #expect(!monitor.isManualRefreshInFlight(for: .codex))
         #expect(monitor.isManualRefreshInFlight(for: .claude))
-        #expect(monitor.subtitle(for: .codex, fallback: fallback).style == .info)
-        #expect(monitor.subtitle(for: .claude, fallback: fallback).style == .loading)
+        #expect(try monitor.subtitle(
+            for: .codex,
+            hostedModel: #require(controller.menuCardModel(for: .codex)),
+            fallback: fallback).style == .info)
+        #expect(try monitor.subtitle(
+            for: .claude,
+            hostedModel: #require(controller.menuCardModel(for: .claude)),
+            fallback: fallback).style == .loading)
 
         controller.store.refreshingProviders.remove(.claude)
         #expect(monitor.isManualRefreshInFlight)
         #expect(!monitor.isManualRefreshInFlight(for: .claude))
-        #expect(monitor.subtitle(for: .claude, fallback: fallback).style == .info)
+        #expect(try monitor.subtitle(
+            for: .claude,
+            hostedModel: #require(controller.menuCardModel(for: .claude)),
+            fallback: fallback).style == .info)
     }
 
     @Test
-    func `completed provider cards stop refreshing while another provider is still running`() async {
+    func `completed provider cards stop refreshing while another provider is still running`() async throws {
         let settings = self.makeSettings()
         settings.statusChecksEnabled = false
         settings.costUsageEnabled = false
@@ -1350,15 +1250,21 @@ extension StatusMenuPersistentRefreshTests {
         #expect(controller.store.refreshingProviders == [.claude])
         #expect(!monitor.isManualRefreshInFlight(for: .codex))
         #expect(monitor.isManualRefreshInFlight(for: .claude))
-        #expect(monitor.subtitle(for: .codex, fallback: fallback).style == .info)
-        #expect(monitor.subtitle(for: .claude, fallback: fallback).style == .loading)
+        #expect(try monitor.subtitle(
+            for: .codex,
+            hostedModel: #require(controller.menuCardModel(for: .codex)),
+            fallback: fallback).style == .info)
+        #expect(try monitor.subtitle(
+            for: .claude,
+            hostedModel: #require(controller.menuCardModel(for: .claude)),
+            fallback: fallback).style == .loading)
 
         releaseClaude.resume()
         await controller.manualRefreshTasks[.global]?.value
     }
 
     @Test
-    func `token-cost tail does not keep completed provider card refreshing`() async {
+    func `token-cost tail does not keep completed provider card refreshing`() async throws {
         let settings = self.makeSettings()
         settings.statusChecksEnabled = false
         settings.costUsageEnabled = true
@@ -1407,7 +1313,10 @@ extension StatusMenuPersistentRefreshTests {
         #expect(controller.isRefreshActionInFlight(for: menu))
         #expect(!monitor.isManualRefreshInFlight)
         #expect(!monitor.isManualRefreshInFlight(for: .codex))
-        #expect(monitor.subtitle(for: .codex, fallback: fallback).style == .info)
+        #expect(try monitor.subtitle(
+            for: .codex,
+            hostedModel: #require(controller.menuCardModel(for: .codex)),
+            fallback: fallback).style == .info)
 
         releaseTokenRefresh.resume()
         await manualCompletionTask.value
@@ -1417,16 +1326,16 @@ extension StatusMenuPersistentRefreshTests {
     }
 
     @Test
-    func `credit tail does not keep completed provider card refreshing`() async {
-        await self.verifyCompletedProviderCardStopsRefreshing(whileBlocking: .credits)
+    func `credit tail does not keep completed provider card refreshing`() async throws {
+        try await self.verifyCompletedProviderCardStopsRefreshing(whileBlocking: .credits)
     }
 
     @Test
-    func `dashboard tail does not keep completed provider card refreshing`() async {
-        await self.verifyCompletedProviderCardStopsRefreshing(whileBlocking: .dashboard)
+    func `dashboard tail does not keep completed provider card refreshing`() async throws {
+        try await self.verifyCompletedProviderCardStopsRefreshing(whileBlocking: .dashboard)
     }
 
-    private func verifyCompletedProviderCardStopsRefreshing(whileBlocking stage: BlockingEnrichmentStage) async {
+    private func verifyCompletedProviderCardStopsRefreshing(whileBlocking stage: BlockingEnrichmentStage) async throws {
         let settings = self.makeSettings()
         settings.statusChecksEnabled = false
         settings.costUsageEnabled = false
@@ -1511,7 +1420,10 @@ extension StatusMenuPersistentRefreshTests {
         #expect(controller.isRefreshActionInFlight(for: menu))
         #expect(!monitor.isManualRefreshInFlight)
         #expect(!monitor.isManualRefreshInFlight(for: .codex))
-        #expect(monitor.subtitle(for: .codex, fallback: fallback).style == .info)
+        #expect(try monitor.subtitle(
+            for: .codex,
+            hostedModel: #require(controller.menuCardModel(for: .codex)),
+            fallback: fallback).style == .info)
 
         releaseStage.resume()
         await manualCompletionTask.value

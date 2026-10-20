@@ -12,14 +12,14 @@ extension SettingsStore {
     }
 
     func claudeNativeProfileEnvironment(
-        base: [String: String], hasTokenAccount: Bool) -> [String: String]
+        base: [String: String], hasTokenAccount: Bool, aliasOverride: String? = nil) -> [String: String]
     {
         guard ClaudeNativeProfileSelection.applies(
             alias: self.claudeNativeProfileAlias,
             source: self.claudeUsageDataSource,
             hasTokenAccount: hasTokenAccount,
             hasManualCookie: self.claudeCookieSource == .manual && !self.claudeCookieHeader.isEmpty,
-            environment: base), let alias = self.claudeNativeProfileAlias
+            environment: base), let alias = aliasOverride ?? self.claudeNativeProfileAlias
         else { return base }
         return ClaudeNativeProfileSelection.environment(
             base: base, alias: alias, discovery: ClaudeFleetProfileDiscovery.discover())

@@ -638,6 +638,8 @@ extension StatusItemController {
                 item.action = #selector(self.selectOverviewProvider(_:))
             }
             menu.addItem(item)
+            self.addOverviewFleetAccountRows(
+                for: row.provider, to: menu, captureMenu: interactionMenu, width: menuWidth)
             if index < rows.count - 1 {
                 menu.addItem(.separator())
             }
@@ -700,6 +702,12 @@ extension StatusItemController {
             showSingleAccount: self.settings.claudeSwapShowSingleAccount)
         {
             self.addClaudeSwapMenuCards(to: menu, captureMenu: captureMenu ?? menu, context: context)
+            self.addFleetAccountMenuCards(fleetProjection.additionalAccounts, to: menu, context: context)
+            return false
+        }
+
+        if context.currentProvider == .claude, !self.store.claudeNativeProfileAccountsForDisplay().isEmpty {
+            self.addClaudeNativeProfileMenuCards(to: menu, captureMenu: captureMenu ?? menu, context: context)
             self.addFleetAccountMenuCards(fleetProjection.additionalAccounts, to: menu, context: context)
             return false
         }
@@ -1067,6 +1075,8 @@ extension StatusItemController {
             accounts: display.accounts,
             selectedAccountID: display.activeVisibleAccountID,
             width: width,
+            displayLabels: self.settings.codexAccountDisplayLabels(for: display.accounts),
+            hidePersonalInfo: self.settings.hidePersonalInfo,
             onSelect: { [weak self, weak menu] account in
                 guard let self else { return }
                 self.handleCodexVisibleAccountSelection(account, menu: menu)

@@ -16,6 +16,7 @@ final class StatusMenuTokenAccountSwitcherTests: XCTestCase {
             suiteName: "StatusMenuTokenAccountSwitcherTests",
             tokenAccountStore: InMemoryTokenAccountStore())
         settings.providerDetectionCompleted = true
+        settings.multiAccountMenuLayout = .segmented
         return settings
     }
 
@@ -107,6 +108,109 @@ final class StatusMenuTokenAccountSwitcherTests: XCTestCase {
                 accountEmail: "claude@example.com",
                 accountOrganization: nil,
                 loginMethod: "OAuth"))
+    }
+
+    func test_accountMenuDisplayCapsOnlyOtherProvidersAndKeepsSelectedAccount() {
+        let settings = self.makeSettings()
+        for index in 0..<9 {
+            settings.addTokenAccount(provider: .copilot, label: "Account \(index)", token: "synthetic-\(index)")
+        }
+        let accounts = settings.tokenAccounts(for: .copilot)
+        let store = UsageStore(
+            fetcher: UsageFetcher(), browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
+        for provider in UsageProvider.allCases {
+            let uncapped = provider == .codex || provider == .claude
+            XCTAssertEqual(UsageStore.accountMenuDisplayLimit(for: provider), uncapped ? nil : 6)
+            let limited = store.limitedTokenAccounts(provider: provider, accounts, selected: accounts.last)
+            XCTAssertEqual(limited.count, uncapped ? 9 : 6)
+            XCTAssertEqual(limited.last?.id, accounts.last?.id)
+        }
+    }
+
+    func test_concurrentAccountFetchesKeepAllAccountsInOrderWithThreeInFlight() async {
+        let (store, accounts, transport) = self.makeBoundedFetchFixture()
+        let refresh = Task { await store.refreshTokenAccounts(provider: .claude, accounts: accounts) }
+        for expected in 3...9 {
+            guard await transport.waitUntilStarted(expected) else {
+                await transport.releaseAll()
+                await refresh.value
+                XCTFail("Account window did not advance to \(expected)")
+                return
+            }
+            if expected < 9 { await transport.releaseLast() }
+        }
+        await transport.releaseAll()
+        await refresh.value
+
+        let metrics = await transport.metrics()
+        XCTAssertEqual(metrics.started, 9)
+        XCTAssertEqual(metrics.peak, 3)
+        XCTAssertNotEqual(metrics.completed, accounts.map(\.id))
+        XCTAssertEqual(store.accountSnapshots[.claude]?.map(\.account.id), accounts.map(\.id))
+        XCTAssertEqual(
+            store.accountSnapshots[.claude]?.compactMap { $0.snapshot?.primary?.usedPercent },
+            (0..<9).map { Double($0) })
+    }
+
+    func test_cancellationDoesNotEnqueueAccountsAndRetainsEveryPriorSnapshot() async {
+        let (store, accounts, transport) = self.makeBoundedFetchFixture()
+        store.accountSnapshots[.claude] = accounts.map { account in
+            TokenAccountUsageSnapshot(
+                account: account,
+                snapshot: self.snapshot(percent: 42),
+                error: nil,
+                sourceLabel: "prior",
+                cacheKey: store.tokenAccountSnapshotCacheKey(provider: .claude, account: account))
+        }
+        let refresh = Task { await store.refreshTokenAccounts(provider: .claude, accounts: accounts) }
+        let started = await transport.waitUntilStarted(3)
+        XCTAssertTrue(started)
+        refresh.cancel()
+        await transport.releaseAll()
+        await refresh.value
+
+        let metrics = await transport.metrics()
+        XCTAssertEqual(metrics.started, 3)
+        XCTAssertEqual(metrics.cancelled, 3)
+        XCTAssertEqual(store.accountSnapshots[.claude]?.map(\.account.id), accounts.map(\.id))
+        XCTAssertEqual(
+            store.accountSnapshots[.claude]?.compactMap { $0.snapshot?.primary?.usedPercent },
+            Array(repeating: 42, count: 9))
+        XCTAssertTrue(store.accountSnapshots[.claude]?.allSatisfy { $0.error == nil } == true)
+    }
+
+    private func makeBoundedFetchFixture()
+        -> (UsageStore, [ProviderTokenAccount], BoundedAccountFetchTransport)
+    {
+        let settings = self.makeSettings()
+        settings.multiAccountMenuLayout = .stacked
+        settings.statusChecksEnabled = false
+        settings.refreshFrequency = .manual
+        self.enableOnlyClaude(settings)
+        for index in 0..<9 {
+            settings.addTokenAccount(provider: .claude, label: "Account \(index)", token: "synthetic-\(index)")
+        }
+        settings.setActiveTokenAccountIndex(0, for: .claude)
+        let accounts = settings.tokenAccounts(for: .claude)
+        let transport = BoundedAccountFetchTransport(accounts: accounts)
+        let store = UsageStore(
+            fetcher: UsageFetcher(), browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
+        let base = store.providerSpecs[.claude]!
+        let descriptor = ProviderDescriptor(
+            id: .claude,
+            metadata: base.descriptor.metadata,
+            branding: base.descriptor.branding,
+            tokenCost: base.descriptor.tokenCost,
+            fetchPlan: ProviderFetchPlan(
+                sourceModes: [.auto, .cli, .oauth],
+                pipeline: ProviderFetchPipeline { _ in [BoundedAccountFetchStrategy(transport: transport)] }),
+            cli: base.descriptor.cli)
+        store.providerSpecs[.claude] = ProviderSpec(
+            style: base.style,
+            isEnabled: base.isEnabled,
+            descriptor: descriptor,
+            makeFetchContext: base.makeFetchContext)
+        return (store, accounts, transport)
     }
 
     func test_tokenAccountMenuSelectionRefreshesProviderWhileGlobalRefreshIsActive() async throws {
@@ -1068,5 +1172,90 @@ private actor BlockingTokenAccountFetchStrategy {
         let ready = self.startedWaiters.filter { self.startedCount >= $0.count }
         self.startedWaiters.removeAll { self.startedCount >= $0.count }
         ready.forEach { $0.continuation.resume() }
+    }
+}
+
+private struct BoundedAccountFetchStrategy: ProviderFetchStrategy {
+    let transport: BoundedAccountFetchTransport
+    var id: String {
+        "bounded-account-test"
+    }
+
+    var kind: ProviderFetchKind {
+        .cli
+    }
+
+    func isAvailable(_: ProviderFetchContext) async -> Bool {
+        true
+    }
+
+    func fetch(_ context: ProviderFetchContext) async throws -> ProviderFetchResult {
+        let snapshot = try await self.transport.fetch(accountID: context.selectedTokenAccountID)
+        return self.makeResult(usage: snapshot, sourceLabel: "bounded-account-test")
+    }
+
+    func shouldFallback(on _: Error, context _: ProviderFetchContext) -> Bool {
+        false
+    }
+}
+
+private actor BoundedAccountFetchTransport {
+    private let accountIDs: [UUID]
+    private var pending: [(UUID, CheckedContinuation<Void, Never>)] = []
+    private var started = 0
+    private var active = 0
+    private var peak = 0
+    private var cancelled = 0
+    private var completed: [UUID] = []
+    private var released = false
+
+    init(accounts: [ProviderTokenAccount]) {
+        self.accountIDs = accounts.map(\.id)
+    }
+
+    func fetch(accountID: UUID?) async throws -> UsageSnapshot {
+        guard let accountID, let index = self.accountIDs.firstIndex(of: accountID) else {
+            throw StatusMenuTokenAccountTestError.rejected
+        }
+        self.started += 1
+        self.active += 1
+        self.peak = max(self.peak, self.active)
+        defer { self.active -= 1 }
+        if !self.released {
+            await withCheckedContinuation { self.pending.append((accountID, $0)) }
+        }
+        if Task.isCancelled {
+            self.cancelled += 1
+            throw CancellationError()
+        }
+        self.completed.append(accountID)
+        return UsageSnapshot(
+            primary: RateWindow(usedPercent: Double(index), windowMinutes: nil, resetsAt: nil, resetDescription: nil),
+            secondary: nil,
+            updatedAt: Date(timeIntervalSince1970: 1_782_000_000))
+    }
+
+    func waitUntilStarted(_ count: Int) async -> Bool {
+        let deadline = ContinuousClock.now.advanced(by: .seconds(5))
+        while self.started < count, ContinuousClock.now < deadline {
+            try? await Task.sleep(for: .milliseconds(1))
+        }
+        return self.started >= count
+    }
+
+    func releaseLast() {
+        self.pending.popLast()?.1.resume()
+    }
+
+    func releaseAll() {
+        self.released = true
+        for (_, continuation) in self.pending.reversed() {
+            continuation.resume()
+        }
+        self.pending.removeAll()
+    }
+
+    func metrics() -> (started: Int, peak: Int, cancelled: Int, completed: [UUID]) {
+        (self.started, self.peak, self.cancelled, self.completed)
     }
 }

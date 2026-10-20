@@ -79,6 +79,7 @@ extension StatusItemController {
 
     private func recordMenuAdjunctReadinessBaseline(_ signature: String) {
         self.lastMenuAdjunctReadinessSignature = signature
+        self.lastMenuCardLayoutReadinessSignature = self.menuCardLayoutReadinessSignature()
         self.lastMenuAdjunctReadinessBaselineVersion = self.menuSession.contentVersion
     }
 
@@ -120,6 +121,7 @@ extension StatusItemController {
             "credits=\(self.store.credits == nil ? "0" : "1")",
             "planHistoryRevision=\(self.store.planUtilizationHistoryRevision)",
             "claudeSwapRevision=\(self.store.claudeSwapRevision)",
+            "claudeNativeProfileAccountsRevision=\(self.store.claudeNativeProfileAccountsRevision)",
         ]
 
         for provider in self.store.enabledFirstPartyProvidersForDisplay() {
@@ -130,6 +132,7 @@ extension StatusItemController {
                 [
                     provider.rawValue,
                     "token=\(tokenSignature)",
+                    "layout=\(self.menuCardLayoutReadinessSignature(for: provider))",
                     "statusComponents=\(self.statusComponentsRenderSignature(for: provider))",
                     "refreshing=\(self.store.shouldShowRefreshingMenuCardIndicator(for: provider) ? "1" : "0")",
                     "usageHistory=\(usageHistoryVisible ? "1" : "0")",
@@ -137,6 +140,32 @@ extension StatusItemController {
         }
 
         return parts.joined(separator: "|")
+    }
+
+    func menuCardLayoutReadinessSignature() -> String {
+        self.store.enabledFirstPartyProvidersForDisplay()
+            .map { "\($0.rawValue):\(self.menuCardLayoutReadinessSignature(for: $0))" }
+            .joined(separator: "|")
+    }
+
+    private func menuCardLayoutReadinessSignature(for provider: UsageProvider) -> String {
+        let accountID: String? = switch provider {
+        case .codex:
+            self.settings.codexVisibleAccountProjectionForMenuDisplay?.activeVisibleAccountID
+        case .claude:
+            [
+                self.settings.selectedTokenAccount(for: provider)?.id.uuidString ?? "none",
+                self.settings.claudeNativeProfileAlias ?? "none",
+                (self.store.providerRuntimes[.claude] as? ClaudeProviderRuntime)?.lastNativeProfileIdentity ?? "none",
+            ].joined(separator: ";")
+        default:
+            self.settings.selectedTokenAccount(for: provider)?.id.uuidString
+        }
+        return [
+            self.store.snapshots[provider.instanceID] == nil ? "empty" : "snapshot",
+            self.store.errors[provider.instanceID] == nil ? "ok" : "error",
+            accountID ?? "none",
+        ].joined(separator: ",")
     }
 
     static func dashboardBreakdownReadinessSignature(

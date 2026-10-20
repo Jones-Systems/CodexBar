@@ -18,11 +18,13 @@ extension StatusItemController {
         errorOverride: String? = nil,
         forceOverrideCard: Bool = false,
         accountOverride: AccountInfo? = nil,
+        accountDisplayLabelOverride: String? = nil,
         historySelectionOverride: PlanUtilizationHistorySelection? = nil,
         planOverride: String? = nil,
         subtitleOverride: String? = nil,
         sourceLabelOverride: String? = nil,
-        creditsOverride: CreditsSnapshot? = nil) -> UsageMenuCardView.Model?
+        creditsOverride: CreditsSnapshot? = nil,
+        isRefreshingOverride: Bool? = nil) -> UsageMenuCardView.Model?
     {
         // Provider-specific by design: Codex is the historical card fallback when no enabled provider is available.
         let target = provider ?? self.store.enabledFirstPartyProvidersForDisplay().first ?? .codex
@@ -117,8 +119,12 @@ extension StatusItemController {
             tokenError: tokenError,
             account: fallbackAccount,
             accountIsAuthoritative: accountOverride != nil,
+            accountDisplayLabel: accountDisplayLabelOverride
+                ?? (target == .codex && surface == .liveCard ? self.selectedCodexAccountDisplayLabel() : nil)
+                ?? (target == .claude && surface == .liveCard
+                    ? self.store.selectedClaudeNativeProfileDisplayLabel() : nil),
             planOverride: planOverride,
-            isRefreshing: self.store.shouldShowRefreshingMenuCardIndicator(for: target),
+            isRefreshing: isRefreshingOverride ?? self.store.shouldShowRefreshingMenuCardIndicator(for: target),
             // Provider-level errors can belong to a different account, so
             // override cards never inherit them (same rule as the snapshot,
             // token-cost, and source-label fallbacks above).
@@ -279,6 +285,20 @@ extension StatusItemController {
         }
         guard let snapshot else { return .unavailable }
         return self.store.planUtilizationHistorySelection(for: provider, snapshotOverride: snapshot)
+    }
+
+    private func selectedCodexAccountDisplayLabel() -> String {
+        if let projection = self.settings.codexVisibleAccountProjectionForMenuDisplay,
+           let account = projection.visibleAccounts.first(where: { $0.id == projection.activeVisibleAccountID })
+        {
+            return self.settings.codexAccountDisplayLabel(for: account)
+        }
+        let source = self.settings.codexActiveSource
+        let alias: String? = if case .liveSystem = source { "default" } else { nil }
+        return self.settings.accountDisplayLabel(
+            provider: .codex,
+            profileIdentity: JonesAccountDisplayLabel.codexProfileIdentity(for: source),
+            verifiedAlias: alias)
     }
 
     func accountInfo(for account: CodexVisibleAccount) -> AccountInfo {

@@ -12,6 +12,7 @@ struct MenuCardCompactAccountRowView: View {
         let constraintDetail: String?
         let hasError: Bool
         let showsBestBadge: Bool
+        var isRefreshing: Bool = false
 
         var headroomLabel: String? {
             self.headroomPercent.map { "\(Int($0.rounded()))%" }
@@ -25,6 +26,7 @@ struct MenuCardCompactAccountRowView: View {
                 self.constraintDetail ?? "-",
                 self.hasError ? "error" : "ok",
                 self.showsBestBadge ? "best" : "plain",
+                self.isRefreshing ? "refreshing" : "idle",
             ].joined(separator: "|")
         }
     }
@@ -54,7 +56,11 @@ struct MenuCardCompactAccountRowView: View {
                         .accessibilityLabel(L("Most usable account"))
                 }
                 Spacer(minLength: 12)
-                if self.model.hasError, self.model.headroomPercent == nil {
+                if self.model.isRefreshing, self.model.headroomPercent == nil {
+                    Text("\(L("Refreshing"))…")
+                        .font(.caption)
+                        .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
+                } else if self.model.hasError, self.model.headroomPercent == nil {
                     Image(systemName: "exclamationmark.triangle")
                         .font(.footnote)
                         .foregroundStyle(MenuHighlightStyle.error(self.isHighlighted))
@@ -110,8 +116,11 @@ struct MenuCardCompactAccountRowView: View {
         }
     }
 
-    private var accessibilityText: String {
+    var accessibilityText: String {
         var parts = [self.model.label]
+        if self.model.isRefreshing, self.model.headroomPercent == nil {
+            parts.append("\(L("Refreshing"))…")
+        }
         if let label = self.model.headroomLabel {
             parts.append(String(format: L("%@ remaining"), label))
         }

@@ -399,7 +399,10 @@ private struct UsageMenuCardHeaderView: View {
     private var liveSubtitle: MenuCardLiveSubtitle {
         let fallback = MenuCardLiveSubtitle(text: self.model.subtitleText, style: self.model.subtitleStyle)
         guard self.model.usesLiveSubtitle else { return fallback }
-        return self.refreshMonitor?.subtitle(for: self.model.provider, fallback: fallback) ?? fallback
+        return self.refreshMonitor?.subtitle(
+            for: self.model.provider,
+            hostedModel: self.model,
+            fallback: fallback) ?? fallback
     }
 
     private func subtitleColor(for style: UsageMenuCardView.Model.SubtitleStyle) -> Color {
@@ -1235,8 +1238,10 @@ extension UsageMenuCardView.Model {
         input: Input,
         subtitle: (text: String, style: SubtitleStyle)) -> RedactedText
     {
+        // Labels change presentation only; tracked identity still uses the original account email.
+        let label = input.accountDisplayLabel?.trimmingCharacters(in: .whitespacesAndNewlines)
         let email = PersonalInfoRedactor.redactEmail(
-            Self.email(from: input),
+            label?.isEmpty == false ? label : Self.email(from: input),
             isEnabled: input.hidePersonalInfo)
         let subtitleText = PersonalInfoRedactor.redactEmails(in: subtitle.text, isEnabled: input.hidePersonalInfo)
             ?? subtitle.text

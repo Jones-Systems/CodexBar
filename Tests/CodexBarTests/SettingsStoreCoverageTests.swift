@@ -188,39 +188,6 @@ struct SettingsStoreCoverageTests {
     }
 
     @Test
-    func `multi account menu layout persists and bridges legacy show all token accounts`() throws {
-        let suite = "SettingsStoreCoverageTests-multi-account-layout"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defaults.removePersistentDomain(forName: suite)
-        let configStore = testConfigStore(suiteName: suite)
-
-        let initial = Self.makeSettingsStore(userDefaults: defaults, configStore: configStore)
-        #expect(initial.multiAccountMenuLayout == .segmented)
-
-        initial.multiAccountMenuLayout = .stacked
-        #expect(defaults.string(forKey: "multiAccountMenuLayout") == MultiAccountMenuLayout.stacked.rawValue)
-        #expect(initial.showAllTokenAccountsInMenu)
-
-        let reloaded = Self.makeSettingsStore(userDefaults: defaults, configStore: configStore)
-        #expect(reloaded.multiAccountMenuLayout == .stacked)
-        reloaded.showAllTokenAccountsInMenu = false
-        #expect(reloaded.multiAccountMenuLayout == .segmented)
-    }
-
-    @Test
-    func `legacy show all token accounts migrates to stacked layout`() throws {
-        let suite = "SettingsStoreCoverageTests-legacy-token-account-layout"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defaults.removePersistentDomain(forName: suite)
-        defaults.set(true, forKey: "showAllTokenAccountsInMenu")
-        let configStore = testConfigStore(suiteName: suite)
-
-        let settings = Self.makeSettingsStore(userDefaults: defaults, configStore: configStore)
-
-        #expect(settings.multiAccountMenuLayout == .stacked)
-    }
-
-    @Test
     func `token account mutations apply side effects`() {
         let settings = Self.makeSettingsStore()
 
@@ -965,5 +932,52 @@ struct SettingsStoreCoverageTests {
             try await Task.sleep(nanoseconds: 10_000_000)
         }
         return try store.load()
+    }
+}
+
+extension SettingsStoreCoverageTests {
+    @Test
+    func `multi account menu layout persists and bridges legacy show all token accounts`() {
+        let defaults = InMemoryUserDefaults()
+        let configStore = testConfigStore(suiteName: "SettingsStoreCoverageTests-multi-account-layout")
+        let initial = Self.makeSettingsStore(userDefaults: defaults, configStore: configStore)
+        #expect(initial.multiAccountMenuLayout == .stacked)
+        #expect(defaults.object(forKey: "multiAccountMenuLayout") == nil)
+        #expect(defaults.object(forKey: "showAllTokenAccountsInMenu") == nil)
+
+        initial.multiAccountMenuLayout = .stacked
+        #expect(defaults.string(forKey: "multiAccountMenuLayout") == MultiAccountMenuLayout.stacked.rawValue)
+        #expect(initial.showAllTokenAccountsInMenu)
+
+        let reloaded = Self.makeSettingsStore(userDefaults: defaults, configStore: configStore)
+        #expect(reloaded.multiAccountMenuLayout == .stacked)
+        reloaded.showAllTokenAccountsInMenu = false
+        #expect(reloaded.multiAccountMenuLayout == .segmented)
+    }
+
+    @Test(arguments: [true, false])
+    func `legacy show all token accounts remains an explicit layout choice`(showAll: Bool) {
+        let defaults = InMemoryUserDefaults()
+        defaults.set(showAll, forKey: "showAllTokenAccountsInMenu")
+        let settings = Self.makeSettingsStore(
+            userDefaults: defaults,
+            configStore: testConfigStore(suiteName: "SettingsStoreCoverageTests-legacy-layout"))
+
+        #expect(settings.multiAccountMenuLayout == (showAll ? .stacked : .segmented))
+        #expect(defaults.object(forKey: "multiAccountMenuLayout") == nil)
+        #expect(defaults.bool(forKey: "showAllTokenAccountsInMenu") == showAll)
+    }
+
+    @Test(arguments: ["segmented", "stacked", "invalid"])
+    func `explicit layout wins over legacy and invalid layout falls back without writes`(rawValue: String) {
+        let defaults = InMemoryUserDefaults()
+        defaults.set(rawValue, forKey: "multiAccountMenuLayout")
+        defaults.set(rawValue == "segmented", forKey: "showAllTokenAccountsInMenu")
+        let settings = Self.makeSettingsStore(
+            userDefaults: defaults,
+            configStore: testConfigStore(suiteName: "SettingsStoreCoverageTests-explicit-layout"))
+
+        #expect(settings.multiAccountMenuLayout == (rawValue == "segmented" ? .segmented : .stacked))
+        #expect(defaults.string(forKey: "multiAccountMenuLayout") == rawValue)
     }
 }

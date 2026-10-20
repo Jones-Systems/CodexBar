@@ -8,6 +8,8 @@ import Foundation
 public struct CodexVisibleAccount: Equatable, Identifiable, Sendable {
     public let id: String
     public let email: String
+    // Presentation metadata from enrolled profile homes; never an authentication or account identity.
+    public let fleetProfileAlias: String?
     public let workspaceLabel: String?
     public private(set) var displayDiscriminator: String?
     public let workspaceAccountID: String?
@@ -33,10 +35,12 @@ public struct CodexVisibleAccount: Equatable, Identifiable, Sendable {
         isLive: Bool,
         canReauthenticate: Bool,
         canRemove: Bool,
-        systemPromotionTarget: JonesCodexSystemPromotionTarget? = nil)
+        systemPromotionTarget: JonesCodexSystemPromotionTarget? = nil,
+        fleetProfileAlias: String? = nil)
     {
         self.id = id
         self.email = email
+        self.fleetProfileAlias = fleetProfileAlias
         self.workspaceLabel = Self.normalizeWorkspaceLabel(workspaceLabel)
         self.workspaceAccountID = workspaceAccountID
         self.authFingerprint = CodexAuthFingerprint.normalize(authFingerprint)
@@ -289,7 +293,10 @@ extension CodexVisibleAccountProjection {
                 isLive: draft.isLive,
                 canReauthenticate: draft.canReauthenticate,
                 canRemove: draft.canRemove,
-                systemPromotionTarget: draft.systemPromotionTarget)
+                systemPromotionTarget: draft.systemPromotionTarget,
+                fleetProfileAlias: Self.fleetProfileAlias(
+                    for: draft.selectionSource,
+                    enrolledHomePaths: snapshot.fleetProfileHomePaths))
         }.sorted { lhs, rhs in
             if lhs.email != rhs.email {
                 return lhs.email < rhs.email
@@ -308,6 +315,11 @@ extension CodexVisibleAccountProjection {
             activeVisibleAccountID: visibleAccounts.first { $0.isActive }?.id,
             liveVisibleAccountID: visibleAccounts.first { $0.isLive }?.id,
             hasUnreadableAddedAccountStore: snapshot.hasUnreadableAddedAccountStore)
+    }
+
+    private static func fleetProfileAlias(for source: CodexActiveSource, enrolledHomePaths: [String]) -> String? {
+        guard case let .profileHome(path) = source, enrolledHomePaths.contains(path) else { return nil }
+        return URL(fileURLWithPath: path).lastPathComponent
     }
 
     private static func storedAccountDrafts(

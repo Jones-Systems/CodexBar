@@ -8,15 +8,16 @@ enum JonesCompactAccountPresentation {
         collapsedAccountIDs: Set<ProviderAccountIdentity> = [],
         healthyTailExpanded: Bool = false) -> AccountMenuLayoutPlanner.Plan
     {
-        // Provider-specific by design: Codex uses toggles at every count and folds eligible overflow above five total.
-        let isCodex = provider == .codex
+        // Provider-specific by design: native fleet rows use toggles at every count and never fold away accounts.
+        let keepsAllAccountsVisible = provider == .codex || (provider == .claude && !accounts.isEmpty &&
+            accounts.allSatisfy { $0.id.source == "claude-native-profile" })
         return AccountMenuLayoutPlanner.plan(
             accounts: accounts,
             expandedAccountIDs: expandedAccountIDs,
             healthyTailExpanded: healthyTailExpanded,
             collapsedAccountIDs: collapsedAccountIDs,
-            minimumVisibleAccountCount: isCodex ? 5 : 0,
-            policy: isCodex
+            minimumVisibleAccountCount: keepsAllAccountsVisible ? Int.max : 0,
+            policy: keepsAllAccountsVisible
                 ? .init(compactLayoutMinimumAccountCount: 1, minimumCollapsedHealthyRowCount: 1)
                 : .init())
     }

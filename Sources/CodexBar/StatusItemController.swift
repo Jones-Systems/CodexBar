@@ -85,37 +85,6 @@ final class StatusItemController: NSObject, NSMenuDelegate, StatusItemControllin
     var menuRefreshEnabledOverrideForTesting: Bool?
     #endif
 
-    typealias Factory =
-        @MainActor (
-            UsageStore,
-            SettingsStore,
-            AccountInfo,
-            UpdaterProviding,
-            PreferencesSelection,
-            ManagedCodexAccountCoordinator,
-            CodexAccountPromotionCoordinator)
-        -> StatusItemControlling
-    // swiftlint:disable:next function_parameter_count
-    static func makeDefaultController(
-        store: UsageStore,
-        settings: SettingsStore,
-        account: AccountInfo,
-        updater: UpdaterProviding,
-        selection: PreferencesSelection,
-        managedCodexAccountCoordinator: ManagedCodexAccountCoordinator,
-        codexAccountPromotionCoordinator: CodexAccountPromotionCoordinator)
-        -> StatusItemControlling
-    {
-        StatusItemController(
-            store: store,
-            settings: settings,
-            account: account,
-            updater: updater,
-            preferencesSelection: selection,
-            managedCodexAccountCoordinator: managedCodexAccountCoordinator,
-            codexAccountPromotionCoordinator: codexAccountPromotionCoordinator)
-    }
-
     static let defaultFactory: Factory = StatusItemController.makeDefaultController
 
     static var factory: Factory = StatusItemController.defaultFactory
@@ -154,6 +123,7 @@ final class StatusItemController: NSObject, NSMenuDelegate, StatusItemControllin
     var menuCardHeightCache: [MenuCardHeightCacheKey: CGFloat] = [:]
     var measuredStandardMenuWidthCache: [String: CGFloat] = [:]
     var lastMenuAdjunctReadinessSignature = ""
+    var lastMenuCardLayoutReadinessSignature = ""
     var lastMenuAdjunctReadinessBaselineVersion = 0
     var rootOpenHandledMenuObservationSignature: String?
     var mergedMenu: NSMenu?
@@ -444,6 +414,7 @@ final class StatusItemController: NSObject, NSMenuDelegate, StatusItemControllin
                 metadata: ["keys": repairedStatusItemVisibilityKeys.joined(separator: ",")])
         }
         self.lastMenuAdjunctReadinessSignature = self.menuAdjunctReadinessSignature()
+        self.lastMenuCardLayoutReadinessSignature = self.menuCardLayoutReadinessSignature()
         self.lastMenuAdjunctReadinessBaselineVersion = self.menuSession.contentVersion
         self.lastWidgetDisplaySettingsSignature = self.widgetDisplaySettingsSignature()
         self.wireBindings()
@@ -536,6 +507,9 @@ final class StatusItemController: NSObject, NSMenuDelegate, StatusItemControllin
     func handleObservedStoreMenuChange() {
         self.observeStoreChanges()
         self.updatePersistentRefreshItemsEnabled()
+        // New usage or account identity needs a rebuilt card; ordinary value updates retain the tracked layout.
+        let cardLayoutChanged = !self.openMenus.isEmpty &&
+            self.menuCardLayoutReadinessSignature() != self.lastMenuCardLayoutReadinessSignature
         let rootOpenHandledReadiness = self.consumeRootOpenHandledMenuObservationIfNeeded()
         // `refreshOpenMenus` is only consulted when a menu is currently open.
         // Computing the readiness signature serializes every enabled provider's
@@ -546,7 +520,7 @@ final class StatusItemController: NSObject, NSMenuDelegate, StatusItemControllin
             : rootOpenHandledReadiness || self.didMenuAdjunctReadinessChange()
         self.invalidateMenus(
             refreshOpenMenus: refreshOpenMenus,
-            deferOpenParentMenuRebuild: true,
+            deferOpenParentMenuRebuild: !cardLayoutChanged,
             allowStaleContentDuringDataRefresh: true)
         self.completeParentMenuRebuildAfterHostedSubviewCloseIfNeeded()
     }
@@ -943,6 +917,39 @@ final class StatusItemController: NSObject, NSMenuDelegate, StatusItemControllin
         self.screenChangeVisibilityTask?.cancel()
         self.pendingScreenChangePreviousCount = nil
         NotificationCenter.default.removeObserver(self)
+    }
+}
+
+extension StatusItemController {
+    typealias Factory =
+        @MainActor (
+            UsageStore,
+            SettingsStore,
+            AccountInfo,
+            UpdaterProviding,
+            PreferencesSelection,
+            ManagedCodexAccountCoordinator,
+            CodexAccountPromotionCoordinator)
+        -> StatusItemControlling
+    // swiftlint:disable:next function_parameter_count
+    static func makeDefaultController(
+        store: UsageStore,
+        settings: SettingsStore,
+        account: AccountInfo,
+        updater: UpdaterProviding,
+        selection: PreferencesSelection,
+        managedCodexAccountCoordinator: ManagedCodexAccountCoordinator,
+        codexAccountPromotionCoordinator: CodexAccountPromotionCoordinator)
+        -> StatusItemControlling
+    {
+        StatusItemController(
+            store: store,
+            settings: settings,
+            account: account,
+            updater: updater,
+            preferencesSelection: selection,
+            managedCodexAccountCoordinator: managedCodexAccountCoordinator,
+            codexAccountPromotionCoordinator: codexAccountPromotionCoordinator)
     }
 }
 

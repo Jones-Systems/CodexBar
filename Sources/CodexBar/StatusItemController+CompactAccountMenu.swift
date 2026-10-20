@@ -25,6 +25,8 @@ extension StatusItemController {
         let cardModel: (ProviderAccountUsageSnapshot) -> UsageMenuCardView.Model?
         var planAction: ((ProviderAccountUsageSnapshot) -> (() -> Void)?)?
         var workspaceSections: [CodexAccountWorkspaceSection] = []
+        var refreshingAccountIDs: Set<ProviderAccountIdentity> = []
+        var accountStatusText: [ProviderAccountIdentity: String] = [:]
     }
 
     /// Renders the token-account list with the compact plan when it applies.
@@ -62,7 +64,7 @@ extension StatusItemController {
     }
 
     /// Renders the Codex account list with the compact plan when it applies.
-    /// Workspace groups share the global visibility budget and retain their section headers.
+    /// Workspace groups retain their section headers without hiding account rows.
     func addCompactCodexAccountMenuIfPlanned(
         display: CodexAccountMenuDisplay,
         to menu: NSMenu,
@@ -71,7 +73,8 @@ extension StatusItemController {
     {
         let projected = Self.projectedCodexAccounts(
             display: display,
-            includeOptionalCredits: self.settings.showOptionalCreditsAndExtraUsage)
+            includeOptionalCredits: self.settings.showOptionalCreditsAndExtraUsage,
+            displayLabels: self.settings.codexAccountDisplayLabels(for: display.accounts))
         let plan = self.compactAccountPlan(for: .codex, accounts: projected)
         guard plan.usesCompactLayout else { return false }
         let snapshotsByAccountID = Dictionary(
@@ -94,6 +97,7 @@ extension StatusItemController {
                         errorOverride: health.label,
                         forceOverrideCard: accountSnapshot == nil,
                         accountOverride: self.accountInfo(for: account),
+                        accountDisplayLabelOverride: projectedAccount.displayLabel,
                         historySelectionOverride: self.store.codexPlanUtilizationHistorySelection(
                             forVisibleAccount: account),
                         creditsOverride: accountSnapshot?.credits)
@@ -170,15 +174,7 @@ extension StatusItemController {
                 if previousRowWasCard {
                     menu.addItem(.separator())
                 }
-                let rowModel = MenuCardCompactAccountRowView.Model(
-                    label: PersonalInfoRedactor.redactEmail(
-                        compactRow.label,
-                        isEnabled: self.settings.hidePersonalInfo),
-                    headroomPercent: compactRow.headroomPercent,
-                    severity: compactRow.severity,
-                    constraintDetail: compactRow.constraintDetail,
-                    hasError: compactRow.hasError,
-                    showsBestBadge: compactRow.isBestCandidate)
+                let rowModel = self.compactAccountRowModel(for: compactRow, rendering: rendering)
                 let accountID = compactRow.accountID
                 menu.addItem(self.makeMenuCardItem(
                     MenuCardCompactAccountRowView(
@@ -255,6 +251,22 @@ extension StatusItemController {
         }
     }
 
+    func compactAccountRowModel(
+        for row: AccountMenuLayoutPlanner.CompactRow,
+        rendering: CompactAccountMenuRendering) -> MenuCardCompactAccountRowView.Model
+    {
+        MenuCardCompactAccountRowView.Model(
+            label: PersonalInfoRedactor.redactEmail(row.label, isEnabled: self.settings.hidePersonalInfo),
+            headroomPercent: row.headroomPercent,
+            severity: row.severity,
+            constraintDetail: rendering.accountStatusText[row.accountID].map {
+                PersonalInfoRedactor.redactEmails(in: $0, isEnabled: self.settings.hidePersonalInfo)
+            } ?? row.constraintDetail,
+            hasError: row.hasError,
+            showsBestBadge: row.isBestCandidate,
+            isRefreshing: rendering.refreshingAccountIDs.contains(row.accountID))
+    }
+
     // MARK: - Projections
 
     static func projectedTokenAccounts(
@@ -280,7 +292,8 @@ extension StatusItemController {
 
     static func projectedCodexAccounts(
         display: CodexAccountMenuDisplay,
-        includeOptionalCredits: Bool = true) -> [ProviderAccountUsageSnapshot]
+        includeOptionalCredits: Bool = true,
+        displayLabels: [String: String] = [:]) -> [ProviderAccountUsageSnapshot]
     {
         let snapshotsByAccountID = Dictionary(uniqueKeysWithValues: display.snapshots.map { ($0.account.id, $0) })
         return display.accounts.map { account in
@@ -291,7 +304,7 @@ extension StatusItemController {
             return ProviderAccountUsageSnapshot(
                 id: ProviderAccountIdentity(source: "codex-account", opaqueID: account.id),
                 provider: .codex,
-                displayLabel: account.menuDisplayName,
+                displayLabel: displayLabels[account.id] ?? account.menuDisplayName,
                 isActive: isActive,
                 canActivate: !isActive,
                 snapshot: Self.snapshotIncludingMonthlyCredit(

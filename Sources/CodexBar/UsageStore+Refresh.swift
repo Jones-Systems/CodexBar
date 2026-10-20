@@ -203,6 +203,9 @@ extension UsageStore {
                         provider,
                         allowDisabled: allowDisabled,
                         generation: request.generation)
+                    if provider == .claude {
+                        await self.refreshClaudeNativeProfileAccountsAfterMain(generation: request.generation)
+                    }
                 }
             }
             let publishedNewSnapshot = didStartRefresh &&
@@ -276,7 +279,6 @@ extension UsageStore {
     private func prepareCodexRefreshPublication() -> CodexRefreshPublicationPreparation {
         let previousGuard = self.lastCodexUsagePublicationGuard
         let expectedGuard = self.freshCodexAccountScopedRefreshGuard()
-        let hydrationCandidates = self.codexAccountSnapshots
         let projection = self.settings.codexVisibleAccountProjection
         let visibleAccounts = projection.visibleAccounts
         let ownerKey = self.codexLimitResetOwnerKey(
@@ -288,31 +290,8 @@ extension UsageStore {
         let ownerMatchesPrevious = ownerKey != nil && ownerKey == previousOwnerKey
         self.reconcileCodexAccountStateForUsageOwner(expectedGuard)
 
-        let hydratedPrior: CodexAccountUsageSnapshot? = {
-            guard let ownerKey, let activeVisibleAccountID = projection.activeVisibleAccountID else { return nil }
-            let matches = hydrationCandidates.filter { row in
-                row.snapshot != nil &&
-                    row.id == activeVisibleAccountID &&
-                    self.codexLimitResetOwnerKey(
-                        forVisibleAccount: row.account,
-                        visibleAccounts: visibleAccounts) == ownerKey
-            }
-            guard matches.count == 1 else { return nil }
-            return matches[0]
-        }()
-        // Provider-specific by design: Codex account refresh hydrates only a uniquely matching reconciled owner.
-        if self.snapshots[.codex] == nil,
-           let hydratedPrior,
-           let hydratedSnapshot = hydratedPrior.snapshot
-        {
-            self.snapshots[.codex] = hydratedSnapshot
-            self.lastKnownResetSnapshots[.codex] = hydratedSnapshot
-            self.errors[.codex] = hydratedPrior.error
-            self.lastSourceLabels[.codex] = hydratedPrior.sourceLabel
-            self.publishHydratedCodexCreditsIfNeeded(from: hydratedPrior.credits, ownerGuard: expectedGuard)
-            self.lastCodexUsagePublicationGuard = expectedGuard
-            self.lastCodexAccountScopedRefreshGuard = expectedGuard
-        }
+        let hydratedPrior = self.hydrateSelectedCodexAccountSnapshot(
+            expectedGuard: expectedGuard, projection: projection)
 
         var trustedCandidates = ownerMatchesPrevious
             ? [self.snapshots[.codex], self.lastKnownResetSnapshots[.codex]].compactMap(\.self)
@@ -358,8 +337,6 @@ extension UsageStore {
         if provider == .codex, self.shouldFetchAllCodexVisibleAccounts() {
             await self.refreshCodexVisibleAccountsForMenu(generation: generation)
             return nil
-        } else if provider == .codex {
-            self.codexAccountSnapshots = []
         }
 
         if provider == .kilo, self.shouldFanOutKiloScopes() {
@@ -884,6 +861,9 @@ extension UsageStore {
         if provider == .deepseek {
             self.markDeepSeekProfileTransitionUnavailable()
         }
+        if provider == .codex, let expectedGuard = context.codexExpectedGuard {
+            self.updateSelectedCodexCachedFailure(error, expectedGuard: expectedGuard)
+        }
         self.bindCodexFailurePublicationOwner(
             provider: provider,
             expectedGuard: context.codexExpectedGuard)
@@ -981,12 +961,21 @@ extension UsageStore {
             accountEmail: account.email,
             accountOrganization: identity?.accountOrganization,
             loginMethod: identity?.loginMethod ?? account.workspaceLabel))
-        let currentSnapshots = [CodexAccountUsageSnapshot(
+        guard let cached = self.settings.cachedCodexAccountMenuProjection,
+              cached.activeSource == currentGuard.source
+        else { return }
+        var currentSnapshots = self.prunedCodexAccountSnapshots(for: cached.projection)
+        let refreshed = CodexAccountUsageSnapshot(
             account: account,
             snapshot: relabeled,
             error: nil,
             sourceLabel: sourceLabel,
-            credits: self.credits)]
+            credits: self.credits)
+        if let index = currentSnapshots.firstIndex(where: { $0.id == account.id }) {
+            currentSnapshots[index] = refreshed
+        } else {
+            currentSnapshots.append(refreshed)
+        }
         self.codexAccountSnapshots = currentSnapshots
         self.codexAccountUsageSnapshotStore?.store(currentSnapshots)
     }

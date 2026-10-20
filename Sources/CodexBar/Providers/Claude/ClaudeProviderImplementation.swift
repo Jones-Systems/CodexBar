@@ -359,7 +359,7 @@ struct ClaudeProviderImplementation: ProviderImplementation {
         -> (label: String, action: MenuDescriptor.MenuAction)?
     {
         if ClaudeNativeProfileSelection.isSelected(environment: context.store.claudeNativeProfileFetchEnvironment()) {
-            return ("Manage selected native profile in Claude Settings…", .providerSettings(.claude))
+            return ("Manage native profile…", .providerSettings(.claude))
         }
         if self.shouldOfferDirectKeychainReadConsent(context: context) {
             // Terminal unreadable state (#2634/#2650): OAuth cannot recover until the user either opts in
