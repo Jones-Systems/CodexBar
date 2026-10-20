@@ -1,6 +1,46 @@
 import CodexBarCore
+import Foundation
 
 enum JonesCompactAccountPresentation {
+    struct CodexRowDetail: Equatable {
+        let text: String?
+        let trailingDetail: MenuCardCompactAccountRowView.TrailingDetail?
+    }
+
+    static func codexRowDetail(
+        account: ProviderAccountUsageSnapshot,
+        resetStyle: ResetTimeDisplayStyle,
+        now: Date) -> CodexRowDetail
+    {
+        // Provider-specific by design: Codex rows pair weekly allowance with the nearest limit-reset credit expiry.
+        guard account.provider == .codex, account.error == nil, let snapshot = account.snapshot else {
+            return CodexRowDetail(text: nil, trailingDetail: nil)
+        }
+        let text = snapshot.secondary.map { weekly in
+            let remaining = String(format: L("%@ left"), "\(Int(weekly.remainingPercent.rounded()))%")
+            var parts = ["\(L("Weekly")) \(remaining)"]
+            if weekly.resetsAt != nil,
+               let reset = UsageFormatter.resetLine(for: weekly, style: resetStyle, now: now)
+            {
+                parts.append(reset)
+            }
+            return parts.joined(separator: " · ")
+        }
+        var trailingDetail: MenuCardCompactAccountRowView.TrailingDetail?
+        if let credits = snapshot.codexResetCredits,
+           credits.availableInventory(at: now).nextExpiringCredit != nil,
+           let presentation = CodexResetCreditsPresentation.make(snapshot: credits, resetStyle: .countdown, now: now),
+           let nearest = presentation.items.first
+        {
+            trailingDetail = .init(
+                text: nearest.compactExpiryText,
+                count: presentation.items.count,
+                accessibilityLabel: [L("Limit Reset Credits"), presentation.text, nearest.expiryText]
+                    .joined(separator: ", "))
+        }
+        return CodexRowDetail(text: text, trailingDetail: trailingDetail)
+    }
+
     static func plan(
         for provider: UsageProvider,
         accounts: [ProviderAccountUsageSnapshot],

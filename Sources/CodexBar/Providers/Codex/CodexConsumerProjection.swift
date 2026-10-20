@@ -288,6 +288,16 @@ struct CodexConsumerProjection {
             CreditsProjection(
                 snapshot: context.liveCredits,
                 userFacingError: CodexUIErrorMapper.userFacingMessage(context.rawCreditsError))
+        } else if surface == .overrideCard,
+                  let accountCredits = context.liveCredits,
+                  accountCredits.codexCreditLimit == nil || accountCredits.remaining > 0
+        {
+            CreditsProjection(
+                snapshot: CreditsSnapshot(
+                    remaining: accountCredits.remaining,
+                    events: accountCredits.events,
+                    updatedAt: accountCredits.updatedAt),
+                userFacingError: nil)
         } else {
             nil
         }

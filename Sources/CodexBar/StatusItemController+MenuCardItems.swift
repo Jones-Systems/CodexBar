@@ -25,7 +25,11 @@ extension StatusItemController {
             let height = self.cachedMenuCardHeight(for: id, scope: scope, width: width) {
                 self.menuCardHeight(for: view, width: width)
             }
+            let previousHeight = view.frame.height
             measuring.applyMeasuredSize(width: width, height: height)
+            if abs(view.frame.height - previousHeight) > 0.5 {
+                menu.itemChanged(item)
+            }
         }
     }
 

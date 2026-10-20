@@ -27,8 +27,15 @@ extension StatusItemController {
         }
     }
 
-    func overviewFleetAccountRows(for provider: UsageProvider) -> [OverviewFleetAccountRow] {
+    func overviewFleetAccountRows(
+        for provider: UsageProvider,
+        now: Date = Date()) -> [OverviewFleetAccountRow]
+    {
         let accounts = self.overviewFleetAccounts(for: provider)
+        let codexDetails = provider == .codex ? Self.compactCodexRowDetails(
+            accounts: accounts,
+            resetStyle: self.settings.resetTimeDisplayStyle,
+            now: now) : [:]
         let plan = AccountMenuLayoutPlanner.plan(
             accounts: accounts,
             healthyTailExpanded: true,
@@ -39,9 +46,10 @@ extension StatusItemController {
                 label: PersonalInfoRedactor.redactEmail(compact.label, isEnabled: self.settings.hidePersonalInfo),
                 headroomPercent: compact.headroomPercent,
                 severity: compact.severity,
-                constraintDetail: compact.constraintDetail,
+                constraintDetail: codexDetails[compact.accountID]?.text ?? compact.constraintDetail,
                 hasError: compact.hasError,
-                showsBestBadge: compact.isBestCandidate)
+                showsBestBadge: compact.isBestCandidate,
+                trailingDetail: codexDetails[compact.accountID]?.trailingDetail)
             if provider == .claude, compact.headroomPercent == nil {
                 model.isRefreshing = self.store.claudeNativeProfileRefreshingAliases
                     .contains(compact.accountID.opaqueID)

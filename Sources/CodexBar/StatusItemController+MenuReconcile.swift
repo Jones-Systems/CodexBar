@@ -97,8 +97,8 @@ extension StatusItemController {
     }
 
     /// Replaces cached content without first emptying the tracked menu. Compatible item shells
-    /// stay attached while their payloads swap; only separator or row-count differences cause
-    /// structural mutations.
+    /// stay attached while their payloads swap. Hosted rows with different measured heights
+    /// are inserted before the old row is removed so AppKit updates its tracked row geometry.
     func replaceMenuContentKeepingRowsVisible(
         _ menu: NSMenu,
         fromIndex: Int,
@@ -122,8 +122,20 @@ extension StatusItemController {
                 self.shouldReplaceNativeImageItemDuringReconcile(newItem)
             let hasCompatibleItemClass =
                 ObjectIdentifier(type(of: liveItem)) == ObjectIdentifier(type(of: newItem))
+            let hasCompatibleHostedHeight = switch (
+                liveItem.view as? ErasedMenuCardHostingView,
+                newItem.view as? ErasedMenuCardHostingView)
+            {
+            case let (liveHosting?, newHosting?):
+                abs(liveHosting.intrinsicContentSize.height - newHosting.intrinsicContentSize.height) <= 0.5
+            case (nil, nil):
+                true
+            default:
+                false
+            }
             if liveItem.isSeparatorItem == newItem.isSeparatorItem,
                hasCompatibleItemClass,
+               hasCompatibleHostedHeight,
                !requiresNativeImageReplacement
             {
                 if !liveItem.isSeparatorItem {
