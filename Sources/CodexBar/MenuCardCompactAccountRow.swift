@@ -2,9 +2,15 @@ import CodexBarCore
 import SwiftUI
 
 /// Compact menu row for a collapsed account in the multi-account layout:
-/// label on the left, constraint summary plus a mini headroom bar on the right.
+/// label and headroom above optional quota and reset-credit details.
 /// Clicking the row expands it into the full usage card.
 struct MenuCardCompactAccountRowView: View {
+    struct TrailingDetail: Equatable {
+        let text: String
+        let count: Int
+        let accessibilityLabel: String
+    }
+
     struct Model: Equatable {
         let label: String
         let headroomPercent: Double?
@@ -13,6 +19,7 @@ struct MenuCardCompactAccountRowView: View {
         let hasError: Bool
         let showsBestBadge: Bool
         var isRefreshing: Bool = false
+        var trailingDetail: TrailingDetail?
 
         var headroomLabel: String? {
             self.headroomPercent.map { "\(Int($0.rounded()))%" }
@@ -27,6 +34,8 @@ struct MenuCardCompactAccountRowView: View {
                 self.hasError ? "error" : "ok",
                 self.showsBestBadge ? "best" : "plain",
                 self.isRefreshing ? "refreshing" : "idle",
+                self.trailingDetail?.text ?? "-",
+                self.trailingDetail.map { String($0.count) } ?? "-",
             ].joined(separator: "|")
         }
     }
@@ -82,13 +91,27 @@ struct MenuCardCompactAccountRowView: View {
                         .frame(minWidth: 34, alignment: .trailing)
                 }
             }
-            if let detail = self.model.constraintDetail {
-                Text(detail)
-                    .font(.footnote)
-                    .foregroundStyle(self.model.severity == .critical
-                        ? MenuHighlightStyle.error(self.isHighlighted)
-                        : MenuHighlightStyle.secondary(self.isHighlighted))
-                    .lineLimit(1)
+            if self.model.constraintDetail != nil || self.model.trailingDetail != nil {
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    if let detail = self.model.constraintDetail {
+                        Text(detail)
+                            .font(.footnote)
+                            .foregroundStyle(self.model.severity == .critical
+                                ? MenuHighlightStyle.error(self.isHighlighted)
+                                : MenuHighlightStyle.secondary(self.isHighlighted))
+                            .lineLimit(1)
+                            .layoutPriority(1)
+                    }
+                    Spacer(minLength: 4)
+                    if let trailing = self.model.trailingDetail {
+                        ViewThatFits(in: .horizontal) {
+                            self.resetCreditDetail(trailing, showsCount: true)
+                            self.resetCreditDetail(trailing, showsCount: false)
+                        }
+                        .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
+                        .accessibilityHidden(true)
+                    }
+                }
             }
         }
         .padding(.horizontal, UsageMenuCardLayout.horizontalPadding)
@@ -96,6 +119,18 @@ struct MenuCardCompactAccountRowView: View {
         .frame(width: self.width, alignment: .leading)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(self.accessibilityText)
+    }
+
+    private func resetCreditDetail(_ detail: TrailingDetail, showsCount: Bool) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 3) {
+            Image(systemName: "clock")
+            Text(detail.text)
+            if showsCount, detail.count > 1 {
+                Text("×\(detail.count)")
+            }
+        }
+        .font(.caption.monospacedDigit())
+        .fixedSize()
     }
 
     private var severityColor: Color {
@@ -126,6 +161,9 @@ struct MenuCardCompactAccountRowView: View {
         }
         if let detail = self.model.constraintDetail {
             parts.append(detail)
+        }
+        if let detail = self.model.trailingDetail {
+            parts.append(detail.accessibilityLabel)
         }
         if self.model.hasError {
             parts.append(L("Account unavailable"))

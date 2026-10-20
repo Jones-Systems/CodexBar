@@ -145,9 +145,9 @@ struct CodexConsumerProjectionTests {
         #expect(projection.userFacingErrors.dashboard == nil)
     }
 
-    @Test
-    func `override card projects that account's monthly credit limit`() {
-        let store = self.makeStore(suite: "CodexConsumerProjectionTests-override-monthly")
+    @Test(arguments: [0.0, 12345.67])
+    func `override card projects that account's monthly credit limit and separate balance`(balance: Double) {
+        let store = self.makeStore(suite: "CodexConsumerProjectionTests-override-monthly-\(balance)")
         let now = Date(timeIntervalSince1970: 1_700_000_000)
         let otherAccountCredits = CreditsSnapshot(
             remaining: 80,
@@ -160,7 +160,7 @@ struct CodexConsumerProjectionTests {
                 resetsAt: nil,
                 updatedAt: now))
         let accountCredits = CreditsSnapshot(
-            remaining: 0,
+            remaining: balance,
             events: [],
             updatedAt: now,
             codexCreditLimit: CodexCreditLimitSnapshot(
@@ -198,8 +198,38 @@ struct CodexConsumerProjectionTests {
         #expect(projection.rateWindow(for: .monthly)?.remainingPercent == 73)
         #expect(projection.displayedRateLanes(showOptionalCreditsAndExtraUsage: true) == [.monthly])
         #expect(projection.displayedRateLanes(showOptionalCreditsAndExtraUsage: false).isEmpty)
-        #expect(projection.credits == nil)
+        #expect(projection.credits?.remaining == (balance > 0 ? balance : nil))
+        #expect(projection.credits?.snapshot?.codexCreditLimit == nil)
+        #expect(projection.credits?.userFacingError == nil)
         #expect(projection.dashboardVisibility == .hidden)
+    }
+
+    @Test(arguments: [0.0, 12345.67])
+    func `override card keeps only the explicit account balance`(balance: Double) {
+        let store = self.makeStore(suite: "CodexConsumerProjectionTests-override-balance-\(balance)")
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        store.credits = CreditsSnapshot(remaining: 87, events: [], updatedAt: now)
+        store.lastCreditsError = "Other account credits error"
+        let accountCredits = CreditsSnapshot(remaining: balance, events: [], updatedAt: now)
+
+        let withoutOverride = store.codexConsumerProjection(surface: .overrideCard, now: now)
+        #expect(withoutOverride.credits == nil)
+
+        let projection = store.codexConsumerProjection(
+            surface: .overrideCard,
+            creditsOverride: accountCredits,
+            now: now)
+
+        #expect(projection.credits?.snapshot == accountCredits)
+        #expect(projection.credits?.remaining == balance)
+        #expect(projection.credits?.userFacingError == nil)
+        #expect(projection.userFacingErrors.credits == nil)
+        #expect(projection.userFacingErrors.dashboard == nil)
+        #expect(projection.dashboardVisibility == .hidden)
+        #expect(projection.supplementalMetrics.isEmpty)
+        #expect(!projection.canShowBuyCredits)
+        #expect(!projection.hasUsageBreakdown)
+        #expect(!projection.hasCreditsHistory)
     }
 
     @Test

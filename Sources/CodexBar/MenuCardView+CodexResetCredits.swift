@@ -1,6 +1,22 @@
 import CodexBarCore
 import SwiftUI
 
+struct CodexAccountBalancePresentation: Equatable {
+    let title: String
+    let balanceLine: String
+
+    static func make(
+        provider: UsageProvider,
+        creditsRemaining: Double?,
+        progressPercent: Double?) -> Self?
+    {
+        guard provider == .codex, progressPercent == nil, let creditsRemaining else { return nil }
+        return Self(
+            title: L("Extra usage"),
+            balanceLine: "\(L("Balance")): \(UsageFormatter.creditsNumberString(from: creditsRemaining))")
+    }
+}
+
 struct CodexResetCreditPresentationItem: Equatable {
     let expiryText: String
     let compactExpiryText: String

@@ -4,6 +4,141 @@ import Testing
 @testable import CodexBar
 
 struct JonesCompactAccountPresentationTests {
+    private static let detailNow = Date(timeIntervalSince1970: 1_781_726_400)
+
+    private static func detailAccount(
+        weekly: RateWindow?,
+        credits: [CodexRateLimitResetCredit] = [],
+        error: String? = nil,
+        hasSnapshot: Bool = true) -> ProviderAccountUsageSnapshot
+    {
+        ProviderAccountUsageSnapshot(
+            id: ProviderAccountIdentity(source: "codex-account", opaqueID: "synthetic-details"),
+            provider: .codex,
+            displayLabel: "Friendly account",
+            isActive: false,
+            snapshot: hasSnapshot ? UsageSnapshot(
+                primary: RateWindow(usedPercent: 10, windowMinutes: 300, resetsAt: nil, resetDescription: nil),
+                secondary: weekly,
+                codexResetCredits: CodexRateLimitResetCreditsSnapshot(
+                    credits: credits, availableCount: 99, updatedAt: self.detailNow),
+                updatedAt: self.detailNow) : nil,
+            error: error,
+            sourceLabel: "synthetic")
+    }
+
+    private static func resetCredit(
+        id: String,
+        expiresIn: TimeInterval?,
+        status: CodexRateLimitResetCreditStatus = .available) -> CodexRateLimitResetCredit
+    {
+        CodexRateLimitResetCredit(
+            id: id,
+            resetType: "weekly",
+            status: status,
+            grantedAt: self.detailNow.addingTimeInterval(-86400),
+            expiresAt: expiresIn.map { Self.detailNow.addingTimeInterval($0) },
+            redeemStartedAt: nil,
+            redeemedAt: nil,
+            title: nil,
+            description: nil)
+    }
+
+    @Test(arguments: [10.0, 95.0])
+    func `healthy and constrained Codex rows retain weekly remaining and reset`(usedPercent: Double) throws {
+        let weekly = RateWindow(
+            usedPercent: usedPercent,
+            windowMinutes: 10080,
+            resetsAt: Self.detailNow.addingTimeInterval(399_600),
+            resetDescription: nil)
+        let account = Self.detailAccount(weekly: weekly)
+        let detail = JonesCompactAccountPresentation.codexRowDetail(
+            account: account, resetStyle: .countdown, now: Self.detailNow)
+        let reset = try #require(UsageFormatter.resetLine(for: weekly, style: .countdown, now: Self.detailNow))
+
+        #expect(detail.text == "Weekly \(Int(100 - usedPercent))% left · \(reset)")
+        #expect(detail.text?.contains("4d 15h") == true)
+        #expect(detail.trailingDetail == nil)
+    }
+
+    @Test
+    func `weekly absolute style leaves banked expiry as a countdown`() throws {
+        let weekly = RateWindow(
+            usedPercent: 25,
+            windowMinutes: 10080,
+            resetsAt: Self.detailNow.addingTimeInterval(399_600),
+            resetDescription: nil)
+        let account = Self.detailAccount(
+            weekly: weekly,
+            credits: [Self.resetCredit(id: "banked", expiresIn: 172_800)])
+        let detail = JonesCompactAccountPresentation.codexRowDetail(
+            account: account, resetStyle: .absolute, now: Self.detailNow)
+        let reset = try #require(UsageFormatter.resetLine(for: weekly, style: .absolute, now: Self.detailNow))
+
+        #expect(detail.text == "Weekly 75% left · \(reset)")
+        #expect(detail.trailingDetail?.text == "2d")
+        #expect(detail.trailingDetail?.count == 1)
+    }
+
+    @Test
+    func `banked expiry selects nearest available date and counts available inventory`() {
+        let account = Self.detailAccount(
+            weekly: nil,
+            credits: [
+                Self.resetCredit(id: "undated", expiresIn: nil),
+                Self.resetCredit(id: "later", expiresIn: 259_200),
+                Self.resetCredit(id: "redeemed", expiresIn: 60, status: .redeemed),
+                Self.resetCredit(id: "expired", expiresIn: -1),
+                Self.resetCredit(id: "at-now", expiresIn: 0),
+                Self.resetCredit(id: "nearest", expiresIn: 86400),
+            ])
+        let detail = JonesCompactAccountPresentation.codexRowDetail(
+            account: account, resetStyle: .countdown, now: Self.detailNow)
+
+        #expect(detail.text == nil)
+        #expect(detail.trailingDetail?.text == "1d")
+        #expect(detail.trailingDetail?.count == 3)
+        #expect(detail.trailingDetail?.accessibilityLabel == "Limit Reset Credits, 3 available, Expires in 1d")
+    }
+
+    @Test
+    func `expired and undated inventory never invent a banked expiry`() {
+        for credits in [
+            [Self.resetCredit(id: "expired", expiresIn: -1)],
+            [Self.resetCredit(id: "at-now", expiresIn: 0)],
+            [Self.resetCredit(id: "undated", expiresIn: nil)],
+            [],
+        ] {
+            let detail = JonesCompactAccountPresentation.codexRowDetail(
+                account: Self.detailAccount(weekly: nil, credits: credits),
+                resetStyle: .countdown,
+                now: Self.detailNow)
+            #expect(detail.trailingDetail == nil)
+        }
+    }
+
+    @Test
+    func `weekly missing date omits reset and missing usage or errors add no detail`() {
+        let weekly = RateWindow(
+            usedPercent: 20,
+            windowMinutes: 10080,
+            resetsAt: nil,
+            resetDescription: "in 4d")
+        let undated = JonesCompactAccountPresentation.codexRowDetail(
+            account: Self.detailAccount(weekly: weekly), resetStyle: .countdown, now: Self.detailNow)
+        #expect(undated.text == "Weekly 80% left")
+        for account in [
+            Self.detailAccount(weekly: nil),
+            Self.detailAccount(weekly: weekly, error: "Needs re-auth"),
+            Self.detailAccount(weekly: weekly, hasSnapshot: false),
+        ] {
+            let detail = JonesCompactAccountPresentation.codexRowDetail(
+                account: account, resetStyle: .countdown, now: Self.detailNow)
+            #expect(detail.text == nil)
+            #expect(detail.trailingDetail == nil)
+        }
+    }
+
     private func accounts(
         count: Int = 5,
         activeIndex: Int = 0,

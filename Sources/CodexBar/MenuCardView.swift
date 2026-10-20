@@ -250,6 +250,7 @@ struct UsageMenuCardView: View {
                     }
                     if let credits = liveModel.creditsText {
                         CreditsBarContent(
+                            provider: liveModel.provider,
                             creditsText: credits,
                             creditsRemaining: liveModel.creditsRemaining,
                             progressPercent: liveModel.creditsProgressPercent,
@@ -778,6 +779,7 @@ struct UsageMenuCardCreditsSectionView: View {
         if let credits = liveModel.creditsText {
             VStack(alignment: .leading, spacing: 6) {
                 CreditsBarContent(
+                    provider: liveModel.provider,
                     creditsText: credits,
                     creditsRemaining: liveModel.creditsRemaining,
                     progressPercent: liveModel.creditsProgressPercent,
@@ -805,6 +807,7 @@ struct UsageMenuCardCreditsSectionView: View {
 private struct CreditsBarContent: View {
     private static let fullScaleTokens: Double = 1000
 
+    let provider: UsageProvider
     let creditsText: String
     let creditsRemaining: Double?
     var progressPercent: Double?, scaleText: String?
@@ -832,26 +835,44 @@ private struct CreditsBarContent: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(L("Credits"))
-                .font(.body)
-                .fontWeight(.medium)
-            if let percentLeft {
-                UsageProgressBar(
-                    percent: percentLeft,
-                    tint: self.progressColor,
-                    accessibilityLabel: L("Credits remaining"))
+            if let balance = CodexAccountBalancePresentation.make(
+                provider: self.provider,
+                creditsRemaining: self.creditsRemaining,
+                progressPercent: self.progressPercent)
+            {
                 HStack(alignment: .firstTextBaseline) {
-                    Text(self.creditsText)
-                        .font(.caption)
-                        .lineLimit(1)
-                    Spacer()
-                    Text(self.effectiveScaleText)
-                        .font(.caption)
+                    Text(balance.title)
+                        .font(.body)
+                        .fontWeight(.medium)
+                    Spacer(minLength: 8)
+                    Text(balance.balanceLine)
+                        .font(.footnote)
                         .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
+                        .monospacedDigit()
+                        .lineLimit(1)
                 }
             } else {
-                Text(self.creditsText)
-                    .font(.caption)
+                Text(L("Credits"))
+                    .font(.body)
+                    .fontWeight(.medium)
+                if let percentLeft {
+                    UsageProgressBar(
+                        percent: percentLeft,
+                        tint: self.progressColor,
+                        accessibilityLabel: L("Credits remaining"))
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(self.creditsText)
+                            .font(.caption)
+                            .lineLimit(1)
+                        Spacer()
+                        Text(self.effectiveScaleText)
+                            .font(.caption)
+                            .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
+                    }
+                } else {
+                    Text(self.creditsText)
+                        .font(.caption)
+                }
             }
             if let hintText, !hintText.isEmpty {
                 Text(hintText)

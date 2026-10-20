@@ -3,6 +3,33 @@ import Testing
 @testable import CodexBar
 
 struct MenuCardHeightFingerprintTests {
+    @MainActor
+    @Test
+    func `compact height fingerprint and accessibility include banked expiry detail`() {
+        var model = MenuCardCompactAccountRowView.Model(
+            label: "Friendly account",
+            headroomPercent: 80,
+            severity: .healthy,
+            constraintDetail: "Weekly 80% left",
+            hasError: false,
+            showsBestBadge: false)
+        let bare = model.heightFingerprint
+        model.trailingDetail = .init(
+            text: "1d", count: 2, accessibilityLabel: "Limit Reset Credits, 2 available, Expires in 1d")
+        let withExpiry = model.heightFingerprint
+        let view = MenuCardCompactAccountRowView(model: model, progressColor: .blue, width: 360)
+
+        #expect(withExpiry != bare)
+        #expect(view.accessibilityText.contains("Weekly 80% left"))
+        #expect(view.accessibilityText.contains("Limit Reset Credits, 2 available, Expires in 1d"))
+        model.trailingDetail = .init(
+            text: "2d", count: 2, accessibilityLabel: "Limit Reset Credits, 2 available, Expires in 2d")
+        #expect(model.heightFingerprint != withExpiry)
+        model.trailingDetail = .init(
+            text: "1d", count: 3, accessibilityLabel: "Limit Reset Credits, 3 available, Expires in 1d")
+        #expect(model.heightFingerprint != withExpiry)
+    }
+
     @Test
     func `height fingerprint does not retain raw text fields`() {
         let model = Self.model()

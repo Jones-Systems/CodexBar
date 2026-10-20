@@ -7,6 +7,36 @@ import Testing
 @Suite(.serialized)
 @MainActor
 struct StatusMenuCodexSwitcherPresentationTests {
+    @Test
+    func `compact Codex detail map preserves account identity and excludes other providers`() throws {
+        let now = Date(timeIntervalSince1970: 1_781_726_400)
+        let accounts = [UsageProvider.codex, .claude, .copilot].map { provider in
+            ProviderAccountUsageSnapshot(
+                id: ProviderAccountIdentity(source: "synthetic", opaqueID: provider.rawValue),
+                provider: provider,
+                displayLabel: "Friendly \(provider.rawValue)",
+                isActive: false,
+                snapshot: UsageSnapshot(
+                    primary: RateWindow(
+                        usedPercent: 10, windowMinutes: 300, resetsAt: nil, resetDescription: nil),
+                    secondary: RateWindow(
+                        usedPercent: 20,
+                        windowMinutes: 10080,
+                        resetsAt: now.addingTimeInterval(399_600),
+                        resetDescription: nil),
+                    updatedAt: now),
+                error: nil,
+                sourceLabel: "Synthetic")
+        }
+        let details = StatusItemController.compactCodexRowDetails(
+            accounts: accounts, resetStyle: .countdown, now: now)
+        let codex = try #require(accounts.first)
+        #expect(Set(details.keys) == [codex.id])
+        #expect(details[codex.id] == JonesCompactAccountPresentation.codexRowDetail(
+            account: codex, resetStyle: .countdown, now: now))
+        #expect(details[codex.id]?.text == "Weekly 80% left · Resets in 4d 15h")
+    }
+
     private func disableMenuCardsForTesting() {
         StatusItemController.menuCardRenderingEnabled = false
         StatusItemController.setMenuRefreshEnabledForTesting(false)

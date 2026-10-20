@@ -170,6 +170,116 @@ struct OverviewFleetAccountsTests {
     }
 
     @Test
+    func `Codex overview and compact menu share weekly and banked expiry details`() throws {
+        try self.withFixture(providers: [.codex]) { controller in
+            let now = Date(timeIntervalSince1970: 1_781_726_400)
+            let accounts = try self.seedCodex(3, controller: controller)
+            let credits = CodexRateLimitResetCreditsSnapshot(
+                credits: [
+                    CodexRateLimitResetCredit(
+                        id: "synthetic-banked",
+                        resetType: "weekly",
+                        status: .available,
+                        grantedAt: now,
+                        expiresAt: now.addingTimeInterval(172_800),
+                        redeemStartedAt: nil,
+                        redeemedAt: nil,
+                        title: nil,
+                        description: nil),
+                ],
+                availableCount: 1,
+                updatedAt: now)
+            controller.store.codexAccountSnapshots = accounts.map {
+                CodexAccountUsageSnapshot(
+                    account: $0,
+                    snapshot: UsageSnapshot(
+                        primary: RateWindow(
+                            usedPercent: 10, windowMinutes: 300, resetsAt: nil, resetDescription: nil),
+                        secondary: RateWindow(
+                            usedPercent: 20,
+                            windowMinutes: 10080,
+                            resetsAt: now.addingTimeInterval(399_600),
+                            resetDescription: nil),
+                        codexResetCredits: credits,
+                        updatedAt: now),
+                    error: nil,
+                    sourceLabel: "Synthetic")
+            }
+            for style in [ResetTimeDisplayStyle.countdown, .absolute] {
+                controller.settings.resetTimesShowAbsolute = style == .absolute
+                let display = try #require(controller.codexAccountMenuDisplay(for: .codex))
+                let projected = StatusItemController.projectedCodexAccounts(
+                    display: display,
+                    displayLabels: controller.settings.codexAccountDisplayLabels(for: display.accounts))
+                let plan = controller.compactAccountPlan(for: .codex, accounts: projected)
+                let details = StatusItemController.compactCodexRowDetails(
+                    accounts: projected, resetStyle: style, now: now)
+                let rendering = StatusItemController.CompactAccountMenuRendering(
+                    plan: plan,
+                    accounts: projected,
+                    idPrefix: "codexAccount",
+                    cardModel: { _ in nil },
+                    codexRowDetails: details)
+                let overviewRows = controller.overviewFleetAccountRows(for: .codex, now: now)
+                #expect(overviewRows.count == 2)
+                for row in plan.rows {
+                    guard case let .compact(compact) = row else { continue }
+                    let model = controller.compactAccountRowModel(for: compact, rendering: rendering)
+                    let overview = try #require(overviewRows.first { $0.accountID == compact.accountID })
+                    #expect(model == overview.model)
+                    #expect(model.constraintDetail?.hasPrefix("Weekly 80% left · Resets ") == true)
+                    #expect(model.trailingDetail?.text == "2d")
+                    #expect(model.trailingDetail?.count == 1)
+                    #expect(!model.hasError)
+                }
+            }
+        }
+    }
+
+    @Test
+    func `Codex missing weekly keeps constraint fallback and loading status text`() throws {
+        try self.withFixture(providers: [.codex]) { controller in
+            let now = Date(timeIntervalSince1970: 1_781_726_400)
+            let accounts = try self.seedCodex(2, controller: controller)
+            controller.store.codexAccountSnapshots = accounts.map {
+                CodexAccountUsageSnapshot(
+                    account: $0,
+                    snapshot: UsageSnapshot(
+                        primary: RateWindow(
+                            usedPercent: 95, windowMinutes: 300, resetsAt: nil, resetDescription: nil),
+                        secondary: nil,
+                        updatedAt: now),
+                    error: nil,
+                    sourceLabel: "Synthetic")
+            }
+            let display = try #require(controller.codexAccountMenuDisplay(for: .codex))
+            let projected = StatusItemController.projectedCodexAccounts(display: display)
+            let plan = controller.compactAccountPlan(for: .codex, accounts: projected)
+            let compact = try #require(plan.rows.compactMap { row -> AccountMenuLayoutPlanner.CompactRow? in
+                if case let .compact(compact) = row { return compact }
+                return nil
+            }.first)
+            var rendering = StatusItemController.CompactAccountMenuRendering(
+                plan: plan,
+                accounts: projected,
+                idPrefix: "codexAccount",
+                cardModel: { _ in nil },
+                codexRowDetails: StatusItemController.compactCodexRowDetails(
+                    accounts: projected, resetStyle: .countdown, now: now))
+            #expect(compact.constraintDetail != nil)
+            #expect(controller.compactAccountRowModel(for: compact, rendering: rendering).constraintDetail
+                == compact.constraintDetail)
+            #expect(controller.overviewFleetAccountRows(for: .codex, now: now).first?.model.constraintDetail
+                == compact.constraintDetail)
+            rendering.accountStatusText[compact.accountID] = "Loading synthetic account"
+            rendering.refreshingAccountIDs.insert(compact.accountID)
+            let loading = controller.compactAccountRowModel(for: compact, rendering: rendering)
+            #expect(loading.constraintDetail == "Loading synthetic account")
+            #expect(loading.isRefreshing)
+        }
+    }
+
+    @Test
     func `overview renders six codex and two claude accounts without folding`() throws {
         try self.withFixture(providers: [.codex, .claude]) { controller in
             self.seedClaude(2, controller: controller)

@@ -208,3 +208,21 @@ with synthetic discovery/settings, alongside the existing expansion and
 rendered-window width contracts. No authentication or account selection
 semantics change.
 <!-- codex-section:end id="spec.fleet-auth-discovery#dec.native-profile-menu-width.001" -->
+
+## Menu details follow-up requirements
+
+- With optional credits enabled, display a known balance for the selected Codex identity without borrowing another account's credits or relaxing credential/identity guards.
+- Compact account rows retain weekly percentage and weekly reset countdown on their second line; place the closest upcoming banked-reset expiry on that line's trailing side when known. Missing and expired data must remain truthful.
+- Retain the complete list, friendly labels, collapse controls and observation-only selection. Account viewing must not promote system authentication.
+- Dynamic refresh and expand/collapse must measure current content so cards are not clipped, compact rows do not stretch, and Quit has no stale blank tail. Preserve the existing menu width and normal type styling.
+- Verify at safe synthetic seams with native menu/hosting coverage for the geometry behavior, then required `make test`, `make check`, current-head CI, guarded merge, and a verified local Jones app update preserving preferences and a rollback bundle.
+
+### Menu details repair decisions and checks
+
+Claude Frontier framing traced the missing balance to `CodexConsumerProjection`: override cards suppress explicit per-account credits along with live adjuncts. Admit only the supplied account-scoped balance, omit its monthly limit from the balance row to avoid duplication, retain the monthly row and all dashboard/history/identity exclusions, and preserve the optional-credit setting. Balance-only Codex presentation uses the former inline Extra usage / Balance layout.
+
+Codex compact rows use one shared presentation helper for their weekly percentage/reset text and earliest unexpired banked-reset countdown. Preserve reset-style preferences, error/loading rows, fallback data and optional trailing-detail accessibility/fingerprints. Claude/shared planner semantics stay unchanged.
+
+For menu geometry, retain positional host reuse only for equivalent measured heights; route height-changing rows through the existing insert/remove path and notify native AppKit when an attached row is resized. Prove mixed-height reconciliation and shrinking with synthetic native menus, including cached Overview/provider transitions and expansion/collapse; preserve ordinary width contracts.
+
+Root owns Git, docs and serialized tests. Independent source writers own credits, compact details and geometry with disjoint test files; none may commit, build, format globally, run tests or change authentication. Root will preserve production preimages for a deterministic geometry failing-before check, run the affected union, required `make test` and `make check`, then publish one ordinary PR, qualify exact CI, merge with the expected-head guard and update the local Jones app.

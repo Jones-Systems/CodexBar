@@ -2,7 +2,7 @@ import AppKit
 import CodexBarCore
 
 /// Shared renderer for the compact multi-account menu layout: full cards for the
-/// initially active and explicitly expanded accounts, one-line rows for the rest, and a
+/// initially active and explicitly expanded accounts, compact rows for the rest, and a
 /// summary row standing in for the collapsed healthy tail. Used by every
 /// multi-account presentation (claude-swap, token accounts, Codex accounts).
 extension StatusItemController {
@@ -27,6 +27,7 @@ extension StatusItemController {
         var workspaceSections: [CodexAccountWorkspaceSection] = []
         var refreshingAccountIDs: Set<ProviderAccountIdentity> = []
         var accountStatusText: [ProviderAccountIdentity: String] = [:]
+        var codexRowDetails: [ProviderAccountIdentity: JonesCompactAccountPresentation.CodexRowDetail] = [:]
     }
 
     /// Renders the token-account list with the compact plan when it applies.
@@ -103,7 +104,11 @@ extension StatusItemController {
                         creditsOverride: accountSnapshot?.credits)
                 },
                 planAction: nil,
-                workspaceSections: display.showsWorkspaceGroups ? display.workspaceSections : []),
+                workspaceSections: display.showsWorkspaceGroups ? display.workspaceSections : [],
+                codexRowDetails: Self.compactCodexRowDetails(
+                    accounts: projected,
+                    resetStyle: self.settings.resetTimeDisplayStyle,
+                    now: Date())),
             to: menu,
             captureMenu: captureMenu,
             context: context)
@@ -261,10 +266,21 @@ extension StatusItemController {
             severity: row.severity,
             constraintDetail: rendering.accountStatusText[row.accountID].map {
                 PersonalInfoRedactor.redactEmails(in: $0, isEnabled: self.settings.hidePersonalInfo)
-            } ?? row.constraintDetail,
+            } ?? rendering.codexRowDetails[row.accountID]?.text ?? row.constraintDetail,
             hasError: row.hasError,
             showsBestBadge: row.isBestCandidate,
-            isRefreshing: rendering.refreshingAccountIDs.contains(row.accountID))
+            isRefreshing: rendering.refreshingAccountIDs.contains(row.accountID),
+            trailingDetail: rendering.codexRowDetails[row.accountID]?.trailingDetail)
+    }
+
+    static func compactCodexRowDetails(
+        accounts: [ProviderAccountUsageSnapshot],
+        resetStyle: ResetTimeDisplayStyle,
+        now: Date) -> [ProviderAccountIdentity: JonesCompactAccountPresentation.CodexRowDetail]
+    {
+        Dictionary(uniqueKeysWithValues: accounts.filter { $0.provider == .codex }.map {
+            ($0.id, JonesCompactAccountPresentation.codexRowDetail(account: $0, resetStyle: resetStyle, now: now))
+        })
     }
 
     // MARK: - Projections
