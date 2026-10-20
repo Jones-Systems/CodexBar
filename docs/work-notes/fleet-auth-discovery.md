@@ -370,3 +370,21 @@ and a rejecting provider pipeline so accidental fan-out cannot invoke a provider
 transport. Production notification behavior is unchanged. Root inspected the
 released builder diff; SwiftFormat and diff whitespace checks passed. Focused
 native execution, repeated `make check`, and complete `make test` are pending.
+
+R10 on `426edcd249bf407e441987fc667c34a2ae07dfc0` passed both quota-warning
+tests (two tests, one suite), retaining both account-warning assertions and
+proving the ordinary refresh consumed all six injected responses exactly once.
+Build took 69.45 seconds; the suite took 0.084 seconds. Its owned fixture parent
+was removed after process drain and absence was independently verified.
+Repeated `make check` (`final-check-r3`) also passed on that source: zero
+SwiftLint violations in 2,160 files, all five existing pinned tools reused
+without downloads, and 95 synthetic cleanup checks passed with one platform
+skip. Six owned fixture parents were removed and absence verified. Source,
+test and script hashes remained unchanged throughout both checks.
+
+Full `make test` attempt `final-test-r2` is now running through the supported
+complete-discovery path with synthetic isolation and no inherited selectors.
+This following work-note-only checkpoint is authorized during the run; the
+verifier must compare all compiled source/test/script hashes at completion.
+Full-suite success, replacement-head hosted CI, installation and launch remain
+pending. No provider login, credential copy or system-account change occurred.
