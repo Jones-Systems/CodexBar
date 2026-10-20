@@ -160,8 +160,9 @@ struct OverviewFleetAccountsTests {
     @Test
     func `overview renders six codex and two claude accounts without folding`() throws {
         try self.withFixture(providers: [.codex, .claude]) { controller in
-            self.seedCodex(6, controller: controller)
             self.seedClaude(2, controller: controller)
+            // Config changes clear the Codex projection, so seed it after selecting the Claude profile.
+            self.seedCodex(6, controller: controller)
             let menu = controller.makeMenu()
             controller.refreshMenuForOpenIfNeeded(menu, provider: nil)
             let ids = self.identifiers(in: menu)

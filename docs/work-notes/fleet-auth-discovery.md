@@ -260,3 +260,20 @@ absence were verified. This result is bound to the second worktree's exact
 source hashes, normally fast-forwarded into the install-transition worktree.
 The repaired native union and full `make test` remain due; the original
 FICR-COR001 P2 is unchanged and deferred.
+
+R5 completed on `61d410914561b45869df99003f349cc69408c5cb`: 31 XCTest cases
+passed; 677 Swift Testing cases reported two issues in the single six-account
+Overview test. All 34 selectors executed. The stale-selection race, native-Claude
+menu, and single-account Overview cases that failed R4 now pass. Source hashes
+were unchanged; process drain and invocation scratch absence were verified.
+The remaining Overview fixture configured Claude after seeding Codex; that
+configuration revision invalidates the seeded projection. Configure Claude
+before seeding Codex so the assertions inspect a current projection.
+
+Hosted run `39344683839`, macOS shard job `118374700011`, failed eight issues
+in grouped-account tests that still expect the old five-row default budget.
+The accepted Codex default now shows every account. Preserve finite-budget
+planner coverage through an explicit finite policy and separately assert the
+new Codex default, including six and nine accounts. Lint and all three Linux
+build jobs passed on `61d4109`; the other macOS shard was still running at
+observation. Neither partial CI nor the failed R5 is a full-suite pass.

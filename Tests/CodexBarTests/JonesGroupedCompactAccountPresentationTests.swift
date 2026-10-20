@@ -51,15 +51,27 @@ struct JonesGroupedCompactAccountPresentationTests {
         _ display: CodexAccountMenuDisplay,
         expanded: Set<ProviderAccountIdentity> = [],
         collapsed: Set<ProviderAccountIdentity> = [],
-        revealed: Bool = false) -> [JonesCompactAccountPresentation.MenuSection]
+        revealed: Bool = false,
+        planOverride: AccountMenuLayoutPlanner.Plan? = nil) -> [JonesCompactAccountPresentation.MenuSection]
     {
-        let plan = JonesCompactAccountPresentation.plan(
+        let plan = planOverride ?? JonesCompactAccountPresentation.plan(
             for: .codex,
             accounts: StatusItemController.projectedCodexAccounts(display: display),
             expandedAccountIDs: expanded,
             collapsedAccountIDs: collapsed,
             healthyTailExpanded: revealed)
         return JonesCompactAccountPresentation.menuSections(plan: plan, workspaceSections: display.workspaceSections)
+    }
+
+    private func finiteBudgetPlan(
+        _ display: CodexAccountMenuDisplay,
+        revealed: Bool = false) -> AccountMenuLayoutPlanner.Plan
+    {
+        AccountMenuLayoutPlanner.plan(
+            accounts: StatusItemController.projectedCodexAccounts(display: display),
+            healthyTailExpanded: revealed,
+            minimumVisibleAccountCount: 5,
+            policy: .init(compactLayoutMinimumAccountCount: 1, minimumCollapsedHealthyRowCount: 1))
     }
 
     private func ids(in rows: [AccountMenuLayoutPlanner.Row]) -> [ProviderAccountIdentity] {
@@ -100,10 +112,24 @@ struct JonesGroupedCompactAccountPresentationTests {
         }
     }
 
+    @Test(arguments: [1, 2, 3, 4, 5, 6, 8, 9, 12])
+    func `default Codex workspace groups show every account without folding`(count: Int) {
+        let display = self.display(count: count)
+        let sections = self.sections(display)
+        self.expectWorkspaceIdentity(sections, display: display)
+        let rows = sections.flatMap(\.rows)
+        #expect(self.ids(in: rows).count == count)
+        #expect(Set(self.ids(in: rows).map(\.opaqueID)) == Set(display.accounts.map(\.id)))
+        #expect(self.hiddenCount(in: rows) == 0)
+        #expect(rows.count { if case .card = $0 { true } else { false } } == 1)
+        #expect(sections.first?.rows.first == .card(.init(source: "codex-account", opaqueID: "synthetic-0")))
+        #expect(self.sections(display, revealed: true) == sections)
+    }
+
     @Test(arguments: [1, 2, 3, 4, 5, 6, 8, 12])
     func `workspace headers do not consume the five account budget`(count: Int) {
         let display = self.display(count: count)
-        let sections = self.sections(display)
+        let sections = self.sections(display, planOverride: self.finiteBudgetPlan(display))
         self.expectWorkspaceIdentity(sections, display: display)
         let rows = sections.flatMap(\.rows)
         #expect(self.ids(in: rows).count == min(count, 5))
@@ -115,8 +141,8 @@ struct JonesGroupedCompactAccountPresentationTests {
     @Test(arguments: [6, 8, 12])
     func `overflow retains every workspace including wholly folded groups and reveals in place`(count: Int) {
         let display = self.display(count: count)
-        let initial = self.sections(display)
-        let revealed = self.sections(display, revealed: true)
+        let initial = self.sections(display, planOverride: self.finiteBudgetPlan(display))
+        let revealed = self.sections(display, planOverride: self.finiteBudgetPlan(display, revealed: true))
         self.expectWorkspaceIdentity(initial, display: display)
         self.expectWorkspaceIdentity(revealed, display: display)
         #expect(self.ids(in: revealed.flatMap(\.rows)).count == count)
@@ -186,9 +212,8 @@ struct JonesGroupedCompactAccountPresentationTests {
             self.display(count: 12, errorIndices: [2, 3, 4, 5, 6, 7]),
         ]
         for display in fixtures {
-            let accounts = StatusItemController.projectedCodexAccounts(display: display)
-            let plan = JonesCompactAccountPresentation.plan(for: .codex, accounts: accounts)
-            let sections = self.sections(display)
+            let plan = self.finiteBudgetPlan(display)
+            let sections = self.sections(display, planOverride: plan)
             self.expectWorkspaceIdentity(sections, display: display)
             let rows = sections.flatMap(\.rows)
             #expect(Set(self.ids(in: rows)) == Set(self.ids(in: plan.rows)))
