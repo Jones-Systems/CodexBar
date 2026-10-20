@@ -47,7 +47,7 @@ extension StatusItemController {
             return
         }
 
-        self.selectOverviewProvider(provider, menu: menu)
+        self.activateOverviewRow(provider, menu: menu)
     }
 
     func selectOverviewProvider(_ provider: UsageProvider, menu: NSMenu) {

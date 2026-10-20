@@ -18,6 +18,52 @@ Authority effect: none
 
 ## Delivery record
 
+### Overview inline account interaction
+
+Owner direction on 2026-10-20: Codex and Claude cards and account rows must
+expand/collapse on Overview without automatically selecting a provider tab.
+Explicit tab buttons remain available. The accepted source base is merged
+`1c3bfe00819b7121d601ee19d3ee7d53dbcce35e`; its Jones app was built, installed
+and opened with rollback retained before this follow-up. Its focused 108 tests
+and full 1,040-selection suite passed. Live visual/order verification was
+unavailable because pointer activity stopped interaction before clicking.
+
+Claude Frontier planning used Opus 5.5/high on the retained Jace binding through
+task `codexbar-overview-inline-opus-506fc1fd-r1`. The account route allowed the
+start with allowance unavailable (`fleet_managed_allowance_unsupported`);
+unknown allowance was not represented as sufficient quota. Read-only source
+research found both summary and account actions explicitly navigate, and
+Overview currently discards account expansion state. No external research or
+live provider probing was needed for this bounded UI repair.
+
+The accepted plan is in the existing spec's Overview account interaction
+section. Root retains sole Git ownership of
+`work/codexbar-install-transition-506fc1fd` and owns docs and delivery; one
+Astra builder owns the declared menu/presentation files and affected tests.
+Root serializes final checks/builds. Test fixtures remain invocation-owned and
+cleanup-verified. Registration remains unavailable pending a verified target
+native project binding; no identity guess or registry repair is authorized.
+Existing deferred findings and trial limitations remain unchanged.
+
+Failing-before evidence on that base: the synthetic runtime-click regression
+failed in `OverviewFleetAccountsTests` because the click selected the provider
+and mutated provider-tab expansion state. All 10 suite tests executed; the
+new regression produced the three intended assertions. Source hashes were
+unchanged during the run and fixture removal/absence were verified. An earlier
+exact-title filter selected zero tests and is not behavioral evidence.
+
+The implementation now gives Overview its own transient summary/account expansion
+state, preserves provider-tab selection and expansion defaults, and reuses each
+account's scoped card model. The final focused Overview pass ran 14 tests and
+passed. The preceding 250-test pass also passed StatusMenuTests (including native
+height transitions), compact presentation and the architecture gate; its one
+new single-account fixture failure was corrected before the 14-test pass.
+An initial global lint run reported 15 test-format/length violations; those
+were repaired, keyboard coverage retained in the existing both-provider loop,
+and repeated contained `make check` passed with zero violations across 2,160
+Swift files. Every reported fixture parent was removed and absence verified.
+The full native suite, hosted checks, publication and installation are pending.
+
 The owner explicitly directs requested CodexBar work through merge and the local
 Jones app update without another routine permission question. The standing
 repository binding is recorded in `AGENTS.md`, section “Delivery and local app

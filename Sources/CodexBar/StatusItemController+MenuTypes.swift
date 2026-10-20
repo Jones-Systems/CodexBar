@@ -39,6 +39,7 @@ struct OverviewMenuCardRowView: View {
     let model: UsageMenuCardView.Model
     let storageText: String?
     let width: CGFloat
+    var showsDetails = true
     @Environment(\.menuItemHighlighted) private var isHighlighted
 
     var body: some View {
@@ -56,7 +57,7 @@ struct OverviewMenuCardRowView: View {
                     width: self.width,
                     showsSectionDividers: Self.showsSectionDividers)
             }
-            if let storageText {
+            if self.showsDetails, let storageText {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text("\(L("Storage")):")
                         .font(.footnote)
@@ -77,7 +78,7 @@ struct OverviewMenuCardRowView: View {
     }
 
     private var hasUsageBlock: Bool {
-        self.model.hasUsageContent
+        self.showsDetails && self.model.hasUsageContent
     }
 }
 
