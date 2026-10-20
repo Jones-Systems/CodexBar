@@ -263,3 +263,62 @@ all existing tests; remap architecture anchors only for actual source movement.
 Run the final affected union, `make test`, `make check`, exact-head hosted CI,
 guarded merge and the verified Jones-only local update with rollback retained.
 <!-- codex-section:end id="spec.fleet-auth-discovery#dec.overview-inline-expansion.001" -->
+
+<!-- codex-section:begin id="spec.fleet-auth-discovery#dec.compact-reset-rows.001" -->
+## Consistent compact account rows
+
+Collapsed Overview summaries use the same compact row view as other account
+rows, retaining the provider name, progress bar and percentage on the first
+line. All collapsed account rows reserve one footnote-height second line,
+including missing, loading, error and expiry-only states. A blank reserved
+line is not announced by accessibility. Summary identifiers, click/keyboard
+routing, ordering and per-open Overview expansion remain unchanged; provider
+tabs continue to have their existing independent state. Height fingerprints
+must distinguish compact-summary content from expanded cards.
+
+Codex compact rows show only dated weekly reset timing on the second line;
+remove the written weekly percentage there. Keep the existing nearest banked
+reset expiry and inventory count right-aligned. Claude compact rows show
+session reset first and weekly reset second, joined by a middle dot. Skip
+synthetic session placeholders and undated windows. Respect the existing
+reset-time display style and preserve error/loading status where applicable;
+missing reset dates must not reintroduce the removed quota wording. Apply the
+shared presentation to Overview and the provider tabs. Other providers keep
+their existing detail semantics. Claude has no banked-reset inventory in the
+current source: its monthly overage fields are not reset credits, and Codex
+reset credits must never be projected into Claude.
+
+The provider summary takes the same scoped presentation snapshot permitted by
+its expanded card; withheld metrics remain withheld. Reuse the existing layout
+planner for compact headroom/severity, without adding account activation or
+refresh effects. Account rows retain their owner-matched snapshot, redaction,
+active color and best-candidate badge. Do not redesign credit/quota selection.
+This is an in-memory presentation change with no persisted shape or migration.
+The shared callers were identified at base `1139c1db` through the compact row,
+Overview renderer, native Claude menu and account-label reference paths. That
+source-consumer inspection covers these named paths; real provider response
+changes and live UI behavior remain outside that claim. Full native discovery
+remains the conservative verification fallback.
+
+The existing local display-label override is the owner of personal mappings.
+Set the native default Claude profile's local Jones label to the requested
+name at installation, preserving every other override. Keep public alias
+fallback generic and leave the logical `default` alias, identity key, native
+configuration, credentials and account selection untouched. The local update
+backs up only the existing nonsecret label map, writes only that preference key
+while Jones is gracefully stopped, and verifies the intended entry and all
+unrelated entries. Existing local override precedence remains authoritative.
+
+One Astra source builder owns the bounded presentation and affected tests;
+root owns documentation, Git, serial native verification and delivery. First
+add compiling regressions at existing reset-text/row-height seams and record
+the expected behavioral failures before changing production. Then cover Claude
+reset order and missing/placeholder cases, equal row heights, compact-summary
+transitions/cache invalidation, scoped data and generic override precedence.
+Update only exact architecture allowlist anchors/fingerprints for changed
+constructs; do not weaken scanning or suppressions. Preserve every owned test.
+Run the affected union, contained `make check`, and full `make test`, then all
+eight exact-head hosted checks before the accepted merge and Jones app update.
+Native fixtures stay invocation-owned and drain/cleanup verified. No live probe,
+credential/config read, account switch, tool install or stock-app replacement.
+<!-- codex-section:end id="spec.fleet-auth-discovery#dec.compact-reset-rows.001" -->

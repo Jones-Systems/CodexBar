@@ -613,6 +613,7 @@ extension StatusItemController {
         for (index, row) in rows.enumerated() {
             let identifier = "\(Self.overviewRowIdentifierPrefix)\(row.provider.rawValue)"
             let showsDetails = !self.overviewExpansionState.collapsedSummaryProviders.contains(row.provider)
+            let compact = showsDetails ? nil : self.overviewSummaryCompactModel(for: row.provider, model: row.model)
             let storageText = self.store.storageFootprintText(for: row.provider)
             let submenu = self.makeOverviewRowSubmenu(
                 provider: row.provider,
@@ -620,15 +621,19 @@ extension StatusItemController {
                 width: menuWidth)
             let item = self.makeMenuCardItem(
                 OverviewMenuCardRowView(
-                    model: row.model, storageText: storageText, width: menuWidth, showsDetails: showsDetails),
+                    model: row.model, storageText: storageText, width: menuWidth, compactSummary: compact),
                 id: identifier,
                 width: menuWidth,
                 heightCacheScope: row.provider.rawValue,
-                heightCacheFingerprint: row.model.heightFingerprint(
-                    section: showsDetails ? "overview" : "overviewCollapsed",
-                    additional: [UsageMenuCardView.Model.heightFingerprintField("storage", storageText)]),
+                heightCacheFingerprint: compact.map { "overviewSummaryCompact|" + $0.heightFingerprint } ??
+                    row.model.heightFingerprint(
+                        section: "overview",
+                        additional: [UsageMenuCardView.Model.heightFingerprintField(
+                            "storage",
+                            storageText)]),
                 submenu: submenu,
-                containsInteractiveControls: row.model.subtitleStyle == .error || row.model.usesLiveSubtitle,
+                containsInteractiveControls: showsDetails &&
+                    (row.model.subtitleStyle == .error || row.model.usesLiveSubtitle),
                 usesGPUSelection: true,
                 onClick: { [weak self, weak interactionMenu] in
                     guard let self, let interactionMenu else { return }

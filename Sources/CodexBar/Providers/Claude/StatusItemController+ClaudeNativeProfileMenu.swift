@@ -15,7 +15,9 @@ extension StatusItemController {
                 }.map(\.id)),
                 accountStatusText: Dictionary(uniqueKeysWithValues: accounts.compactMap { account in
                     account.error.map { (account.id, $0) }
-                })),
+                }),
+                codexRowDetails: Self.compactAccountRowDetails(
+                    accounts: accounts, resetStyle: self.settings.resetTimeDisplayStyle, now: Date())),
             to: menu,
             captureMenu: captureMenu,
             context: context)

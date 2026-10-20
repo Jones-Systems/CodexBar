@@ -2,7 +2,7 @@ import CodexBarCore
 import SwiftUI
 
 /// Compact menu row for a collapsed account in the multi-account layout:
-/// label and headroom above optional quota and reset-credit details.
+/// label and headroom above a reserved detail line for quota or reset-credit details.
 /// Clicking the row expands it into the full usage card.
 struct MenuCardCompactAccountRowView: View {
     struct TrailingDetail: Equatable {
@@ -93,26 +93,23 @@ struct MenuCardCompactAccountRowView: View {
                         .frame(minWidth: 34, alignment: .trailing)
                 }
             }
-            if self.model.constraintDetail != nil || self.model.trailingDetail != nil {
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    if let detail = self.model.constraintDetail {
-                        Text(detail)
-                            .font(.footnote)
-                            .foregroundStyle(self.model.severity == .critical
-                                ? MenuHighlightStyle.error(self.isHighlighted)
-                                : MenuHighlightStyle.secondary(self.isHighlighted))
-                            .lineLimit(1)
-                            .layoutPriority(1)
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(self.model.constraintDetail ?? " ")
+                    .font(.footnote)
+                    .foregroundStyle(self.model.severity == .critical
+                        ? MenuHighlightStyle.error(self.isHighlighted)
+                        : MenuHighlightStyle.secondary(self.isHighlighted))
+                    .lineLimit(1)
+                    .layoutPriority(1)
+                    .accessibilityHidden(self.model.constraintDetail == nil)
+                Spacer(minLength: 4)
+                if let trailing = self.model.trailingDetail {
+                    ViewThatFits(in: .horizontal) {
+                        self.resetCreditDetail(trailing, showsCount: true)
+                        self.resetCreditDetail(trailing, showsCount: false)
                     }
-                    Spacer(minLength: 4)
-                    if let trailing = self.model.trailingDetail {
-                        ViewThatFits(in: .horizontal) {
-                            self.resetCreditDetail(trailing, showsCount: true)
-                            self.resetCreditDetail(trailing, showsCount: false)
-                        }
-                        .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
-                        .accessibilityHidden(true)
-                    }
+                    .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
+                    .accessibilityHidden(true)
                 }
             }
         }

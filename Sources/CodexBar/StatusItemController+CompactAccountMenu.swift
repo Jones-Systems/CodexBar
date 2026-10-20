@@ -270,12 +270,24 @@ extension StatusItemController {
             severity: row.severity,
             constraintDetail: rendering.accountStatusText[row.accountID].map {
                 PersonalInfoRedactor.redactEmails(in: $0, isEnabled: self.settings.hidePersonalInfo)
-            } ?? rendering.codexRowDetails[row.accountID]?.text ?? row.constraintDetail,
+            } ?? (row.hasError || rendering.codexRowDetails[row.accountID] == nil
+                ? row.constraintDetail : rendering.codexRowDetails[row.accountID]?.text),
             hasError: row.hasError,
             showsBestBadge: row.isBestCandidate,
             isActiveAccount: row.isActive,
             isRefreshing: rendering.refreshingAccountIDs.contains(row.accountID),
             trailingDetail: rendering.codexRowDetails[row.accountID]?.trailingDetail)
+    }
+
+    static func compactAccountRowDetails(
+        accounts: [ProviderAccountUsageSnapshot],
+        resetStyle: ResetTimeDisplayStyle,
+        now: Date) -> [ProviderAccountIdentity: JonesCompactAccountPresentation.CodexRowDetail]
+    {
+        Dictionary(uniqueKeysWithValues: accounts.compactMap { account in
+            JonesCompactAccountPresentation.rowDetail(account: account, resetStyle: resetStyle, now: now)
+                .map { (account.id, $0) }
+        })
     }
 
     static func compactCodexRowDetails(
