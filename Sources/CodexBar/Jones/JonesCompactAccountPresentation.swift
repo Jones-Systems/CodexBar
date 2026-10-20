@@ -12,6 +12,7 @@ enum JonesCompactAccountPresentation {
         resetStyle: ResetTimeDisplayStyle,
         now: Date) -> CodexRowDetail
     {
+        // Provider-specific by design: Codex rows pair weekly allowance with the nearest limit-reset credit expiry.
         guard account.provider == .codex, account.error == nil, let snapshot = account.snapshot else {
             return CodexRowDetail(text: nil, trailingDetail: nil)
         }

@@ -10,6 +10,7 @@ struct CodexAccountBalancePresentation: Equatable {
         creditsRemaining: Double?,
         progressPercent: Double?) -> Self?
     {
+        // Provider-specific by design: Codex balances have no token capacity; render them without a progress meter.
         guard provider == .codex, progressPercent == nil, let creditsRemaining else { return nil }
         return Self(
             title: L("Extra usage"),

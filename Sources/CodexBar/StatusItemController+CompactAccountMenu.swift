@@ -278,6 +278,7 @@ extension StatusItemController {
         resetStyle: ResetTimeDisplayStyle,
         now: Date) -> [ProviderAccountIdentity: JonesCompactAccountPresentation.CodexRowDetail]
     {
+        // Provider-specific by design: only Codex snapshots carry the weekly and limit-reset credit row details.
         Dictionary(uniqueKeysWithValues: accounts.filter { $0.provider == .codex }.map {
             ($0.id, JonesCompactAccountPresentation.codexRowDetail(account: $0, resetStyle: resetStyle, now: now))
         })
