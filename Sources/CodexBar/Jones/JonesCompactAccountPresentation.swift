@@ -36,19 +36,12 @@ enum JonesCompactAccountPresentation {
         resetStyle: ResetTimeDisplayStyle,
         now: Date) -> CodexRowDetail
     {
-        // Provider-specific by design: Codex rows pair weekly allowance with the nearest limit-reset credit expiry.
+        // Provider-specific by design: Codex rows pair weekly reset timing with the nearest limit-reset credit expiry.
         guard account.provider == .codex, account.error == nil, let snapshot = account.snapshot else {
             return CodexRowDetail(text: nil, trailingDetail: nil)
         }
-        let text = snapshot.secondary.map { weekly in
-            let remaining = String(format: L("%@ left"), "\(Int(weekly.remainingPercent.rounded()))%")
-            var parts = ["\(L("Weekly")) \(remaining)"]
-            if weekly.resetsAt != nil,
-               let reset = UsageFormatter.resetLine(for: weekly, style: resetStyle, now: now)
-            {
-                parts.append(reset)
-            }
-            return parts.joined(separator: " · ")
+        let text = snapshot.secondary.flatMap { weekly in
+            weekly.resetsAt == nil ? nil : UsageFormatter.resetLine(for: weekly, style: resetStyle, now: now)
         }
         var trailingDetail: MenuCardCompactAccountRowView.TrailingDetail?
         if let credits = snapshot.codexResetCredits,
@@ -63,6 +56,79 @@ enum JonesCompactAccountPresentation {
                     .joined(separator: ", "))
         }
         return CodexRowDetail(text: text, trailingDetail: trailingDetail)
+    }
+
+    static func claudeRowDetail(
+        account: ProviderAccountUsageSnapshot,
+        resetStyle: ResetTimeDisplayStyle,
+        now: Date) -> CodexRowDetail
+    {
+        // Provider-specific by design: Claude exposes session and weekly reset dates, but no banked reset inventory.
+        guard account.provider == .claude, account.error == nil, let snapshot = account.snapshot else {
+            return CodexRowDetail(text: nil, trailingDetail: nil)
+        }
+        let lines = [snapshot.primary, snapshot.secondary].compactMap { window -> String? in
+            guard let window, !window.isSyntheticPlaceholder, window.resetsAt != nil else { return nil }
+            return UsageFormatter.resetLine(for: window, style: resetStyle, now: now)
+        }
+        return CodexRowDetail(text: lines.isEmpty ? nil : lines.joined(separator: " · "), trailingDetail: nil)
+    }
+
+    static func rowDetail(
+        account: ProviderAccountUsageSnapshot,
+        resetStyle: ResetTimeDisplayStyle,
+        now: Date) -> CodexRowDetail?
+    {
+        // Provider-specific by design: only Codex and Claude replace compact quota text with reset timing.
+        switch account.provider {
+        case .codex: self.codexRowDetail(account: account, resetStyle: resetStyle, now: now)
+        case .claude: self.claudeRowDetail(account: account, resetStyle: resetStyle, now: now)
+        default: nil
+        }
+    }
+
+    struct OverviewSummaryInput {
+        let provider: UsageProvider
+        let label: String
+        let snapshot: UsageSnapshot?
+        let hasError: Bool
+        let isRefreshing: Bool
+    }
+
+    static func overviewSummaryRow(
+        _ input: OverviewSummaryInput,
+        resetStyle: ResetTimeDisplayStyle,
+        now: Date) -> MenuCardCompactAccountRowView.Model
+    {
+        let account = ProviderAccountUsageSnapshot(
+            id: ProviderAccountIdentity(source: "overview-summary", opaqueID: input.provider.rawValue),
+            provider: input.provider,
+            displayLabel: input.label,
+            isActive: false,
+            canActivate: false,
+            snapshot: input.snapshot,
+            error: input.hasError ? L("Account unavailable") : nil,
+            sourceLabel: nil)
+        let plan = AccountMenuLayoutPlanner.plan(
+            accounts: [account],
+            policy: .init(
+                compactLayoutMinimumAccountCount: 1,
+                preservesAccountOrder: true,
+                expandsActiveAccount: false))
+        let compact = plan.rows.compactMap { row -> AccountMenuLayoutPlanner.CompactRow? in
+            if case let .compact(value) = row { return value }
+            return nil
+        }.first
+        let detail = self.rowDetail(account: account, resetStyle: resetStyle, now: now)
+        return MenuCardCompactAccountRowView.Model(
+            label: input.label,
+            headroomPercent: compact?.headroomPercent,
+            severity: compact?.severity,
+            constraintDetail: input.hasError || detail == nil ? compact?.constraintDetail : detail?.text,
+            hasError: input.hasError,
+            showsBestBadge: false,
+            isRefreshing: input.isRefreshing,
+            trailingDetail: detail?.trailingDetail)
     }
 
     static func plan(

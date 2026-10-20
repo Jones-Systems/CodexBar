@@ -47,10 +47,10 @@ extension StatusItemController {
         now: Date = Date()) -> [OverviewFleetAccountRow]
     {
         let accounts = self.overviewFleetAccounts(for: provider)
-        let codexDetails = provider == .codex ? Self.compactCodexRowDetails(
+        let details = Self.compactAccountRowDetails(
             accounts: accounts,
             resetStyle: self.settings.resetTimeDisplayStyle,
-            now: now) : [:]
+            now: now)
         let plan = AccountMenuLayoutPlanner.plan(
             accounts: accounts,
             healthyTailExpanded: true,
@@ -61,17 +61,34 @@ extension StatusItemController {
                 label: PersonalInfoRedactor.redactEmail(compact.label, isEnabled: self.settings.hidePersonalInfo),
                 headroomPercent: compact.headroomPercent,
                 severity: compact.severity,
-                constraintDetail: codexDetails[compact.accountID]?.text ?? compact.constraintDetail,
+                constraintDetail: compact.hasError || details[compact.accountID] == nil
+                    ? compact.constraintDetail : details[compact.accountID]?.text,
                 hasError: compact.hasError,
                 showsBestBadge: compact.isBestCandidate,
                 isActiveAccount: compact.isActive,
-                trailingDetail: codexDetails[compact.accountID]?.trailingDetail)
+                trailingDetail: details[compact.accountID]?.trailingDetail)
             if provider == .claude, compact.headroomPercent == nil {
                 model.isRefreshing = self.store.claudeNativeProfileRefreshingAliases
                     .contains(compact.accountID.opaqueID)
             }
             return OverviewFleetAccountRow(accountID: compact.accountID, model: model)
         }
+    }
+
+    func overviewSummaryCompactModel(
+        for provider: UsageProvider,
+        model: UsageMenuCardView.Model,
+        now: Date = Date()) -> MenuCardCompactAccountRowView.Model
+    {
+        JonesCompactAccountPresentation.overviewSummaryRow(
+            .init(
+                provider: provider,
+                label: model.providerName,
+                snapshot: model.metrics.isEmpty ? nil : self.store.presentationSnapshot(for: provider),
+                hasError: model.subtitleStyle == .error,
+                isRefreshing: model.subtitleStyle == .loading),
+            resetStyle: self.settings.resetTimeDisplayStyle,
+            now: now)
     }
 
     func addOverviewFleetAccountRows(

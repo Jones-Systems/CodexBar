@@ -18,6 +18,71 @@ Authority effect: none
 
 ## Delivery record
 
+### Consistent compact rows and reset timing
+
+Owner direction on 2026-10-20: collapsed Overview summaries must use the same
+two-line account-row structure as other collapsed accounts. Codex second lines
+show weekly reset timing without the written percentage; the nearest banked
+reset expiry/count remains right-aligned. Claude second lines show session
+reset, then weekly reset, separated by a middle dot. Claude banked resets may
+appear only when supported by genuine provider data. Native Claude `default`
+should display Malcolm while preserving the logical alias and authentication.
+The finish line remains verified source, ordinary PR, all required CI, merge
+and the local Jones app update with settings and rollback preserved.
+
+Source base is merged PR #10, `1139c1dbad3527362b9cfaeaf76e87e775b649a0`.
+The installed Jones app runs its source-identical tested head `49a24a0b`.
+Root remains sole Git owner of the existing dedicated non-main worktree and
+branch. No overlapping open PR was observed. No nested AGENTS.md was found
+under the selected source/test/docs/scripts roots. Read-only repository
+inspection and the supplied screenshot suffice for this bounded UI change;
+external research and live account probes are unnecessary. The plan is being
+provided by Opus 5.5/high under explicit Claude Frontier. The retained Jace
+route returned start with unknown allowance (`fleet_managed_allowance_unsupported`),
+not a claim of quota. A rejected initial workspace binding created no task;
+the read-only planner then started in the parent workspace with the exact target
+checkout supplied. No source writer or test/build is active during planning.
+Additional research lanes would duplicate this same small caller/presentation
+boundary; source implementation depends on the plan. Registration remains
+unavailable without a verified target native project binding; no identity guess,
+enrollment or registry repair is attempted. Prior finding deferrals remain.
+
+The Opus plan completed against that exact source. Root accepted shared reset
+presentation in both Overview and provider tabs, provider names in collapsed
+summary rows, and the existing summary quota source. Its proposed public
+personal-name fallback is superseded by the existing friendly-label contract:
+the requested default Claude name will use the local Jones profile override.
+Missing reset dates reserve a blank line instead of falling back to the removed
+written quota percentage. One Astra builder now owns only the declared menu,
+presentation and affected test paths; it first prepares compiling regressions
+and pauses for root's contained failing-before pass. Root owns both docs and
+all Git/test/build state. The full raw planning result is retained in the owned
+ignored evidence directory. No extra review lane is required for this bounded
+repair, and existing finding deferrals and native trial gates remain intact.
+
+Failing-before native evidence: `before-suite` compiled against unchanged
+production and executed 49 tests in four suites. It failed with 23 expected
+assertions covering reset-only wording, missing timing, variable compact heights
+and the 52-point collapsed summaries versus 31-point lower rows. The pass took
+88.73 seconds including compilation. Source hashes remained unchanged and the
+owned fixture parent was removed with absence verified. Focused verification
+custody is now assigned to the same source builder while root remains sole Git
+owner and documentation/delivery owner; no concurrent local native check starts.
+The builder uses the existing contained runner and returns custody at handoff.
+
+The candidate's first affected pass succeeded: 286 tests across eight suites,
+no skips, 148.94 seconds including compilation and 32.892 seconds in tests.
+Source hashes remained unchanged and fixture cleanup/absence were verified.
+All 13 changed Swift files passed scoped formatting and strict lint. Production
+alias resolution remains byte-identical; a generic synthetic default-profile
+override assertion verifies the existing mechanism. Source/verification custody
+has returned to root, with global checks, full native suite and delivery next.
+
+Contained `make check` passed on the unchanged candidate source in 79.55
+seconds, including verified fixture-parent cleanup. The source checkpoint is
+ready for ordinary publication and full native verification; package, exact-head
+hosted qualification, merge and local label/app update remain pending.
+
 ### Overview inline account interaction
 
 Owner direction on 2026-10-20: Codex and Claude cards and account rows must

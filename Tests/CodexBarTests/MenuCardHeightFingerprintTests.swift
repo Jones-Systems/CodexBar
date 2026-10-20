@@ -30,6 +30,50 @@ struct MenuCardHeightFingerprintTests {
         #expect(model.heightFingerprint != withExpiry)
     }
 
+    @MainActor
+    @Test
+    func `compact rows reserve the same two line height for every detail state`() {
+        let detail = MenuCardCompactAccountRowView.Model(
+            label: "Synthetic account",
+            headroomPercent: 80,
+            severity: .healthy,
+            constraintDetail: "Resets in 2h",
+            hasError: false,
+            showsBestBadge: false)
+        let expectedHeight = Self.compactHeight(detail)
+        #expect(expectedHeight > 0)
+        for hasError in [false, true] {
+            for isRefreshing in [false, true] {
+                for hasTrailing in [false, true] {
+                    let model = MenuCardCompactAccountRowView.Model(
+                        label: "Synthetic account",
+                        headroomPercent: hasError || isRefreshing ? nil : 80,
+                        severity: .healthy,
+                        constraintDetail: nil,
+                        hasError: hasError,
+                        showsBestBadge: false,
+                        isRefreshing: isRefreshing,
+                        trailingDetail: hasTrailing ? .init(
+                            text: "2d", count: 2, accessibilityLabel: "2 reset credits, expires in 2d") : nil)
+                    #expect(Self.compactHeight(model) == expectedHeight)
+                    let accessible = MenuCardCompactAccountRowView(model: model, progressColor: .blue, width: 320)
+                        .accessibilityText
+                    #expect(!accessible.contains(",  "))
+                    #expect(!accessible.hasSuffix(", "))
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private static func compactHeight(_ model: MenuCardCompactAccountRowView.Model) -> CGFloat {
+        let hosting = MenuHostingView(rootView: MenuCardCompactAccountRowView(
+            model: model, progressColor: .blue, width: 320))
+        hosting.frame = CGRect(x: 0, y: 0, width: 320, height: 1)
+        hosting.layoutSubtreeIfNeeded()
+        return ceil(hosting.fittingSize.height)
+    }
+
     @Test
     func `height fingerprint does not retain raw text fields`() {
         let model = Self.model()

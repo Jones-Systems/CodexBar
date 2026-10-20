@@ -40,9 +40,21 @@ struct OverviewMenuCardRowView: View {
     let storageText: String?
     let width: CGFloat
     var showsDetails = true
+    var compactSummary: MenuCardCompactAccountRowView.Model?
     @Environment(\.menuItemHighlighted) private var isHighlighted
 
     var body: some View {
+        if let compactSummary {
+            MenuCardCompactAccountRowView(
+                model: compactSummary,
+                progressColor: UsageMenuCardView.Model.progressColor(for: self.model.provider),
+                width: self.width)
+        } else {
+            self.expandedBody
+        }
+    }
+
+    private var expandedBody: some View {
         VStack(alignment: .leading, spacing: 0) {
             UsageMenuCardHeaderSectionView(
                 model: self.model,

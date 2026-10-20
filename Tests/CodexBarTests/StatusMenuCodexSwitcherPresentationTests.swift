@@ -34,7 +34,7 @@ struct StatusMenuCodexSwitcherPresentationTests {
         #expect(Set(details.keys) == [codex.id])
         #expect(details[codex.id] == JonesCompactAccountPresentation.codexRowDetail(
             account: codex, resetStyle: .countdown, now: now))
-        #expect(details[codex.id]?.text == "Weekly 80% left · Resets in 4d 15h")
+        #expect(details[codex.id]?.text == "Resets in 4d 15h")
     }
 
     private func disableMenuCardsForTesting() {

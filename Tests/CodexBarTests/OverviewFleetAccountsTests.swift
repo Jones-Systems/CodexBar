@@ -229,7 +229,8 @@ struct OverviewFleetAccountsTests {
                     let model = controller.compactAccountRowModel(for: compact, rendering: rendering)
                     let overview = try #require(overviewRows.first { $0.accountID == compact.accountID })
                     #expect(model == overview.model)
-                    #expect(model.constraintDetail?.hasPrefix("Weekly 80% left · Resets ") == true)
+                    #expect(model.constraintDetail?.hasPrefix("Resets ") == true)
+                    #expect(model.constraintDetail?.contains("left") == false)
                     #expect(model.trailingDetail?.text == "2d")
                     #expect(model.trailingDetail?.count == 1)
                     #expect(!model.hasError)
@@ -239,7 +240,7 @@ struct OverviewFleetAccountsTests {
     }
 
     @Test
-    func `Codex missing weekly keeps constraint fallback and loading status text`() throws {
+    func `Codex missing weekly reserves blank detail and retains loading status text`() throws {
         try self.withFixture(providers: [.codex]) { controller in
             let now = Date(timeIntervalSince1970: 1_781_726_400)
             let accounts = try self.seedCodex(2, controller: controller)
@@ -269,10 +270,8 @@ struct OverviewFleetAccountsTests {
                 codexRowDetails: StatusItemController.compactCodexRowDetails(
                     accounts: projected, resetStyle: .countdown, now: now))
             #expect(compact.constraintDetail != nil)
-            #expect(controller.compactAccountRowModel(for: compact, rendering: rendering).constraintDetail
-                == compact.constraintDetail)
-            #expect(controller.overviewFleetAccountRows(for: .codex, now: now).first?.model.constraintDetail
-                == compact.constraintDetail)
+            #expect(controller.compactAccountRowModel(for: compact, rendering: rendering).constraintDetail == nil)
+            #expect(controller.overviewFleetAccountRows(for: .codex, now: now).first?.model.constraintDetail == nil)
             rendering.accountStatusText[compact.accountID] = "Loading synthetic account"
             rendering.refreshingAccountIDs.insert(compact.accountID)
             let loading = controller.compactAccountRowModel(for: compact, rendering: rendering)
@@ -574,6 +573,83 @@ struct OverviewFleetAccountsTests {
                     .activeVisibleAccountID == active)
                 #expect(controller.settings.claudeNativeProfileAlias == "default")
                 #expect(controller.settings.effectiveSelectedTokenAccount(for: .claude) == nil)
+            }
+        }
+    }
+
+    @Test(arguments: [false, true])
+    func `collapsed provider summaries match compact account row heights`(hasResetDates: Bool) throws {
+        try self.withFixture(renderCards: true) { controller in
+            self.seedClaude(2, controller: controller)
+            let accounts = try self.seedCodex(3, controller: controller)
+            if hasResetDates {
+                let now = Date()
+                let snapshot = UsageSnapshot(
+                    primary: RateWindow(
+                        usedPercent: 50,
+                        windowMinutes: 300,
+                        resetsAt: now.addingTimeInterval(3600),
+                        resetDescription: nil),
+                    secondary: RateWindow(
+                        usedPercent: 20,
+                        windowMinutes: 10080,
+                        resetsAt: now.addingTimeInterval(86400),
+                        resetDescription: nil),
+                    updatedAt: now)
+                controller.store.snapshots[.codex] = snapshot
+                controller.store.snapshots[.claude] = snapshot
+                controller.store.codexAccountSnapshots = accounts.map {
+                    CodexAccountUsageSnapshot(account: $0, snapshot: snapshot, error: nil, sourceLabel: "Synthetic")
+                }
+                controller.store.claudeNativeProfileAccountSnapshots = controller.store
+                    .claudeNativeProfileAccountSnapshots.map {
+                        ProviderAccountUsageSnapshot(
+                            id: $0.id,
+                            provider: .claude,
+                            displayLabel: $0.displayLabel,
+                            isActive: $0.isActive,
+                            snapshot: snapshot,
+                            error: nil,
+                            sourceLabel: "Synthetic")
+                    }
+                let claudeRows = controller.overviewFleetAccountRows(for: .claude, now: now)
+                let expected = [snapshot.primary, snapshot.secondary].compactMap { window in
+                    window.flatMap { UsageFormatter.resetLine(for: $0, style: .countdown, now: now) }
+                }.joined(separator: " · ")
+                #expect(claudeRows.first?.model.constraintDetail == expected)
+                #expect(claudeRows.first?.model.trailingDetail == nil)
+                let projected = controller.overviewFleetAccounts(for: .claude)
+                let plan = controller.compactAccountPlan(for: .claude, accounts: projected)
+                let rendering = StatusItemController.CompactAccountMenuRendering(
+                    plan: plan,
+                    accounts: projected,
+                    idPrefix: "claudeNativeProfile",
+                    cardModel: { _ in nil },
+                    codexRowDetails: StatusItemController.compactAccountRowDetails(
+                        accounts: projected, resetStyle: .countdown, now: now))
+                for row in plan.rows {
+                    if case let .compact(compact) = row {
+                        #expect(controller.compactAccountRowModel(for: compact, rendering: rendering).constraintDetail
+                            == expected)
+                    }
+                }
+            }
+            let menu = controller.makeMenu()
+            controller.populateMenu(menu, provider: .codex)
+            for provider in [UsageProvider.codex, .claude] {
+                let summaryID = "overviewRow-\(provider.rawValue)"
+                let summary = try #require(menu.items.first { $0.representedObject as? String == summaryID })
+                #expect(try #require(summary.view as? MenuRowContainerView)._test_simulateRuntimeClick())
+                controller.populateMenu(menu, provider: .codex)
+                let collapsed = try #require(menu.items.first { $0.representedObject as? String == summaryID })
+                let account = try #require(menu.items.first {
+                    ($0.representedObject as? String)?.hasPrefix("overviewAccount-\(provider.rawValue)-") == true
+                })
+                let summaryView = try #require(collapsed.view as? MenuRowContainerView)
+                let accountView = try #require(account.view as? MenuRowContainerView)
+                #expect(summaryView.frame.height == accountView.frame.height)
+                #expect(summaryView.intrinsicContentSize.height == accountView.intrinsicContentSize.height)
+                #expect(controller.settings.mergedMenuLastSelectedWasOverview)
             }
         }
     }

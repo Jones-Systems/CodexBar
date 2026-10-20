@@ -45,7 +45,7 @@ struct JonesCompactAccountPresentationTests {
     }
 
     @Test(arguments: [10.0, 95.0])
-    func `healthy and constrained Codex rows retain weekly remaining and reset`(usedPercent: Double) throws {
+    func `healthy and constrained Codex rows show only weekly reset timing`(usedPercent: Double) throws {
         let weekly = RateWindow(
             usedPercent: usedPercent,
             windowMinutes: 10080,
@@ -56,7 +56,7 @@ struct JonesCompactAccountPresentationTests {
             account: account, resetStyle: .countdown, now: Self.detailNow)
         let reset = try #require(UsageFormatter.resetLine(for: weekly, style: .countdown, now: Self.detailNow))
 
-        #expect(detail.text == "Weekly \(Int(100 - usedPercent))% left · \(reset)")
+        #expect(detail.text == reset)
         #expect(detail.text?.contains("4d 15h") == true)
         #expect(detail.trailingDetail == nil)
     }
@@ -75,7 +75,7 @@ struct JonesCompactAccountPresentationTests {
             account: account, resetStyle: .absolute, now: Self.detailNow)
         let reset = try #require(UsageFormatter.resetLine(for: weekly, style: .absolute, now: Self.detailNow))
 
-        #expect(detail.text == "Weekly 75% left · \(reset)")
+        #expect(detail.text == reset)
         #expect(detail.trailingDetail?.text == "2d")
         #expect(detail.trailingDetail?.count == 1)
     }
@@ -126,7 +126,7 @@ struct JonesCompactAccountPresentationTests {
             resetDescription: "in 4d")
         let undated = JonesCompactAccountPresentation.codexRowDetail(
             account: Self.detailAccount(weekly: weekly), resetStyle: .countdown, now: Self.detailNow)
-        #expect(undated.text == "Weekly 80% left")
+        #expect(undated.text == nil)
         for account in [
             Self.detailAccount(weekly: nil),
             Self.detailAccount(weekly: weekly, error: "Needs re-auth"),
@@ -137,6 +137,117 @@ struct JonesCompactAccountPresentationTests {
             #expect(detail.text == nil)
             #expect(detail.trailingDetail == nil)
         }
+    }
+
+    @Test
+    func `Claude reset detail preserves window order and rejects unknown placeholder and error timing`() throws {
+        let session = RateWindow(
+            usedPercent: 90,
+            windowMinutes: 300,
+            resetsAt: Self.detailNow.addingTimeInterval(3600),
+            resetDescription: nil)
+        let weekly = RateWindow(
+            usedPercent: 40,
+            windowMinutes: 10080,
+            resetsAt: Self.detailNow.addingTimeInterval(86400),
+            resetDescription: nil)
+        let placeholder = RateWindow(
+            usedPercent: 0,
+            windowMinutes: 300,
+            resetsAt: session.resetsAt,
+            resetDescription: nil,
+            isSyntheticPlaceholder: true)
+        let undated = RateWindow(usedPercent: 99, windowMinutes: 300, resetsAt: nil, resetDescription: "tomorrow")
+        for style in [ResetTimeDisplayStyle.countdown, .absolute] {
+            let sessionText = try #require(UsageFormatter.resetLine(for: session, style: style, now: Self.detailNow))
+            let weeklyText = try #require(UsageFormatter.resetLine(for: weekly, style: style, now: Self.detailNow))
+            for (primary, expected) in [
+                (session, sessionText + " · " + weeklyText),
+                (placeholder, weeklyText),
+                (undated, weeklyText),
+            ] {
+                let account = ProviderAccountUsageSnapshot(
+                    id: .init(source: "claude-native-profile", opaqueID: "synthetic"),
+                    provider: .claude,
+                    displayLabel: "Synthetic",
+                    isActive: false,
+                    snapshot: UsageSnapshot(primary: primary, secondary: weekly, updatedAt: Self.detailNow),
+                    error: nil,
+                    sourceLabel: nil)
+                let detail = JonesCompactAccountPresentation.claudeRowDetail(
+                    account: account, resetStyle: style, now: Self.detailNow)
+                #expect(detail.text == expected)
+                #expect(detail.trailingDetail == nil)
+            }
+        }
+        for (snapshot, error) in [
+            (nil, nil),
+            (UsageSnapshot(
+                primary: undated,
+                secondary: nil,
+                updatedAt: Self.detailNow), nil),
+            (UsageSnapshot(
+                primary: session,
+                secondary: weekly,
+                updatedAt: Self.detailNow), "Unavailable"),
+        ] {
+            let account = ProviderAccountUsageSnapshot(
+                id: .init(source: "claude-native-profile", opaqueID: "synthetic"),
+                provider: .claude,
+                displayLabel: "Synthetic",
+                isActive: false,
+                snapshot: snapshot,
+                error: error,
+                sourceLabel: nil)
+            let detail = JonesCompactAccountPresentation.claudeRowDetail(
+                account: account, resetStyle: .countdown, now: Self.detailNow)
+            #expect(detail.text == nil)
+            #expect(detail.trailingDetail == nil)
+        }
+    }
+
+    @Test
+    func `compact summary preserves provider scope reset credits and missing data`() {
+        let weekly = RateWindow(
+            usedPercent: 20,
+            windowMinutes: 10080,
+            resetsAt: Self.detailNow.addingTimeInterval(86400),
+            resetDescription: nil)
+        let account = Self.detailAccount(weekly: weekly, credits: [Self.resetCredit(id: "banked", expiresIn: 172_800)])
+        for provider in [UsageProvider.codex, .claude] {
+            let row = JonesCompactAccountPresentation.overviewSummaryRow(
+                .init(
+                    provider: provider,
+                    label: provider.rawValue,
+                    snapshot: account.snapshot,
+                    hasError: false,
+                    isRefreshing: false),
+                resetStyle: .absolute,
+                now: Self.detailNow)
+            #expect(row.label == provider.rawValue)
+            #expect(row.constraintDetail == UsageFormatter.resetLine(
+                for: weekly,
+                style: .absolute,
+                now: Self.detailNow))
+            #expect(row.trailingDetail?.count == (provider == .codex ? 1 : nil))
+            #expect(!row.showsBestBadge)
+            #expect(!row.isActiveAccount)
+            let empty = JonesCompactAccountPresentation.overviewSummaryRow(
+                .init(
+                    provider: provider,
+                    label: provider.rawValue,
+                    snapshot: nil,
+                    hasError: false,
+                    isRefreshing: true),
+                resetStyle: .countdown,
+                now: Self.detailNow)
+            #expect(empty.constraintDetail == nil)
+            #expect(empty.headroomPercent == nil)
+            #expect(empty.trailingDetail == nil)
+            #expect(empty.isRefreshing)
+        }
+        #expect(JonesCompactAccountPresentation.claudeRowDetail(
+            account: account, resetStyle: .countdown, now: Self.detailNow).text == nil)
     }
 
     private func accounts(

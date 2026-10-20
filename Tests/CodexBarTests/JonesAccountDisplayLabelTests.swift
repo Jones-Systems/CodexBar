@@ -17,6 +17,11 @@ struct JonesAccountDisplayLabelTests {
             provider: .codex, profileIdentity: "profile:one", verifiedAlias: "north", override: "  ") == "North")
         #expect(JonesAccountDisplayLabel.resolve(
             provider: .claude, profileIdentity: "native:default", verifiedAlias: "default") == "default")
+        #expect(JonesAccountDisplayLabel.resolve(
+            provider: .claude,
+            profileIdentity: "native:default",
+            verifiedAlias: "default",
+            override: "Primary synthetic") == "Primary synthetic")
         let unknown = JonesAccountDisplayLabel.resolve(provider: .codex, profileIdentity: "profile:one")
         #expect(unknown.hasPrefix("Account · "))
         #expect(unknown == JonesAccountDisplayLabel.resolve(provider: .codex, profileIdentity: "profile:one"))
