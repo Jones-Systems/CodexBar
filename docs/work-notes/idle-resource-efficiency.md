@@ -129,3 +129,10 @@ One independent Astra/high correctness review (`/root/idle_correctness_review`,
 before and after inspecting cache/dedup/freshness consumers and the close/rehydration
 callers. It ran no tests. Its source review does not establish native AppKit event ordering,
 framework deallocation timing, causal resource savings, or delivery readiness.
+
+PR #13's initial lint job reported 13 `multiline_arguments` violations, all in the two
+new tests. The repair expands only those argument lists to one argument per line.
+Targeted SwiftLint reports zero violations and SwiftFormat reports no changes.
+Production source bytes remain identical to the independently reviewed candidate.
+The root-owned full test run is still executing its previously compiled candidate;
+the repair does not change test semantics. The new CI head will compile the formatted tests.

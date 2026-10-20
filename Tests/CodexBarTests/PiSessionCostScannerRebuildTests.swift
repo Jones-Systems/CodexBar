@@ -134,8 +134,12 @@ struct PiSessionCostScannerRebuildTests {
         }
         let refreshed = try self.observing(rebuilds: 1, parses: 1) {
             try PiSessionCostScanner.loadDailyReportCancellable(
-                provider: .codex, since: since, until: day, now: day.addingTimeInterval(1),
-                options: options, checkCancellation: nil)
+                provider: .codex,
+                since: since,
+                until: day,
+                now: day.addingTimeInterval(1),
+                options: options,
+                checkCancellation: nil)
         }
         #expect(refreshed.summary?.totalTokens == original.summary?.totalTokens)
         #expect(refreshed.summary?.totalCostUSD == original.summary?.totalCostUSD)
@@ -155,8 +159,12 @@ struct PiSessionCostScannerRebuildTests {
         options: PiSessionCostScanner.Options) throws -> CostUsageDailyReport
     {
         try PiSessionCostScanner.loadDailyReportCancellable(
-            provider: .codex, since: day, until: day, now: now ?? day,
-            options: options, checkCancellation: nil)
+            provider: .codex,
+            since: day,
+            until: day,
+            now: now ?? day,
+            options: options,
+            checkCancellation: nil)
     }
 
     private func observing(

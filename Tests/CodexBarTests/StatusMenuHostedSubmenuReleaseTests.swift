@@ -118,8 +118,13 @@ struct StatusMenuHostedSubmenuReleaseTests {
             last30DaysTokens: 123,
             last30DaysCostUSD: cost,
             daily: [CostUsageDailyReport.Entry(
-                date: "2025-12-23", inputTokens: nil, outputTokens: nil,
-                totalTokens: 123, costUSD: cost, modelsUsed: nil, modelBreakdowns: nil)],
+                date: "2025-12-23",
+                inputTokens: nil,
+                outputTokens: nil,
+                totalTokens: 123,
+                costUSD: cost,
+                modelsUsed: nil,
+                modelBreakdowns: nil)],
             updatedAt: Date())
     }
 
