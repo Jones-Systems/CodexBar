@@ -136,3 +136,20 @@ Targeted SwiftLint reports zero violations and SwiftFormat reports no changes.
 Production source bytes remain identical to the independently reviewed candidate.
 The root-owned full test run is still executing its previously compiled candidate;
 the repair does not change test semantics. The new CI head will compile the formatted tests.
+
+The first full local test invocation stopped after 65 successful groups at the architecture
+gatekeeper group; its retry failed identically. The failure was nine exact-line catalog
+entries shifted by additions in the three changed source files. Root verified each old
+anchor line against the new source line byte for byte, then changed only those nine line
+numbers. Reasons, provider sets, occurrence fingerprints, suppression semantics, and
+gatekeeper logic are unchanged. The run took 639.9 seconds, had no timeouts, and removed
+its owned fixture root with absence verified. Remaining groups were not executed in that
+invocation; a corrected full run is required. Root owns this added test-catalog write scope.
+
+The full `make check` retry using invocation-local Node 22 passed, including portable
+script checks, JavaScript/TypeScript checks, SwiftFormat, and strict SwiftLint with zero
+violations across 2,162 Swift files. No host runtime was repaired or replaced.
+
+The corrected architecture gatekeeper and both new regression suites passed together:
+49 tests in three suites, 5.757 seconds of execution. The runner removed its owned fixture
+root and verified absence. Production source remains unchanged from the reviewed candidate.
