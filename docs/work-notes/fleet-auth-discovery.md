@@ -333,3 +333,18 @@ root belonged to this pre-existing entry; the eleven new entries already had
 specific provider/behavior reasons and remain unchanged.
 Source hashes stayed unchanged; process drain and fixture absence passed.
 The verifier stopped before `make check` and full `make test`.
+
+R9 on `e6317b3a8b356256d0bac98b084c70b2671fa71f` passed all 41 architecture
+tests, including the previously failing cross-provider cluster check. Overview,
+grouped-account and display-label source/test bytes retain their R8 passing
+results. Current-source `make check` also passed: SwiftLint found zero violations
+in 2,160 files, five pinned tools were reused without downloads, and 95 synthetic
+cleanup checks passed with one platform-specific skip. All six invocation fixture
+parents were removed and their absence verified.
+
+Full `make test` is now running with normal complete discovery/grouping, no
+inherited shard/filter selectors, synthetic file/Keychain isolation and the
+existing process-drain/cleanup lifecycle. Full-suite completion, current-head
+hosted CI and the next local app update remain pending. Root's following
+documentation-only checkpoint may advance HEAD during this run; compiled
+source, tests and scripts remain frozen and require final hash comparison.
