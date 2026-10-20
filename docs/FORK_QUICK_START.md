@@ -10,11 +10,13 @@ read_when:
 
 The source repository is [Jones-Systems/CodexBar](https://github.com/Jones-Systems/CodexBar),
 an independent public repository derived from [steipete/CodexBar](https://github.com/steipete/CodexBar).
-The former GitHub fork and its original PR discussions are preserved as
-[CodexBar-legacy-fork](https://github.com/Jones-Systems/CodexBar-legacy-fork).
-See the [migration record](work-notes/public-repository-migration.md) for source
-and PR mappings. GitHub repository independence does not establish build or
-installation readiness.
+The former GitHub fork was named `Jones-Systems/CodexBar-legacy-fork`.
+The [legacy retirement record](work-notes/public-repository-migration.md#legacy-fork-retirement-record)
+preserves the five open PRs' source mappings, useful conclusions and finding
+references in this repository. On 2026-10-20 the owner superseded the earlier
+requirement to retain the original discussion host; current onboarding does not
+depend on that repository remaining available. GitHub repository independence
+does not establish build or installation readiness.
 The [CAAM retirement note](work-notes/caam-retirement.md) records removal of the earlier
 CAAM integration; its original work note remains historical evidence. Older fork setup and roadmap documents
 may describe earlier owners or plans; they do not establish current delivery status.

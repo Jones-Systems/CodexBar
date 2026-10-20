@@ -16,6 +16,115 @@ Consumers: repository owner, migration operator and source owners
 Authority effect: none
 <!-- codex-section:end id="worknote.public-repository-migration#ctx.artifact-header.001" -->
 
+<!-- codex-section:begin id="worknote.public-repository-migration#ctx.retirement.001" -->
+## Legacy fork retirement record
+
+On 2026-10-20, M Jones requested evaluation of all five open PRs in
+`Jones-Systems/CodexBar-legacy-fork` (repository ID `1356759930`), preservation
+of their useful conclusions in `Jones-Systems/CodexBar` (ID `1425008735`), and
+publication and merge of that documentation before a separate Otto deletion.
+The owner explicitly discarded the rest. This supersedes the migration's earlier
+requirement to keep original discussions on the legacy host: no complete discussion
+archive or continuing dependency on that host is required. This record evaluates
+only those five open PRs, not every closed PR, issue or other repository history.
+It records no deletion or archival operation and grants no authority for one.
+
+### Source and successor mapping
+
+Readback on 2026-10-20 found all five legacy PRs still open and all five successors
+merged. Every legacy head below and each of the three distinct successor merge
+commits is an ancestor of current `main` at
+`d0f7c37e59d032c67b479b358a977d53de6896d8`. The first three successors share the
+atomic stack's merge commit. The legacy repository is not needed to recover these
+source revisions or their successor delivery records.
+
+| Legacy PR and scope | Preserved legacy head | Successor PR | Merge commit |
+| --- | --- | --- | --- |
+| #11 — Authfleet accounts, controls and CAAM removal | `4f62ba08bd6c22940bd79189b451464ba2df3ba5` | [#1](https://github.com/Jones-Systems/CodexBar/pull/1) | `7138b98b978381be69a08b0c7acedae6549a783c` |
+| #12 — Jones trial identity and isolated state | `405b6765d7ba4da09affb894e2e8d5fe6feea3da` | [#2](https://github.com/Jones-Systems/CodexBar/pull/2) | `7138b98b978381be69a08b0c7acedae6549a783c` |
+| #13 — Native fixture containment and CI isolation | `99429988aefee925c0a2aaabf884e89792f25d7a` | [#3](https://github.com/Jones-Systems/CodexBar/pull/3) | `7138b98b978381be69a08b0c7acedae6549a783c` |
+| #14 — Netdata multi-host node selection | `2fbbca5ed244a9a2873a0005c09f414a5063d6cf` | [#4](https://github.com/Jones-Systems/CodexBar/pull/4) | `8a4216c98fc6ca78ae2f5b5b39f0bee302993d0e` |
+| #3 — Independent repository-sync safety core | `b981e7e5c824451d9ab6c47a0513e926c3a32bc5` | [#5](https://github.com/Jones-Systems/CodexBar/pull/5) | `bd4c3b27113428cfbc678ad0af7c4d46250cf9c1` |
+
+### Useful conclusions retained
+
+The evaluated material comprises the five PR bodies, nine issue comments, zero
+submitted reviews and zero inline review comments; the bounded collection pages
+were complete. Successor PRs retain the original bodies' substantive content.
+Four comments on legacy #11 add account-recovery, native-verification and Authfleet
+architecture context; the remaining five comments only identify successor PRs.
+The useful conclusions are retained here and in the existing local records:
+
+- **Authfleet and account recovery (#11):** exact, unique account identity and
+  fail-closed source selection remain important. Selecting a usage source alone
+  does not switch the system account. The owner subsequently approved use of the
+  existing System Account credential-copy behavior for Authfleet source integration,
+  superseding the earlier no-copy restriction for that implementation. The
+  [promotion record](fleet-system-promotion.md#binding-and-owner-approval) preserves
+  the ruling, typed-target validation and destination semantics. It does not grant
+  live credential access, installation or running-session changes. App-owned writer
+  exclusion does not establish exclusion against external refreshers or full
+  transactional rollback; its [preservation limits](fleet-system-promotion.md#preservation-limits-and-operational-gates)
+  remain explicit. [Account recovery and drain](account-recovery-drain.md) retains
+  the AFR-001/AFR-002 source corrections and compilation follow-up.
+- **Trial identity (#12):** the opt-in packaging overlay separates Jones-owned
+  identity/state and disables upstream updates. Source integration and merge do not
+  establish an installable trial or remove the seven gates in
+  [Jones identity](../jones/IDENTITY.md). The
+  [trial work note](trial-identity.md) retains its exact evidence and limitations.
+- **Fixture and CI isolation (#13):** workspace-owned fixture allocation, propagated
+  child isolation and drain-before-cleanup are the preserved contract. Historical
+  native and plugin results are bound to their tested revision in
+  [CI isolation evidence](../review-evidence/ci-isolation-r1.json); they are not a
+  fresh verification of current source. Later migration repairs and their narrower
+  proofs remain in the evidence below and the successor delivery record.
+- **Netdata (#14):** both metric requests select the configured machine GUID using
+  `nodes`, so a multi-host Parent does not cause valid data to be rejected as
+  ambiguous. Wrong-node rejection remains required. The successor records the
+  synthetic multi-host regression and historical 31-test Linux result. Deferred
+  request-start freshness is unchanged; source delivery does not establish a
+  configured, activated or rendered Mac app.
+- **Repository sync (#3):** the delivered slice is an independent client safety
+  core, not complete production synchronization. It persists intent before dispatch,
+  fails closed on unsafe or unknown state, does not repeat ambiguous operations,
+  and requires original-target readback and separately confirmed guarded rollback.
+  Production Git/SSH host integration, discovery/fetch and preferences integration
+  remain outside that slice. No `repo_updater` code was adopted; its unresolved
+  license rider remains a reuse gate. The [local work note](repository-sync.md) and
+  [engineering spec](../engineering-specs/repository-sync.md) preserve the contract
+  and historical ownership boundary without requiring legacy-host links.
+
+### Findings and evidence boundaries
+
+Retirement does not correct, downgrade or waive findings. AFR-001 and AFR-002
+retain their original P2 severity and blocking effects (explicit recovery-account
+selection and shared-home cancellation/retry correctness) in the
+[original ledger](../review-evidence/account-fixes-ccafd932.json); their authorized
+source-correction disposition is recorded in the recovery note above.
+TIR001 and TIR002 remain deferred P2 findings concerning the standalone fixture's
+compile inputs and invalid identity metadata's fail-open behavior, with original
+blocking effects in the [trial ledger](../review-evidence/trial-identity-4ff8b504.json).
+
+The migration's retained deferrals below remain intact: NFCR-COR-002 blocks the
+identity/scratch-parent proof; NFP-COR-002 concerns identityless success-history
+mixing; FSP-PROC-002 is the originally nonblocking handler-restoration observation.
+Their P2 severity, original effects and dispositions remain in the
+[fixture containment](../review-evidence/native-fixture-containment.json),
+[Claude fixture](../review-evidence/claude-native-gui-ab73cbaa.json) and
+[process fixture](../review-evidence/fixture-scratch-parent-c5454c8b.json) ledgers.
+NFCR-COR-003 retains its original P2 history; only its list-only stdout contamination
+aspect has the focused correction recorded in the
+[migration CI receipt](../review-evidence/migration-ci-repair.json).
+Full scratch/identity proofs and EXPOSURE001's bounded public identity/path
+disclosure finding remain as documented below. No new runtime, installation,
+live-account or all-history security result is asserted by this record.
+
+The remaining sections are the migration's historical chronology. Their original
+host-preservation statements and then-pending delivery gates describe those earlier
+checkpoints; this retirement record supersedes the host-retention requirement,
+and the mapped successor PRs carry subsequent delivery results.
+<!-- codex-section:end id="worknote.public-repository-migration#ctx.retirement.001" -->
+
 <!-- codex-section:begin id="worknote.public-repository-migration#ctx.intent.001" -->
 ## Accepted intent and ownership
 
@@ -46,7 +155,9 @@ The approved migration is now executed. Old repository ID `1356759930` is
 `Jones-Systems/CodexBar-legacy-fork`; new public independent repository ID
 `1425008735` is `Jones-Systems/CodexBar`. All 431 branch heads and 135 tag objects
 (658 advertised records including peeled targets) matched the preserved source
-manifest after the atomic import. Original PR IDs/discussions remain intact.
+manifest after the atomic import. Original PR IDs/discussions remained intact at
+that checkpoint; the [retirement record](#legacy-fork-retirement-record) supersedes
+the earlier requirement to retain their legacy host.
 
 Old/new PR mapping is 11→1, 12→2, 13→3, 14→4, 3→5. All replacements are linked
 natively, and all originals have a link to their replacement. Native stack #6
