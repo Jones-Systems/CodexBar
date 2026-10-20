@@ -3080,9 +3080,9 @@ struct ProviderArchitectureGatekeeperTests {
             line: 842,
             anchor: "if provider == .codex,",
             expectedProviderIDs: ["codex", "deepseek"],
-            expectedReferenceCount: 3,
-            expectedReferenceFingerprint: ["codex@0", "deepseek@11", "deepseek@19"],
-            reason: "This exact app-runtime bridge coordinates provider-owned state through the shared controller."),
+            expectedReferenceCount: 4,
+            expectedReferenceFingerprint: ["codex@0", "deepseek@11", "deepseek@19", "codex@22"],
+            reason: "Refresh failures reject stale Codex owners before publication, mark current DeepSeek profile transitions unavailable on cancellation or failure, and update the selected Codex account cache only after the generation check."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/UsageStore+Refresh.swift",
             line: 883,

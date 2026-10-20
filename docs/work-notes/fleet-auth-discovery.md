@@ -321,3 +321,15 @@ equivalent active-account lookups with ordinary predicate closures; retain the
 same assertions and selection semantics. Zero tests executed, so neither the
 architecture repair nor Overview is qualified by R7. Process drain and exact
 fixture-parent removal passed; subsequent checks were not started.
+
+R8 on `754b5bb47d7268b99fc5ab907e5801f63da4c052` compiled and ran 65 tests
+in four suites. Overview, grouped-account and label suites passed, including
+the previously failing six-Codex/two-Claude Overview case. The architecture
+check reported one remaining mismatch: the refresh-failure cluster at line
+842 has four references, including Codex cache failure handling at relative
+line 22, rather than the catalog's three. Correct that exact fingerprint and
+clarify the changed failure cluster's reason. The generic reason inspected by
+root belonged to this pre-existing entry; the eleven new entries already had
+specific provider/behavior reasons and remain unchanged.
+Source hashes stayed unchanged; process drain and fixture absence passed.
+The verifier stopped before `make check` and full `make test`.
