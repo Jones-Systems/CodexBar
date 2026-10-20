@@ -277,3 +277,39 @@ planner coverage through an explicit finite policy and separately assert the
 new Codex default, including six and nine accounts. Lint and all three Linux
 build jobs passed on `61d4109`; the other macOS shard was still running at
 observation. Neither partial CI nor the failed R5 is a full-suite pass.
+
+R6 on `35bf977e9d10070fac0b816bda96e8f47229328f` ran 40 tests in four
+suites. All planner and grouped-account cases passed, including the original
+finite-budget matrices and new unlimited Codex policy cases. The same Overview
+test still reported two missing-row issues: changing fixture seed order was
+insufficient. Source hashes stayed unchanged; drain and fixture absence passed.
+The verifier stopped the sequence, so no R6 `make check` or full `make test`
+was started. Further Overview diagnosis must trace the complete population
+path rather than assume the earlier fixture hypothesis resolved the failure.
+
+Hosted job `118385589844` in run `39348107517` failed the architecture
+gatekeeper on `35bf977`: the new provider-specific label construct lacks a
+specific justification, and affected menu/provider constructs have stale
+reviewed anchors after the repair's moves/formatting. Repair only verified
+affected catalog entries and the specific design justification; retain all
+architecture checks. The completed log is retained under
+`.build/fleet-repair-evidence/publication-r1`.
+
+The subsequent Overview trace identified the remaining fixture defect:
+`makeMenuDescriptor` obtains Codex account information, whose environment
+resolution reads reconciliation and rebuilds the cached projection. Fabricated
+menu rows alone therefore disappear before Overview rendering. The fixture now
+injects immutable synthetic observed accounts, derives actual projected IDs,
+and seeds matching usage identities. It asserts projection stability around
+descriptor construction while retaining row counts, ordering, navigation and
+strict wrong-owner/ID rejection. No production behavior is changed by this
+fixture repair; native execution is still required.
+
+The architecture repair relocates 79 existing anchors to exact unchanged
+source lines, retains their reasons, adds 11 individually justified constructs,
+and updates one refresh fingerprint from seven provider references to six after
+the removed Codex clearing branch. A near-code comment explains Claude label
+identity. Scanner implementation and existing test bodies are unchanged; no
+new suppression or rule relaxation was added. SwiftFormat passed over the
+three affected Swift paths. The actual gatekeeper and Overview checks remain
+pending on this source candidate.

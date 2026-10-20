@@ -35,6 +35,7 @@ enum JonesAccountDisplayLabel {
     }
 
     static func claudeProfileIdentity(alias: String, home: String, configDirectory: String?) -> String {
+        // Provider-specific by design: Claude label overrides use the alias and effective config directory as identity.
         let effectiveDirectory = configDirectory ?? URL(fileURLWithPath: home).appendingPathComponent(".claude").path
         return "native-profile:" + alias + ":" + URL(fileURLWithPath: effectiveDirectory).standardizedFileURL.path
     }

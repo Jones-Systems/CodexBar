@@ -83,43 +83,55 @@ struct OverviewFleetAccountsTests {
         try body(controller)
     }
 
-    private static func snapshot(provider: UsageProvider) -> UsageSnapshot {
+    private static func snapshot(
+        provider: UsageProvider,
+        accountEmail: String = "selected@example.com") -> UsageSnapshot
+    {
         UsageSnapshot(
             primary: RateWindow(usedPercent: 21, windowMinutes: 300, resetsAt: nil, resetDescription: nil),
             secondary: nil,
             updatedAt: Date(timeIntervalSince1970: 1_800_000_000),
             identity: ProviderIdentitySnapshot(
                 providerID: provider.instanceID,
-                accountEmail: "selected@example.com",
+                accountEmail: accountEmail,
                 accountOrganization: nil,
                 loginMethod: "Pro"))
     }
 
-    private func seedCodex(_ count: Int, controller: StatusItemController) {
-        let accounts = (0..<count).map { index in
-            CodexVisibleAccount(
-                id: "codex-\(index)",
+    @discardableResult
+    private func seedCodex(_ count: Int, controller: StatusItemController) throws -> [CodexVisibleAccount] {
+        let home = try URL(fileURLWithPath: #require(controller.store.environmentBase["HOME"]))
+        let observed = (0..<count).map { index in
+            ObservedSystemCodexAccount(
                 email: "account\(index)@example.com",
-                storedAccountID: nil,
-                selectionSource: .liveSystem,
-                isActive: index == 0,
-                isLive: index == 0,
-                canReauthenticate: false,
-                canRemove: false)
+                workspaceAccountID: "workspace-\(index)",
+                authFingerprint: "fingerprint-\(index)",
+                codexHomePath: home.appendingPathComponent("codex-\(index)").path,
+                observedAt: Date(timeIntervalSince1970: 1_800_000_000),
+                identity: .providerAccount(id: "workspace-\(index)"))
         }
-        controller.settings.cachedCodexAccountMenuProjection = CachedCodexAccountMenuProjection(
-            activeSource: .liveSystem,
-            loadedAt: Date(),
-            projection: CodexVisibleAccountProjection(
-                visibleAccounts: accounts,
-                activeVisibleAccountID: accounts.first?.id,
-                liveVisibleAccountID: accounts.first?.id,
-                hasUnreadableAddedAccountStore: false))
+        controller.settings._test_codexAccountSnapshotLoader = { source in
+            CodexAccountReconciliationSnapshot(
+                storedAccounts: [],
+                activeStoredAccount: nil,
+                liveSystemAccount: observed.first,
+                profileHomeAccounts: Array(observed.dropFirst()),
+                matchingStoredAccountForLiveSystemAccount: nil,
+                activeSource: source,
+                hasUnreadableAddedAccountStore: false)
+        }
+        // Descriptor construction reloads reconciliation; seed its source as well as the menu projection.
+        let accounts = controller.settings.codexVisibleAccountProjection.visibleAccounts
         controller.store.codexAccountSnapshots = accounts.map {
             CodexAccountUsageSnapshot(
-                account: $0, snapshot: Self.snapshot(provider: .codex), error: nil, sourceLabel: "Synthetic")
+                account: $0,
+                snapshot: Self.snapshot(provider: .codex, accountEmail: $0.email),
+                error: nil,
+                sourceLabel: "Synthetic")
         }
-        controller.store.snapshots[.codex] = Self.snapshot(provider: .codex)
+        let activeAccount = try #require(accounts.first(where: \.isActive))
+        controller.store.snapshots[.codex] = Self.snapshot(provider: .codex, accountEmail: activeAccount.email)
+        return accounts
     }
 
     private func seedClaude(_ count: Int, controller: StatusItemController) {
@@ -161,15 +173,19 @@ struct OverviewFleetAccountsTests {
     func `overview renders six codex and two claude accounts without folding`() throws {
         try self.withFixture(providers: [.codex, .claude]) { controller in
             self.seedClaude(2, controller: controller)
-            // Config changes clear the Codex projection, so seed it after selecting the Claude profile.
-            self.seedCodex(6, controller: controller)
+            let accounts = try self.seedCodex(6, controller: controller)
+            let projection = try #require(controller.settings.codexVisibleAccountProjectionForMenuDisplay)
+            #expect(projection.visibleAccounts.count == 6)
+            _ = controller.makeMenuDescriptor(provider: .codex, includeContextualActions: true)
+            #expect(controller.settings.codexVisibleAccountProjectionForMenuDisplay == projection)
+            let activeID = try #require(accounts.first(where: \.isActive)?.id)
             let menu = controller.makeMenu()
             controller.refreshMenuForOpenIfNeeded(menu, provider: nil)
             let ids = self.identifiers(in: menu)
             let codexIndex = try #require(ids.firstIndex(of: "overviewRow-codex"))
             let accountIDs = ids.filter { $0.hasPrefix("overviewAccount-codex-") }
             #expect(accountIDs.count == 5)
-            #expect(!accountIDs.contains("overviewAccount-codex-codex-0"))
+            #expect(!accountIDs.contains("overviewAccount-codex-\(activeID)"))
             #expect(Array(ids[(codexIndex + 1)...].prefix(5)) == accountIDs)
             let claudeIndex = try #require(ids.firstIndex(of: "overviewRow-claude"))
             #expect(ids.dropFirst(claudeIndex + 1).first == "overviewAccount-claude-secondary")
@@ -181,7 +197,7 @@ struct OverviewFleetAccountsTests {
     @Test
     func `segmented overview uses cached quota only for matching account id and owner`() throws {
         try self.withFixture(providers: [.codex]) { controller in
-            self.seedCodex(3, controller: controller)
+            let accounts = try self.seedCodex(3, controller: controller)
             controller.settings.multiAccountMenuLayout = .segmented
             let display = try #require(controller.codexAccountMenuDisplay(for: .codex))
             #expect(display.snapshots.isEmpty)
@@ -189,12 +205,16 @@ struct OverviewFleetAccountsTests {
             #expect(initialRows.count == 2)
             #expect(initialRows.allSatisfy { $0.model.headroomPercent == 79 })
 
-            let first = try #require(display.accounts.first { $0.id == "codex-1" })
-            let second = try #require(display.accounts.first { $0.id == "codex-2" })
+            let inactiveAccounts = display.accounts.filter { !$0.isActive }
+            let first = try #require(inactiveAccounts.first)
+            let second = try #require(inactiveAccounts.last)
+            #expect(first.id != second.id)
             let wrongOwner = CodexVisibleAccount(
                 id: first.id,
                 email: "different-owner@example.com",
-                storedAccountID: nil,
+                workspaceAccountID: first.workspaceAccountID,
+                authFingerprint: first.authFingerprint,
+                storedAccountID: first.storedAccountID,
                 selectionSource: first.selectionSource,
                 isActive: false,
                 isLive: false,
@@ -203,7 +223,9 @@ struct OverviewFleetAccountsTests {
             let wrongID = CodexVisibleAccount(
                 id: "different-id",
                 email: second.email,
-                storedAccountID: nil,
+                workspaceAccountID: second.workspaceAccountID,
+                authFingerprint: second.authFingerprint,
+                storedAccountID: second.storedAccountID,
                 selectionSource: second.selectionSource,
                 isActive: false,
                 isLive: false,
@@ -218,14 +240,14 @@ struct OverviewFleetAccountsTests {
             #expect(rejectedRows.allSatisfy { $0.model.headroomPercent == nil })
             #expect(controller.settings.multiAccountMenuLayout == .segmented)
             #expect(controller.settings.codexVisibleAccountProjectionForMenuDisplay?
-                .activeVisibleAccountID == "codex-0")
+                .activeVisibleAccountID == accounts.first(where: \.isActive)?.id)
         }
     }
 
     @Test
     func `single codex account and other providers add no overview account rows`() throws {
         try self.withFixture(providers: [.codex, .gemini]) { controller in
-            self.seedCodex(1, controller: controller)
+            try self.seedCodex(1, controller: controller)
             controller.store.snapshots[.gemini] = Self.snapshot(provider: .gemini)
             let overviewMenu = controller.makeMenu()
             controller.refreshMenuForOpenIfNeeded(overviewMenu, provider: nil)
@@ -245,16 +267,17 @@ struct OverviewFleetAccountsTests {
     @Test
     func `overview account click expands and navigates without changing active account`() throws {
         try self.withFixture(providers: [.codex, .claude], renderCards: true) { controller in
-            self.seedCodex(6, controller: controller)
+            let accounts = try self.seedCodex(6, controller: controller)
+            let inactive = try #require(accounts.first { !$0.isActive })
             let menu = NSMenu()
-            let accountID = ProviderAccountIdentity(source: "codex-account", opaqueID: "codex-1")
+            let accountID = ProviderAccountIdentity(source: "codex-account", opaqueID: inactive.id)
             controller.compactAccountCollapsedIDs.insert(accountID)
             let originalSource = controller.settings.codexActiveSource
             let originalSelectedID = controller.settings.codexVisibleAccountProjectionForMenuDisplay?
                 .activeVisibleAccountID
             controller.addOverviewFleetAccountRows(for: .codex, to: menu, captureMenu: menu, width: 320)
             let item = try #require(menu.items.first {
-                ($0.representedObject as? String) == "overviewAccount-codex-codex-1"
+                ($0.representedObject as? String) == "overviewAccount-codex-\(inactive.id)"
             })
             let view = try #require(item.view as? MenuRowContainerView)
             #expect(view._test_simulateRuntimeClick())
@@ -310,7 +333,7 @@ struct OverviewFleetAccountsTests {
     @Test
     func `overview rows redact labels and ignore prior expansion`() throws {
         try self.withFixture(providers: [.codex]) { controller in
-            self.seedCodex(9, controller: controller)
+            try self.seedCodex(9, controller: controller)
             let accounts = try #require(controller.codexAccountMenuDisplay(for: .codex)).accounts
             let account = try #require(accounts.first { !$0.isActive })
             controller.settings.setAccountDisplayLabel(
@@ -332,7 +355,7 @@ struct OverviewFleetAccountsTests {
     func `overview account rows respect selected provider scopes and provider limit`() throws {
         let providers: [UsageProvider] = [.codex, .claude, .gemini, .cursor, .copilot, .zai, .augment]
         try self.withFixture(providers: providers) { controller in
-            self.seedCodex(6, controller: controller)
+            try self.seedCodex(6, controller: controller)
             for provider in providers where provider != .codex {
                 controller.store.snapshots[provider.instanceID] = Self.snapshot(provider: provider)
             }
