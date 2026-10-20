@@ -17,6 +17,7 @@ private final class PiSessionISO8601FormatterBox: @unchecked Sendable {
 
 enum PiSessionCostScanner {
     @TaskLocal static var sessionParseObserverForTesting: (@Sendable () -> Void)?
+    @TaskLocal static var dailyUsageRebuildObserverForTesting: (@Sendable () -> Void)?
 
     struct Options {
         var piSessionsRoot: URL?
@@ -77,6 +78,7 @@ enum PiSessionCostScanner {
 
     private static let costScale = 1_000_000_000.0
     /// Bump for Pi-only cost formula changes not represented by the parser or pricing fingerprints.
+    /// Aggregation or deduplication changes must invalidate persisted days via this or the cache artifact version.
     private static let costFormulaVersion = 2
     private static let maxLineBytes = 16 * 1024 * 1024
     private static let maxSafeRoundedInt = Double(Int.max) - 1
@@ -137,6 +139,8 @@ enum PiSessionCostScanner {
         if shouldRefresh {
             try checkCancellation?()
             let roots = self.defaultSessionRoots(options: options)
+            let sessionRootPaths = roots.map(\.path)
+            var aggregateInputsChanged = cache.sessionRootPaths != sessionRootPaths
             let startCutoff = self.dateFromDayKey(range.scanSinceKey, calendar: range.calendar) ?? since
             var files: [SessionFileCandidate] = []
             for (rootIndex, root) in roots.enumerated() {
@@ -156,7 +160,7 @@ enum PiSessionCostScanner {
             let filePathsInScan = Set(files.map(\.url.path))
 
             for file in files {
-                try self.scanPiSessionFile(
+                let fileChanged = try self.scanPiSessionFile(
                     fileURL: file.url,
                     cache: &cache,
                     context: ScanContext(
@@ -164,6 +168,7 @@ enum PiSessionCostScanner {
                         forceRescan: options.forceRescan || windowExpanded || pricingChanged,
                         pricingContext: pricingContext,
                         checkCancellation: checkCancellation))
+                aggregateInputsChanged = aggregateInputsChanged || fileChanged
             }
             try checkCancellation?()
 
@@ -175,10 +180,14 @@ enum PiSessionCostScanner {
                         sign: -1)
                 }
                 cache.files.removeValue(forKey: key)
+                aggregateInputsChanged = true
             }
 
-            try self.rebuildDailyUsage(cache: &cache, files: files, checkCancellation: checkCancellation)
+            if aggregateInputsChanged {
+                try self.rebuildDailyUsage(cache: &cache, files: files, checkCancellation: checkCancellation)
+            }
 
+            cache.sessionRootPaths = sessionRootPaths
             cache.scanSinceKey = range.scanSinceKey
             cache.scanUntilKey = range.scanUntilKey
             cache.pricingKey = pricingContext.pricingKey
@@ -356,7 +365,7 @@ enum PiSessionCostScanner {
         fileURL: URL,
         cache: inout PiSessionCostCache,
         context: ScanContext)
-        throws
+        throws -> Bool
     {
         try context.checkCancellation?()
         let path = fileURL.path
@@ -375,7 +384,7 @@ enum PiSessionCostScanner {
            cached.mtimeUnixMs == mtimeMs,
            cached.size == size
         {
-            return
+            return false
         }
 
         if !context.forceRescan,
@@ -412,7 +421,7 @@ enum PiSessionCostScanner {
                 contributions: merged,
                 unkeyedContributions: mergedUnkeyed,
                 entryUsages: mergedEntryUsages))
-            return
+            return true
         }
 
         if let cached {
@@ -440,6 +449,7 @@ enum PiSessionCostScanner {
             contributions: parsed.contributions,
             unkeyedContributions: parsed.unkeyedContributions,
             entryUsages: parsed.entryUsages))
+        return true
     }
 
     private static func parsePiSessionFile(
@@ -598,6 +608,7 @@ enum PiSessionCostScanner {
         files: [SessionFileCandidate],
         checkCancellation: CostUsageScanner.CancellationCheck?) throws
     {
+        self.dailyUsageRebuildObserverForTesting?()
         var seenEntriesBySessionID: [String: Set<String>] = [:]
         cache.daysByProvider = [:]
 

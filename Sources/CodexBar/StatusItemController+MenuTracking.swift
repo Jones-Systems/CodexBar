@@ -213,7 +213,7 @@ extension StatusItemController {
                 for: self.renderedProviders(for: menu))
     }
 
-    private func attachedMenusForClosedPreparation() -> [NSMenu] {
+    func attachedMenusForClosedPreparation() -> [NSMenu] {
         var menus: [NSMenu] = []
         var seen = Set<ObjectIdentifier>()
 
