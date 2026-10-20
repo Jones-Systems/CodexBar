@@ -188,7 +188,7 @@ struct ClaudeNativeProfileIntegrationTests {
                     settings: settings,
                     account: AccountInfo(email: nil, plan: nil),
                     hasAccount: false))
-                #expect(action?.label == "Manage selected native profile in Claude Settings…")
+                #expect(action?.label == "Manage native profile…")
                 picker.binding.wrappedValue = ""
                 #expect(settings.claudeNativeProfileAlias == nil)
             }

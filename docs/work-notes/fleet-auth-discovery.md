@@ -388,3 +388,61 @@ This following work-note-only checkpoint is authorized during the run; the
 verifier must compare all compiled source/test/script hashes at completion.
 Full-suite success, replacement-head hosted CI, installation and launch remain
 pending. No provider login, credential copy or system-account change occurred.
+
+The prior full native run `final-test-r2` completed successfully: all 1,040
+discovered selections in 87 groups passed on their first attempt, with no
+retries or timeouts and normal declared skips. Compiled source/test/script
+hashes were unchanged through the documentation-only advance to
+`0fcb196ff1d8c919db01117246a00aa256148ff3`; process drain and exact
+fixture-parent removal/absence were verified. All eight hosted checks passed
+on that head. The Jones arm64 ad hoc bundle was built with automatic smoke
+launch skipped, installed through exact-path recoverable replacement, and
+opened with its build/path identity verified. The prior Jones bundle remains
+retained; stock CodexBar, credentials and system authentication were untouched.
+
+The owner's subsequent screenshots show native Claude `default` and a named
+profile together, resolving the prior local profile-selection UI uncertainty.
+The owner corrected one display label; only its obsolete local label override
+was removed, and the supplied Overview screenshot confirms the correction.
+
+The owner then reported menu width growing to roughly 410 points while the
+Overview cards remain narrow. On `0fcb196`, the shared menu width deliberately
+measures every enabled provider's native actions. Selecting native Claude
+adds the long “Manage selected native profile in Claude Settings…” action,
+which widens every merged tab. Keep the existing wider-label behavior for
+other legitimate actions; shorten this settings action without changing its
+destination. A synthetic selected-native merged-menu regression will prove
+the ordinary 310-point width and action routing. Root remains sole Git owner
+and documentation/build owner in the existing dedicated transition worktree.
+The builder owns only the affected Claude action label and menu tests.
+Regression red/green, affected menu suites, repeated `make check`, full
+`make test`, replacement-head CI and the next Jones app update are pending.
+The existing PR #7 merge hold and deferred findings remain unchanged.
+
+Width regression red phase on `0fcb196` reproduced the exact reported change:
+`./Scripts/test.sh --command swift test --no-parallel --filter
+StatusMenuClaudeNativeProfileAccountsTests` measured 408 points instead of 310
+for Codex, Claude and the Overview-style descriptor. The other four tests
+passed. The unchanged regression file and production preimage were hashed;
+only the new test was present, with production source unchanged. Runtime was
+88.16 seconds including 78.62 seconds compilation. Source hashes were stable,
+owned processes drained, and the exact fixture parent was removed with absence
+verified. This is synthetic AppKit measurement, without live account access.
+
+The width repair changes only the native Claude settings action label and its
+existing integration expectation; the regression itself remains byte-identical
+to the red phase. The affected native union passed 187 tests in three suites:
+`./Scripts/test.sh --command swift test --no-parallel --filter
+'StatusMenuClaudeNativeProfileAccountsTests|ClaudeNativeProfileIntegrationTests|StatusMenuTests'`.
+The 310-point regression and unchanged legitimate expansion/rendered-window
+contracts passed. Total runtime was 118.55 seconds, including 82.59 seconds
+compilation and 28.261 seconds test execution. Source hashes remained unchanged
+and exact fixture-parent removal/absence was verified.
+
+The exact red-phase command also passed unchanged on the repair (five tests,
+9.19 seconds including SwiftPM startup). Repeated `make check` passed in
+75.75 seconds: zero SwiftLint violations across 2,160 files, existing pinned
+tools reused, 95 synthetic cleanup checks with one declared platform skip,
+and six exact fixture-parent removal/absence receipts. Source/test/script
+hashes remained unchanged. Full native `make test`, current-head hosted CI
+and the next exact-path Jones update remain pending at this checkpoint.

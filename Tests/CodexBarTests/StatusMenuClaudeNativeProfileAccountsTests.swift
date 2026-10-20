@@ -8,6 +8,44 @@ import Testing
 @Suite(.serialized)
 struct StatusMenuClaudeNativeProfileAccountsTests {
     @Test
+    func `native profile settings action keeps merged provider and overview menus at baseline width`() async throws {
+        try await ClaudeNativeProfileAccountsFixture.run { settings, store, _ in
+            settings.mergeIcons = true
+            settings.setProviderEnabled(
+                provider: .codex,
+                metadata: ProviderDescriptorRegistry.descriptor(for: .codex).metadata,
+                enabled: true)
+            store.snapshots[.claude] = ClaudeNativeProfileAccountsFixture.snapshot(12)
+            try withStatusItemControllerForTesting(
+                store: store,
+                settings: settings,
+                fetcher: UsageFetcher())
+            { controller in
+                let action = try #require(ClaudeProviderImplementation().loginMenuAction(
+                    context: ProviderMenuLoginContext(
+                        provider: .claude,
+                        store: store,
+                        settings: settings,
+                        account: AccountInfo(email: nil, plan: nil),
+                        hasAccount: true)))
+                #expect(action.action == .providerSettings(.claude))
+                for (provider, includeContextualActions) in [
+                    (UsageProvider.codex, true), (.claude, true), (.codex, false),
+                ] {
+                    let descriptor = controller.makeMenuDescriptor(
+                        provider: provider,
+                        includeContextualActions: includeContextualActions)
+                    let width = controller.menuCardWidth(
+                        for: [.codex, .claude],
+                        selectedProvider: provider,
+                        descriptor: descriptor)
+                    #expect(width == StatusItemController.menuCardBaseWidth)
+                }
+            }
+        }
+    }
+
+    @Test
     func `two native profiles render selected card and side row without switching or hidden tail`() async throws {
         try await ClaudeNativeProfileAccountsFixture.run { settings, store, root in
             settings.setAccountDisplayLabel(

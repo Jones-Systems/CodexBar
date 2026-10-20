@@ -192,3 +192,16 @@ multiple cached accounts, stale timestamps and authentication-failure eviction.
 This changes cache retention and presentation only, with no new storage, TTL,
 request suppression or system-account switching.
 <!-- codex-section:end id="spec.fleet-auth-discovery#dec.cached-selection.001" -->
+
+<!-- codex-section:begin id="spec.fleet-auth-discovery#dec.native-profile-menu-width.001" -->
+## Native profile action width
+
+Keep the ordinary merged menu at its existing 310-point baseline when native
+Claude profiles are selected. The action that opens Claude profile settings
+uses the concise label “Manage native profile…”, retaining its existing
+provider-settings destination. Preserve native measurement and expansion for
+other legitimately wide actions. Prove the selected-native merged menu width
+with synthetic discovery/settings, alongside the existing expansion and
+rendered-window width contracts. No authentication or account selection
+semantics change.
+<!-- codex-section:end id="spec.fleet-auth-discovery#dec.native-profile-menu-width.001" -->
