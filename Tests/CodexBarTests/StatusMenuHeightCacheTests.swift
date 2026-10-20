@@ -609,6 +609,64 @@ extension StatusMenuTests {
         }
     }
 
+    @Test
+    func `overview inline toggles restore measured heights and leave provider tab defaults intact`() throws {
+        try self.withHeightFleetFixture(renderCards: true) { controller in
+            try self.seedHeightFleetCodex(3, controller: controller)
+            self.seedHeightFleetClaude(2, controller: controller)
+            let menu = controller.makeMenu()
+            controller.populateMenu(menu, provider: .codex)
+            let originalIDs = menu.items.compactMap { $0.representedObject as? String }
+            let total = { menu.items.reduce(CGFloat.zero) { $0 + ($1.view?.frame.height ?? 0) } }
+            let originalTotal = total()
+            for provider in [UsageProvider.codex, .claude] {
+                let summaryID = "overviewRow-\(provider.rawValue)"
+                let summary = try #require(menu.items.first { $0.representedObject as? String == summaryID })
+                let initialHeight = try #require(summary.view).frame.height
+                controller.warmMergedSwitcherSiblingContent(in: menu)
+                #expect(try #require(summary.view as? MenuRowContainerView)._test_simulateRuntimeClick())
+                #expect(controller.mergedSwitcherContentCaches[ObjectIdentifier(menu)] == nil)
+                controller.populateMenu(menu, provider: .codex)
+                let collapsed = try #require(menu.items.first { $0.representedObject as? String == summaryID })
+                #expect(try #require(collapsed.view).frame.height < initialHeight)
+                #expect(total() < originalTotal)
+                self.expectHeightFleetGeometry(in: menu)
+                #expect(try #require(collapsed.view as? MenuRowContainerView)._test_simulateRuntimeClick())
+                controller.populateMenu(menu, provider: .codex)
+                #expect(menu.items.first { $0.representedObject as? String == summaryID }?.view?.frame
+                    .height == initialHeight)
+                #expect(total() == originalTotal)
+                let compact = try #require(menu.items.first {
+                    ($0.representedObject as? String)?.hasPrefix("overviewAccount-\(provider.rawValue)-") == true
+                })
+                let compactID = try #require(compact.representedObject as? String)
+                let compactHeight = try #require(compact.view).frame.height
+                let cardID = compactID.replacingOccurrences(of: "overviewAccount-", with: "overviewAccountCard-")
+                #expect(try #require(compact.view as? MenuRowContainerView)._test_simulateRuntimeClick())
+                controller.populateMenu(menu, provider: .codex)
+                let expanded = try #require(menu.items.first { $0.representedObject as? String == cardID })
+                #expect(try #require(expanded.view).frame.height > compactHeight)
+                #expect(total() > originalTotal)
+                self.expectHeightFleetGeometry(in: menu)
+                #expect(try #require(expanded.view as? MenuRowContainerView)._test_simulateRuntimeClick())
+                controller.populateMenu(menu, provider: .codex)
+                #expect(menu.items.first { $0.representedObject as? String == compactID }?.view?.frame
+                    .height == compactHeight)
+                #expect(total() == originalTotal)
+                #expect(menu.items.compactMap { $0.representedObject as? String } == originalIDs)
+                self.expectHeightFleetGeometry(in: menu)
+            }
+            controller.selectOverviewProvider(.codex, menu: menu)
+            controller.populateMenu(menu, provider: .codex)
+            let codexIDs = menu.items.compactMap { $0.representedObject as? String }
+            #expect(codexIDs.count { $0.hasPrefix("codexAccountCompact-") } == 3)
+            #expect(!codexIDs.contains { $0.hasPrefix("codexAccountCard-") })
+            controller.selectOverviewProvider(.claude, menu: menu)
+            controller.populateMenu(menu, provider: .claude)
+            #expect(menu.items.contains { $0.representedObject as? String == "claudeNativeProfileCard-default" })
+        }
+    }
+
     private func expectHeightFleetGeometry(in menu: NSMenu) {
         let rows = menu.items.compactMap { $0.view as? MenuRowContainerView }
         #expect(!rows.isEmpty)

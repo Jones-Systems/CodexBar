@@ -350,6 +350,14 @@ struct OverviewFleetAccountsTests {
             let rejectedRows = controller.overviewFleetAccountRows(for: .codex)
             #expect(rejectedRows.count == 2)
             #expect(rejectedRows.allSatisfy { $0.model.headroomPercent == nil })
+            let source = try #require(controller.overviewFleetSource(for: .codex))
+            for account in source.accounts where !account.isActive {
+                let card = try #require(source.cardModel(account))
+                #expect(card.metrics.isEmpty)
+                #expect(card.creditsRemaining == nil)
+                #expect(card.codexResetCredits == nil)
+                #expect(!card.emailIsActiveAccount)
+            }
             #expect(controller.settings.multiAccountMenuLayout == .segmented)
             #expect(controller.settings.codexVisibleAccountProjectionForMenuDisplay?
                 .activeVisibleAccountID == accounts.first { $0.isActive }?.id)
@@ -377,7 +385,7 @@ struct OverviewFleetAccountsTests {
     }
 
     @Test
-    func `overview account click expands and navigates without changing active account`() throws {
+    func `overview runtime account click retains overview`() throws {
         try self.withFixture(providers: [.codex, .claude], renderCards: true) { controller in
             let accounts = try self.seedCodex(6, controller: controller)
             let inactive = try #require(accounts.first { !$0.isActive })
@@ -393,10 +401,9 @@ struct OverviewFleetAccountsTests {
             })
             let view = try #require(item.view as? MenuRowContainerView)
             #expect(view._test_simulateRuntimeClick())
-            #expect(controller.compactAccountExpandedIDs.contains(accountID))
-            #expect(!controller.compactAccountCollapsedIDs.contains(accountID))
-            #expect(controller.selectedMenuProvider == .codex)
-            #expect(!controller.settings.mergedMenuLastSelectedWasOverview)
+            #expect(controller.compactAccountExpandedIDs.isEmpty)
+            #expect(controller.compactAccountCollapsedIDs.contains(accountID))
+            #expect(controller.settings.mergedMenuLastSelectedWasOverview)
             #expect(controller.settings.codexActiveSource == originalSource)
             #expect(controller.settings.codexVisibleAccountProjectionForMenuDisplay?.activeVisibleAccountID
                 == originalSelectedID)
@@ -410,12 +417,186 @@ struct OverviewFleetAccountsTests {
             let id = ProviderAccountIdentity(source: "claude-native-profile", opaqueID: "secondary")
             let menu = NSMenu()
             controller.selectOverviewFleetAccount(id, provider: .claude, menu: menu)
-            #expect(controller.compactAccountExpandedIDs.contains(id))
-            #expect(controller.selectedMenuProvider == .claude)
+            #expect(controller.overviewExpansionState.expandedAccountIDs.contains(id))
+            #expect(controller.compactAccountExpandedIDs.isEmpty)
+            #expect(controller.settings.mergedMenuLastSelectedWasOverview)
             #expect(controller.settings.claudeNativeProfileAlias == "default")
             #expect(controller.store.claudeNativeProfileAccountsForDisplay()
                 .first { $0.isActive }?.id.opaqueID == "default")
             #expect(controller.settings.effectiveSelectedTokenAccount(for: .claude) == nil)
+        }
+    }
+
+    @Test
+    func `expanded account models retain their own quota credits and reset details`() throws {
+        try self.withFixture { controller in
+            self.seedClaude(2, controller: controller)
+            let accounts = try self.seedCodex(3, controller: controller)
+            let now = Date()
+            controller.store.codexAccountSnapshots = accounts.enumerated().map { index, account in
+                CodexAccountUsageSnapshot(
+                    account: account,
+                    snapshot: UsageSnapshot(
+                        primary: RateWindow(
+                            usedPercent: Double(10 + index),
+                            windowMinutes: 300,
+                            resetsAt: now.addingTimeInterval(3600),
+                            resetDescription: nil),
+                        secondary: nil,
+                        codexResetCredits: CodexRateLimitResetCreditsSnapshot(
+                            credits: [CodexRateLimitResetCredit(
+                                id: "credit-\(index)",
+                                resetType: "weekly",
+                                status: .available,
+                                grantedAt: now,
+                                expiresAt: now.addingTimeInterval(172_800),
+                                redeemStartedAt: nil,
+                                redeemedAt: nil,
+                                title: nil,
+                                description: nil)],
+                            availableCount: 1,
+                            updatedAt: now),
+                        updatedAt: now),
+                    error: nil,
+                    sourceLabel: "Synthetic",
+                    credits: CreditsSnapshot(remaining: Double(100 + index), events: [], updatedAt: now))
+            }
+            controller.settings.showOptionalCreditsAndExtraUsage = true
+            controller.settings.usageBarsShowUsed = true
+            let source = try #require(controller.overviewFleetSource(for: .codex))
+            for (index, account) in source.accounts.enumerated() {
+                let card = try #require(source.cardModel(account))
+                #expect(card.metrics.first?.percent == Double(10 + index))
+                #expect(card.metrics.first?.resetText != nil)
+                #expect(card.creditsRemaining == Double(100 + index))
+                #expect(card.codexResetCredits?.items.count == 1)
+                #expect(card.emailIsActiveAccount == account.isActive)
+            }
+            let claudeID = ProviderAccountIdentity(source: "claude-native-profile", opaqueID: "secondary")
+            controller.store.claudeNativeProfileAccountSnapshots[1] = ProviderAccountUsageSnapshot(
+                id: claudeID,
+                provider: .claude,
+                displayLabel: "Secondary native",
+                isActive: false,
+                snapshot: UsageSnapshot(
+                    primary: RateWindow(
+                        usedPercent: 68,
+                        windowMinutes: 300,
+                        resetsAt: now.addingTimeInterval(7200),
+                        resetDescription: nil),
+                    secondary: nil,
+                    updatedAt: now),
+                error: nil,
+                sourceLabel: "Synthetic")
+            let claudeSource = try #require(controller.overviewFleetSource(for: .claude))
+            let secondary = try #require(claudeSource.accounts.first { $0.id == claudeID })
+            let card = try #require(claudeSource.cardModel(secondary))
+            #expect(card.metrics.first?.percent == 68)
+            #expect(card.metrics.first?.resetText != nil)
+            #expect(card.creditsRemaining == nil)
+            #expect(card.email != "selected@example.com")
+        }
+    }
+
+    @Test
+    func `single Codex summary collapses in place without an account list`() throws {
+        try self.withFixture(renderCards: true) { controller in
+            self.seedClaude(1, controller: controller)
+            try self.seedCodex(1, controller: controller)
+            let menu = controller.makeMenu()
+            controller.populateMenu(menu, provider: .codex)
+            #expect(controller.overviewFleetAccountRows(for: .codex).isEmpty)
+            let summary = try #require(menu.items.first { $0.representedObject as? String == "overviewRow-codex" })
+            #expect(try #require(summary.view as? MenuRowContainerView)._test_simulateRuntimeClick())
+            #expect(controller.overviewExpansionState.collapsedSummaryProviders == [.codex])
+            #expect(controller.settings.mergedMenuLastSelectedWasOverview)
+            controller.populateMenu(menu, provider: .codex)
+            let collapsed = try #require(menu.items.first { $0.representedObject as? String == "overviewRow-codex" })
+            #expect(try #require(collapsed.view as? MenuRowContainerView)._test_simulateRuntimeClick())
+            #expect(controller.overviewExpansionState.collapsedSummaryProviders.isEmpty)
+        }
+    }
+
+    @Test
+    func `both providers expand and collapse runtime rows without navigation or selection`() throws {
+        try self.withFixture(renderCards: true) { controller in
+            try self.seedCodex(3, controller: controller)
+            self.seedClaude(2, controller: controller)
+            let selectedProvider = controller.selectedMenuProvider
+            let source = controller.settings.codexActiveSource
+            let menu = controller.makeMenu()
+            controller.populateMenu(menu, provider: .codex)
+            let switcherSelection = controller.lastMergedSwitcherSelection
+            let active = controller.settings.codexVisibleAccountProjectionForMenuDisplay?.activeVisibleAccountID
+            for provider in [UsageProvider.codex, .claude] {
+                controller.populateMenu(menu, provider: .codex)
+                let summaryID = "overviewRow-\(provider.rawValue)"
+                let summary = try #require(menu.items.first { $0.representedObject as? String == summaryID })
+                #expect(try #require(summary.view as? MenuRowContainerView)._test_simulateRuntimeClick())
+                #expect(controller.overviewExpansionState.collapsedSummaryProviders == [provider])
+                controller.populateMenu(menu, provider: .codex)
+                let collapsed = try #require(menu.items.first { $0.representedObject as? String == summaryID })
+                #expect(try #require(collapsed.view as? MenuRowContainerView)._test_simulateRuntimeClick())
+                #expect(controller.overviewExpansionState.collapsedSummaryProviders.isEmpty)
+                controller.populateMenu(menu, provider: .codex)
+                let keyboardRow = try #require(menu.items.first { $0.representedObject as? String == summaryID })
+                #expect(keyboardRow.action != nil)
+                #expect(keyboardRow.target is StatusItemController)
+                controller.selectOverviewProvider(keyboardRow)
+                #expect(controller.overviewExpansionState.collapsedSummaryProviders == [provider])
+                #expect(controller.settings.mergedMenuLastSelectedWasOverview)
+                #expect(controller.selectedMenuProvider == selectedProvider)
+                #expect(controller.lastMergedSwitcherSelection == switcherSelection)
+                controller.selectOverviewProvider(keyboardRow)
+                #expect(controller.overviewExpansionState.collapsedSummaryProviders.isEmpty)
+                controller.populateMenu(menu, provider: .codex)
+                let compact = try #require(menu.items.first {
+                    ($0.representedObject as? String)?.hasPrefix("overviewAccount-\(provider.rawValue)-") == true
+                })
+                let compactID = try #require(compact.representedObject as? String)
+                let cardID = compactID.replacingOccurrences(of: "overviewAccount-", with: "overviewAccountCard-")
+                #expect(try #require(compact.view as? MenuRowContainerView)._test_simulateRuntimeClick())
+                controller.populateMenu(menu, provider: .codex)
+                let card = try #require(menu.items.first { $0.representedObject as? String == cardID })
+                #expect(card.submenu == nil)
+                #expect(try #require(card.view as? MenuRowContainerView)._test_simulateRuntimeClick())
+                controller.populateMenu(menu, provider: .codex)
+                #expect(menu.items.contains { $0.representedObject as? String == compactID })
+                #expect(!menu.items.contains { $0.representedObject as? String == cardID })
+                #expect(controller.overviewExpansionState.expandedAccountIDs.isEmpty)
+                #expect(controller.compactAccountExpandedIDs.isEmpty)
+                #expect(controller.compactAccountCollapsedIDs.isEmpty)
+                #expect(controller.selectedMenuProvider == selectedProvider)
+                #expect(controller.lastMergedSwitcherSelection == switcherSelection)
+                #expect(controller.settings.mergedMenuLastSelectedWasOverview)
+                #expect(controller.settings.codexActiveSource == source)
+                #expect(controller.settings.codexVisibleAccountProjectionForMenuDisplay?
+                    .activeVisibleAccountID == active)
+                #expect(controller.settings.claudeNativeProfileAlias == "default")
+                #expect(controller.settings.effectiveSelectedTokenAccount(for: .claude) == nil)
+            }
+        }
+    }
+
+    @Test
+    func `overview state survives sibling close and resets after last menu closes`() throws {
+        try self.withFixture { controller in
+            try self.seedCodex(2, controller: controller)
+            self.seedClaude(2, controller: controller)
+            let first = NSMenu()
+            let second = NSMenu()
+            controller.openMenus[ObjectIdentifier(first)] = first
+            controller.openMenus[ObjectIdentifier(second)] = second
+            controller.activateOverviewRow(.codex, menu: first)
+            controller.activateOverviewRow(.claude, menu: first)
+            let account = try #require(controller.overviewFleetAccounts(for: .claude).last)
+            controller.selectOverviewFleetAccount(account.id, provider: .claude, menu: first)
+            controller.menuDidClose(first)
+            #expect(controller.overviewExpansionState.collapsedSummaryProviders == [.codex, .claude])
+            #expect(controller.overviewExpansionState.expandedAccountIDs == [account.id])
+            controller.menuDidClose(second)
+            #expect(controller.overviewExpansionState.collapsedSummaryProviders.isEmpty)
+            #expect(controller.overviewExpansionState.expandedAccountIDs.isEmpty)
         }
     }
 
@@ -439,6 +620,12 @@ struct OverviewFleetAccountsTests {
             #expect(row.accountID == id)
             #expect(row.model.isRefreshing)
             #expect(row.model.headroomPercent == nil)
+            let source = try #require(controller.overviewFleetSource(for: .claude))
+            let account = try #require(source.accounts.first { $0.id == id })
+            let card = try #require(source.cardModel(account))
+            #expect(card.metrics.isEmpty)
+            #expect(card.email == "Secondary")
+            #expect(card.creditsRemaining == nil)
         }
     }
 
@@ -460,6 +647,11 @@ struct OverviewFleetAccountsTests {
             let row = try #require(rows.first { $0.accountID == id })
             #expect(row.model.label == PersonalInfoRedactor.redactEmail("private@example.com", isEnabled: true))
             #expect(row.model.label != "private@example.com")
+            let source = try #require(controller.overviewFleetSource(for: .codex))
+            let projected = try #require(source.accounts.first { $0.id == id })
+            let card = try #require(source.cardModel(projected))
+            #expect(card.email == PersonalInfoRedactor.redactEmail("private@example.com", isEnabled: true))
+            #expect(!card.emailIsActiveAccount)
         }
     }
 

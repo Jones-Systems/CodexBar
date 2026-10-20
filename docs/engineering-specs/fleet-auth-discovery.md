@@ -226,3 +226,40 @@ Codex compact rows use one shared presentation helper for their weekly percentag
 For menu geometry, retain positional host reuse only for equivalent measured heights; route height-changing rows through the existing insert/remove path and notify native AppKit when an attached row is resized. Prove mixed-height reconciliation and shrinking with synthetic native menus, including cached Overview/provider transitions and expansion/collapse; preserve ordinary width contracts.
 
 Root owns Git, docs and serialized tests. Independent source writers own credits, compact details and geometry with disjoint test files; none may commit, build, format globally, run tests or change authentication. Root will preserve production preimages for a deterministic geometry failing-before check, run the affected union, required `make test` and `make check`, then publish one ordinary PR, qualify exact CI, merge with the expected-head guard and update the local Jones app.
+
+<!-- codex-section:begin id="spec.fleet-auth-discovery#dec.overview-inline-expansion.001" -->
+## Overview account interaction
+
+Codex and Claude summaries and fleet rows expand and collapse inside Overview.
+Mouse, keyboard and accessibility activation must retain Overview and all
+account selections. Explicit provider tabs retain their navigation behavior.
+Other providers keep their existing Overview behavior.
+
+Keep Overview expansion transient and separate from provider-tab expansion.
+Initially show the active provider summary expanded and other accounts compact;
+reset those defaults when the last menu closes. Preserve Settings account order,
+redaction, cached usage and the Codex tab's initially collapsed accounts.
+
+Reuse account-scoped full-card models: Codex uses owner-matched snapshots,
+credits, reset credits and history selection; Claude uses its native-profile
+override model. Expanded nonactive rows must never borrow the active provider's
+quota or history submenu. Summary collapse keeps the provider/account header.
+Route toggles through interaction-generation advancement and existing menu
+invalidation, with height fingerprints distinguishing expanded and collapsed
+content. No persistence, authentication, refresh-request or system-account
+selection contract changes.
+
+The existing Jones presentation helper and Overview extension own the behavior;
+the shared controller, Overview view and menu dispatch carry narrow hooks. No
+upstream import or unrelated extraction belongs to this repair.
+
+Prove runtime-click and keyboard actions stay on Overview, independent provider
+state, correct account data, last-menu-close reset, stable order and native
+height restoration through cached menu reconciliation. Affected suites include
+OverviewFleetAccountsTests, StatusMenuHeightCacheTests, StatusMenuTests,
+JonesCompactAccountPresentationTests, StatusMenuOverviewSubmenuTests,
+StatusMenuViewportRestoreTests and ProviderArchitectureGatekeeperTests. Preserve
+all existing tests; remap architecture anchors only for actual source movement.
+Run the final affected union, `make test`, `make check`, exact-head hosted CI,
+guarded merge and the verified Jones-only local update with rollback retained.
+<!-- codex-section:end id="spec.fleet-auth-discovery#dec.overview-inline-expansion.001" -->

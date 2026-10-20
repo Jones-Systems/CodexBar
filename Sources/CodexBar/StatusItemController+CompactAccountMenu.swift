@@ -78,32 +78,13 @@ extension StatusItemController {
             displayLabels: self.settings.codexAccountDisplayLabels(for: display.accounts))
         let plan = self.compactAccountPlan(for: .codex, accounts: projected)
         guard plan.usesCompactLayout else { return false }
-        let snapshotsByAccountID = Dictionary(
-            uniqueKeysWithValues: display.snapshots.map { ($0.account.id, $0) })
-        let accountsByID = Dictionary(
-            uniqueKeysWithValues: display.accounts.map { ($0.id, $0) })
         self.addCompactAccountMenuRows(
             CompactAccountMenuRendering(
                 plan: plan,
                 accounts: projected,
                 idPrefix: "codexAccount",
                 cardModel: { [weak self] projectedAccount in
-                    guard let self,
-                          let account = accountsByID[projectedAccount.id.opaqueID] else { return nil }
-                    let accountSnapshot = snapshotsByAccountID[account.id]
-                    let health = CodexAccountHealth.status(for: account, error: accountSnapshot?.error)
-                    var model = self.menuCardModel(
-                        for: .codex,
-                        snapshotOverride: accountSnapshot?.snapshot,
-                        errorOverride: health.label,
-                        forceOverrideCard: accountSnapshot == nil,
-                        accountOverride: self.accountInfo(for: account),
-                        accountDisplayLabelOverride: projectedAccount.displayLabel,
-                        historySelectionOverride: self.store.codexPlanUtilizationHistorySelection(
-                            forVisibleAccount: account),
-                        creditsOverride: accountSnapshot?.credits)
-                    model?.emailIsActiveAccount = projectedAccount.isActive
-                    return model
+                    self?.codexAccountCardModel(for: projectedAccount, display: display)
                 },
                 planAction: nil,
                 workspaceSections: display.showsWorkspaceGroups ? display.workspaceSections : [],
@@ -115,6 +96,27 @@ extension StatusItemController {
             captureMenu: captureMenu,
             context: context)
         return true
+    }
+
+    func codexAccountCardModel(
+        for account: ProviderAccountUsageSnapshot,
+        display: CodexAccountMenuDisplay) -> UsageMenuCardView.Model?
+    {
+        guard let visibleAccount = display.accounts.first(where: { $0.id == account.id.opaqueID }) else { return nil }
+        let snapshot = display.snapshots.first { $0.account.id == visibleAccount.id }
+        let health = CodexAccountHealth.status(for: visibleAccount, error: snapshot?.error)
+        var model = self.menuCardModel(
+            for: .codex,
+            snapshotOverride: snapshot?.snapshot,
+            errorOverride: health.label,
+            forceOverrideCard: true,
+            accountOverride: self.accountInfo(for: visibleAccount),
+            accountDisplayLabelOverride: account.displayLabel,
+            historySelectionOverride: self.store
+                .codexPlanUtilizationHistorySelection(forVisibleAccount: visibleAccount),
+            creditsOverride: snapshot?.credits)
+        model?.emailIsActiveAccount = account.isActive
+        return model
     }
 
     func addCompactAccountMenuRows(
@@ -384,12 +386,13 @@ extension StatusItemController {
 
     /// Compact-layout expansion is per-open transient UI state; reset when the last menu closes.
     func resetCompactAccountMenuExpansionStateIfIdle() {
-        guard JonesCompactAccountPresentation.resetIfIdle(
+        let overviewChanged = self.overviewExpansionState.resetIfIdle(hasOpenMenus: !self.openMenus.isEmpty)
+        let compactChanged = JonesCompactAccountPresentation.resetIfIdle(
             hasOpenMenus: !self.openMenus.isEmpty,
             expandedAccountIDs: &self.compactAccountExpandedIDs,
             collapsedAccountIDs: &self.compactAccountCollapsedIDs,
             expandedHealthyTailProviders: &self.compactAccountExpandedHealthyTailProviders)
-        else { return }
+        guard overviewChanged || compactChanged else { return }
         // Persistent menus may still contain the previous session's expanded or collapsed rows.
         self.invalidateMenus()
     }

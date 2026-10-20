@@ -2,6 +2,30 @@ import CodexBarCore
 import Foundation
 
 enum JonesCompactAccountPresentation {
+    struct OverviewExpansionState {
+        var collapsedSummaryProviders: Set<UsageProvider> = []
+        var expandedAccountIDs: Set<ProviderAccountIdentity> = []
+
+        mutating func toggleSummary(_ provider: UsageProvider) {
+            if self.collapsedSummaryProviders.remove(provider) == nil {
+                self.collapsedSummaryProviders.insert(provider)
+            }
+        }
+
+        mutating func toggleAccount(_ accountID: ProviderAccountIdentity) {
+            if self.expandedAccountIDs.remove(accountID) == nil {
+                self.expandedAccountIDs.insert(accountID)
+            }
+        }
+
+        mutating func resetIfIdle(hasOpenMenus: Bool) -> Bool {
+            guard !hasOpenMenus else { return false }
+            let changed = !self.collapsedSummaryProviders.isEmpty || !self.expandedAccountIDs.isEmpty
+            self = Self()
+            return changed
+        }
+    }
+
     struct CodexRowDetail: Equatable {
         let text: String?
         let trailingDetail: MenuCardCompactAccountRowView.TrailingDetail?
