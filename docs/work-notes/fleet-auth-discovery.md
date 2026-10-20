@@ -348,3 +348,25 @@ existing process-drain/cleanup lifecycle. Full-suite completion, current-head
 hosted CI and the next local app update remain pending. Root's following
 documentation-only checkpoint may advance HEAD during this run; compiled
 source, tests and scripts remain frozen and require final hash comparison.
+
+Full native attempt `final-test-r1` failed on unchanged
+`c5cdc4f50de308d5224ec65d7a4136adc7aca552`: all 1,040 discovered selections
+were selected in 87 groups; 79 groups passed, group 80 failed, and seven groups
+were not reached. There were no retries or timed-out groups. The failure was
+`ordinary refresh keeps selected token account warning episodes independent`
+in `UsageStoreAccountQuotaWarningTests`: expected First/Second warnings, got
+none. Hosted job `118399782186` in run `39352512518` reported the same failure.
+The fixture's ordinary-refresh stub and the changed default stacked path need
+inspection before another run; preserve both warning assertions and synthetic
+transport control. Full-suite success is not claimed. The harness verified
+process drain, removed its invocation parent and verified absence; tracked
+source/test/script hashes remained unchanged.
+
+The warning fixture repair explicitly selects segmented ordinary refresh, retains
+both original tests and their six-observation warning assertions, and verifies
+that each injected outcome is consumed exactly once. Both stores now use
+in-memory settings/credentials, synthetic contained homes and widget paths,
+and a rejecting provider pipeline so accidental fan-out cannot invoke a provider
+transport. Production notification behavior is unchanged. Root inspected the
+released builder diff; SwiftFormat and diff whitespace checks passed. Focused
+native execution, repeated `make check`, and complete `make test` are pending.

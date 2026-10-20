@@ -22,10 +22,10 @@ struct UsageStoreAccountQuotaWarningTests {
     }
 
     @Test
-    func `ordinary refresh keeps selected token account warning episodes independent`() async {
-        let settings = testSettingsStore(
-            suiteName: "UsageStoreAccountQuotaWarningTests-selected-account",
-            tokenAccountStore: InMemoryTokenAccountStore())
+    func `ordinary refresh keeps selected token account warning episodes independent`() async throws {
+        let settings = self.makeSettingsStore(suiteName: "UsageStoreAccountQuotaWarningTests-selected-account")
+        defer { settings.configFileWatcher?.stop() }
+        settings.multiAccountMenuLayout = .segmented
         settings.refreshFrequency = .manual
         settings.statusChecksEnabled = false
         settings.quotaWarningNotificationsEnabled = true
@@ -39,12 +39,7 @@ struct UsageStoreAccountQuotaWarningTests {
         #expect(settings.tokenAccounts(for: .deepseek).map(\.label) == ["First", "Second"])
 
         let notifier = NotifierSpy()
-        let store = UsageStore(
-            fetcher: UsageFetcher(),
-            browserDetection: BrowserDetection(cacheTTL: 0),
-            settings: settings,
-            sessionQuotaNotifier: notifier,
-            startupBehavior: .testing)
+        let store = try self.makeStore(settings: settings, notifier: notifier)
         let sequence = [
             (accountIndex: 0, usedPercent: 40.0),
             (accountIndex: 1, usedPercent: 40.0),
@@ -59,8 +54,14 @@ struct UsageStoreAccountQuotaWarningTests {
             let outcome = Self.outcome(
                 usedPercent: observation.usedPercent,
                 updatedAt: Date(timeIntervalSince1970: 1_780_000_000 + Double(step)))
-            store._test_providerFetchOutcomeOverride = { _ in outcome }
+            var overrideCalls = 0
+            store._test_providerFetchOutcomeOverride = { provider in
+                #expect(provider == .deepseek)
+                overrideCalls += 1
+                return outcome
+            }
             await store.refreshProvider(.deepseek, allowDisabled: true)
+            #expect(overrideCalls == 1)
         }
 
         #expect(notifier.quotaWarnings.map(\.accountDisplayName) == ["First", "Second"])
@@ -69,9 +70,8 @@ struct UsageStoreAccountQuotaWarningTests {
 
     @Test
     func `selected outcome keeps token account warning episodes independent`() async throws {
-        let settings = testSettingsStore(
-            suiteName: "UsageStoreAccountQuotaWarningTests-selected-outcome",
-            tokenAccountStore: InMemoryTokenAccountStore())
+        let settings = self.makeSettingsStore(suiteName: "UsageStoreAccountQuotaWarningTests-selected-outcome")
+        defer { settings.configFileWatcher?.stop() }
         settings.quotaWarningNotificationsEnabled = true
         settings.quotaWarningThresholds = [50]
         settings.setQuotaWarningWindowEnabled(.session, enabled: true)
@@ -94,12 +94,7 @@ struct UsageStoreAccountQuotaWarningTests {
                 lastUsed: nil),
         ]
         let notifier = NotifierSpy()
-        let store = UsageStore(
-            fetcher: UsageFetcher(),
-            browserDetection: BrowserDetection(cacheTTL: 0),
-            settings: settings,
-            sessionQuotaNotifier: notifier,
-            startupBehavior: .testing)
+        let store = try self.makeStore(settings: settings, notifier: notifier)
         let sequence = [
             (accountIndex: 0, usedPercent: 40.0),
             (accountIndex: 1, usedPercent: 40.0),
@@ -121,6 +116,64 @@ struct UsageStoreAccountQuotaWarningTests {
 
         #expect(notifier.quotaWarnings.map(\.accountDisplayName) == ["First", "Second"])
         #expect(notifier.quotaWarnings.allSatisfy { $0.threshold == 50 })
+    }
+
+    private func makeSettingsStore(suiteName: String) -> SettingsStore {
+        SettingsStore(
+            userDefaults: InMemoryUserDefaults(),
+            configStore: testConfigStore(suiteName: suiteName),
+            zaiTokenStore: NoopZaiTokenStore(),
+            syntheticTokenStore: NoopSyntheticTokenStore(),
+            codexCookieStore: InMemoryCookieHeaderStore(),
+            claudeCookieStore: InMemoryCookieHeaderStore(),
+            cursorCookieStore: InMemoryCookieHeaderStore(),
+            opencodeCookieStore: InMemoryCookieHeaderStore(),
+            factoryCookieStore: InMemoryCookieHeaderStore(),
+            minimaxCookieStore: InMemoryMiniMaxCookieStore(),
+            minimaxAPITokenStore: InMemoryMiniMaxAPITokenStore(),
+            kimiTokenStore: InMemoryKimiTokenStore(),
+            augmentCookieStore: InMemoryCookieHeaderStore(),
+            ampCookieStore: InMemoryCookieHeaderStore(),
+            copilotTokenStore: InMemoryCopilotTokenStore(),
+            tokenAccountStore: InMemoryTokenAccountStore(),
+            keychainAccessPolicy: SettingsStoreKeychainAccessPolicy(
+                setDisabled: { _ in }, isExplicitlyDisabled: { true }),
+            performInitialProviderDetection: false)
+    }
+
+    private func makeStore(settings: SettingsStore, notifier: NotifierSpy) throws -> UsageStore {
+        let home = TestFixtureScratch.root
+            .appendingPathComponent("UsageStoreAccountQuotaWarningTests-\(UUID().uuidString)")
+        let environment = ["HOME": home.path, "CODEX_HOME": home.appendingPathComponent("codex").path]
+        let store = UsageStore(
+            fetcher: UsageFetcher(environment: environment),
+            browserDetection: BrowserDetection(homeDirectory: home.path, cacheTTL: 0),
+            settings: settings,
+            sessionQuotaNotifier: notifier,
+            startupBehavior: .testing,
+            environmentBase: environment,
+            widgetSnapshotURL: home.appendingPathComponent("widget.json"),
+            widgetTimelineReloader: {})
+        store._test_widgetSnapshotSaveOverride = { _ in }
+        let base = try #require(store.providerSpecs[.deepseek])
+        let descriptor = ProviderDescriptor(
+            id: .deepseek,
+            metadata: base.descriptor.metadata,
+            branding: base.descriptor.branding,
+            tokenCost: base.descriptor.tokenCost,
+            fetchPlan: ProviderFetchPlan(
+                sourceModes: base.descriptor.fetchPlan.sourceModes,
+                pipeline: ProviderFetchPipeline { _ in
+                    Issue.record("Warning episode tests must use their injected outcome, not a provider transport")
+                    return []
+                }),
+            cli: base.descriptor.cli)
+        store.providerSpecs[.deepseek] = ProviderSpec(
+            style: base.style,
+            isEnabled: base.isEnabled,
+            descriptor: descriptor,
+            makeFetchContext: base.makeFetchContext)
+        return store
     }
 
     private static func outcome(usedPercent: Double, updatedAt: Date) -> ProviderFetchOutcome {
