@@ -139,9 +139,12 @@ Keychain probe, token copying, new login or system-account promotion is covered.
 Retain all seven original trial gates outside the bounded Codex/Claude scope;
 widgets, real signing, iCloud and public release remain unqualified.
 
-Readiness is distinct from delivery authority. The migration binding covers only
-its five migrated PRs; a new repair PR must satisfy an applicable merge binding
-before merge. Do not silently rewrite policy or bypass required reviews/checks.
+Routine delivery follows the owner's standing delivery and local app update
+binding in `AGENTS.md` (section “Delivery and local app updates”), including PR #7
+and subsequent requested CodexBar changes. This supersedes the migration's historical
+five-PR limit for routine delivery. Qualify every current candidate and preserve
+native review/check requirements; do not bypass them or request routine merge
+and installation permission again.
 Rollback source through normal reviewable commits; restore the preserved prior
 Jones app only after verifying its exact replacement postimage. Unknown prior
 install/process effects stop replay and require direct reconciliation.

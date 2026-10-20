@@ -16,11 +16,62 @@ Consumers: CodexBar maintainers and fleet-auth implementation
 Authority effect: none
 <!-- codex-section:end id="worknote.fleet-auth-discovery#ctx.artifact-header.001" -->
 
-## Outcome
+## Delivery record
+
+The owner explicitly directs requested CodexBar work through merge and the local
+Jones app update without another routine permission question. The standing
+repository binding is recorded in `AGENTS.md`, section “Delivery and local app
+updates”.
+Owner direction on 2026-10-20: “You should always go and get your PRs merged in,
+get the app updated whenever I'm requesting changes and all that, and get it all
+installed.”
+It covers PR #7 and later routine requested changes, replacing the historical
+five-PR migration restriction for this delivery scope. Explicit future review
+holds, native consent, failed verification and unknown effects retain their gates.
+
+PR #7 delivers the complete fleet presentation, cached observation selection,
+friendly labels and native-Claude menu-width repair. Its production candidate
+`a102e500bbfbf7b0c5432e34121cb499fac18fc1` passed all eight hosted checks in
+[run 39365319729](https://github.com/Jones-Systems/CodexBar/actions/runs/39365319729).
+Full native `make test` passed all 1,040 selections in 87 groups, first attempt,
+with no retries or timeouts; `make check` passed. Source hashes, owned process
+drain and fixture-parent removal/absence were verified. The same unchanged
+regression measured 408 points before the width repair and passed at 310 after.
+
+The arm64 ad hoc Jones app built from that production candidate was installed
+and opened at its verified Jones bundle/executable path. Its previous bundle
+is retained for rollback; no preference migration, label seeding, credential
+copy or system-account change occurred. Live screenshot verification remains
+unqualified because the menu read back closed while concurrent pointer activity
+was observed; further UI interaction stopped. Native synthetic layout proof
+passed. This documentation-only delivery binding does not change app, test or
+script bytes and needs no app replacement. Its current CI and merge result belong
+to the [native PR](https://github.com/Jones-Systems/CodexBar/pull/7), rather than a
+premature source claim of merge completion.
+
+The delivery-binding documentation passed the link checker (250 local links)
+using the existing Node 20 executable, `git diff --check`, and repeated
+`make check`: zero SwiftLint violations in 2,160 files, 95 synthetic cleanup
+checks with one declared skip, and six owned fixture parents removed with
+absence verified. All compiled source, test and script bytes remain identical
+to the fully tested production candidate. The default Node 24 executable was
+unavailable because its existing simdjson library was missing; no tools were
+installed. The configured formatter excludes these Markdown paths, so its
+empty target result is not formatting evidence; the bounded diff was inspected.
+
+FICR-COR001 remains deferred and uncorrected with its original P2 severity and
+blocking claim. Other deferred findings and the seven original trial gates remain
+unchanged. Registration remains unavailable pending a verified native project
+binding; no registry repair or identity guess was attempted.
+
+The state and next-action entries below are intake and checkpoint history, not
+current blockers. The native PR and this delivery record own the current result.
+
+## Intake outcome (historical)
 
 Fix CodexBar discovery of existing UMICH, Malcolm and Wallace fleet logins, evaluate Headroom selectively, and report outstanding fork work. Source completion and bounded PR publication are in scope. Installation, privileged operations and unrelated provider-directory repair require their own route.
 
-## Current State And Evidence
+## Intake state and evidence (historical)
 
 - User explicitly authorized parallel subagents and use of the existing fleet authorization credentials. No token or credential content has been read or emitted.
 - Canonical fork: Jones-Systems/CodexBar, base `5f4a4c9474d2c44e136275fe5c42689a6c6e7a56`. Primary local checkout is upstream and is not the implementation base.
@@ -29,7 +80,7 @@ Fix CodexBar discovery of existing UMICH, Malcolm and Wallace fleet logins, eval
 - Headroom research is pinned to `b1e4aa53ceb86715808fc38348ac38c863252535`; Graphify navigation snapshot is stale and current source controls conclusions.
 - Native thread: `0488f286-4c8b-4932-9b44-67ef47cb70a3`; environment `6ec33bac-c2bb-4418-b6c6-c2515a13e8b5`. Registration is unavailable pending a verified native project binding; no project identity is guessed.
 
-## Next Action
+## Intake next action (historical)
 
 Fleet source and its 10 integration tests are implemented. Existing app-managed selections prefer a registered fleet home only on unique exact workspace identity and normalized email; selection removal/unavailable cases fail closed. Core parser tests and integration source cover projection, scoped routing, metadata loss/recovery, duplicates, identity ambiguity and isolation. SwiftFormat and whitespace checks passed. `make test` was attempted and cannot discover tests because `swift` is absent. `make check` was attempted and stops at the macOS `plutil` dependency before source checks. SwiftLint additionally lacks `libsourcekitdInProc.so`. These are unavailable local checks, not passes. macOS CI and native UI evidence remain required.
 

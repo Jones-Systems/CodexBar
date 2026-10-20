@@ -2,8 +2,8 @@
 
 ## Scope and routes
 
-This is the Jones Systems CodexBar fork. SwiftPM uses Swift tools 6.2 and targets
-macOS 14+. The app is macOS-only; shared core and CLI code also support Linux.
+This is the independent Jones Systems CodexBar repository. SwiftPM uses Swift
+tools 6.2 and targets macOS 14+. The app is macOS-only; shared core and CLI code also support Linux.
 Source support does not establish installed-binary behavior or live provider availability.
 
 - `Sources/CodexBar`: app state, menu bar, settings, and rendering.
@@ -32,6 +32,45 @@ are generated release artifacts; avoid editing them outside release work.
 
 Always run `make test` before handoff. After any code change, run `make check` and fix
 every reported format/lint issue. Report unavailable or failed checks truthfully.
+
+## Delivery and local app updates
+
+M Jones authorizes routine requested CodexBar changes through source completion,
+PR publication, applicable CI repair, merge, and the local Jones app update.
+Do not stop at an open green PR or ask for separate routine merge or installation
+confirmation. An explicit later review-only or no-merge instruction overrides this
+finish line. Preserve real native consent, failed checks and unknown-effect gates.
+
+The standing merge binding is `Jones-Systems/CodexBar`, repository ID `1425008735`,
+node `R_kgDOVO_oXw`, base `main`, using merge commits from `work/`, `docs/` or
+`t3code/` branches. It applies to PR #7 and subsequent routine requested changes;
+the migration's historical PR #1–#5 limit does not restrict this binding.
+Before merging, verify the exact open non-draft head, mergeability, changed-path
+scope, current native review requirements, and resolution of every review thread.
+No independent review is required by default. Retain documented finding deferrals.
+
+Require successful applicable checks from GitHub Actions app ID `15368`, workflow
+ID `388934113`, for the exact candidate: `changes`, `lint`, both
+`swift-test-macos (0, 2)` and `swift-test-macos (1, 2)`,
+`build-linux-musl-cli`, `build-linux-cli (linux-x64, ubuntu-24.04)`,
+`build-linux-cli (linux-arm64, ubuntu-24.04-arm)` and `lint-build-test`.
+Missing, cancelled or old-head checks do not pass. Send the full qualified head
+through GitHub's expected-head guard, without bypass or branch deletion; verify
+the merged PR, merge parents and inclusion in canonical `main`. Preserve the
+legacy remote and use the verified canonical remote for local synchronization.
+
+For app changes, build the tested source with the existing local Jones identity
+(`com.jonessystems.codexbar`) and verify its bundle, architecture and signature.
+Replace only the identified installed Jones app after a normal graceful quit,
+retain its previous bundle for rollback, preserve current preferences, open the
+installed copy and verify its executable/build identity. Use the inspected
+packaging path with its automatic launch smoke skipped, then the exact app open;
+do not use broad process-killing wrappers. A documentation-only change needs no
+replacement when the installed app's source bytes already match the delivered code.
+This authorization does not include stock-app replacement, credential copying,
+account switching, live provider probes, tool installation, sudo, public signing,
+notarization or release, or propagation to other machines. Keep original trial
+limitations and native authentication boundaries intact.
 
 ## Safety and isolation
 
