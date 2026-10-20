@@ -39,7 +39,7 @@ extension StatusItemController {
         let plan = AccountMenuLayoutPlanner.plan(
             accounts: accounts,
             healthyTailExpanded: true,
-            policy: .init(compactLayoutMinimumAccountCount: 1))
+            policy: JonesCompactAccountPresentation.overviewPolicy(for: provider))
         return plan.rows.compactMap { row in
             guard case let .compact(compact) = row else { return nil }
             var model = MenuCardCompactAccountRowView.Model(
@@ -49,6 +49,7 @@ extension StatusItemController {
                 constraintDetail: codexDetails[compact.accountID]?.text ?? compact.constraintDetail,
                 hasError: compact.hasError,
                 showsBestBadge: compact.isBestCandidate,
+                isActiveAccount: compact.isActive,
                 trailingDetail: codexDetails[compact.accountID]?.trailingDetail)
             if provider == .claude, compact.headroomPercent == nil {
                 model.isRefreshing = self.store.claudeNativeProfileRefreshingAliases

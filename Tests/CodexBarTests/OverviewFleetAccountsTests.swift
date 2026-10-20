@@ -222,8 +222,10 @@ struct OverviewFleetAccountsTests {
                     codexRowDetails: details)
                 let overviewRows = controller.overviewFleetAccountRows(for: .codex, now: now)
                 #expect(overviewRows.count == 2)
+                #expect(plan.rows.count { if case let .compact(compact) = $0 { compact.isActive } else { false } } == 1)
                 for row in plan.rows {
-                    guard case let .compact(compact) = row else { continue }
+                    // The active account is in the Codex list but stays the Overview provider summary row.
+                    guard case let .compact(compact) = row, !compact.isActive else { continue }
                     let model = controller.compactAccountRowModel(for: compact, rendering: rendering)
                     let overview = try #require(overviewRows.first { $0.accountID == compact.accountID })
                     #expect(model == overview.model)
