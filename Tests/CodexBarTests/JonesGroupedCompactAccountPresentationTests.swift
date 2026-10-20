@@ -84,6 +84,13 @@ struct JonesGroupedCompactAccountPresentationTests {
         }
     }
 
+    private func activeIDs(in rows: [AccountMenuLayoutPlanner.Row]) -> [ProviderAccountIdentity] {
+        rows.compactMap { row in
+            if case let .compact(compact) = row, compact.isActive { return compact.accountID }
+            return nil
+        }
+    }
+
     private func hiddenCount(in rows: [AccountMenuLayoutPlanner.Row]) -> Int {
         rows.reduce(0) { count, row in
             if case let .collapsedHealthy(hidden) = row { return count + hidden }
@@ -121,8 +128,8 @@ struct JonesGroupedCompactAccountPresentationTests {
         #expect(self.ids(in: rows).count == count)
         #expect(Set(self.ids(in: rows).map(\.opaqueID)) == Set(display.accounts.map(\.id)))
         #expect(self.hiddenCount(in: rows) == 0)
-        #expect(rows.count { if case .card = $0 { true } else { false } } == 1)
-        #expect(sections.first?.rows.first == .card(.init(source: "codex-account", opaqueID: "synthetic-0")))
+        #expect(!rows.contains { if case .card = $0 { true } else { false } })
+        #expect(self.activeIDs(in: rows) == [.init(source: "codex-account", opaqueID: "synthetic-0")])
         #expect(self.sections(display, revealed: true) == sections)
     }
 
@@ -232,8 +239,8 @@ struct JonesGroupedCompactAccountPresentationTests {
         let sections = self.sections(selected, collapsed: [originalAccounts[0].id], revealed: true)
         self.expectWorkspaceIdentity(sections, display: selected)
         let rows = sections.flatMap(\.rows)
-        #expect(!rows.contains(.card(originalAccounts[0].id)))
-        #expect(rows.contains(.card(originalAccounts[6].id)))
+        #expect(!rows.contains { if case .card = $0 { true } else { false } })
+        #expect(self.activeIDs(in: rows) == [originalAccounts[6].id])
         #expect(Set(self.ids(in: rows)) == Set(originalAccounts.map(\.id)))
     }
 

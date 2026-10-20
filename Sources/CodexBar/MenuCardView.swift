@@ -166,6 +166,8 @@ struct UsageMenuCardView: View {
         let provider: UsageProvider
         let providerName: String
         let email: String
+        /// Colors the account name blue to mark the active (system) account.
+        var emailIsActiveAccount: Bool = false
         var accountIdentityFingerprint: String?
         let subtitleText: String
         let subtitleStyle: SubtitleStyle
@@ -329,7 +331,9 @@ private struct UsageMenuCardHeaderView: View {
                     .lineLimit(1).truncationMode(.tail).layoutPriority(1)
                 Spacer()
                 Text(self.model.email).font(.subheadline)
-                    .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
+                    .foregroundStyle(self.model.emailIsActiveAccount && !self.isHighlighted
+                        ? Color(nsColor: .systemBlue)
+                        : MenuHighlightStyle.secondary(self.isHighlighted))
                     .lineLimit(1).truncationMode(.middle)
             }
             let liveSubtitle = self.liveSubtitle

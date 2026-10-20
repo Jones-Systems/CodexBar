@@ -301,8 +301,8 @@ struct StatusMenuCodexSwitcherPresentationTests {
         let menu = controller.makeMenu(for: .codex)
         controller.menuWillOpen(menu)
         let ids = self.representedIDs(in: menu)
-        #expect(ids.count { $0.hasPrefix("codexAccountCard-") } == 1)
-        #expect(ids.count { $0.hasPrefix("codexAccountCompact-") } == count - 1)
+        #expect(ids.count { $0.hasPrefix("codexAccountCard-") } == 0)
+        #expect(ids.count { $0.hasPrefix("codexAccountCompact-") } == count)
         #expect(!ids.contains("codexAccountCollapsed"))
         #expect(!menu.items.contains { $0.view is CodexAccountSwitcherView })
 

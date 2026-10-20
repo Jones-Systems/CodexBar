@@ -49,6 +49,7 @@ enum JonesCompactAccountPresentation {
         healthyTailExpanded: Bool = false) -> AccountMenuLayoutPlanner.Plan
     {
         // Provider-specific by design: native fleet rows use toggles at every count and never fold away accounts.
+        // Codex keeps the Settings menu order and starts fully collapsed; the active account is marked, not moved.
         let keepsAllAccountsVisible = provider == .codex || (provider == .claude && !accounts.isEmpty &&
             accounts.allSatisfy { $0.id.source == "claude-native-profile" })
         return AccountMenuLayoutPlanner.plan(
@@ -58,7 +59,11 @@ enum JonesCompactAccountPresentation {
             collapsedAccountIDs: collapsedAccountIDs,
             minimumVisibleAccountCount: keepsAllAccountsVisible ? Int.max : 0,
             policy: keepsAllAccountsVisible
-                ? .init(compactLayoutMinimumAccountCount: 1, minimumCollapsedHealthyRowCount: 1)
+                ? .init(
+                    compactLayoutMinimumAccountCount: 1,
+                    minimumCollapsedHealthyRowCount: 1,
+                    preservesAccountOrder: provider == .codex,
+                    expandsActiveAccount: provider != .codex)
                 : .init())
     }
 
@@ -124,5 +129,10 @@ enum JonesCompactAccountPresentation {
         collapsedAccountIDs.removeAll()
         expandedHealthyTailProviders.removeAll()
         return changed
+    }
+
+    static func overviewPolicy(for provider: UsageProvider) -> AccountMenuLayoutPlanner.Policy {
+        // Provider-specific by design: Overview Codex rows keep the Settings menu order below the active summary row.
+        .init(compactLayoutMinimumAccountCount: 1, preservesAccountOrder: provider == .codex)
     }
 }

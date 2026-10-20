@@ -20,13 +20,22 @@ public enum AccountMenuLayoutPlanner {
     public struct Policy: Equatable, Sendable {
         public let compactLayoutMinimumAccountCount: Int
         public let minimumCollapsedHealthyRowCount: Int
+        /// Keeps the caller's account order (for example a user-chosen menu order) instead of
+        /// hoisting the active account and sorting the rest most-constrained-first. No rows fold.
+        public let preservesAccountOrder: Bool
+        /// Whether the active account starts as a full card rather than a compact row.
+        public let expandsActiveAccount: Bool
 
         public init(
             compactLayoutMinimumAccountCount: Int = AccountMenuLayoutPlanner.compactLayoutMinimumAccountCount,
-            minimumCollapsedHealthyRowCount: Int = AccountMenuLayoutPlanner.minimumCollapsedHealthyRowCount)
+            minimumCollapsedHealthyRowCount: Int = AccountMenuLayoutPlanner.minimumCollapsedHealthyRowCount,
+            preservesAccountOrder: Bool = false,
+            expandsActiveAccount: Bool = true)
         {
             self.compactLayoutMinimumAccountCount = max(1, compactLayoutMinimumAccountCount)
             self.minimumCollapsedHealthyRowCount = max(1, minimumCollapsedHealthyRowCount)
+            self.preservesAccountOrder = preservesAccountOrder
+            self.expandsActiveAccount = expandsActiveAccount
         }
     }
 
@@ -47,6 +56,7 @@ public enum AccountMenuLayoutPlanner {
         public let constraintDetail: String?
         public let hasError: Bool
         public let canActivate: Bool
+        public let isActive: Bool
         /// Marks the inactive account with the most usable headroom — the best
         /// candidate to switch to next. Only healthy accounts qualify.
         public let isBestCandidate: Bool
@@ -74,6 +84,13 @@ public enum AccountMenuLayoutPlanner {
     {
         guard accounts.count >= policy.compactLayoutMinimumAccountCount else {
             return Plan(rows: accounts.map { .card($0.id) }, usesCompactLayout: false)
+        }
+        if policy.preservesAccountOrder {
+            return self.orderPreservingPlan(
+                accounts: accounts,
+                expandedAccountIDs: expandedAccountIDs,
+                collapsedAccountIDs: collapsedAccountIDs,
+                policy: policy)
         }
 
         var rows: [Row] = accounts.filter(\.isActive).map { account in
@@ -107,6 +124,24 @@ public enum AccountMenuLayoutPlanner {
         }
         if !collapsedIDs.isEmpty {
             rows.append(.collapsedHealthy(count: collapsedIDs.count))
+        }
+        return Plan(rows: rows, usesCompactLayout: true)
+    }
+
+    private static func orderPreservingPlan(
+        accounts: [ProviderAccountUsageSnapshot],
+        expandedAccountIDs: Set<ProviderAccountIdentity>,
+        collapsedAccountIDs: Set<ProviderAccountIdentity>,
+        policy: Policy) -> Plan
+    {
+        let bestCandidateID = self.bestCandidateID(in: accounts)
+        let rows: [Row] = accounts.map { account in
+            let startsExpanded = account.isActive && policy.expandsActiveAccount
+            let isExpanded = !collapsedAccountIDs.contains(account.id) &&
+                (startsExpanded || expandedAccountIDs.contains(account.id))
+            return isExpanded
+                ? .card(account.id)
+                : .compact(self.compactRow(for: account, isBestCandidate: account.id == bestCandidateID))
         }
         return Plan(rows: rows, usesCompactLayout: true)
     }
@@ -159,6 +194,7 @@ public enum AccountMenuLayoutPlanner {
             constraintDetail: constrained.isEmpty ? nil : constrained.joined(separator: " · "),
             hasError: account.error != nil,
             canActivate: account.canActivate,
+            isActive: account.isActive,
             isBestCandidate: isBestCandidate)
     }
 

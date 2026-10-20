@@ -454,7 +454,7 @@ extension StatusMenuCodexSwitcherTests {
         #expect(menu.items.compactMap { $0.view as? CodexAccountSwitcherView }.first == nil)
         #expect(self.representedIDs(in: menu).filter {
             $0.hasPrefix("codexAccount") || $0.hasPrefix("menuCard")
-        } == ["codexAccountCard-live@example.com", "codexAccountCompact-managed@example.com"])
+        } == ["codexAccountCompact-live@example.com", "codexAccountCompact-managed@example.com"])
 
         controller.compactAccountExpandedIDs = [
             ProviderAccountIdentity(source: "codex-account", opaqueID: "managed@example.com"),
@@ -465,7 +465,7 @@ extension StatusMenuCodexSwitcherTests {
         #expect(menu.items.compactMap { $0.view as? CodexAccountSwitcherView }.first == nil)
         #expect(self.representedIDs(in: menu).filter {
             $0.hasPrefix("codexAccount") || $0.hasPrefix("menuCard")
-        } == ["codexAccountCard-live@example.com", "codexAccountCard-managed@example.com"])
+        } == ["codexAccountCompact-live@example.com", "codexAccountCard-managed@example.com"])
     }
 
     @Test
@@ -532,7 +532,7 @@ extension StatusMenuCodexSwitcherTests {
         #expect(menu.items.compactMap { $0.view as? CodexAccountSwitcherView }.first == nil)
         #expect(self.representedIDs(in: menu).filter {
             $0.hasPrefix("codexAccount") || $0.hasPrefix("menuCard")
-        } == ["codexAccountCard-live@example.com", "codexAccountCompact-managed@example.com"])
+        } == ["codexAccountCompact-live@example.com", "codexAccountCompact-managed@example.com"])
 
         controller.compactAccountExpandedIDs = [
             ProviderAccountIdentity(source: "codex-account", opaqueID: "managed@example.com"),
@@ -543,7 +543,7 @@ extension StatusMenuCodexSwitcherTests {
         #expect(menu.items.compactMap { $0.view as? CodexAccountSwitcherView }.first == nil)
         #expect(self.representedIDs(in: menu).filter {
             $0.hasPrefix("codexAccount") || $0.hasPrefix("menuCard")
-        } == ["codexAccountCard-live@example.com", "codexAccountCard-managed@example.com"])
+        } == ["codexAccountCompact-live@example.com", "codexAccountCard-managed@example.com"])
         #expect(store.codexAccountSnapshots.isEmpty)
         let expandedDisplay = try #require(controller.codexAccountMenuDisplay(for: .codex))
         #expect(expandedDisplay.accounts.map(\.id) == ["live@example.com", "managed@example.com"])

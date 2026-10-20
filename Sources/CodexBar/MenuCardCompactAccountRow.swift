@@ -18,6 +18,7 @@ struct MenuCardCompactAccountRowView: View {
         let constraintDetail: String?
         let hasError: Bool
         let showsBestBadge: Bool
+        var isActiveAccount: Bool = false
         var isRefreshing: Bool = false
         var trailingDetail: TrailingDetail?
 
@@ -33,6 +34,7 @@ struct MenuCardCompactAccountRowView: View {
                 self.constraintDetail ?? "-",
                 self.hasError ? "error" : "ok",
                 self.showsBestBadge ? "best" : "plain",
+                self.isActiveAccount ? "active" : "inactive",
                 self.isRefreshing ? "refreshing" : "idle",
                 self.trailingDetail?.text ?? "-",
                 self.trailingDetail.map { String($0.count) } ?? "-",
@@ -53,7 +55,7 @@ struct MenuCardCompactAccountRowView: View {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(self.model.label)
                     .font(.subheadline)
-                    .foregroundStyle(MenuHighlightStyle.primary(self.isHighlighted))
+                    .foregroundStyle(self.labelColor)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 if self.model.showsBestBadge {
@@ -133,6 +135,14 @@ struct MenuCardCompactAccountRowView: View {
         .fixedSize()
     }
 
+    /// The active (system) account keeps its menu position; a blue name marks it instead.
+    private var labelColor: Color {
+        guard self.model.isActiveAccount, !self.isHighlighted else {
+            return MenuHighlightStyle.primary(self.isHighlighted)
+        }
+        return Color(nsColor: .systemBlue)
+    }
+
     private var severityColor: Color {
         guard !self.isHighlighted else { return MenuHighlightStyle.selectionText }
         switch self.model.severity {
@@ -153,6 +163,9 @@ struct MenuCardCompactAccountRowView: View {
 
     var accessibilityText: String {
         var parts = [self.model.label]
+        if self.model.isActiveAccount {
+            parts.append(L("Active"))
+        }
         if self.model.isRefreshing, self.model.headroomPercent == nil {
             parts.append("\(L("Refreshing"))…")
         }

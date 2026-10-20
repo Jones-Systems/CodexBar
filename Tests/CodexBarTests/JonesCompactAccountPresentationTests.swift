@@ -177,8 +177,15 @@ struct JonesCompactAccountPresentationTests {
         }
     }
 
+    private func activeCompactIDs(in plan: AccountMenuLayoutPlanner.Plan) -> [ProviderAccountIdentity] {
+        plan.rows.compactMap { row in
+            if case let .compact(compact) = row, compact.isActive { return compact.accountID }
+            return nil
+        }
+    }
+
     @Test(arguments: [0, 1, 2, 3, 4, 5, 6, 8, 9, 12])
-    func `Codex initially shows every account without a healthy tail fold`(count: Int) {
+    func `Codex initially shows every account collapsed without a healthy tail fold`(count: Int) {
         let accounts = self.accounts(count: count)
         let codex = JonesCompactAccountPresentation.plan(for: .codex, accounts: accounts)
         #expect(codex.usesCompactLayout == (count > 0))
@@ -187,8 +194,8 @@ struct JonesCompactAccountPresentationTests {
             #expect(codex.rows.isEmpty)
             return
         }
-        #expect(codex.rows.first == .card(accounts[0].id))
-        #expect(codex.rows.count { if case .card = $0 { true } else { false } } == 1)
+        #expect(!codex.rows.contains { if case .card = $0 { true } else { false } })
+        #expect(self.activeCompactIDs(in: codex) == [accounts[0].id])
         #expect(codex.rows.count == count)
         #expect(!codex.rows.contains { if case .collapsedHealthy = $0 { true } else { false } })
     }
@@ -256,9 +263,9 @@ struct JonesCompactAccountPresentationTests {
             accounts: switched,
             expandedAccountIDs: expandedIDs,
             collapsedAccountIDs: collapsedIDs)
-        #expect(plan.rows.first == .card(switched[2].id))
-        #expect(!plan.rows.contains(.card(original[0].id)))
-        #expect(Set(self.accountIDs(in: plan)) == Set(switched.map(\.id)))
+        #expect(!plan.rows.contains { if case .card = $0 { true } else { false } })
+        #expect(self.activeCompactIDs(in: plan) == [switched[2].id])
+        #expect(self.accountIDs(in: plan) == switched.map(\.id))
 
         let removed = Array(switched.dropFirst())
         let afterRemoval = JonesCompactAccountPresentation.plan(
@@ -267,7 +274,8 @@ struct JonesCompactAccountPresentationTests {
             expandedAccountIDs: expandedIDs,
             collapsedAccountIDs: collapsedIDs)
         #expect(!self.accountIDs(in: afterRemoval).contains(original[0].id))
-        #expect(afterRemoval.rows.first == .card(switched[2].id))
+        #expect(self.accountIDs(in: afterRemoval) == removed.map(\.id))
+        #expect(self.activeCompactIDs(in: afterRemoval) == [switched[2].id])
     }
 
     @Test(arguments: [6, 8, 9, 12])
@@ -331,13 +339,42 @@ struct JonesCompactAccountPresentationTests {
             collapsedAccountIDs: collapsedIDs,
             healthyTailExpanded: expandedProviders.contains(.codex))
         #expect(reopened == JonesCompactAccountPresentation.plan(for: .codex, accounts: accounts))
-        #expect(reopened.rows.first == .card(accounts[0].id))
-        #expect(self.accountIDs(in: reopened).count == count)
+        #expect(!reopened.rows.contains { if case .card = $0 { true } else { false } })
+        #expect(self.accountIDs(in: reopened) == accounts.map(\.id))
         #expect(!JonesCompactAccountPresentation.resetIfIdle(
             hasOpenMenus: false,
             expandedAccountIDs: &expandedIDs,
             collapsedAccountIDs: &collapsedIDs,
             expandedHealthyTailProviders: &expandedProviders))
+    }
+
+    @Test(arguments: [0, 2, 4])
+    func `Codex keeps the caller's account order regardless of active account or headroom`(activeIndex: Int) {
+        // Synthetic usage rises with index, so headroom sorting would reverse this order.
+        let accounts = self.accounts(count: 5, activeIndex: activeIndex)
+        let plan = JonesCompactAccountPresentation.plan(for: .codex, accounts: accounts)
+        #expect(self.accountIDs(in: plan) == accounts.map(\.id))
+        #expect(self.activeCompactIDs(in: plan) == [accounts[activeIndex].id])
+
+        let expanded = JonesCompactAccountPresentation.plan(
+            for: .codex,
+            accounts: accounts,
+            expandedAccountIDs: [accounts[activeIndex].id])
+        #expect(self.accountIDs(in: expanded) == accounts.map(\.id))
+        #expect(expanded.rows[activeIndex] == .card(accounts[activeIndex].id))
+    }
+
+    @Test
+    func `Overview keeps Codex order and leaves the active account to the provider summary row`() {
+        let accounts = self.accounts(count: 5, activeIndex: 2)
+        let plan = AccountMenuLayoutPlanner.plan(
+            accounts: accounts,
+            healthyTailExpanded: true,
+            policy: JonesCompactAccountPresentation.overviewPolicy(for: .codex))
+        #expect(self.accountIDs(in: plan) == accounts.map(\.id))
+        #expect(plan.rows[2] == .card(accounts[2].id))
+        #expect(JonesCompactAccountPresentation.overviewPolicy(for: .claude) ==
+            .init(compactLayoutMinimumAccountCount: 1))
     }
 
     @Test

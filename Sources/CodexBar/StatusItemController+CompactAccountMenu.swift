@@ -2,7 +2,7 @@ import AppKit
 import CodexBarCore
 
 /// Shared renderer for the compact multi-account menu layout: full cards for the
-/// initially active and explicitly expanded accounts, compact rows for the rest, and a
+/// planned (expanded, and by default the active) accounts, compact rows for the rest, and a
 /// summary row standing in for the collapsed healthy tail. Used by every
 /// multi-account presentation (claude-swap, token accounts, Codex accounts).
 extension StatusItemController {
@@ -92,7 +92,7 @@ extension StatusItemController {
                           let account = accountsByID[projectedAccount.id.opaqueID] else { return nil }
                     let accountSnapshot = snapshotsByAccountID[account.id]
                     let health = CodexAccountHealth.status(for: account, error: accountSnapshot?.error)
-                    return self.menuCardModel(
+                    var model = self.menuCardModel(
                         for: .codex,
                         snapshotOverride: accountSnapshot?.snapshot,
                         errorOverride: health.label,
@@ -102,6 +102,8 @@ extension StatusItemController {
                         historySelectionOverride: self.store.codexPlanUtilizationHistorySelection(
                             forVisibleAccount: account),
                         creditsOverride: accountSnapshot?.credits)
+                    model?.emailIsActiveAccount = projectedAccount.isActive
+                    return model
                 },
                 planAction: nil,
                 workspaceSections: display.showsWorkspaceGroups ? display.workspaceSections : [],
@@ -269,6 +271,7 @@ extension StatusItemController {
             } ?? rendering.codexRowDetails[row.accountID]?.text ?? row.constraintDetail,
             hasError: row.hasError,
             showsBestBadge: row.isBestCandidate,
+            isActiveAccount: row.isActive,
             isRefreshing: rendering.refreshingAccountIDs.contains(row.accountID),
             trailingDetail: rendering.codexRowDetails[row.accountID]?.trailingDetail)
     }
