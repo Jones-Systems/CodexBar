@@ -3918,7 +3918,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "This exact shared construct dispatches a provider-owned capability at the generic integration boundary."),
         AllowedProviderConstruct(
             path: "Sources/CodexBarCore/Vendored/CostUsage/CostUsagePricing.swift",
-            line: 222,
+            line: 225,
             anchor: "guard let pricing = self.codex[model] else { continue }",
             expectedProviderIDs: ["codex"],
             expectedReferenceCount: 1,
@@ -3926,7 +3926,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "This exact cost scanner dispatch selects a provider-owned transcript, cache, or pricing format."),
         AllowedProviderConstruct(
             path: "Sources/CodexBarCore/Vendored/CostUsage/CostUsagePricing.swift",
-            line: 452,
+            line: 455,
             anchor: "static let codexModelsDevProviderID = \"openai\"",
             expectedProviderIDs: ["deepseek", "openai", "opencode"],
             expectedReferenceCount: 4,
@@ -3934,7 +3934,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "This exact cost scanner dispatch selects a provider-owned transcript, cache, or pricing format."),
         AllowedProviderConstruct(
             path: "Sources/CodexBarCore/Vendored/CostUsage/CostUsagePricing.swift",
-            line: 487,
+            line: 490,
             anchor: "providerIDs.append(\"opencode\")",
             expectedProviderIDs: ["opencode"],
             expectedReferenceCount: 1,
@@ -3942,7 +3942,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "This exact cost scanner dispatch selects a provider-owned transcript, cache, or pricing format."),
         AllowedProviderConstruct(
             path: "Sources/CodexBarCore/Vendored/CostUsage/CostUsagePricing.swift",
-            line: 520,
+            line: 523,
             anchor: "if self.codex[trimmed] != nil {",
             expectedProviderIDs: ["codex"],
             expectedReferenceCount: 2,
@@ -3950,7 +3950,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "This exact cost scanner dispatch selects a provider-owned transcript, cache, or pricing format."),
         AllowedProviderConstruct(
             path: "Sources/CodexBarCore/Vendored/CostUsage/CostUsagePricing.swift",
-            line: 563,
+            line: 566,
             anchor: "if self.claude[base] != nil {",
             expectedProviderIDs: ["claude"],
             expectedReferenceCount: 1,
@@ -3958,7 +3958,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "This exact cost scanner dispatch selects a provider-owned transcript, cache, or pricing format."),
         AllowedProviderConstruct(
             path: "Sources/CodexBarCore/Vendored/CostUsage/CostUsagePricing.swift",
-            line: 596,
+            line: 603,
             anchor: "let bundled = lookup.pricing.providerID == self.codexModelsDevProviderID ? self.codex[key] : nil",
             expectedProviderIDs: ["codex"],
             expectedReferenceCount: 1,
@@ -3966,7 +3966,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "This exact cost scanner dispatch selects a provider-owned transcript, cache, or pricing format."),
         AllowedProviderConstruct(
             path: "Sources/CodexBarCore/Vendored/CostUsage/CostUsagePricing.swift",
-            line: 630,
+            line: 637,
             anchor: "guard let pricing = self.codex[key] else { return nil }",
             expectedProviderIDs: ["codex"],
             expectedReferenceCount: 1,
@@ -3974,7 +3974,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "This exact cost scanner dispatch selects a provider-owned transcript, cache, or pricing format."),
         AllowedProviderConstruct(
             path: "Sources/CodexBarCore/Vendored/CostUsage/CostUsagePricing.swift",
-            line: 780,
+            line: 790,
             anchor: "guard let pricing = self.claude[key] else { return nil }",
             expectedProviderIDs: ["claude"],
             expectedReferenceCount: 1,
