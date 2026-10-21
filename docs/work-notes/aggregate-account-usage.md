@@ -246,3 +246,15 @@ the existing custom name when no named account resolves by reading only the
 explicit saved override. Missing/blank overrides still do not synthesize default.
 Added that boundary coverage. The runner removed its fixture root and verified
 absence. All later full-suite groups remain unverified until the final rerun.
+
+The next validation passed 70 focused tests (labels, Overview and architecture),
+then passed 63 full-suite groups before the new distinct-default Overview
+fixture failed when grouped with its normal peers. Both full-group attempts
+reported missing rendered rows. Menu refresh freshness uses object identifiers;
+releasing and recreating a menu inside the fixture loop can reuse a fresh ID.
+That is a source-grounded explanation, not a live runtime defect diagnosis.
+The fixture now invokes production Overview content with an explicit context,
+retaining exact row counts, both layouts, no-default and raw-identity checks.
+No production change was needed. The failed run drained and verified scratch
+removal. Next verification begins with its exact full-suite group before the
+required unchanged full suite; no test selection is removed.

@@ -850,8 +850,20 @@ extension OverviewFleetAccountsTests {
                 #expect(display.activeVisibleAccountID == nil)
                 #expect(controller.overviewFleetAccounts(for: .codex).count == 5)
                 #expect(controller.overviewFleetAccountRows(for: .codex).count == 5)
-                let menu = controller.makeMenu()
-                controller.refreshMenuForOpenIfNeeded(menu, provider: nil)
+                let context = StatusItemController.MenuCardContext(
+                    currentProvider: .codex,
+                    selectedProvider: .codex,
+                    menuWidth: 320,
+                    codexAccountDisplay: display,
+                    tokenAccountDisplay: nil,
+                    openAIContext: .init(
+                        hasUsageBreakdown: false,
+                        hasCreditsHistory: false,
+                        hasCostHistory: false,
+                        canShowBuyCredits: false,
+                        hasOpenAIWebMenuItems: false))
+                let menu = NSMenu()
+                controller.addPrimaryMenuContent(to: menu, context: context, switcherSelection: .overview)
                 #expect(self.identifiers(in: menu).contains("overviewRow-gemini"))
                 #expect(!self.identifiers(in: menu).contains("overviewRow-codex"))
                 #expect(self.identifiers(in: menu).count { $0.hasPrefix("overviewAccount-codex-") } == 5)
