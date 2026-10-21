@@ -66,13 +66,14 @@ extension StatusItemController {
     }
 
     /// Renders the Codex account list with the compact plan when it applies.
-    /// Workspace groups retain their section headers without hiding account rows.
+    /// Named Codex accounts share one Personal section without hiding account rows.
     func addCompactCodexAccountMenuIfPlanned(
         display: CodexAccountMenuDisplay,
         to menu: NSMenu,
         captureMenu: NSMenu,
         context: MenuCardContext) -> Bool
     {
+        let now = Date()
         let projected = Self.projectedCodexAccounts(
             display: display,
             includeOptionalCredits: self.settings.showOptionalCreditsAndExtraUsage,
@@ -89,12 +90,15 @@ extension StatusItemController {
                 },
                 planAction: nil,
                 aggregate: JonesAccountAggregate.codex(
-                    projection: self.settings.codexVisibleAccountProjectionForMenuDisplay, accounts: projected),
+                    projection: self.settings.codexVisibleAccountProjectionForMenuDisplay,
+                    accounts: projected,
+                    now: now,
+                    workDays: self.settings.weeklyProgressWorkDays),
                 workspaceSections: display.showsWorkspaceGroups ? display.workspaceSections : [],
                 codexRowDetails: Self.compactCodexRowDetails(
                     accounts: projected,
                     resetStyle: self.settings.resetTimeDisplayStyle,
-                    now: Date())),
+                    now: now)),
             to: menu,
             captureMenu: captureMenu,
             context: context)
@@ -363,7 +367,7 @@ extension StatusItemController {
         return display.accounts.map { account in
             let accountSnapshot = snapshotsByAccountID[account.id]
             let health = CodexAccountHealth.status(for: account, error: accountSnapshot?.error)
-            let isActive = account.id == display.activeVisibleAccountID || account.isActive
+            let isActive = account.id == display.activeVisibleAccountID
             let credits = includeOptionalCredits ? accountSnapshot?.credits : nil
             return ProviderAccountUsageSnapshot(
                 id: ProviderAccountIdentity(source: "codex-account", opaqueID: account.id),

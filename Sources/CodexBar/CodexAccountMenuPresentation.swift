@@ -178,3 +178,24 @@ extension [CodexVisibleAccount] {
         return sections
     }
 }
+
+extension CodexVisibleAccountProjection {
+    var menuAccounts: [CodexVisibleAccount] {
+        self.visibleAccounts.filter { $0.selectionSource != .liveSystem && $0.fleetProfileAlias != "default" }
+    }
+
+    var omitsSummary: Bool {
+        self.menuAccounts.count < self.visibleAccounts.count && self.menuActiveAccount == nil
+    }
+
+    var menuActiveAccount: CodexVisibleAccount? {
+        guard let active = self.visibleAccounts.first(where: { $0.id == self.activeVisibleAccountID }) else {
+            return nil
+        }
+        if let named = self.menuAccounts.first(where: { $0.id == active.id }) { return named }
+        // Cached identity can name the live account only when exactly one presented profile matches.
+        // This changes presentation, never the selected authentication source or quota identity.
+        let matches = self.menuAccounts.filter { UsageStore.codexPriorSnapshotAccountMatches(active, account: $0) }
+        return matches.count == 1 ? matches.first : nil
+    }
+}

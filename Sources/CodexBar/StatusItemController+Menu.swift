@@ -612,6 +612,14 @@ extension StatusItemController {
         }
 
         for (index, row) in rows.enumerated() {
+            // Provider-specific by design: hide Codex default summaries unless cached identity names one unique
+            // profile.
+            if row.provider == .codex, self.settings.codexVisibleAccountProjectionForMenuDisplay?.omitsSummary == true {
+                self.addOverviewFleetAccountRows(
+                    for: row.provider, to: menu, captureMenu: interactionMenu, width: menuWidth)
+                if index < rows.count - 1 { menu.addItem(.separator()) }
+                continue
+            }
             let identifier = "\(Self.overviewRowIdentifierPrefix)\(row.provider.rawValue)"
             let showsDetails = !self.overviewExpansionState.collapsedSummaryProviders.contains(row.provider)
             let compact = showsDetails ? nil : self.overviewSummaryCompactModel(for: row.provider, model: row.model)

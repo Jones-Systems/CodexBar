@@ -178,11 +178,11 @@ struct CodexAccountMenuDisplay: Equatable {
     }
 
     var workspaceSections: [CodexAccountWorkspaceSection] {
-        self.accounts.codexWorkspaceSections()
+        self.accounts.isEmpty ? [] : [CodexAccountWorkspaceSection(title: "Personal", accounts: self.accounts)]
     }
 
     var showsWorkspaceGroups: Bool {
-        Set(self.workspaceSections.map(\.title)).count > 1
+        !self.workspaceSections.isEmpty
     }
 
     static func == (lhs: CodexAccountMenuDisplay, rhs: CodexAccountMenuDisplay) -> Bool {

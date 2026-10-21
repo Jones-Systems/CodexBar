@@ -14,6 +14,7 @@ extension StatusItemController {
     }
 
     func overviewFleetSource(for provider: UsageProvider) -> OverviewFleetSource? {
+        let now = Date()
         switch provider {
         case .codex:
             guard let display = self.codexAccountMenuDisplay(for: provider) else {
@@ -32,13 +33,16 @@ extension StatusItemController {
                 accounts: accounts,
                 cardModel: { [weak self] in self?.codexAccountCardModel(for: $0, display: overviewDisplay) },
                 aggregate: JonesAccountAggregate.codex(
-                    projection: self.settings.codexVisibleAccountProjectionForMenuDisplay, accounts: accounts))
+                    projection: self.settings.codexVisibleAccountProjectionForMenuDisplay,
+                    accounts: accounts,
+                    now: now,
+                    workDays: self.settings.weeklyProgressWorkDays))
         case .claude:
             let accounts = self.store.claudeNativeProfileAccountsForDisplay()
             return OverviewFleetSource(
                 accounts: accounts,
                 cardModel: { [weak self] in self?.claudeNativeProfileCardModel(for: $0) },
-                aggregate: self.claudeNativeProfileAggregate(accounts: accounts))
+                aggregate: self.claudeNativeProfileAggregate(accounts: accounts, now: now))
         default:
             return nil
         }
@@ -86,10 +90,21 @@ extension StatusItemController {
         model: UsageMenuCardView.Model,
         now: Date = Date()) -> MenuCardCompactAccountRowView.Model
     {
-        JonesCompactAccountPresentation.overviewSummaryRow(
+        // Provider-specific by design: Codex and Claude resolve cached selected-account labels before redaction.
+        let label: String = switch provider {
+        case .codex:
+            self.selectedCodexAccountDisplayLabel() ?? model.email
+        case .claude:
+            self.store.selectedClaudeNativeProfileDisplayLabel()
+                ?? self.store.claudeNativeProfileAccountsForDisplay().first(where: \.isActive)?.displayLabel
+                ?? model.email
+        default:
+            model.providerName
+        }
+        return JonesCompactAccountPresentation.overviewSummaryRow(
             .init(
                 provider: provider,
-                label: model.providerName,
+                label: PersonalInfoRedactor.redactEmail(label, isEnabled: self.settings.hidePersonalInfo),
                 snapshot: model.metrics.isEmpty ? nil : self.store.presentationSnapshot(for: provider),
                 hasError: model.subtitleStyle == .error,
                 isRefreshing: model.subtitleStyle == .loading),

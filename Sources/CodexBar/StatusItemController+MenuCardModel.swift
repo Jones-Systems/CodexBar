@@ -287,18 +287,11 @@ extension StatusItemController {
         return self.store.planUtilizationHistorySelection(for: provider, snapshotOverride: snapshot)
     }
 
-    private func selectedCodexAccountDisplayLabel() -> String {
-        if let projection = self.settings.codexVisibleAccountProjectionForMenuDisplay,
-           let account = projection.visibleAccounts.first(where: { $0.id == projection.activeVisibleAccountID })
-        {
-            return self.settings.codexAccountDisplayLabel(for: account)
+    func selectedCodexAccountDisplayLabel() -> String? {
+        guard let account = self.settings.codexVisibleAccountProjectionForMenuDisplay?.menuActiveAccount else {
+            return nil
         }
-        let source = self.settings.codexActiveSource
-        let alias: String? = if case .liveSystem = source { "default" } else { nil }
-        return self.settings.accountDisplayLabel(
-            provider: .codex,
-            profileIdentity: JonesAccountDisplayLabel.codexProfileIdentity(for: source),
-            verifiedAlias: alias)
+        return self.settings.codexAccountDisplayLabel(for: account)
     }
 
     func accountInfo(for account: CodexVisibleAccount) -> AccountInfo {

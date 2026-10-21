@@ -444,9 +444,9 @@ extension StatusMenuCodexSwitcherTests {
         defer { controller.releaseStatusItemsForTesting() }
 
         let display = try #require(controller.codexAccountMenuDisplay(for: .codex))
-        #expect(display.accounts.map(\.id) == ["live@example.com", "managed@example.com"])
-        #expect(display.snapshots.map(\.account.id) == ["live@example.com", "managed@example.com"])
-        #expect(display.activeVisibleAccountID == "live@example.com")
+        #expect(display.accounts.map(\.id) == ["managed@example.com"])
+        #expect(display.snapshots.map(\.account.id) == ["managed@example.com"])
+        #expect(display.activeVisibleAccountID == nil)
 
         let menu = controller.makeMenu(for: .codex)
         controller.menuWillOpen(menu)
@@ -454,7 +454,7 @@ extension StatusMenuCodexSwitcherTests {
         #expect(menu.items.compactMap { $0.view as? CodexAccountSwitcherView }.first == nil)
         #expect(self.representedIDs(in: menu).filter {
             $0.hasPrefix("codexAccount") || $0.hasPrefix("menuCard")
-        } == ["codexAccountCompact-live@example.com", "codexAccountCompact-managed@example.com"])
+        } == ["codexAccountCompact-managed@example.com"])
 
         controller.compactAccountExpandedIDs = [
             ProviderAccountIdentity(source: "codex-account", opaqueID: "managed@example.com"),
@@ -465,11 +465,11 @@ extension StatusMenuCodexSwitcherTests {
         #expect(menu.items.compactMap { $0.view as? CodexAccountSwitcherView }.first == nil)
         #expect(self.representedIDs(in: menu).filter {
             $0.hasPrefix("codexAccount") || $0.hasPrefix("menuCard")
-        } == ["codexAccountCompact-live@example.com", "codexAccountCard-managed@example.com"])
+        } == ["codexAccountCard-managed@example.com"])
     }
 
     @Test
-    func `codex stacked layout keeps both accounts expandable before per account snapshots load`() throws {
+    func `codex stacked layout keeps named account expandable before per account snapshots load`() throws {
         self.disableMenuCardsForTesting()
         let settings = self.makeSettings()
         settings.statusChecksEnabled = false
@@ -521,8 +521,8 @@ extension StatusMenuCodexSwitcherTests {
         defer { controller.releaseStatusItemsForTesting() }
 
         let display = try #require(controller.codexAccountMenuDisplay(for: .codex))
-        #expect(display.accounts.map(\.id) == ["live@example.com", "managed@example.com"])
-        #expect(display.activeVisibleAccountID == "live@example.com")
+        #expect(display.accounts.map(\.id) == ["managed@example.com"])
+        #expect(display.activeVisibleAccountID == nil)
         #expect(store.codexAccountSnapshots.isEmpty)
         #expect(display.snapshots.isEmpty)
 
@@ -532,7 +532,7 @@ extension StatusMenuCodexSwitcherTests {
         #expect(menu.items.compactMap { $0.view as? CodexAccountSwitcherView }.first == nil)
         #expect(self.representedIDs(in: menu).filter {
             $0.hasPrefix("codexAccount") || $0.hasPrefix("menuCard")
-        } == ["codexAccountCompact-live@example.com", "codexAccountCompact-managed@example.com"])
+        } == ["codexAccountCompact-managed@example.com"])
 
         controller.compactAccountExpandedIDs = [
             ProviderAccountIdentity(source: "codex-account", opaqueID: "managed@example.com"),
@@ -543,11 +543,11 @@ extension StatusMenuCodexSwitcherTests {
         #expect(menu.items.compactMap { $0.view as? CodexAccountSwitcherView }.first == nil)
         #expect(self.representedIDs(in: menu).filter {
             $0.hasPrefix("codexAccount") || $0.hasPrefix("menuCard")
-        } == ["codexAccountCompact-live@example.com", "codexAccountCard-managed@example.com"])
+        } == ["codexAccountCard-managed@example.com"])
         #expect(store.codexAccountSnapshots.isEmpty)
         let expandedDisplay = try #require(controller.codexAccountMenuDisplay(for: .codex))
-        #expect(expandedDisplay.accounts.map(\.id) == ["live@example.com", "managed@example.com"])
-        #expect(expandedDisplay.activeVisibleAccountID == "live@example.com")
+        #expect(expandedDisplay.accounts.map(\.id) == ["managed@example.com"])
+        #expect(expandedDisplay.activeVisibleAccountID == nil)
         #expect(expandedDisplay.snapshots.isEmpty)
     }
 
