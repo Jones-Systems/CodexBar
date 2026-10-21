@@ -541,8 +541,8 @@ extension StatusMenuTests {
     @Test
     func `fleet menu cached switches and account collapse preserve current row geometry`() throws {
         try self.withHeightFleetFixture(renderCards: true) { controller in
-            try self.seedHeightFleetCodex(6, controller: controller)
             self.seedHeightFleetClaude(2, controller: controller)
+            try self.seedHeightFleetCodex(6, controller: controller)
             let menu = controller.makeMenu()
             let key = ObjectIdentifier(menu)
             controller.populateMenu(menu, provider: .codex)
@@ -612,8 +612,8 @@ extension StatusMenuTests {
     @Test
     func `overview inline toggles restore measured heights and leave provider tab defaults intact`() throws {
         try self.withHeightFleetFixture(renderCards: true) { controller in
-            try self.seedHeightFleetCodex(3, controller: controller)
             self.seedHeightFleetClaude(2, controller: controller)
+            try self.seedHeightFleetCodex(3, controller: controller)
             let menu = controller.makeMenu()
             controller.populateMenu(menu, provider: .codex)
             let originalIDs = menu.items.compactMap { $0.representedObject as? String }
@@ -783,12 +783,13 @@ extension StatusMenuTests {
                 observedAt: Date(timeIntervalSince1970: 1_800_000_000),
                 identity: .providerAccount(id: "workspace-\(index)"))
         }
+        controller.settings.codexActiveSource = .profileHome(path: observed[0].codexHomePath)
         controller.settings._test_codexAccountSnapshotLoader = { source in
             CodexAccountReconciliationSnapshot(
                 storedAccounts: [],
                 activeStoredAccount: nil,
-                liveSystemAccount: observed.first,
-                profileHomeAccounts: Array(observed.dropFirst()),
+                liveSystemAccount: nil,
+                profileHomeAccounts: observed,
                 matchingStoredAccountForLiveSystemAccount: nil,
                 activeSource: source,
                 hasUnreadableAddedAccountStore: false)

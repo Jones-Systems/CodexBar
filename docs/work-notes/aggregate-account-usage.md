@@ -258,3 +258,28 @@ retaining exact row counts, both layouts, no-default and raw-identity checks.
 No production change was needed. The failed run drained and verified scratch
 removal. Next verification begins with its exact full-suite group before the
 required unchanged full suite; no test selection is removed.
+
+The exact formerly failing Overview peer group passed (114 tests/11 suites).
+The next full run passed groups 1–76 before an existing height fixture failed
+at group 77 because it selected an unmatched live/default source and expected
+a Codex summary. Migrated that fixture to a named active profile and seeded
+Claude first; all geometry, toggle and row assertions remain unchanged. No
+production source changed. The failed group retry repeated the same issue,
+and the runner verified cleanup. Rather than repeat 76 unchanged groups, the
+final local continuation discovers the same 1044 selections, verifies the
+height group is still 77, and executes original groups 77–87 with the existing
+runner helpers and owned fixture lifecycle. The earlier full-run evidence is
+preserved; this is a coverage union, not a claim of one all-green local
+`make test` invocation. Exact final-head full CI remains mandatory for merge.
+
+Final local validation: `make check` passed with zero violations in 2166 Swift
+files. Original groups 77–87 passed without test issues or retries after the
+height-fixture migration; together with the unchanged production run's first
+76 successful groups, all 1044 discovered selections are covered locally.
+The tail command used the existing runner's discovery/group/filter helpers,
+checked the original group mapping, and verified owned scratch removal. Its
+first safety assertion used the file name rather than the suite name and ran
+no tests; corrected it, then reused the completed build. Logs and exact
+selection coverage remain under `.build/pacing-*`. Production source hashes
+match the earlier full run. No claim of one final all-green local full-suite
+invocation is made; final-head complete CI remains the merge gate.
