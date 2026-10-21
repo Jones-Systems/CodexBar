@@ -79,13 +79,19 @@ one serial process allowed. That cold build was deliberately stopped (143) as
 shared disk free space fell below 700 MiB. The runner drained and verified fixture
 removal. Only task-generated `.dSYM` folders were then removed from this worktree's
 new `.build/arm64-apple-macosx/debug` to recover roughly 0.5 GiB; no shared cache,
-source, credential, branch or worktree cleanup occurred. Local `make test` is now
-running against the frozen candidate. No live provider or Keychain checks are used.
+source, credential, branch or worktree cleanup occurred. The required local `make test` was also safely stopped during discovery (make
+exit 2, inner command 143) as free space fell to 280 MiB. It ran no test groups;
+no passing local suite is claimed. After verified drain and scratch removal,
+root removed this task's newly generated debug directory only. Build/test logs
+remain in the owned `.build` root. Shared free space remained below 1 GiB, so
+no further local compilation or Jones app replacement was attempted. No live provider or Keychain checks are used.
 
 The first `make check` completed all checks and reported one new SwiftLint type
 size violation in `OverviewFleetAccountsTests`. Its added helper/test moved to an
 extension of that same suite; focused strict lint then passed with zero violations.
-No test was removed or excluded.
+No test was removed or excluded. The final full `make check` passed (exit 0),
+including SwiftFormat and strict SwiftLint with zero violations across 2,166 files.
+Repository tooling used the already-installed NVM Node 20.19.2.
 
 ## Delivery and recovery
 
@@ -96,4 +102,11 @@ is outside replacement scope. Preserve preferences and the prior Jones bundle.
 Registration metadata preflight found no socket at
 `~/.local/state/voice-control-plane/registry.sock`: `registration_unavailable`,
 `endpoint_unavailable`, effect none. No request was sent or endpoint repaired.
-Exact candidate/check/delivery evidence will be recorded here.
+Source checkpoint `e36c89c9aa670c626a7c08c42b7c76ab719dc14e` was pushed to the
+canonical `standalone` remote with direct OID readback. Ordinary non-draft
+[PR #15](https://github.com/Jones-Systems/CodexBar/pull/15) is linked to this Jones
+Code thread. GitHub's full macOS/Linux CI qualifies the final PR head. The PR's
+delivery record owns subsequent exact-head CI, merge and local-installation
+postconditions; a pending CI run is not a pass. Local replacement is blocked
+until sufficient disk space permits a tested Jones-identity build. The prior
+installed bundle remains untouched; no unrelated cleanup is authorized.
