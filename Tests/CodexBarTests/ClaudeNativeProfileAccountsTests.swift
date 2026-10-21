@@ -19,7 +19,11 @@ private struct ClaudeNativeProfileAccountsOAuthStub: ProviderFetchStrategy {
                 updatedAt: Date(timeIntervalSince1970: 1_800_000_000),
                 identity: ProviderIdentitySnapshot(
                     providerID: .claude, accountEmail: nil, accountOrganization: nil, loginMethod: "OAuth")),
-            credits: nil, dashboard: nil, sourceLabel: "OAuth", strategyID: self.id, strategyKind: self.kind)
+            credits: nil,
+            dashboard: nil,
+            sourceLabel: "OAuth",
+            strategyID: self.id,
+            strategyKind: self.kind)
     }
 
     func shouldFallback(on _: Error, context _: ProviderFetchContext) -> Bool {

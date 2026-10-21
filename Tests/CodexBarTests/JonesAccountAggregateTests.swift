@@ -488,8 +488,11 @@ struct JonesAccountAggregateTests {
         let aliases = JonesAccountAggregate.codexAliases
         let rows = aliases.map { self.row($0, remaining: 30, windowMinutes: 10080, resetsAt: reset) }
         let total = try #require(JonesAccountAggregate.codex(
-            projection: self.projection(aliases.map { self.visible($0) }), accounts: rows,
-            now: now, workDays: 5, calendar: calendar))
+            projection: self.projection(aliases.map { self.visible($0) }),
+            accounts: rows,
+            now: now,
+            workDays: 5,
+            calendar: calendar))
         guard case let .runsOut(date, _) = total.exhaustion else {
             Issue.record("Expected workday forecast")
             return
@@ -498,8 +501,11 @@ struct JonesAccountAggregateTests {
         var mixed = rows
         mixed[0] = self.row(aliases[0], remaining: 30, windowMinutes: 300, resetsAt: now.addingTimeInterval(9000))
         let mixedTotal = try #require(JonesAccountAggregate.codex(
-            projection: self.projection(aliases.map { self.visible($0) }), accounts: mixed,
-            now: now, workDays: 5, calendar: calendar))
+            projection: self.projection(aliases.map { self.visible($0) }),
+            accounts: mixed,
+            now: now,
+            workDays: 5,
+            calendar: calendar))
         guard case let .runsOut(mixedDate, _) = mixedTotal.exhaustion else {
             Issue.record("Expected mixed-clock forecast")
             return
@@ -511,8 +517,12 @@ struct JonesAccountAggregateTests {
     @Test
     func `expanded fingerprint records line shapes but no dates or identities`() {
         var total = JonesAccountAggregate(
-            selectedCount: 5, reportingCount: 5, summedRemainingPercent: 340, paceTargetPercent: 320,
-            exhaustion: .runsOut(at: Self.now, beforeFirstReset: false), firstReset: Self.now)
+            selectedCount: 5,
+            reportingCount: 5,
+            summedRemainingPercent: 340,
+            paceTargetPercent: 320,
+            exhaustion: .runsOut(at: Self.now, beforeFirstReset: false),
+            firstReset: Self.now)
         let expanded = total.heightFingerprint(isExpanded: true)
         #expect(expanded != total.heightFingerprint(isExpanded: false))
         total.firstReset = Self.now.addingTimeInterval(60)

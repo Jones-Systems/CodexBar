@@ -365,3 +365,22 @@ cloned debug/release ModuleCache directories under exact task-owned names,
 leaving the old worktree untouched, then restarted against fresh cache paths.
 The second compile has built the core and application and is building tests;
 no behavioral pass is claimed before execution finishes.
+
+The second focused build stopped on ENOSPC before tests ran. Root removed only
+this task's failed generated debug output, disabled compiler debug symbols and
+indexing for local verification, and retained source and build logs. A session
+interruption then detached the third build from its runner; the exact orphaned
+compiler process tree was terminated and drained before its fixture parent was
+removed. Root reclaimed the prior task-owned debug build at verified `ffaba2c`
+after proving no open files. Worktrees, source, preferences and installed rollback
+bundles were preserved. Free space recovered to 6.5 GiB; no broad host cleanup ran.
+
+The resumed focused run at `32174a25` executed 255 tests in 13 suites: 253 passed;
+two failed. The architecture guard had four stale source-line anchors, rebound
+to the same exact constructs and justifications. The new workday test compared
+Date-derived floating-point seconds exactly; it now requires the expected
+three-day interval within one millisecond. PR #17's initial Linux lint job found
+35 violations in changed paths. Root separated multiline arguments, named the
+local timing tuple, and grouped aggregate-row rendering arguments into one
+context without changing behavior or disabling lint rules. Final checks and
+candidate test execution are pending; these repairs are not yet a passing claim.

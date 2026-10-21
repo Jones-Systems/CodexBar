@@ -227,7 +227,10 @@ struct ClaudeNativeProfileFetchTests {
             if !otherProvider { environment.removeValue(forKey: ClaudeNativeProfileSelection.selectionKey) }
             let original = Self.oauthResult(identity: ProviderIdentitySnapshot(
                 providerID: otherProvider ? .codex : .claude,
-                accountEmail: nil, accountOrganization: nil, loginMethod: nil, accountID: "transport-uuid"))
+                accountEmail: nil,
+                accountOrganization: nil,
+                loginMethod: nil,
+                accountID: "transport-uuid"))
             let strategy = ClaudeNativeProfileFetchStrategy(base: StubStrategy { _ in original })
             let result = try await strategy.fetch(self.context(environment: environment))
             #expect(result.usage.identity?.providerID == original.usage.identity?.providerID)

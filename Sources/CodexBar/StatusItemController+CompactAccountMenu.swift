@@ -151,13 +151,14 @@ extension StatusItemController {
             self.addAccountAggregateRow(
                 aggregate,
                 to: menu,
-                id: "\(rendering.idPrefix)Aggregate",
-                provider: context.currentProvider,
-                width: context.menuWidth,
-                isExpanded: self.compactAccountExpandedAggregateScopes.contains(rendering.idPrefix),
-                onClick: { [weak self, weak captureMenu] in
-                    self?.toggleCompactAccountAggregate(scope: rendering.idPrefix, menu: captureMenu)
-                })
+                context: AccountAggregateRowContext(
+                    id: "\(rendering.idPrefix)Aggregate",
+                    provider: context.currentProvider,
+                    width: context.menuWidth,
+                    isExpanded: self.compactAccountExpandedAggregateScopes.contains(rendering.idPrefix),
+                    onClick: { [weak self, weak captureMenu] in
+                        self?.toggleCompactAccountAggregate(scope: rendering.idPrefix, menu: captureMenu)
+                    }))
             menu.addItem(.separator())
         }
         if self.addStorageMenuCardSection(to: menu, provider: context.currentProvider, width: context.menuWidth) {
@@ -165,26 +166,30 @@ extension StatusItemController {
         }
     }
 
+    struct AccountAggregateRowContext {
+        let id: String
+        let provider: UsageProvider
+        let width: CGFloat
+        let isExpanded: Bool
+        let onClick: () -> Void
+    }
+
     func addAccountAggregateRow(
         _ aggregate: JonesAccountAggregate,
         to menu: NSMenu,
-        id: String,
-        provider: UsageProvider,
-        width: CGFloat,
-        isExpanded: Bool,
-        onClick: @escaping () -> Void)
+        context: AccountAggregateRowContext)
     {
         menu.addItem(self.makeMenuCardItem(
             MenuCardAccountAggregateRowView(
                 model: aggregate,
-                progressColor: UsageMenuCardView.Model.progressColor(for: provider),
-                width: width,
-                isExpanded: isExpanded),
-            id: id,
-            width: width,
-            heightCacheScope: id,
-            heightCacheFingerprint: aggregate.heightFingerprint(isExpanded: isExpanded),
-            onClick: onClick))
+                progressColor: UsageMenuCardView.Model.progressColor(for: context.provider),
+                width: context.width,
+                isExpanded: context.isExpanded),
+            id: context.id,
+            width: context.width,
+            heightCacheScope: context.id,
+            heightCacheFingerprint: aggregate.heightFingerprint(isExpanded: context.isExpanded),
+            onClick: context.onClick))
     }
 
     private func addCompactAccountMenuSectionRows(

@@ -203,8 +203,11 @@ struct JonesAccountAggregate: Equatable {
                 calendar: calendar)
         }
         return Self.make(
-            selectedCount: Self.codexAliases.count, contributions: contributions,
-            now: now, workDays: workDays, calendar: calendar)
+            selectedCount: Self.codexAliases.count,
+            contributions: contributions,
+            now: now,
+            workDays: workDays,
+            calendar: calendar)
     }
 
     static func claude(
@@ -250,8 +253,11 @@ struct JonesAccountAggregate: Equatable {
             return Self.contribution(row, identity: key, now: now, workDays: workDays, calendar: calendar)
         }
         return Self.make(
-            selectedCount: Self.claudeAliases.count, contributions: contributions,
-            now: now, workDays: workDays, calendar: calendar)
+            selectedCount: Self.claudeAliases.count,
+            contributions: contributions,
+            now: now,
+            workDays: workDays,
+            calendar: calendar)
     }
 
     private static func claudeFallback(_ identity: ProviderIdentitySnapshot) -> [String]? {
@@ -285,26 +291,23 @@ struct JonesAccountAggregate: Equatable {
     {
         guard row.error == nil, let remaining = AccountMenuLayoutPlanner.headroomPercent(for: row),
               remaining.isFinite else { return nil }
-        let timedWindows = AccountMenuLayoutPlanner.limitingWindows(for: row).compactMap { window
-            -> (reset: Date, pace: UsagePace, wallRate: Double?, tooEarly: Bool)? in
+        typealias TimedWindow = (reset: Date, pace: UsagePace, wallRate: Double?, tooEarly: Bool)
+        let timedWindows = AccountMenuLayoutPlanner.limitingWindows(for: row).compactMap { window -> TimedWindow? in
             guard let minutes = window.windowMinutes, minutes > 0,
                   let reset = window.resetsAt,
                   let pace = UsagePace.weekly(
-                      window: window, now: now, defaultWindowMinutes: minutes,
-                      workDays: workDays, calendar: calendar),
+                      window: window,
+                      now: now,
+                      defaultWindowMinutes: minutes,
+                      workDays: workDays,
+                      calendar: calendar),
                   pace.expectedUsedPercent.isFinite, pace.actualUsedPercent.isFinite else { return nil }
             let elapsed = Double(minutes) * 60 - reset.timeIntervalSince(now)
             let wallRate = elapsed > 0 ? pace.actualUsedPercent / elapsed : pace.actualUsedPercent == 0 ? 0 : nil
             return (reset, pace, wallRate, pace.actualUsedPercent > 0 && pace.expectedUsedPercent < 3)
         }
         // The latest valid reset controls a tied limit longest; equal resets retain planner order.
-        let controlling = timedWindows.reduce(nil as (
-            reset: Date,
-            pace: UsagePace,
-            wallRate: Double?,
-            tooEarly: Bool)?)
-        {
-            selected, candidate in
+        let controlling = timedWindows.reduce(nil as TimedWindow?) { selected, candidate in
             guard let selected else { return candidate }
             return candidate.reset > selected.reset ? candidate : selected
         }

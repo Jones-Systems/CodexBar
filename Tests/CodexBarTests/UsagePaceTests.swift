@@ -618,9 +618,9 @@ struct UsagePaceTests {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
         let now = try #require(ISO8601DateFormatter().date(from: "2026-10-16T12:00:00Z"))
-        let interval = UsagePace.wallClockInterval(
-            from: now, consumingWorkSeconds: 86400, workDays: 5, calendar: calendar)
-        #expect(interval == 3 * 86400)
+        let interval = try #require(UsagePace.wallClockInterval(
+            from: now, consumingWorkSeconds: 86400, workDays: 5, calendar: calendar))
+        #expect(abs(interval - 3 * 86400) < 0.001)
         #expect(UsagePace.wallClockInterval(
             from: now, consumingWorkSeconds: 86400, workDays: 5, calendar: calendar, limit: 86400) == nil)
         #expect(UsagePace.wallClockInterval(

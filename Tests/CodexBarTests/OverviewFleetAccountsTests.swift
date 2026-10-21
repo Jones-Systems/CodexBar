@@ -1039,11 +1039,17 @@ extension OverviewFleetAccountsTests {
                 let menu = NSMenu()
                 let display = controller.codexAccountMenuDisplay(for: provider)
                 let context = StatusItemController.MenuCardContext(
-                    currentProvider: provider, selectedProvider: provider, menuWidth: 310,
-                    codexAccountDisplay: display, tokenAccountDisplay: nil,
+                    currentProvider: provider,
+                    selectedProvider: provider,
+                    menuWidth: 310,
+                    codexAccountDisplay: display,
+                    tokenAccountDisplay: nil,
                     openAIContext: .init(
-                        hasUsageBreakdown: false, hasCreditsHistory: false, hasCostHistory: false,
-                        canShowBuyCredits: false, hasOpenAIWebMenuItems: false))
+                        hasUsageBreakdown: false,
+                        hasCreditsHistory: false,
+                        hasCostHistory: false,
+                        canShowBuyCredits: false,
+                        hasOpenAIWebMenuItems: false))
                 let scope = provider == .codex ? "codexAccount" : "claudeNativeProfile"
                 if provider == .codex {
                     #expect(try controller.addCompactCodexAccountMenuIfPlanned(
