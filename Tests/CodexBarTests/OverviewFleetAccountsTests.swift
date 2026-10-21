@@ -789,8 +789,9 @@ extension OverviewFleetAccountsTests {
     @Test
     func `selected fleet aggregate follows accounts before storage and plan usage and refreshes with totals`() throws {
         try self.withFixture(providers: [.codex, .claude]) { controller in
-            try self.seedSelectedCodexFleet(controller: controller)
+            // Claude selection changes invalidate cached Codex projections, so seed configuration first.
             self.seedClaude(2, controller: controller)
+            try self.seedSelectedCodexFleet(controller: controller)
             controller.settings.providerStorageFootprintsEnabled = true
             for provider in [UsageProvider.codex, .claude] {
                 controller.store.providerStorageFootprints[provider.instanceID] = ProviderStorageFootprint(

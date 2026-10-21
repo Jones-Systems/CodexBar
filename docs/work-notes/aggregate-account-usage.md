@@ -84,7 +84,7 @@ exit 2, inner command 143) as free space fell to 280 MiB. It ran no test groups;
 no passing local suite is claimed. After verified drain and scratch removal,
 root removed this task's newly generated debug directory only. Build/test logs
 remain in the owned `.build` root. Shared free space remained below 1 GiB, so
-no further local compilation or Jones app replacement was attempted. No live provider or Keychain checks are used.
+no further local compilation or Jones app replacement was attempted in that first pass. No live provider or Keychain checks are used.
 
 The first `make check` completed all checks and reported one new SwiftLint type
 size violation in `OverviewFleetAccountsTests`. Its added helper/test moved to an
@@ -107,6 +107,25 @@ canonical `standalone` remote with direct OID readback. Ordinary non-draft
 [PR #15](https://github.com/Jones-Systems/CodexBar/pull/15) is linked to this Jones
 Code thread. GitHub's full macOS/Linux CI qualifies the final PR head. The PR's
 delivery record owns subsequent exact-head CI, merge and local-installation
-postconditions; a pending CI run is not a pass. Local replacement is blocked
-until sufficient disk space permits a tested Jones-identity build. The prior
+postconditions; a pending CI run is not a pass. Local replacement was initially
+blocked by disk space; a later sample recovered to 13 GiB, permitting validation
+and a subsequent tested Jones-identity build. The prior
 installed bundle remains untouched; no unrelated cleanup is authorized.
+
+
+## CI repair
+
+At PR head `0dfb210838e2c3cd75f58210af4d9adfc9fae89d`, GitHub run
+`39541901280` passed Linux glibc x64/ARM64, musl, lint, and macOS shard 1.
+macOS shard 0 failed the new aggregate placement fixture at the required Codex
+display (`nil`); the overall `lint-build-test` job then correctly failed its
+macOS result gate. The aggregate arithmetic and identity tests passed in that run.
+
+The fixture seeded Codex's menu projection before changing Claude's profile
+selection. Config revision changes intentionally invalidate cached Codex routing,
+including when another provider changes. The repair seeds Claude configuration
+first, then the synthetic Codex projection. All placement/order/refresh assertions
+remain present; no production code changes and no retries or exclusions mask the
+failure. Direct failing-before evidence is the exact-head CI log retained under
+the owned `.build` directory. CPU admission before local validation: 28.9%, one
+core 8.33%, normal pressure and zero sampled swap; one serial test process.
