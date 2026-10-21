@@ -1,6 +1,9 @@
 import Foundation
 
 enum CostUsagePricing {
+    @TaskLocal static var codexModelsDevLookupObserverForTesting: (@Sendable () -> Void)?
+    @TaskLocal static var codexLookupMemoDisabledForTesting = false
+
     private static let codexPriorityInputTokenLimit = 272_000
     static let codexUnattributedModel = "unknown"
 
@@ -576,22 +579,26 @@ enum CostUsagePricing {
         model: String,
         pricingDate: Date? = nil,
         modelsDevCatalog: ModelsDevCatalog?,
-        modelsDevCacheRoot: URL?) -> CodexPricing?
+        modelsDevCacheRoot: URL?,
+        resolver: CodexResolver? = nil) -> CodexPricing?
     {
         let key = self.normalizeCodexModel(model)
         guard key != self.codexUnattributedModel else { return nil }
-        // Use historical bundled rates when the usage predates a known pricing change and
-        // no custom overlay or models.dev catalog entry overrides the lookup.
+        // The caller checks custom overlays first; dated historical bundled rates precede catalog lookup.
         if let pricingDate,
            pricingDate < self.codexGPT56PricingCutoff,
            let historical = self.codexHistoricalPricing[key]
         {
             return historical
         }
-        let modelsDevLookup = self.codexModelsDevLookup(
-            model: model,
-            catalog: modelsDevCatalog,
-            cacheRoot: modelsDevCacheRoot)
+        let modelsDevLookup: ModelsDevPricingLookup? = if let resolver {
+            resolver.lookup(model)
+        } else {
+            self.codexModelsDevLookup(
+                model: model,
+                catalog: modelsDevCatalog,
+                cacheRoot: modelsDevCacheRoot)
+        }
         if let lookup = modelsDevLookup {
             let bundled = lookup.pricing.providerID == self.codexModelsDevProviderID ? self.codex[key] : nil
             // A missing catalog context block means models.dev has no long-context opinion, so use
@@ -639,6 +646,7 @@ enum CostUsagePricing {
         catalog: ModelsDevCatalog?,
         cacheRoot: URL?) -> ModelsDevPricingLookup?
     {
+        self.codexModelsDevLookupObserverForTesting?()
         for target in self.codexModelsDevPricingTargets(for: rawModel) {
             if let lookup = self.modelsDevLookup(
                 providerID: target.providerID,
@@ -661,7 +669,8 @@ enum CostUsagePricing {
         pricingDate: Date? = nil,
         modelsDevCatalog: ModelsDevCatalog? = nil,
         modelsDevCacheRoot: URL? = nil,
-        customPricing: CostUsageCustomPricing? = nil) -> Double?
+        customPricing: CostUsageCustomPricing? = nil,
+        resolver: CodexResolver? = nil) -> Double?
     {
         guard let multiplier = self.codexAPIFastMultiplier(model: model) else { return nil }
         // OpenAI does not support API Fast processing for long-context requests. Do not combine
@@ -679,7 +688,8 @@ enum CostUsagePricing {
             pricingDate: pricingDate,
             modelsDevCatalog: modelsDevCatalog,
             modelsDevCacheRoot: modelsDevCacheRoot,
-            customPricing: customPricing)
+            customPricing: customPricing,
+            resolver: resolver)
             .map { $0 * multiplier }
     }
 
@@ -1059,5 +1069,38 @@ extension CostUsagePricing {
         let matchedProviderIDs = Set(matches.map(\.pricing.providerID))
         guard matchedProviderIDs.count == 1 else { return nil }
         return matches.first
+    }
+}
+
+extension CostUsagePricing {
+    /// One synchronous report build shares catalog lookups without caching dated or token-dependent costs.
+    final class CodexResolver {
+        private struct LookupResult {
+            let value: ModelsDevPricingLookup?
+        }
+
+        let catalog: ModelsDevCatalog
+        private let memoDisabled = CostUsagePricing.codexLookupMemoDisabledForTesting
+        /// Exact bytes keep canonically equivalent model spellings independent; both hits and misses are bounded.
+        private var lookups: [[UInt8]: LookupResult] = [:]
+
+        init(catalog: ModelsDevCatalog) {
+            self.catalog = catalog
+        }
+
+        fileprivate func lookup(_ model: String) -> ModelsDevPricingLookup? {
+            guard !self.memoDisabled, model.utf8.count <= 256 else {
+                return CostUsagePricing.codexModelsDevLookup(model: model, catalog: self.catalog, cacheRoot: nil)
+            }
+            let key = Array(model.utf8)
+            if let result = self.lookups[key] {
+                return result.value
+            }
+            let value = CostUsagePricing.codexModelsDevLookup(model: model, catalog: self.catalog, cacheRoot: nil)
+            if self.lookups.count < 256 {
+                self.lookups[key] = LookupResult(value: value)
+            }
+            return value
+        }
     }
 }

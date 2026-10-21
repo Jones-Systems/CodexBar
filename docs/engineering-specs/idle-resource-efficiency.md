@@ -5,7 +5,7 @@ Artifact Type: `engineering-spec`
 
 Artifact ID: `spec.idle-resource-efficiency`
 
-Purpose: Remove redundant aggregation and closed-menu view retention without changing usage semantics.
+Purpose: Remove redundant history calculations and closed-menu view retention without changing usage semantics.
 
 Governing artifact: `worknote.idle-resource-efficiency`
 
@@ -93,3 +93,66 @@ The relevant hidden-impact screen is therefore bounded to these existing state l
 their tests. Stop on changed ownership, failing monetary equivalence, lost provider identity,
 live credential access, unknown installation effects, or lost rollback. Revert source normally;
 retain the exact previous app bundle when performing the authorized local update.
+
+
+<!-- codex-section:begin id="spec.idle-resource-efficiency#req.codex-pricing-memo.001" -->
+## Captured Codex pricing work
+
+A post-install process sample found the cost-usage worker repeatedly resolving model
+names through ModelsDev while the main thread slept. This adds a concrete CPU path to
+the original source-proven improvements. The Opus 5.5/high planning delta accepts a
+synchronous invocation-owned `CostUsagePricing.CodexResolver`, following the existing
+Claude resolver precedent. Root corrects one pseudocode ambiguity: a resolver's nil
+lookup is authoritative and must never fall through a nil-coalescing static lookup.
+
+The resolver owns a non-optional immutable catalog snapshot and caches only catalog
+lookup results, including misses, by exact raw UTF-8 bytes. At most 256 entries with
+keys of at most 256 bytes are retained; new keys at capacity and longer keys bypass
+storage. No global, durable, actor-shared, or cross-await state is added. One project
+build shares the resolver across every per-file and per-project report; one session
+build shares its own resolver. Other standalone reports create their own context.
+An optional trailing internal resolver argument propagates through pricing, overlay,
+row pricing, report context, incomplete evidence and reconciliation helpers. When
+present it is the sole catalog lookup source. Existing no-resolver callers remain valid.
+
+Custom overlays still precede historical pricing, which precedes catalog lookup. Dates,
+cutovers, nil dates, provider routing, priority model/input limits and fallback, long-
+context aggregate rejection, authoritative nanos, summation and reconciliation order
+remain unchanged. Final costs are recalculated per row. No refresh interval, preference,
+public API, account selection or transcript parsing semantics changes.
+
+Builder owns seven files under `Sources/CodexBarCore/Vendored/CostUsage/`:
+`CostUsagePricing.swift`, `CostUsagePricing+Overlay.swift`,
+`CostUsageScanner+PricingRows.swift`, `CostUsageScanner+CacheHelpers.swift`,
+`CostUsageScanner+ForkCoverage.swift`, `CostUsageScanner+ReportReconciliation.swift`,
+and `CostUsageScanner+Projects.swift`, plus new
+`Tests/CodexBarTests/CostUsageScannerCodexPricingMemoTests.swift`.
+Root owns Git, artifacts, all build/test/format state, the generated parser hash and
+necessary line-only architecture-catalog anchor maintenance. Existing root catalog
+snapshot boundaries are preserved; this internal per-build object has no independent
+consumer, asynchronous lifecycle or externally consumed compatibility contract.
+
+Synthetic tests must prove work scales with distinct models (two lookups across three
+files and two projects, at both 40 and 80 rows/file), exact cached/uncached report and
+session equivalence, changed-catalog isolation, positive and negative memoization,
+capacity/long-key/exact-byte bounds, overlay precedence, dated historical/priority and
+long-context costs, and authoritative-cost bypass. Preserve existing test isolation and
+fixture cleanup. Count real scalar lookups at the existing no-op TaskLocal observer.
+The test-only memo-disable flag is captured once at resolver creation.
+
+Run the new suite and affected pricing, custom overlay, breakdown, Codex priority cursor,
+fork split/evidence, subagent accounting, store read/view/work, fetcher, performance gate,
+and Pi compatibility suites, then required `make check` and full `make test`. Regenerate
+`Sources/CodexBarCore/Generated/CodexParserHash.generated.swift` through the existing script;
+all changed vendored files remain hash inputs. A one-time derived Codex/Pi cache rebuild
+on adoption is expected and must be separated from steady-state observations.
+
+Deliver the focused follow-up through another ordinary PR, current CI, standing merge
+policy and exact local Jones app update. Retain the original backup and the PR #13
+bundle separately. First-launch resource observations include hash rebuilding; measure
+a later equivalent 30-second period separately before making improvement claims. A warm
+snapshot alone cannot establish elimination of every intermittent burst or a specific
+memory saving. Source rollback uses an ordinary revert; local rollback retains the
+exact prior app. Stop on changed monetary results, catalog leakage, unexpected paths,
+private-data access, unknown installation effects or lost rollback.
+<!-- codex-section:end id="spec.idle-resource-efficiency#req.codex-pricing-memo.001" -->
