@@ -77,12 +77,44 @@ extension StatusItemController {
             submenu.minimumWidth = width
         }
         submenu.delegate = self
-        let chartItem = NSMenuItem()
-        chartItem.isEnabled = true
-        chartItem.representedObject = chartID
-        chartItem.toolTip = provider?.rawValue
-        submenu.addItem(chartItem)
+        submenu.addItem(self.makeHostedSubviewPlaceholderItem(chartID: chartID, providerRawValue: provider?.rawValue))
         return submenu
+    }
+
+    private func makeHostedSubviewPlaceholderItem(chartID: String, providerRawValue: String?) -> NSMenuItem {
+        let item = NSMenuItem()
+        item.isEnabled = true
+        item.representedObject = chartID
+        item.toolTip = providerRawValue
+        return item
+    }
+
+    func releaseClosedHostedSubmenus(afterClosing closingMenu: NSMenu) {
+        // Retain hydrated views across submenu hover closes until the complete tracking session ends.
+        guard self.openMenus.isEmpty else { return }
+        var visited = Set<ObjectIdentifier>()
+
+        func release(in menu: NSMenu, depth: Int) {
+            guard depth <= 16, visited.insert(ObjectIdentifier(menu)).inserted else { return }
+            for item in menu.items {
+                if let submenu = item.submenu {
+                    release(in: submenu, depth: depth + 1)
+                }
+            }
+            guard self.isHostedSubviewMenu(menu),
+                  menu.items.contains(where: { $0.view != nil }),
+                  let identity = self.hostedSubviewIdentity(for: menu)
+            else { return }
+            menu.removeAllItems()
+            menu.addItem(self.makeHostedSubviewPlaceholderItem(
+                chartID: identity.chartID,
+                providerRawValue: identity.providerRawValue))
+            self.hostedSubviewRenderSignatures.removeObject(forKey: menu)
+        }
+
+        for menu in self.attachedMenusForClosedPreparation() + [closingMenu] {
+            release(in: menu, depth: 0)
+        }
     }
 
     @discardableResult

@@ -206,6 +206,7 @@ extension StatusItemController {
             self.applyDeferredMergedIconRenderAfterTrackingIfNeeded()
         }
         if menuTrackingEnded {
+            self.releaseClosedHostedSubmenus(afterClosing: menu)
             self.prepareAttachedClosedMenusIfNeeded()
         }
     }
