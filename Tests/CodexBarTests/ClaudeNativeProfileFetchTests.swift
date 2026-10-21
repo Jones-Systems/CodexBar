@@ -3,6 +3,22 @@ import Testing
 @testable import CodexBarCore
 
 struct ClaudeNativeProfileFetchTests {
+    private struct StubStrategy: ProviderFetchStrategy {
+        let id = "synthetic-oauth"
+        let kind = ProviderFetchKind.oauth
+        let operation: @Sendable (ProviderFetchContext) async throws -> ProviderFetchResult
+
+        func isAvailable(_: ProviderFetchContext) async -> Bool { true }
+
+        func fetch(_ context: ProviderFetchContext) async throws -> ProviderFetchResult {
+            try await self.operation(context)
+        }
+
+        func shouldFallback(on error: Error, context _: ProviderFetchContext) -> Bool {
+            error is ClaudeNativeProfileSelectionError
+        }
+    }
+
     private struct NoFetch: ClaudeUsageFetching {
         func loadLatestUsage(model: String) async throws -> ClaudeUsageSnapshot {
             Issue.record("No credential or provider fetch may run for an unavailable selection")
@@ -66,6 +82,156 @@ struct ClaudeNativeProfileFetchTests {
     }
 
     #if os(macOS)
+    private static func writeAccountID(_ accountID: String?, environment: [String: String]) throws {
+        let url = ClaudeConfigPaths.accountConfigURL(environment: environment)
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let config: [String: Any] = accountID.map { ["oauthAccount": ["accountUuid": $0]] } ?? [:]
+        try JSONSerialization.data(withJSONObject: config).write(to: url)
+    }
+
+    private static func oauthResult(identity: ProviderIdentitySnapshot? = nil) -> ProviderFetchResult {
+        ProviderFetchResult(
+            usage: UsageSnapshot(
+                primary: RateWindow(usedPercent: 65, windowMinutes: 300, resetsAt: nil, resetDescription: nil),
+                secondary: RateWindow(usedPercent: 90, windowMinutes: 10080, resetsAt: nil, resetDescription: nil),
+                updatedAt: Date(timeIntervalSince1970: 1_800_000_000),
+                identity: identity ?? ProviderIdentitySnapshot(
+                    providerID: .claude, accountEmail: nil, accountOrganization: nil, loginMethod: "OAuth"),
+                dataConfidence: .percentOnly),
+            credits: nil,
+            dashboard: nil,
+            sourceLabel: "OAuth",
+            strategyID: "synthetic-oauth",
+            strategyKind: .oauth,
+            diagnostic: "synthetic diagnostic",
+            claudeOAuthKeychainPersistentRefHash: "synthetic-reference",
+            claudeOAuthHistoryOwnerIdentifier: "synthetic-owner",
+            claudeOAuthCredentialOwner: .claudeCLI,
+            claudeOAuthKeychainCredentialMismatch: true,
+            claudeOAuthKeychainCredentialAbsent: true,
+            claudeOAuthKeychainCredentialUnavailable: true)
+    }
+
+    @Test(arguments: [false, true])
+    func `native aliases expose account UUIDs and duplicate UUIDs stay identical`(duplicate: Bool) async throws {
+        var identities: [String?] = []
+        for named in [false, true] {
+            try await self.withNativeFixture(named: named, expired: false) { environment, _ in
+                let accountID = named && !duplicate ? "synthetic-second-uuid" : "synthetic-first-uuid"
+                try Self.writeAccountID(accountID, environment: environment)
+                let original = Self.oauthResult()
+                let strategy = ClaudeNativeProfileFetchStrategy(base: StubStrategy { _ in original })
+                let result = try await strategy.fetch(self.context(environment: environment))
+                identities.append(result.usage.identity?.accountID)
+                #expect(result.usage.identity?.accountID == accountID)
+                #expect(result.usage.identity?.accountEmail == nil)
+                #expect(result.usage.identity?.accountOrganization == nil)
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = .sortedKeys
+                #expect(try encoder.encode(result.usage.withIdentity(original.usage.identity))
+                    == encoder.encode(original.usage))
+                #expect(result.sourceLabel == original.sourceLabel)
+                #expect(result.strategyID == original.strategyID)
+                #expect(result.strategyKind == original.strategyKind)
+                #expect(result.diagnostic == original.diagnostic)
+                #expect(result.claudeOAuthKeychainPersistentRefHash == original.claudeOAuthKeychainPersistentRefHash)
+                #expect(result.claudeOAuthHistoryOwnerIdentifier == original.claudeOAuthHistoryOwnerIdentifier)
+                #expect(result.claudeOAuthCredentialOwner == original.claudeOAuthCredentialOwner)
+                #expect(result.claudeOAuthKeychainCredentialMismatch)
+                #expect(result.claudeOAuthKeychainCredentialAbsent)
+                #expect(result.claudeOAuthKeychainCredentialUnavailable)
+            }
+        }
+        #expect((identities[0] == identities[1]) == duplicate)
+    }
+
+    @Test
+    func `missing selected UUID keeps OAuth quota usable and identity unknown`() async throws {
+        try await self.withNativeFixture(named: true, expired: false) { environment, _ in
+            let strategy = ClaudeNativeProfileFetchStrategy(base: ClaudeOAuthFetchStrategy())
+            let result = try await strategy.fetch(self.context(environment: environment))
+            #expect(result.usage.identity?.accountID == nil)
+            #expect(result.usage.primary?.usedPercent == 7)
+            #expect(result.usage.secondary?.usedPercent == 21)
+        }
+    }
+
+    @Test(arguments: ["changed", "disappeared", "appeared"])
+    func `selected UUID transitions reject a completed quota fetch`(transition: String) async throws {
+        try await self.withNativeFixture(named: true, expired: false) { environment, _ in
+            try Self.writeAccountID(transition == "appeared" ? nil : "before", environment: environment)
+            let strategy = ClaudeNativeProfileFetchStrategy(base: StubStrategy { context in
+                try Self.writeAccountID(transition == "disappeared" ? nil : "after", environment: context.env)
+                return Self.oauthResult()
+            })
+            await #expect(throws: ClaudeNativeProfileSelectionError.self) {
+                try await strategy.fetch(self.context(environment: environment))
+            }
+        }
+    }
+
+    @Test(arguments: [false, true])
+    func `returned Claude account UUID must match selected profile`(matches: Bool) async throws {
+        try await self.withNativeFixture(named: true, expired: false) { environment, _ in
+            try Self.writeAccountID("selected-uuid", environment: environment)
+            let strategy = ClaudeNativeProfileFetchStrategy(base: StubStrategy { _ in
+                Self.oauthResult(identity: ProviderIdentitySnapshot(
+                    providerID: .claude,
+                    accountEmail: "synthetic@example.test",
+                    accountOrganization: "synthetic organization",
+                    loginMethod: "OAuth",
+                    accountID: matches ? "SELECTED-UUID" : "different-uuid"))
+            })
+            if matches {
+                let result = try await strategy.fetch(self.context(environment: environment))
+                #expect(result.usage.identity?.accountID == "selected-uuid")
+                #expect(result.usage.identity?.accountEmail == "synthetic@example.test")
+                #expect(result.usage.identity?.accountOrganization == "synthetic organization")
+                #expect(result.usage.identity?.loginMethod == "OAuth")
+            } else {
+                await #expect(throws: ClaudeNativeProfileSelectionError.self) {
+                    try await strategy.fetch(self.context(environment: environment))
+                }
+            }
+        }
+    }
+
+    @Test(arguments: [false, true])
+    func `identity admission preserves base fallback and cancellation`(cancelled: Bool) async throws {
+        try await self.withNativeFixture(named: true, expired: false) { environment, _ in
+            try Self.writeAccountID("selected-uuid", environment: environment)
+            let strategy = ClaudeNativeProfileFetchStrategy(base: StubStrategy { _ in
+                if cancelled { throw CancellationError() }
+                throw ClaudeNativeProfileSelectionError.unavailable
+            })
+            let context = self.context(environment: environment)
+            do {
+                _ = try await strategy.fetch(context)
+                Issue.record("Stub failure must propagate")
+            } catch {
+                #expect((error is CancellationError) == cancelled)
+                #expect(strategy.shouldFallback(on: error, context: context) == !cancelled)
+            }
+        }
+    }
+
+    @Test(arguments: [false, true])
+    func `identity admission leaves other provider and unselected snapshots unchanged`(otherProvider: Bool) async throws {
+        try await self.withNativeFixture(named: true, expired: false) { environment, _ in
+            try Self.writeAccountID("selected-uuid", environment: environment)
+            var environment = environment
+            if !otherProvider { environment.removeValue(forKey: ClaudeNativeProfileSelection.selectionKey) }
+            let original = Self.oauthResult(identity: ProviderIdentitySnapshot(
+                providerID: otherProvider ? .codex : .claude,
+                accountEmail: nil, accountOrganization: nil, loginMethod: nil, accountID: "transport-uuid"))
+            let strategy = ClaudeNativeProfileFetchStrategy(base: StubStrategy { _ in original })
+            let result = try await strategy.fetch(self.context(environment: environment))
+            #expect(result.usage.identity?.providerID == original.usage.identity?.providerID)
+            #expect(result.usage.identity?.accountID == "transport-uuid")
+            #expect(result.usage.primary?.usedPercent == 65)
+        }
+    }
+
     @Test(arguments: [false, true])
     func `expired selected OAuth cannot delegate to a fallback executable`(named: Bool) async throws {
         try await self.withNativeFixture(named: named, expired: true) { environment, root in
@@ -92,12 +258,18 @@ struct ClaudeNativeProfileFetchTests {
     @Test(arguments: [false, true])
     func `valid selected OAuth stays usable without its enrolled executable`(named: Bool) async throws {
         try await self.withNativeFixture(named: named, expired: false) { environment, root in
+            let accountID = named ? "synthetic-jace-uuid" : "synthetic-default-uuid"
+            try Data("{\"oauthAccount\":{\"accountUuid\":\"\(accountID)\"}}".utf8)
+                .write(to: ClaudeConfigPaths.accountConfigURL(environment: environment))
             let strategy = ClaudeNativeProfileFetchStrategy(base: ClaudeOAuthFetchStrategy())
             let result = try await ProviderInteractionContext.$current.withValue(.background) {
                 try await strategy.fetch(self.context(environment: environment))
             }
             #expect(result.strategyKind == .oauth)
             #expect(result.usage.primary?.usedPercent == 7)
+            #expect(result.usage.identity?.accountID == accountID)
+            #expect(result.usage.identity?.accountEmail == nil)
+            #expect(result.usage.identity?.accountOrganization == nil)
             #expect(result.claudeOAuthCredentialOwner == .claudeCLI)
             #expect(!FileManager.default.fileExists(atPath: root.appendingPathComponent("launched").path))
         }
