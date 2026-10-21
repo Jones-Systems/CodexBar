@@ -25,6 +25,7 @@ extension StatusItemController {
         let cardModel: (ProviderAccountUsageSnapshot) -> UsageMenuCardView.Model?
         var planAction: ((ProviderAccountUsageSnapshot) -> (() -> Void)?)?
         var aggregate: JonesAccountAggregate?
+        var showsPersonalHeading = false
         var workspaceSections: [CodexAccountWorkspaceSection] = []
         var refreshingAccountIDs: Set<ProviderAccountIdentity> = []
         var accountStatusText: [ProviderAccountIdentity: String] = [:]
@@ -132,6 +133,10 @@ extension StatusItemController {
         captureMenu: NSMenu,
         context: MenuCardContext)
     {
+        if rendering.showsPersonalHeading {
+            self.addCodexWorkspaceHeader(L("Personal"), index: 0, to: menu)
+            menu.items.last?.representedObject = "\(rendering.idPrefix)PersonalHeading"
+        }
         let sections = JonesCompactAccountPresentation.menuSections(
             plan: rendering.plan,
             workspaceSections: rendering.workspaceSections)
@@ -148,7 +153,11 @@ extension StatusItemController {
                 to: menu,
                 id: "\(rendering.idPrefix)Aggregate",
                 provider: context.currentProvider,
-                width: context.menuWidth)
+                width: context.menuWidth,
+                isExpanded: self.compactAccountExpandedAggregateScopes.contains(rendering.idPrefix),
+                onClick: { [weak self, weak captureMenu] in
+                    self?.toggleCompactAccountAggregate(scope: rendering.idPrefix, menu: captureMenu)
+                })
             menu.addItem(.separator())
         }
         if self.addStorageMenuCardSection(to: menu, provider: context.currentProvider, width: context.menuWidth) {
@@ -161,17 +170,21 @@ extension StatusItemController {
         to menu: NSMenu,
         id: String,
         provider: UsageProvider,
-        width: CGFloat)
+        width: CGFloat,
+        isExpanded: Bool,
+        onClick: @escaping () -> Void)
     {
         menu.addItem(self.makeMenuCardItem(
             MenuCardAccountAggregateRowView(
                 model: aggregate,
                 progressColor: UsageMenuCardView.Model.progressColor(for: provider),
-                width: width),
+                width: width,
+                isExpanded: isExpanded),
             id: id,
             width: width,
             heightCacheScope: id,
-            heightCacheFingerprint: aggregate.heightFingerprint))
+            heightCacheFingerprint: aggregate.heightFingerprint(isExpanded: isExpanded),
+            onClick: onClick))
     }
 
     private func addCompactAccountMenuSectionRows(
@@ -414,6 +427,14 @@ extension StatusItemController {
 
     // MARK: - Expansion state
 
+    func toggleCompactAccountAggregate(scope: String, menu: NSMenu?) {
+        self.advanceMenuInteraction(for: menu)
+        if self.compactAccountExpandedAggregateScopes.remove(scope) == nil {
+            self.compactAccountExpandedAggregateScopes.insert(scope)
+        }
+        self.invalidateMenus(refreshOpenMenus: true)
+    }
+
     private func setCompactAccountExpanded(_ expanded: Bool, accountID: ProviderAccountIdentity, menu: NSMenu?) {
         self.advanceMenuInteraction(for: menu)
         JonesCompactAccountPresentation.setExpanded(
@@ -438,7 +459,9 @@ extension StatusItemController {
             expandedAccountIDs: &self.compactAccountExpandedIDs,
             collapsedAccountIDs: &self.compactAccountCollapsedIDs,
             expandedHealthyTailProviders: &self.compactAccountExpandedHealthyTailProviders)
-        guard overviewChanged || compactChanged else { return }
+        let aggregateChanged = self.openMenus.isEmpty && !self.compactAccountExpandedAggregateScopes.isEmpty
+        if self.openMenus.isEmpty { self.compactAccountExpandedAggregateScopes.removeAll() }
+        guard overviewChanged || compactChanged || aggregateChanged else { return }
         // Persistent menus may still contain the previous session's expanded or collapsed rows.
         self.invalidateMenus()
     }

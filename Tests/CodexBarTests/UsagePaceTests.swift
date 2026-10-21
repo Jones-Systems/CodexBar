@@ -589,4 +589,51 @@ struct UsagePaceTests {
             hour: hour,
             minute: minute)))
     }
+
+    @Test
+    func `weekly exposes consumption rate including exhausted demand while historical remains unchanged`() throws {
+        let now = Date(timeIntervalSince1970: 0)
+        let window = RateWindow(
+            usedPercent: 100,
+            windowMinutes: 300,
+            resetsAt: now.addingTimeInterval(9000),
+            resetDescription: nil)
+        let pace = try #require(UsagePace.weekly(window: window, now: now))
+        #expect(pace.consumptionRatePerSecond == 100 / 9000.0)
+        #expect(!pace.usesWorkdayClock)
+        #expect(pace.etaSeconds == 0)
+        let historical = UsagePace.historical(
+            expectedUsedPercent: 50,
+            actualUsedPercent: 60,
+            etaSeconds: 10,
+            willLastToReset: false,
+            runOutProbability: nil)
+        #expect(historical.consumptionRatePerSecond == nil)
+        #expect(!historical.usesWorkdayClock)
+        #expect(historical.etaSeconds == 10)
+    }
+
+    @Test
+    func `public workday conversion skips weekend and caps the walk`() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
+        let now = try #require(ISO8601DateFormatter().date(from: "2026-10-16T12:00:00Z"))
+        let interval = UsagePace.wallClockInterval(
+            from: now, consumingWorkSeconds: 86400, workDays: 5, calendar: calendar)
+        #expect(interval == 3 * 86400)
+        #expect(UsagePace.wallClockInterval(
+            from: now, consumingWorkSeconds: 86400, workDays: 5, calendar: calendar, limit: 86400) == nil)
+        #expect(UsagePace.wallClockInterval(
+            from: now, consumingWorkSeconds: .infinity, workDays: 5, calendar: calendar) == nil)
+        #expect(UsagePace.wallClockInterval(
+            from: now, consumingWorkSeconds: 0, workDays: 5, calendar: calendar) == 0)
+        let window = RateWindow(
+            usedPercent: 50,
+            windowMinutes: 10080,
+            resetsAt: now.addingTimeInterval(4.5 * 86400),
+            resetDescription: nil)
+        let pace = try #require(UsagePace.weekly(window: window, now: now, workDays: 5, calendar: calendar))
+        #expect(pace.usesWorkdayClock)
+        #expect(pace.consumptionRatePerSecond == 50 / (2.5 * 86400))
+    }
 }

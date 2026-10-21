@@ -7,7 +7,9 @@ private struct ClaudeNativeProfileAccountsOAuthStub: ProviderFetchStrategy {
     let id = "synthetic-native-oauth"
     let kind = ProviderFetchKind.oauth
 
-    func isAvailable(_: ProviderFetchContext) async -> Bool { true }
+    func isAvailable(_: ProviderFetchContext) async -> Bool {
+        true
+    }
 
     func fetch(_: ProviderFetchContext) async throws -> ProviderFetchResult {
         ProviderFetchResult(
@@ -20,7 +22,9 @@ private struct ClaudeNativeProfileAccountsOAuthStub: ProviderFetchStrategy {
             credits: nil, dashboard: nil, sourceLabel: "OAuth", strategyID: self.id, strategyKind: self.kind)
     }
 
-    func shouldFallback(on _: Error, context _: ProviderFetchContext) -> Bool { false }
+    func shouldFallback(on _: Error, context _: ProviderFetchContext) -> Bool {
+        false
+    }
 }
 
 @MainActor
@@ -136,7 +140,8 @@ struct ClaudeNativeProfileAccountsTests {
             try Data("{\"oauthAccount\":{\"accountUuid\":\"synthetic-jace-uuid\"}}".utf8).write(to: config)
             store._test_claudeNativeProfileFetchOutcomeOverride = { context in
                 do {
-                    let result = try await ClaudeNativeProfileFetchStrategy(base: ClaudeNativeProfileAccountsOAuthStub())
+                    let result =
+                        try await ClaudeNativeProfileFetchStrategy(base: ClaudeNativeProfileAccountsOAuthStub())
                         .fetch(context)
                     return ProviderFetchOutcome(result: .success(result), attempts: [])
                 } catch {

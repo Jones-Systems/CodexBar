@@ -186,7 +186,8 @@ extension CodexVisibleAccountProjection {
             URL(fileURLWithPath: $0).lastPathComponent
         })
         guard JonesAccountAggregate.codexAliases.contains(where: { enrolledByAlias[$0] != nil }) else {
-            return self.visibleAccounts.filter { $0.selectionSource != .liveSystem && $0.fleetProfileAlias != "default" }
+            return self.visibleAccounts
+                .filter { $0.selectionSource != .liveSystem && $0.fleetProfileAlias != "default" }
         }
         // Enrollment binds presentation slots to homes; usage and authentication health do not determine visibility.
         return JonesAccountAggregate.codexAliases.compactMap { alias in

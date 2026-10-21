@@ -118,10 +118,17 @@ struct StatusMenuClaudeNativeProfileAccountsTests {
                 let ids = menu.items.compactMap { $0.representedObject as? String }
                     .filter { $0.hasPrefix("claudeNativeProfile") }
                 #expect(ids == [
+                    "claudeNativeProfilePersonalHeading",
                     "claudeNativeProfileCard-default",
                     "claudeNativeProfileCompact-jace",
                     "claudeNativeProfileAggregate",
                 ])
+                let heading = try #require(menu.items.first {
+                    ($0.representedObject as? String) == "claudeNativeProfilePersonalHeading"
+                })
+                #expect(heading.title == "Personal")
+                #expect(!heading.isEnabled)
+                #expect(!menu.items.contains { ($0.representedObject as? String)?.hasPrefix("codexWorkspace") == true })
                 #expect(accounts.allSatisfy { !$0.canActivate })
                 let side = try #require(accounts.last)
                 #expect(controller.claudeNativeProfileCardModel(for: side)?.email == "Side account")

@@ -12,6 +12,7 @@ extension StatusItemController {
                 idPrefix: "claudeNativeProfile",
                 cardModel: { [weak self] account in self?.claudeNativeProfileCardModel(for: account) },
                 aggregate: self.claudeNativeProfileAggregate(accounts: accounts, now: now),
+                showsPersonalHeading: true,
                 refreshingAccountIDs: Set(accounts.filter {
                     self.store.claudeNativeProfileRefreshingAliases.contains($0.id.opaqueID)
                 }.map(\.id)),

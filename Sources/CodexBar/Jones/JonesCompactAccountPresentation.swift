@@ -3,8 +3,15 @@ import Foundation
 
 enum JonesCompactAccountPresentation {
     struct OverviewExpansionState {
+        var expandedAggregateProviders: Set<UsageProvider> = []
         var collapsedSummaryProviders: Set<UsageProvider> = []
         var expandedAccountIDs: Set<ProviderAccountIdentity> = []
+
+        mutating func toggleAggregate(_ provider: UsageProvider) {
+            if self.expandedAggregateProviders.remove(provider) == nil {
+                self.expandedAggregateProviders.insert(provider)
+            }
+        }
 
         mutating func toggleSummary(_ provider: UsageProvider) {
             if self.collapsedSummaryProviders.remove(provider) == nil {
@@ -20,7 +27,8 @@ enum JonesCompactAccountPresentation {
 
         mutating func resetIfIdle(hasOpenMenus: Bool) -> Bool {
             guard !hasOpenMenus else { return false }
-            let changed = !self.collapsedSummaryProviders.isEmpty || !self.expandedAccountIDs.isEmpty
+            let changed = !self.collapsedSummaryProviders.isEmpty || !self.expandedAccountIDs.isEmpty ||
+                !self.expandedAggregateProviders.isEmpty
             self = Self()
             return changed
         }

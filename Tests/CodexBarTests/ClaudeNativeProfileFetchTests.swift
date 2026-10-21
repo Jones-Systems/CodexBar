@@ -8,7 +8,9 @@ struct ClaudeNativeProfileFetchTests {
         let kind = ProviderFetchKind.oauth
         let operation: @Sendable (ProviderFetchContext) async throws -> ProviderFetchResult
 
-        func isAvailable(_: ProviderFetchContext) async -> Bool { true }
+        func isAvailable(_: ProviderFetchContext) async -> Bool {
+            true
+        }
 
         func fetch(_ context: ProviderFetchContext) async throws -> ProviderFetchResult {
             try await self.operation(context)
@@ -216,7 +218,9 @@ struct ClaudeNativeProfileFetchTests {
     }
 
     @Test(arguments: [false, true])
-    func `identity admission leaves other provider and unselected snapshots unchanged`(otherProvider: Bool) async throws {
+    func `identity admission leaves other provider and unselected snapshots unchanged`(
+        otherProvider: Bool) async throws
+    {
         try await self.withNativeFixture(named: true, expired: false) { environment, _ in
             try Self.writeAccountID("selected-uuid", environment: environment)
             var environment = environment

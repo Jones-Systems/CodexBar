@@ -1029,4 +1029,62 @@ extension OverviewFleetAccountsTests {
             #expect(controller.menuAdjunctReadinessSignature() != before)
         }
     }
+
+    @Test
+    func `aggregate runtime clicks toggle separate provider and overview state then reset on idle`() throws {
+        try self.withFixture(providers: [.codex, .claude], renderCards: true) { controller in
+            self.seedClaude(2, controller: controller)
+            try self.seedSelectedCodexFleet(controller: controller)
+            for provider in [UsageProvider.codex, .claude] {
+                let menu = NSMenu()
+                let display = controller.codexAccountMenuDisplay(for: provider)
+                let context = StatusItemController.MenuCardContext(
+                    currentProvider: provider, selectedProvider: provider, menuWidth: 310,
+                    codexAccountDisplay: display, tokenAccountDisplay: nil,
+                    openAIContext: .init(
+                        hasUsageBreakdown: false, hasCreditsHistory: false, hasCostHistory: false,
+                        canShowBuyCredits: false, hasOpenAIWebMenuItems: false))
+                let scope = provider == .codex ? "codexAccount" : "claudeNativeProfile"
+                if provider == .codex {
+                    #expect(try controller.addCompactCodexAccountMenuIfPlanned(
+                        display: #require(display), to: menu, captureMenu: menu, context: context))
+                } else {
+                    controller.addClaudeNativeProfileMenuCards(to: menu, captureMenu: menu, context: context)
+                }
+                let item = try #require(menu.items.first { ($0.representedObject as? String) == "\(scope)Aggregate" })
+                #expect(item.isEnabled)
+                let view = try #require(item.view as? MenuRowContainerView)
+                #expect(view._test_simulateRuntimeClick())
+                #expect(controller.compactAccountExpandedAggregateScopes.contains(scope))
+                #expect(controller.overviewExpansionState.expandedAggregateProviders.isEmpty)
+                #expect(view._test_simulateRuntimeClick())
+                #expect(!controller.compactAccountExpandedAggregateScopes.contains(scope))
+                #expect(view._test_simulateRuntimeClick())
+
+                let overview = NSMenu()
+                controller.addOverviewFleetAccountRows(for: provider, to: overview, captureMenu: overview, width: 310)
+                let overviewItem = try #require(overview.items.first {
+                    ($0.representedObject as? String) == "overviewAccountAggregate-\(provider.rawValue)"
+                })
+                #expect(overviewItem.isEnabled)
+                let overviewView = try #require(overviewItem.view as? MenuRowContainerView)
+                #expect(overviewView._test_simulateRuntimeClick())
+                #expect(controller.overviewExpansionState.expandedAggregateProviders.contains(provider))
+                #expect(controller.compactAccountExpandedAggregateScopes.contains(scope))
+                #expect(overviewView._test_simulateRuntimeClick())
+                #expect(!controller.overviewExpansionState.expandedAggregateProviders.contains(provider))
+                #expect(overviewView._test_simulateRuntimeClick())
+                #expect(controller.compactAccountExpandedIDs.isEmpty)
+                #expect(controller.overviewExpansionState.expandedAccountIDs.isEmpty)
+                controller.openMenus[ObjectIdentifier(menu)] = menu
+                controller.resetCompactAccountMenuExpansionStateIfIdle()
+                #expect(controller.compactAccountExpandedAggregateScopes.contains(scope))
+                #expect(controller.overviewExpansionState.expandedAggregateProviders.contains(provider))
+                controller.openMenus.removeValue(forKey: ObjectIdentifier(menu))
+                controller.resetCompactAccountMenuExpansionStateIfIdle()
+                #expect(controller.compactAccountExpandedAggregateScopes.isEmpty)
+                #expect(controller.overviewExpansionState.expandedAggregateProviders.isEmpty)
+            }
+        }
+    }
 }

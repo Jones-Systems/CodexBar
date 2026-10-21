@@ -34,12 +34,16 @@ binds each allowed alias to its profile; an additional enrolled alias, system
 default, managed account, or token account must not add capacity. Presentation
 labels never establish identity. Preserve existing label preferences.
 
-Resolve quota identity from existing snapshots only. Codex identity combines
+Resolve quota identity from provider-bound snapshots. Codex identity combines
 normalized workspace/account ID and email to distinguish seats in one workspace;
 Claude uses its provider account identity with normalized email/organization
 fallback. A repeated verified identity counts once. Unresolved identity, absent
 row, loading or failed retained snapshot contributes unknown capacity rather
-than another account. No credential, account or filesystem reads are added.
+than another account. The selected native Claude fetch reuses its prompt-free
+Claude-owned plaintext profile UUID lookup before and after transport. A stable
+UUID enriches OAuth usage with no email; a changed or conflicting UUID must not
+publish a relabeled reading. Agents do not inspect real profile or credential
+contents, and the presentation adds no account or filesystem reads.
 
 Use the same rounded headroom percentage that the compact rows show, including
 their limiting windows. Do not call this Weekly or imply a fungible token budget.
@@ -49,10 +53,12 @@ state or suppresses the summary rather than displaying a confirmed zero.
 Show the aggregate only in supported fleet account-list presentations, not
 unrelated switcher, token-account or provider layouts without roster evidence.
 
-The owner has now approved production pacing. Add a red 2-point-wide,
+The owner has now approved production pacing. Add a 2-point-wide,
 8-point-high tick centered vertically over the existing 4-point meter. This
 reduces the mock's marker height by one-third; preserve the summary's text,
-padding and overall row height. Keep the tick red when highlighted.
+padding and collapsed row height. The tick uses the native pace colors: green
+when remaining exceeds the time-based target, red when below it, and neutral
+on pace. Highlighted content uses the existing selection contrast treatment.
 
 For every selected, distinct reporting account, compute on-pace remaining
 from the same limiting usage window that supplies its actual headroom. Use
@@ -166,3 +172,76 @@ root's failing-before and final verification runs. The original pacing mock is
 retained in the V3 worktree; the approved production marker is 8 points high.
 Stop on unowned edits, identity ambiguity that would inflate capacity, unsafe
 fixture access, failed required checks or unknown Git/runtime effects.
+
+<!-- codex-section:begin id="spec.aggregate-account-usage#req.disclosure.001" -->
+## Expandable pacing details
+
+Clicking Total remaining expands details in place, on both provider pages and
+both Overview sections. Clicking again collapses it; closing the menu session
+resets disclosure state. This reuses existing menu interaction, invalidation,
+weak capture and session ownership. No new window, timer or persisted preference
+is required. Dedicated Claude native account lists start with one Personal
+heading using the existing section styling.
+
+The signed balance is summed actual remaining minus summed target remaining,
+measured in raw account percentage points. With 340% remaining and a 320% target,
+Codex has +20 points out of its 500% capacity, not +4 points. Positive is reserve
+and green; negative is deficit and red; zero is on pace and neutral. Exact
+balance requires every selected slot and valid timing, as does the exact marker.
+Partial actual totals remain lower bounds with their original denominator.
+
+Estimate exhaustion from the current combined rate: sum each controlling
+window's used percentage divided by elapsed pace time, including already-empty
+accounts, then divide summed remaining by that rate. This assumes demand can
+move between selected accounts. Never claim this is a pooled token balance.
+Show the approximate date/time and first reset, with an explicit no-refill
+qualification when that reset precedes the estimate. Do not simulate speculative
+refills or promise an actual exhaustion date after reset. Zero observed activity
+has no finite estimate; all-zero remaining reports exhausted now. Partial,
+missing, invalid or too-early timing reports unavailable rather than fabricated
+precision. Windows with nonzero usage need at least 3% elapsed for an estimate.
+
+Use the existing workday schedule when every controlling window is weekly;
+mixed durations use one common wall-clock basis. Any additive core rate fields
+must retain defaults and preserve historical and existing per-window outputs.
+Workday-to-wall-clock conversion is bounded to avoid an unbounded walk. Calendar
+injection makes tests deterministic. Clock labels use America/New_York and the
+seasonally correct EST/EDT abbreviation; localizable durations need no zone.
+
+Expanded text exposes balance, target, approximate exhaustion and next reset
+without emails or raw account IDs. Keep required values readable at normal
+menu width. Accessibility identifies the row as a button, conveys expanded
+state, and includes detail text. Height fingerprints include disclosure and
+line-shape state, excluding changing clock text and identity material.
+
+The strict Codex presentation roster activates with recognized enrolled fleet
+homes. Only unambiguous normalized .profileHome matches for the five approved
+aliases are admitted, independently of usage or authentication health. Internal
+projection, routing and authentication remain intact. Generic nonfleet layouts
+retain their existing behavior outside the supported fleet integration.
+<!-- codex-section:end id="spec.aggregate-account-usage#req.disclosure.001" -->
+
+<!-- codex-section:begin id="spec.aggregate-account-usage#iface.follow-up-boundaries.001" -->
+## Follow-up ownership and verification boundaries
+
+Root owns Git, documents, build state and delivery. Independent bounded writers
+own roster presentation, Claude fetch identity and disclosure/core pace source,
+with no overlapping active scopes. The source research covers native profile
+fetch, aggregate construction and the dedicated/Overview/picker consumers at
+the follow-up base. Impact coverage is partial for this named universe; external
+consumers of additive core APIs are not exhaustively inventoried, so full native
+suite discovery and the repository's Linux CI remain required. No storage,
+configuration, credential, account-selection or installation-identity migration
+is introduced. The retained previous Jones bundle supplies installation rollback.
+
+Affected checks cover native OAuth nil-identity enrichment, stable/missing/changed
+UUIDs and duplicate identities; five-slot admission with managed/nonfleet/default
+extras and privacy; raw +20/500 and deficit/neutral/partial balances; forecast
+before/after reset, zero activity, all-zero, too early, mixed clocks and workday
+weekends; click enablement, toggle, idle reset, height shape and Claude heading.
+Preserve existing quota, source-ownership and menu assertions. New fixture scratch
+uses the existing isolated test runner and contained synthetic homes. Core and
+menu changes receive make check, make test, final-head CI and native component
+renders. A component render is not proof of installed account data or live
+provider availability; installed process/build identity is verified separately.
+<!-- codex-section:end id="spec.aggregate-account-usage#iface.follow-up-boundaries.001" -->

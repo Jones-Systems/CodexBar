@@ -69,12 +69,14 @@ struct CodexAccountMenuDisplaySnapshotTests {
     }
 
     @Test(arguments: [false, true])
-    func `fleet menu admits only unique enrolled roster homes without requiring account identity`(reversed: Bool) {
+    func `fleet menu admits only unique enrolled roster homes without requiring account identity`(
+        reversed: Bool) throws
+    {
         let aliases = JonesAccountAggregate.codexAliases
         let named = aliases.map {
             self.rosterAccount($0, source: .profileHome(path: "/fixture/fleet/\($0)"), alias: $0)
         }
-        let managedID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+        let managedID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000001"))
         let excluded = [
             self.rosterAccount("live", source: .liveSystem),
             self.rosterAccount("managed", source: .managedAccount(id: managedID), alias: "malcolm"),
@@ -125,8 +127,8 @@ struct CodexAccountMenuDisplaySnapshotTests {
     }
 
     @Test
-    func `nonfleet menu retains managed and profile accounts without admitting default or live`() {
-        let managedID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+    func `nonfleet menu retains managed and profile accounts without admitting default or live`() throws {
+        let managedID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000001"))
         let projection = CodexVisibleAccountProjection(
             visibleAccounts: [
                 self.rosterAccount("managed", source: .managedAccount(id: managedID)),
