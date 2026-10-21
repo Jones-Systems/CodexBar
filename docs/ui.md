@@ -85,6 +85,45 @@ model-generic token label while the rendered menu-bar prefix and accessibility l
 - Provider storage usage is opt-in from Advanced settings. When enabled, overview rows and provider detail cards can show
   local provider-owned storage totals, with a submenu for path breakdowns and copyable paths.
 
+## Selected-account aggregate
+
+The fleet account lists end with a shared **Total remaining** row on Codex,
+native Claude, and each corresponding Overview section. The meter and normalized
+percentage use the full selected pool; the second line shows reporting count and
+the sum together with its denominator. Codex selects Malcolm, Jace, Umich, Steven
+and Wallace (500%); Claude selects its default and Jace profiles (200%). Display
+label overrides do not change selection. Extra default/system/token accounts do
+not add capacity, and matching verified quota identities count only once.
+
+The figure is equal-weight account headroom using each compact row's rounded,
+limiting-window percentage, not a pooled token or monetary balance. A failed,
+unresolved or missing reading leaves the fixed denominator intact and produces
+a lower-bound total with `k of N reporting`. No reading is not confirmed zero.
+The new aggregate pacing tick remains a separate design proposal; existing
+per-account pace tracking is unchanged.
+
+### Partial menu view map
+
+This map covers only the selected-account summary consumers, not every native
+view. Source discovery alone does not verify an installed build.
+
+| View and entry | Expected state and placement | Shared consumer and source check |
+| --- | --- | --- |
+| CodexBar Jones menu → Codex, supported fleet account list | Total follows account rows, before storage or Plan Usage; partial readings retain /500 | Compact account renderer; `OverviewFleetAccountsTests` placement fixture |
+| CodexBar Jones menu → Claude, native fleet profiles | Total follows the two profile rows; partial readings retain /200 | Compact account renderer; `StatusMenuClaudeNativeProfileAccountsTests` |
+| Merge Icons → Overview with Codex and Claude selected | Each provider section ends in its own total; no cross-provider sum | Overview fleet renderer; `OverviewFleetAccountsTests` |
+
+Use synthetic fleet-discovery and account-snapshot fixtures for the named suites,
+through the isolated test runner documented in [development](DEVELOPMENT.md#run-tests-only).
+Their owning runner allocates and drains fixture scratch; no live account reset,
+credential access or shared preference reset is part of this journey. A native
+check requires the freshly built Jones bundle, account lists already populated
+by normal owner operation, and a visible menu-bar icon. Open the menu, select
+each tab, and observe the stated placements and reporting counts. Closing the
+menu ends the journey; preserve any captures before fixture cleanup. Installed
+native entry points remain unverified until explicit candidate-bound evidence
+is recorded in the [work note](work-notes/aggregate-account-usage.md).
+
 ## Pace tracking
 
 Pace compares your actual usage against the expected consumption rate for the current window. Most providers use an even-consumption budget; Codex can use historical pace data when historical tracking is available.

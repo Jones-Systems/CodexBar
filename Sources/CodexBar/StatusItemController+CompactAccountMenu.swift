@@ -24,6 +24,7 @@ extension StatusItemController {
         let idPrefix: String
         let cardModel: (ProviderAccountUsageSnapshot) -> UsageMenuCardView.Model?
         var planAction: ((ProviderAccountUsageSnapshot) -> (() -> Void)?)?
+        var aggregate: JonesAccountAggregate?
         var workspaceSections: [CodexAccountWorkspaceSection] = []
         var refreshingAccountIDs: Set<ProviderAccountIdentity> = []
         var accountStatusText: [ProviderAccountIdentity: String] = [:]
@@ -87,6 +88,8 @@ extension StatusItemController {
                     self?.codexAccountCardModel(for: projectedAccount, display: display)
                 },
                 planAction: nil,
+                aggregate: JonesAccountAggregate.codex(
+                    projection: self.settings.codexVisibleAccountProjectionForMenuDisplay, accounts: projected),
                 workspaceSections: display.showsWorkspaceGroups ? display.workspaceSections : [],
                 codexRowDetails: Self.compactCodexRowDetails(
                     accounts: projected,
@@ -135,9 +138,36 @@ extension StatusItemController {
             self.addCompactAccountMenuSectionRows(
                 section, rendering: rendering, to: menu, captureMenu: captureMenu, context: context)
         }
+        if let aggregate = rendering.aggregate {
+            self.addAccountAggregateRow(
+                aggregate,
+                to: menu,
+                id: "\(rendering.idPrefix)Aggregate",
+                provider: context.currentProvider,
+                width: context.menuWidth)
+            menu.addItem(.separator())
+        }
         if self.addStorageMenuCardSection(to: menu, provider: context.currentProvider, width: context.menuWidth) {
             menu.addItem(.separator())
         }
+    }
+
+    func addAccountAggregateRow(
+        _ aggregate: JonesAccountAggregate,
+        to menu: NSMenu,
+        id: String,
+        provider: UsageProvider,
+        width: CGFloat)
+    {
+        menu.addItem(self.makeMenuCardItem(
+            MenuCardAccountAggregateRowView(
+                model: aggregate,
+                progressColor: UsageMenuCardView.Model.progressColor(for: provider),
+                width: width),
+            id: id,
+            width: width,
+            heightCacheScope: id,
+            heightCacheFingerprint: aggregate.heightFingerprint))
     }
 
     private func addCompactAccountMenuSectionRows(

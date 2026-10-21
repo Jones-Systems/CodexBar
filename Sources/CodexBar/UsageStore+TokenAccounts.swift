@@ -457,7 +457,8 @@ extension UsageStore {
             visibleAccounts: visibleAccounts,
             activeVisibleAccountID: projection.activeVisibleAccountID,
             liveVisibleAccountID: projection.liveVisibleAccountID,
-            hasUnreadableAddedAccountStore: projection.hasUnreadableAddedAccountStore)
+            hasUnreadableAddedAccountStore: projection.hasUnreadableAddedAccountStore,
+            fleetProfileHomePaths: projection.fleetProfileHomePaths)
     }
 
     static func currentCodexVisibleAccount(

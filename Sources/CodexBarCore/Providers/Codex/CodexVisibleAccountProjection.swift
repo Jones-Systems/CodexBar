@@ -132,17 +132,20 @@ public struct CodexVisibleAccountProjection: Equatable, Sendable {
     public let activeVisibleAccountID: String?
     public let liveVisibleAccountID: String?
     public let hasUnreadableAddedAccountStore: Bool
+    public let fleetProfileHomePaths: [String]
 
     public init(
         visibleAccounts: [CodexVisibleAccount],
         activeVisibleAccountID: String?,
         liveVisibleAccountID: String?,
-        hasUnreadableAddedAccountStore: Bool)
+        hasUnreadableAddedAccountStore: Bool,
+        fleetProfileHomePaths: [String] = [])
     {
         self.visibleAccounts = CodexVisibleAccount.disambiguating(visibleAccounts)
         self.activeVisibleAccountID = activeVisibleAccountID
         self.liveVisibleAccountID = liveVisibleAccountID
         self.hasUnreadableAddedAccountStore = hasUnreadableAddedAccountStore
+        self.fleetProfileHomePaths = fleetProfileHomePaths
     }
 
     public var showsAccountSelection: Bool {
@@ -314,7 +317,8 @@ extension CodexVisibleAccountProjection {
             visibleAccounts: visibleAccounts,
             activeVisibleAccountID: visibleAccounts.first { $0.isActive }?.id,
             liveVisibleAccountID: visibleAccounts.first { $0.isLive }?.id,
-            hasUnreadableAddedAccountStore: snapshot.hasUnreadableAddedAccountStore)
+            hasUnreadableAddedAccountStore: snapshot.hasUnreadableAddedAccountStore,
+            fleetProfileHomePaths: snapshot.fleetProfileHomePaths)
     }
 
     private static func fleetProfileAlias(for source: CodexActiveSource, enrolledHomePaths: [String]) -> String? {
