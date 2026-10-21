@@ -238,3 +238,11 @@ new argument layouts were corrected without changing test values, and the
 hidden-source predicate moved to the existing presentation projection to stay
 within the menu controller file-length limit. No lint suppression was added.
 The final full `make test` is running with frozen source and test files.
+
+The first full run discovered 1044 selections and completed 48 groups before
+stopping at group 49 on an existing selected-source custom-label regression.
+The failing test was unchanged; its one full-group retry also failed. Preserved
+the existing custom name when no named account resolves by reading only the
+explicit saved override. Missing/blank overrides still do not synthesize default.
+Added that boundary coverage. The runner removed its fixture root and verified
+absence. All later full-suite groups remain unverified until the final rerun.

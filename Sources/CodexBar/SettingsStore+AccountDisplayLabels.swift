@@ -9,13 +9,20 @@ extension SettingsStore {
         profileIdentity: String,
         verifiedAlias: String? = nil) -> String
     {
-        let key = JonesAccountDisplayLabel.overrideKey(provider: provider, profileIdentity: profileIdentity)
-        let overrides = self.userDefaults.dictionary(forKey: Self.accountDisplayLabelOverridesKey) as? [String: String]
-        return JonesAccountDisplayLabel.resolve(
+        JonesAccountDisplayLabel.resolve(
             provider: provider,
             profileIdentity: profileIdentity,
             verifiedAlias: verifiedAlias,
-            override: overrides?[key])
+            override: self.accountDisplayLabelOverride(provider: provider, profileIdentity: profileIdentity))
+    }
+
+    func accountDisplayLabelOverride(provider: UsageProvider, profileIdentity: String) -> String? {
+        let key = JonesAccountDisplayLabel.overrideKey(provider: provider, profileIdentity: profileIdentity)
+        let overrides = self.userDefaults.dictionary(forKey: Self.accountDisplayLabelOverridesKey) as? [String: String]
+        guard let label = overrides?[key]?.trimmingCharacters(in: .whitespacesAndNewlines), !label.isEmpty else {
+            return nil
+        }
+        return label
     }
 
     func setAccountDisplayLabel(_ label: String?, provider: UsageProvider, profileIdentity: String) {
