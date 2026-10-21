@@ -129,3 +129,20 @@ remain present; no production code changes and no retries or exclusions mask the
 failure. Direct failing-before evidence is the exact-head CI log retained under
 the owned `.build` directory. CPU admission before local validation: 28.9%, one
 core 8.33%, normal pressure and zero sampled swap; one serial test process.
+
+
+The first local affected-group run completed its cold build in 632.74 seconds.
+The repaired placement fixture and all feature checks passed. Its one remaining
+failure was the architecture gate: edits shifted existing absolute-line anchors
+in four touched source files. Root updated 31 location integers by mapping each
+unchanged baseline source line to its current position. Anchor text, provider sets,
+reasons, occurrence fingerprints and scanner behavior remain unchanged. No new
+allowlist or suppression was added. The affected-group rerun now includes that
+exact gate as well as the original feature checks.
+
+
+The final local affected group passed: 97 Swift Testing cases in seven suites
+and four XCTest cases, zero failures; fixture cleanup verified absence. This
+includes the repaired aggregate placement fixture and architecture gate. Final
+full `make check`, full `make test`, current-head CI and local packaging follow
+under the existing delivery binding.
