@@ -132,6 +132,7 @@ extension StatusItemController {
                 [
                     provider.rawValue,
                     "token=\(tokenSignature)",
+                    "aggregate=\(self.overviewFleetSource(for: provider)?.aggregate?.heightFingerprint ?? "none")",
                     "layout=\(self.menuCardLayoutReadinessSignature(for: provider))",
                     "statusComponents=\(self.statusComponentsRenderSignature(for: provider))",
                     "refreshing=\(self.store.shouldShowRefreshingMenuCardIndicator(for: provider) ? "1" : "0")",

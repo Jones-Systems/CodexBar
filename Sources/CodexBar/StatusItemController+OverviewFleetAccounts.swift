@@ -10,6 +10,7 @@ extension StatusItemController {
     struct OverviewFleetSource {
         let accounts: [ProviderAccountUsageSnapshot]
         let cardModel: (ProviderAccountUsageSnapshot) -> UsageMenuCardView.Model?
+        var aggregate: JonesAccountAggregate?
     }
 
     func overviewFleetSource(for provider: UsageProvider) -> OverviewFleetSource? {
@@ -23,16 +24,21 @@ extension StatusItemController {
                 snapshots: self.codexAccountSnapshots(matching: display.accounts),
                 activeVisibleAccountID: display.activeVisibleAccountID,
                 layout: display.layout)
+            let accounts = Self.projectedCodexAccounts(
+                display: overviewDisplay,
+                includeOptionalCredits: self.settings.showOptionalCreditsAndExtraUsage,
+                displayLabels: self.settings.codexAccountDisplayLabels(for: display.accounts))
             return OverviewFleetSource(
-                accounts: Self.projectedCodexAccounts(
-                    display: overviewDisplay,
-                    includeOptionalCredits: self.settings.showOptionalCreditsAndExtraUsage,
-                    displayLabels: self.settings.codexAccountDisplayLabels(for: display.accounts)),
-                cardModel: { [weak self] in self?.codexAccountCardModel(for: $0, display: overviewDisplay) })
+                accounts: accounts,
+                cardModel: { [weak self] in self?.codexAccountCardModel(for: $0, display: overviewDisplay) },
+                aggregate: JonesAccountAggregate.codex(
+                    projection: self.settings.codexVisibleAccountProjectionForMenuDisplay, accounts: accounts))
         case .claude:
+            let accounts = self.store.claudeNativeProfileAccountsForDisplay()
             return OverviewFleetSource(
-                accounts: self.store.claudeNativeProfileAccountsForDisplay(),
-                cardModel: { [weak self] in self?.claudeNativeProfileCardModel(for: $0) })
+                accounts: accounts,
+                cardModel: { [weak self] in self?.claudeNativeProfileCardModel(for: $0) },
+                aggregate: self.claudeNativeProfileAggregate(accounts: accounts))
         default:
             return nil
         }
@@ -133,6 +139,15 @@ extension StatusItemController {
                     onClick: click))
                 previousRowWasCard = false
             }
+        }
+        if let aggregate = source.aggregate {
+            menu.addItem(.separator())
+            self.addAccountAggregateRow(
+                aggregate,
+                to: menu,
+                id: "overviewAccountAggregate-\(provider.rawValue)",
+                provider: provider,
+                width: width)
         }
     }
 

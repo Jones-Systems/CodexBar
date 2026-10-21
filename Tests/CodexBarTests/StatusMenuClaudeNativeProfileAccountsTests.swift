@@ -79,7 +79,11 @@ struct StatusMenuClaudeNativeProfileAccountsTests {
                 controller.refreshMenuForOpenIfNeeded(menu, provider: .claude)
                 let ids = menu.items.compactMap { $0.representedObject as? String }
                     .filter { $0.hasPrefix("claudeNativeProfile") }
-                #expect(ids == ["claudeNativeProfileCard-default", "claudeNativeProfileCompact-jace"])
+                #expect(ids == [
+                    "claudeNativeProfileCard-default",
+                    "claudeNativeProfileCompact-jace",
+                    "claudeNativeProfileAggregate",
+                ])
                 #expect(accounts.allSatisfy { !$0.canActivate })
                 let side = try #require(accounts.last)
                 #expect(controller.claudeNativeProfileCardModel(for: side)?.email == "Side account")

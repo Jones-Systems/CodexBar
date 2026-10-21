@@ -4,6 +4,22 @@ import Testing
 
 struct CodexVisibleAccountProjectionRuntimeIdentityTests {
     @Test
+    func `visible projection preserves fleet enrollment even when selected profile has no account row`() {
+        let paths = ["/synthetic/malcolm", "/synthetic/jace", "/synthetic/umich"]
+        let snapshot = CodexAccountReconciliationSnapshot(
+            storedAccounts: [],
+            activeStoredAccount: nil,
+            liveSystemAccount: nil,
+            fleetProfileHomePaths: paths,
+            matchingStoredAccountForLiveSystemAccount: nil,
+            activeSource: .liveSystem,
+            hasUnreadableAddedAccountStore: false)
+        let projection = CodexVisibleAccountProjection.make(from: snapshot)
+        #expect(projection.visibleAccounts.isEmpty)
+        #expect(projection.fleetProfileHomePaths == paths)
+    }
+
+    @Test
     func `runtime provider identity supplies missing managed workspace id`() throws {
         let accountID = UUID()
         let storedAccount = ManagedCodexAccount(

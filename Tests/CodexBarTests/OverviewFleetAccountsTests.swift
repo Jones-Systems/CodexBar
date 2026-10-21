@@ -751,3 +751,104 @@ struct OverviewFleetAccountsTests {
         }
     }
 }
+
+extension OverviewFleetAccountsTests {
+    private func seedSelectedCodexFleet(controller: StatusItemController) throws {
+        let home = try URL(fileURLWithPath: #require(controller.store.environmentBase["HOME"]))
+        let observed = JonesAccountAggregate.codexAliases.enumerated().map { index, alias in
+            ObservedSystemCodexAccount(
+                email: "\(alias)@example.test",
+                workspaceAccountID: "workspace-\(index)",
+                authFingerprint: "fingerprint-\(index)",
+                codexHomePath: home.appendingPathComponent(alias).path,
+                observedAt: Date(timeIntervalSince1970: 1_800_000_000),
+                identity: .providerAccount(id: "workspace-\(index)"))
+        }
+        controller.settings._test_codexAccountSnapshotLoader = { source in
+            CodexAccountReconciliationSnapshot(
+                storedAccounts: [],
+                activeStoredAccount: nil,
+                liveSystemAccount: observed.first,
+                profileHomeAccounts: observed,
+                fleetProfileHomePaths: observed.map(\.codexHomePath),
+                matchingStoredAccountForLiveSystemAccount: nil,
+                activeSource: source,
+                hasUnreadableAddedAccountStore: false)
+        }
+        let accounts = controller.settings.codexVisibleAccountProjection.visibleAccounts
+        controller.store.codexAccountSnapshots = accounts.map {
+            CodexAccountUsageSnapshot(
+                account: $0,
+                snapshot: Self.snapshot(provider: .codex, accountEmail: $0.email),
+                error: nil,
+                sourceLabel: "Synthetic")
+        }
+        controller.store.snapshots[.codex] = Self.snapshot(provider: .codex, accountEmail: "malcolm@example.test")
+    }
+
+    @Test
+    func `selected fleet aggregate follows accounts before storage and plan usage and refreshes with totals`() throws {
+        try self.withFixture(providers: [.codex, .claude]) { controller in
+            try self.seedSelectedCodexFleet(controller: controller)
+            self.seedClaude(2, controller: controller)
+            controller.settings.providerStorageFootprintsEnabled = true
+            for provider in [UsageProvider.codex, .claude] {
+                controller.store.providerStorageFootprints[provider.instanceID] = ProviderStorageFootprint(
+                    provider: provider,
+                    totalBytes: 1024,
+                    paths: [],
+                    missingPaths: [],
+                    unreadablePaths: [],
+                    updatedAt: Date(timeIntervalSince1970: 1_800_000_000))
+                let menu = NSMenu()
+                let display = controller.codexAccountMenuDisplay(for: provider)
+                let context = StatusItemController.MenuCardContext(
+                    currentProvider: provider,
+                    selectedProvider: provider,
+                    menuWidth: 320,
+                    codexAccountDisplay: display,
+                    tokenAccountDisplay: nil,
+                    openAIContext: .init(
+                        hasUsageBreakdown: false,
+                        hasCreditsHistory: false,
+                        hasCostHistory: false,
+                        canShowBuyCredits: false,
+                        hasOpenAIWebMenuItems: false))
+                let aggregateID: String
+                if provider == .codex {
+                    #expect(try controller.addCompactCodexAccountMenuIfPlanned(
+                        display: #require(display), to: menu, captureMenu: menu, context: context))
+                    aggregateID = "codexAccountAggregate"
+                } else {
+                    controller.addClaudeNativeProfileMenuCards(to: menu, captureMenu: menu, context: context)
+                    aggregateID = "claudeNativeProfileAggregate"
+                }
+                #expect(controller.addUsageHistoryMenuItemIfNeeded(to: menu, provider: provider, width: 320))
+                let ids = self.identifiers(in: menu)
+                let totalIndex = try #require(ids.firstIndex(of: aggregateID))
+                let storageIndex = try #require(ids.firstIndex(of: "menuCardStorage"))
+                let historyIndex = try #require(ids.firstIndex(of: "usageHistorySubmenu"))
+                #expect(totalIndex > 0)
+                #expect(totalIndex < storageIndex)
+                #expect(storageIndex < historyIndex)
+                let rowPrefix = provider == .codex ? "codexAccountCompact-" : "claudeNativeProfile"
+                #expect(ids.prefix(totalIndex).contains { $0.hasPrefix(rowPrefix) })
+                #expect(!ids.suffix(from: totalIndex + 1).contains { $0.hasPrefix(rowPrefix) })
+                let overview = NSMenu()
+                controller.addOverviewFleetAccountRows(for: provider, to: overview, captureMenu: overview, width: 320)
+                let overviewIDs = self.identifiers(in: overview)
+                #expect(overviewIDs.last == "overviewAccountAggregate-\(provider.rawValue)")
+                #expect(overviewIDs.dropLast().contains { $0.hasPrefix("overviewAccount-\(provider.rawValue)-") })
+            }
+            let before = controller.menuAdjunctReadinessSignature()
+            let index = try #require(controller.store.codexAccountSnapshots.firstIndex { !$0.account.isLive })
+            let old = controller.store.codexAccountSnapshots[index]
+            controller.store.codexAccountSnapshots[index] = CodexAccountUsageSnapshot(
+                account: old.account, snapshot: old.snapshot, error: "Unavailable", sourceLabel: old.sourceLabel)
+            let total = try #require(controller.overviewFleetSource(for: .codex)?.aggregate)
+            #expect(total.reportingCount == 4)
+            #expect(total.maximumPercent == 500)
+            #expect(controller.menuAdjunctReadinessSignature() != before)
+        }
+    }
+}

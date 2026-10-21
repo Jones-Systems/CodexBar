@@ -10,6 +10,7 @@ extension StatusItemController {
                 accounts: accounts,
                 idPrefix: "claudeNativeProfile",
                 cardModel: { [weak self] account in self?.claudeNativeProfileCardModel(for: account) },
+                aggregate: self.claudeNativeProfileAggregate(accounts: accounts),
                 refreshingAccountIDs: Set(accounts.filter {
                     self.store.claudeNativeProfileRefreshingAliases.contains($0.id.opaqueID)
                 }.map(\.id)),
@@ -21,6 +22,13 @@ extension StatusItemController {
             to: menu,
             captureMenu: captureMenu,
             context: context)
+    }
+
+    func claudeNativeProfileAggregate(accounts: [ProviderAccountUsageSnapshot]) -> JonesAccountAggregate? {
+        JonesAccountAggregate.claude(
+            enrolledAliases: self.store.claudeNativeProfileAccountsState?.profiles.map(\.alias) ?? [],
+            accounts: accounts,
+            refreshingAliases: self.store.claudeNativeProfileRefreshingAliases)
     }
 
     func claudeNativeProfileCardModel(for account: ProviderAccountUsageSnapshot) -> UsageMenuCardView.Model? {
