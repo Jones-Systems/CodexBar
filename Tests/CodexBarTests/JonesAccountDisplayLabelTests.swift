@@ -192,6 +192,35 @@ struct JonesAccountDisplayLabelTests {
         }
     }
 
+    @Test(arguments: [false, true])
+    func `unresolved Codex source never synthesizes a default header label`(blankOverride: Bool) throws {
+        let settings = self.settings(defaults: InMemoryUserDefaults())
+        settings.codexActiveSource = .liveSystem
+        if blankOverride {
+            settings.setAccountDisplayLabel("  ", provider: .codex, profileIdentity: "system")
+        }
+        let fetcher = UsageFetcher(environment: [:])
+        let store = UsageStore(
+            fetcher: fetcher,
+            browserDetection: BrowserDetection(cacheTTL: 0),
+            settings: settings,
+            startupBehavior: .testing,
+            environmentBase: [:])
+        store._setSnapshotForTesting(self.snapshot(email: "owner@example.test", provider: .codex), provider: .codex)
+        try withStatusItemControllerForTesting(
+            store: store,
+            settings: settings,
+            fetcher: fetcher,
+            account: AccountInfo(email: nil, plan: nil))
+        { controller in
+            #expect(controller.selectedCodexAccountDisplayLabel() == nil)
+            let model = try #require(controller.menuCardModel(for: .codex))
+            #expect(model.email == "owner@example.test")
+            #expect(model.email != "default")
+            #expect(settings.codexActiveSource == .liveSystem)
+        }
+    }
+
     private func settings(defaults: InMemoryUserDefaults) -> SettingsStore {
         let settings = SettingsStore(
             userDefaults: defaults,

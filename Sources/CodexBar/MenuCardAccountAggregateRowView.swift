@@ -21,6 +21,16 @@ struct MenuCardAccountAggregateRowView: View {
                                 .fill(self.isHighlighted ? MenuHighlightStyle.selectionText : self.progressColor)
                                 .frame(width: MenuCardCompactAccountRowView.miniBarWidth * percent / 100)
                         }
+                        .overlay(alignment: .leading) {
+                            if let target = self.model.paceMarkerPercent {
+                                RoundedRectangle(cornerRadius: 1)
+                                    .fill(Color(red: 243 / 255, green: 91 / 255, blue: 102 / 255))
+                                    .frame(width: 2, height: 8)
+                                    .offset(x: min(
+                                        MenuCardCompactAccountRowView.miniBarWidth - 2,
+                                        max(0, MenuCardCompactAccountRowView.miniBarWidth * target / 100 - 1)))
+                            }
+                        }
                         .accessibilityHidden(true)
                 }
                 Text(self.model.normalizedLabel)

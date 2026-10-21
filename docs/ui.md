@@ -99,8 +99,22 @@ The figure is equal-weight account headroom using each compact row's rounded,
 limiting-window percentage, not a pooled token or monetary balance. A failed,
 unresolved or missing reading leaves the fixed denominator intact and produces
 a lower-bound total with `k of N reporting`. No reading is not confirmed zero.
-The new aggregate pacing tick remains a separate design proposal; existing
-per-account pace tracking is unchanged.
+The red aggregate pacing tick is 2 points wide and 8 points tall, centered over
+the 4-point meter. Each account's target uses its own limiting window and reset;
+those rounded targets are summed over the same fixed denominator as actual
+headroom. Existing workday settings apply to weekly windows. An incomplete pool
+or missing valid timing hides the exact marker while retaining the actual total
+and reporting count. Accessibility describes the target or its unavailability.
+The overlay leaves the row's text, padding and height unchanged.
+
+Codex account menus omit live/default sources and source-defined default fleet
+aliases. Named accounts share one Personal section without workspace headings;
+verified workspace identities remain part of routing and quota deduplication.
+Minimized Overview summaries use the selected Codex or Claude account's display
+name and existing personal-information redaction. A hidden live Codex source is
+represented by a named account only when their verified identities match uniquely.
+An unresolved match leaves the named rows and aggregate visible without an extra
+current-account summary.
 
 ### Partial menu view map
 
@@ -109,9 +123,9 @@ view. Source discovery alone does not verify an installed build.
 
 | View and entry | Expected state and placement | Shared consumer and source check |
 | --- | --- | --- |
-| CodexBar Jones menu → Codex, supported fleet account list | Total follows account rows, before storage or Plan Usage; partial readings retain /500 | Compact account renderer; `OverviewFleetAccountsTests` placement fixture |
-| CodexBar Jones menu → Claude, native fleet profiles | Total follows the two profile rows; partial readings retain /200 | Compact account renderer; `StatusMenuClaudeNativeProfileAccountsTests` |
-| Merge Icons → Overview with Codex and Claude selected | Each provider section ends in its own total; no cross-provider sum | Overview fleet renderer; `OverviewFleetAccountsTests` |
+| CodexBar Jones menu → Codex, supported fleet account list | One Personal section, no default row or workspace headings; total follows accounts before storage or Plan Usage; partial readings retain /500 | Shared Codex account display and compact renderer; `OverviewFleetAccountsTests`, `StatusMenuCodexSwitcherPresentationTests` |
+| CodexBar Jones menu → Claude, native fleet profiles | Total follows the two profile rows; partial readings retain /200; centered pacing marker requires both accounts' timing | Compact account renderer; `StatusMenuClaudeNativeProfileAccountsTests`, `JonesAccountAggregateTests` |
+| Merge Icons → Overview with Codex and Claude selected | Minimized summaries show selected account names with privacy redaction, without duplicate or default rows; each section ends in its own total | Overview fleet renderer; `OverviewFleetAccountsTests` |
 
 Use synthetic fleet-discovery and account-snapshot fixtures for the named suites,
 through the isolated test runner documented in [development](DEVELOPMENT.md#run-tests-only).

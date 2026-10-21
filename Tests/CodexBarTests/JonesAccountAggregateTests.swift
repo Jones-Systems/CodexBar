@@ -5,6 +5,8 @@ import Testing
 
 @MainActor
 struct JonesAccountAggregateTests {
+    private static let now = Date(timeIntervalSince1970: 1_800_000_000)
+
     private func visible(
         _ alias: String,
         email: String? = nil,
@@ -42,7 +44,10 @@ struct JonesAccountAggregateTests {
         email: String? = nil,
         accountID: String? = nil,
         organization: String? = nil,
-        tertiaryRemaining: Double? = nil) -> ProviderAccountUsageSnapshot
+        tertiaryRemaining: Double? = nil,
+        windowMinutes: Int? = 300,
+        resetsAt: Date? = nil,
+        secondary: RateWindow? = nil) -> ProviderAccountUsageSnapshot
     {
         ProviderAccountUsageSnapshot(
             id: ProviderAccountIdentity(
@@ -55,10 +60,10 @@ struct JonesAccountAggregateTests {
                 UsageSnapshot(
                     primary: RateWindow(
                         usedPercent: 100 - $0,
-                        windowMinutes: 300,
-                        resetsAt: nil,
+                        windowMinutes: windowMinutes,
+                        resetsAt: resetsAt,
                         resetDescription: nil),
-                    secondary: nil,
+                    secondary: secondary,
                     tertiary: tertiaryRemaining.map {
                         RateWindow(usedPercent: 100 - $0, windowMinutes: nil, resetsAt: nil, resetDescription: nil)
                     },
@@ -212,5 +217,151 @@ struct JonesAccountAggregateTests {
             ]))
         #expect(unavailable.normalizedPercent == nil)
         #expect(unavailable.maximumPercent == 200)
+    }
+
+    @Test
+    func `complete Codex weekly targets sum to 400 of 500 without changing actual totals`() throws {
+        let aliases = JonesAccountAggregate.codexAliases
+        let rows = zip(aliases, [98.0, 59, 97, 24, 79]).map {
+            self.row(
+                $0,
+                remaining: $1,
+                windowMinutes: 10080,
+                resetsAt: Self.now.addingTimeInterval(10080 * 60 * 0.8))
+        }
+        let total = try #require(JonesAccountAggregate.codex(
+            projection: self.projection(aliases.map { self.visible($0) }), accounts: rows, now: Self.now))
+        #expect(total.summedRemainingPercent == 357)
+        #expect(total.paceTargetPercent == 400)
+        #expect(total.paceMarkerPercent == 80)
+        #expect(total.accessibilityText.contains("On-pace target 400 of 500 percent"))
+        #expect(total.countLabel == "5 accounts")
+        #expect(total.remainingLabel == "357% / 500%")
+    }
+
+    @Test
+    func `Claude target sums account schedules over the fixed two slot capacity`() throws {
+        let rows = ["default", "jace"].map {
+            self.row(
+                $0,
+                provider: .claude,
+                accountID: $0,
+                windowMinutes: 10080,
+                resetsAt: Self.now.addingTimeInterval(10080 * 60 * 0.75))
+        }
+        let total = try #require(JonesAccountAggregate.claude(
+            enrolledAliases: ["default", "jace"], accounts: rows, now: Self.now))
+        #expect(total.paceTargetPercent == 150)
+        #expect(total.paceMarkerPercent == 75)
+        let refreshing = try #require(JonesAccountAggregate.claude(
+            enrolledAliases: ["default", "jace"], accounts: rows, refreshingAliases: ["jace"], now: Self.now))
+        #expect(refreshing.paceTargetPercent == nil)
+        #expect(refreshing.maximumPercent == 200)
+    }
+
+    @Test
+    func `mixed limiting windows sum their targets instead of averaging reset times`() throws {
+        let aliases = JonesAccountAggregate.codexAliases
+        let weekly = RateWindow(
+            usedPercent: 10,
+            windowMinutes: 10080,
+            resetsAt: Self.now.addingTimeInterval(10080 * 60 * 0.8),
+            resetDescription: nil)
+        let rows = aliases.enumerated().map { index, alias in
+            self.row(
+                alias,
+                remaining: 50,
+                windowMinutes: index == 0 ? 300 : 10080,
+                resetsAt: Self.now.addingTimeInterval(index == 0 ? 9000 : 10080 * 60 * 0.8),
+                secondary: weekly)
+        }
+        let total = try #require(JonesAccountAggregate.codex(
+            projection: self.projection(aliases.map { self.visible($0) }), accounts: rows, now: Self.now))
+        #expect(total.paceTargetPercent == 370)
+        #expect(total.paceMarkerPercent == 74)
+        #expect(total.summedRemainingPercent == 250)
+    }
+
+    @Test(arguments: ["missing-reset", "past-reset", "future-reset", "missing-duration", "zero-duration", "credit"])
+    func `invalid limiting timing hides pacing without changing actual coverage`(kind: String) throws {
+        let aliases = JonesAccountAggregate.codexAliases
+        var rows = aliases.map {
+            self.row($0, resetsAt: Self.now.addingTimeInterval(9000))
+        }
+        rows[0] = self.row(
+            aliases[0],
+            tertiaryRemaining: kind == "credit" ? 20 : nil,
+            windowMinutes: kind == "missing-duration" ? nil : kind == "zero-duration" ? 0 : 300,
+            resetsAt: kind == "missing-reset" ? nil : Self.now.addingTimeInterval(
+                kind == "past-reset" ? -1 : kind == "future-reset" ? 18001 : 9000))
+        let total = try #require(JonesAccountAggregate.codex(
+            projection: self.projection(aliases.map { self.visible($0) }), accounts: rows, now: Self.now))
+        #expect(total.reportingCount == 5)
+        #expect(total.maximumPercent == 500)
+        #expect(total.paceTargetPercent == nil)
+        #expect(total.paceMarkerPercent == nil)
+        #expect(total.accessibilityText.contains("Pacing unavailable"))
+    }
+
+    @Test(arguments: ["missing", "failed", "duplicate"])
+    func `partial or duplicate selected identities cannot produce a target`(kind: String) throws {
+        let aliases = JonesAccountAggregate.codexAliases
+        var visible = aliases.map { self.visible($0) }
+        var rows = aliases.map { self.row($0, resetsAt: Self.now.addingTimeInterval(9000)) }
+        if kind == "missing" {
+            rows.removeLast()
+        } else if kind == "failed" {
+            rows[4] = self.row(aliases[4], error: "Unavailable", resetsAt: Self.now.addingTimeInterval(9000))
+        } else {
+            visible[4] = self.visible(aliases[4], email: visible[0].email)
+        }
+        let total = try #require(JonesAccountAggregate.codex(
+            projection: self.projection(visible), accounts: rows, now: Self.now))
+        #expect(total.reportingCount == 4)
+        #expect(total.maximumPercent == 500)
+        #expect(total.normalizedLabel.hasPrefix("≥"))
+        #expect(total.paceTargetPercent == nil)
+    }
+
+    @Test(arguments: [false, true])
+    func `tied limits use the latest valid reset and planner order for equal resets`(equalReset: Bool) throws {
+        let aliases = JonesAccountAggregate.codexAliases
+        let reset = Self.now.addingTimeInterval(9000)
+        let weekly = RateWindow(
+            usedPercent: 50,
+            windowMinutes: 10080,
+            resetsAt: equalReset ? reset : Self.now.addingTimeInterval(10080 * 60 * 0.8),
+            resetDescription: nil)
+        let rows = aliases.map {
+            self.row($0, resetsAt: reset, secondary: weekly)
+        }
+        let total = try #require(JonesAccountAggregate.codex(
+            projection: self.projection(aliases.map { self.visible($0) }), accounts: rows, now: Self.now))
+        #expect(total.paceTargetPercent == (equalReset ? 250 : 400))
+        let missingSession = aliases.map { self.row($0, secondary: weekly) }
+        let fallback = try #require(JonesAccountAggregate.codex(
+            projection: self.projection(aliases.map { self.visible($0) }), accounts: missingSession, now: Self.now))
+        #expect(fallback.paceTargetPercent != nil)
+    }
+
+    @Test
+    func `workday schedule matches UsagePace and time never changes the height fingerprint`() throws {
+        let aliases = JonesAccountAggregate.codexAliases
+        let reset = Self.now.addingTimeInterval(4 * 86400)
+        let rows = aliases.map { self.row($0, windowMinutes: 10080, resetsAt: reset) }
+        let projection = self.projection(aliases.map { self.visible($0) })
+        let total = try #require(JonesAccountAggregate.codex(
+            projection: projection, accounts: rows, now: Self.now, workDays: 5))
+        let window = try #require(rows[0].snapshot?.primary)
+        let pace = try #require(UsagePace.weekly(
+            window: window, now: Self.now, defaultWindowMinutes: 10080, workDays: 5))
+        #expect(total.paceTargetPercent == Int((100 - pace.expectedUsedPercent).rounded()) * 5)
+        let later = try #require(JonesAccountAggregate.codex(
+            projection: projection, accounts: rows, now: Self.now.addingTimeInterval(86400), workDays: 5))
+        let expired = try #require(JonesAccountAggregate.codex(
+            projection: projection, accounts: rows, now: reset, workDays: 5))
+        #expect(total.heightFingerprint == later.heightFingerprint)
+        #expect(total.heightFingerprint == expired.heightFingerprint)
+        #expect(expired.paceTargetPercent == nil)
     }
 }

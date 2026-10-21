@@ -7,6 +7,44 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct StatusMenuClaudeNativeProfileAccountsTests {
+    @Test(arguments: ["default", "jace"])
+    func `minimized native profile summary uses selected name and redacts overrides`(alias: String) async throws {
+        try await ClaudeNativeProfileAccountsFixture.run { settings, store, root in
+            settings.claudeNativeProfileAlias = alias
+            store.reconcileClaudeNativeProfileEnvironment(store.claudeNativeProfileFetchEnvironment())
+            let identity = JonesAccountDisplayLabel.claudeProfileIdentity(
+                alias: alias,
+                home: root.path,
+                configDirectory: alias == "default" ? nil : root.appendingPathComponent(".claude-t3/jace").path)
+            let label = alias == "default" ? "Malcolm" : "Jace"
+            settings.setAccountDisplayLabel(label, provider: .claude, profileIdentity: identity)
+            store.snapshots[.claude] = ClaudeNativeProfileAccountsFixture.snapshot(12)
+            store
+                ._test_claudeNativeProfileFetchOutcomeOverride = { _ in ClaudeNativeProfileAccountsFixture.outcome(67) }
+            await store.refreshClaudeNativeProfileAccountsAfterMain()
+            try withStatusItemControllerForTesting(
+                store: store,
+                settings: settings,
+                fetcher: UsageFetcher())
+            { controller in
+                let card = try #require(controller.menuCardModel(for: .claude))
+                #expect(controller.overviewSummaryCompactModel(for: .claude, model: card).label == label)
+                #expect(controller.overviewFleetAccounts(for: .claude).filter(\.isActive)
+                    .map(\.id.opaqueID) == [alias])
+                #expect(!controller.overviewFleetAccountRows(for: .claude)
+                    .contains { $0.accountID.opaqueID == alias })
+                settings.setAccountDisplayLabel(
+                    "private@example.test",
+                    provider: .claude,
+                    profileIdentity: identity)
+                settings.hidePersonalInfo = true
+                #expect(controller.overviewSummaryCompactModel(for: .claude, model: card).label
+                    == PersonalInfoRedactor.redactEmail("private@example.test", isEnabled: true))
+                #expect(settings.claudeNativeProfileAlias == alias)
+            }
+        }
+    }
+
     @Test
     func `native profile settings action keeps merged provider and overview menus at baseline width`() async throws {
         try await ClaudeNativeProfileAccountsFixture.run { settings, store, _ in

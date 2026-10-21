@@ -103,19 +103,22 @@ extension StatusItemController {
         guard provider == .codex else { return nil }
         guard let projection = self.settings.codexVisibleAccountProjectionForMenuDisplay else { return nil }
         guard projection.showsAccountSelection else { return nil }
+        let visibleAccounts = projection.menuAccounts
+        guard !visibleAccounts.isEmpty else { return nil }
+        let activeVisibleAccountID = projection.menuActiveAccount?.id
         // Recovery requires an explicit switch action even when the usual layout only displays stacked cards.
         let showAll = self.settings.multiAccountMenuLayout == .stacked && projection.activeVisibleAccountID != nil
         let accounts = showAll
             ? self.store.limitedCodexVisibleAccounts(
-                projection.visibleAccounts,
+                visibleAccounts,
                 snapshots: self.store.codexAccountSnapshots,
-                activeVisibleAccountID: projection.activeVisibleAccountID)
-            : self.settings.orderedCodexAccounts(projection.visibleAccounts)
+                activeVisibleAccountID: activeVisibleAccountID)
+            : self.settings.orderedCodexAccounts(visibleAccounts)
         let snapshots = showAll ? self.codexAccountSnapshots(matching: accounts) : []
         return CodexAccountMenuDisplay(
             accounts: accounts,
             snapshots: snapshots,
-            activeVisibleAccountID: projection.activeVisibleAccountID,
+            activeVisibleAccountID: activeVisibleAccountID,
             layout: showAll ? .stacked : .segmented)
     }
 

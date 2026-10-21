@@ -287,18 +287,15 @@ extension StatusItemController {
         return self.store.planUtilizationHistorySelection(for: provider, snapshotOverride: snapshot)
     }
 
-    private func selectedCodexAccountDisplayLabel() -> String {
-        if let projection = self.settings.codexVisibleAccountProjectionForMenuDisplay,
-           let account = projection.visibleAccounts.first(where: { $0.id == projection.activeVisibleAccountID })
-        {
+    func selectedCodexAccountDisplayLabel() -> String? {
+        if let account = self.settings.codexVisibleAccountProjectionForMenuDisplay?.menuActiveAccount {
             return self.settings.codexAccountDisplayLabel(for: account)
         }
-        let source = self.settings.codexActiveSource
-        let alias: String? = if case .liveSystem = source { "default" } else { nil }
-        return self.settings.accountDisplayLabel(
+        // Provider-specific by design: Codex headers preserve explicit selected-source overrides without inventing a
+        // default alias.
+        return self.settings.accountDisplayLabelOverride(
             provider: .codex,
-            profileIdentity: JonesAccountDisplayLabel.codexProfileIdentity(for: source),
-            verifiedAlias: alias)
+            profileIdentity: JonesAccountDisplayLabel.codexProfileIdentity(for: self.settings.codexActiveSource))
     }
 
     func accountInfo(for account: CodexVisibleAccount) -> AccountInfo {

@@ -1019,19 +1019,19 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "This provider-owned integration passes its fixed identity to a shared helper."),
         SuppressedProviderReference(
             path: "Sources/CodexBar/StatusItemController+CompactAccountMenu.swift",
-            line: 80,
+            line: 81,
             anchor: "let plan = self.compactAccountPlan(for: .codex, accounts: projected)",
             expectedProviderIDs: ["codex"],
             reason: "This provider-specific app branch passes its already-selected identity to a shared helper."),
         SuppressedProviderReference(
             path: "Sources/CodexBar/StatusItemController+CompactAccountMenu.swift",
-            line: 112,
+            line: 116,
             anchor: "for: .codex,",
             expectedProviderIDs: ["codex"],
             reason: "This provider-specific app branch passes its already-selected identity to a shared helper."),
         SuppressedProviderReference(
             path: "Sources/CodexBar/StatusItemController+CompactAccountMenu.swift",
-            line: 370,
+            line: 374,
             anchor: "provider: .codex,",
             expectedProviderIDs: ["codex"],
             reason: "This provider-specific app branch passes its already-selected identity to a shared helper."),
@@ -1043,7 +1043,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "The memory-pressure debug fixture installs its synthetic entry in the Codex cache slot."),
         SuppressedProviderReference(
             path: "Sources/CodexBar/StatusItemController+Menu.swift",
-            line: 1120,
+            line: 1128,
             anchor: "controller.refreshOpenMenuIfStillVisible(menu, provider: .codex)",
             expectedProviderIDs: ["codex"],
             reason: "This provider-specific app branch passes its already-selected identity to a shared helper."),
@@ -1734,7 +1734,7 @@ struct ProviderArchitectureGatekeeperTests {
     private static let allowedProviderConstructs: [AllowedProviderConstruct] = [
         AllowedProviderConstruct(
             path: "Sources/CodexBar/SettingsStore+AccountDisplayLabels.swift",
-            line: 32,
+            line: 39,
             anchor: "provider: .codex,",
             expectedProviderIDs: ["codex"],
             expectedReferenceCount: 1,
@@ -1742,7 +1742,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "Codex visible accounts resolve label overrides with their stable selection-source identity and verified fleet alias."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/StatusItemController+Menu.swift",
-            line: 717,
+            line: 725,
             anchor: "if context.currentProvider == .claude, !self.store.claudeNativeProfileAccountsForDisplay().isEmpty {",
             expectedProviderIDs: ["claude"],
             expectedReferenceCount: 1,
@@ -1757,14 +1757,6 @@ struct ProviderArchitectureGatekeeperTests {
             expectedReferenceFingerprint: ["codex@0", "claude@1"],
             reason: "Live Codex and Claude cards resolve selected-account friendly labels; explicit account label overrides retain precedence."),
         AllowedProviderConstruct(
-            path: "Sources/CodexBar/StatusItemController+MenuCardModel.swift",
-            line: 299,
-            anchor: "provider: .codex,",
-            expectedProviderIDs: ["codex"],
-            expectedReferenceCount: 1,
-            expectedReferenceFingerprint: ["codex@0"],
-            reason: "The selected Codex card resolves its label from the active source when no visible-account projection is available."),
-        AllowedProviderConstruct(
             path: "Sources/CodexBar/StatusItemController+MenuRefreshScheduling.swift",
             line: 154,
             anchor: "case .codex:",
@@ -1774,7 +1766,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "Menu readiness tracks the selected Codex account and Claude token/native ownership using cached identities without profile discovery."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/StatusItemController+OverviewFleetAccounts.swift",
-            line: 18,
+            line: 19,
             anchor: "case .codex:",
             expectedProviderIDs: ["codex"],
             expectedReferenceCount: 1,
@@ -1782,7 +1774,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "Overview projects Codex visible accounts and guarded cached snapshots into account-specific rows and cards."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/StatusItemController+OverviewFleetAccounts.swift",
-            line: 36,
+            line: 40,
             anchor: "case .claude:",
             expectedProviderIDs: ["claude"],
             expectedReferenceCount: 1,
@@ -1790,7 +1782,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "The same Overview source dispatch supplies cached Claude native profiles and their override card models."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/StatusItemController+OverviewFleetAccounts.swift",
-            line: 76,
+            line: 80,
             anchor: "if provider == .claude, compact.headroomPercent == nil {",
             expectedProviderIDs: ["claude"],
             expectedReferenceCount: 1,
@@ -2590,7 +2582,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "This exact shared construct dispatches a provider-owned capability at the generic integration boundary."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/StatusItemController+AccountMenuDisplay.swift",
-            line: 124,
+            line: 127,
             anchor: "guard providers.contains(.codex) else { return }",
             expectedProviderIDs: ["codex"],
             expectedReferenceCount: 1,
@@ -2598,7 +2590,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "This exact app-runtime bridge coordinates provider-owned state through the shared controller."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/StatusItemController+AccountMenuDisplay.swift",
-            line: 161,
+            line: 164,
             anchor: "guard provider == .codex else { return display }",
             expectedProviderIDs: ["codex"],
             expectedReferenceCount: 1,
@@ -2702,7 +2694,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "This exact app-runtime bridge coordinates provider-owned state through the shared controller."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/StatusItemController+Menu.swift",
-            line: 1153,
+            line: 1161,
             anchor: "return .provider((self.resolvedMenuProvider(enabledProviders: enabledProviders) ?? .codex).instanceID)",
             expectedProviderIDs: ["codex"],
             expectedReferenceCount: 1,
@@ -2710,7 +2702,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "This exact app-runtime bridge coordinates provider-owned state through the shared controller."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/StatusItemController+Menu.swift",
-            line: 1166,
+            line: 1174,
             anchor: "return self.store.enabledFirstPartyProvidersForDisplay().first ?? .codex",
             expectedProviderIDs: ["codex"],
             expectedReferenceCount: 1,

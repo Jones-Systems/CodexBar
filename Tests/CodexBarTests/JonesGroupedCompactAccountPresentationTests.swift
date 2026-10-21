@@ -20,9 +20,9 @@ struct JonesGroupedCompactAccountPresentationTests {
                 workspaceLabel: "Workspace \(index / 2)",
                 workspaceAccountID: "workspace-\(index / 2)",
                 storedAccountID: nil,
-                selectionSource: .liveSystem,
+                selectionSource: .profileHome(path: "/synthetic/account-\(index)"),
                 isActive: index == activeIndex,
-                isLive: true,
+                isLive: false,
                 canReauthenticate: false,
                 canRemove: false)
         }
@@ -119,8 +119,50 @@ struct JonesGroupedCompactAccountPresentationTests {
         }
     }
 
+    @Test
+    func `ambiguous cached live identity does not name a profile and default aliases stay hidden`() {
+        let live = CodexVisibleAccount(
+            id: "live",
+            email: "shared@example.test",
+            workspaceAccountID: "seat",
+            storedAccountID: nil,
+            selectionSource: .liveSystem,
+            isActive: true,
+            isLive: true,
+            canReauthenticate: false,
+            canRemove: false)
+        let named = ["jace", "malcolm", "default"].map { alias in
+            CodexVisibleAccount(
+                id: alias,
+                email: live.email,
+                workspaceAccountID: live.workspaceAccountID,
+                storedAccountID: nil,
+                selectionSource: .profileHome(path: "/synthetic/\(alias)"),
+                isActive: false,
+                isLive: false,
+                canReauthenticate: false,
+                canRemove: false,
+                fleetProfileAlias: alias)
+        }
+        let projection = CodexVisibleAccountProjection(
+            visibleAccounts: [live] + named,
+            activeVisibleAccountID: live.id,
+            liveVisibleAccountID: live.id,
+            hasUnreadableAddedAccountStore: false)
+        #expect(projection.menuAccounts.map(\.id) == ["jace", "malcolm"])
+        #expect(projection.menuActiveAccount == nil)
+        #expect(projection.visibleAccounts.count == 4)
+        #expect(projection.activeVisibleAccountID == live.id)
+        let namedSelection = CodexVisibleAccountProjection(
+            visibleAccounts: projection.visibleAccounts,
+            activeVisibleAccountID: "jace",
+            liveVisibleAccountID: live.id,
+            hasUnreadableAddedAccountStore: false)
+        #expect(namedSelection.menuActiveAccount?.id == "jace")
+    }
+
     @Test(arguments: [1, 2, 3, 4, 5, 6, 8, 9, 12])
-    func `default Codex workspace groups show every account without folding`(count: Int) {
+    func `Personal section shows every named Codex account without folding`(count: Int) {
         let display = self.display(count: count)
         let sections = self.sections(display)
         self.expectWorkspaceIdentity(sections, display: display)
@@ -134,7 +176,7 @@ struct JonesGroupedCompactAccountPresentationTests {
     }
 
     @Test(arguments: [1, 2, 3, 4, 5, 6, 8, 12])
-    func `workspace headers do not consume the five account budget`(count: Int) {
+    func `Personal header does not consume the five account budget`(count: Int) {
         let display = self.display(count: count)
         let sections = self.sections(display, planOverride: self.finiteBudgetPlan(display))
         self.expectWorkspaceIdentity(sections, display: display)
@@ -146,7 +188,7 @@ struct JonesGroupedCompactAccountPresentationTests {
     }
 
     @Test(arguments: [6, 8, 12])
-    func `overflow retains every workspace including wholly folded groups and reveals in place`(count: Int) {
+    func `overflow retains the Personal section and reveals every hidden account in place`(count: Int) {
         let display = self.display(count: count)
         let initial = self.sections(display, planOverride: self.finiteBudgetPlan(display))
         let revealed = self.sections(display, planOverride: self.finiteBudgetPlan(display, revealed: true))
@@ -154,9 +196,8 @@ struct JonesGroupedCompactAccountPresentationTests {
         self.expectWorkspaceIdentity(revealed, display: display)
         #expect(self.ids(in: revealed.flatMap(\.rows)).count == count)
         #expect(self.hiddenCount(in: revealed.flatMap(\.rows)) == 0)
-        if count >= 8 {
-            #expect(initial.contains { self.ids(in: $0.rows).isEmpty && self.hiddenCount(in: $0.rows) > 0 })
-        }
+        #expect(initial.map(\.title) == ["Personal"])
+        #expect(self.hiddenCount(in: initial.flatMap(\.rows)) == count - 5)
         for (before, after) in zip(initial, revealed) {
             let visible = self.ids(in: before.rows)
             #expect(self.ids(in: after.rows).filter { visible.contains($0) } == visible)

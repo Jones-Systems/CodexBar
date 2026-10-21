@@ -158,7 +158,7 @@ public enum AccountMenuLayoutPlanner {
 
     /// Lowest remaining percent across the account's real usage windows.
     public static func headroomPercent(for account: ProviderAccountUsageSnapshot) -> Double? {
-        self.labeledWindows(for: account).map(\.remainingPercent).min()
+        self.labeledWindows(for: account).map(\.window.remainingPercent).min()
     }
 
     private static func sortedCompactRows(for accounts: [ProviderAccountUsageSnapshot]) -> [CompactRow] {
@@ -180,12 +180,12 @@ public enum AccountMenuLayoutPlanner {
         isBestCandidate: Bool) -> CompactRow
     {
         let windows = self.labeledWindows(for: account)
-        let headroom = windows.map(\.remainingPercent).min()
+        let headroom = windows.map(\.window.remainingPercent).min()
         let constrained = windows
-            .filter { $0.remainingPercent <= self.warningHeadroomPercent }
-            .sorted { $0.remainingPercent < $1.remainingPercent }
+            .filter { $0.window.remainingPercent <= self.warningHeadroomPercent }
+            .sorted { $0.window.remainingPercent < $1.window.remainingPercent }
             .prefix(self.constraintDetailWindowLimit)
-            .map { "\($0.label) \(Int($0.remainingPercent.rounded()))%" }
+            .map { "\($0.label) \(Int($0.window.remainingPercent.rounded()))%" }
         return CompactRow(
             accountID: account.id,
             label: account.displayLabel,
@@ -213,23 +213,29 @@ public enum AccountMenuLayoutPlanner {
             .id
     }
 
+    public static func limitingWindows(for account: ProviderAccountUsageSnapshot) -> [RateWindow] {
+        let windows = self.labeledWindows(for: account).map(\.window)
+        guard let minimum = windows.map(\.remainingPercent).min() else { return [] }
+        return windows.filter { $0.remainingPercent == minimum }
+    }
+
     private static func labeledWindows(
-        for account: ProviderAccountUsageSnapshot) -> [(label: String, remainingPercent: Double)]
+        for account: ProviderAccountUsageSnapshot) -> [(label: String, window: RateWindow)]
     {
         guard let snapshot = account.snapshot else { return [] }
         let metadata = ProviderDefaults.metadata[account.provider]
-        var windows: [(label: String, remainingPercent: Double)] = []
+        var windows: [(label: String, window: RateWindow)] = []
         if let primary = snapshot.primary, !primary.isSyntheticPlaceholder {
-            windows.append((metadata?.sessionLabel ?? "Session", primary.remainingPercent))
+            windows.append((metadata?.sessionLabel ?? "Session", primary))
         }
         if let secondary = snapshot.secondary {
-            windows.append((metadata?.weeklyLabel ?? "Weekly", secondary.remainingPercent))
+            windows.append((metadata?.weeklyLabel ?? "Weekly", secondary))
         }
         if let tertiary = snapshot.tertiary {
-            windows.append((metadata?.opusLabel ?? "Monthly", tertiary.remainingPercent))
+            windows.append((metadata?.opusLabel ?? "Monthly", tertiary))
         }
         for extra in snapshot.extraRateWindows ?? [] where extra.usageKnown {
-            windows.append((self.shortLabel(forWindowTitle: extra.title), extra.window.remainingPercent))
+            windows.append((self.shortLabel(forWindowTitle: extra.title), extra.window))
         }
         return windows
     }

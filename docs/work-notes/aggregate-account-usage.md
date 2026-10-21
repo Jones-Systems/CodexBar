@@ -146,3 +146,140 @@ and four XCTest cases, zero failures; fixture cleanup verified absence. This
 includes the repaired aggregate placement fixture and architecture gate. Final
 full `make check`, full `make test`, current-head CI and local packaging follow
 under the existing delivery binding.
+
+## Owner follow-up: pacing and account presentation
+
+PR #15 merged as `1c28608feaacfa17eaa86d2d06322b5335ba37ca`; its delivery
+record verifies all eight required checks, full local tests (1,044 selections,
+87 first-pass successful groups), lint and the installed Jones app's executable.
+The previous installed bundle is retained for rollback. No readiness mark was
+created because this runtime reported unavailable Darwin process containment.
+
+The owner now authorizes production pacing with the red marker reduced from
+the mock's 12-point height to 8 points, keeping its center aligned with the
+meter. The summary's text and overall row height are not the requested target.
+The owner also supplied native screenshots showing a visible Codex `default`
+row, provider names instead of account names in minimized Overview, and several
+workspace sections. Required follow-up: never display Codex `default`; show the
+selected account names in Overview; display Malcolm, Jace, Umich, Steven and
+Wallace together in one Personal section without workspace headings or IDs.
+Internal verified quota identities remain necessary for deduplication and routing.
+The delivery finish line remains merged changes and the updated local Jones app.
+
+Root owns Git, documentation, shared build/test/package state and installation
+in the existing isolated worktree. The follow-up branch is
+`work/aggregate-pacing-overview-repair-8b4b042f`, based on canonical `main` at
+`1c28608feaacfa17eaa86d2d06322b5335ba37ca`; no overlapping open PRs were found.
+Two read-only lanes cover pacing technical framing and account presentation
+evidence. Inherited mode remains `claude_frontier`, temporary preference revision
+1. Fresh account routing selected Malcolm's verified fleet binding with allowance
+unavailable under its standing fallback; no model access or quota is inferred.
+
+The follow-up registration preflight again found no socket at
+`~/.local/state/voice-control-plane/registry.sock`: `registration_unavailable`,
+`endpoint_unavailable`, effect none. No request was sent and no endpoint repaired.
+
+Source evidence found independent presentation causes: the shared Codex account
+display consumed every visible projection row, the minimized Overview summary
+explicitly used the provider name, and workspace metadata determined account
+sections. The read-only follow-up also established that hidden live sources
+need a unique verified named counterpart; percentages alone are not identity.
+Opus technical framing completed and is retained at
+`.build/pacing-overview-opus-framing-v2.md`. Its limiting-window timing, additive
+core selection helper, stable readiness fingerprint and 8-point overlay decisions
+are encoded in the evolving Engineering Spec. One Astra builder owns all source
+and affected tests; root owns documentation, architecture anchors and shared
+verification state. No independent review is required by target policy.
+
+Before production changes, the isolated Overview fixture file had SHA-256
+`25c393df76795456468966e5d63851118925ba07b01e78b62c194e076ebe9364`.
+The first slash/name filter built successfully but selected zero tests, so it
+provides no behavioral evidence. The corrected isolated command was
+`Scripts/test.sh --command swift test --skip-build --no-parallel --filter OverviewFleetAccountsTests`.
+It ran 18 tests: the two new regression cases failed with 19 issues, while all
+16 existing tests passed. Failures independently prove visible default count,
+missing Personal grouping, live-vs-named active identity, duplicate account rows
+and the Codex-vs-Jace summary label. One ordering assertion also assumed raw
+projection order; it will be corrected to preserve existing sort preferences.
+Logs are `.build/pacing-overview-v2-red-suite.log`; runner exit 1 and fixture
+scratch removal/absence were verified. Production source stayed at the base
+revision through that run. Source writes were then released to the builder.
+
+### Follow-up component render and verification correction
+
+Rendered the actual aggregate SwiftUI view with synthetic model values in dark
+and highlighted states. The marker and marker-free render both measure
+310 × 39 points at 2× scale; the centered marker remains red when highlighted.
+Evidence lives in `.build/pacing-native-render/` (source hashes, PNGs and probe).
+This verifies the component, not a live menu or installed-account screenshot.
+The first affected run compiled app sources but failed test compilation on a
+nested Swift Testing `#require`; split that binding before the next run.
+Self-review also narrowed the unresolved-default summary omission to a cached
+projection containing actual hidden sources, preserving absent/empty projection
+overviews; added isolated regressions. No live credentials or provider probes.
+
+### Follow-up resumed after interrupted verification
+
+Recovered the affected-suite result: 247 tests ran; four issues across three
+tests. The default-row fixture had opened a single-provider Codex page instead
+of merged Overview, and the cold-cache fixture expected reconciliation not to
+populate an empty projection. Corrected both fixture assumptions while retaining
+the account counts, names and raw-identity assertions. The architecture inventory
+tracks moved existing anchors, retires the removed default fallback, and retains
+explicit local reasons for the new provider identity display branches.
+The interrupted runner no longer existed; no process held its exact fixture
+parent. Preserved the log and recovery manifest, then removed only that owned
+fixture root and verified absence. Full verification is pending.
+Native render pixel bounds are 4 × 16 pixels at 2× scale (2 × 8 points),
+identical in normal/highlighted states; both rows remain 310 × 39 points.
+
+Final `make check` passes with zero violations across 2166 Swift files. The
+new argument layouts were corrected without changing test values, and the
+hidden-source predicate moved to the existing presentation projection to stay
+within the menu controller file-length limit. No lint suppression was added.
+The final full `make test` is running with frozen source and test files.
+
+The first full run discovered 1044 selections and completed 48 groups before
+stopping at group 49 on an existing selected-source custom-label regression.
+The failing test was unchanged; its one full-group retry also failed. Preserved
+the existing custom name when no named account resolves by reading only the
+explicit saved override. Missing/blank overrides still do not synthesize default.
+Added that boundary coverage. The runner removed its fixture root and verified
+absence. All later full-suite groups remain unverified until the final rerun.
+
+The next validation passed 70 focused tests (labels, Overview and architecture),
+then passed 63 full-suite groups before the new distinct-default Overview
+fixture failed when grouped with its normal peers. Both full-group attempts
+reported missing rendered rows. Menu refresh freshness uses object identifiers;
+releasing and recreating a menu inside the fixture loop can reuse a fresh ID.
+That is a source-grounded explanation, not a live runtime defect diagnosis.
+The fixture now invokes production Overview content with an explicit context,
+retaining exact row counts, both layouts, no-default and raw-identity checks.
+No production change was needed. The failed run drained and verified scratch
+removal. Next verification begins with its exact full-suite group before the
+required unchanged full suite; no test selection is removed.
+
+The exact formerly failing Overview peer group passed (114 tests/11 suites).
+The next full run passed groups 1–76 before an existing height fixture failed
+at group 77 because it selected an unmatched live/default source and expected
+a Codex summary. Migrated that fixture to a named active profile and seeded
+Claude first; all geometry, toggle and row assertions remain unchanged. No
+production source changed. The failed group retry repeated the same issue,
+and the runner verified cleanup. Rather than repeat 76 unchanged groups, the
+final local continuation discovers the same 1044 selections, verifies the
+height group is still 77, and executes original groups 77–87 with the existing
+runner helpers and owned fixture lifecycle. The earlier full-run evidence is
+preserved; this is a coverage union, not a claim of one all-green local
+`make test` invocation. Exact final-head full CI remains mandatory for merge.
+
+Final local validation: `make check` passed with zero violations in 2166 Swift
+files. Original groups 77–87 passed without test issues or retries after the
+height-fixture migration; together with the unchanged production run's first
+76 successful groups, all 1044 discovered selections are covered locally.
+The tail command used the existing runner's discovery/group/filter helpers,
+checked the original group mapping, and verified owned scratch removal. Its
+first safety assertion used the file name rather than the suite name and ran
+no tests; corrected it, then reused the completed build. Logs and exact
+selection coverage remain under `.build/pacing-*`. Production source hashes
+match the earlier full run. No claim of one final all-green local full-suite
+invocation is made; final-head complete CI remains the merge gate.

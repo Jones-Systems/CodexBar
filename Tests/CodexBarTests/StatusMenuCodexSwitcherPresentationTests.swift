@@ -238,12 +238,12 @@ struct StatusMenuCodexSwitcherPresentationTests {
         defer { controller.releaseStatusItemsForTesting() }
 
         let display = try #require(controller.codexAccountMenuDisplay(for: .codex))
-        #expect(display.accounts.map(\.email) == ["active@example.com", "high@example.com", "low@example.com"])
-        #expect(display.workspaceSections.map(\.title) == ["Personal", "Team High", "Team Low"])
+        #expect(display.accounts.map(\.email) == ["high@example.com", "low@example.com"])
+        #expect(display.workspaceSections.map(\.title) == ["Personal"])
 
         let menu = controller.makeMenu(for: .codex)
         controller.menuWillOpen(menu)
-        #expect(self.representedIDs(in: menu).count(where: { $0.hasPrefix("codexWorkspace-") }) == 3)
+        #expect(self.representedIDs(in: menu).count(where: { $0.hasPrefix("codexWorkspace-") }) == 1)
     }
 
     @Test(arguments: [6, 9])
@@ -255,7 +255,7 @@ struct StatusMenuCodexSwitcherPresentationTests {
         settings.mergeIcons = false
         settings.multiAccountMenuLayout = .stacked
         self.enableOnlyCodex(settings)
-        let managed = (1..<count).map { index in
+        let managed = (0..<count).map { index in
             ManagedCodexAccount(
                 id: UUID(),
                 email: "account\(index)@example.com",
@@ -275,7 +275,7 @@ struct StatusMenuCodexSwitcherPresentationTests {
             email: "active@example.com",
             codexHomePath: TestFixtureScratch.root.appendingPathComponent("unused-live-home").path,
             observedAt: Date())
-        settings.codexActiveSource = .liveSystem
+        settings.codexActiveSource = .managedAccount(id: managed[0].id)
         let fetcher = UsageFetcher()
         let store = UsageStore(fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
         store.codexAccountSnapshots = settings.codexVisibleAccountProjection.visibleAccounts.map { account in

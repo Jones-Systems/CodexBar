@@ -52,8 +52,8 @@ struct CodexAccountMenuDisplaySnapshotTests {
     }
 
     @Test(arguments: [MultiAccountMenuLayout.segmented, .stacked])
-    func `menu exposes sole recovery account without selecting it or loading auth`(
-        layout: MultiAccountMenuLayout) throws
+    func `menu hides sole default recovery account without selecting it or loading auth`(
+        layout: MultiAccountMenuLayout)
     {
         let settings = self.makeSettings()
         self.enableOnlyCodex(settings)
@@ -83,13 +83,8 @@ struct CodexAccountMenuDisplaySnapshotTests {
             statusBar: .system)
         defer { controller.releaseStatusItemsForTesting() }
         let callsBeforeDisplay = probe.callCount
-        let display = try #require(controller.codexAccountMenuDisplay(for: .codex))
-        #expect(display.accounts.map(\.email) == ["recovery@example.com"])
-        #expect(display.activeVisibleAccountID == nil)
-        #expect(display.showSwitcher)
-        #expect(probe.callCount == callsBeforeDisplay)
-        try settings.selectDisplayedCodexVisibleAccount(#require(display.accounts.first))
-        #expect(settings.codexActiveSource == .liveSystem)
+        #expect(controller.codexAccountMenuDisplay(for: .codex) == nil)
+        #expect(settings.codexActiveSource == source)
         #expect(probe.callCount == callsBeforeDisplay)
     }
 

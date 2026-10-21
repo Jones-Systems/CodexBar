@@ -5,6 +5,12 @@ struct JonesAccountAggregate: Equatable {
     let selectedCount: Int
     let reportingCount: Int
     let summedRemainingPercent: Int
+    var paceTargetPercent: Int?
+
+    var paceMarkerPercent: Double? {
+        guard let paceTargetPercent, self.selectedCount > 0 else { return nil }
+        return Double(paceTargetPercent) / Double(self.selectedCount)
+    }
 
     var maximumPercent: Int {
         self.selectedCount * 100
@@ -40,12 +46,19 @@ struct JonesAccountAggregate: Equatable {
     }
 
     var accessibilityText: String {
-        guard let normalizedPercent else { return "\(L("Total remaining")), \(L("Unavailable")), \(self.detailLabel)" }
+        guard let normalizedPercent else {
+            return "\(L("Total remaining")), \(L("Unavailable")), \(self.detailLabel), \(self.paceAccessibilityText)"
+        }
         let value = normalizedPercent.formatted(.number.precision(.fractionLength(0...1)))
         let remaining = self.isPartial
             ? String(format: L("At least %@ percent remaining"), value)
             : String(format: L("%@ percent remaining"), value)
-        return "\(L("Total remaining")), \(remaining), \(self.detailLabel)"
+        return "\(L("Total remaining")), \(remaining), \(self.detailLabel), \(self.paceAccessibilityText)"
+    }
+
+    private var paceAccessibilityText: String {
+        guard let paceTargetPercent else { return L("Pacing unavailable") }
+        return String(format: L("On-pace target %d of %d percent"), paceTargetPercent, self.maximumPercent)
     }
 
     var heightFingerprint: String {
@@ -57,7 +70,9 @@ struct JonesAccountAggregate: Equatable {
 
     static func codex(
         projection: CodexVisibleAccountProjection?,
-        accounts: [ProviderAccountUsageSnapshot]) -> Self?
+        accounts: [ProviderAccountUsageSnapshot],
+        now: Date = Date(),
+        workDays: Int? = nil) -> Self?
     {
         guard let projection else { return nil }
         let enrolled = Dictionary(grouping: projection.fleetProfileHomePaths, by: {
@@ -79,7 +94,7 @@ struct JonesAccountAggregate: Equatable {
                 $0.provider == .codex && $0.id == ProviderAccountIdentity(source: "codex-account", opaqueID: account.id)
             }
             guard rows.count == 1, let row = rows.first else { return nil }
-            return Self.contribution(row, identity: [workspace, email])
+            return Self.contribution(row, identity: [workspace, email], now: now, workDays: workDays)
         }
         return Self.make(selectedCount: Self.codexAliases.count, contributions: contributions)
     }
@@ -87,7 +102,9 @@ struct JonesAccountAggregate: Equatable {
     static func claude(
         enrolledAliases: [String],
         accounts: [ProviderAccountUsageSnapshot],
-        refreshingAliases: Set<String> = []) -> Self?
+        refreshingAliases: Set<String> = [],
+        now: Date = Date(),
+        workDays: Int? = nil) -> Self?
     {
         guard self.claudeAliases.contains(where: enrolledAliases.contains), !accounts.isEmpty else { return nil }
         // Provider-specific by design: reconcile Claude's fallback identity with any selected verified account ID.
@@ -121,7 +138,7 @@ struct JonesAccountAggregate: Equatable {
             } else {
                 return nil
             }
-            return Self.contribution(row, identity: key)
+            return Self.contribution(row, identity: key, now: now, workDays: workDays)
         }
         return Self.make(selectedCount: Self.claudeAliases.count, contributions: contributions)
     }
@@ -134,6 +151,7 @@ struct JonesAccountAggregate: Equatable {
     private struct Contribution {
         let identity: [String]
         let remainingPercent: Int
+        let targetRemainingPercent: Int?
     }
 
     private static func normalized(_ value: String?) -> String? {
@@ -142,18 +160,43 @@ struct JonesAccountAggregate: Equatable {
         return value
     }
 
-    private static func contribution(_ row: ProviderAccountUsageSnapshot, identity: [String]) -> Contribution? {
+    private static func contribution(
+        _ row: ProviderAccountUsageSnapshot,
+        identity: [String],
+        now: Date,
+        workDays: Int?) -> Contribution?
+    {
         guard row.error == nil, let remaining = AccountMenuLayoutPlanner.headroomPercent(for: row),
               remaining.isFinite else { return nil }
-        return Contribution(identity: identity, remainingPercent: Int(min(100, max(0, remaining)).rounded()))
+        let timedWindows = AccountMenuLayoutPlanner.limitingWindows(for: row).compactMap { window
+            -> (reset: Date, target: Int)? in
+            guard let minutes = window.windowMinutes, minutes > 0,
+                  let reset = window.resetsAt,
+                  let pace = UsagePace.weekly(
+                      window: window, now: now, defaultWindowMinutes: minutes, workDays: workDays),
+                  pace.expectedUsedPercent.isFinite else { return nil }
+            return (reset, Int(min(100, max(0, 100 - pace.expectedUsedPercent)).rounded()))
+        }
+        // The latest valid reset controls a tied limit longest; equal resets retain planner order.
+        let target = timedWindows.reduce(nil as (reset: Date, target: Int)?) { selected, candidate in
+            guard let selected else { return candidate }
+            return candidate.reset > selected.reset ? candidate : selected
+        }?.target
+        return Contribution(
+            identity: identity,
+            remainingPercent: Int(min(100, max(0, remaining)).rounded()),
+            targetRemainingPercent: target)
     }
 
     private static func make(selectedCount: Int, contributions: [Contribution]) -> Self {
         var seen: Set<[String]> = []
         let unique = contributions.filter { seen.insert($0.identity).inserted }
+        let targets = unique.compactMap(\.targetRemainingPercent)
         return Self(
             selectedCount: selectedCount,
             reportingCount: unique.count,
-            summedRemainingPercent: unique.reduce(0) { $0 + $1.remainingPercent })
+            summedRemainingPercent: unique.reduce(0) { $0 + $1.remainingPercent },
+            paceTargetPercent: unique.count == selectedCount && targets.count == selectedCount
+                ? targets.reduce(0, +) : nil)
     }
 }

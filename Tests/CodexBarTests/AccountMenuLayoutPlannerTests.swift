@@ -394,4 +394,34 @@ struct AccountMenuLayoutPlannerTests {
             #expect(toggled.rows.count == 8)
         }
     }
+
+    @Test
+    func `limiting windows retain planner order and exclude synthetic and unknown usage`() {
+        let known = RateWindow(usedPercent: 80, windowMinutes: 10080, resetsAt: Self.now, resetDescription: nil)
+        let unknown = RateWindow(usedPercent: 100, windowMinutes: 10080, resetsAt: Self.now, resetDescription: nil)
+        let row = ProviderAccountUsageSnapshot(
+            id: .init(source: "synthetic", opaqueID: "limits"),
+            provider: .claude,
+            displayLabel: "Synthetic",
+            isActive: false,
+            snapshot: UsageSnapshot(
+                primary: RateWindow(
+                    usedPercent: 100,
+                    windowMinutes: 300,
+                    resetsAt: nil,
+                    resetDescription: nil,
+                    isSyntheticPlaceholder: true),
+                secondary: known,
+                extraRateWindows: [
+                    NamedRateWindow(id: "unknown", title: "Unknown", window: unknown, usageKnown: false),
+                    NamedRateWindow(id: "known", title: "Known", window: known),
+                ],
+                updatedAt: Self.now),
+            error: nil,
+            sourceLabel: nil)
+        let windows = AccountMenuLayoutPlanner.limitingWindows(for: row)
+        #expect(windows == [known, known])
+        #expect(windows.first?.remainingPercent == AccountMenuLayoutPlanner.headroomPercent(for: row))
+        #expect(AccountMenuLayoutPlanner.headroomPercent(for: row) == 20)
+    }
 }

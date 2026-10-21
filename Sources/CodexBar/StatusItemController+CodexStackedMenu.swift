@@ -28,6 +28,7 @@ extension StatusItemController {
                     errorOverride: health.label,
                     forceOverrideCard: accountSnapshot == nil,
                     accountOverride: self.accountInfo(for: account),
+                    accountDisplayLabelOverride: self.settings.codexAccountDisplayLabel(for: account),
                     historySelectionOverride: self.store.codexPlanUtilizationHistorySelection(
                         forVisibleAccount: account),
                     creditsOverride: accountSnapshot?.credits)
