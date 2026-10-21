@@ -19,6 +19,9 @@ public struct UsagePace: Sendable {
     public let willLastToReset: Bool
     public let runOutProbability: Double?
     public let speedMultiplierToReset: Double?
+    /// Used percentage points per elapsed clock second; usesWorkdayClock identifies the clock.
+    public let consumptionRatePerSecond: Double?
+    public let usesWorkdayClock: Bool
 
     public init(
         stage: Stage,
@@ -28,7 +31,9 @@ public struct UsagePace: Sendable {
         etaSeconds: TimeInterval?,
         willLastToReset: Bool,
         runOutProbability: Double? = nil,
-        speedMultiplierToReset: Double? = nil)
+        speedMultiplierToReset: Double? = nil,
+        consumptionRatePerSecond: Double? = nil,
+        usesWorkdayClock: Bool = false)
     {
         self.stage = stage
         self.deltaPercent = deltaPercent
@@ -38,6 +43,8 @@ public struct UsagePace: Sendable {
         self.willLastToReset = willLastToReset
         self.runOutProbability = runOutProbability
         self.speedMultiplierToReset = speedMultiplierToReset
+        self.consumptionRatePerSecond = consumptionRatePerSecond
+        self.usesWorkdayClock = usesWorkdayClock
     }
 
     public static func weekly(
@@ -120,7 +127,9 @@ public struct UsagePace: Sendable {
             etaSeconds: etaSeconds,
             willLastToReset: willLastToReset,
             runOutProbability: nil,
-            speedMultiplierToReset: speedMultiplierToReset)
+            speedMultiplierToReset: speedMultiplierToReset,
+            consumptionRatePerSecond: paceElapsed > 0 ? actual / paceElapsed : actual == 0 ? 0 : nil,
+            usesWorkdayClock: workdayProgress != nil)
     }
 
     public static func historical(
@@ -211,6 +220,25 @@ public struct UsagePace: Sendable {
             totalSeconds: totalWorkSeconds,
             elapsedSeconds: elapsedWorkSeconds,
             remainingSeconds: remainingWorkSeconds)
+    }
+
+    /// Converts pooled work seconds without assuming that quota refills at a reset.
+    /// The bounded walk returns nil when the estimate exceeds the requested wall-clock limit.
+    public static func wallClockInterval(
+        from now: Date,
+        consumingWorkSeconds requiredWorkSeconds: TimeInterval,
+        workDays: Int,
+        calendar: Calendar = .current,
+        limit: TimeInterval = 28 * 86400) -> TimeInterval?
+    {
+        guard requiredWorkSeconds.isFinite, requiredWorkSeconds >= 0,
+              (2...6).contains(workDays), limit.isFinite, limit > 0, limit <= 28 * 86400 else { return nil }
+        return self.wallClockInterval(
+            from: now,
+            to: now.addingTimeInterval(limit),
+            consumingWorkSeconds: requiredWorkSeconds,
+            workDays: workDays,
+            calendar: calendar)
     }
 
     private static func wallClockInterval(

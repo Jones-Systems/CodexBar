@@ -181,7 +181,23 @@ extension [CodexVisibleAccount] {
 
 extension CodexVisibleAccountProjection {
     var menuAccounts: [CodexVisibleAccount] {
-        self.visibleAccounts.filter { $0.selectionSource != .liveSystem && $0.fleetProfileAlias != "default" }
+        let enrolledPaths = self.fleetProfileHomePaths.compactMap { CodexHomeScope.normalizedHomePath($0) }
+        let enrolledByAlias = Dictionary(grouping: enrolledPaths, by: {
+            URL(fileURLWithPath: $0).lastPathComponent
+        })
+        guard JonesAccountAggregate.codexAliases.contains(where: { enrolledByAlias[$0] != nil }) else {
+            return self.visibleAccounts
+                .filter { $0.selectionSource != .liveSystem && $0.fleetProfileAlias != "default" }
+        }
+        // Enrollment binds presentation slots to homes; usage and authentication health do not determine visibility.
+        return JonesAccountAggregate.codexAliases.compactMap { alias in
+            guard let paths = enrolledByAlias[alias], paths.count == 1 else { return nil }
+            let matches = self.visibleAccounts.filter { account in
+                guard case let .profileHome(path) = account.selectionSource else { return false }
+                return CodexHomeScope.normalizedHomePath(path) == paths[0]
+            }
+            return matches.count == 1 ? matches.first : nil
+        }
     }
 
     var omitsSummary: Bool {

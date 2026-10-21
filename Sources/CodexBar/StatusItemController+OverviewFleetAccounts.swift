@@ -160,10 +160,21 @@ extension StatusItemController {
             self.addAccountAggregateRow(
                 aggregate,
                 to: menu,
-                id: "overviewAccountAggregate-\(provider.rawValue)",
-                provider: provider,
-                width: width)
+                context: AccountAggregateRowContext(
+                    id: "overviewAccountAggregate-\(provider.rawValue)",
+                    provider: provider,
+                    width: width,
+                    isExpanded: self.overviewExpansionState.expandedAggregateProviders.contains(provider),
+                    onClick: { [weak self, weak captureMenu] in
+                        self?.toggleOverviewAccountAggregate(provider: provider, menu: captureMenu)
+                    }))
         }
+    }
+
+    func toggleOverviewAccountAggregate(provider: UsageProvider, menu: NSMenu?) {
+        self.advanceMenuInteraction(for: menu)
+        self.overviewExpansionState.toggleAggregate(provider)
+        self.invalidateMenus(refreshOpenMenus: true)
     }
 
     func selectOverviewFleetAccount(

@@ -51,6 +51,99 @@ struct CodexAccountMenuDisplaySnapshotTests {
             projection: CodexVisibleAccountProjection.make(from: snapshot))
     }
 
+    private func rosterAccount(
+        _ id: String,
+        source: CodexActiveSource,
+        alias: String? = nil) -> CodexVisibleAccount
+    {
+        CodexVisibleAccount(
+            id: id,
+            email: "",
+            storedAccountID: nil,
+            selectionSource: source,
+            isActive: false,
+            isLive: source == .liveSystem,
+            canReauthenticate: false,
+            canRemove: false,
+            fleetProfileAlias: alias)
+    }
+
+    @Test(arguments: [false, true])
+    func `fleet menu admits only unique enrolled roster homes without requiring account identity`(
+        reversed: Bool) throws
+    {
+        let aliases = JonesAccountAggregate.codexAliases
+        let named = aliases.map {
+            self.rosterAccount($0, source: .profileHome(path: "/fixture/fleet/\($0)"), alias: $0)
+        }
+        let managedID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000001"))
+        let excluded = [
+            self.rosterAccount("live", source: .liveSystem),
+            self.rosterAccount("managed", source: .managedAccount(id: managedID), alias: "malcolm"),
+            self.rosterAccount("default", source: .profileHome(path: "/fixture/fleet/default"), alias: "default"),
+            self.rosterAccount("hash", source: .profileHome(path: "/fixture/other")),
+            self.rosterAccount("extra", source: .profileHome(path: "/fixture/fleet/extra"), alias: "extra"),
+            self.rosterAccount("spoof", source: .profileHome(path: "/fixture/unregistered/jace"), alias: "jace"),
+        ]
+        let accounts = named + excluded
+        let paths = aliases.map { "/fixture/fleet/\($0)/." } + ["/fixture/fleet/extra", "/fixture/fleet/default"]
+        for active in excluded {
+            let projection = CodexVisibleAccountProjection(
+                visibleAccounts: reversed ? Array(accounts.reversed()) : accounts,
+                activeVisibleAccountID: active.id,
+                liveVisibleAccountID: "live",
+                hasUnreadableAddedAccountStore: true,
+                fleetProfileHomePaths: reversed ? Array(paths.reversed()) : paths)
+            #expect(Set(projection.menuAccounts.map(\.id)) == Set(aliases))
+            #expect(projection.menuAccounts.count == 5)
+            #expect(projection.menuActiveAccount == nil)
+            #expect(projection.omitsSummary)
+            #expect(projection.visibleAccounts.count == accounts.count)
+            #expect(projection.activeVisibleAccountID == active.id)
+            #expect(projection.source(forVisibleAccountID: active.id) == active.selectionSource)
+        }
+    }
+
+    @Test
+    func `fleet menu rejects ambiguous enrollment and duplicate profile homes`() {
+        let accounts = [
+            self.rosterAccount("malcolm", source: .profileHome(path: "/fixture/fleet/malcolm")),
+            self.rosterAccount("jace", source: .profileHome(path: "/fixture/fleet/jace")),
+            self.rosterAccount("jace-duplicate", source: .profileHome(path: "/fixture/fleet/jace/.")),
+            self.rosterAccount("umich", source: .profileHome(path: "/fixture/fleet/umich")),
+            self.rosterAccount("hash", source: .profileHome(path: "/fixture/other")),
+        ]
+        let projection = CodexVisibleAccountProjection(
+            visibleAccounts: accounts,
+            activeVisibleAccountID: "hash",
+            liveVisibleAccountID: nil,
+            hasUnreadableAddedAccountStore: false,
+            fleetProfileHomePaths: [
+                "/fixture/fleet/malcolm", "/fixture/second/malcolm",
+                "/fixture/fleet/jace", "/fixture/fleet/umich",
+            ])
+        #expect(projection.menuAccounts.map(\.id) == ["umich"])
+        #expect(projection.menuActiveAccount == nil)
+    }
+
+    @Test
+    func `nonfleet menu retains managed and profile accounts without admitting default or live`() throws {
+        let managedID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000001"))
+        let projection = CodexVisibleAccountProjection(
+            visibleAccounts: [
+                self.rosterAccount("managed", source: .managedAccount(id: managedID)),
+                self.rosterAccount("profile", source: .profileHome(path: "/fixture/personal")),
+                self.rosterAccount("live", source: .liveSystem),
+                self.rosterAccount("default", source: .profileHome(path: "/fixture/default"), alias: "default"),
+            ],
+            activeVisibleAccountID: "managed",
+            liveVisibleAccountID: "live",
+            hasUnreadableAddedAccountStore: false,
+            fleetProfileHomePaths: ["/fixture/default"])
+        #expect(projection.menuAccounts.map(\.id) == ["managed", "profile"])
+        #expect(projection.menuActiveAccount?.id == "managed")
+    }
+
     @Test(arguments: [MultiAccountMenuLayout.segmented, .stacked])
     func `menu hides sole default recovery account without selecting it or loading auth`(
         layout: MultiAccountMenuLayout)

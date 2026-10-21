@@ -364,4 +364,182 @@ struct JonesAccountAggregateTests {
         #expect(total.heightFingerprint == expired.heightFingerprint)
         #expect(expired.paceTargetPercent == nil)
     }
+
+    @Test(arguments: [(340, 20), (285, -35), (320, 0)])
+    func `balance uses raw capacity points and strict sign tones`(remaining: Int, balance: Int) throws {
+        let aliases = JonesAccountAggregate.codexAliases
+        let rows = aliases.enumerated().map { index, alias in
+            self.row(
+                alias,
+                remaining: Double(remaining / 5 + (index < remaining % 5 ? 1 : 0)),
+                resetsAt: Self.now.addingTimeInterval(18000 * 0.64))
+        }
+        let total = try #require(JonesAccountAggregate.codex(
+            projection: self.projection(aliases.map { self.visible($0) }), accounts: rows, now: Self.now))
+        #expect(total.paceTargetPercent == 320)
+        #expect(total.balancePoints == balance)
+        #expect(total.balanceTone == (balance > 0 ? .reserve : balance < 0 ? .deficit : .neutral))
+        #expect(total.expandedLines.first?.tone == total.balanceTone)
+        #expect(total.accessibilityText(isExpanded: true).contains("\(balance) percentage points of 500"))
+        if balance == 20 {
+            #expect(total.expandedLines.first?.text == "Reserve +20% (of 500%)")
+        }
+    }
+
+    @Test
+    func `verified Claude UUID seats contribute 155 of 200 without identity disclosure`() throws {
+        let rows = [
+            self.row(
+                "default",
+                remaining: 65,
+                provider: .claude,
+                email: "secret@example.test",
+                accountID: "00000000-0000-0000-0000-000000000001",
+                resetsAt: Self.now.addingTimeInterval(18000 * 0.72)),
+            self.row(
+                "jace",
+                remaining: 90,
+                provider: .claude,
+                email: "secret@example.test",
+                accountID: "00000000-0000-0000-0000-000000000002",
+                resetsAt: Self.now.addingTimeInterval(18000 * 0.60)),
+        ]
+        let total = try #require(JonesAccountAggregate.claude(
+            enrolledAliases: ["default", "jace"], accounts: rows, now: Self.now))
+        #expect(total.summedRemainingPercent == 155)
+        #expect(total.maximumPercent == 200)
+        #expect(total.balancePoints == 23)
+        let text = total.accessibilityText(isExpanded: true)
+        #expect(!text.contains("secret@"))
+        #expect(!text.contains("00000000-"))
+        let duplicate = self.row(
+            "jace",
+            remaining: 90,
+            provider: .claude,
+            accountID: "00000000-0000-0000-0000-000000000001")
+        let partial = try #require(JonesAccountAggregate.claude(
+            enrolledAliases: ["default", "jace"], accounts: [rows[0], duplicate], now: Self.now))
+        #expect(partial.reportingCount == 1)
+        #expect(partial.balancePoints == nil)
+        #expect(partial.exhaustion == .unknown(.partialRoster))
+    }
+
+    @Test(arguments: [20.0, 80.0])
+    func `pooled forecast distinguishes before first reset from ignored refills`(remaining: Double) throws {
+        let aliases = JonesAccountAggregate.codexAliases
+        let rows = aliases.map { self.row($0, remaining: remaining, resetsAt: Self.now.addingTimeInterval(9000)) }
+        let total = try #require(JonesAccountAggregate.codex(
+            projection: self.projection(aliases.map { self.visible($0) }), accounts: rows, now: Self.now))
+        guard case let .runsOut(date, beforeFirstReset) = total.exhaustion else {
+            Issue.record("Expected pooled forecast")
+            return
+        }
+        #expect(abs(date.timeIntervalSince(Self.now) - remaining / (100 - remaining) * 9000) < 0.001)
+        #expect(beforeFirstReset == (remaining == 20))
+        #expect(total.expandedLines.contains { $0.text == "Estimate ignores refills" } == (remaining == 80))
+        #expect(total.expandedLines.contains { $0.text == "Assumes demand moves across accounts" })
+    }
+
+    @Test(arguments: ["zero-activity", "all-zero", "too-early", "missing-timing", "partial"])
+    func `forecast handles unavailable and boundary states`(kind: String) throws {
+        let aliases = JonesAccountAggregate.codexAliases
+        var rows = aliases.map {
+            self.row(
+                $0,
+                remaining: kind == "zero-activity" ? 100 : kind == "all-zero" ? 0 : 50,
+                resetsAt: Self.now.addingTimeInterval(kind == "too-early" ? 17900 : 9000))
+        }
+        if kind == "missing-timing" { rows[0] = self.row(aliases[0]) }
+        if kind == "partial" { rows.removeLast() }
+        let total = try #require(JonesAccountAggregate.codex(
+            projection: self.projection(aliases.map { self.visible($0) }), accounts: rows, now: Self.now))
+        let expected: JonesAccountAggregate.Exhaustion = switch kind {
+        case "zero-activity": .noUsage
+        case "all-zero": .exhaustedNow
+        case "too-early": .unknown(.tooEarly)
+        case "partial": .unknown(.partialRoster)
+        default: .unknown(.missingTiming)
+        }
+        #expect(total.exhaustion == expected)
+        if kind == "missing-timing" || kind == "partial" { #expect(total.balancePoints == nil) }
+    }
+
+    @Test
+    func `exhausted accounts still contribute demand to pooled rate`() throws {
+        let aliases = JonesAccountAggregate.codexAliases
+        let rows = aliases.enumerated().map { index, alias in
+            self.row(alias, remaining: index == 0 ? 0 : 80, resetsAt: Self.now.addingTimeInterval(9000))
+        }
+        let total = try #require(JonesAccountAggregate.codex(
+            projection: self.projection(aliases.map { self.visible($0) }), accounts: rows, now: Self.now))
+        guard case let .runsOut(date, _) = total.exhaustion else {
+            Issue.record("Expected pooled forecast")
+            return
+        }
+        #expect(abs(date.timeIntervalSince(Self.now) - 320 / (180.0 / 9000)) < 0.001)
+    }
+
+    @Test
+    func `workday forecast skips weekend and mixed windows use wall clock`() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
+        let now = try #require(ISO8601DateFormatter().date(from: "2026-10-16T12:00:00Z"))
+        let reset = now.addingTimeInterval(4.5 * 86400)
+        let aliases = JonesAccountAggregate.codexAliases
+        let rows = aliases.map { self.row($0, remaining: 30, windowMinutes: 10080, resetsAt: reset) }
+        let total = try #require(JonesAccountAggregate.codex(
+            projection: self.projection(aliases.map { self.visible($0) }),
+            accounts: rows,
+            now: now,
+            workDays: 5,
+            calendar: calendar))
+        guard case let .runsOut(date, _) = total.exhaustion else {
+            Issue.record("Expected workday forecast")
+            return
+        }
+        #expect(calendar.component(.weekday, from: date) == 2)
+        var mixed = rows
+        mixed[0] = self.row(aliases[0], remaining: 30, windowMinutes: 300, resetsAt: now.addingTimeInterval(9000))
+        let mixedTotal = try #require(JonesAccountAggregate.codex(
+            projection: self.projection(aliases.map { self.visible($0) }),
+            accounts: mixed,
+            now: now,
+            workDays: 5,
+            calendar: calendar))
+        guard case let .runsOut(mixedDate, _) = mixedTotal.exhaustion else {
+            Issue.record("Expected mixed-clock forecast")
+            return
+        }
+        let rate = 70 / 9000.0 + 4 * 70 / (2.5 * 86400)
+        #expect(abs(mixedDate.timeIntervalSince(now) - 150 / rate) < 0.001)
+    }
+
+    @Test
+    func `expanded fingerprint records line shapes but no dates or identities`() {
+        var total = JonesAccountAggregate(
+            selectedCount: 5,
+            reportingCount: 5,
+            summedRemainingPercent: 340,
+            paceTargetPercent: 320,
+            exhaustion: .runsOut(at: Self.now, beforeFirstReset: false),
+            firstReset: Self.now)
+        let expanded = total.heightFingerprint(isExpanded: true)
+        #expect(expanded != total.heightFingerprint(isExpanded: false))
+        total.firstReset = Self.now.addingTimeInterval(60)
+        total.exhaustion = .runsOut(at: Self.now.addingTimeInterval(60), beforeFirstReset: false)
+        #expect(total.heightFingerprint(isExpanded: true) == expanded)
+        total.exhaustion = .noUsage
+        #expect(total.heightFingerprint(isExpanded: true) != expanded)
+        total.paceTargetPercent = nil
+        #expect(total.heightFingerprint(isExpanded: true).contains("bal=false"))
+    }
+
+    @Test(arguments: [
+        ("2026-07-01T16:00:00Z", "Wed Jul 1 12:00 PM EDT"),
+        ("2026-01-01T17:00:00Z", "Thu Jan 1 12:00 PM EST")
+    ])
+    func `aggregate dates use Eastern seasonal abbreviations`(input: String, expected: String) throws {
+        let date = try #require(ISO8601DateFormatter().date(from: input))
+        #expect(JonesAccountAggregate.easternDateLabel(date) == expected)
+    }
 }

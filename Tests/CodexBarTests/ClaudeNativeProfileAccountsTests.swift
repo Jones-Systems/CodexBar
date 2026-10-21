@@ -3,6 +3,34 @@ import Testing
 @testable import CodexBar
 @testable import CodexBarCore
 
+private struct ClaudeNativeProfileAccountsOAuthStub: ProviderFetchStrategy {
+    let id = "synthetic-native-oauth"
+    let kind = ProviderFetchKind.oauth
+
+    func isAvailable(_: ProviderFetchContext) async -> Bool {
+        true
+    }
+
+    func fetch(_: ProviderFetchContext) async throws -> ProviderFetchResult {
+        ProviderFetchResult(
+            usage: UsageSnapshot(
+                primary: RateWindow(usedPercent: 65, windowMinutes: 300, resetsAt: nil, resetDescription: nil),
+                secondary: RateWindow(usedPercent: 90, windowMinutes: 10080, resetsAt: nil, resetDescription: nil),
+                updatedAt: Date(timeIntervalSince1970: 1_800_000_000),
+                identity: ProviderIdentitySnapshot(
+                    providerID: .claude, accountEmail: nil, accountOrganization: nil, loginMethod: "OAuth")),
+            credits: nil,
+            dashboard: nil,
+            sourceLabel: "OAuth",
+            strategyID: self.id,
+            strategyKind: self.kind)
+    }
+
+    func shouldFallback(on _: Error, context _: ProviderFetchContext) -> Bool {
+        false
+    }
+}
+
 @MainActor
 enum ClaudeNativeProfileAccountsFixture {
     static func run(_ body: (SettingsStore, UsageStore, URL) async throws -> Void) async throws {
@@ -107,6 +135,36 @@ enum ClaudeNativeProfileAccountsFixture {
 
 @MainActor
 struct ClaudeNativeProfileAccountsTests {
+    @Test
+    func `selected OAuth UUID survives account projection without email or organization`() async throws {
+        try await ClaudeNativeProfileAccountsFixture.run { _, store, root in
+            let config = root.appendingPathComponent(".claude-t3/jace/.claude.json")
+            try FileManager.default.createDirectory(
+                at: config.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try Data("{\"oauthAccount\":{\"accountUuid\":\"synthetic-jace-uuid\"}}".utf8).write(to: config)
+            store._test_claudeNativeProfileFetchOutcomeOverride = { context in
+                do {
+                    let result =
+                        try await ClaudeNativeProfileFetchStrategy(base: ClaudeNativeProfileAccountsOAuthStub())
+                        .fetch(context)
+                    return ProviderFetchOutcome(result: .success(result), attempts: [])
+                } catch {
+                    return ProviderFetchOutcome(result: .failure(error), attempts: [])
+                }
+            }
+            await store.refreshClaudeNativeProfileAccountsAfterMain()
+            let account = try #require(store.claudeNativeProfileAccountsForDisplay().first { !$0.isActive })
+            let snapshot = try #require(account.snapshot)
+            #expect(snapshot.identity?.providerID == .claude)
+            #expect(snapshot.identity?.accountID == "synthetic-jace-uuid")
+            #expect(snapshot.identity?.accountEmail == nil)
+            #expect(snapshot.identity?.accountOrganization == nil)
+            #expect(snapshot.primary?.usedPercent == 65)
+            #expect(snapshot.secondary?.usedPercent == 90)
+            #expect(account.error == nil)
+        }
+    }
+
     @Test(arguments: [false, true])
     func `discovery change during side fetch discards result and retires prior owner usage`(removed: Bool)
         async throws

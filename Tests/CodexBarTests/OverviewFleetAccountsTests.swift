@@ -756,7 +756,8 @@ struct OverviewFleetAccountsTests {
 extension OverviewFleetAccountsTests {
     private func seedSelectedCodexFleet(
         controller: StatusItemController,
-        liveAlias: String? = "malcolm") throws
+        liveAlias: String? = "malcolm",
+        missingQuota: Bool = false) throws
     {
         let home = try URL(fileURLWithPath: #require(controller.store.environmentBase["HOME"]))
         let observed = JonesAccountAggregate.codexAliases.enumerated().map { index, alias in
@@ -776,13 +777,29 @@ extension OverviewFleetAccountsTests {
                 codexHomePath: home.appendingPathComponent("system").path,
                 observedAt: Date(timeIntervalSince1970: 1_800_000_000),
                 identity: .providerAccount(id: "distinct-default-workspace"))
+        let extras = ["default", "extra", "unregistered"].map { alias in
+            ObservedSystemCodexAccount(
+                email: "\(alias)@example.test",
+                workspaceAccountID: "workspace-\(alias)",
+                authFingerprint: "fingerprint-\(alias)",
+                codexHomePath: home.appendingPathComponent(alias).path,
+                observedAt: Date(timeIntervalSince1970: 1_800_000_000),
+                identity: .providerAccount(id: "workspace-\(alias)"))
+        }
+        let managed = ManagedCodexAccount(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+            email: "managed@example.test",
+            managedHomePath: home.appendingPathComponent("managed").path,
+            createdAt: 1,
+            updatedAt: 1,
+            lastAuthenticatedAt: 1)
         controller.settings._test_codexAccountSnapshotLoader = { source in
             CodexAccountReconciliationSnapshot(
-                storedAccounts: [],
-                activeStoredAccount: nil,
+                storedAccounts: [managed],
+                activeStoredAccount: source == .managedAccount(id: managed.id) ? managed : nil,
                 liveSystemAccount: live,
-                profileHomeAccounts: observed,
-                fleetProfileHomePaths: observed.map(\.codexHomePath),
+                profileHomeAccounts: observed + extras,
+                fleetProfileHomePaths: (observed + Array(extras.prefix(2))).map(\.codexHomePath),
                 matchingStoredAccountForLiveSystemAccount: nil,
                 activeSource: source,
                 hasUnreadableAddedAccountStore: false)
@@ -791,8 +808,9 @@ extension OverviewFleetAccountsTests {
         controller.store.codexAccountSnapshots = accounts.map {
             CodexAccountUsageSnapshot(
                 account: $0,
-                snapshot: Self.snapshot(provider: .codex, accountEmail: $0.email),
-                error: nil,
+                snapshot: missingQuota && $0.fleetProfileAlias == "steven"
+                    ? nil : Self.snapshot(provider: .codex, accountEmail: $0.email),
+                error: missingQuota && $0.fleetProfileAlias == "wallace" ? "Unavailable" : nil,
                 sourceLabel: "Synthetic")
         }
         controller.store.snapshots[.codex] = Self.snapshot(provider: .codex, accountEmail: "malcolm@example.test")
@@ -831,14 +849,30 @@ extension OverviewFleetAccountsTests {
         }
     }
 
-    @Test
-    func `named Codex fleet hides distinct default in stacked segmented and overview presentation`() throws {
+    @Test(arguments: [false, true], [false, true])
+    func `named Codex fleet excludes unrelated accounts in stacked segmented and overview presentation`(
+        reversed: Bool,
+        managedActive: Bool) throws
+    {
         try self.withFixture(providers: [.codex, .gemini]) { controller in
             controller.store.snapshots[.gemini] = Self.snapshot(provider: .gemini)
-            try self.seedSelectedCodexFleet(controller: controller, liveAlias: nil)
+            let activeSource: CodexActiveSource = managedActive
+                ? .managedAccount(id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!) : .liveSystem
+            controller.settings.codexActiveSource = activeSource
+            try self.seedSelectedCodexFleet(controller: controller, liveAlias: nil, missingQuota: true)
             let raw = try #require(controller.settings.codexVisibleAccountProjectionForMenuDisplay)
-            #expect(raw.visibleAccounts.count == 6)
-            let expected = raw.visibleAccounts.filter { $0.selectionSource != .liveSystem }
+            #expect(raw.visibleAccounts.count == 10)
+            #expect(raw.visibleAccounts.first { $0.id == raw.activeVisibleAccountID }?.selectionSource == activeSource)
+            let expected = raw.visibleAccounts.filter {
+                JonesAccountAggregate.codexAliases.contains($0.fleetProfileAlias ?? "")
+            }
+            #expect(expected.count == 5)
+            let ordered = reversed ? Array(raw.visibleAccounts.reversed()) : raw.visibleAccounts
+            controller.settings.updateProviderConfig(provider: .codex, affectsBackgroundWork: false) {
+                $0.codexAccountOrder = ordered.map(CodexAccountOrder.key)
+            }
+            controller.settings.cachedCodexAccountMenuProjection = CachedCodexAccountMenuProjection(
+                activeSource: activeSource, loadedAt: Date(), projection: raw)
             for layout in [MultiAccountMenuLayout.stacked, .segmented] {
                 controller.settings.multiAccountMenuLayout = layout
                 let display = try #require(controller.codexAccountMenuDisplay(for: .codex))
@@ -869,7 +903,7 @@ extension OverviewFleetAccountsTests {
                 #expect(self.identifiers(in: menu).count { $0.hasPrefix("overviewAccount-codex-") } == 5)
             }
             #expect(controller.settings.codexVisibleAccountProjectionForMenuDisplay == raw)
-            #expect(controller.settings.codexActiveSource == .liveSystem)
+            #expect(controller.settings.codexActiveSource == activeSource)
         }
     }
 
@@ -983,7 +1017,9 @@ extension OverviewFleetAccountsTests {
                 #expect(overviewIDs.dropLast().contains { $0.hasPrefix("overviewAccount-\(provider.rawValue)-") })
             }
             let before = controller.menuAdjunctReadinessSignature()
-            let index = try #require(controller.store.codexAccountSnapshots.firstIndex { !$0.account.isLive })
+            let index = try #require(controller.store.codexAccountSnapshots.firstIndex {
+                $0.account.fleetProfileAlias == "malcolm"
+            })
             let old = controller.store.codexAccountSnapshots[index]
             controller.store.codexAccountSnapshots[index] = CodexAccountUsageSnapshot(
                 account: old.account, snapshot: old.snapshot, error: "Unavailable", sourceLabel: old.sourceLabel)
@@ -991,6 +1027,70 @@ extension OverviewFleetAccountsTests {
             #expect(total.reportingCount == 4)
             #expect(total.maximumPercent == 500)
             #expect(controller.menuAdjunctReadinessSignature() != before)
+        }
+    }
+
+    @Test
+    func `aggregate runtime clicks toggle separate provider and overview state then reset on idle`() throws {
+        try self.withFixture(providers: [.codex, .claude], renderCards: true) { controller in
+            self.seedClaude(2, controller: controller)
+            try self.seedSelectedCodexFleet(controller: controller)
+            for provider in [UsageProvider.codex, .claude] {
+                let menu = NSMenu()
+                let display = controller.codexAccountMenuDisplay(for: provider)
+                let context = StatusItemController.MenuCardContext(
+                    currentProvider: provider,
+                    selectedProvider: provider,
+                    menuWidth: 310,
+                    codexAccountDisplay: display,
+                    tokenAccountDisplay: nil,
+                    openAIContext: .init(
+                        hasUsageBreakdown: false,
+                        hasCreditsHistory: false,
+                        hasCostHistory: false,
+                        canShowBuyCredits: false,
+                        hasOpenAIWebMenuItems: false))
+                let scope = provider == .codex ? "codexAccount" : "claudeNativeProfile"
+                if provider == .codex {
+                    #expect(try controller.addCompactCodexAccountMenuIfPlanned(
+                        display: #require(display), to: menu, captureMenu: menu, context: context))
+                } else {
+                    controller.addClaudeNativeProfileMenuCards(to: menu, captureMenu: menu, context: context)
+                }
+                let item = try #require(menu.items.first { ($0.representedObject as? String) == "\(scope)Aggregate" })
+                #expect(item.isEnabled)
+                let view = try #require(item.view as? MenuRowContainerView)
+                #expect(view._test_simulateRuntimeClick())
+                #expect(controller.compactAccountExpandedAggregateScopes.contains(scope))
+                #expect(controller.overviewExpansionState.expandedAggregateProviders.isEmpty)
+                #expect(view._test_simulateRuntimeClick())
+                #expect(!controller.compactAccountExpandedAggregateScopes.contains(scope))
+                #expect(view._test_simulateRuntimeClick())
+
+                let overview = NSMenu()
+                controller.addOverviewFleetAccountRows(for: provider, to: overview, captureMenu: overview, width: 310)
+                let overviewItem = try #require(overview.items.first {
+                    ($0.representedObject as? String) == "overviewAccountAggregate-\(provider.rawValue)"
+                })
+                #expect(overviewItem.isEnabled)
+                let overviewView = try #require(overviewItem.view as? MenuRowContainerView)
+                #expect(overviewView._test_simulateRuntimeClick())
+                #expect(controller.overviewExpansionState.expandedAggregateProviders.contains(provider))
+                #expect(controller.compactAccountExpandedAggregateScopes.contains(scope))
+                #expect(overviewView._test_simulateRuntimeClick())
+                #expect(!controller.overviewExpansionState.expandedAggregateProviders.contains(provider))
+                #expect(overviewView._test_simulateRuntimeClick())
+                #expect(controller.compactAccountExpandedIDs.isEmpty)
+                #expect(controller.overviewExpansionState.expandedAccountIDs.isEmpty)
+                controller.openMenus[ObjectIdentifier(menu)] = menu
+                controller.resetCompactAccountMenuExpansionStateIfIdle()
+                #expect(controller.compactAccountExpandedAggregateScopes.contains(scope))
+                #expect(controller.overviewExpansionState.expandedAggregateProviders.contains(provider))
+                controller.openMenus.removeValue(forKey: ObjectIdentifier(menu))
+                controller.resetCompactAccountMenuExpansionStateIfIdle()
+                #expect(controller.compactAccountExpandedAggregateScopes.isEmpty)
+                #expect(controller.overviewExpansionState.expandedAggregateProviders.isEmpty)
+            }
         }
     }
 }

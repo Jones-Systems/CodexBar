@@ -5,7 +5,7 @@ Artifact Type: `work-note`
 
 Artifact ID: `worknote.aggregate-account-usage`
 
-Purpose: Preserve selected-account aggregate delivery and pacing mock scope.
+Purpose: Preserve selected-account aggregate delivery, pacing, and account presentation repairs.
 
 Governing artifact: `spec.aggregate-account-usage`
 
@@ -16,7 +16,7 @@ Consumers: M Jones and CodexBar delivery owner
 Authority effect: none
 <!-- codex-section:end id="worknote.aggregate-account-usage#ctx.artifact-header.001" -->
 
-## Accepted scope and binding
+## Original accepted scope and binding
 
 The owner selected A and authorized baseline implementation, while requesting a
 new mock of a small red aggregate pacing tick. The tick remains review-only.
@@ -283,3 +283,104 @@ no tests; corrected it, then reused the completed build. Logs and exact
 selection coverage remain under `.build/pacing-*`. Production source hashes
 match the earlier full run. No claim of one final all-green local full-suite
 invocation is made; final-head complete CI remains the merge gate.
+
+## Expanded pacing and production-identity follow-up
+
+The owner supplied installed-menu screenshots after PR #16 and requested a
+clickable aggregate with a signed pacing difference measured against 500% or
+200%, an estimated exhaustion time, green reserve/red deficit semantics, the
+Claude Personal heading, a working Claude total, and exactly the five named
+Codex fleet profiles. The current 2 × 8 point marker extension is acceptable.
+The accepted finish line remains merge and local Jones-app installation.
+
+This follow-up starts from canonical main `2fdc905b8aa55a2900a3f5907ad7daebe0b5bbc4`
+in `/Users/malcolmjones/.t3/worktrees/CodexBar/aggregate-details-8b4b042f`, branch
+`work/aggregate-details-8b4b042f`. Root alone owns Git, documents, checks,
+packaging and delivery. No open PR overlapped at intake. The prior task worktree
+and installation rollback bundles remain retained.
+
+Two bounded Sol/medium source investigations completed at that exact base.
+The Codex filter excluded live/default rows but admitted managed and nonfleet
+profile rows, which can receive the `Account · <digest>` label. The screenshot
+cannot identify which of those sources produced the particular row. A strict
+presentation-only roster applies when a recognized enrolled fleet home exists;
+generic nonfleet behavior remains outside that integration. Missing usage must
+not hide a named enrolled profile or change authentication selection.
+
+Claude native row IDs already use the expected aliases. Production OAuth usage
+contains no email/organization, and its snapshot conversion supplies no account
+ID; the aggregate consequently rejects valid usage as unidentified. Existing
+fixtures supplied synthetic email or IDs and missed this transport shape. The
+bounded repair attaches an unchanged selected-profile Claude UUID at the fetch
+boundary, preserving identity deduplication instead of counting display labels.
+The native Claude caller also supplies no section metadata to the shared renderer.
+
+The new pacing disclosure is framed by an Opus 5.5/high read-only child under
+inherited `claude_frontier`, personal temporary revision 1. Its account route
+returned `start` for Malcolm's `claudeAgent`; both companion allowances were
+unavailable (`account_authentication_unverified`, fleet-managed unsupported),
+so allowance remains unknown under the existing fallback. The first T3 launch
+was rejected with `No task was created` because the target worktree belongs to
+a different repository; the corrected read-only child uses the parent binding
+and explicit source path. No unknown creation effect exists.
+
+Current frontend guidance was resolved and read at
+`9a01d7131a057aee382c78485a2610eeba689b54`; affected map entries remain in `docs/ui.md`.
+The gallery export route covers public website/iOS presentation exports; this
+private account-backed macOS application update produces no such export.
+No web search is needed: owner screenshots, current native code and synthetic
+fixtures provide the bounded research basis. The native Voice registry socket
+is absent, so registration is unavailable with no submitted effect; no endpoint
+repair or identity guess is attempted.
+
+Independent builders own disjoint roster-presentation and Claude-fetch source
+and tests. Root owns the shared build state. An APFS copy-on-write clone of the
+prior owned build cache limits disk duplication; retained logs and binaries
+inside it are historical and do not establish candidate verification. CPU was
+24.3%, one core 8.33% across 12 cores, memory pressure warning with zero sampled
+swap traffic at builder admission. No test/build process was started concurrently.
+
+Opus framing completed and was accepted for in-place expansion, raw signed
+balance, pooled current-rate estimate bounded by the first reset, existing
+workday behavior, native green/red/selection colors and session-scoped state.
+Its full result is retained in task-owned `.build/aggregate-details-opus-v3.md`.
+The Engineering Spec now records those semantics and the shared-core compatibility
+and verification boundary. One Astra/high writer owns that connected source/test
+slice; the two defect writers have frozen their scopes. Root checkpointed their
+six paths as `18512e9b`. No independent reviewer is selected by default.
+
+Failing-before execution was not cheap at this new physical worktree: compiling
+new app assertions required a rebuild while independent writers were active.
+Root did not freeze sibling lanes solely to manufacture red evidence. The exact
+pre-fix counterexamples and production-shaped assertions are retained; frozen
+candidate execution remains required and no unrun test is reported as passing.
+
+The first make-check run completed its harness checks but stopped on formatting
+in eight changed files. Root ran the repository-pinned SwiftFormat only on the
+17 changed Swift paths and replaced two forced fixture UUID unwraps with
+throwing requirements. The first focused compile could not reuse cloned Clang
+modules because their cache recorded the prior absolute worktree path; its
+runner drained and removed the fixture parent. Root retained the incompatible
+cloned debug/release ModuleCache directories under exact task-owned names,
+leaving the old worktree untouched, then restarted against fresh cache paths.
+The second compile has built the core and application and is building tests;
+no behavioral pass is claimed before execution finishes.
+
+The second focused build stopped on ENOSPC before tests ran. Root removed only
+this task's failed generated debug output, disabled compiler debug symbols and
+indexing for local verification, and retained source and build logs. A session
+interruption then detached the third build from its runner; the exact orphaned
+compiler process tree was terminated and drained before its fixture parent was
+removed. Root reclaimed the prior task-owned debug build at verified `ffaba2c`
+after proving no open files. Worktrees, source, preferences and installed rollback
+bundles were preserved. Free space recovered to 6.5 GiB; no broad host cleanup ran.
+
+The resumed focused run at `32174a25` executed 255 tests in 13 suites: 253 passed;
+two failed. The architecture guard had four stale source-line anchors, rebound
+to the same exact constructs and justifications. The new workday test compared
+Date-derived floating-point seconds exactly; it now requires the expected
+three-day interval within one millisecond. PR #17's initial Linux lint job found
+35 violations in changed paths. Root separated multiline arguments, named the
+local timing tuple, and grouped aggregate-row rendering arguments into one
+context without changing behavior or disabling lint rules. Final checks and
+candidate test execution are pending; these repairs are not yet a passing claim.
