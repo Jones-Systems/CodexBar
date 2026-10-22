@@ -86,8 +86,11 @@ struct ClaudeNativeProfileMenuSelectionTests {
     @Test
     func `descriptor replaces manage entry and native menu dispatch selects profile`() async throws {
         try await ClaudeNativeProfileAccountsFixture.run { settings, store, _ in
-            try withStatusItemControllerForTesting(store: store, settings: settings, fetcher: UsageFetcher()) {
-                controller in
+            try withStatusItemControllerForTesting(
+                store: store,
+                settings: settings,
+                fetcher: UsageFetcher())
+            { controller in
                 let descriptor = controller.makeMenuDescriptor(provider: .claude, includeContextualActions: true)
                 let entries = descriptor.sections.flatMap(\.entries)
                 #expect(!entries.contains {
@@ -118,13 +121,26 @@ struct ClaudeNativeProfileMenuSelectionTests {
             { controller in
                 var openedProvider: UsageProvider?
                 let content = MenuContent(
-                    store: store, settings: settings, account: AccountInfo(email: nil, plan: nil),
-                    updater: controller.updater, provider: .claude,
+                    store: store,
+                    settings: settings,
+                    account: AccountInfo(email: nil, plan: nil),
+                    updater: controller.updater,
+                    provider: .claude,
                     actions: MenuActions(
-                        installUpdate: {}, refresh: {}, refreshAugmentSession: {}, openDashboard: {},
-                        openStatusPage: {}, openChangelog: {}, addCodexAccount: {}, switchAccount: { _ in },
-                        openTerminal: { _ in }, openSettings: {}, openProviderSettings: { openedProvider = $0 },
-                        openAbout: {}, quit: {}, copyError: { _ in }))
+                        installUpdate: {},
+                        refresh: {},
+                        refreshAugmentSession: {},
+                        openDashboard: {},
+                        openStatusPage: {},
+                        openChangelog: {},
+                        addCodexAccount: {},
+                        switchAccount: { _ in },
+                        openTerminal: { _ in },
+                        openSettings: {},
+                        openProviderSettings: { openedProvider = $0 },
+                        openAbout: {},
+                        quit: {},
+                        copyError: { _ in }))
                 content.perform(.selectClaudeNativeProfile(alias: "jace"))
                 #expect(settings.claudeNativeProfileAlias == "jace")
                 settings.claudeUsageDataSource = .web
@@ -149,17 +165,33 @@ struct ClaudeNativeProfileMenuSelectionTests {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         try await ClaudeNativeProfileAccountsFixture.run { settings, store, _ in
             let content = MenuContent(
-                store: store, settings: settings, account: AccountInfo(email: nil, plan: nil),
-                updater: DisabledUpdaterController(), provider: .claude,
+                store: store,
+                settings: settings,
+                account: AccountInfo(email: nil, plan: nil),
+                updater: DisabledUpdaterController(),
+                provider: .claude,
                 actions: MenuActions(
-                    installUpdate: {}, refresh: {}, refreshAugmentSession: {}, openDashboard: {},
-                    openStatusPage: {}, openChangelog: {}, addCodexAccount: {}, switchAccount: { _ in },
-                    openTerminal: { _ in }, openSettings: {}, openProviderSettings: { _ in },
-                    openAbout: {}, quit: {}, copyError: { _ in }))
+                    installUpdate: {},
+                    refresh: {},
+                    refreshAugmentSession: {},
+                    openDashboard: {},
+                    openStatusPage: {},
+                    openChangelog: {},
+                    addCodexAccount: {},
+                    switchAccount: { _ in },
+                    openTerminal: { _ in },
+                    openSettings: {},
+                    openProviderSettings: { _ in },
+                    openAbout: {},
+                    quit: {},
+                    copyError: { _ in }))
             let previous = try #require(ClaudeProviderImplementation().loginMenuAction(
                 context: ProviderMenuLoginContext(
-                    provider: .claude, store: store, settings: settings,
-                    account: AccountInfo(email: nil, plan: nil), hasAccount: true)))
+                    provider: .claude,
+                    store: store,
+                    settings: settings,
+                    account: AccountInfo(email: nil, plan: nil),
+                    hasAccount: true)))
             // Reconstruct the prior action with the current consumer; this is not a prior-binary capture.
             try Self.capture(
                 content.row(for: .action(previous.label, previous.action)),
@@ -167,8 +199,11 @@ struct ClaudeNativeProfileMenuSelectionTests {
             for alias in ["default", "jace", "removed"] {
                 settings.claudeNativeProfileAlias = alias
                 let descriptor = MenuDescriptor.build(
-                    provider: .claude, store: store, settings: settings,
-                    account: AccountInfo(email: nil, plan: nil), updateReady: false)
+                    provider: .claude,
+                    store: store,
+                    settings: settings,
+                    account: AccountInfo(email: nil, plan: nil),
+                    updateReady: false)
                 let entry = try #require(descriptor.sections.flatMap(\.entries).first {
                     if case .submenu("Claude profile", _, _) = $0 { return true }
                     return false

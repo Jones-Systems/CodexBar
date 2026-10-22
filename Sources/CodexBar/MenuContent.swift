@@ -145,9 +145,7 @@ struct MenuContent: View {
             self.actions.addCodexAccount()
         case .requestCodexSystemPromotion:
             return
-        case let .addProviderAccount(provider):
-            self.actions.switchAccount(provider)
-        case let .switchAccount(provider):
+        case let .addProviderAccount(provider), let .switchAccount(provider):
             self.actions.switchAccount(provider)
         case let .openTerminal(command):
             self.actions.openTerminal(command)
@@ -162,8 +160,7 @@ struct MenuContent: View {
         case let .providerSettings(provider):
             self.actions.openProviderSettings(provider)
         case let .selectClaudeNativeProfile(alias):
-            let outcome = ClaudeNativeProfileMenuSelection.select(alias: alias, store: self.store)
-            if outcome != .unchanged { self.profileMenuRevision &+= 1 }
+            self.selectClaudeNativeProfile(alias)
         case .about:
             self.actions.openAbout()
         case .quit:
@@ -173,6 +170,11 @@ struct MenuContent: View {
         case .focusAgentSession:
             return
         }
+    }
+
+    private func selectClaudeNativeProfile(_ alias: String) {
+        let outcome = ClaudeNativeProfileMenuSelection.select(alias: alias, store: self.store)
+        if outcome != .unchanged { self.profileMenuRevision &+= 1 }
     }
 }
 
