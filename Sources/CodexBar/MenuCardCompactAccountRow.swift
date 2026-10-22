@@ -21,6 +21,11 @@ struct MenuCardCompactAccountRowView: View {
         var isActiveAccount: Bool = false
         var isRefreshing: Bool = false
         var trailingDetail: TrailingDetail?
+        var detailIsResetTiming: Bool = false
+
+        var detailIsError: Bool {
+            self.hasError || (!self.detailIsResetTiming && self.severity == .critical)
+        }
 
         var headroomLabel: String? {
             self.headroomPercent.map { "\(Int($0.rounded()))%" }
@@ -32,6 +37,7 @@ struct MenuCardCompactAccountRowView: View {
                 self.label,
                 self.headroomLabel ?? "-",
                 self.constraintDetail ?? "-",
+                self.detailIsResetTiming ? "resetTiming" : "constraint",
                 self.hasError ? "error" : "ok",
                 self.showsBestBadge ? "best" : "plain",
                 self.isActiveAccount ? "active" : "inactive",
@@ -96,7 +102,7 @@ struct MenuCardCompactAccountRowView: View {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(self.model.constraintDetail ?? " ")
                     .font(.footnote)
-                    .foregroundStyle(self.model.severity == .critical
+                    .foregroundStyle(self.model.detailIsError
                         ? MenuHighlightStyle.error(self.isHighlighted)
                         : MenuHighlightStyle.secondary(self.isHighlighted))
                     .lineLimit(1)
