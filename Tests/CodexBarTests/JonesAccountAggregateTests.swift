@@ -515,7 +515,7 @@ struct JonesAccountAggregateTests {
     }
 
     @Test
-    func `expanded fingerprint records line shapes but no dates or identities`() {
+    func `compact expanded fingerprint stays stable across two row content changes`() {
         var total = JonesAccountAggregate(
             selectedCount: 5,
             reportingCount: 5,
@@ -529,14 +529,102 @@ struct JonesAccountAggregateTests {
         total.exhaustion = .runsOut(at: Self.now.addingTimeInterval(60), beforeFirstReset: false)
         #expect(total.heightFingerprint(isExpanded: true) == expanded)
         total.exhaustion = .noUsage
-        #expect(total.heightFingerprint(isExpanded: true) != expanded)
+        #expect(total.heightFingerprint(isExpanded: true) == expanded)
         total.paceTargetPercent = nil
-        #expect(total.heightFingerprint(isExpanded: true).contains("bal=false"))
+        total.firstReset = nil
+        #expect(total.heightFingerprint(isExpanded: true) == expanded)
+        #expect(expanded.contains("compactRows=2"))
+    }
+
+    @Test(arguments: [2, 5])
+    func `compact balance preserves raw points and provider capacity`(count: Int) {
+        var total = JonesAccountAggregate(
+            selectedCount: count,
+            reportingCount: count,
+            summedRemainingPercent: 121,
+            paceTargetPercent: 100)
+        #expect(total.compactBalanceLabel == "21% in reserve")
+        #expect(total.balanceTone == .reserve)
+        #expect(total.compactCapacityLabel == "of \(count * 100)%")
+        total.paceTargetPercent = 142
+        #expect(total.compactBalanceLabel == "21% in deficit")
+        #expect(total.balanceTone == .deficit)
+        total.paceTargetPercent = 121
+        #expect(total.compactBalanceLabel == "On pace")
+        #expect(total.balanceTone == .neutral)
+        total.paceTargetPercent = nil
+        #expect(total.compactBalanceLabel == "Pace unavailable")
+        #expect(total.balanceTone == .neutral)
+    }
+
+    @Test(arguments: [
+        (JonesAccountAggregate.Exhaustion.exhaustedNow, "Now"),
+        (.noUsage, "No usage"),
+        (.unknown(.partialRoster), "Needs all accounts"),
+        (.unknown(.missingTiming), "Timing unavailable"),
+        (.unknown(.tooEarly), "Too early"),
+        (.unknown(.beyondHorizon), "Beyond 28 days"),
+    ])
+    func `compact forecast states do not invent a date`(
+        exhaustion: JonesAccountAggregate.Exhaustion,
+        expected: String)
+    {
+        let total = JonesAccountAggregate(
+            selectedCount: 5,
+            reportingCount: 5,
+            summedRemainingPercent: 100,
+            exhaustion: exhaustion)
+        #expect(total.compactExhaustionLabel == expected)
+    }
+
+    @Test
+    func `partial compact pace stays neutral while full forecast context remains available`() {
+        let partial = JonesAccountAggregate(
+            selectedCount: 5,
+            reportingCount: 4,
+            summedRemainingPercent: 100,
+            paceTargetPercent: 200,
+            exhaustion: .unknown(.partialRoster))
+        #expect(partial.compactBalanceLabel == "Needs all accounts")
+        #expect(partial.balanceTone == .neutral)
+        #expect(partial.compactCapacityLabel == "of 500%")
+        let total = JonesAccountAggregate(
+            selectedCount: 5,
+            reportingCount: 5,
+            summedRemainingPercent: 340,
+            paceTargetPercent: 320,
+            exhaustion: .runsOut(at: Self.now, beforeFirstReset: false),
+            firstReset: Self.now)
+        for text in [
+            "Target 320 · Remaining 340",
+            "Estimate ignores refills",
+            "Assumes demand moves across accounts",
+            "Resets begin before this estimate",
+            "First reset",
+            JonesAccountAggregate.easternDateLabel(Self.now),
+        ] {
+            #expect(total.expandedHelpText.contains(text))
+            #expect(total.accessibilityText(isExpanded: true).contains(text))
+        }
+    }
+
+    @Test(arguments: [
+        ("2026-07-01T16:00:00Z", "Wed 12:00 PM EDT"),
+        ("2026-01-01T17:00:00Z", "Thu 12:00 PM EST"),
+    ])
+    func `compact forecast uses Eastern seasonal date labels`(input: String, expected: String) throws {
+        let date = try #require(ISO8601DateFormatter().date(from: input))
+        let total = JonesAccountAggregate(
+            selectedCount: 5,
+            reportingCount: 5,
+            summedRemainingPercent: 100,
+            exhaustion: .runsOut(at: date, beforeFirstReset: true))
+        #expect(total.compactExhaustionLabel == expected)
     }
 
     @Test(arguments: [
         ("2026-07-01T16:00:00Z", "Wed Jul 1 12:00 PM EDT"),
-        ("2026-01-01T17:00:00Z", "Thu Jan 1 12:00 PM EST")
+        ("2026-01-01T17:00:00Z", "Thu Jan 1 12:00 PM EST"),
     ])
     func `aggregate dates use Eastern seasonal abbreviations`(input: String, expected: String) throws {
         let date = try #require(ISO8601DateFormatter().date(from: input))
