@@ -355,6 +355,28 @@ struct ClaudeProviderImplementation: ProviderImplementation {
     }
 
     @MainActor
+    func appendActionMenuEntries(context: ProviderMenuActionContext, entries: inout [ProviderMenuEntry]) {
+        guard ClaudeNativeProfileSelection.isSelected(environment: context.store.claudeNativeProfileFetchEnvironment())
+        else { return }
+        entries.removeAll {
+            if case .action("Manage native profile…", .providerSettings(.claude)) = $0 { return true }
+            return false
+        }
+        let items = ClaudeNativeProfileMenuSelection.items(
+            selectedAlias: context.settings.claudeNativeProfileAlias,
+            discovery: ClaudeFleetProfileDiscovery.discover())
+        { profile in
+            let label = context.settings.accountDisplayLabel(
+                provider: .claude,
+                profileIdentity: JonesAccountDisplayLabel.claudeProfileIdentity(
+                    alias: profile.alias, home: profile.home, configDirectory: profile.configDirectory),
+                verifiedAlias: profile.alias)
+            return PersonalInfoRedactor.redactEmail(label, isEnabled: context.settings.hidePersonalInfo)
+        }
+        entries.append(.submenu("Claude profile", "person.crop.circle", items))
+    }
+
+    @MainActor
     func loginMenuAction(context: ProviderMenuLoginContext)
         -> (label: String, action: MenuDescriptor.MenuAction)?
     {

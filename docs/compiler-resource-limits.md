@@ -1,3 +1,10 @@
+---
+summary: "Load-aware macOS compiler job limits and participating build launchers."
+read_when:
+  - Running local builds or tests
+  - Diagnosing compiler CPU usage or blocked admission
+---
+
 # Compiler resource limits
 
 Use the repository's build and test launchers on macOS. They apply a maximum
