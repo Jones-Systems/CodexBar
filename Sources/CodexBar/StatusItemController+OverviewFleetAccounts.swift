@@ -76,7 +76,8 @@ extension StatusItemController {
                 hasError: compact.hasError,
                 showsBestBadge: compact.isBestCandidate,
                 isActiveAccount: compact.isActive,
-                trailingDetail: details[compact.accountID]?.trailingDetail)
+                trailingDetail: details[compact.accountID]?.trailingDetail,
+                detailIsResetTiming: !compact.hasError && details[compact.accountID]?.text != nil)
             if provider == .claude, compact.headroomPercent == nil {
                 model.isRefreshing = self.store.claudeNativeProfileRefreshingAliases
                     .contains(compact.accountID.opaqueID)

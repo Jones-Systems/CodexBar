@@ -136,7 +136,8 @@ enum JonesCompactAccountPresentation {
             hasError: input.hasError,
             showsBestBadge: false,
             isRefreshing: input.isRefreshing,
-            trailingDetail: detail?.trailingDetail)
+            trailingDetail: detail?.trailingDetail,
+            detailIsResetTiming: !input.hasError && detail?.text != nil)
     }
 
     static func plan(

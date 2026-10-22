@@ -1,3 +1,4 @@
+import AppKit
 import CodexBarCore
 import Foundation
 import Testing
@@ -361,5 +362,86 @@ struct MenuBarResetTimeDisplayTests {
             now: now)
 
         #expect(text == "5h ↻ in 2h 15m · W 45%")
+    }
+}
+
+extension MenuBarResetTimeDisplayTests {
+    @Test
+    func `credit selection uses only available future Codex inventory earlier than reset`() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let resetAt = now.addingTimeInterval(86400)
+        let credits: [CodexRateLimitResetCredit] = [
+            ("redeemed", 60.0, CodexRateLimitResetCreditStatus.redeemed),
+            ("expired", 0.0, .available),
+            ("nearest", 3600.0, .available),
+            ("later", 7200.0, .available),
+        ].map { id, seconds, status in
+            CodexRateLimitResetCredit(
+                id: id,
+                resetType: "weekly",
+                status: status,
+                grantedAt: now.addingTimeInterval(-86400),
+                expiresAt: now.addingTimeInterval(seconds),
+                redeemStartedAt: nil,
+                redeemedAt: nil,
+                title: nil,
+                description: nil)
+        }
+        let snapshot = UsageSnapshot(
+            primary: nil,
+            secondary: nil,
+            codexResetCredits: .init(credits: credits, availableCount: 99, updatedAt: now),
+            updatedAt: now)
+        #expect(MenuBarResetCreditCountdown.preferredExpiry(
+            provider: .codex,
+            snapshot: snapshot,
+            resetAt: resetAt,
+            now: now) == now.addingTimeInterval(3600))
+        #expect(MenuBarResetCreditCountdown.preferredExpiry(
+            provider: .codex,
+            snapshot: snapshot,
+            resetAt: resetAt,
+            now: now.addingTimeInterval(3600)) == now.addingTimeInterval(7200))
+        for boundary in [Date?.none, now.addingTimeInterval(3600), now.addingTimeInterval(1800)] {
+            #expect(MenuBarResetCreditCountdown.preferredExpiry(
+                provider: .codex,
+                snapshot: snapshot,
+                resetAt: boundary,
+                now: now) == nil)
+        }
+        #expect(MenuBarResetCreditCountdown.preferredExpiry(
+            provider: .claude,
+            snapshot: snapshot,
+            resetAt: resetAt,
+            now: now) == nil)
+        #expect(MenuBarResetCreditCountdown.preferredExpiry(
+            provider: .codex,
+            snapshot: snapshot,
+            resetAt: resetAt,
+            now: now.addingTimeInterval(7200)) == nil)
+    }
+
+    @Test @MainActor
+    func `legacy reset styling preserves percent and brand attachment`() throws {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let credit = try #require(MenuBarResetCreditCountdown(expiresAt: now.addingTimeInterval(3600), now: now))
+        let title = StatusItemController.highContrastButtonTitle(
+            image: NSImage(size: NSSize(width: 16, height: 16)),
+            title: " 4% " + credit.markedText)
+        let styled = credit.styling(title)
+        #expect(styled.attribute(.attachment, at: 0, effectiveRange: nil) is NSTextAttachment)
+        #expect(styled.attribute(.attachment, at: styled.length - 1, effectiveRange: nil) is NSTextAttachment)
+        #expect(styled
+            .attribute(.foregroundColor, at: styled.length - 1, effectiveRange: nil) as? NSColor == .systemRed)
+        let ordinary = MenuBarResetCreditCountdown.stylingResetTimes(
+            NSAttributedString(string: "4% · ↻ in 2d", attributes: [.foregroundColor: NSColor.controlTextColor]),
+            resetDates: [now.addingTimeInterval(2 * 86400)],
+            style: .countdown,
+            now: now)
+        #expect(ordinary.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == .controlTextColor)
+        #expect(ordinary.attribute(
+            .foregroundColor,
+            at: ordinary.length - 1,
+            effectiveRange: nil) as? NSColor == .systemOrange)
     }
 }

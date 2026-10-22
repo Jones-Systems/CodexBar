@@ -328,7 +328,9 @@ extension StatusItemController {
             showsBestBadge: row.isBestCandidate,
             isActiveAccount: row.isActive,
             isRefreshing: rendering.refreshingAccountIDs.contains(row.accountID),
-            trailingDetail: rendering.codexRowDetails[row.accountID]?.trailingDetail)
+            trailingDetail: rendering.codexRowDetails[row.accountID]?.trailingDetail,
+            detailIsResetTiming: !row.hasError && rendering.accountStatusText[row.accountID] == nil
+                && rendering.codexRowDetails[row.accountID]?.text != nil)
     }
 
     static func compactAccountRowDetails(
