@@ -18,6 +18,8 @@ Read the relevant sections before acting:
   and [verification and handoff](docs/DEVELOPMENT.md#verification-and-handoff).
 - Build/run or UI validation: [development quick start](docs/DEVELOPMENT.md#quick-start)
   and [runtime validation](docs/DEVELOPMENT.md#runtime-validation-and-command-effects).
+- Local builds and tests: [compiler resource limits](docs/compiler-resource-limits.md).
+- Claude menu changes: [profile menu map](docs/ui-map/claude-profile-menu.md).
 - Credential/session tests: the applicable fixture section in the
   [development guide](docs/DEVELOPMENT.md).
 - Provider changes: [provider authoring](docs/provider.md).

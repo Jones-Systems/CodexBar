@@ -38,6 +38,7 @@ debug_*.swift
 __pycache__/
 
 # Debug/analysis docs
+.t3/
 docs/*-analysis.md
 docs/.viewport-audit/
 docs/.astro/
