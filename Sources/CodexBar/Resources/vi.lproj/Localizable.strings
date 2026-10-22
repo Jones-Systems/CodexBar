@@ -1601,3 +1601,22 @@
 
 "No system observations are available." = "Không có dữ liệu quan sát hệ thống.";
 "Historical provider cache; not a billing receipt or an identified account." = "Bộ nhớ đệm lịch sử của nhà cung cấp; không phải biên lai thanh toán hay tài khoản đã xác định.";
+
+/* Jones updates */
+"jones_updates_automatic" = "Tự động tải bản cập nhật và cài đặt khi không hoạt động";
+"jones_updates_bootstrap" = "Bản dựng này chưa cấu hình cập nhật. Hãy cài đặt bản dựng Jones đã được xác minh.";
+"jones_updates_channel_none" = "Cài đặt thủ công";
+"jones_updates_channel_stable" = "Jones ổn định";
+"jones_updates_idle" = "Sẵn sàng kiểm tra bản cập nhật.";
+"jones_updates_checking" = "Đang kiểm tra bản cập nhật…";
+"jones_updates_downloading" = "Đang tải bản cập nhật %@…";
+"jones_updates_preparing" = "Đang chuẩn bị bản cập nhật %@…";
+"jones_updates_ready_idle" = "Bản cập nhật %@ đã sẵn sàng. Sẽ cài đặt khi không hoạt động hoặc khi thoát.";
+"jones_updates_ready_quit" = "Bản cập nhật %@ đã sẵn sàng. Sẽ cài đặt khi bạn thoát.";
+"jones_updates_installing" = "Đang cài đặt bản cập nhật %@…";
+"jones_updates_current" = "Bạn đang dùng phiên bản mới nhất.";
+"jones_updates_trust_failure" = "Không thể xác minh nguồn cập nhật. Hãy cài đặt bản dựng Jones đã được xác minh.";
+"jones_updates_failure" = "Cập nhật thất bại. Hãy thử kiểm tra lại.";
+"jones_updates_size_failure" = "Không thể tải bản cập nhật này một cách an toàn. Hãy cài đặt bản dựng Jones đã được xác minh.";
+"jones_updates_capacity_unknown" = "Không thể kiểm tra dung lượng trống. Hãy kiểm tra các ổ đĩa rồi thử lại.";
+"jones_updates_capacity_low" = "Bản cập nhật cần ít nhất %@ dung lượng trống. Hãy giải phóng dung lượng rồi thử lại.";

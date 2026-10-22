@@ -1600,3 +1600,22 @@
 
 "No system observations are available." = "Keine Systembeobachtungen verfügbar.";
 "Historical provider cache; not a billing receipt or an identified account." = "Historischer Anbieter-Cache; kein Abrechnungsbeleg und keinem identifizierten Konto zugeordnet.";
+
+/* Jones updates */
+"jones_updates_automatic" = "Updates automatisch laden und bei Inaktivität installieren";
+"jones_updates_bootstrap" = "Updates sind in diesem Build nicht eingerichtet. Installiere einen verifizierten Jones-Build.";
+"jones_updates_channel_none" = "Manuelle Installation";
+"jones_updates_channel_stable" = "Jones stabil";
+"jones_updates_idle" = "Bereit, nach Updates zu suchen.";
+"jones_updates_checking" = "Suche nach Updates…";
+"jones_updates_downloading" = "Update %@ wird geladen…";
+"jones_updates_preparing" = "Update %@ wird vorbereitet…";
+"jones_updates_ready_idle" = "Update %@ ist bereit. Installation bei Inaktivität oder beim Beenden.";
+"jones_updates_ready_quit" = "Update %@ ist bereit. Installation beim Beenden.";
+"jones_updates_installing" = "Update %@ wird installiert…";
+"jones_updates_current" = "Du bist auf dem neuesten Stand.";
+"jones_updates_trust_failure" = "Die Updatequelle konnte nicht verifiziert werden. Installiere einen verifizierten Jones-Build.";
+"jones_updates_failure" = "Das Update ist fehlgeschlagen. Suche erneut nach Updates.";
+"jones_updates_size_failure" = "Dieses Update kann nicht sicher geladen werden. Installiere einen verifizierten Jones-Build.";
+"jones_updates_capacity_unknown" = "Der freie Speicherplatz konnte nicht geprüft werden. Prüfe deine Laufwerke und versuche es erneut.";
+"jones_updates_capacity_low" = "Updates benötigen mindestens %@ freien Speicherplatz. Gib Speicherplatz frei und versuche es erneut.";

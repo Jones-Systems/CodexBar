@@ -3,6 +3,7 @@ set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 # Fixtures exercise identity metadata and isolated session compilation; packaging/signing never runs.
 exec python3 - "$ROOT" <<'PYTEST'
+import base64
 import hashlib
 import os
 from pathlib import Path
@@ -32,13 +33,7 @@ if "CODEXBAR_TEST_SCRATCH_PARENT" in os.environ:
     SCRATCH_PARENT = parent
 SOURCE = (ROOT / "Scripts/package_app.sh").read_text()
 GOLDEN = {'release/identity/$APP/Contents/Info.plist': '139d367a203b990fea2584d54fcb9893ba6510f0a8b5cc11c04c0c556acaed5e', 'release/identity/$APP_ENTITLEMENTS': '82637aeed3306a079b86c3828b0159d193b3af3b8312349fd0f1cd0d755982d5', 'release/identity/$WIDGET_ENTITLEMENTS': '068b22ca7b56d898fd0c275d87a3924ba6b2266244d59e059cd7ba4e4cde12a4', 'release/adhoc/$APP/Contents/Info.plist': '3023450dd5489602ee0c1ee03020194506ae3457714e19d7ba0f3448cf0973ca', 'release/adhoc/$APP_ENTITLEMENTS': '82637aeed3306a079b86c3828b0159d193b3af3b8312349fd0f1cd0d755982d5', 'release/adhoc/$WIDGET_ENTITLEMENTS': '068b22ca7b56d898fd0c275d87a3924ba6b2266244d59e059cd7ba4e4cde12a4', 'debug/identity/$APP/Contents/Info.plist': '0f709318f2455aabae759f9868e35e66108d11e4bb15d9699e21684cde9327d0', 'debug/identity/$APP_ENTITLEMENTS': '55f83f8a1f01c38a1fdeb735c46e1f72c5baa709be046c5b2780649085f211e3', 'debug/identity/$WIDGET_ENTITLEMENTS': '7bdbe4f531d23ac5ff9ded2b82e46c110346dd1b7102fc1bce52af14fd41a098', 'debug/adhoc/$APP/Contents/Info.plist': '0f709318f2455aabae759f9868e35e66108d11e4bb15d9699e21684cde9327d0', 'debug/adhoc/$APP_ENTITLEMENTS': '55f83f8a1f01c38a1fdeb735c46e1f72c5baa709be046c5b2780649085f211e3', 'debug/adhoc/$WIDGET_ENTITLEMENTS': '7bdbe4f531d23ac5ff9ded2b82e46c110346dd1b7102fc1bce52af14fd41a098'}
-BASE_OID = "0f842d7f26edcd1a1fff886409291ef9b4f846b6"
-BASE_SOURCE = subprocess.check_output(
-    ["git", "-C", str(ROOT), "show", BASE_OID + ":Scripts/package_app.sh"], text=True)
-BASE_FUNCTION = "resolve_package_identity() {\n" + BASE_SOURCE.split(
-    'BUNDLE_ID="com.steipete.codexbar"', 1)[1].split('ENTITLEMENTS_DIR=', 1)[0]
-BASE_FUNCTION = BASE_FUNCTION.replace("resolve_package_identity() {\n", 
-    'resolve_package_identity() {\nBUNDLE_ID="com.steipete.codexbar"', 1) + "\n}"
+# The unchanged hashes above pin original bytes without requiring historical objects in shallow CI.
 TARGETS = ("$APP/Contents/Info.plist", "$APP_ENTITLEMENTS", "$WIDGET_ENTITLEMENTS")
 FIELDS = ("BUNDLE_ID", "WIDGET_BUNDLE_ID", "APP_GROUP_ID", "ICLOUD_ID", "FEED_URL",
           "PUBLIC_ED_KEY", "AUTO_CHECKS", "APP_TEAM_ID", "DISPLAY_NAME")
@@ -88,6 +83,7 @@ sources = [Path(arg) for arg in args if arg.endswith('.swift')]
 assert all(path.is_file() for path in sources)
 assert {path.name for path in sources} == {
     'JonesStateRoot.swift', 'ProviderSessionStoreFile.swift', 'KeychainSecurity.swift', 'TestProcessSafety.swift',
+    'TestFixtureScratch.swift',
     'provider_session_file_proof.swift'}, 'standalone compile source dependency missing'
 output = Path(args[args.index('-o') + 1])
 assert Path(args[args.index('-module-cache-path') + 1]).parent == output.parent
@@ -182,8 +178,6 @@ struct IdentityProof {
         for mode in ("identity", "adhoc"):
             for target in TARGETS:
                 actual = render(fixture, config, mode, target)
-                baseline = render(fixture, config, mode, target, source=BASE_SOURCE, function=BASE_FUNCTION)
-                assert actual == baseline, (config, mode, target, "differs from pinned original output")
                 key = f"{config}/{mode}/{target}"
                 assert hashlib.sha256(actual).hexdigest() == GOLDEN[key], key + " changed without overlay"
                 plistlib.loads(actual)
@@ -199,8 +193,8 @@ struct IdentityProof {
             extra = {"JONES_SIGNING_IDENTITY": "SYNTHETIC_SIGNER"}
             result = values(fixture, config, mode, extra)
             assert result == dict(zip(FIELDS, ("com.jonessystems.codexbar", "com.jonessystems.codexbar.widget",
-                "REPLACE_WITH_YOUR_TEAM.com.jonessystems.codexbar", "iCloud.com.jonessystems.codexbar",
-                "", "", "false", "REPLACE_WITH_YOUR_TEAM", "CodexBar Jones"))), result
+                "JONESLOCAL.com.jonessystems.codexbar", "iCloud.com.jonessystems.codexbar",
+                "", "", "false", "JONESLOCAL", "CodexBar Jones"))), result
             app = plistlib.loads(render(fixture, config, mode, TARGETS[0], extra))
             assert app["JonesAppBundleID"] == result["BUNDLE_ID"] == app["CFBundleIdentifier"]
             assert app["JonesAppGroupID"] == result["APP_GROUP_ID"]
@@ -209,6 +203,14 @@ struct IdentityProof {
             assert app["CodexBarTeamID"] == result["APP_TEAM_ID"]
             assert app["SUFeedURL"] == app["SUPublicEDKey"] == ""
             assert app["SUEnableAutomaticChecks"] is False
+            assert app["JonesUpdateChannel"] == "none"
+            assert app["SUAutomaticallyUpdate"] is False
+            assert app["SUAllowsAutomaticUpdates"] is False
+            assert app["SURequireSignedFeed"] is True
+            assert app["SUVerifyUpdateBeforeExtraction"] is True
+            assert type(app["SUSignedFeedFailureExpirationInterval"]) is int
+            assert app["SUSignedFeedFailureExpirationInterval"] == 0
+            assert "JonesUpdateHarness" not in app and "NSAppTransportSecurity" not in app
             for target in TARGETS[1:]:
                 entitlements = plistlib.loads(render(fixture, config, mode, target, extra))
                 assert entitlements["com.apple.security.application-groups"] == [result["APP_GROUP_ID"]]
@@ -218,6 +220,42 @@ struct IdentityProof {
                           '\n</dict></plist>\nPLIST\n', extra).stdout
             assert plistlib.loads(cloud)["com.apple.developer.icloud-container-identifiers"] == [result["ICLOUD_ID"]]
             count += 1
+    # Synthetic public bytes exercise stable rendering without activating a real feed/key.
+    stable_feed = "https://github.com/Jones-Systems/CodexBar/releases/latest/download/appcast.xml"
+    stable_key = base64.b64encode(bytes(range(32))).decode("ascii")
+    stable_example = example.replace('JONES_UPDATE_CHANNEL="none"', 'JONES_UPDATE_CHANNEL="stable"')
+    stable_example = stable_example.replace('JONES_UPDATE_FEED_URL=""', f'JONES_UPDATE_FEED_URL="{stable_feed}"')
+    stable_example = stable_example.replace('JONES_UPDATE_PUBLIC_ED_KEY=""',
+                                            f'JONES_UPDATE_PUBLIC_ED_KEY="{stable_key}"')
+    overlay.write_text(stable_example)
+    for config in ("release", "debug"):
+        for mode in ("identity", "adhoc"):
+            app = plistlib.loads(render(fixture, config, mode, TARGETS[0],
+                                        {"JONES_SIGNING_IDENTITY": "SYNTHETIC_SIGNER"}))
+            assert app["JonesUpdateChannel"] == "stable"
+            assert app["SUFeedURL"] == stable_feed and app["SUPublicEDKey"] == stable_key
+            for key in ("SUEnableAutomaticChecks", "SUAutomaticallyUpdate", "SUAllowsAutomaticUpdates",
+                        "SURequireSignedFeed", "SUVerifyUpdateBeforeExtraction"):
+                assert app[key] is True, key
+            assert app["SUSignedFeedFailureExpirationInterval"] == 0
+            assert "JonesUpdateHarness" not in app and "NSAppTransportSecurity" not in app
+            count += 1
+    for bad in (stable_example.replace(stable_feed, "https://raw.githubusercontent.com/steipete/CodexBar/main/appcast.xml"),
+                stable_example.replace(stable_feed, stable_feed + "?other=feed"),
+                stable_example.replace(stable_feed, "http://127.0.0.1:1234/appcast.xml"),
+                stable_example.replace(stable_key, "AGCY8w5vHirVfGGDGc8Szc5iuOqupZSh9pMj/Qs67XI="),
+                stable_example.replace(stable_key, "not-base64"),
+                stable_example.replace(stable_key, base64.b64encode(bytes(31)).decode("ascii")),
+                stable_example.replace(stable_key, stable_key[:-2] + "9="),
+                stable_example.replace(stable_key, ""),
+                stable_example.replace(stable_feed, ""),
+                example.replace('JONES_UPDATE_CHANNEL="none"', 'JONES_UPDATE_CHANNEL=""'),
+                stable_example.replace('JONES_UPDATE_CHANNEL="stable"', 'JONES_UPDATE_CHANNEL="none"'),
+                stable_example.replace('JONES_UPDATE_CHANNEL="stable"', 'JONES_UPDATE_CHANNEL="beta"')):
+        overlay.write_text(bad)
+        assert shell(fixture, "release", "adhoc", ":", check=False).returncode != 0
+        count += 1
+    overlay.write_text(example)
     # Execute the actual widget metadata hook against a fixture-only PlistBuddy substitute.
     # Xcode's build-setting substitution and native PlistBuddy remain macOS qualification gates.
     buddy = fixture / "plist-buddy"
@@ -238,9 +276,9 @@ p.write_bytes(plistlib.dumps(data))
     widget_info = app_dir / "Contents/PlugIns/CodexBarWidget.appex/Contents/Info.plist"
     widget_info.parent.mkdir(parents=True)
     widget_template = (ROOT / "WidgetExtension/Info.plist").read_text()
-    replacements = {"CODEXBAR_TEAM_ID": "REPLACE_WITH_YOUR_TEAM",
+    replacements = {"CODEXBAR_TEAM_ID": "JONESLOCAL",
                     "PRODUCT_BUNDLE_IDENTIFIER": "com.jonessystems.codexbar.widget",
-                    "MARKETING_VERSION": "1.2.3", "CURRENT_PROJECT_VERSION": "42",
+                    "MARKETING_VERSION": "1.2.3", "CURRENT_PROJECT_VERSION": "42.9",
                     "PRODUCT_NAME": "CodexBarWidget", "EXECUTABLE_NAME": "CodexBarWidget"}
     for key, value in replacements.items():
         widget_template = widget_template.replace("$(" + key + ")", value)
@@ -248,14 +286,19 @@ p.write_bytes(plistlib.dumps(data))
     widget_hook = SOURCE.split('# JONES(trial-identity): widget metadata', 1)[1]
     widget_hook = widget_hook[widget_hook.index('if [['):].split('\n# Sign widget extension', 1)[0]
     widget_hook = widget_hook.replace('/usr/libexec/PlistBuddy', '"' + str(buddy) + '"')
-    shell(fixture, "release", "adhoc", widget_hook, {"APP": str(app_dir)})
+    shell(fixture, "release", "adhoc", widget_hook, {"APP": str(app_dir), "JONES_SOURCE_REVISION": "a" * 40,
+                                                    "JONES_BUILD_ORIGIN": "local", "JONES_BUILD_RUN": ""})
     widget_plist = plistlib.loads(widget_info.read_bytes())
     assert widget_plist["JonesAppBundleID"] == "com.jonessystems.codexbar"
-    assert widget_plist["JonesAppGroupID"] == "REPLACE_WITH_YOUR_TEAM.com.jonessystems.codexbar"
+    assert widget_plist["JonesAppGroupID"] == "JONESLOCAL.com.jonessystems.codexbar"
     assert widget_plist["JonesICloudID"] == "iCloud.com.jonessystems.codexbar"
     assert widget_plist["JonesStateKey"] == "jones"
-    assert widget_plist["CodexBarTeamID"] == "REPLACE_WITH_YOUR_TEAM"
+    assert widget_plist["CodexBarTeamID"] == "JONESLOCAL"
     assert widget_plist["CFBundleIdentifier"] == "com.jonessystems.codexbar.widget"
+    assert widget_plist["CFBundleVersion"] == "42.9"
+    assert widget_plist["JonesSourceRevision"] == "a" * 40
+    assert widget_plist["JonesBuildOrigin"] == "local" and widget_plist["JonesBuildRun"] == ""
+    assert widget_plist["JonesUpdateChannel"] == "none"
     count += 1
     # The widget's existing team build setting and added metadata must agree with the app.
     widget = (ROOT / "WidgetExtension/Info.plist").read_text()
@@ -272,7 +315,10 @@ p.write_bytes(plistlib.dumps(data))
     assert 'CODESIGN_ID="$JONES_SIGNING_IDENTITY"' in SOURCE
     # Reject upstream identifiers/team and incomplete overlay before any build effects.
     for bad in (example.replace("com.jonessystems.codexbar", "com.steipete.codexbar"),
-                example.replace("REPLACE_WITH_YOUR_TEAM", "Y5PE65HELJ"),
+                example.replace("JONESLOCAL", "Y5PE65HELJ"),
+                example.replace("JONESLOCAL", "REPLACE_WITH_YOUR_TEAM"),
+                example.replace("com.jonessystems.codexbar", "com.jonessystems.codexbar.update-harness"),
+                example.replace('JONES_DISPLAY_NAME="CodexBar Jones"', 'JONES_DISPLAY_NAME="CodexBar"'),
                 example.replace('JONES_STATE_KEY="jones"', 'JONES_STATE_KEY="unknown"')):
         overlay.write_text(bad)
         assert shell(fixture, "release", "adhoc", ":", check=False).returncode != 0

@@ -1601,3 +1601,22 @@
 
 "No system observations are available." = "Наблюдения за системами недоступны.";
 "Historical provider cache; not a billing receipt or an identified account." = "Исторический кэш провайдера; не платёжный документ и не идентифицированный аккаунт.";
+
+/* Jones updates */
+"jones_updates_automatic" = "Загружать обновления автоматически и устанавливать при бездействии";
+"jones_updates_bootstrap" = "Обновления в этой сборке не настроены. Установите проверенную сборку Jones.";
+"jones_updates_channel_none" = "Установка вручную";
+"jones_updates_channel_stable" = "Jones — стабильный канал";
+"jones_updates_idle" = "Всё готово к проверке обновлений.";
+"jones_updates_checking" = "Проверка обновлений…";
+"jones_updates_downloading" = "Загрузка обновления %@…";
+"jones_updates_preparing" = "Подготовка обновления %@…";
+"jones_updates_ready_idle" = "Обновление %@ готово. Установка при бездействии или выходе.";
+"jones_updates_ready_quit" = "Обновление %@ готово. Установка при выходе.";
+"jones_updates_installing" = "Установка обновления %@…";
+"jones_updates_current" = "Установлена последняя версия.";
+"jones_updates_trust_failure" = "Не удалось проверить источник обновления. Установите проверенную сборку Jones.";
+"jones_updates_failure" = "Обновление не удалось. Повторите проверку обновлений.";
+"jones_updates_size_failure" = "Невозможно безопасно загрузить это обновление. Установите проверенную сборку Jones.";
+"jones_updates_capacity_unknown" = "Не удалось проверить свободное место. Проверьте диски и повторите попытку.";
+"jones_updates_capacity_low" = "Для обновлений требуется не менее %@ свободного места. Освободите место и повторите попытку.";

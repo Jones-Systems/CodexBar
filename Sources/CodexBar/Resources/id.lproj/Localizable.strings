@@ -1603,3 +1603,22 @@
 
 "No system observations are available." = "Tidak ada pengamatan sistem yang tersedia.";
 "Historical provider cache; not a billing receipt or an identified account." = "Cache historis penyedia; bukan tanda terima tagihan atau akun yang teridentifikasi.";
+
+/* Jones updates */
+"jones_updates_automatic" = "Unduh pembaruan otomatis dan instal saat tidak aktif";
+"jones_updates_bootstrap" = "Pembaruan belum dikonfigurasi pada versi ini. Instal versi Jones yang terverifikasi.";
+"jones_updates_channel_none" = "Instalasi manual";
+"jones_updates_channel_stable" = "Jones stabil";
+"jones_updates_idle" = "Siap memeriksa pembaruan.";
+"jones_updates_checking" = "Memeriksa pembaruan…";
+"jones_updates_downloading" = "Mengunduh pembaruan %@…";
+"jones_updates_preparing" = "Menyiapkan pembaruan %@…";
+"jones_updates_ready_idle" = "Pembaruan %@ siap. Akan diinstal saat tidak aktif atau saat keluar.";
+"jones_updates_ready_quit" = "Pembaruan %@ siap. Akan diinstal saat keluar.";
+"jones_updates_installing" = "Menginstal pembaruan %@…";
+"jones_updates_current" = "Anda menggunakan versi terbaru.";
+"jones_updates_trust_failure" = "Sumber pembaruan tidak dapat diverifikasi. Instal versi Jones yang terverifikasi.";
+"jones_updates_failure" = "Pembaruan gagal. Coba periksa lagi.";
+"jones_updates_size_failure" = "Pembaruan ini tidak dapat diunduh dengan aman. Instal versi Jones yang terverifikasi.";
+"jones_updates_capacity_unknown" = "Ruang penyimpanan tersedia tidak dapat diperiksa. Periksa disk Anda lalu coba lagi.";
+"jones_updates_capacity_low" = "Pembaruan memerlukan setidaknya %@ ruang tersedia. Kosongkan ruang lalu coba lagi.";

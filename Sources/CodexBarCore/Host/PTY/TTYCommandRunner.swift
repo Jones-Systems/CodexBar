@@ -99,6 +99,12 @@ private enum TTYCommandRunnerActiveProcessRegistry {
             return count
         }
 
+        func hasActiveWork() -> Bool {
+            self.condition.lock()
+            defer { self.condition.unlock() }
+            return self.isShuttingDown || self.launchesInProgress > 0 || !self.processes.isEmpty
+        }
+
         func testTrackProcess(pid: pid_t, binary: String, processGroup: pid_t?) {
             guard pid > 0 else { return }
             self.condition.lock()
@@ -146,6 +152,10 @@ private enum TTYCommandRunnerActiveProcessRegistry {
 
     static func count() -> Int {
         self.current.count()
+    }
+
+    static func hasActiveWork() -> Bool {
+        self.current.hasActiveWork()
     }
 
     static func testTrackProcess(pid: pid_t, binary: String, processGroup: pid_t?) {
@@ -371,6 +381,12 @@ public struct TTYCommandRunner {
     }
 
     public init() {}
+
+    /// A read-only safety snapshot includes launch reservations and shutdown;
+    /// it neither reserves idle time nor stops a process.
+    public static var hasActiveProcesses: Bool {
+        TTYCommandRunnerActiveProcessRegistry.hasActiveWork()
+    }
 
     public static func terminateActiveProcessesForAppShutdown() {
         let targets = TTYCommandRunnerActiveProcessRegistry.drainForShutdown()

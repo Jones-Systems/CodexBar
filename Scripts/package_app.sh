@@ -22,16 +22,30 @@ resolve_package_identity() {
   if [[ -f "$ROOT/.mac-release.jones.env" ]]; then
     source "$ROOT/.mac-release.jones.env"
     : "${JONES_BUNDLE_ID:?Missing JONES_BUNDLE_ID}" "${JONES_TEAM_ID:?Missing JONES_TEAM_ID}"
-    [[ "$JONES_BUNDLE_ID" =~ ^[a-zA-Z0-9]+([.-][a-zA-Z0-9]+)+$ && "$JONES_BUNDLE_ID" != *steipete* ]] || return 1
-    [[ "$JONES_TEAM_ID" =~ ^[A-Z0-9_]+$ && "$JONES_TEAM_ID" != "Y5PE65HELJ" ]] || return 1
+    [[ "$JONES_BUNDLE_ID" == "com.jonessystems.codexbar" ]] || return 1
+    [[ "$JONES_TEAM_ID" == "JONESLOCAL" ]] || return 1
     [[ "${JONES_STATE_KEY:-}" == "jones" ]] || return 1
     [[ "${JONES_DISPLAY_NAME:-}" == "CodexBar Jones" ]] || return 1
     BUNDLE_ID="$JONES_BUNDLE_ID"
     APP_TEAM_ID="$JONES_TEAM_ID"
     DISPLAY_NAME="$JONES_DISPLAY_NAME"
-    FEED_URL=""
-    PUBLIC_ED_KEY=""
+    JONES_UPDATE_CHANNEL="${JONES_UPDATE_CHANNEL-none}"
+    FEED_URL="${JONES_UPDATE_FEED_URL:-}"
+    PUBLIC_ED_KEY="${JONES_UPDATE_PUBLIC_ED_KEY:-}"
     AUTO_CHECKS=false
+    case "$JONES_UPDATE_CHANNEL" in
+      none)
+        [[ -z "$FEED_URL" && -z "$PUBLIC_ED_KEY" ]] || return 1
+        ;;
+      stable)
+        [[ "$FEED_URL" == "https://github.com/Jones-Systems/CodexBar/releases/latest/download/appcast.xml" ]] || return 1
+        # Canonical base64 for exactly 32 bytes, including the final padding bits.
+        [[ "$PUBLIC_ED_KEY" =~ ^[A-Za-z0-9+/]{42}[AEIMQUYcgkosw048]=$ ]] || return 1
+        [[ "$PUBLIC_ED_KEY" != "AGCY8w5vHirVfGGDGc8Szc5iuOqupZSh9pMj/Qs67XI=" ]] || return 1
+        AUTO_CHECKS=true
+        ;;
+      *) return 1 ;;
+    esac
     JONES_OVERLAY=1
   fi
   WIDGET_BUNDLE_ID="${BUNDLE_ID}.widget"
@@ -47,7 +61,13 @@ resolve_package_identity() {
     <key>JonesStateKey</key><string>jones</string>
     <key>JonesAppBundleID</key><string>${BUNDLE_ID}</string>
     <key>JonesAppGroupID</key><string>${APP_GROUP_ID}</string>
-    <key>JonesICloudID</key><string>${ICLOUD_ID}</string>"
+    <key>JonesICloudID</key><string>${ICLOUD_ID}</string>
+    <key>JonesUpdateChannel</key><string>${JONES_UPDATE_CHANNEL}</string>
+    <key>SUAutomaticallyUpdate</key><${AUTO_CHECKS}/>
+    <key>SUAllowsAutomaticUpdates</key><${AUTO_CHECKS}/>
+    <key>SURequireSignedFeed</key><true/>
+    <key>SUVerifyUpdateBeforeExtraction</key><true/>
+    <key>SUSignedFeedFailureExpirationInterval</key><integer>0</integer>"
     if [[ "$SIGNING_MODE" == "identity" ]]; then
       : "${JONES_SIGNING_IDENTITY:?Fork signing identity must be explicitly supplied}"
       [[ "$JONES_SIGNING_IDENTITY" != *Y5PE65HELJ* ]] || return 1
@@ -55,6 +75,22 @@ resolve_package_identity() {
   fi
 }
 # JONES(trial-identity): end pure identity resolution.
+
+# JONES(updates): Git/CI reads stay outside the shell-only identity fixture seam.
+prepare_jones_update_metadata() {
+  [[ "$JONES_OVERLAY" == "1" ]] || return 0
+  local metadata
+  metadata=$(python3 "$ROOT/Scripts/jones_update_metadata.py" metadata \
+    --repo "$ROOT" --build-number "$BUILD_NUMBER" \
+    --origin "${JONES_BUILD_ORIGIN-local}" --build-run "${JONES_BUILD_RUN:-}" \
+    --bundle-id "$BUNDLE_ID" --team-id "$APP_TEAM_ID" --state-key "$JONES_STATE_KEY" \
+    --display-name "$DISPLAY_NAME" --app-group-id "$APP_GROUP_ID" --icloud-id "$ICLOUD_ID" \
+    --channel "$JONES_UPDATE_CHANNEL" --feed-url "$FEED_URL" --public-ed-key "$PUBLIC_ED_KEY" \
+    --format shell) || return 1
+  # Only fixed assignment names and shlex-quoted, validated public values are emitted.
+  eval "$metadata"
+  JONES_METADATA+="$JONES_PROVENANCE_METADATA"
+}
 
 resolve_package_signing_mode() {
   local requested="${CODEXBAR_SIGNING:-adhoc}"
@@ -107,6 +143,7 @@ source "$ROOT/version.env"
 source "$ROOT/Scripts/package_product_paths.sh"
 source "$ROOT/Scripts/sparkle_signing_paths.sh"
 resolve_package_identity # JONES(trial-identity): resolve before any build or packaging effects.
+prepare_jones_update_metadata # JONES(updates): reject dirty/shallow source and invalid CI claims before builds.
 
 # Clean build only when explicitly requested (slower).
 if [[ "${CODEXBAR_FORCE_CLEAN:-0}" == "1" ]]; then
@@ -647,6 +684,10 @@ if [[ "$JONES_OVERLAY" == "1" && -d "${APP}/Contents/PlugIns/CodexBarWidget.appe
   /usr/libexec/PlistBuddy -c "Add :JonesAppBundleID string ${BUNDLE_ID}" "$WIDGET_INFO"
   /usr/libexec/PlistBuddy -c "Add :JonesAppGroupID string ${APP_GROUP_ID}" "$WIDGET_INFO"
   /usr/libexec/PlistBuddy -c "Add :JonesICloudID string ${ICLOUD_ID}" "$WIDGET_INFO"
+  /usr/libexec/PlistBuddy -c "Add :JonesSourceRevision string ${JONES_SOURCE_REVISION}" "$WIDGET_INFO"
+  /usr/libexec/PlistBuddy -c "Add :JonesBuildOrigin string ${JONES_BUILD_ORIGIN}" "$WIDGET_INFO"
+  /usr/libexec/PlistBuddy -c "Add :JonesBuildRun string ${JONES_BUILD_RUN}" "$WIDGET_INFO"
+  /usr/libexec/PlistBuddy -c "Add :JonesUpdateChannel string ${JONES_UPDATE_CHANNEL}" "$WIDGET_INFO"
 fi
 
 # Sign widget extension if present

@@ -1569,3 +1569,22 @@
 
 "No system observations are available." = "사용 가능한 시스템 관측 정보가 없습니다.";
 "Historical provider cache; not a billing receipt or an identified account." = "공급자의 과거 캐시이며, 청구 영수증이나 식별된 계정이 아닙니다.";
+
+/* Jones updates */
+"jones_updates_automatic" = "업데이트를 자동으로 다운로드하고 유휴 상태에서 설치";
+"jones_updates_bootstrap" = "이 빌드에는 업데이트가 설정되지 않았습니다. 검증된 Jones 빌드를 설치하세요.";
+"jones_updates_channel_none" = "수동 설치";
+"jones_updates_channel_stable" = "Jones 안정 버전";
+"jones_updates_idle" = "업데이트를 확인할 준비가 되었습니다.";
+"jones_updates_checking" = "업데이트 확인 중…";
+"jones_updates_downloading" = "업데이트 %@ 다운로드 중…";
+"jones_updates_preparing" = "업데이트 %@ 준비 중…";
+"jones_updates_ready_idle" = "업데이트 %@ 준비가 완료되었습니다. 유휴 상태이거나 종료할 때 설치됩니다.";
+"jones_updates_ready_quit" = "업데이트 %@ 준비가 완료되었습니다. 종료할 때 설치됩니다.";
+"jones_updates_installing" = "업데이트 %@ 설치 중…";
+"jones_updates_current" = "최신 버전입니다.";
+"jones_updates_trust_failure" = "업데이트 출처를 검증할 수 없습니다. 검증된 Jones 빌드를 설치하세요.";
+"jones_updates_failure" = "업데이트에 실패했습니다. 다시 확인하세요.";
+"jones_updates_size_failure" = "이 업데이트를 안전하게 다운로드할 수 없습니다. 검증된 Jones 빌드를 설치하세요.";
+"jones_updates_capacity_unknown" = "사용 가능한 저장 공간을 확인할 수 없습니다. 디스크를 확인한 후 다시 시도하세요.";
+"jones_updates_capacity_low" = "업데이트하려면 최소 %@의 여유 공간이 필요합니다. 공간을 확보한 후 다시 시도하세요.";

@@ -1612,3 +1612,22 @@
 
 "No system observations are available." = "暂无系统观测数据。";
 "Historical provider cache; not a billing receipt or an identified account." = "提供商的历史缓存；不是账单收据，也不代表已识别的账户。";
+
+/* Jones updates */
+"jones_updates_automatic" = "自动下载更新并在空闲时安装";
+"jones_updates_bootstrap" = "此构建版本尚未配置更新。请安装已验证的 Jones 构建版本。";
+"jones_updates_channel_none" = "手动安装";
+"jones_updates_channel_stable" = "Jones 稳定版";
+"jones_updates_idle" = "已准备好检查更新。";
+"jones_updates_checking" = "正在检查更新…";
+"jones_updates_downloading" = "正在下载更新 %@…";
+"jones_updates_preparing" = "正在准备更新 %@…";
+"jones_updates_ready_idle" = "更新 %@ 已准备就绪。将在空闲时或退出时安装。";
+"jones_updates_ready_quit" = "更新 %@ 已准备就绪。将在退出时安装。";
+"jones_updates_installing" = "正在安装更新 %@…";
+"jones_updates_current" = "已是最新版本。";
+"jones_updates_trust_failure" = "无法验证更新来源。请安装已验证的 Jones 构建版本。";
+"jones_updates_failure" = "更新失败。请重新检查。";
+"jones_updates_size_failure" = "无法安全下载此更新。请安装已验证的 Jones 构建版本。";
+"jones_updates_capacity_unknown" = "无法检查可用存储空间。请检查磁盘后重试。";
+"jones_updates_capacity_low" = "更新至少需要 %@ 的可用存储空间。请释放空间后重试。";

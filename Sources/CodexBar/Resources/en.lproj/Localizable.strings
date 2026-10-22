@@ -685,6 +685,23 @@
 "check_for_updates" = "Check for Updates…";
 "updates_unavailable" = "Updates unavailable in this build.";
 "copyright" = "© 2026 Peter Steinberger. MIT License.";
+"jones_updates_automatic" = "Download updates automatically and install when idle";
+"jones_updates_bootstrap" = "Updates are not configured in this build. Install a verified Jones candidate to update.";
+"jones_updates_channel_none" = "Manual installation";
+"jones_updates_channel_stable" = "Jones stable";
+"jones_updates_idle" = "Ready to check for updates.";
+"jones_updates_checking" = "Checking for updates…";
+"jones_updates_downloading" = "Downloading update %@…";
+"jones_updates_preparing" = "Preparing update %@…";
+"jones_updates_ready_idle" = "Update %@ is ready. Installs when idle or at quit.";
+"jones_updates_ready_quit" = "Update %@ is ready. Installs when you quit.";
+"jones_updates_installing" = "Installing update %@…";
+"jones_updates_current" = "You're up to date.";
+"jones_updates_trust_failure" = "The update source could not be verified. Install a verified Jones candidate.";
+"jones_updates_failure" = "The update failed. Try checking again.";
+"jones_updates_size_failure" = "This update cannot be downloaded safely. Install a verified Jones candidate.";
+"jones_updates_capacity_unknown" = "Available storage could not be checked. Try again after checking your disks.";
+"jones_updates_capacity_low" = "Updates need at least %@ of available storage. Free space and try again.";
 
 /* Debug Pane */
 "use_javascriptcore_plugin_engine" = "Use JavaScriptCore for provider plugins";

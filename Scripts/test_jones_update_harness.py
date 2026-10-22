@@ -1,0 +1,266 @@
+#!/usr/bin/env python3
+"""Small portable harness fixtures; every native command is replaced by a fake."""
+
+import base64
+from contextlib import redirect_stderr
+import io
+import json
+import os
+from pathlib import Path
+import plistlib
+import signal
+import subprocess
+import tempfile
+import unittest
+from unittest.mock import patch
+import urllib.error
+import urllib.request
+import uuid
+import xml.etree.ElementTree as ET
+import zipfile
+
+import jones_update_harness as harness
+
+
+KEY = base64.b64encode(bytes(range(32))).decode("ascii")
+SIGNATURE = base64.b64encode(bytes(range(64))).decode("ascii")
+FIXTURE_ID = "a65bf229-e140-40a4-a9b6-248ac4bd5d65"
+REVISION = "a" * 40
+
+
+class HarnessTests(unittest.TestCase):
+    def setUp(self):
+        parent = Path(os.environ.get("CODEXBAR_TEST_SCRATCH_PARENT", harness.ROOT / ".build"))
+        parent.mkdir(exist_ok=True)
+        self.assertEqual(parent.resolve(), parent.absolute())
+        self.assertIn(harness.ROOT, parent.resolve().parents)
+        self.temporary = tempfile.TemporaryDirectory(prefix="jones-harness-test-", dir=parent)
+        self.root = Path(self.temporary.name)
+        self.addCleanup(self.temporary.cleanup)
+
+    def rejects(self, code, function, *args, **kwargs):
+        with self.assertRaises(harness.candidate.CandidateError) as caught:
+            function(*args, **kwargs)
+        self.assertEqual(caught.exception.code, code)
+
+    def original(self):
+        return dict(CFBundleIdentifier=harness.candidate.BUNDLE_ID, CFBundleExecutable="CodexBar",
+                    JonesSourceRevision=REVISION, JonesBuildOrigin="local", JonesBuildRun="",
+                    **{key: "production" for key in harness.FORBIDDEN})
+
+    def test_fixture_removes_all_production_state_metadata(self):
+        original = self.original()
+        info = harness.fixture_info(original, FIXTURE_ID, KEY, 39541, harness.BUILD_A)
+        self.assertEqual(info["CFBundleIdentifier"], harness.BUNDLE_ID)
+        self.assertIs(info["JonesUpdateHarness"], True)
+        self.assertEqual(info["JonesSourceRevision"], REVISION)
+        self.assertEqual(info["SUFeedURL"], "http://127.0.0.1:39541/appcast.xml")
+        self.assertTrue(all(key not in info for key in harness.FORBIDDEN))
+        self.assertEqual(original, self.original())
+        for key in ("SURequireSignedFeed", "SUVerifyUpdateBeforeExtraction", "SUAutomaticallyUpdate"):
+            self.assertIs(info[key], True)
+        self.assertIs(type(info["SUSignedFeedFailureExpirationInterval"]), int)
+        self.assertEqual(info["SUSignedFeedFailureExpirationInterval"], 0)
+
+    def test_fixture_refuses_foreign_source_invalid_keys_and_ports(self):
+        original = self.original()
+        self.rejects("fixture-source", harness.fixture_info, {**original, "CFBundleIdentifier": "com.steipete.codexbar"},
+                     FIXTURE_ID, KEY, 39541, harness.BUILD_A)
+        self.rejects("fixture-source", harness.fixture_info, {**original, "JonesSourceRevision": "short"},
+                     FIXTURE_ID, KEY, 39541, harness.BUILD_A)
+        for key in ("", "invalid", base64.b64encode(bytes(31)).decode(), harness.candidate.UPSTREAM_KEY):
+            self.rejects("fixture-key", harness.public_key, key)
+        for port in (80, True, -1, 65536):
+            self.rejects("fixture-port", harness.fixture_info, original, FIXTURE_ID, KEY, port, harness.BUILD_A)
+
+    def test_feed_length_and_signature_are_signed_as_exact_bytes(self):
+        content = harness.feed(39541, SIGNATURE, 1234)
+        root = ET.fromstring(content)
+        enclosure = root.find("./channel/item/enclosure")
+        self.assertEqual(enclosure.attrib["length"], "1234")
+        self.assertEqual(enclosure.attrib["url"], "http://127.0.0.1:39541/update.zip")
+        signed = harness.signed_feed(content, SIGNATURE)
+        self.assertEqual(signed[:len(content)], content)
+        footer = signed[len(content):].decode("ascii")
+        self.assertEqual(footer, f"<!-- sparkle-signatures:\nedSignature: {SIGNATURE}\nlength: {len(content)}\n-->\n")
+        self.assertEqual(ET.fromstring(signed).tag, "rss")
+
+    def test_prepare_refuses_non_ci_before_creating_any_files(self):
+        with patch.object(harness.sys, "platform", "darwin"):
+            self.rejects("fixture-ci", harness.prepare, self.root / "unused.app", self.root / "output",
+                         self.root / "signer", 39541, {})
+        self.assertEqual(list(self.root.iterdir()), [])
+
+    def export(self):
+        fixture = self.root / "export"
+        fixture.mkdir()
+        app = self.root / "CodexBar.app"
+        (app / "Contents").mkdir(parents=True)
+        (app / "Contents/Info.plist").write_bytes(plistlib.dumps({"fixture": True}))
+        manifest = {"schema": "jones-update-fixture/v1", "fixture_id": FIXTURE_ID,
+                    "source_revision": REVISION, "public_key": KEY, "port": 39541, "files": {}, "trees": {}}
+        for name in ("A", "B"):
+            tree = harness.candidate.tree_manifest(app)
+            archive = fixture / f"{name}.zip"
+            with zipfile.ZipFile(archive, "w") as handle:
+                for entry in sorted(tree):
+                    handle.write(app.parent / entry, entry)
+            manifest["trees"][name] = tree
+        (fixture / "feeds.json").write_text(json.dumps({scenario: "fixture" for scenario in harness.SCENARIOS}))
+        for path in fixture.iterdir():
+            manifest["files"][path.name] = {"bytes": path.stat().st_size, "sha256": harness.candidate.digest(path)}
+        (fixture / "fixture.json").write_text(json.dumps(manifest))
+        return fixture, manifest
+
+    def test_export_verification_accepts_only_exact_source_and_bytes(self):
+        fixture, manifest = self.export()
+        self.assertEqual(harness.verify_fixture(fixture, REVISION)[0], manifest)
+        self.rejects("fixture-source", harness.verify_fixture, fixture, "b" * 40)
+        with (fixture / "B.zip").open("ab") as handle:
+            handle.write(b"changed")
+        self.rejects("fixture-hash", harness.verify_fixture, fixture, REVISION)
+
+    def test_export_refuses_extra_files_and_links(self):
+        fixture, _ = self.export()
+        extra = fixture / "signer.key"
+        extra.write_text("must never export a private key")
+        self.rejects("fixture-layout", harness.verify_fixture, fixture, REVISION)
+        extra.unlink()
+        (fixture / "feeds.json").unlink()
+        (fixture / "feeds.json").symlink_to(self.root / "missing")
+        self.rejects("fixture-layout", harness.verify_fixture, fixture, REVISION)
+
+    def test_command_writes_only_owned_companion_and_refuses_symlinks(self):
+        manifest = {"fixture_id": FIXTURE_ID}
+        harness.write_command(self.root, manifest, harness.BUILD_A, "check")
+        value = json.loads((self.root / "harness-command.json").read_text())
+        self.assertEqual((value["fixtureID"], value["build"], value["action"]),
+                         (FIXTURE_ID, harness.BUILD_A, "check"))
+        uuid.UUID(value["requestID"])
+        self.assertFalse((self.root / "harness-command.pending").exists())
+        (self.root / "harness-command.json").unlink()
+        (self.root / "harness-command.json").symlink_to(self.root / "foreign")
+        self.rejects("fixture-command", harness.write_command, self.root, manifest, harness.BUILD_A, "quit")
+        self.assertFalse((self.root / "foreign").exists())
+
+    def test_server_is_loopback_and_tampered_payload_changes_one_byte(self):
+        archive = self.root / "B.zip"
+        archive.write_bytes(b"small-owned-fixture")
+        for tamper in (False, True):
+            server = harness.FixtureServer(0, b"<rss/>", archive, tamper)
+            self.assertEqual(server.server_address[0], "127.0.0.1")
+            worker = harness.threading.Thread(target=server.serve_forever)
+            worker.start()
+            try:
+                base = f"http://127.0.0.1:{server.server_address[1]}"
+                with urllib.request.urlopen(base + "/appcast.xml", timeout=2) as response:
+                    self.assertEqual(response.read(), b"<rss/>")
+                with urllib.request.urlopen(base + "/update.zip", timeout=2) as response:
+                    actual = response.read()
+                self.assertEqual(actual[:-1], archive.read_bytes()[:-1])
+                self.assertEqual(actual[-1], archive.read_bytes()[-1] ^ int(tamper))
+                self.assertEqual(server.archive_requests, 1)
+                with self.assertRaises(urllib.error.HTTPError):
+                    urllib.request.urlopen(base + "/../outside", timeout=2)
+            finally:
+                server.shutdown()
+                server.server_close()
+                worker.join(timeout=3)
+            self.assertFalse(worker.is_alive())
+
+    def home(self):
+        home = self.root / "home"
+        (home / "Library/Caches").mkdir(parents=True)
+        return home
+
+    @staticmethod
+    def defaults(arguments, **_):
+        action = arguments[1]
+        return subprocess.CompletedProcess(arguments, 1 if action == "read" else 0,
+                                           stdout=b"", stderr=b"Domain does not exist" if action == "read" else b"")
+
+    def test_native_state_cleanup_success_and_original_failure(self):
+        for should_fail in (False, True):
+            home = self.home()
+            with patch.object(harness.subprocess, "run", side_effect=self.defaults):
+                try:
+                    with harness.native_state(home) as lease:
+                        lease.cache.mkdir()
+                        (lease.cache / "owned").write_text("fixture")
+                        lease.cleanup_allowed = True
+                        if should_fail:
+                            raise RuntimeError("original fixture failure")
+                except RuntimeError as error:
+                    self.assertTrue(should_fail)
+                    self.assertEqual(str(error), "original fixture failure")
+            self.assertEqual(list((home / "Library/Caches").iterdir()), [])
+            harness.shutil.rmtree(home)
+
+    def test_preexisting_native_state_and_lock_are_preserved(self):
+        home = self.home()
+        cache = harness.state_paths(home)[0]
+        cache.mkdir()
+        (cache / "foreign").write_text("preserve")
+        with self.assertRaises(harness.candidate.CandidateError) as caught:
+            with harness.native_state(home):
+                self.fail("must not admit existing state")
+        self.assertEqual(caught.exception.code, "fixture-state-exists")
+        self.assertEqual((cache / "foreign").read_text(), "preserve")
+        lock = home / "Library/Caches" / ("." + harness.BUNDLE_ID + ".lock")
+        lock.write_text("existing lock")
+        with self.assertRaises(FileExistsError):
+            with harness.native_state(home):
+                self.fail("must not enter an existing lease")
+        self.assertEqual(lock.read_text(), "existing lock")
+
+    def test_unproved_process_drain_preserves_cache_and_lock(self):
+        home = self.home()
+        with patch.object(harness.subprocess, "run", side_effect=self.defaults), redirect_stderr(io.StringIO()):
+            with harness.native_state(home) as lease:
+                lease.cache.mkdir()
+                (lease.cache / "installer").write_text("still owned by native helper")
+        self.assertTrue((lease.cache / "installer").exists())
+        self.assertTrue((home / "Library/Caches" / ("." + harness.BUNDLE_ID + ".lock")).exists())
+
+    def test_cleanup_failure_preserves_original_error_and_lock(self):
+        home = self.home()
+        with patch.object(harness.subprocess, "run", side_effect=self.defaults), redirect_stderr(io.StringIO()), \
+                patch.object(harness.shutil, "rmtree", side_effect=OSError("cleanup")):
+            with self.assertRaisesRegex(RuntimeError, "original"):
+                with harness.native_state(home) as lease:
+                    lease.cache.mkdir()
+                    lease.cleanup_allowed = True
+                    raise RuntimeError("original")
+        self.assertTrue(lease.cache.exists())
+        self.assertTrue((home / "Library/Caches" / ("." + harness.BUNDLE_ID + ".lock")).exists())
+
+    def test_handled_signal_unwinds_owned_state(self):
+        home = self.home()
+        with patch.object(harness.subprocess, "run", side_effect=self.defaults):
+            with self.assertRaises(harness.candidate.CandidateError) as caught:
+                with harness.candidate.cancellation_cleanup(), harness.native_state(home) as lease:
+                    lease.cache.mkdir()
+                    lease.cleanup_allowed = True
+                    os.kill(os.getpid(), signal.SIGTERM)
+            self.assertEqual(caught.exception.code, "cancelled")
+        self.assertEqual(list((home / "Library/Caches").iterdir()), [])
+
+    def test_two_fixture_homes_do_not_clean_each_other(self):
+        first = self.home()
+        second = self.root / "second-home"
+        (second / "Library/Caches").mkdir(parents=True)
+        with patch.object(harness.subprocess, "run", side_effect=self.defaults):
+            with harness.native_state(first) as first_lease:
+                first_lease.cache.mkdir()
+                first_lease.cleanup_allowed = True
+                with harness.native_state(second) as second_lease:
+                    second_lease.cache.mkdir()
+                    second_lease.cleanup_allowed = True
+                self.assertTrue(first_lease.cache.exists())
+                self.assertFalse(second_lease.cache.exists())
+        self.assertFalse(first_lease.cache.exists())
+
+
+if __name__ == "__main__":
+    with harness.candidate.cancellation_cleanup():
+        unittest.main()

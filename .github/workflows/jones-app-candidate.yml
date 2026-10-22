@@ -1,0 +1,275 @@
+name: Jones app candidate
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
+    paths:
+      - '.github/workflows/jones-app-candidate.yml'
+      - '.gitignore'
+      - '.mac-release.jones.env.example'
+      - 'Package.swift'
+      - 'Package.resolved'
+      - 'version.env'
+      - 'Sources/**'
+      - 'Tests/**'
+      - 'Scripts/**'
+      - 'WidgetExtension/**'
+      - 'Icon.icon/**'
+      - 'Icon.icns'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/jones-app-candidate.yml'
+      - '.gitignore'
+      - '.mac-release.jones.env.example'
+      - 'Package.swift'
+      - 'Package.resolved'
+      - 'version.env'
+      - 'Sources/**'
+      - 'Tests/**'
+      - 'Scripts/**'
+      - 'WidgetExtension/**'
+      - 'Icon.icon/**'
+      - 'Icon.icns'
+  # GitHub exposes manual dispatch only once this workflow exists on main.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jones-app-candidate-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  candidate:
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      CODEXBAR_SIGNING: adhoc
+      ARCHES: arm64
+      CODEXBAR_ALLOW_LLDB: '0'
+      CODEXBAR_SKIP_LAUNCH_SMOKE: '0'
+      CODEXBAR_LAUNCH_SMOKE_RESOURCE_ONLY: '1'
+      # Defense in depth: even an accidental liveness launch takes the early resource exit.
+      CODEXBAR_RESOURCE_SMOKE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Check out exact candidate with full history
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Select hosted Apple Silicon Xcode 26 without changing the host
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RUNNER_ENVIRONMENT" == github-hosted && "$(uname -m)" == arm64 ]]
+          candidate_developer_dir=''
+          for candidate_xcode in /Applications/Xcode_26.3.app /Applications/Xcode_26.2.app; do
+            if [[ -d "$candidate_xcode/Contents/Developer" ]]; then
+              candidate_developer_dir="$candidate_xcode/Contents/Developer"
+              break
+            fi
+          done
+          [[ -n "$candidate_developer_dir" ]]
+          export DEVELOPER_DIR="$candidate_developer_dir"
+          [[ "$(/usr/bin/xcodebuild -version)" == Xcode\ 26.* ]]
+          printf 'DEVELOPER_DIR=%s\n' "$DEVELOPER_DIR" >> "$GITHUB_ENV"
+          /usr/bin/xcodebuild -version
+
+      - name: Validate repository, event and exact source
+        id: context
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B Scripts/jones_candidate_artifact.py context \
+            --repo "$GITHUB_WORKSPACE" --github-output "$GITHUB_OUTPUT"
+
+      - name: Admit and run portable candidate fixtures serially
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ ! -e .build && ! -L .build ]]
+          mkdir .build
+          candidate_scratch=$(mktemp -d "$GITHUB_WORKSPACE/.build/candidate-tests.XXXXXX")
+          cleanup_candidate_tests() {
+            local result=$?
+            trap - EXIT INT TERM
+            if ! rm -rf -- "$candidate_scratch"; then
+              echo 'Candidate test scratch cleanup failed.' >&2
+              if [[ "$result" == 0 ]]; then result=1; fi
+            fi
+            exit "$result"
+          }
+          trap cleanup_candidate_tests EXIT
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
+          export TMPDIR="$candidate_scratch"
+          python3 -B Scripts/jones_candidate_admission.py \
+            --workspace "$GITHUB_WORKSPACE" --scratch "$candidate_scratch" --compiler-jobs 6
+          bash Scripts/test.sh --command python3 -B Scripts/test_jones_candidate_artifact.py
+
+      - name: Require bounded compiler and resource-only packaging support
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B Scripts/jones_candidate_artifact.py check-packager --repo "$GITHUB_WORKSPACE"
+          [[ -x /usr/bin/sandbox-exec ]]
+
+      - name: Admit, package and statically verify the candidate
+        shell: bash
+        env:
+          JONES_BUILD_ORIGIN: ${{ steps.context.outputs.origin }}
+          JONES_BUILD_RUN: ${{ steps.context.outputs.build_run }}
+        run: |
+          set -euo pipefail
+          [[ ! -e .mac-release.jones.env && ! -L .mac-release.jones.env ]]
+          git check-ignore --quiet .mac-release.jones.env
+          candidate_scratch=$(mktemp -d "$GITHUB_WORKSPACE/.build/candidate-package.XXXXXX")
+          candidate_overlay_owned=0
+          cleanup_candidate_package() {
+            local result=$?
+            trap - EXIT INT TERM
+            if [[ "$candidate_overlay_owned" == 1 ]]; then
+              if ! rm -f -- "$GITHUB_WORKSPACE/.mac-release.jones.env"; then
+                echo 'Candidate overlay cleanup failed.' >&2
+                if [[ "$result" == 0 ]]; then result=1; fi
+              fi
+            fi
+            if ! rm -rf -- "$candidate_scratch"; then
+              echo 'Candidate package scratch cleanup failed.' >&2
+              if [[ "$result" == 0 ]]; then result=1; fi
+            fi
+            exit "$result"
+          }
+          trap cleanup_candidate_package EXIT
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
+          export TMPDIR="$candidate_scratch"
+          candidate_overlay_owned=1
+          cat > .mac-release.jones.env <<'JONES_OVERLAY'
+          JONES_BUNDLE_ID="com.jonessystems.codexbar"
+          JONES_DISPLAY_NAME="CodexBar Jones"
+          JONES_STATE_KEY="jones"
+          JONES_TEAM_ID="JONESLOCAL"
+          JONES_UPDATE_CHANNEL="none"
+          JONES_UPDATE_FEED_URL=""
+          JONES_UPDATE_PUBLIC_ED_KEY=""
+          JONES_OVERLAY
+          python3 -B Scripts/jones_candidate_admission.py \
+            --workspace "$GITHUB_WORKSPACE" --scratch "$candidate_scratch" \
+            --compiler-jobs 6 --jobs-output "$candidate_scratch/compiler-jobs"
+          read -r CODEXBAR_BUILD_JOBS < "$candidate_scratch/compiler-jobs"
+          [[ "$CODEXBAR_BUILD_JOBS" =~ ^[1-6]$ ]]
+          export CODEXBAR_BUILD_JOBS
+          /bin/bash Scripts/package_app.sh release
+          python3 -B Scripts/jones_candidate_artifact.py create \
+            --repo "$GITHUB_WORKSPACE" --app "$GITHUB_WORKSPACE/CodexBar.app" \
+            --output "$GITHUB_WORKSPACE/.build/jones-candidate-artifact" --channel none
+
+      - name: Retain the static candidate for fourteen days
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: >-
+            Jones-CodexBar-candidate-${{ steps.context.outputs.revision }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .build/jones-candidate-artifact/Jones-CodexBar-*.zip
+            .build/jones-candidate-artifact/Jones-CodexBar-*.zip.sha256
+            .build/jones-candidate-artifact/provenance.json
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Admit and prepare public updater fixtures with a memory-only signing key
+        id: harness-fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          harness_scratch=$(mktemp -d "$GITHUB_WORKSPACE/.build/harness-prepare.XXXXXX")
+          cleanup_harness_prepare() {
+            local result=$?
+            trap - EXIT INT TERM
+            if ! rm -rf -- "$harness_scratch"; then
+              echo 'Fixture preparation scratch cleanup failed.' >&2
+              if [[ "$result" == 0 ]]; then result=1; fi
+            fi
+            exit "$result"
+          }
+          trap cleanup_harness_prepare EXIT
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
+          export TMPDIR="$harness_scratch"
+          python3 -B Scripts/jones_candidate_admission.py \
+            --workspace "$GITHUB_WORKSPACE" --scratch "$harness_scratch" --compiler-jobs 1
+          xcrun swiftc -j 1 -module-cache-path "$harness_scratch/module-cache" \
+            Scripts/jones_update_fixture_signer.swift -o "$harness_scratch/fixture-signer"
+          python3 -B Scripts/jones_update_harness.py prepare \
+            --app "$GITHUB_WORKSPACE/CodexBar.app" \
+            --output "$GITHUB_WORKSPACE/.build/jones-update-fixture" \
+            --signer "$harness_scratch/fixture-signer"
+
+      - name: Admit and prove isolated signed updates and rejection paths
+        shell: bash
+        env:
+          EXPECTED_REVISION: ${{ steps.context.outputs.revision }}
+        run: |
+          set -euo pipefail
+          harness_scratch=$(mktemp -d "$GITHUB_WORKSPACE/.build/harness-run.XXXXXX")
+          cleanup_harness_run() {
+            local result=$?
+            trap - EXIT INT TERM
+            if [[ -e "$HOME/Library/Caches/.com.jonessystems.codexbar.update-harness.lock" ]]; then
+              echo 'Native drain is unproved; retain this fixture until hosted VM teardown.' >&2
+              if [[ "$result" == 0 ]]; then result=1; fi
+            elif ! rm -rf -- "$harness_scratch"; then
+              echo 'Native fixture scratch cleanup failed.' >&2
+              if [[ "$result" == 0 ]]; then result=1; fi
+            fi
+            exit "$result"
+          }
+          trap cleanup_harness_run EXIT
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
+          export TMPDIR="$harness_scratch"
+          python3 -B Scripts/jones_candidate_admission.py \
+            --workspace "$GITHUB_WORKSPACE" --scratch "$harness_scratch" --compiler-jobs 1
+          bash Scripts/test.sh --command python3 -B Scripts/jones_update_harness.py run \
+            --fixture "$GITHUB_WORKSPACE/.build/jones-update-fixture" \
+            --scratch-parent "$harness_scratch" --expect-revision "$EXPECTED_REVISION" \
+            --result "$GITHUB_WORKSPACE/.build/jones-update-native-result.json"
+
+      - name: Retain public fixtures and native results for the scheduled Mac check
+        if: ${{ always() && steps.harness-fixture.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: >-
+            Jones-CodexBar-update-fixture-${{ steps.context.outputs.revision }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .build/jones-update-fixture/A.zip
+            .build/jones-update-fixture/B.zip
+            .build/jones-update-fixture/feeds.json
+            .build/jones-update-fixture/fixture.json
+            .build/jones-update-native-result.json
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Remove this hosted job's generated products
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RUNNER_ENVIRONMENT" == github-hosted && "$PWD" == "$GITHUB_WORKSPACE" ]]
+          # This job restored no build cache. User caches expire with its hosted VM.
+          # Uploaded candidates and public fixtures have a separate fourteen-day lifetime.
+          if [[ -e "$HOME/Library/Caches/.com.jonessystems.codexbar.update-harness.lock" ]]; then
+            echo 'Native drain is unproved; preserve owned executables until hosted VM teardown.' >&2
+            exit 1
+          fi
+          [[ ! -L .build && ! -L CodexBar.app ]]
+          rm -rf -- "$GITHUB_WORKSPACE/.build" "$GITHUB_WORKSPACE/CodexBar.app"

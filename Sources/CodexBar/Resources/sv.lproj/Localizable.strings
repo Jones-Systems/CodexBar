@@ -1599,3 +1599,22 @@
 
 "No system observations are available." = "Inga systemobservationer är tillgängliga.";
 "Historical provider cache; not a billing receipt or an identified account." = "Historisk leverantörscache; inte ett faktureringskvitto eller ett identifierat konto.";
+
+/* Jones updates */
+"jones_updates_automatic" = "Hämta uppdateringar automatiskt och installera vid inaktivitet";
+"jones_updates_bootstrap" = "Uppdateringar är inte konfigurerade i den här versionen. Installera en verifierad Jones-version.";
+"jones_updates_channel_none" = "Manuell installation";
+"jones_updates_channel_stable" = "Jones stabil";
+"jones_updates_idle" = "Redo att söka efter uppdateringar.";
+"jones_updates_checking" = "Söker efter uppdateringar…";
+"jones_updates_downloading" = "Hämtar uppdatering %@…";
+"jones_updates_preparing" = "Förbereder uppdatering %@…";
+"jones_updates_ready_idle" = "Uppdatering %@ är klar. Installeras vid inaktivitet eller när appen avslutas.";
+"jones_updates_ready_quit" = "Uppdatering %@ är klar. Installeras när appen avslutas.";
+"jones_updates_installing" = "Installerar uppdatering %@…";
+"jones_updates_current" = "Du har den senaste versionen.";
+"jones_updates_trust_failure" = "Uppdateringskällan kunde inte verifieras. Installera en verifierad Jones-version.";
+"jones_updates_failure" = "Uppdateringen misslyckades. Sök efter uppdateringar igen.";
+"jones_updates_size_failure" = "Den här uppdateringen kan inte hämtas säkert. Installera en verifierad Jones-version.";
+"jones_updates_capacity_unknown" = "Tillgängligt utrymme kunde inte kontrolleras. Kontrollera diskarna och försök igen.";
+"jones_updates_capacity_low" = "Uppdateringar kräver minst %@ ledigt utrymme. Frigör utrymme och försök igen.";

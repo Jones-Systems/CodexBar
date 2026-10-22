@@ -1602,3 +1602,22 @@
 
 "No system observations are available." = "No hi ha observacions del sistema disponibles.";
 "Historical provider cache; not a billing receipt or an identified account." = "Memòria cau històrica del proveïdor; no és un rebut de facturació ni un compte identificat.";
+
+/* Jones updates */
+"jones_updates_automatic" = "Descarrega les actualitzacions automàticament i instal·la-les durant la inactivitat";
+"jones_updates_bootstrap" = "Les actualitzacions no estan configurades en aquesta versió. Instal·la una versió de Jones verificada.";
+"jones_updates_channel_none" = "Instal·lació manual";
+"jones_updates_channel_stable" = "Jones estable";
+"jones_updates_idle" = "A punt per cercar actualitzacions.";
+"jones_updates_checking" = "S’estan cercant actualitzacions…";
+"jones_updates_downloading" = "S’està descarregant l’actualització %@…";
+"jones_updates_preparing" = "S’està preparant l’actualització %@…";
+"jones_updates_ready_idle" = "L’actualització %@ està a punt. S’instal·larà durant la inactivitat o en sortir.";
+"jones_updates_ready_quit" = "L’actualització %@ està a punt. S’instal·larà en sortir.";
+"jones_updates_installing" = "S’està instal·lant l’actualització %@…";
+"jones_updates_current" = "Estàs al dia.";
+"jones_updates_trust_failure" = "No s’ha pogut verificar l’origen de l’actualització. Instal·la una versió de Jones verificada.";
+"jones_updates_failure" = "L’actualització ha fallat. Torna a cercar actualitzacions.";
+"jones_updates_size_failure" = "Aquesta actualització no es pot descarregar de manera segura. Instal·la una versió de Jones verificada.";
+"jones_updates_capacity_unknown" = "No s’ha pogut comprovar l’espai disponible. Revisa els discs i torna-ho a provar.";
+"jones_updates_capacity_low" = "Les actualitzacions necessiten almenys %@ d’espai disponible. Allibera espai i torna-ho a provar.";

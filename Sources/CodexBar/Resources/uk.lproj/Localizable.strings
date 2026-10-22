@@ -1600,3 +1600,22 @@
 
 "No system observations are available." = "Спостереження за системами недоступні.";
 "Historical provider cache; not a billing receipt or an identified account." = "Історичний кеш постачальника; не платіжний документ і не ідентифікований обліковий запис.";
+
+/* Jones updates */
+"jones_updates_automatic" = "Завантажувати оновлення автоматично й установлювати під час бездіяльності";
+"jones_updates_bootstrap" = "Оновлення в цій збірці не налаштовані. Установіть перевірену збірку Jones.";
+"jones_updates_channel_none" = "Ручне встановлення";
+"jones_updates_channel_stable" = "Jones — стабільний канал";
+"jones_updates_idle" = "Готово до перевірки оновлень.";
+"jones_updates_checking" = "Перевірка оновлень…";
+"jones_updates_downloading" = "Завантаження оновлення %@…";
+"jones_updates_preparing" = "Підготовка оновлення %@…";
+"jones_updates_ready_idle" = "Оновлення %@ готове. Установлення під час бездіяльності або виходу.";
+"jones_updates_ready_quit" = "Оновлення %@ готове. Установлення під час виходу.";
+"jones_updates_installing" = "Установлення оновлення %@…";
+"jones_updates_current" = "Установлено останню версію.";
+"jones_updates_trust_failure" = "Не вдалося перевірити джерело оновлення. Установіть перевірену збірку Jones.";
+"jones_updates_failure" = "Оновлення не вдалося. Перевірте оновлення ще раз.";
+"jones_updates_size_failure" = "Неможливо безпечно завантажити це оновлення. Установіть перевірену збірку Jones.";
+"jones_updates_capacity_unknown" = "Не вдалося перевірити вільне місце. Перевірте диски й повторіть спробу.";
+"jones_updates_capacity_low" = "Для оновлень потрібно щонайменше %@ вільного місця. Звільніть місце й повторіть спробу.";

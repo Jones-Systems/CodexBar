@@ -198,6 +198,13 @@ if [[ "$PROBE_STATUS" -ne 0 ]] || ! grep -q "CODEXBAR_RESOURCE_SMOKE_OK" "$PROBE
 fi
 log "Launch smoke check: resource probe OK."
 
+# Candidate packaging can prove resources without starting provider/account work.
+# All three probes above must still pass; this opt-in skips only the UI lifetime check.
+if [[ "${CODEXBAR_LAUNCH_SMOKE_RESOURCE_ONLY:-0}" == "1" ]]; then
+  log "Launch smoke check: resource-only verification complete; application lifetime was not tested."
+  exit 0
+fi
+
 # Phase 2: launch the app for real and require it to stay alive.
 log "Launch smoke check: running packaged binary with ${ROOT} unreadable for ${SMOKE_SECONDS}s."
 (
