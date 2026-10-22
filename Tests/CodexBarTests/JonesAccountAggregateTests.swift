@@ -624,7 +624,7 @@ struct JonesAccountAggregateTests {
 
     @Test(arguments: [
         ("2026-07-01T16:00:00Z", "Wed Jul 1 12:00 PM EDT"),
-        ("2026-01-01T17:00:00Z", "Thu Jan 1 12:00 PM EST")
+        ("2026-01-01T17:00:00Z", "Thu Jan 1 12:00 PM EST"),
     ])
     func `aggregate dates use Eastern seasonal abbreviations`(input: String, expected: String) throws {
         let date = try #require(ISO8601DateFormatter().date(from: input))
