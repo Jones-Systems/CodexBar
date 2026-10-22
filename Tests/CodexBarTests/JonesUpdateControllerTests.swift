@@ -95,7 +95,8 @@ struct JonesUpdateControllerTests {
     func `preparation is synchronous and manual apply consumes the handler before reentrancy`() throws {
         let timer = JonesUpdateFixtureTimer()
         let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(), driver: JonesUpdateFixtureDriver(),
+            policy: try JonesUpdateTestFixtures.policy(),
+            driver: JonesUpdateFixtureDriver(),
             scheduleIdle: timer.schedule)
         var installations = 0
         controller.beginCheck()
@@ -140,7 +141,8 @@ struct JonesUpdateControllerTests {
         for outcome in outcomes {
             let timer = JonesUpdateFixtureTimer()
             let controller = JonesUpdateController(
-                policy: try JonesUpdateTestFixtures.policy(), driver: JonesUpdateFixtureDriver(),
+                policy: try JonesUpdateTestFixtures.policy(),
+                driver: JonesUpdateFixtureDriver(),
                 scheduleIdle: timer.schedule)
             var installations = 0
             controller.beginCheck()
@@ -163,7 +165,8 @@ struct JonesUpdateControllerTests {
     func `dismissal and successful cycle do not fabricate readiness or installation`() throws {
         let timer = JonesUpdateFixtureTimer()
         let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(), driver: JonesUpdateFixtureDriver(),
+            policy: try JonesUpdateTestFixtures.policy(),
+            driver: JonesUpdateFixtureDriver(),
             scheduleIdle: timer.schedule)
         controller.beginCheck()
         controller.found(version: "135.2")
@@ -190,8 +193,11 @@ struct JonesUpdateControllerTests {
         let timer = JonesUpdateFixtureTimer()
         var now: TimeInterval = 0
         let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(), driver: JonesUpdateFixtureDriver(), savedAutoUpdate: true,
-            clock: { now }, scheduleIdle: timer.schedule)
+            policy: try JonesUpdateTestFixtures.policy(),
+            driver: JonesUpdateFixtureDriver(),
+            savedAutoUpdate: true,
+            clock: { now },
+            scheduleIdle: timer.schedule)
         var installations = 0
         controller.beginCheck()
         controller.found(version: "135.2")
@@ -215,8 +221,12 @@ struct JonesUpdateControllerTests {
         var now: TimeInterval = 0
         var safety = JonesUpdateTestFixtures.idleSafety
         let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(), driver: JonesUpdateFixtureDriver(), savedAutoUpdate: true,
-            idleSafetyProvider: { safety }, clock: { now }, scheduleIdle: timer.schedule)
+            policy: try JonesUpdateTestFixtures.policy(),
+            driver: JonesUpdateFixtureDriver(),
+            savedAutoUpdate: true,
+            idleSafetyProvider: { safety },
+            clock: { now },
+            scheduleIdle: timer.schedule)
         var installations = 0
         now = 300
         controller.beginCheck()
@@ -244,8 +254,12 @@ struct JonesUpdateControllerTests {
         let timer = JonesUpdateFixtureTimer()
         var now: TimeInterval = 0
         let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(), driver: JonesUpdateFixtureDriver(), savedAutoUpdate: true,
-            idleSafetyProvider: { JonesUpdateTestFixtures.idleSafety }, clock: { now }, scheduleIdle: timer.schedule)
+            policy: try JonesUpdateTestFixtures.policy(),
+            driver: JonesUpdateFixtureDriver(),
+            savedAutoUpdate: true,
+            idleSafetyProvider: { JonesUpdateTestFixtures.idleSafety },
+            clock: { now },
+            scheduleIdle: timer.schedule)
         var installations = 0
         controller.beginCheck()
         controller.found(version: "135.2")
@@ -266,7 +280,8 @@ struct JonesUpdateControllerTests {
     func `termination uncertainty and installation cancellation never silently rearm a handler`() throws {
         let timer = JonesUpdateFixtureTimer()
         let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(), driver: JonesUpdateFixtureDriver(),
+            policy: try JonesUpdateTestFixtures.policy(),
+            driver: JonesUpdateFixtureDriver(),
             scheduleIdle: timer.schedule)
         var installations = 0
         controller.beginCheck()
@@ -291,7 +306,8 @@ struct JonesUpdateControllerTests {
     func `cycle errors clear readiness and preserve an actionable admission reason`() throws {
         let timer = JonesUpdateFixtureTimer()
         let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(), driver: JonesUpdateFixtureDriver(),
+            policy: try JonesUpdateTestFixtures.policy(),
+            driver: JonesUpdateFixtureDriver(),
             scheduleIdle: timer.schedule)
         controller.beginCheck()
         controller.found(version: "135.2")
@@ -343,10 +359,13 @@ struct JonesUpdateControllerTests {
     func `download admission fails closed with a typed reason before any readiness`() throws {
         let candidate = JonesUpdateAdmission.Candidate(
             archiveURL: URL(string: "https://github.com/Jones-Systems/CodexBar/releases/download/v1/app.zip"),
-            archiveLength: 1024, isDelta: false, installationType: "application")
+            archiveLength: 1024,
+            isDelta: false,
+            installationType: "application")
         var capacity = JonesUpdateAdmission.Capacity.unknown
         let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(), driver: JonesUpdateFixtureDriver(),
+            policy: try JonesUpdateTestFixtures.policy(),
+            driver: JonesUpdateFixtureDriver(),
             capacityProvider: { capacity })
         controller.beginCheck()
         #expect(throws: (any Error).self) { try controller.admitDownload(candidate) }
@@ -362,7 +381,8 @@ struct JonesUpdateControllerTests {
     @Test
     func `delta and package updates are rejected through the actual admission seam`() throws {
         let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(), driver: JonesUpdateFixtureDriver(),
+            policy: try JonesUpdateTestFixtures.policy(),
+            driver: JonesUpdateFixtureDriver(),
             capacityProvider: { .init(appVolume: .max, cacheVolume: .max) })
         let url = URL(string: "https://github.com/Jones-Systems/CodexBar/releases/download/v1/app.zip")
         controller.beginCheck()

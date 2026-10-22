@@ -31,8 +31,11 @@ enum JonesUpdateTestFixtures {
 
     static var idleSafety: JonesUpdateIdleSafetyInputs {
         .init(
-            hidIdleTime: 900, hasBlockedAccountInteraction: false, hasActiveTTYProcesses: false,
-            hasVisibleWindows: false, hasVisibleMenus: false)
+            hidIdleTime: 900,
+            hasBlockedAccountInteraction: false,
+            hasActiveTTYProcesses: false,
+            hasVisibleWindows: false,
+            hasVisibleMenus: false)
     }
 }
 

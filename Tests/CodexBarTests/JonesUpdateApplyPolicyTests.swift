@@ -5,7 +5,9 @@ import Testing
 struct JonesUpdateApplyPolicyTests {
     private var eligible: JonesUpdateApplyPolicy.Snapshot {
         .init(
-            preparedAge: 600, launchAge: 900, automaticUpdatesEnabled: true,
+            preparedAge: 600,
+            launchAge: 900,
+            automaticUpdatesEnabled: true,
             safety: JonesUpdateTestFixtures.idleSafety)
     }
 

@@ -373,9 +373,8 @@ private func makeUpdaterController() -> UpdaterProviding {
                 policy: policy,
                 savedAutoUpdate: savedAutoUpdate,
                 capacityProvider: {
-                    guard let cacheURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
-                        return .unknown
-                    }
+                    guard let cacheURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+                    else { return .unknown }
                     return .read(appURL: bundleURL, cacheURL: cacheURL)
                 },
                 describeFailure: { JonesUpdatePresentation.failure($0) })
@@ -499,11 +498,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NotificationCenter.default.addObserver(
-            self, selector: #selector(self.updateMenuDidBeginTracking(_:)),
-            name: NSMenu.didBeginTrackingNotification, object: nil)
+            self,
+            selector: #selector(self.updateMenuDidBeginTracking(_:)),
+            name: NSMenu.didBeginTrackingNotification,
+            object: nil)
         NotificationCenter.default.addObserver(
-            self, selector: #selector(self.updateMenuDidEndTracking(_:)),
-            name: NSMenu.didEndTrackingNotification, object: nil)
+            self,
+            selector: #selector(self.updateMenuDidEndTracking(_:)),
+            name: NSMenu.didEndTrackingNotification,
+            object: nil)
         self.dockIconController.start()
         self.memoryPressureMonitor.start()
         #if DEBUG

@@ -350,8 +350,10 @@ extension JonesUpdateController: SPUUpdaterDelegate {
         updateCheck: SPUUpdateCheck) throws
     {
         try self.admitDownload(.init(
-            archiveURL: item.fileURL, archiveLength: item.contentLength,
-            isDelta: item.isDeltaUpdate, installationType: item.installationType))
+            archiveURL: item.fileURL,
+            archiveLength: item.contentLength,
+            isDelta: item.isDeltaUpdate,
+            installationType: item.installationType))
     }
 
     func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {

@@ -89,8 +89,13 @@ struct JonesUpdateTrustPolicy: Equatable, Sendable {
         if channel == .none {
             guard feed.isEmpty, key.isEmpty else { throw Rejection.disabledConfiguration }
             return Self(
-                identity: identity, channel: channel, sourceRevision: revision,
-                buildOrigin: origin, buildRun: run, feedURL: nil, publicKey: nil)
+                identity: identity,
+                channel: channel,
+                sourceRevision: revision,
+                buildOrigin: origin,
+                buildRun: run,
+                feedURL: nil,
+                publicKey: nil)
         }
 
         guard key != Self.upstreamPublicKey else { throw Rejection.upstreamTrust }
@@ -109,8 +114,13 @@ struct JonesUpdateTrustPolicy: Equatable, Sendable {
               CFGetTypeID(expiry) != CFBooleanGetTypeID(), expiry.doubleValue == 0
         else { throw Rejection.signedFeedExpiryMustBeZero }
         return Self(
-            identity: identity, channel: channel, sourceRevision: revision,
-            buildOrigin: origin, buildRun: run, feedURL: feedURL, publicKey: key)
+            identity: identity,
+            channel: channel,
+            sourceRevision: revision,
+            buildOrigin: origin,
+            buildRun: run,
+            feedURL: feedURL,
+            publicKey: key)
     }
 
     /// Bind an injected policy to the actual host package before constructing Sparkle.
