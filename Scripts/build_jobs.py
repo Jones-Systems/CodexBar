@@ -150,6 +150,8 @@ def output_destinations(arguments: list[str], kind: str, environment: dict[str, 
             if key in selected:
                 raise AdmissionError(f"duplicate output destination: {key}")
             selected[key] = destination(value)
+        elif key in {"-C", "--toolset", "--multiroot-data-file"}:
+            raise AdmissionError(f"unsupported output destination override: {key}")
         elif key in VALUE_OPTIONS:
             if not equal:
                 index += 1
@@ -166,7 +168,7 @@ def output_destinations(arguments: list[str], kind: str, environment: dict[str, 
                 value = arguments[index] if index < len(arguments) else ""
             if value not in {"-warnings-as-errors", "-enable-testing"}:
                 raise AdmissionError("opaque compiler output overrides are not supported")
-        elif (arg.startswith(("-X", "@")) or
+        elif (arg.startswith(("-X", "@", "-C")) or
               (arg.startswith("-") and any(word in key.lower() for word in ("path", "dir", "output", "cache"))) or
               (kind == "xcode" and equal and key not in safe_settings)):
             raise AdmissionError(f"unsupported output destination override: {key}")
@@ -183,12 +185,18 @@ def output_destinations(arguments: list[str], kind: str, environment: dict[str, 
         destinations.append(destination(native_temp))
     if kind == "swift":
         package = selected.pop("--package-path", cwd)
+        # SwiftPM searches upward for Package.swift even after --package-path.
+        for candidate in (package, *package.parents):
+            if (candidate / "Package.swift").is_file():
+                package = candidate
+                break
         destinations.extend([
             package,
             selected.pop("--scratch-path", package / ".build"),
             selected.pop("--cache-path", home / "Library/Caches/org.swift.swiftpm"),
             selected.pop("--config-path", home / ".swiftpm/configuration"),
             selected.pop("--security-path", home / ".swiftpm/security"),
+            home / "Library/org.swift.swiftpm",
         ])
     else:
         destinations.extend([
@@ -366,6 +374,8 @@ def admission(command: list[str], kind: str = "swift", *, cleanup_proved=None):
         if time.monotonic() >= deadline:
             raise AdmissionError("admission deadline expired")
         admit_storage(arguments, kind, dict(os.environ))
+        if time.monotonic() >= deadline:
+            raise AdmissionError("admission deadline expired")
         record = json.dumps({"state": "in-progress", "owner_pid": os.getpid(), "jobs": jobs}) + "\n"
         os.lseek(fd, 0, os.SEEK_SET)
         os.write(fd, record.encode())

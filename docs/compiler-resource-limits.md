@@ -61,7 +61,8 @@ SwiftPM output selection follows `--package-path` and `--scratch-path`, includin
 `--option=value` forms. It also checks explicit cache/config/security and xUnit
 output paths. Xcode selection includes `-derivedDataPath`, `-archivePath`, result
 and package-cache destinations. Defaults include the package's `.build` (the
-current directory's `.build` without `--package-path`), the standard shared caches,
+current directory's `.build` at the package root; nested working directories
+follow SwiftPM's upward `Package.swift` search), the standard shared caches,
 Xcode DerivedData/Archives as applicable, and temporary storage. Nonexistent
 outputs resolve to their nearest existing ancestor without creating them.
 Unresolved path expressions, unsupported destination overrides and opaque compiler

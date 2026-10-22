@@ -107,6 +107,16 @@ class BuildJobsTests(unittest.TestCase):
                     self.fail("launched")
         self.assertEqual(events, ["lock", "lock", "cpu", "disk"])
 
+    def test_storage_measurement_cannot_extend_admission_deadline(self):
+        def disk(_):
+            self.clock.now = 300
+            return SimpleNamespace(f_bavail=40 * 1024 ** 3, f_frsize=1)
+        self.disk.side_effect = disk
+        with self.assertRaisesRegex(jobs.AdmissionError, "deadline expired"):
+            with jobs.admission(["swift", "build"]):
+                self.fail("launched")
+        self.assertEqual((self.directory / "lock/compiler.lock").read_bytes(), b"")
+
     def test_storage_swift_destinations_and_nonexistent_ancestor(self):
         package = self.directory / "package"
         package.mkdir()
@@ -128,6 +138,19 @@ class BuildJobsTests(unittest.TestCase):
                 ["build", "--package-path", "package"], "swift", {}))
             for option in ["--cache-path", "--config-path", "--security-path", "--xunit-output"]:
                 self.assertIn(external, jobs.output_destinations(["test", option + "=" + str(external)], "swift", {}))
+
+    def test_storage_finds_package_from_nested_working_directory(self):
+        package = self.directory / "package"
+        nested = package / "Sources/Nested"
+        nested.mkdir(parents=True)
+        (package / "Package.swift").touch()
+        with patch.object(jobs.Path, "cwd", return_value=nested):
+            paths = jobs.output_destinations(["build"], "swift", {})
+            self.assertIn(package / ".build", paths)
+            self.assertNotIn(nested / ".build", paths)
+        with patch.object(jobs.Path, "cwd", return_value=self.directory):
+            paths = jobs.output_destinations(["build", "--package-path=package/Sources"], "swift", {})
+            self.assertIn(package / ".build", paths)
 
     def test_storage_checks_each_destination_filesystem(self):
         first = self.directory / "volume-a"
@@ -159,6 +182,8 @@ class BuildJobsTests(unittest.TestCase):
                            ("swift", ["--scratch-path", "~/build"]), ("swift", ["--new-output-path", "elsewhere"]),
                            ("swift", ["-Xswiftc", "-module-cache-path"]), ("swift", ["-Xcc=-fmodules-cache-path=x"]),
                            ("swift", ["--scratch-path=a", "--scratch-path=b"]),
+                           ("swift", ["-C", "elsewhere"]), ("swift", ["--toolset=opaque.json"]),
+                           ("swift", ["--multiroot-data-file", "workspace.json"]),
                            ("xcode", ["SYMROOT=elsewhere"]), ("xcode", ["OBJROOT[sdk=macosx*]=elsewhere"]),
                            ("xcode", ["-exportPath", "elsewhere"])]:
             with self.subTest(args=args), self.assertRaises(jobs.AdmissionError):
