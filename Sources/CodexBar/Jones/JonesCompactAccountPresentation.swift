@@ -76,11 +76,24 @@ enum JonesCompactAccountPresentation {
         guard account.provider == .claude, account.error == nil, let snapshot = account.snapshot else {
             return CodexRowDetail(text: nil, trailingDetail: nil)
         }
-        let lines = [snapshot.primary, snapshot.secondary].compactMap { window -> String? in
-            guard let window, !window.isSyntheticPlaceholder, window.resetsAt != nil else { return nil }
-            return UsageFormatter.resetLine(for: window, style: resetStyle, now: now)
+        let weeklyText = snapshot.secondary.flatMap { weekly -> String? in
+            guard !weekly.isSyntheticPlaceholder, let date = weekly.resetsAt,
+                  date.timeIntervalSinceReferenceDate.isFinite else { return nil }
+            return UsageFormatter.resetLine(for: weekly, style: resetStyle, now: now)
         }
-        return CodexRowDetail(text: lines.isEmpty ? nil : lines.joined(separator: " · "), trailingDetail: nil)
+        let sessionDetail = snapshot.primary.flatMap { session -> MenuCardCompactAccountRowView.TrailingDetail? in
+            guard !session.isSyntheticPlaceholder, let date = session.resetsAt,
+                  date.timeIntervalSinceReferenceDate.isFinite else { return nil }
+            let timing = resetStyle == .countdown
+                ? UsageFormatter.resetCountdownDescription(from: date, now: now)
+                : UsageFormatter.resetDescription(from: date, now: now)
+            return .init(
+                text: "5h \(timing)",
+                count: nil,
+                accessibilityLabel: [L("Session"), UsageFormatter.resetLine(for: session, style: resetStyle, now: now)]
+                    .compactMap { $0 }.joined(separator: ", "))
+        }
+        return CodexRowDetail(text: weeklyText, trailingDetail: sessionDetail)
     }
 
     static func rowDetail(

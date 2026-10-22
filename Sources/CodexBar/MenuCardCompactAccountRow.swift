@@ -2,7 +2,7 @@ import CodexBarCore
 import SwiftUI
 
 /// Compact menu row for a collapsed account in the multi-account layout:
-/// label and headroom above a reserved detail line for quota or reset-credit details.
+/// label and headroom above a reserved detail line for quota, reset timing, or reset-credit details.
 /// Clicking the row expands it into the full usage card.
 struct MenuCardCompactAccountRowView: View {
     struct TrailingDetail: Equatable {
@@ -12,7 +12,7 @@ struct MenuCardCompactAccountRowView: View {
         }
 
         let text: String
-        let count: Int
+        let count: Int?
         let accessibilityLabel: String
         var expiryUrgency: ExpiryUrgency?
 
@@ -58,7 +58,7 @@ struct MenuCardCompactAccountRowView: View {
                 self.isActiveAccount ? "active" : "inactive",
                 self.isRefreshing ? "refreshing" : "idle",
                 self.trailingDetail?.text ?? "-",
-                self.trailingDetail.map { String($0.count) } ?? "-",
+                self.trailingDetail?.count.map { String($0) } ?? "-",
                 self.trailingDetail?.expiryUrgency?.rawValue ?? "-",
             ].joined(separator: "|")
         }
@@ -126,9 +126,17 @@ struct MenuCardCompactAccountRowView: View {
                     .accessibilityHidden(self.model.constraintDetail == nil)
                 Spacer(minLength: 4)
                 if let trailing = self.model.trailingDetail {
-                    ViewThatFits(in: .horizontal) {
-                        self.resetCreditDetail(trailing, showsCount: true)
-                        self.resetCreditDetail(trailing, showsCount: false)
+                    Group {
+                        if trailing.count != nil {
+                            ViewThatFits(in: .horizontal) {
+                                self.resetCreditDetail(trailing, showsCount: true)
+                                self.resetCreditDetail(trailing, showsCount: false)
+                            }
+                        } else {
+                            Text(trailing.text)
+                                .font(.footnote)
+                                .lineLimit(1)
+                        }
                     }
                     .foregroundStyle(trailing.foregroundColor(highlighted: self.isHighlighted))
                     .accessibilityHidden(true)
@@ -146,8 +154,8 @@ struct MenuCardCompactAccountRowView: View {
         HStack(alignment: .firstTextBaseline, spacing: 3) {
             Image(systemName: "clock")
             Text(detail.text)
-            if showsCount, detail.count > 1 {
-                Text("×\(detail.count)")
+            if showsCount, let count = detail.count, count > 1 {
+                Text("×\(count)")
             }
         }
         .font(.caption.monospacedDigit())
