@@ -10,6 +10,7 @@ struct MenuContent: View {
     let updater: UpdaterProviding
     let provider: UsageProvider?
     let actions: MenuActions
+    @State private var profileMenuRevision = 0
 
     var body: some View {
         let descriptor = MenuDescriptor.build(
@@ -31,13 +32,14 @@ struct MenuContent: View {
                 }
             }
         }
+        .id(self.profileMenuRevision)
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .frame(minWidth: 260, alignment: .leading)
     }
 
     @ViewBuilder
-    private func row(for entry: MenuDescriptor.Entry) -> some View {
+    func row(for entry: MenuDescriptor.Entry) -> some View {
         switch entry {
         case let .text(text, style):
             switch style {
@@ -86,19 +88,18 @@ struct MenuContent: View {
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel(title)
                 ForEach(Array(submenuItems.enumerated()), id: \.offset) { _, submenuItem in
-                    HStack(spacing: 8) {
-                        if submenuItem.isChecked {
-                            Image(systemName: "checkmark")
-                                .imageScale(.small)
-                                .frame(width: 18, alignment: .center)
-                        } else {
-                            Spacer().frame(width: 18)
+                    switch submenuItem.action {
+                    case .selectClaudeNativeProfile?, .providerSettings?:
+                        Button {
+                            if let action = submenuItem.action { self.perform(action) }
+                        } label: {
+                            self.submenuRow(for: submenuItem)
                         }
-                        Text(submenuItem.title)
-                            .foregroundStyle(submenuItem.isEnabled ? .primary : .secondary)
+                        .buttonStyle(.plain)
+                        .disabled(!submenuItem.isEnabled)
+                    default:
+                        self.submenuRow(for: submenuItem)
                     }
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel(submenuItem.title)
                 }
             }
         case .divider:
@@ -106,11 +107,27 @@ struct MenuContent: View {
         }
     }
 
+    private func submenuRow(for item: MenuDescriptor.SubmenuItem) -> some View {
+        HStack(spacing: 8) {
+            if item.isChecked {
+                Image(systemName: "checkmark")
+                    .imageScale(.small)
+                    .frame(width: 18, alignment: .center)
+            } else {
+                Spacer().frame(width: 18)
+            }
+            Text(item.title)
+                .foregroundStyle(item.isEnabled ? .primary : .secondary)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(item.title)
+    }
+
     private func iconName(for action: MenuDescriptor.MenuAction) -> String? {
         action.systemImageName
     }
 
-    private func perform(_ action: MenuDescriptor.MenuAction) {
+    func perform(_ action: MenuDescriptor.MenuAction) {
         switch action {
         case .refresh:
             self.actions.refresh()
@@ -128,9 +145,7 @@ struct MenuContent: View {
             self.actions.addCodexAccount()
         case .requestCodexSystemPromotion:
             return
-        case let .addProviderAccount(provider):
-            self.actions.switchAccount(provider)
-        case let .switchAccount(provider):
+        case let .addProviderAccount(provider), let .switchAccount(provider):
             self.actions.switchAccount(provider)
         case let .openTerminal(command):
             self.actions.openTerminal(command)
@@ -144,6 +159,8 @@ struct MenuContent: View {
             self.actions.openSettings()
         case let .providerSettings(provider):
             self.actions.openProviderSettings(provider)
+        case let .selectClaudeNativeProfile(alias):
+            self.selectClaudeNativeProfile(alias)
         case .about:
             self.actions.openAbout()
         case .quit:
@@ -153,6 +170,11 @@ struct MenuContent: View {
         case .focusAgentSession:
             return
         }
+    }
+
+    private func selectClaudeNativeProfile(_ alias: String) {
+        let outcome = ClaudeNativeProfileMenuSelection.select(alias: alias, store: self.store)
+        if outcome != .unchanged { self.profileMenuRevision &+= 1 }
     }
 }
 

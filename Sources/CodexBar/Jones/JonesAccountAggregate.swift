@@ -42,12 +42,42 @@ struct JonesAccountAggregate: Equatable {
         return balancePoints > 0 ? .reserve : balancePoints < 0 ? .deficit : .neutral
     }
 
-    static func easternDateLabel(_ date: Date) -> String {
+    static func easternDateLabel(_ date: Date, compact: Bool = false) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone(identifier: "America/New_York")
-        formatter.dateFormat = "EEE MMM d h:mm a z"
+        formatter.dateFormat = compact ? "EEE h:mm a z" : "EEE MMM d h:mm a z"
         return formatter.string(from: date)
+    }
+
+    var compactBalanceLabel: String {
+        guard let balancePoints else {
+            return self.isPartial ? L("Needs all accounts") : L("Pace unavailable")
+        }
+        if balancePoints == 0 { return L("On pace") }
+        return balancePoints > 0
+            ? "\(balancePoints)% in reserve"
+            : "\(abs(balancePoints))% in deficit"
+    }
+
+    var compactCapacityLabel: String {
+        "of \(self.maximumPercent)%"
+    }
+
+    var compactExhaustionLabel: String {
+        switch self.exhaustion {
+        case let .runsOut(date, _): Self.easternDateLabel(date, compact: true)
+        case .exhaustedNow: L("Now")
+        case .noUsage: L("No usage")
+        case .unknown(.partialRoster): L("Needs all accounts")
+        case .unknown(.missingTiming): L("Timing unavailable")
+        case .unknown(.tooEarly): L("Too early")
+        case .unknown(.beyondHorizon): L("Beyond 28 days")
+        }
+    }
+
+    var expandedHelpText: String {
+        self.expandedLines.map(\.text).joined(separator: "\n")
     }
 
     var expandedLines: [Line] {
@@ -103,8 +133,7 @@ struct JonesAccountAggregate: Equatable {
 
     func heightFingerprint(isExpanded: Bool) -> String {
         guard isExpanded else { return self.heightFingerprint + "|exp=0" }
-        return self.heightFingerprint + "|exp=1|bal=\(self.balancePoints != nil)" +
-            "|eta=\(self.exhaustion.shape)|reset=\(self.firstReset != nil)"
+        return self.heightFingerprint + "|exp=1|compactRows=2"
     }
 
     var paceMarkerPercent: Double? {

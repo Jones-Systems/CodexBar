@@ -108,10 +108,13 @@ and reporting count. Accessibility describes the target or its unavailability.
 The overlay leaves the collapsed row's text, padding and height unchanged.
 It is green for reserve, red for deficit and neutral on pace, using the native
 pace and selection colors. Clicking Total remaining expands its signed balance
-in raw account percentage points, target, approximate current-rate exhaustion
-and next reset. Codex's +20 points is out of 500%, not +4% normalized. An estimate
-past the first reset explicitly excludes refills; missing or too-early timing
-has no precise estimate. Zero activity does not imply an exhaustion date.
+in two compact, full-width rows. The first pairs “21% in reserve” or “21% in
+deficit” with “of 500%” for Codex or “of 200%” for Claude. The second pairs
+“Runs out ≈” with a short Eastern date and seasonally correct EDT/EST time.
+These balance points use the full account capacity, not the normalized total.
+Target, pooled-demand assumptions, first reset and ignored-refill context remain
+in the hover help and accessibility description. Missing, partial or too-early
+timing stays explicit; zero activity does not imply an exhaustion date.
 
 Supported fleet Codex account menus admit only the five unambiguous enrolled
 profile homes; live/default, managed and extra profile rows are excluded.

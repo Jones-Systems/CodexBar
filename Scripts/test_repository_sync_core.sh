@@ -18,4 +18,4 @@ let package = Package(
         .testTarget(name: "RepositorySyncTests", dependencies: ["CodexBarCore"], path: "Tests")
     ])
 PACKAGE
-swift test --package-path "$scratch" "$@"
+python3 "$root/Scripts/build_jobs.py" -- swift test --package-path "$scratch" "$@"

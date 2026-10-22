@@ -3,7 +3,8 @@
 codexbar_swiftpm_bin_path() {
   local conf="$1"
   shift
-  local command=(swift build --show-bin-path -c "$conf")
+  local helper="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/build_jobs.py"
+  local command=(python3 "$helper" -- swift build --show-bin-path -c "$conf")
   local arch
   for arch in "$@"; do
     command+=(--arch "$arch")

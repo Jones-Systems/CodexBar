@@ -568,6 +568,14 @@ extension StatusItemController: StatusItemMenuPersistentActionDelegate {
         self.openSettings(pane: nil)
     }
 
+    @objc func selectClaudeNativeProfileFromMenu(_ sender: NSMenuItem) {
+        guard let alias = sender.representedObject as? String else { return }
+        let outcome = ClaudeNativeProfileMenuSelection.select(alias: alias, store: self.store)
+        if outcome != .unchanged {
+            self.refreshOpenMenusAfterExplicitStoreAction()
+        }
+    }
+
     @objc func showProviderSettings(_ sender: NSMenuItem) {
         guard let rawProvider = sender.representedObject as? String,
               let provider = UsageProvider(rawValue: rawProvider)
