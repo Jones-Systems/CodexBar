@@ -153,7 +153,8 @@ struct JonesCompactAccountPresentationTests {
     }
 
     @Test
-    func `Claude reset detail preserves window order and rejects unknown placeholder and error timing`() throws {
+    @MainActor
+    func `Claude reset detail places weekly left and session right without credit decoration`() throws {
         let session = RateWindow(
             usedPercent: 90,
             windowMinutes: 300,
@@ -171,28 +172,47 @@ struct JonesCompactAccountPresentationTests {
             resetDescription: nil,
             isSyntheticPlaceholder: true)
         let undated = RateWindow(usedPercent: 99, windowMinutes: 300, resetsAt: nil, resetDescription: "tomorrow")
+        let invalid = RateWindow(
+            usedPercent: 0,
+            windowMinutes: 300,
+            resetsAt: Date(timeIntervalSinceReferenceDate: .infinity),
+            resetDescription: nil)
+        let windows: [RateWindow?] = [session, placeholder, undated, invalid, nil]
+        let weeklyWindows: [RateWindow?] = [weekly, placeholder, undated, invalid, nil]
         for style in [ResetTimeDisplayStyle.countdown, .absolute] {
             let sessionText = try #require(UsageFormatter.resetLine(for: session, style: style, now: Self.detailNow))
             let weeklyText = try #require(UsageFormatter.resetLine(for: weekly, style: style, now: Self.detailNow))
-            for (primary, expected) in [
-                (session, sessionText + " · " + weeklyText),
-                (placeholder, weeklyText),
-                (undated, weeklyText),
-            ] {
-                let account = ProviderAccountUsageSnapshot(
-                    id: .init(source: "claude-native-profile", opaqueID: "synthetic"),
-                    provider: .claude,
-                    displayLabel: "Synthetic",
-                    isActive: false,
-                    snapshot: UsageSnapshot(primary: primary, secondary: weekly, updatedAt: Self.detailNow),
-                    error: nil,
-                    sourceLabel: nil)
-                let detail = JonesCompactAccountPresentation.claudeRowDetail(
-                    account: account,
-                    resetStyle: style,
-                    now: Self.detailNow)
-                #expect(detail.text == expected)
-                #expect(detail.trailingDetail == nil)
+            for primary in windows {
+                for secondary in weeklyWindows {
+                    let account = ProviderAccountUsageSnapshot(
+                        id: .init(source: "claude-native-profile", opaqueID: "synthetic"),
+                        provider: .claude,
+                        displayLabel: "Synthetic",
+                        isActive: false,
+                        snapshot: UsageSnapshot(primary: primary, secondary: secondary, updatedAt: Self.detailNow),
+                        error: nil,
+                        sourceLabel: nil)
+                    let detail = JonesCompactAccountPresentation.claudeRowDetail(
+                        account: account,
+                        resetStyle: style,
+                        now: Self.detailNow)
+                    #expect(detail.text == (secondary == weekly ? weeklyText : nil))
+                    if primary == session {
+                        let trailing = try #require(detail.trailingDetail)
+                        let date = try #require(session.resetsAt)
+                        let timing = style == .countdown
+                            ? UsageFormatter.resetCountdownDescription(from: date, now: Self.detailNow)
+                            : UsageFormatter.resetDescription(from: date, now: Self.detailNow)
+                        #expect(trailing.text == "5h \(timing)")
+                        #expect(trailing.accessibilityLabel == "Session, \(sessionText)")
+                        #expect(trailing.count == nil)
+                        #expect(trailing.expiryUrgency == nil)
+                        #expect(trailing.foregroundColor(highlighted: false) == MenuHighlightStyle.normalSecondaryText)
+                        #expect(trailing.foregroundColor(highlighted: true) == MenuHighlightStyle.selectionText)
+                    } else {
+                        #expect(detail.trailingDetail == nil)
+                    }
+                }
             }
         }
         for (snapshot, error) in [

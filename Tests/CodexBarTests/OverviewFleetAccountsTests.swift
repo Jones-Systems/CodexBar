@@ -614,11 +614,9 @@ struct OverviewFleetAccountsTests {
                             sourceLabel: "Synthetic")
                     }
                 let claudeRows = controller.overviewFleetAccountRows(for: .claude, now: now)
-                let expected = [snapshot.primary, snapshot.secondary].compactMap { window in
-                    window.flatMap { UsageFormatter.resetLine(for: $0, style: .countdown, now: now) }
-                }.joined(separator: " · ")
-                #expect(claudeRows.first?.model.constraintDetail == expected)
-                #expect(claudeRows.first?.model.trailingDetail == nil)
+                #expect(claudeRows.first?.model.constraintDetail == "Resets in 1d")
+                #expect(claudeRows.first?.model.trailingDetail?.text == "5h in 1h")
+                #expect(claudeRows.first?.model.trailingDetail?.count == nil)
                 let projected = controller.overviewFleetAccounts(for: .claude)
                 let plan = controller.compactAccountPlan(for: .claude, accounts: projected)
                 let rendering = StatusItemController.CompactAccountMenuRendering(
@@ -630,8 +628,10 @@ struct OverviewFleetAccountsTests {
                         accounts: projected, resetStyle: .countdown, now: now))
                 for row in plan.rows {
                     if case let .compact(compact) = row {
-                        #expect(controller.compactAccountRowModel(for: compact, rendering: rendering).constraintDetail
-                            == expected)
+                        let model = controller.compactAccountRowModel(for: compact, rendering: rendering)
+                        #expect(model.constraintDetail == "Resets in 1d")
+                        #expect(model.trailingDetail?.text == "5h in 1h")
+                        #expect(model.trailingDetail?.count == nil)
                     }
                 }
             }
