@@ -91,7 +91,7 @@ enum JonesCompactAccountPresentation {
                 text: "5h \(timing)",
                 count: nil,
                 accessibilityLabel: [L("Session"), UsageFormatter.resetLine(for: session, style: resetStyle, now: now)]
-                    .compactMap { $0 }.joined(separator: ", "))
+                    .compactMap(\.self).joined(separator: ", "))
         }
         return CodexRowDetail(text: weeklyText, trailingDetail: sessionDetail)
     }
