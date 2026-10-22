@@ -324,7 +324,10 @@ extension StatusItemController {
         if showBrandPercent,
            let brand = ProviderBrandIcon.image(for: primaryProvider)
         {
-            let displayText = self.menuBarDisplayText(for: primaryProvider, snapshot: snapshot)
+            let now = Date()
+            let displayText = self.menuBarDisplayText(for: primaryProvider, snapshot: snapshot, now: now)
+            let resetCredit = self.menuBarResetCreditCountdown(for: primaryProvider, snapshot: snapshot, now: now)
+            let resetDates = self.menuBarQuotaResetDates(for: primaryProvider, snapshot: snapshot, now: now)
             let displayedImage = warningFlash ? Self.quotaWarningFlashImage(base: brand) : brand
             let signature = [
                 "mode=brandPercent",
@@ -344,11 +347,23 @@ extension StatusItemController {
             if self.shouldSkipMergedIconRender(signature) {
                 // AppKit can lose button content state independently of the cached render signature.
                 // Keep this cheap path self-healing even when the provider image itself can be skipped.
-                self.setButtonContent(image: displayedImage, title: displayText, for: button)
+                self.setButtonContent(
+                    image: displayedImage,
+                    title: displayText,
+                    resetCredit: resetCredit,
+                    resetDates: resetDates,
+                    now: now,
+                    for: button)
                 self.noteIconPerfRender(skipped: true)
                 return true
             }
-            self.setButtonContent(image: displayedImage, title: displayText, for: button)
+            self.setButtonContent(
+                image: displayedImage,
+                title: displayText,
+                resetCredit: resetCredit,
+                resetDates: resetDates,
+                now: now,
+                for: button)
             self.noteIconPerfRender(skipped: false)
             return false
         }
@@ -512,24 +527,12 @@ extension StatusItemController {
         if showBrandPercent,
            let brand = ProviderBrandIcon.image(for: provider)
         {
-            let displayText = self.menuBarDisplayText(for: provider, snapshot: snapshot)
-            let displayedImage = warningFlash ? Self.quotaWarningFlashImage(base: brand) : brand
-            let signature = [
-                "mode=brandPercent",
-                "provider=\(provider.rawValue)",
-                "style=\(String(describing: style))",
-                "text=\(displayText ?? "nil")",
-                "warningFlash=\(warningFlash ? "1" : "0")",
-                "highContrast=\(self.shouldUseHighContrastStatusItemContent ? "1" : "0")",
-            ].joined(separator: "|")
-            if self.shouldSkipProviderIconRender(provider: provider, signature: signature) {
-                self.setButtonContent(image: displayedImage, title: displayText, for: button)
-                self.noteIconPerfRender(skipped: true)
-                return true
-            }
-            self.setButtonContent(image: displayedImage, title: displayText, for: button)
-            self.noteIconPerfRender(skipped: false)
-            return false
+            return self.applyProviderBrandPercentIcon(
+                provider: provider,
+                snapshot: snapshot,
+                brand: brand,
+                warningFlash: warningFlash,
+                button: button)
         }
 
         // OpenRouter always gets a meter here — the brand-logo fallback was removed on purpose.
@@ -643,6 +646,49 @@ extension StatusItemController {
                 title: nil,
                 for: button)
         }
+        self.noteIconPerfRender(skipped: false)
+        return false
+    }
+
+    private func applyProviderBrandPercentIcon(
+        provider: UsageProvider,
+        snapshot: UsageSnapshot?,
+        brand: NSImage,
+        warningFlash: Bool,
+        button: NSStatusBarButton) -> Bool
+    {
+        let style = self.store.style(for: provider)
+        let now = Date()
+        let displayText = self.menuBarDisplayText(for: provider, snapshot: snapshot, now: now)
+        let resetCredit = self.menuBarResetCreditCountdown(for: provider, snapshot: snapshot, now: now)
+        let resetDates = self.menuBarQuotaResetDates(for: provider, snapshot: snapshot, now: now)
+        let displayedImage = warningFlash ? Self.quotaWarningFlashImage(base: brand) : brand
+        let signature = [
+            "mode=brandPercent",
+            "provider=\(provider.rawValue)",
+            "style=\(String(describing: style))",
+            "text=\(displayText ?? "nil")",
+            "warningFlash=\(warningFlash ? "1" : "0")",
+            "highContrast=\(self.shouldUseHighContrastStatusItemContent ? "1" : "0")",
+        ].joined(separator: "|")
+        if self.shouldSkipProviderIconRender(provider: provider, signature: signature) {
+            self.setButtonContent(
+                image: displayedImage,
+                title: displayText,
+                resetCredit: resetCredit,
+                resetDates: resetDates,
+                now: now,
+                for: button)
+            self.noteIconPerfRender(skipped: true)
+            return true
+        }
+        self.setButtonContent(
+            image: displayedImage,
+            title: displayText,
+            resetCredit: resetCredit,
+            resetDates: resetDates,
+            now: now,
+            for: button)
         self.noteIconPerfRender(skipped: false)
         return false
     }
@@ -808,32 +854,6 @@ extension StatusItemController {
         return true
     }
 
-    private func setButtonContent(image: NSImage, title: String?, for button: NSStatusBarButton) {
-        let isDebugApp = Self.isDebugApp(bundleIdentifier: Bundle.main.bundleIdentifier)
-        let value = Self.buttonTitle(
-            title,
-            hasImage: true,
-            isDebugApp: isDebugApp)
-
-        if self.shouldUseHighContrastStatusItemContent {
-            button.image = nil
-            button.imagePosition = .noImage
-            button.attributedTitle = Self.highContrastButtonTitle(image: image, title: value)
-            return
-        }
-
-        if button.image !== image {
-            button.image = image
-        }
-        if button.title != value {
-            button.title = value
-        }
-        let position: NSControl.ImagePosition = value.isEmpty ? .imageOnly : .imageLeft
-        if button.imagePosition != position {
-            button.imagePosition = position
-        }
-    }
-
     static func highContrastButtonTitle(image: NSImage, title: String) -> NSAttributedString {
         let font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
         let attachment = NSTextAttachment()
@@ -868,7 +888,7 @@ extension StatusItemController {
         return hasImage && !value.isEmpty ? " \(value)" : value
     }
 
-    func menuBarDisplayText(
+    func menuBarQuotaDisplayText(
         for provider: UsageProvider,
         snapshot: UsageSnapshot?,
         now: Date = .init()) -> String?
@@ -946,7 +966,9 @@ extension StatusItemController {
         // The combined "Session + Weekly" metric (Codex and Claude) shows both lanes in percent mode
         // ("5h 12% · W 45%") and, in pace/both modes, pairs the session usage with the weekly pace.
         let combinedLanes = self.combinedSessionWeeklyLanes(
-            for: provider, snapshot: snapshot, projection: codexProjection)
+            for: provider,
+            snapshot: snapshot,
+            projection: codexProjection)
 
         let pace: UsagePace?
         switch mode {
@@ -1251,8 +1273,11 @@ extension StatusItemController {
     /// "reset time when exhausted" option can surface BOTH combined session/weekly lanes in percent mode,
     /// while pace/both render the one lane chosen by `combinedDisplayPercentWindow` — mirror that presentation
     /// here rather than scheduling whichever lane happened to drive the icon.
-    func menuBarDisplayedResetDates(for provider: UsageProvider, now: Date) -> [Date] {
-        let snapshot = self.store.menuBarSnapshot(for: provider.instanceID)
+    func menuBarQuotaResetDates(
+        for provider: UsageProvider,
+        snapshot: UsageSnapshot?,
+        now: Date) -> [Date]
+    {
         let layoutResolution = self.settings.menuBarLayoutResolution(for: provider)
         if !layoutResolution.usesLegacyRendering,
            self.settings.menuBarIconStyle == .iconAndPercent
@@ -1272,7 +1297,9 @@ extension StatusItemController {
             snapshotOverride: snapshot,
             now: now)
         if let lanes = self.combinedSessionWeeklyLanes(
-            for: provider, snapshot: snapshot, projection: projection),
+            for: provider,
+            snapshot: snapshot,
+            projection: projection),
             lanes.session != nil || lanes.weekly != nil
         {
             switch mode {
@@ -1580,7 +1607,8 @@ extension StatusItemController {
     }
 
     private nonisolated static func drawBrandStatusOverlay(
-        indicator: ProviderStatusIndicator, size: NSSize)
+        indicator: ProviderStatusIndicator,
+        size: NSSize)
     {
         guard indicator.hasIssue else { return }
 

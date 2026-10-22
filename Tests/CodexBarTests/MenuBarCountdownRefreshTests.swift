@@ -724,3 +724,17 @@ struct MenuBarCountdownRefreshTests {
         #expect(controller._test_isMenuBarCountdownRefreshScheduled())
     }
 }
+
+extension MenuBarCountdownRefreshTests {
+    @Test
+    func `absolute reset color refresh wakes at the 24 hour urgency boundary`() throws {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let delay = try #require(StatusItemController.menuBarResetUrgencyRefreshDelay(
+            resetDates: [now.addingTimeInterval(86400 + 0.1), now.addingTimeInterval(86400 + 60)],
+            now: now))
+        #expect(abs(delay - 0.15) < 0.001)
+        #expect(StatusItemController.menuBarResetUrgencyRefreshDelay(
+            resetDates: [now.addingTimeInterval(86400), now.addingTimeInterval(-1)],
+            now: now) == nil)
+    }
+}

@@ -82,6 +82,7 @@ struct MenuBarLayoutRenderData: Hashable {
     let cost30d: String?
     /// Numeric twins of the display strings above, for conditional predicates.
     let metrics: MenuBarLayoutRenderMetrics
+    var resetCreditExpiresAt: Date?
 }
 
 struct MenuBarLayoutRenderOptions: Hashable {
@@ -94,8 +95,8 @@ struct MenuBarLayoutRenderOptions: Hashable {
     /// Whether the provider's latest refresh failed; when true the shown snapshot is stale
     /// and rendered dimmer until a background refresh succeeds again.
     let isStale: Bool
-    /// Exact display clock. The cache keys on the resulting reset strings, so animation ticks that keep
-    /// the same visible countdown still reuse the cached title.
+    /// Exact display clock. The cache keys on reset strings and urgency, so animation ticks that keep
+    /// the same visible countdown and color still reuse the cached title.
     let now: Date
     /// User-tunable vertical nudge for the whole title, applied on top of the optical baseline
     /// offset. Positive moves content up, negative moves it down.
@@ -145,8 +146,12 @@ struct MenuBarLayoutRenderKey: Hashable {
 struct MenuBarLayoutResetText: Hashable {
     let countdown: String?
     let absolute: String?
+    let creditCountdown: MenuBarResetCreditCountdown?
+    let resetIsUrgent: Bool?
 
-    init(window: MenuBarLayoutRenderWindow?, now: Date) {
+    init(window: MenuBarLayoutRenderWindow?, now: Date, creditExpiresAt: Date? = nil) {
+        self.creditCountdown = MenuBarResetCreditCountdown(expiresAt: creditExpiresAt, now: now)
+        self.resetIsUrgent = window?.resetsAt.map { $0.timeIntervalSince(now) <= 24 * 3600 }
         if let resetsAt = window?.resetsAt {
             self.countdown = UsageFormatter.resetCountdownDescription(from: resetsAt, now: now)
             self.absolute = UsageFormatter.resetDescription(from: resetsAt, now: now)
@@ -227,7 +232,10 @@ final class MenuBarLayoutRenderer {
         options: MenuBarLayoutRenderOptions)
         -> MenuBarLayoutRenderedTitle
     {
-        let resetText = MenuBarLayoutResetText(window: data.automatic, now: options.now)
+        let resetText = MenuBarLayoutResetText(
+            window: data.automatic,
+            now: options.now,
+            creditExpiresAt: data.resetCreditExpiresAt)
         // Evaluate each conditional exactly once per render: the outcome is both a cache-key component
         // and what the token resolver needs, so re-testing per placement would only duplicate work.
         let outcomes = Dictionary(
@@ -467,18 +475,8 @@ final class MenuBarLayoutRenderer {
                 value,
                 accessibilityText: L("Usage bar, %d of 3 filled", filled),
                 attributes: style.attributes)
-        case .resetCountdown:
-            return self.resetToken(
-                data.automatic?.resetsAt.map { UsageFormatter.resetCountdownDescription(from: $0, now: options.now) }
-                    ?? data.automatic?.resetDescription,
-                unavailableLabel: L("Reset countdown unavailable"),
-                attributes: style.attributes)
-        case .resetAbsolute:
-            return self.resetToken(
-                data.automatic?.resetsAt.map { UsageFormatter.resetDescription(from: $0, now: options.now) }
-                    ?? data.automatic?.resetDescription,
-                unavailableLabel: L("Reset time unavailable"),
-                attributes: style.attributes)
+        case .resetCountdown, .resetAbsolute:
+            return self.renderReset(item, data: data, style: style, options: options)
         case .runsOut, .runsOutCompact:
             let isCompact = item == .runsOutCompact
             return self.optionalTextToken(
@@ -516,6 +514,32 @@ final class MenuBarLayoutRenderer {
         case .providerName, .accountLabel, .lanePercent:
             preconditionFailure("Provider text tokens should render before the main switch")
         }
+    }
+
+    private static func renderReset(
+        _ item: MenuBarLayoutToken,
+        data: MenuBarLayoutRenderData,
+        style: TokenStyle,
+        options: MenuBarLayoutRenderOptions)
+        -> (value: NSAttributedString, accessibilityText: String?)
+    {
+        if let credit = MenuBarResetCreditCountdown(expiresAt: data.resetCreditExpiresAt, now: options.now) {
+            return (credit.attributedTitle(attributes: style.attributes), credit.accessibilityLabel)
+        }
+        var attributes = style.attributes
+        if let resetAt = data.automatic?.resetsAt {
+            attributes[.foregroundColor] = MenuBarResetCreditCountdown.resetColor(resetAt: resetAt, now: options.now)
+        }
+        let isCountdown = item == .resetCountdown
+        let text = data.automatic?.resetsAt.map {
+            isCountdown
+                ? UsageFormatter.resetCountdownDescription(from: $0, now: options.now)
+                : UsageFormatter.resetDescription(from: $0, now: options.now)
+        } ?? data.automatic?.resetDescription
+        return self.resetToken(
+            text,
+            unavailableLabel: isCountdown ? L("Reset countdown unavailable") : L("Reset time unavailable"),
+            attributes: attributes)
     }
 
     private static func renderPercent(
