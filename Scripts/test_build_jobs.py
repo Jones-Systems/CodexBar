@@ -104,7 +104,8 @@ class BuildJobsTests(unittest.TestCase):
     def test_xcode_trusted_tail_disables_parallel_whole_module_optimization(self):
         with jobs.admission(["xcodebuild", "build", "-configuration", "Release"], "xcode") as command:
             self.assertEqual(command, ["xcodebuild", "build", "-configuration", "Release", "-jobs", "6",
-                                       "SWIFT_USE_PARALLEL_WHOLE_MODULE_OPTIMIZATION=NO"])
+                                       "SWIFT_USE_PARALLEL_WHOLE_MODULE_OPTIMIZATION=NO",
+                                       "OTHER_SWIFT_FLAGS=$(inherited) -num-threads 1"])
 
     def test_reject_caller_parallel_whole_module_optimization_override(self):
         for setting in ["SWIFT_USE_PARALLEL_WHOLE_MODULE_OPTIMIZATION=YES",

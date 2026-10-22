@@ -240,7 +240,8 @@ def admission(command: list[str], kind: str = "swift", *, cleanup_proved=None):
             # single-threaded while retaining the per-file outputs enabled by positive 1.
             tail = (["--jobs", str(jobs), "-Xswiftc", "-num-threads", "-Xswiftc", "1"]
                     if kind == "swift" else
-                    ["-jobs", str(jobs), "SWIFT_USE_PARALLEL_WHOLE_MODULE_OPTIMIZATION=NO"])
+                    ["-jobs", str(jobs), "SWIFT_USE_PARALLEL_WHOLE_MODULE_OPTIMIZATION=NO",
+                     "OTHER_SWIFT_FLAGS=$(inherited) -num-threads 1"])
             yield [command[0], *arguments, *tail]
             returned = True
         finally:

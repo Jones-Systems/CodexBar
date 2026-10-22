@@ -20,8 +20,12 @@ with bare, uncapped SwiftPM or Xcode commands.
 
 Release builds also limit each Swift compiler job to one backend thread.
 SwiftPM receives a final `-Xswiftc -num-threads -Xswiftc 1`; Xcode receives
-`SWIFT_USE_PARALLEL_WHOLE_MODULE_OPTIMIZATION=NO`, which selects one backend
-thread while preserving whole-module compilation and per-file object outputs.
+`SWIFT_USE_PARALLEL_WHOLE_MODULE_OPTIMIZATION=NO` together with the literal
+`OTHER_SWIFT_FLAGS=$(inherited) -num-threads 1` build setting. The first disables
+Xcode's processor-count default; the second explicitly selects one backend
+thread while preserving inherited flags, whole-module compilation and per-file
+object outputs. Both are needed on toolchains that otherwise omit the thread
+option when parallel whole-module optimization is disabled.
 Limiting jobs alone leaves Swift's release backend free to use every processor.
 
 Participating commands share a per-user lock across worktrees. After obtaining
