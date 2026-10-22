@@ -18,6 +18,12 @@ tests, repository-sync tests and app packaging call it at the compiler
 boundary. Packaging also applies Xcode's job control. Do not bypass the helper
 with bare, uncapped SwiftPM or Xcode commands.
 
+Release builds also limit each Swift compiler job to one backend thread.
+SwiftPM receives a final `-Xswiftc -num-threads -Xswiftc 1`; Xcode receives
+`SWIFT_USE_PARALLEL_WHOLE_MODULE_OPTIMIZATION=NO`, which selects one backend
+thread while preserving whole-module compilation and per-file object outputs.
+Limiting jobs alone leaves Swift's release backend free to use every processor.
+
 Participating commands share a per-user lock across worktrees. After obtaining
 it, the helper measures a fresh 30-second CPU window and its final five-second
 interval. It uses the busier value and reserves nominal 20% headroom, with at

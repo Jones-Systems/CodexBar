@@ -106,7 +106,8 @@ sys.exit(int(os.environ.get("CI_COMMAND_EXIT", "0")))
                               "--filter", "FocusedTests", "-j12"])
         self.assertEqual(status, 0, self.output)
         records = self.records()
-        self.assertEqual(records[0]["args"], ["test", "--filter", "FocusedTests", "--jobs", "6"])
+        self.assertEqual(records[0]["args"], ["test", "--filter", "FocusedTests", "--jobs", "6",
+                                               "-Xswiftc", "-num-threads", "-Xswiftc", "1"])
         self.assert_owned_cleanup(records)
 
     def test_plugin_passes_share_parent_and_preserve_filters(self):

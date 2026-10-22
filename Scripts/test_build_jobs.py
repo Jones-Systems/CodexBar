@@ -96,9 +96,27 @@ class BuildJobsTests(unittest.TestCase):
             with self.assertRaises(jobs.AdmissionError):
                 jobs.normalize([arg], "xcode", {})
 
+    def test_swift_trusted_tail_limits_each_compiler_to_one_thread(self):
+        with jobs.admission(["swift", "build", "-c", "release", "-j12"]) as command:
+            self.assertEqual(command, ["swift", "build", "-c", "release", "--jobs", "6",
+                                       "-Xswiftc", "-num-threads", "-Xswiftc", "1"])
+
+    def test_xcode_trusted_tail_disables_parallel_whole_module_optimization(self):
+        with jobs.admission(["xcodebuild", "build", "-configuration", "Release"], "xcode") as command:
+            self.assertEqual(command, ["xcodebuild", "build", "-configuration", "Release", "-jobs", "6",
+                                       "SWIFT_USE_PARALLEL_WHOLE_MODULE_OPTIMIZATION=NO"])
+
+    def test_reject_caller_parallel_whole_module_optimization_override(self):
+        for setting in ["SWIFT_USE_PARALLEL_WHOLE_MODULE_OPTIMIZATION=YES",
+                        "SWIFT_USE_PARALLEL_WHOLE_MODULE_OPTIMIZATION=NO",
+                        "SWIFT_USE_PARALLEL_WHOLE_MODULE_OPTIMIZATION[arch=arm64]=YES"]:
+            with self.subTest(setting=setting), self.assertRaises(jobs.AdmissionError):
+                jobs.normalize(["build", setting], "xcode", {})
+
     def test_full_window_and_ci_cap(self):
         with patch.dict(os.environ, {"CI": "true"}), jobs.admission(["swift", "test", "-j12", "--parallel"]) as command:
-            self.assertEqual(command, ["swift", "test", "--parallel", "--jobs", "6"])
+            self.assertEqual(command, ["swift", "test", "--parallel", "--jobs", "6",
+                                       "-Xswiftc", "-num-threads", "-Xswiftc", "1"])
             self.assertEqual(self.clock.now, 30)
             self.assertEqual(self.cpu.call_count, 7)
 
@@ -112,7 +130,7 @@ class BuildJobsTests(unittest.TestCase):
 
     def test_skip_build_serializes_without_sampling(self):
         with jobs.admission(["swift", "test", "--skip-build"]) as command:
-            self.assertEqual(command[-2:], ["--jobs", "6"])
+            self.assertEqual(command[-6:], ["--jobs", "6", "-Xswiftc", "-num-threads", "-Xswiftc", "1"])
             fd = jobs.open_lock()
             try:
                 with self.assertRaises(BlockingIOError):
@@ -125,7 +143,7 @@ class BuildJobsTests(unittest.TestCase):
         with patch.object(jobs, "sample_window", side_effect=[(Fraction(3, 4), Fraction(3, 4), 30),
                                                              (Fraction(1, 2), Fraction(1, 2), 30)]):
             with jobs.admission(["swift", "build"]) as command:
-                self.assertEqual(command[-1], "3")
+                self.assertEqual(command[-6:], ["--jobs", "3", "-Xswiftc", "-num-threads", "-Xswiftc", "1"])
 
     def test_lock_wait_is_in_deadline_and_sample_follows_lock(self):
         events = []
@@ -229,7 +247,8 @@ class BuildJobsTests(unittest.TestCase):
             for command in [["swift", "test", "list"], ["swift", "build", "--show-bin-path"],
                             ["swift", "test", "--skip-build", "--no-parallel", "--filter", "RetryTests"]]:
                 self.assertEqual(runner.run_command(command), 0)
-                self.assertEqual(execute.call_args.args[0], command + ["--jobs", "6"])
+                self.assertEqual(execute.call_args.args[0], command + ["--jobs", "6",
+                                                                       "-Xswiftc", "-num-threads", "-Xswiftc", "1"])
             self.assertEqual(self.cpu.call_count, 14)
 
     def test_cli_observes_runner_unknown_flag_on_return_and_cancel(self):

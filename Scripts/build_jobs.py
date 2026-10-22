@@ -87,6 +87,7 @@ def normalize(arguments: list[str], kind: str, environment: dict[str, str]) -> t
             if kind == "xcode" and (arg.split("=", 1)[0].split("[", 1)[0].lstrip("-") in {
                 "SWIFT_COMPILATION_MODE", "SWIFT_MAXIMUM_CONCURRENT_COMPILE_TASKS",
                 "SWIFT_ENABLE_BATCH_MODE", "SWIFT_NUM_THREADS", "OTHER_SWIFT_FLAGS",
+                "SWIFT_USE_PARALLEL_WHOLE_MODULE_OPTIMIZATION",
                 "OTHER_CFLAGS", "OTHER_CPLUSPLUSFLAGS", "IDEBuildOperationMaxNumberOfConcurrentCompileTasks",
             } or arg in {"-xcconfig", "-parallelizeTargets"}):
                 raise AdmissionError("Xcode concurrency/opaque compiler overrides are not supported")
@@ -235,7 +236,12 @@ def admission(command: list[str], kind: str = "swift", *, cleanup_proved=None):
         os.fsync(fd)
         returned = False
         try:
-            yield [command[0], *arguments, "--jobs" if kind == "swift" else "-jobs", str(jobs)]
+            # SwiftPM's WMO default precedes Xswiftc flags: keep each admitted job
+            # single-threaded while retaining the per-file outputs enabled by positive 1.
+            tail = (["--jobs", str(jobs), "-Xswiftc", "-num-threads", "-Xswiftc", "1"]
+                    if kind == "swift" else
+                    ["-jobs", str(jobs), "SWIFT_USE_PARALLEL_WHOLE_MODULE_OPTIMIZATION=NO"])
+            yield [command[0], *arguments, *tail]
             returned = True
         finally:
             # The runner's monotonic cleanup flag also covers cancellation while an
