@@ -22,6 +22,7 @@ struct MenuBarResetCreditCountdown: Hashable {
         resetAt: Date?,
         now: Date) -> Date?
     {
+        // Provider-specific by design: only Codex snapshots carry banked limit reset credits.
         guard provider == .codex,
               let resetAt,
               let expiry = snapshot?.codexResetCredits?.availableInventory(at: now).nextExpiringCredit?.expiresAt,
