@@ -15,6 +15,9 @@ extension StatusItemController {
             title,
             hasImage: true,
             isDebugApp: isDebugApp)
+        let accessibilityTitle = resetCredit.map {
+            value.replacingOccurrences(of: $0.markedText, with: $0.accessibilityLabel)
+        } ?? Self.statusItemAccessibilityTitle(isDebugApp: isDebugApp)
 
         if self.shouldUseHighContrastStatusItemContent {
             button.image = nil
@@ -25,13 +28,7 @@ extension StatusItemController {
                 style: self.settings.resetTimeDisplayStyle,
                 now: now)
             button.attributedTitle = resetCredit?.styling(attributed) ?? attributed
-            if let resetCredit {
-                button.setAccessibilityTitle(value.replacingOccurrences(
-                    of: resetCredit.markedText,
-                    with: resetCredit.accessibilityLabel))
-            } else {
-                button.setAccessibilityTitle(nil)
-            }
+            button.setAccessibilityTitle(accessibilityTitle)
             return
         }
 
@@ -50,14 +47,12 @@ extension StatusItemController {
                 style: self.settings.resetTimeDisplayStyle,
                 now: now)
             button.attributedTitle = resetCredit?.styling(attributed) ?? attributed
-            button.setAccessibilityTitle(resetCredit.map {
-                value.replacingOccurrences(of: $0.markedText, with: $0.accessibilityLabel)
-            })
+            button.setAccessibilityTitle(accessibilityTitle)
         } else {
             if button.title != value {
                 button.title = value
             }
-            button.setAccessibilityTitle(nil)
+            button.setAccessibilityTitle(accessibilityTitle)
         }
         let position: NSControl.ImagePosition = value.isEmpty ? .imageOnly : .imageLeft
         if button.imagePosition != position {

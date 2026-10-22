@@ -134,6 +134,14 @@ extension MenuBarSmartResetIntegrationTests {
             effectiveRange: nil) is NSTextAttachment)
         #expect(output.accessibilityLabel.contains("Limit Reset Credits"))
         #expect(controller.menuBarDisplayedResetDates(for: .codex, now: now).contains(expiry))
+        let button = try #require(controller.statusItem.button)
+        let image = NSImage(size: NSSize(width: 16, height: 16))
+        let credit = try #require(MenuBarResetCreditCountdown(expiresAt: expiry, now: now))
+        controller.setButtonContent(image: image, title: credit.markedText, resetCredit: credit, now: now, for: button)
+        #expect(button.accessibilityTitle()?.contains("Limit Reset Credits") == true)
+        controller.setButtonContent(image: image, title: "4%", for: button)
+        #expect(button.accessibilityTitle() == StatusItemController.statusItemAccessibilityTitle(
+            isDebugApp: StatusItemController.isDebugApp(bundleIdentifier: Bundle.main.bundleIdentifier)))
     }
 
     private static func captureResetDisplayIfRequested(
