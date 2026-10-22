@@ -1,5 +1,6 @@
 import CodexBarCore
 import Foundation
+import SwiftUI
 import Testing
 @testable import CodexBar
 
@@ -560,5 +561,87 @@ extension JonesCompactAccountPresentationTests {
         quota.detailIsResetTiming = false
         #expect(quota.detailIsError)
         #expect(quota.heightFingerprint != healthy.heightFingerprint)
+    }
+}
+
+extension JonesCompactAccountPresentationTests {
+    @Test(arguments: [1.0, 86400.0, 86401.0, 172_800.0])
+    @MainActor
+    func `banked expiry urgency colors the trailing detail and preserves selection contrast`(
+        remainingSeconds: TimeInterval) throws
+    {
+        let account = Self.detailAccount(
+            weekly: nil,
+            credits: [
+                Self.resetCredit(id: "later", expiresIn: remainingSeconds + 86400),
+                Self.resetCredit(id: "redeemed", expiresIn: 1, status: .redeemed),
+                Self.resetCredit(id: "expired", expiresIn: 0),
+                Self.resetCredit(id: "nearest", expiresIn: remainingSeconds),
+                Self.resetCredit(id: "undated", expiresIn: nil),
+            ])
+        let detail = JonesCompactAccountPresentation.codexRowDetail(
+            account: account,
+            resetStyle: .countdown,
+            now: Self.detailNow)
+        let trailing = try #require(detail.trailingDetail)
+        let isUrgent = remainingSeconds <= 86400
+        #expect(trailing.expiryUrgency == (isUrgent ? .urgent : .upcoming))
+        let expectedColor = Color(nsColor: isUrgent ? .systemRed : .systemOrange)
+        #expect(trailing.foregroundColor(highlighted: false) == expectedColor)
+        #expect(trailing.foregroundColor(highlighted: true) == MenuHighlightStyle.selectionText)
+        #expect(trailing.count == 3)
+        #expect(detail.text == nil)
+    }
+
+    @Test
+    func `expired nearest credit yields the next available credit urgency`() throws {
+        let account = Self.detailAccount(
+            weekly: nil,
+            credits: [
+                Self.resetCredit(id: "soon", expiresIn: 60),
+                Self.resetCredit(id: "later", expiresIn: 3 * 86400),
+            ])
+        let before = JonesCompactAccountPresentation.codexRowDetail(
+            account: account,
+            resetStyle: .countdown,
+            now: Self.detailNow)
+        let after = JonesCompactAccountPresentation.codexRowDetail(
+            account: account,
+            resetStyle: .countdown,
+            now: Self.detailNow.addingTimeInterval(60))
+        let beforeTrailing = try #require(before.trailingDetail)
+        let afterTrailing = try #require(after.trailingDetail)
+        #expect(beforeTrailing.expiryUrgency == .urgent)
+        #expect(afterTrailing.expiryUrgency == .upcoming)
+        #expect(after.trailingDetail?.count == 1)
+    }
+
+    @Test
+    @MainActor
+    func `trailing urgency participates in row identity without changing left detail severity`() {
+        let trailing = MenuCardCompactAccountRowView.TrailingDetail(
+            text: "1d",
+            count: 3,
+            accessibilityLabel: "Synthetic expiry",
+            expiryUrgency: .upcoming)
+        var row = MenuCardCompactAccountRowView.Model(
+            label: "Synthetic account",
+            headroomPercent: 4,
+            severity: .critical,
+            constraintDetail: "Resets in 4d 15h",
+            hasError: false,
+            showsBestBadge: false,
+            trailingDetail: trailing,
+            detailIsResetTiming: true)
+        let original = row
+        row.trailingDetail?.expiryUrgency = .urgent
+        #expect(row != original)
+        #expect(row.heightFingerprint != original.heightFingerprint)
+        #expect(!row.detailIsError)
+        #expect(row.severity == .critical)
+        #expect(row.headroomLabel == "4%")
+        var neutral = trailing
+        neutral.expiryUrgency = nil
+        #expect(neutral.foregroundColor(highlighted: false) == MenuHighlightStyle.normalSecondaryText)
     }
 }
