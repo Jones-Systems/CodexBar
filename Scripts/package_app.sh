@@ -199,7 +199,7 @@ PY
 
 KEYBOARD_SHORTCUTS_UTIL="$ROOT/.build/checkouts/KeyboardShortcuts/Sources/KeyboardShortcuts/Utilities.swift"
 if [[ ! -f "$KEYBOARD_SHORTCUTS_UTIL" ]]; then
-  swift build -c "$CONF" --arch "${ARCH_LIST[0]}"
+  python3 "$ROOT/Scripts/build_jobs.py" -- swift build -c "$CONF" --arch "${ARCH_LIST[0]}"
 fi
 patch_keyboard_shortcuts
 
@@ -254,7 +254,7 @@ stage_build_products() {
 }
 
 for ARCH in "${ARCH_LIST[@]}"; do
-  swift build -c "$CONF" --arch "$ARCH"
+  python3 "$ROOT/Scripts/build_jobs.py" -- swift build -c "$CONF" --arch "$ARCH"
   stage_build_products "$ARCH"
 done
 
@@ -484,7 +484,7 @@ build_widget_extension() {
 
   mkdir -p "$derived_dir"
   echo "Building CodexBarWidget Xcode extension (${xcode_conf}, ${archs})." >&2
-  xcodebuild \
+  python3 "$ROOT/Scripts/build_jobs.py" --kind xcode -- xcodebuild \
     -project "$project_dir" \
     -scheme CodexBarWidgetExtension \
     -configuration "$xcode_conf" \

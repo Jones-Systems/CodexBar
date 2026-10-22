@@ -8,8 +8,8 @@ FILTER='ProviderPluginRuntimeTests|ProviderPluginParityTests|ProviderPluginDetai
 
 exec ./Scripts/test.sh --command /bin/sh -eu -c '
   echo "plugin engine A/B: QuickJS default"
-  env -u CODEXBAR_PLUGIN_ENGINE swift test --filter "$1"
+  env -u CODEXBAR_PLUGIN_ENGINE python3 Scripts/build_jobs.py -- swift test --filter "$1"
 
   echo "plugin engine A/B: JavaScriptCore rollback"
-  CODEXBAR_PLUGIN_ENGINE=jsc swift test --skip-build --filter "$1"
+  CODEXBAR_PLUGIN_ENGINE=jsc python3 Scripts/build_jobs.py -- swift test --skip-build --filter "$1"
 ' plugin-engine-tests "$FILTER"
