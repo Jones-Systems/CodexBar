@@ -6,9 +6,24 @@ import SwiftUI
 /// Clicking the row expands it into the full usage card.
 struct MenuCardCompactAccountRowView: View {
     struct TrailingDetail: Equatable {
+        enum ExpiryUrgency: String {
+            case upcoming
+            case urgent
+        }
+
         let text: String
         let count: Int
         let accessibilityLabel: String
+        var expiryUrgency: ExpiryUrgency?
+
+        func foregroundColor(highlighted: Bool) -> Color {
+            guard !highlighted else { return MenuHighlightStyle.selectionText }
+            switch self.expiryUrgency {
+            case .upcoming: return Color(nsColor: .systemOrange)
+            case .urgent: return Color(nsColor: .systemRed)
+            case nil: return MenuHighlightStyle.normalSecondaryText
+            }
+        }
     }
 
     struct Model: Equatable {
@@ -44,6 +59,7 @@ struct MenuCardCompactAccountRowView: View {
                 self.isRefreshing ? "refreshing" : "idle",
                 self.trailingDetail?.text ?? "-",
                 self.trailingDetail.map { String($0.count) } ?? "-",
+                self.trailingDetail?.expiryUrgency?.rawValue ?? "-",
             ].joined(separator: "|")
         }
     }
@@ -114,7 +130,7 @@ struct MenuCardCompactAccountRowView: View {
                         self.resetCreditDetail(trailing, showsCount: true)
                         self.resetCreditDetail(trailing, showsCount: false)
                     }
-                    .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
+                    .foregroundStyle(trailing.foregroundColor(highlighted: self.isHighlighted))
                     .accessibilityHidden(true)
                 }
             }

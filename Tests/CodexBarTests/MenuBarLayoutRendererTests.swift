@@ -1547,7 +1547,9 @@ private final class MenuBarLayoutSizeCountingImage: NSImage {
 
 extension MenuBarLayoutRendererTests {
     @Test(arguments: [MenuBarLayoutToken.resetCountdown, .resetAbsolute])
-    func `banked expiry colors only the reset and ends with an hourglass`(token: MenuBarLayoutToken) throws {
+    func `banked expiry retains normal typography and the existing runs out hourglass`(
+        token: MenuBarLayoutToken) throws
+    {
         var data = self.data(automaticResetAt: self.now.addingTimeInterval(4 * 86400))
         data.resetCreditExpiresAt = self.now.addingTimeInterval(86400 + 0.1)
         let cache = MenuBarLayoutTitleCache()
@@ -1584,11 +1586,11 @@ extension MenuBarLayoutRendererTests {
         #expect(orange.attributedTitle.attribute(
             .foregroundColor,
             at: range.location,
-            effectiveRange: nil) as? NSColor == .systemOrange)
+            effectiveRange: nil) as? NSColor == .controlTextColor)
         #expect(red.attributedTitle.attribute(
             .foregroundColor,
             at: range.location,
-            effectiveRange: nil) as? NSColor == .systemRed)
+            effectiveRange: nil) as? NSColor == .controlTextColor)
         #expect(red.attributedTitle.attribute(
             .foregroundColor,
             at: 0,
@@ -1597,7 +1599,17 @@ extension MenuBarLayoutRendererTests {
             .attachment,
             at: red.attributedTitle.length - 1,
             effectiveRange: nil) as? NSTextAttachment)
-        #expect(attachment.image != nil)
+        let image = try #require(attachment.image)
+        let font = try #require(red.attributedTitle.attribute(.font, at: 0, effectiveRange: nil) as? NSFont)
+        let resetFont = try #require(red.attributedTitle.attribute(
+            .font,
+            at: range.location,
+            effectiveRange: nil) as? NSFont)
+        #expect(resetFont == font)
+        #expect(font.pointSize == NSFont.systemFontSize)
+        #expect(MenuBarResetCreditCountdown.symbolName == MenuBarLayoutToken.runsOut.editorSystemImage)
+        #expect(attachment.bounds.size == image.size)
+        #expect(attachment.bounds.height > font.capHeight)
         #expect(red.accessibilityLabel.contains("Limit Reset Credits"))
         let expired = renderer.render(
             layout: layout,
@@ -1612,7 +1624,7 @@ extension MenuBarLayoutRendererTests {
     }
 
     @Test(arguments: [MenuBarLayoutToken.resetCountdown, .resetAbsolute])
-    func `ordinary reset urgency updates without recoloring percent or requiring text change`(
+    func `ordinary reset retains normal color across the urgency boundary`(
         token: MenuBarLayoutToken)
     {
         let data = self.data(automaticResetAt: self.now.addingTimeInterval(86400 + 0.1))
@@ -1635,11 +1647,11 @@ extension MenuBarLayoutRendererTests {
         #expect(orange.attributedTitle.attribute(
             .foregroundColor,
             at: orange.attributedTitle.length - 1,
-            effectiveRange: nil) as? NSColor == .systemOrange)
+            effectiveRange: nil) as? NSColor == .controlTextColor)
         #expect(red.attributedTitle.attribute(
             .foregroundColor,
             at: red.attributedTitle.length - 1,
-            effectiveRange: nil) as? NSColor == .systemRed)
+            effectiveRange: nil) as? NSColor == .controlTextColor)
         #expect(red.attributedTitle.attribute(
             .foregroundColor,
             at: 0,

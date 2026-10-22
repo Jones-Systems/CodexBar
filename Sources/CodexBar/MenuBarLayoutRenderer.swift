@@ -526,10 +526,6 @@ final class MenuBarLayoutRenderer {
         if let credit = MenuBarResetCreditCountdown(expiresAt: data.resetCreditExpiresAt, now: options.now) {
             return (credit.attributedTitle(attributes: style.attributes), credit.accessibilityLabel)
         }
-        var attributes = style.attributes
-        if let resetAt = data.automatic?.resetsAt {
-            attributes[.foregroundColor] = MenuBarResetCreditCountdown.resetColor(resetAt: resetAt, now: options.now)
-        }
         let isCountdown = item == .resetCountdown
         let text = data.automatic?.resetsAt.map {
             isCountdown
@@ -539,7 +535,7 @@ final class MenuBarLayoutRenderer {
         return self.resetToken(
             text,
             unavailableLabel: isCountdown ? L("Reset countdown unavailable") : L("Reset time unavailable"),
-            attributes: attributes)
+            attributes: style.attributes)
     }
 
     private static func renderPercent(

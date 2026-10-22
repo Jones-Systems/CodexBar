@@ -432,16 +432,6 @@ extension MenuBarResetTimeDisplayTests {
         #expect(styled.attribute(.attachment, at: 0, effectiveRange: nil) is NSTextAttachment)
         #expect(styled.attribute(.attachment, at: styled.length - 1, effectiveRange: nil) is NSTextAttachment)
         #expect(styled
-            .attribute(.foregroundColor, at: styled.length - 1, effectiveRange: nil) as? NSColor == .systemRed)
-        let ordinary = MenuBarResetCreditCountdown.stylingResetTimes(
-            NSAttributedString(string: "4% · ↻ in 2d", attributes: [.foregroundColor: NSColor.controlTextColor]),
-            resetDates: [now.addingTimeInterval(2 * 86400)],
-            style: .countdown,
-            now: now)
-        #expect(ordinary.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == .controlTextColor)
-        #expect(ordinary.attribute(
-            .foregroundColor,
-            at: ordinary.length - 1,
-            effectiveRange: nil) as? NSColor == .systemOrange)
+            .attribute(.foregroundColor, at: styled.length - 1, effectiveRange: nil) as? NSColor == .labelColor)
     }
 }

@@ -22,11 +22,7 @@ extension StatusItemController {
         if self.shouldUseHighContrastStatusItemContent {
             button.image = nil
             button.imagePosition = .noImage
-            let attributed = MenuBarResetCreditCountdown.stylingResetTimes(
-                Self.highContrastButtonTitle(image: image, title: value),
-                resetDates: resetDates,
-                style: self.settings.resetTimeDisplayStyle,
-                now: now)
+            let attributed = Self.highContrastButtonTitle(image: image, title: value)
             button.attributedTitle = resetCredit?.styling(attributed) ?? attributed
             button.setAccessibilityTitle(accessibilityTitle)
             return
@@ -36,16 +32,12 @@ extension StatusItemController {
             button.image = image
         }
         if resetCredit != nil || !resetDates.isEmpty {
-            let attributed = MenuBarResetCreditCountdown.stylingResetTimes(
-                NSAttributedString(
-                    string: value,
-                    attributes: [
-                        .font: NSFont.systemFont(ofSize: NSFont.systemFontSize),
-                        .foregroundColor: NSColor.controlTextColor,
-                    ]),
-                resetDates: resetDates,
-                style: self.settings.resetTimeDisplayStyle,
-                now: now)
+            let attributed = NSAttributedString(
+                string: value,
+                attributes: [
+                    .font: NSFont.systemFont(ofSize: NSFont.systemFontSize),
+                    .foregroundColor: NSColor.controlTextColor,
+                ])
             button.attributedTitle = resetCredit?.styling(attributed) ?? attributed
             button.setAccessibilityTitle(accessibilityTitle)
         } else {
