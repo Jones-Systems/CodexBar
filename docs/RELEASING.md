@@ -199,6 +199,16 @@ input, uses pinned checkout/upload actions and read-only repository permission,
 and never uses `pull_request_target`. Restrict the environment to the canonical
 default branch and apply the owner's approval policy before any real dispatch.
 
+The signing job additionally requires `vars.JONES_MACOS_SIGNING_ENABLED == 'true'`.
+Keep the repository-level Actions variable absent or set to `false` during partial
+credential enrollment, and verify that no organization-level variable supplies
+`true`. Setting the repository variable to the exact string `true` is a separate,
+explicitly approved activation step after credential, profile and operation
+readiness are established. Use repository scope: the job condition is evaluated
+before environment-level variables are available. Credentials alone do not enable
+the consumer, and source publication does not authorize changing this flag or
+dispatching the workflow. The public PR source-checks job is unaffected.
+
 The environment's five secret names are:
 
 - `MACOS_SIGNING_CERTIFICATE_P12_BASE64`

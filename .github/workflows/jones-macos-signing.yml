@@ -48,7 +48,8 @@ jobs:
   sign:
     if: >-
       github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' &&
-      github.repository == 'Jones-Systems/CodexBar' && github.repository_id == '1425008735'
+      github.repository == 'Jones-Systems/CodexBar' && github.repository_id == '1425008735' &&
+      vars.JONES_MACOS_SIGNING_ENABLED == 'true'
     environment: macos-signing
     runs-on: macos-26
     timeout-minutes: 90
