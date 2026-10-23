@@ -1544,3 +1544,118 @@ private final class MenuBarLayoutSizeCountingImage: NSImage {
         }
     }
 }
+
+extension MenuBarLayoutRendererTests {
+    @Test(arguments: [MenuBarLayoutToken.resetCountdown, .resetAbsolute])
+    func `banked expiry retains normal typography and the existing runs out hourglass`(
+        token: MenuBarLayoutToken) throws
+    {
+        var data = self.data(automaticResetAt: self.now.addingTimeInterval(4 * 86400))
+        data.resetCreditExpiresAt = self.now.addingTimeInterval(86400 + 0.1)
+        let cache = MenuBarLayoutTitleCache()
+        let renderer = MenuBarLayoutRenderer(cache: cache)
+        let layout = MenuBarLayout(lines: [[.percent(window: .automatic), token]])
+        let orange = renderer.render(layout: layout, data: data, icon: nil, options: self.options())
+        let red = renderer.render(
+            layout: layout,
+            data: data,
+            icon: nil,
+            options: self.options(now: self.now.addingTimeInterval(0.1)))
+        if token == .resetCountdown,
+           let directory = ProcessInfo.processInfo.environment["CODEXBAR_RESET_DISPLAY_ORANGE_CAPTURE_DIR"]
+        {
+            let image = NSImage(size: NSSize(width: 340, height: 36))
+            let appearance = try #require(NSAppearance(named: .aqua))
+            appearance.performAsCurrentDrawingAppearance {
+                image.lockFocus()
+                NSColor.white.setFill()
+                NSRect(x: 0, y: 0, width: 340, height: 36).fill()
+                orange.attributedTitle.draw(at: NSPoint(x: 12, y: 10))
+                image.unlockFocus()
+            }
+            let imageData = try #require(image.tiffRepresentation)
+            let bitmap = try #require(NSBitmapImageRep(data: imageData))
+            try #require(bitmap.representation(using: .png, properties: [:]))
+                .write(to: URL(fileURLWithPath: directory).appendingPathComponent("menu-bar.png"))
+        }
+        #expect(orange.attributedTitle.string.contains("in 1d 1m"))
+        #expect(red.attributedTitle.string.contains("in 1d"))
+        #expect(cache.count == 2)
+        let range = (orange.attributedTitle.string as NSString).range(of: "in ")
+        #expect(range.location != NSNotFound)
+        #expect(orange.attributedTitle.attribute(
+            .foregroundColor,
+            at: range.location,
+            effectiveRange: nil) as? NSColor == .controlTextColor)
+        #expect(red.attributedTitle.attribute(
+            .foregroundColor,
+            at: range.location,
+            effectiveRange: nil) as? NSColor == .controlTextColor)
+        #expect(red.attributedTitle.attribute(
+            .foregroundColor,
+            at: 0,
+            effectiveRange: nil) as? NSColor == .controlTextColor)
+        let attachment = try #require(red.attributedTitle.attribute(
+            .attachment,
+            at: red.attributedTitle.length - 1,
+            effectiveRange: nil) as? NSTextAttachment)
+        let image = try #require(attachment.image)
+        let font = try #require(red.attributedTitle.attribute(.font, at: 0, effectiveRange: nil) as? NSFont)
+        let resetFont = try #require(red.attributedTitle.attribute(
+            .font,
+            at: range.location,
+            effectiveRange: nil) as? NSFont)
+        #expect(resetFont == font)
+        #expect(font.pointSize == NSFont.systemFontSize)
+        #expect(MenuBarResetCreditCountdown.symbolName == MenuBarLayoutToken.runsOut.editorSystemImage)
+        #expect(attachment.bounds.size == image.size)
+        #expect(attachment.bounds.height > font.capHeight)
+        #expect(red.accessibilityLabel.contains("Limit Reset Credits"))
+        let expired = renderer.render(
+            layout: layout,
+            data: data,
+            icon: nil,
+            options: self.options(now: self.now.addingTimeInterval(86401)))
+        #expect(!expired.accessibilityLabel.contains("Limit Reset Credits"))
+        #expect(expired.attributedTitle.attribute(
+            .attachment,
+            at: expired.attributedTitle.length - 1,
+            effectiveRange: nil) == nil)
+    }
+
+    @Test(arguments: [MenuBarLayoutToken.resetCountdown, .resetAbsolute])
+    func `ordinary reset retains normal color across the urgency boundary`(
+        token: MenuBarLayoutToken)
+    {
+        let data = self.data(automaticResetAt: self.now.addingTimeInterval(86400 + 0.1))
+        let cache = MenuBarLayoutTitleCache()
+        let renderer = MenuBarLayoutRenderer(cache: cache)
+        let layout = MenuBarLayout(lines: [[.percent(window: .automatic), token]])
+        let orange = renderer.render(layout: layout, data: data, icon: nil, options: self.options())
+        let red = renderer.render(
+            layout: layout,
+            data: data,
+            icon: nil,
+            options: self.options(now: self.now.addingTimeInterval(0.1)))
+        if token == .resetAbsolute {
+            #expect(orange.attributedTitle.string == red.attributedTitle.string)
+        } else {
+            #expect(orange.attributedTitle.string.contains("in 1d 1m"))
+            #expect(red.attributedTitle.string.contains("in 1d"))
+        }
+        #expect(cache.count == 2)
+        #expect(orange.attributedTitle.attribute(
+            .foregroundColor,
+            at: orange.attributedTitle.length - 1,
+            effectiveRange: nil) as? NSColor == .controlTextColor)
+        #expect(red.attributedTitle.attribute(
+            .foregroundColor,
+            at: red.attributedTitle.length - 1,
+            effectiveRange: nil) as? NSColor == .controlTextColor)
+        #expect(red.attributedTitle.attribute(
+            .foregroundColor,
+            at: 0,
+            effectiveRange: nil) as? NSColor == .controlTextColor)
+        #expect(!red.accessibilityLabel.contains("Limit Reset Credits"))
+    }
+}

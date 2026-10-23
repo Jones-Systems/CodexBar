@@ -162,7 +162,9 @@ extension StatusItemController {
                 balanceRemainingUSD: balanceAmounts.remaining,
                 balanceUsedUSD: balanceAmounts.used,
                 costTodayUSD: costs.todayUSD,
-                cost30dUSD: costs.last30DaysUSD))
+                cost30dUSD: costs.last30DaysUSD),
+            resetCreditExpiresAt: MenuBarResetCreditCountdown.preferredExpiry(
+                provider: provider, snapshot: snapshot, resetAt: windows.automatic?.resetsAt, now: now))
     }
 
     func menuBarLayoutAccountLabel(provider: UsageProvider, snapshot: UsageSnapshot?) -> String? {

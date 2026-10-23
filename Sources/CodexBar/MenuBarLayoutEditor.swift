@@ -1057,7 +1057,9 @@ struct MenuBarLayoutPreview: View {
                 balanceRemainingUSD: balanceAmounts.remaining,
                 balanceUsedUSD: balanceAmounts.used,
                 costTodayUSD: costToday.flatMap(toUSD),
-                cost30dUSD: cost?.last30DaysCostUSD.flatMap(toUSD)))
+                cost30dUSD: cost?.last30DaysCostUSD.flatMap(toUSD)),
+            resetCreditExpiresAt: MenuBarResetCreditCountdown.preferredExpiry(
+                provider: provider, snapshot: snapshot, resetAt: automatic?.resetsAt, now: now))
     }
 
     private func representativeData(provider: UsageProvider) -> MenuBarLayoutRenderData {
