@@ -14,6 +14,7 @@ import http.server
 import json
 import os
 from pathlib import Path
+import platform
 import plistlib
 import re
 import selectors
@@ -161,6 +162,7 @@ def inspect_harness(bundle, manifest, build):
     candidate.validate_signature((displayed.stdout + displayed.stderr).decode("utf-8"), BUNDLE_ID)
     entitlements = command(["/usr/bin/codesign", "--display", "--entitlements", ":-", bundle]).stdout
     require(plistlib.loads(entitlements) == {}, "fixture-entitlements", "Fixture must have no signed entitlements")
+    macho = set()
     for name, entry in tree.items():
         if entry["kind"] != "file":
             continue
@@ -173,8 +175,12 @@ def inspect_harness(bundle, manifest, build):
         require(not any("icloud" in key.lower() or "ubiquity" in key.lower() for key in nested)
                 and not nested.get("com.apple.security.application-groups"),
                 "fixture-entitlements", "No fixture executable may carry app groups or iCloud entitlements")
-    architectures = command(["/usr/bin/lipo", "-archs", bundle / "Contents/MacOS/CodexBar"]).stdout.decode().split()
-    require(architectures == ["arm64"], "fixture-architecture", "Fixture executable must be arm64")
+        architectures = command(["/usr/bin/lipo", "-archs", path]).stdout.decode("ascii").split()
+        candidate.validate_architectures(architectures, "fixture-architecture")
+        macho.add(name)
+    executable = tree.get("CodexBar.app/Contents/MacOS/CodexBar", {})
+    require("CodexBar.app/Contents/MacOS/CodexBar" in macho and executable.get("mode", 0) & 0o111,
+            "fixture-architecture", "Fixture executable must be present and executable")
     return tree
 
 
@@ -574,7 +580,8 @@ def run(root, scratch_parent, expected_revision):
         results.append(result)
         print(json.dumps(result, sort_keys=True), flush=True)
     return {"schema": "jones-update-native-result/v1", "source_revision": expected_revision,
-            "fixture_id": manifest["fixture_id"], "scenarios": results, "result": "passed"}
+            "fixture_id": manifest["fixture_id"], "host_architecture": platform.machine(),
+            "scenarios": results, "result": "passed"}
 
 
 def main(argv=None):

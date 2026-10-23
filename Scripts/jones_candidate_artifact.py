@@ -43,6 +43,7 @@ MIB = 1024 ** 2
 GIB = 1024 ** 3
 MAX_ARCHIVE_BYTES = 256 * MIB
 MAX_UNPACKED_BYTES = GIB
+PRODUCT_ARCHITECTURES = ("arm64", "x86_64")
 SHA = re.compile(r"[0-9a-f]{40}")
 POSITIVE = re.compile(r"[1-9][0-9]*")
 MACHO_MAGICS = {
@@ -318,6 +319,11 @@ def validate_signature(text, identifier):
             "signature-identity", "Expected the exact ad-hoc bundle identifier and no signing authority")
 
 
+def validate_architectures(architectures, code="architecture"):
+    require(len(architectures) == len(PRODUCT_ARCHITECTURES) and set(architectures) == set(PRODUCT_ARCHITECTURES),
+            code, "Universal candidate executables must contain exactly arm64 and x86_64 slices")
+
+
 def inspect_bundle(bundle, context, channel):
     require(sys.platform == "darwin", "platform", "Static bundle verification requires macOS")
     manifest = tree_manifest(bundle, check_quarantine=True)
@@ -354,12 +360,8 @@ def inspect_bundle(bundle, context, channel):
             magic = handle.read(4)
         if magic in MACHO_MAGICS:
             arches = command(["/usr/bin/lipo", "-archs", path]).stdout.decode("ascii").split()
-            if name.startswith("CodexBar.app/Contents/Frameworks/Sparkle.framework/"):
-                # Retain the pinned vendor framework's supported slices without rewriting its binaries.
-                require(len(arches) == len(set(arches)) and set(arches) in ({"arm64"}, {"arm64", "x86_64"}),
-                        "architecture", "Sparkle must support arm64 with only its known optional x86_64 slice")
-            else:
-                require(arches == ["arm64"], "architecture", "Jones product binaries must be arm64 only")
+            # Validate the vendor's existing slices too; never thin or rewrite its binaries.
+            validate_architectures(arches)
             macho.append(name)
             macho_architectures[name] = arches
     for name in (
@@ -368,7 +370,7 @@ def inspect_bundle(bundle, context, channel):
     ):
         entry = manifest.get(f"CodexBar.app/{name}", {})
         require(f"CodexBar.app/{name}" in macho and entry.get("mode", 0) & 0o111,
-                "executable", "Missing executable arm64 product")
+                "executable", "Missing executable universal product")
     require(any("/Sparkle.framework/" in name for name in macho), "sparkle", "Missing Sparkle binary")
     return {"plist": info, "entitlements": entitlements, "macho_files": sorted(macho),
             "macho_architectures": macho_architectures}, manifest
@@ -494,7 +496,8 @@ def create_artifact(bundle, output, context, channel):
                                                 "prior bundle size unmeasured"),
                          "size_is_reservation": False, "root": "CodexBar.app"},
             "verification": {"signature": "adhoc", "codesign": "--verify --deep --strict",
-                             "product_architectures": ["arm64"], "quarantine": "absent", "archive_roundtrip": True,
+                             "product_architectures": list(PRODUCT_ARCHITECTURES),
+                             "quarantine": "absent", "archive_roundtrip": True,
                              "signed_entitlements": inspected["entitlements"], "macho_files": inspected["macho_files"],
                              "macho_architectures": inspected["macho_architectures"]},
             "distribution": {"kind": "ci-candidate", "canonical_main_push": context.origin == "ci-main",

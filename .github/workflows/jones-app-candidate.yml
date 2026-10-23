@@ -45,11 +45,11 @@ concurrency:
 jobs:
   candidate:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
-    runs-on: macos-26
+    runs-on: macos-26-intel
     timeout-minutes: 60
     env:
       CODEXBAR_SIGNING: adhoc
-      ARCHES: arm64
+      ARCHES: arm64 x86_64
       CODEXBAR_ALLOW_LLDB: '0'
       CODEXBAR_SKIP_LAUNCH_SMOKE: '0'
       CODEXBAR_LAUNCH_SMOKE_RESOURCE_ONLY: '1'
@@ -64,11 +64,11 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Select hosted Apple Silicon Xcode 26 without changing the host
+      - name: Select hosted Intel Xcode 26 for the universal candidate
         shell: bash
         run: |
           set -euo pipefail
-          [[ "$RUNNER_ENVIRONMENT" == github-hosted && "$(uname -m)" == arm64 ]]
+          [[ "$RUNNER_ENVIRONMENT" == github-hosted && "$(uname -m)" == x86_64 ]]
           candidate_developer_dir=''
           for candidate_xcode in /Applications/Xcode_26.3.app /Applications/Xcode_26.2.app; do
             if [[ -d "$candidate_xcode/Contents/Developer" ]]; then
@@ -116,6 +116,9 @@ jobs:
           python3 -B Scripts/jones_candidate_admission.py \
             --workspace "$GITHUB_WORKSPACE" --scratch "$candidate_scratch" --compiler-jobs 1 --wait-seconds 180
           bash Scripts/test.sh --command python3 -B Scripts/test_verify_packaged_app_launch.py
+          python3 -B Scripts/jones_candidate_admission.py \
+            --workspace "$GITHUB_WORKSPACE" --scratch "$candidate_scratch" --compiler-jobs 1 --wait-seconds 180
+          bash Scripts/test.sh --command python3 -B Scripts/test_jones_update_harness.py
 
       - name: Require bounded compiler and resource-only packaging support
         shell: bash

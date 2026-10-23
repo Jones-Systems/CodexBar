@@ -7,7 +7,7 @@ installation, a working feed, or a public release. Keep the existing
 
 ## Candidate artifact and external verification
 
-The bootstrap artifact is an **ad-hoc sealed, arm64, canonical-main CI bundle**.
+The bootstrap artifact is an **ad-hoc sealed, universal ARM64/x86_64, canonical-main CI bundle**.
 It is for the separately authorized local Jones install. It is not a signed,
 notarized public distribution. PR artifacts and local builds are not eligible
 for this installer.
@@ -95,7 +95,11 @@ estimates, not reserved space or enforced quotas.
 The helper checks the archive hash before extraction, contained file/link
 layout, quarantine on the archive and bundle, the full identity tuple, strict
 deep code-signature verification, typed ad-hoc signature metadata, the resource
-seal and the arm64 app/widget executables. Required production metadata is:
+seal and matching app/widget architecture slices. ARM64 must be present, either
+alone for retained thin builds or alongside x86_64 for universal builds. Unknown,
+duplicate or mismatched slices are refused. Recovery records keep the existing
+`architecture=arm64` value for thin builds; universal builds record
+`architecture=arm64+x86_64`. Required production metadata is:
 
 | Field | Value |
 | --- | --- |
@@ -276,6 +280,25 @@ passes alone cannot qualify them. Source delivery also requires the repository's
 reported separately.
 
 ## Isolated native update proof
+
+The candidate uses GitHub's standard `macos-26-intel` runner and the existing
+universal packaging path. The 14 GB Intel runner provides more memory than the
+7 GB ARM64 runner without requiring a larger paid runner in this public
+repository. [GitHub runner specifications](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)
+The existing full Swift test shards remain on `macos-26` ARM64. Candidate
+admission keeps the same CPU, 3 GiB available-memory, normal-pressure and compiler
+limits. Its conservative additional allocation estimate includes 16 GiB for both
+build slices, 4 GiB scratch/artifacts, 2 GiB user caches and a 2 GiB reserve per
+filesystem (24 GiB when all share one device). Actual capacity is sampled before
+each serial command; these estimates reserve no resources.
+
+Every shipped Mach-O, including the unchanged Sparkle binaries, must contain
+exactly ARM64 and x86_64. Candidate provenance records those verified slices;
+missing or unknown slices fail qualification. Hosted resource and updater tests
+exercise the Intel slice. The native result records its host architecture, and
+the exact exported fixtures still require root-scheduled ARM64 execution before
+owner installation. Intel proof and ARM64 source tests do not establish that
+artifact's ARM64 updater behavior.
 
 Before archiving, candidate packaging probes both the app and bundled CLI with
 the source checkout denied by the sandbox. Its owned package scratch lives under

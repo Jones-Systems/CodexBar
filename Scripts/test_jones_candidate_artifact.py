@@ -41,7 +41,7 @@ CONTEXT = candidate.Context(
     RUN_URL, "12345", "1", f"{candidate.REPOSITORY}/{candidate.WORKFLOW_PATH}@refs/heads/main", REVISION,
 )
 FIXTURE_PUBLIC_KEY = base64.b64encode(bytes(range(32))).decode("ascii")
-MACHO = b"\xcf\xfa\xed\xfe" + b"synthetic-arm64-fixture"
+MACHO = b"\xca\xfe\xba\xbe" + b"synthetic-universal-fixture"
 
 
 def repository():
@@ -303,8 +303,8 @@ def extract_fixture(archive, destination):
 class FakeMac:
     def __init__(self):
         self.calls = []
-        self.arches = b"arm64\n"
-        self.framework_arches = b"arm64\n"
+        self.arches = b"arm64 x86_64\n"
+        self.framework_arches = b"arm64 x86_64\n"
         self.signature = "adhoc"
         self.entitlements_extra = {}
         self.fail_extract = False
@@ -351,23 +351,26 @@ class ArtifactTests(RejectionAssertions, unittest.TestCase):
             patcher.start()
             self.addCleanup(patcher.stop)
 
+    def test_universal_candidate_contains_both_native_slices(self):
+        self.mac.arches = b"x86_64 arm64\n"
+        self.mac.framework_arches = b"arm64 x86_64\n"
+        inspected, _ = candidate.inspect_bundle(self.bundle, CONTEXT, "none")
+        self.assertTrue(all(set(arches) == {"arm64", "x86_64"}
+                            for arches in inspected["macho_architectures"].values()))
+
     def test_static_verification_checks_deep_seal_all_macho_and_entitlements(self):
         inspected, manifest = candidate.inspect_bundle(self.bundle, CONTEXT, "none")
         self.assertEqual(len(inspected["macho_files"]), 5)
         self.assertIn(["/usr/bin/codesign", "--verify", "--deep", "--strict", "--verbose=2", str(self.bundle)],
                       self.mac.calls)
         self.assertEqual(manifest["CodexBar.app/Contents/MacOS/CodexBar"]["mode"], 0o755)
-        self.mac.arches = b"arm64 x86_64\n"
-        self.rejects("architecture", candidate.inspect_bundle, self.bundle, CONTEXT, "none")
-        self.mac.arches = b"arm64\n"
-        self.mac.framework_arches = b"arm64 x86_64\n"
-        inspected, _ = candidate.inspect_bundle(self.bundle, CONTEXT, "none")
-        framework = next(name for name in inspected["macho_architectures"] if "/Sparkle.framework/" in name)
-        self.assertEqual(inspected["macho_architectures"][framework], ["arm64", "x86_64"])
-        self.mac.framework_arches = b"x86_64\n"
-        self.rejects("architecture", candidate.inspect_bundle, self.bundle, CONTEXT, "none")
-        self.mac.framework_arches = b"arm64 arm64e\n"
-        self.rejects("architecture", candidate.inspect_bundle, self.bundle, CONTEXT, "none")
+        for field in ("arches", "framework_arches"):
+            for invalid in (b"arm64\n", b"x86_64\n", b"arm64 arm64e\n", b"arm64 arm64\n",
+                            b"arm64 x86_64 arm64e\n", b""):
+                with self.subTest(field=field, invalid=invalid):
+                    setattr(self.mac, field, invalid)
+                    self.rejects("architecture", candidate.inspect_bundle, self.bundle, CONTEXT, "none")
+            setattr(self.mac, field, b"arm64 x86_64\n")
 
     def test_rejects_non_adhoc_signatures_and_unexpected_entitlements(self):
         self.mac.signature = "Developer ID"
@@ -395,6 +398,7 @@ class ArtifactTests(RejectionAssertions, unittest.TestCase):
         self.assertFalse(result["distribution"]["installed_verification"])
         self.assertFalse(result["distribution"]["automatic_update_ready"])
         self.assertTrue(result["distribution"]["canonical_main_push"])
+        self.assertEqual(result["verification"]["product_architectures"], ["arm64", "x86_64"])
         sizes = result["artifact"]
         self.assertEqual(sizes["estimated_install_peak_bytes"],
                          sizes["archive_size_bytes"] + 2 * sizes["unpacked_size_bytes"] + candidate.GIB)
@@ -726,27 +730,49 @@ class AdmissionTests(RejectionAssertions, unittest.TestCase):
             ("/usr/bin/vm_stat",): "Mach Virtual Memory Statistics: (page size of 16384 bytes)\n"
                 "Pages free: 262144.\nPages inactive: 262144.\n",
         }
-        with patch.object(admission.sys, "platform", "darwin"), \
-                patch.object(admission.platform, "machine", return_value="arm64"), \
-                patch.object(admission, "build_jobs", build_jobs, create=True), \
-                patch.object(build_jobs, "cpu_ticks", side_effect=[(0, 0, 0, 0), (1005, 2005, 6990, 0)]), \
-                patch.object(admission.time, "sleep"), \
-                patch.object(admission.time, "monotonic", side_effect=[0, 1]), \
-                patch.object(admission, "storage_observations", return_value=self.volumes), \
-                patch.object(admission, "command", side_effect=lambda args, **kwargs:
-                             Mock(stdout=replies[tuple(args)].encode("ascii"))):
-            result = admission.sample(Path("/fixture"), Path("/scratch"),
-                                      {"GITHUB_ACTIONS": "true", "RUNNER_ENVIRONMENT": "github-hosted"}, 6)
-        self.assertAlmostEqual(result["cpu_used_percent"], 30.1)
-        self.assertEqual(result["start_ceiling"], 1)
+        for architecture in ("arm64", "x86_64"):
+            page_size = 16384 if architecture == "arm64" else 4096
+            free_pages = 4 * candidate.GIB // page_size
+            replies[("/usr/bin/vm_stat",)] = (
+                f"Mach Virtual Memory Statistics: (page size of {page_size} bytes)\n"
+                f"Pages free: {free_pages}.\nPages inactive: {free_pages}.\n")
+            with self.subTest(architecture=architecture), patch.object(admission.sys, "platform", "darwin"), \
+                    patch.object(admission.platform, "machine", return_value=architecture), \
+                    patch.object(admission, "build_jobs", build_jobs, create=True), \
+                    patch.object(build_jobs, "cpu_ticks", side_effect=[(0, 0, 0, 0), (1005, 2005, 6990, 0)]), \
+                    patch.object(admission.time, "sleep"), \
+                    patch.object(admission.time, "monotonic", side_effect=[0, 1]), \
+                    patch.object(admission, "storage_observations", return_value=self.volumes), \
+                    patch.object(admission, "command", side_effect=lambda args, **kwargs:
+                                 Mock(stdout=replies[tuple(args)].encode("ascii"))):
+                result = admission.sample(Path("/fixture"), Path("/scratch"),
+                                          {"GITHUB_ACTIONS": "true", "RUNNER_ENVIRONMENT": "github-hosted"}, 6)
+            self.assertEqual(result["host_architecture"], architecture)
+            self.assertEqual(result["memory_available_estimate_bytes"], 8 * candidate.GIB)
+            self.assertAlmostEqual(result["cpu_used_percent"], 30.1)
+            self.assertEqual(result["start_ceiling"], 1)
+
+    def test_unsupported_platform_or_unhosted_identity_cannot_sample_or_start(self):
+        cases = (("linux", "arm64", "true", "github-hosted", "runner-platform"),
+                 ("darwin", "arm64e", "true", "github-hosted", "runner-platform"),
+                 ("darwin", "x86_64", "true", "self-hosted", "runner-identity"),
+                 ("darwin", "arm64", "false", "github-hosted", "runner-identity"))
+        for system, architecture, actions, runner, code in cases:
+            with self.subTest(system=system, architecture=architecture, runner=runner), \
+                    patch.object(admission.sys, "platform", system), \
+                    patch.object(admission.platform, "machine", return_value=architecture), \
+                    patch.object(admission, "sample_cpu") as cpu:
+                self.rejects(code, admission.sample, Path("/fixture"), Path("/scratch"),
+                             {"GITHUB_ACTIONS": actions, "RUNNER_ENVIRONMENT": runner}, 6)
+                cpu.assert_not_called()
 
     def test_shared_filesystem_budgets_are_added_once_with_one_reserve(self):
         with tempfile.TemporaryDirectory(prefix="jones-storage-fixture-") as temporary:
             root = Path(temporary)
-            with patch.object(admission.shutil, "disk_usage", return_value=Mock(free=14 * candidate.GIB)):
+            with patch.object(admission.shutil, "disk_usage", return_value=Mock(free=24 * candidate.GIB)):
                 volumes = admission.storage_observations(root, root / "scratch", root / "cache")
             self.assertEqual(len(volumes), 1)
-            self.assertEqual(volumes[0]["estimated_additional_peak_bytes"], 14 * candidate.GIB)
+            self.assertEqual(volumes[0]["estimated_additional_peak_bytes"], 22 * candidate.GIB)
             self.assertEqual(volumes[0]["reserve_bytes"], 2 * candidate.GIB)
             self.assertEqual(len(volumes[0]["destinations"]), 3)
 
@@ -829,7 +855,9 @@ class WorkflowContractTests(unittest.TestCase):
                                "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
                                "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"])
         self.assertIn("permissions:\n  contents: read", source)
-        self.assertIn("runs-on: macos-26", source)
+        self.assertEqual(re.findall(r"^    runs-on: (.+)$", source, re.MULTILINE), ["macos-26-intel"])
+        self.assertIn("      ARCHES: arm64 x86_64\n", source)
+        self.assertIn('"$(uname -m)" == x86_64', source)
         self.assertIn("fetch-depth: 0", source)
         self.assertIn("persist-credentials: false", source)
         self.assertIn("ref: ${{ github.event.pull_request.head.sha || github.sha }}", source)
@@ -843,7 +871,8 @@ class WorkflowContractTests(unittest.TestCase):
         package = source.index("Scripts/package_app.sh release")
         self.assertLess(source.index("jones_candidate_artifact.py check-packager"), package)
         self.assertLess(source.index('--jobs-output "$candidate_scratch/compiler-jobs"'), package)
-        self.assertEqual(source.count("--wait-seconds 180"), 5)
+        self.assertEqual(source.count("--wait-seconds 180"), 6)
+        self.assertIn("Scripts/test_jones_update_harness.py", source)
         self.assertIn("xcrun swiftc -j 1", source)
         self.assertIn("Scripts/jones_update_harness.py run", source)
         self.assertIn(".build/jones-update-fixture/fixture.json", source)
