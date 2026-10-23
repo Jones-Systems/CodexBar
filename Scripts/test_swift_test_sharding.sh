@@ -143,10 +143,17 @@ required_not_deferred = (
 )
 if required_not_deferred not in job:
     raise SystemExit("swift-test-macos must skip only required tests explicitly deferred for drafts")
-if not re.search(r"(?m)^\s+shard-index:\s+\[0,\s*1\]\s*$", job):
-    raise SystemExit("swift-test-macos must run exactly two shard indexes: [0, 1]")
-if not re.search(r"(?m)^\s+shard-count:\s+\[2\]\s*$", job):
-    raise SystemExit("swift-test-macos shard-count must be [2]")
+sys.path.insert(0, str(pathlib.Path(sys.argv[1]).resolve().parents[2] / "Scripts"))
+from ci_swift_test_campaign import resolve_plan
+expected = [{"shard-index": index, "shard-count": 2, "group-size": 4,
+             "cache-mode": "ordinary", "campaign": False} for index in (0, 1)]
+for event in ("pull_request", "push"):
+    if resolve_plan(event)["include"] != expected:
+        raise SystemExit("ordinary CI must retain group four and exactly two shards")
+if "matrix: ${{ fromJSON(needs.changes.outputs.macos-matrix) }}" not in job:
+    raise SystemExit("macOS must consume the validated campaign matrix")
+if "name: swift-test-macos (${{ matrix.shard-index }}, ${{ matrix.shard-count }})" not in job:
+    raise SystemExit("ordinary macOS check names must remain stable")
 if "CODEXBAR_TEST_SHARD_INDEX=${{ matrix.shard-index }}" not in job:
     raise SystemExit("swift-test-macos must pass matrix.shard-index to Scripts/test.sh")
 if "CODEXBAR_TEST_SHARD_COUNT=${{ matrix.shard-count }}" not in job:

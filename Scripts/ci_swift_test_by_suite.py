@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import build_jobs
+import ci_swift_test_campaign as campaign
 import ctypes
 import errno
 import fcntl
@@ -26,6 +27,7 @@ from dataclasses import dataclass
 SCRATCH_PARENT_KEY = "CODEXBAR_TEST_SCRATCH_PARENT"
 WORKSPACE_ROOT_KEY = "CODEXBAR_TEST_WORKSPACE_ROOT"
 _scratch_cleanup_safe = True
+_campaign: campaign.Capture | None = None
 CANCELLATION_SIGNALS = (signal.SIGHUP, signal.SIGINT, signal.SIGTERM)
 
 
@@ -70,6 +72,10 @@ class FixtureScratchParent:
             os.environ[SCRATCH_PARENT_KEY] = str(self.path)
         os.environ["TMPDIR"] = str(self.path)
         print(f"Fixture scratch parent ({'owned' if self.owned else 'borrowed'}): {self.path}", file=sys.stderr, flush=True)
+        if _campaign is not None:
+            _campaign.check_fixture(self.path)
+            info = self.path.stat()
+            emit_evidence("fixture-prepared", path=str(self.path), identity=[info.st_dev, info.st_ino], owned=self.owned)
 
     def cleanup(self) -> None:
         try:
@@ -88,6 +94,8 @@ class FixtureScratchParent:
             if os.path.lexists(self.path):
                 raise RuntimeError(f"Fixture scratch parent cleanup failed: {self.path}")
             print(f"Fixture scratch parent removed and absence verified: {self.path}", file=sys.stderr, flush=True)
+            if _campaign is not None:
+                emit_evidence("fixture-removed", path=str(self.path), identity=list(self.identity))
         finally:
             for key, value in self.previous.items():
                 if value is None:
@@ -552,6 +560,7 @@ def _run_command(command: list[str], timeout: int | None = None, *, stdout=None,
     ownership = None
     process = None
     result_code = None
+    launch_id = None
     launching = True
     deferred_signals = []
 
@@ -576,8 +585,15 @@ def _run_command(command: list[str], timeout: int | None = None, *, stdout=None,
         # Popen established this session even if getsid now races with the command's exit.
         root = TestProcess(root.pid, root.parent, process.pid, root.birth, root.zombie)
         ownership = TestProcessOwnership(root, process)
+        if _campaign is not None:
+            launch_id = _campaign.next_process()
+            emit_evidence("process-start", launch_id=launch_id, attempt_id=_campaign.attempt_id,
+                          pid=root.pid, birth=list(root.birth), session=root.session, command=command,
+                          environment=_campaign.process_environment())
         next_diagnostic = started + 30
         while True:
+            if _campaign is not None:
+                _campaign.check_budget()
             owned = ownership.refresh(observing=True)
             result = unreaped_exit_code(process)
             if result is not None:
@@ -607,8 +623,15 @@ def _run_command(command: list[str], timeout: int | None = None, *, stdout=None,
                 stop_unreaped_child(process)
             else:
                 ownership.drain(process)
+                if _campaign is not None and launch_id is not None:
+                    emit_evidence("process-drained", launch_id=launch_id, pid=root.pid, birth=list(root.birth))
         except BaseException as error:
             _scratch_cleanup_safe = False
+            if _campaign is not None:
+                try:
+                    emit_evidence("process-drain-failed", launch_id=launch_id, error=type(error).__name__)
+                except Exception as evidence_error:
+                    print(f"Drain evidence also failed: {evidence_error}", file=sys.stderr, flush=True)
             if not propagating_error:
                 raise CommandDrainError(str(error), result_code or 1) from error
             print(f"Cleanup also failed: {type(error).__name__}: {error}", file=sys.stderr, flush=True)
@@ -721,6 +744,21 @@ def emit_evidence(event: str, **fields) -> None:
         **fields,
     }
     print(f"Swift test evidence: {json.dumps(record, sort_keys=True)}", file=sys.stderr, flush=True)
+    if _campaign is not None:
+        _campaign.record(record)
+
+
+def check_native_evidence_support(swift_command: list[str]) -> None:
+    result = run_captured_command([*swift_command, "test", "--skip-build", "--help-hidden"])
+    help_text = result.stdout + "\n" + result.stderr
+    (_campaign.root / "native-help.txt").write_text(help_text)
+    supported = result.returncode == 0 and all(
+        flag in help_text for flag in ("--event-stream-version", "--event-stream-output-path")
+    )
+    emit_evidence("native-support", advertised_options=supported, event_stream_version=0,
+                  exit_code=result.returncode, parameter_identity="native fields required; v0 does not require case IDs")
+    campaign.require(supported, "native toolchain does not advertise the required event stream options")
+    _campaign.native_support = True
 
 
 def swift_test_list(swift_command: list[str], stats: RunStats | None = None) -> list[TestSelection]:
@@ -850,19 +888,47 @@ def run_group(
     started = time.monotonic()
     result = None
     pattern = filter_for(suites)
+    directory = None
+    attempt_id = None
     try:
-        result = run_command(
-            [*swift_command, "test", "--skip-build", "--no-parallel", "--filter", pattern],
-            timeout=timeout,
-        )
+        command = [*swift_command, "test", "--skip-build", "--no-parallel", "--filter", pattern]
+        if _campaign is None:
+            result = run_command(command, timeout=timeout)
+        else:
+            directory = _campaign.begin_attempt(attempt)
+            attempt_id = _campaign.attempt_id
+            command.extend(["--event-stream-version", "0", "--event-stream-output-path",
+                            str(directory / "swift-testing.jsonl")])
+            # Regular files retain both native consoles without pipe backpressure.
+            # The command owner still drains every descendant before these handles close.
+            with (directory / "stdout.txt").open("x") as stdout, (directory / "stderr.txt").open("x") as stderr:
+                result = run_command(command, timeout=timeout, stdout=stdout, stderr=stderr)
         return result
     finally:
         error = sys.exc_info()[0]
-        emit_evidence(
-            "attempt", attempt=attempt, selections=[suite.name for suite in suites],
-            filter_pattern=pattern, exit_code=result, error=error.__name__ if error else None,
-            elapsed_seconds=round(time.monotonic() - started, 6), timeout_seconds=timeout,
-        )
+        elapsed = time.monotonic() - started
+        fields = {"attempt_id": attempt_id} if _campaign is not None else {}
+        try:
+            emit_evidence(
+                "attempt", attempt=attempt, selections=[suite.name for suite in suites],
+                filter_pattern=pattern, exit_code=result, error=error.__name__ if error else None,
+                elapsed_seconds=round(elapsed, 6), timeout_seconds=timeout, **fields,
+            )
+            if directory is not None:
+                for name, output in (("stdout.txt", sys.stdout), ("stderr.txt", sys.stderr)):
+                    if (directory / name).exists():
+                        with (directory / name).open() as captured:
+                            shutil.copyfileobj(captured, output)
+                        output.flush()
+                _campaign.end_attempt(directory)
+                campaign.bounded_root(str(_campaign.root))
+        except Exception as evidence_error:
+            if error is None and not result:
+                raise
+            print(f"Campaign attempt evidence also failed: {evidence_error}", file=sys.stderr, flush=True)
+        finally:
+            if _campaign is not None:
+                _campaign.attempt_id = None
 
 
 def retry_selections_individually(
@@ -884,6 +950,8 @@ def retry_selections_individually(
 def run_suites() -> int:
     total_started = time.monotonic()
     args = parse_args()
+    if _campaign is not None:
+        _campaign.validate_invocation(args)
     if args.command is not None:
         if not args.command:
             print("--command requires an executable", file=sys.stderr)
@@ -906,6 +974,8 @@ def run_suites() -> int:
     swift_command = [args.swift_command, *args.swift_command_arg]
     result = 0
     try:
+        if _campaign is not None:
+            check_native_evidence_support(swift_command)
         discovery_started = time.monotonic()
         try:
             suites = prioritized_suites(filtered_suites_for_environment(swift_test_list(swift_command, stats)))
@@ -1006,8 +1076,9 @@ def run_suites() -> int:
 
 
 def main() -> int:
-    global _scratch_cleanup_safe
+    global _scratch_cleanup_safe, _campaign
     _scratch_cleanup_safe = True
+    _campaign = None
     scratch = FixtureScratchParent()
     preparing = True
     deferred_signals = []
@@ -1021,6 +1092,7 @@ def main() -> int:
     previous_handlers = {sig: signal.signal(sig, cancellation) for sig in CANCELLATION_SIGNALS}
     result = 1
     try:
+        _campaign = campaign.Capture.from_environment()
         scratch.prepare()
         preparing = False
         if deferred_signals:
@@ -1042,6 +1114,15 @@ def main() -> int:
             print(f"Fixture cleanup failed: {error}", file=sys.stderr, flush=True)
             result = result or 1
         finally:
+            if _campaign is not None:
+                try:
+                    cleanup_proved = _scratch_cleanup_safe and scratch.owned and not os.path.lexists(scratch.path)
+                    _campaign.finish(result, cleanup_proved)
+                except Exception as error:
+                    print(f"Campaign evidence finalization failed: {error}", file=sys.stderr, flush=True)
+                    result = result or 1
+                finally:
+                    _campaign = None
             for sig, handler in previous_handlers.items():
                 signal.signal(sig, handler)
     return result if result >= 0 else 128 - result

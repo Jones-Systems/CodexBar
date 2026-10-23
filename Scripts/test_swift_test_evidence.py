@@ -2,17 +2,22 @@
 """Synthetic discovery, timing, and cache contracts; no Swift toolchain required."""
 
 import contextlib
+import copy
 import hashlib
 import io
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
 import sys
+import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
 import ci_swift_test_by_suite as runner
+import ci_swift_test_campaign as campaign
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -22,6 +27,70 @@ TEST_IDS = [
     "CodexBarTests.Legacy/test_example",
     "CodexBarTests.`top/level works`()",
 ]
+SHA = "a" * 40
+
+
+def campaign_environment(workspace, **overrides):
+    return {"GITHUB_WORKSPACE": str(workspace), "GITHUB_SHA": SHA, "GITHUB_ACTIONS": "true",
+            "GITHUB_RUN_ID": "123", "GITHUB_RUN_ATTEMPT": "1", "GITHUB_REF": "refs/heads/work/campaign",
+            "RUNNER_OS": "macOS", "RUNNER_ARCH": "ARM64", "ImageVersion": "20261001.1", "ImageOS": "macos26",
+            "CAMPAIGN_GROUP_SIZE": "4", "CAMPAIGN_SHARD_COUNT": "1", "CAMPAIGN_SHARD_INDEX": "0",
+            "CAMPAIGN_EXPECTED_SHA": SHA, "CAMPAIGN_CACHE_MODE": "warm", "CAMPAIGN_CACHE_HIT": "true",
+            "CAMPAIGN_CACHE_KEY": "swiftpm-toolchain-dependencies-" + SHA, "CAMPAIGN_TOOLCHAIN_ID": "toolchain",
+            **overrides}
+
+
+@contextlib.contextmanager
+def capture_fixture():
+    with tempfile.TemporaryDirectory(prefix=".test-campaign-", dir=ROOT) as temporary:
+        environment = campaign_environment(Path(temporary))
+        root = campaign.prepare(environment, SHA)
+        with patch.dict(os.environ, {"GITHUB_SHA": SHA, "GITHUB_ACTIONS": "true", **campaign.ISOLATION}):
+            capture = campaign.Capture(root)
+            try:
+                yield capture, environment
+            finally:
+                capture.records.close()
+
+
+def native_stream(names=("opaque/function(argument:)",), *, parameterized=True, fields=True, skipped=False):
+    # Source-backed v0 capability fixture: Documentation/ABI/JSON.md at swift-6.2-RELEASE
+    # requires testID, not a parameter-case ID. HumanReadableOutputRecorder supplies
+    # argument messages; the raw native text must survive comparison unchanged.
+    records = [{"version": 0, "kind": "test", "payload": {
+        "kind": "function", "id": name, "name": "function(argument:)", "displayName": "native display",
+        "sourceLocation": {"fileID": "Synthetic/Fixture.swift", "line": 7, "column": 1},
+        "isParameterized": parameterized,
+    }} for name in names]
+
+    def event(kind, name=None, **extra):
+        payload = {"kind": kind, "instant": {"absolute": 1, "since1970": 2}, "messages": []}
+        if name:
+            payload["testID"] = name
+        records.append({"version": 0, "kind": "event", "payload": {**payload, **extra}})
+
+    event("runStarted")
+    for name in names:
+        if skipped:
+            event("testSkipped", name, messages=[{"symbol": "skip", "text": "Disabled by a synthetic trait"}])
+            continue
+        event("testStarted", name)
+        messages = [{"symbol": "default", "text": "Test case passing 1 argument value → 7 to function started."}]
+        if parameterized:
+            event("testCaseStarted", name, messages=messages if fields else [])
+            event("testCaseEnded", name)
+        event("testEnded", name)
+    event("runEnded")
+    return "\n".join(campaign.encode(record) for record in records) + "\n"
+
+
+def xctest_console(names=(), status="passed"):
+    lines = ["Test Suite 'Selected tests' started at 2026-01-01"]
+    for name in names:
+        lines += [f"Test Case '{name}' started.", f"Test Case '{name}' {status} (0.001 seconds)."]
+    lines += ["Test Suite 'Selected tests' passed at 2026-01-01",
+              f"Executed {len(names)} tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds"]
+    return "\n".join(lines) + "\n"
 
 
 def completed(command, status=0, stderr=""):
@@ -89,6 +158,512 @@ class CacheContractTests(unittest.TestCase):
         self.assertEqual(restore.strip(), key.removesuffix("${{ github.sha }}"))
         self.assertLess(job.index("id: swift-toolchain"), job.index("- name: Restore SwiftPM build cache"))
         self.assertNotIn("cache-hit", job[job.index("- name: Swift Test"):])
+
+
+class CampaignActivationTests(unittest.TestCase):
+    def test_manual_campaign_has_explicit_validated_controls(self):
+        workflow = (ROOT / ".github/workflows/ci.yml").read_text()
+        self.assertIn("  workflow_dispatch:", workflow)
+        for name in ("group_size", "shard_count", "expected_sha", "cache_mode"):
+            self.assertIn(f"      {name}:", workflow)
+        self.assertIn("Scripts/ci_swift_test_campaign.py plan", workflow)
+
+    def test_native_evidence_is_opt_in(self):
+        source = (ROOT / "Scripts/ci_swift_test_by_suite.py").read_text()
+        self.assertIn("campaign.Capture.from_environment()", source)
+
+
+class CampaignPlanTests(unittest.TestCase):
+    def test_ordinary_defaults_ignore_manual_inputs(self):
+        for event in ("pull_request", "push"):
+            plan = campaign.resolve_plan(event, "12", "3", "untrusted", SHA, "cold")
+            self.assertEqual(plan["include"], [
+                {"shard-index": index, "shard-count": 2, "group-size": 4,
+                 "cache-mode": "ordinary", "campaign": False} for index in (0, 1)
+            ])
+
+    def test_every_manual_arm_and_invalid_input(self):
+        for group in ("4", "12"):
+            for count in ("1", "2", "3"):
+                for mode in ("seed", "warm", "cold"):
+                    with self.subTest(group=group, count=count, mode=mode):
+                        arms = campaign.resolve_plan("workflow_dispatch", group, count, SHA, SHA, mode)["include"]
+                        self.assertEqual([item["shard-index"] for item in arms], list(range(int(count))))
+                        self.assertTrue(all(item["group-size"] == int(group) and item["campaign"] for item in arms))
+        defaults = {"group_size": "4", "shard_count": "2", "expected_sha": SHA,
+                    "source_sha": SHA, "cache_mode": "warm"}
+        for field, value in (("group_size", "8"), ("shard_count", "4"), ("cache_mode", "unknown"),
+                             ("expected_sha", "b" * 40), ("expected_sha", SHA + "\n"), ("shard_count", "2; false")):
+            with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+                campaign.resolve_plan("workflow_dispatch", **{**defaults, field: value})
+
+    def test_workflow_preserves_caps_qualification_and_scoped_capture(self):
+        workflow = (ROOT / ".github/workflows/ci.yml").read_text()
+        job = workflow.split("  swift-test-macos:\n", 1)[1].split("  lint-build-test:\n", 1)[0]
+        self.assertIn("timeout-minutes: 80", job)
+        self.assertIn("timeout-minutes: 70", job)
+        self.assertIn("CODEXBAR_TEST_SUITE_TIMEOUT=120", job)
+        self.assertIn("CODEXBAR_TEST_RETRY_NON_TIMEOUT_FAILURES=0", job)
+        self.assertIn("if: ${{ matrix.cache-mode != 'cold' }}", job)
+        swift_step = job.split("- name: Swift Test\n", 1)[1].split("      - name:", 1)[0]
+        self.assertIn("CODEXBAR_TEST_EVIDENCE_DIR:", swift_step)
+        self.assertEqual(job.count("CODEXBAR_TEST_EVIDENCE_DIR:"), 1)
+        for required in ("Check app locales and Swift formatting", "Provider plugin engine A/B goldens",
+                         "Collect crash reports on failure", "Summarize macOS shard"):
+            self.assertIn(required, job)
+        self.assertLess(job.index("Summarize macOS shard"), job.index("Validate campaign evidence"))
+        self.assertIn("retention-days: 7", job)
+        self.assertIn("steps.campaign-upload.outcome == 'success'", job)
+        self.assertIn("./Scripts/test.sh --command swift test --parallel", workflow)
+        self.assertNotIn("GITHUB_ENV", (ROOT / "Scripts/ci_swift_test_campaign.py").read_text())
+
+    def test_prepare_refuses_unproved_warm_cold_and_storage(self):
+        with tempfile.TemporaryDirectory(prefix=".test-campaign-", dir=ROOT) as temporary:
+            workspace = Path(temporary)
+            environment = campaign_environment(workspace)
+            for overrides in ({"CAMPAIGN_CACHE_HIT": "false"}, {"RUNNER_OS": "Linux"}, {"ImageVersion": ""}):
+                with self.subTest(overrides=overrides), self.assertRaises(ValueError):
+                    campaign.prepare({**environment, **overrides}, SHA)
+            (workspace / ".build").mkdir()
+            with self.assertRaisesRegex(ValueError, "absent application build"):
+                campaign.prepare({**environment, "CAMPAIGN_CACHE_MODE": "cold", "CAMPAIGN_CACHE_HIT": ""}, SHA)
+            with patch.object(campaign.shutil, "disk_usage", return_value=SimpleNamespace(free=1)), \
+                    self.assertRaisesRegex(ValueError, "insufficient storage"):
+                campaign.prepare(environment, SHA)
+            self.assertEqual([path.name for path in workspace.iterdir()], [".build"])
+
+    def test_upload_cleanup_is_exact_and_preserves_unproved_roots(self):
+        with capture_fixture() as (capture, environment):
+            root = capture.root
+            sentinel = root.parent / "unrelated"
+            sentinel.write_text("keep")
+            capture.finish(23, False)
+            with self.assertRaisesRegex(ValueError, "drain is unproved"):
+                campaign.cleanup(root, environment)
+            completion = root / "completion.json"
+            completion.write_text(campaign.encode({"result": 23, "cleanup_proved": True, "native_support": False}))
+            with contextlib.redirect_stdout(io.StringIO()):
+                campaign.cleanup(root, environment)
+            self.assertFalse(root.exists())
+            self.assertEqual(sentinel.read_text(), "keep")
+
+
+class NativeOutcomeTests(unittest.TestCase):
+    def test_v0_parameter_capability_keeps_native_fields_or_reports_unknown(self):
+        complete = campaign.native_outcomes(native_stream())
+        self.assertEqual(complete["limitations"], [])
+        self.assertEqual(complete["functions"][0]["native_test"]["displayName"], "native display")
+        self.assertEqual(complete["cases"][0]["test_id"], "opaque/function(argument:)")
+        self.assertIn("value → 7", complete["cases"][0]["native_fields"]["messages"][0]["text"])
+        for stream in (native_stream(fields=False), native_stream().replace("Test case passing 1 argument value → 7",
+                                                                           "Generic test-start display")):
+            result = campaign.native_outcomes(stream)
+            self.assertIn("no comparable parameter representation", result["limitations"][0])
+            self.assertEqual(result["functions"][0]["status"], "passed")
+            self.assertEqual(len(result["cases"]), 1)
+
+    def test_native_case_extension_remains_comparable_without_argument_messages(self):
+        records = [json.loads(line) for line in native_stream(fields=False).splitlines()]
+        native_case = {"id": "opaque-case-native-value", "displayName": "7"}
+        for record in records:
+            if record["payload"].get("kind") in ("testCaseStarted", "testCaseEnded"):
+                record["payload"]["_testCase"] = native_case
+        outcomes = campaign.native_outcomes("\n".join(map(campaign.encode, records)))
+        self.assertEqual(outcomes["limitations"], [])
+        self.assertEqual(outcomes["cases"][0]["native_fields"]["_testCase"], native_case)
+        records[4]["payload"]["_testCase"] = {"id": "different native case"}
+        with self.assertRaisesRegex(ValueError, "relationship changed"):
+            campaign.native_outcomes("\n".join(map(campaign.encode, records)))
+
+    def test_native_missing_duplicate_and_failed_outcomes(self):
+        records = [json.loads(line) for line in native_stream().splitlines()]
+        for kind in ("testEnded", "testCaseEnded", "runEnded"):
+            incomplete = [item for item in records if item["payload"].get("kind") != kind]
+            with self.subTest(kind=kind), self.assertRaises(ValueError):
+                campaign.native_outcomes("\n".join(map(campaign.encode, incomplete)))
+        duplicate = records[:4] + records[3:5] + records[4:]
+        with self.assertRaises(ValueError):
+            campaign.native_outcomes("\n".join(map(campaign.encode, duplicate)))
+        issue = {"version": 0, "kind": "event", "payload": {
+            "kind": "issueRecorded", "testID": "opaque/function(argument:)",
+            "issue": {"isKnown": False}, "messages": [{"symbol": "fail", "text": "expected failure"}],
+        }}
+        failed = campaign.native_outcomes("\n".join(map(campaign.encode, records[:4] + [issue] + records[4:])))
+        self.assertEqual(failed["functions"][0]["status"], "failed")
+        self.assertEqual(failed["cases"][0]["status"], "failed")
+        issue["payload"]["issue"]["isKnown"] = True
+        known = campaign.native_outcomes("\n".join(map(campaign.encode, records[:4] + [issue] + records[4:])))
+        self.assertEqual(known["functions"][0]["status"], "passed-with-known-issue")
+        self.assertEqual(len(known["issues"]), 1)
+
+    def test_native_skips_and_ambiguous_parameter_multiplicity(self):
+        skipped = campaign.native_outcomes(native_stream(skipped=True))
+        self.assertEqual(skipped["functions"][0]["status"], "skipped")
+        self.assertEqual(skipped["functions"][0]["skip"][0]["text"], "Disabled by a synthetic trait")
+        records = [json.loads(line) for line in native_stream().splitlines()]
+        duplicated_case = records[:5] + records[3:5] + records[5:]
+        result = campaign.native_outcomes("\n".join(map(campaign.encode, duplicated_case)))
+        self.assertEqual(len(result["cases"]), 2)
+        self.assertIn("ambiguous repeated", result["limitations"][0])
+
+    def test_xctest_retains_raw_identity_multiplicity_and_skips(self):
+        name = "-[SyntheticTests.Legacy test_example]"
+        outcomes = campaign.xctest_outcomes(xctest_console([name, name]))
+        self.assertEqual([item["id"] for item in outcomes], [name, name])
+        self.assertEqual(campaign.xctest_outcomes(xctest_console()), [])
+        skipped = xctest_console([name], "skipped").replace(
+            f"Test Case '{name}' skipped", "Fixture.swift:7: skipped - unavailable synthetic capability\n"
+            f"Test Case '{name}' skipped")
+        self.assertIn("unavailable synthetic capability", campaign.xctest_outcomes(skipped)[0]["skip"][0])
+        for broken in ("", xctest_console([name]).replace("Executed 1 test", "Executed 2 test"),
+                       xctest_console([name]).replace("passed (0.001 seconds).", "pending.")):
+            with self.assertRaises(ValueError):
+                campaign.xctest_outcomes(broken)
+
+
+class CampaignCaptureTests(unittest.TestCase):
+    def test_capture_rejects_partial_selection_changed_policy_and_non_native_route(self):
+        with capture_fixture() as (capture, _), patch.object(sys, "argv", [
+                "runner", "--group-size", "4", "--shard-count", "1", "--shard-index", "0",
+                "--timeout", "120", "--no-retry-non-timeout-failures"]):
+            args = runner.parse_args()
+            with patch.object(sys, "platform", "darwin"):
+                capture.validate_invocation(args)
+                for name, value in (("limit_groups", 1), ("list_only", True), ("timeout", 180),
+                                     ("retry_non_timeout_failures", True), ("command", ["true"]),
+                                     ("swift_command", "other-swift")):
+                    changed = copy.copy(args)
+                    setattr(changed, name, value)
+                    with self.subTest(name=name), self.assertRaises(ValueError):
+                        capture.validate_invocation(changed)
+                with patch.dict(os.environ, {"CODEXBAR_TEST_CODEX_FILE_ISOLATION": "0"}), \
+                        self.assertRaisesRegex(ValueError, "isolation"):
+                    capture.validate_invocation(args)
+            with patch.object(sys, "platform", "linux"), self.assertRaisesRegex(ValueError, "macOS Actions"):
+                capture.validate_invocation(args)
+
+    def test_attempt_files_are_unique_and_invocation_timeout_unchanged(self):
+        selection = runner.TestSelection("CodexBarTests.Legacy", r"^CodexBarTests\.Legacy/")
+        handles = []
+        def invoke(command, *, timeout, stdout, stderr):
+            self.assertEqual(timeout, 120)
+            self.assertEqual(command[:6], ["swift", "test", "--skip-build", "--no-parallel", "--filter",
+                                          runner.filter_for([selection])])
+            self.assertEqual(command[6:9], ["--event-stream-version", "0", "--event-stream-output-path"])
+            Path(command[9]).write_text(native_stream())
+            stdout.write(xctest_console())
+            stderr.write("native stderr marker\n")
+            handles.extend((stdout, stderr))
+            return 124 if len(handles) == 2 else 0
+        with capture_fixture() as (capture, _), patch.object(runner, "_campaign", capture), \
+                patch.object(runner, "run_command", side_effect=invoke), \
+                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()) as stderr:
+            self.assertEqual(runner.run_group([selection], 120, ["swift"]), 124)
+            self.assertEqual(runner.run_group([selection], 120, ["swift"], attempt="selection-retry"), 0)
+            self.assertTrue(all(handle.closed for handle in handles))
+            self.assertIn("native stderr marker", stderr.getvalue())
+            self.assertTrue((capture.root / "0001-first/swift-testing.jsonl").exists())
+            self.assertTrue((capture.root / "0002-selection-retry/swift-testing.jsonl").exists())
+            attempts = [item for item in campaign.read_records(capture.root / "runner.jsonl") if item["event"] == "attempt"]
+            self.assertEqual([item["exit_code"] for item in attempts], [124, 0])
+            self.assertIsNone(capture.attempt_id)
+
+    def test_evidence_failure_cannot_mask_drain_failure_or_test_status(self):
+        for outcome in (runner.CommandDrainError("unproved drain", 23), 23):
+            with self.subTest(outcome=outcome), capture_fixture() as (capture, _), \
+                    patch.object(runner, "_campaign", capture), \
+                    patch.object(runner, "run_command", side_effect=outcome if isinstance(outcome, Exception) else None,
+                                 return_value=23), \
+                    patch.object(capture, "record", side_effect=OSError("synthetic write failure")), \
+                    contextlib.redirect_stderr(io.StringIO()):
+                if isinstance(outcome, Exception):
+                    with self.assertRaises(runner.CommandDrainError):
+                        runner.run_group([runner.TestSelection("Alpha", "Alpha")], 120, ["swift"])
+                else:
+                    self.assertEqual(runner.run_group([runner.TestSelection("Alpha", "Alpha")], 120, ["swift"]), 23)
+
+    def test_native_support_probe_fails_closed(self):
+        for text, status, expected in (("--event-stream-version --event-stream-output-path", 0, True),
+                                       ("--event-stream-output-path", 0, False), ("", 42, False)):
+            with self.subTest(text=text), capture_fixture() as (capture, _), patch.object(runner, "_campaign", capture), \
+                    patch.object(runner, "run_captured_command",
+                                 return_value=subprocess.CompletedProcess([], status, text, "")) as invoke, \
+                    contextlib.redirect_stderr(io.StringIO()):
+                if expected:
+                    runner.check_native_evidence_support(["swift"])
+                else:
+                    with self.assertRaises(ValueError):
+                        runner.check_native_evidence_support(["swift"])
+                invoke.assert_called_once_with(["swift", "test", "--skip-build", "--help-hidden"])
+                self.assertEqual(capture.native_support, expected)
+
+    def test_actual_process_birth_drain_and_scratch_cleanup_receipts(self):
+        with capture_fixture() as (capture, _), patch.object(runner.campaign.Capture, "from_environment", return_value=capture), \
+                contextlib.redirect_stderr(io.StringIO()):
+            environment = dict(os.environ)
+            environment.pop(runner.SCRATCH_PARENT_KEY, None)
+            environment.pop(runner.WORKSPACE_ROOT_KEY, None)
+            def command():
+                return runner.run_command([sys.executable, "-c", "raise SystemExit(23)"], timeout=2)
+            with patch.dict(os.environ, environment, clear=True), patch.object(runner, "run_suites", side_effect=command):
+                self.assertEqual(runner.main(), 23)
+            records = campaign.read_records(capture.root / "runner.jsonl")
+            self.assertEqual([item["event"] for item in records],
+                             ["fixture-prepared", "process-start", "process-drained", "fixture-removed"])
+            self.assertEqual(records[1]["birth"], records[2]["birth"])
+            self.assertTrue(any(records[1]["birth"]))
+            self.assertFalse(Path(records[0]["path"]).exists())
+            self.assertTrue(campaign.read_json(capture.root / "completion.json")["cleanup_proved"])
+
+    def test_capture_budget_failure_drains_the_actual_command(self):
+        with capture_fixture() as (capture, _), patch.object(runner, "_campaign", capture), \
+                contextlib.redirect_stderr(io.StringIO()):
+            directory = capture.begin_attempt("first")
+            command = [sys.executable, "-c", "import pathlib,sys,time; pathlib.Path(sys.argv[1]).write_bytes(b'x'*4096); time.sleep(2)",
+                       str(directory / "stdout.txt")]
+            with patch.object(campaign, "MAX_BYTES", 2048), self.assertRaisesRegex(ValueError, "budget"):
+                runner.run_command(command, timeout=2)
+            records = campaign.read_records(capture.root / "runner.jsonl")
+            self.assertEqual([item["event"] for item in records], ["process-start", "process-drained"])
+            self.assertIsNone(runner.test_process(records[0]["pid"]))
+
+    def test_success_and_handled_cancellation_retain_evidence_after_fixture_cleanup(self):
+        for outcome in (0, SystemExit(143)):
+            with self.subTest(outcome=outcome), capture_fixture() as (capture, _), \
+                    patch.object(runner.campaign.Capture, "from_environment", return_value=capture), \
+                    patch.object(runner, "run_suites", return_value=0,
+                                 side_effect=outcome if isinstance(outcome, SystemExit) else None), \
+                    contextlib.redirect_stderr(io.StringIO()):
+                environment = dict(os.environ)
+                environment.pop(runner.SCRATCH_PARENT_KEY, None)
+                environment.pop(runner.WORKSPACE_ROOT_KEY, None)
+                with patch.dict(os.environ, environment, clear=True):
+                    self.assertEqual(runner.main(), 143 if isinstance(outcome, SystemExit) else 0)
+                records = campaign.read_records(capture.root / "runner.jsonl")
+                self.assertEqual([item["event"] for item in records], ["fixture-prepared", "fixture-removed"])
+                self.assertTrue(capture.root.exists())
+                self.assertFalse(Path(records[0]["path"]).exists())
+                self.assertTrue(campaign.read_json(capture.root / "completion.json")["cleanup_proved"])
+
+
+def receipt_fixture(workspace, group_size=4, shard_count=1, shard_index=0):
+    environment = campaign_environment(workspace, CAMPAIGN_GROUP_SIZE=str(group_size),
+                                       CAMPAIGN_SHARD_COUNT=str(shard_count), CAMPAIGN_SHARD_INDEX=str(shard_index))
+    root = campaign.prepare(environment, SHA)
+    (root / "native-help.txt").write_text("--event-stream-version --event-stream-output-path\n")
+    names = [f"CodexBarTests.Suite{index:02}" for index in range(25)] + ["CodexBarTests.Legacy"]
+    top = "CodexBarTests.`top/level works`()"
+    discovery = sorted([name + "/function()" for name in names] + [top, "CodexBarTests.CLIEntryTests/entry()"])
+    names = sorted(names + [top])
+    groups = [names[offset:offset + group_size] for offset in range(0, len(names), group_size)]
+    groups = [group for index, group in enumerate(groups) if index % shard_count == shard_index]
+    fixture = workspace / ".test-fixtures-synthetic"
+    records = []
+
+    def record(event, **fields):
+        records.append({"event": event, "source_revision": SHA, **fields})
+
+    record("fixture-prepared", path=str(fixture), identity=[1, 2], owned=True)
+    record("native-support", advertised_options=True, exit_code=0, event_stream_version=0)
+    record("discovery", test_ids=discovery, sha256=campaign.digest(discovery))
+    record("selection", groups=groups, shard_index=shard_index, shard_count=shard_count,
+           sha256=campaign.digest(name for group in groups for name in group))
+    for index, group in enumerate(groups, 1):
+        attempt_id = f"{index:04}-first"
+        directory = root / attempt_id
+        directory.mkdir()
+        native_names = ["opaque-native/" + name for name in group if name != "CodexBarTests.Legacy"]
+        xctest_names = ["-[CodexBarTests.Legacy function]"] if "CodexBarTests.Legacy" in group else []
+        (directory / "swift-testing.jsonl").write_text(native_stream(native_names))
+        (directory / "stdout.txt").write_text(xctest_console(xctest_names))
+        (directory / "stderr.txt").write_text("")
+        selections = [runner.TestSelection(name, campaign.selection_pattern([name])[1:-1]) for name in group]
+        pattern = runner.filter_for(selections)
+        command = ["swift", "test", "--skip-build", "--no-parallel", "--filter", pattern,
+                   "--event-stream-version", "0", "--event-stream-output-path", str(directory / "swift-testing.jsonl")]
+        record("process-start", launch_id=index, attempt_id=attempt_id, pid=100 + index, birth=[index, 1],
+               session=100 + index, command=command, environment={**campaign.ISOLATION,
+               "CODEXBAR_TEST_WORKSPACE_ROOT": str(workspace), "CODEXBAR_TEST_SCRATCH_PARENT": str(fixture),
+               "TMPDIR": str(fixture), "live_or_fixture_grant": False})
+        record("process-drained", launch_id=index, pid=100 + index, birth=[index, 1])
+        record("attempt", attempt="first", attempt_id=attempt_id, selections=group, filter_pattern=pattern,
+               exit_code=0, error=None, timeout_seconds=120, elapsed_seconds=1.5)
+    record("fixture-removed", path=str(fixture), identity=[1, 2])
+    (root / "runner.jsonl").write_text("\n".join(map(campaign.encode, records)) + "\n")
+    campaign.write_json(root / "completion.json", {"result": 0, "cleanup_proved": True, "native_support": True})
+    return root
+
+
+class CampaignReceiptTests(unittest.TestCase):
+    def test_missing_parameter_representation_retains_functions_but_cannot_compare(self):
+        with tempfile.TemporaryDirectory(prefix=".test-campaign-", dir=ROOT) as temporary:
+            root = receipt_fixture(Path(temporary))
+            path = root / "0001-first/swift-testing.jsonl"
+            records = campaign.read_records(path)
+            for record in records:
+                if record["kind"] == "test":
+                    record["payload"]["isParameterized"] = True
+                if record["payload"].get("kind") == "testCaseStarted":
+                    record["payload"]["messages"] = []
+            path.write_text("\n".join(map(campaign.encode, records)))
+            receipt = campaign.verify(root)
+            self.assertEqual(len(receipt["functions"]), 27)
+            self.assertFalse(receipt["complete_identity"])
+            with self.assertRaisesRegex(ValueError, "parameter identity"):
+                campaign.compare([receipt], [receipt])
+
+    def test_complete_same_source_campaign_compares_all_six_arms(self):
+        with tempfile.TemporaryDirectory(prefix=".test-campaign-", dir=ROOT) as temporary:
+            workspace = Path(temporary)
+            baseline = [campaign.verify(receipt_fixture(workspace))]
+            for group in (4, 12):
+                for count in (1, 2, 3):
+                    with self.subTest(group=group, count=count):
+                        receipts = [campaign.verify(receipt_fixture(workspace, group, count, index))
+                                    for index in range(count)]
+                        compared = campaign.compare(baseline, receipts)
+                        self.assertTrue(compared["equivalent"])
+                        self.assertEqual(compared["function_outcomes"], 27)
+                        self.assertEqual(compared["case_outcomes"], 26)
+                        self.assertEqual(len(receipts[0]["discovery"]), 28)
+            self.assertNotIn("CodexBarTests.CLIEntryTests", baseline[0]["selections"])
+
+    def test_incomplete_or_changed_evidence_fails_qualification(self):
+        with tempfile.TemporaryDirectory(prefix=".test-campaign-", dir=ROOT) as temporary:
+            root = receipt_fixture(Path(temporary))
+            records_path = root / "runner.jsonl"
+            records = campaign.read_records(records_path)
+            mutations = []
+            for event in ("process-drained", "fixture-removed", "native-support", "attempt"):
+                changed = copy.deepcopy(records)
+                changed.pop(next(index for index, item in enumerate(changed) if item["event"] == event))
+                mutations.append(changed)
+            for event, key, value in (("process-start", "birth", [0, 0]), ("process-start", "session", 999),
+                                      ("process-drained", "birth", [999, 1]), ("attempt", "exit_code", 124),
+                                      ("attempt", "attempt", "selection-retry"), ("attempt", "timeout_seconds", 121),
+                                      ("attempt", "filter_pattern", ".*"), ("selection", "groups", [])):
+                changed = copy.deepcopy(records)
+                next(item for item in changed if item["event"] == event)[key] = value
+                mutations.append(changed)
+            changed = copy.deepcopy(records)
+            next(item for item in changed if item["event"] == "process-start")["environment"]["TMPDIR"] = "/tmp"
+            mutations.append(changed)
+            for index, changed in enumerate(mutations):
+                records_path.write_text("\n".join(map(campaign.encode, changed)))
+                with self.subTest(mutation=index), self.assertRaises(ValueError):
+                    campaign.verify(root)
+
+    def test_comparison_rejects_missing_shards_changed_outcomes_and_unknown_case_identity(self):
+        with tempfile.TemporaryDirectory(prefix=".test-campaign-", dir=ROOT) as temporary:
+            workspace = Path(temporary)
+            baseline = [campaign.verify(receipt_fixture(workspace))]
+            candidate = [campaign.verify(receipt_fixture(workspace, 12, 2, index)) for index in (0, 1)]
+            with self.assertRaisesRegex(ValueError, "every shard"):
+                campaign.compare(baseline, candidate[:1])
+            for mutation in ("identity", "outcome", "multiplicity", "source", "cache", "unknown"):
+                changed = copy.deepcopy(candidate)
+                if mutation == "identity":
+                    changed[0]["functions"][0]["id"] = "other native ID"
+                elif mutation == "outcome":
+                    changed[0]["functions"][0]["status"] = "skipped"
+                elif mutation == "multiplicity":
+                    changed[0]["functions"].append(copy.deepcopy(changed[0]["functions"][0]))
+                elif mutation == "source":
+                    changed[0]["context"]["source_revision"] = "b" * 40
+                elif mutation == "cache":
+                    changed[0]["context"]["cache_hit"] = "false"
+                else:
+                    changed[0]["complete_identity"] = False
+                with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                    campaign.compare(baseline, changed)
+
+    def test_known_compiler_admission_tail_is_preserved_but_filter_override_rejected(self):
+        with tempfile.TemporaryDirectory(prefix=".test-campaign-", dir=ROOT) as temporary:
+            root = receipt_fixture(Path(temporary))
+            path = root / "runner.jsonl"
+            records = campaign.read_records(path)
+            commands = [item["command"] for item in records if item["event"] == "process-start"]
+            for command in commands:
+                command.extend(["--jobs", "4", "-Xswiftc", "-num-threads", "-Xswiftc", "1"])
+            path.write_text("\n".join(map(campaign.encode, records)))
+            self.assertTrue(campaign.verify(root)["complete_identity"])
+            commands[0].extend(["--filter", ".*"])
+            path.write_text("\n".join(map(campaign.encode, records)))
+            with self.assertRaisesRegex(ValueError, "invocation"):
+                campaign.verify(root)
+
+
+class LinuxStorageObservationTests(unittest.TestCase):
+    def test_storage_walk_stops_at_its_time_bound_without_changing_files(self):
+        with tempfile.TemporaryDirectory(prefix=".test-storage-", dir=ROOT) as temporary:
+            workspace = Path(temporary)
+            build = workspace / ".build"
+            build.mkdir()
+            (build / "object").write_bytes(b"unchanged")
+            with patch.object(campaign.time, "monotonic", side_effect=[0, 11, 12]):
+                receipt = campaign.measure_linux(campaign_environment(workspace, RUNNER_OS="Linux"), "after-release")
+            self.assertEqual(receipt["status"], "unavailable")
+            self.assertIn("entry/time bound", receipt["reason"])
+            self.assertEqual((build / "object").read_bytes(), b"unchanged")
+
+    def test_storage_receipt_counts_metadata_without_following_links_or_reading_files(self):
+        with tempfile.TemporaryDirectory(prefix=".test-storage-", dir=ROOT) as temporary:
+            workspace = Path(temporary)
+            build = workspace / ".build"
+            build.mkdir()
+            (build / "release").mkdir()
+            (build / "release/app").write_bytes(b"x" * 7)
+            (build / "debug").mkdir()
+            (build / "debug/tests").write_bytes(b"x" * 11)
+            (workspace / "outside").write_bytes(b"x" * 19)
+            (build / "reference").symlink_to(workspace / "outside")
+            environment = campaign_environment(workspace, RUNNER_OS="Linux", SWIFT_VERSION="6.3.3")
+            with patch.object(Path, "read_text", side_effect=AssertionError("must not read file contents")), \
+                    patch.object(Path, "read_bytes", side_effect=AssertionError("must not read file contents")):
+                receipt = campaign.measure_linux(environment, "after-tests")
+            self.assertEqual(receipt["status"], "observed")
+            self.assertEqual(receipt["regular_files"], 2)
+            self.assertEqual(receipt["logical_bytes"], 18)
+            self.assertEqual(receipt["symlinks"], 1)
+            self.assertEqual(receipt["cache_path_manifest"], [".build"])
+            self.assertFalse(receipt["cache_enabled"])
+            self.assertTrue(receipt["fixture_parents_absent"])
+            self.assertGreater(receipt["available_bytes"], 0)
+            (workspace / ".test-fixtures-owned").mkdir()
+            (build / "fixture-link").symlink_to(workspace / ".test-fixtures-owned")
+            observed = campaign.measure_linux(environment, "after-tests")
+            self.assertFalse(observed["fixture_parents_absent"])
+            self.assertEqual(observed["fixture_paths_in_build"], 1)
+            self.assertTrue((workspace / ".test-fixtures-owned").exists())
+
+    def test_missing_build_and_unavailable_measurements_never_change_command_status(self):
+        with tempfile.TemporaryDirectory(prefix=".test-storage-", dir=ROOT) as temporary:
+            environment = campaign_environment(Path(temporary), RUNNER_OS="Linux")
+            receipt = campaign.measure_linux(environment, "before-release")
+            self.assertEqual(receipt["status"], "observed")
+            self.assertFalse(receipt["build_exists"])
+            self.assertEqual(receipt["logical_bytes"], 0)
+            with patch.object(campaign.shutil, "disk_usage", side_effect=OSError(5, "synthetic failure")), \
+                    patch.dict(os.environ, environment), \
+                    patch.object(sys, "argv", ["campaign", "measure-linux", "--phase", "after-release"]), \
+                    contextlib.redirect_stdout(io.StringIO()) as output:
+                self.assertEqual(campaign.main(), 0)
+            self.assertEqual(json.loads(output.getvalue())["status"], "unavailable")
+            self.assertEqual(json.loads(output.getvalue())["error_errno"], 5)
+
+    def test_workflow_measurements_surround_existing_builds_without_enabling_cache(self):
+        workflow = (ROOT / ".github/workflows/ci.yml").read_text()
+        linux = workflow.split("  build-linux-cli:\n", 1)[1]
+        steps = ("measure-linux --phase before-release", "swift build -c release --product CodexBarCLI --static-swift-stdlib",
+                 "measure-linux --phase after-release", "./Scripts/test.sh --command swift test --parallel",
+                 "measure-linux --phase after-tests", "- name: Smoke test CodexBarCLI")
+        positions = [linux.index(step) for step in steps]
+        self.assertEqual(positions, sorted(positions))
+        self.assertEqual(linux.count("uses: actions/cache@"), 1)
+        self.assertIn("path: ~/.local/share/swiftly", linux)
+        for name in ("Observe Linux build storage after release", "Observe Linux build storage after tests"):
+            step = linux.split(f"- name: {name}\n", 1)[1].split("      - name:", 1)[0]
+            self.assertIn("if: ${{ always() }}", step)
 
 
 class EvidenceTests(unittest.TestCase):

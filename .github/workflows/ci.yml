@@ -5,6 +5,30 @@ on:
     branches: [main]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
+  workflow_dispatch:
+    inputs:
+      group_size:
+        description: Selections per fresh SwiftPM process
+        required: true
+        type: choice
+        options: ['4', '12']
+        default: '4'
+      shard_count:
+        description: Complete macOS shard count
+        required: true
+        type: choice
+        options: ['1', '2', '3']
+        default: '2'
+      expected_sha:
+        description: Exact lowercase commit SHA of the selected ref
+        required: true
+        type: string
+      cache_mode:
+        description: Seed permits a miss; warm requires an exact hit; cold bypasses cache
+        required: true
+        type: choice
+        options: [seed, warm, cold]
+        default: seed
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -26,10 +50,20 @@ jobs:
       changed-path-count: ${{ steps.macos-tests.outputs.changed-path-count }}
       linux-musl-build: ${{ steps.linux-musl-build.outputs.linux-musl-build }}
       linux-musl-build-reason: ${{ steps.linux-musl-build.outputs.linux-musl-build-reason }}
+      macos-matrix: ${{ steps.campaign.outputs.matrix }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
+
+      - name: Validate campaign controls
+        id: campaign
+        env:
+          CAMPAIGN_GROUP_SIZE: ${{ inputs.group_size }}
+          CAMPAIGN_SHARD_COUNT: ${{ inputs.shard_count }}
+          CAMPAIGN_EXPECTED_SHA: ${{ inputs.expected_sha }}
+          CAMPAIGN_CACHE_MODE: ${{ inputs.cache_mode }}
+        run: python3 Scripts/ci_swift_test_campaign.py plan
 
       - name: Detect macOS test impact
         id: macos-tests
@@ -103,6 +137,7 @@ jobs:
         run: ./Scripts/lint.sh lint-linux
 
   swift-test-macos:
+    name: swift-test-macos (${{ matrix.shard-index }}, ${{ matrix.shard-count }})
     needs: changes
     if: ${{ needs.changes.outputs.macos-tests == 'true' && needs.changes.outputs.macos-tests-deferred != 'true' }}
     # Apple-Silicon runners: ~2-4x faster Swift builds than the retired-path
@@ -111,11 +146,8 @@ jobs:
     timeout-minutes: 80
     strategy:
       fail-fast: false
-      matrix:
-        # Two shards amortize SwiftPM's per-shard discovery/cold build.
-        # Load-aware admission and cold builds share the bounded test-step budget.
-        shard-index: [0, 1]
-        shard-count: [2]
+      # Ordinary CI remains group four / two shards. Only validated manual arms vary.
+      matrix: ${{ fromJSON(needs.changes.outputs.macos-matrix) }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
@@ -147,6 +179,8 @@ jobs:
           printf 'cache-id=%s\n' "$cache_id" >> "$GITHUB_OUTPUT"
 
       - name: Restore SwiftPM build cache
+        id: swift-cache
+        if: ${{ matrix.cache-mode != 'cold' }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
@@ -158,6 +192,20 @@ jobs:
           restore-keys: |
             swiftpm-macos26-v2-${{ runner.arch }}-${{ steps.swift-toolchain.outputs.cache-id }}-${{ hashFiles('Package.resolved', 'Package.swift') }}-
 
+      - name: Prepare campaign evidence
+        id: campaign-evidence
+        if: ${{ matrix.campaign }}
+        env:
+          CAMPAIGN_GROUP_SIZE: ${{ matrix.group-size }}
+          CAMPAIGN_SHARD_COUNT: ${{ matrix.shard-count }}
+          CAMPAIGN_SHARD_INDEX: ${{ matrix.shard-index }}
+          CAMPAIGN_EXPECTED_SHA: ${{ inputs.expected_sha }}
+          CAMPAIGN_CACHE_MODE: ${{ matrix.cache-mode }}
+          CAMPAIGN_CACHE_HIT: ${{ steps.swift-cache.outputs.cache-hit }}
+          CAMPAIGN_CACHE_KEY: swiftpm-macos26-v2-${{ runner.arch }}-${{ steps.swift-toolchain.outputs.cache-id }}-${{ hashFiles('Package.resolved', 'Package.swift') }}-${{ github.sha }}
+          CAMPAIGN_TOOLCHAIN_ID: ${{ steps.swift-toolchain.outputs.cache-id }}
+        run: python3 Scripts/ci_swift_test_campaign.py prepare --checkout-sha "$(git rev-parse HEAD)"
+
       - name: Check app locales and Swift formatting
         if: ${{ matrix.shard-index == 0 }}
         run: ./Scripts/lint.sh lint-macos
@@ -165,8 +213,10 @@ jobs:
       - name: Swift Test
         # Keep small batches to reduce SwiftPM process overhead without returning to one aggregate run.
         timeout-minutes: 70
+        env:
+          CODEXBAR_TEST_EVIDENCE_DIR: ${{ steps.campaign-evidence.outputs.root }}
         run: |
-          CODEXBAR_TEST_GROUP_SIZE=4 \
+          CODEXBAR_TEST_GROUP_SIZE=${{ matrix.group-size }} \
             CODEXBAR_TEST_SUITE_TIMEOUT=120 \
             CODEXBAR_TEST_RETRY_NON_TIMEOUT_FAILURES=0 \
             CODEXBAR_TEST_SHARD_INDEX=${{ matrix.shard-index }} \
@@ -214,6 +264,29 @@ jobs:
             printf '| Xcode | `%s` |\n' "${xcode_version:-unknown}"
             printf '| Runs lint-macos | `%s` |\n' "$RUNS_LINT_MACOS"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate campaign evidence
+        if: ${{ always() && steps.campaign-evidence.outputs.root != '' }}
+        env:
+          CAMPAIGN_ROOT: ${{ steps.campaign-evidence.outputs.root }}
+        run: python3 Scripts/ci_swift_test_campaign.py verify "$CAMPAIGN_ROOT"
+
+      - name: Upload campaign evidence
+        id: campaign-upload
+        if: ${{ always() && steps.campaign-evidence.outputs.root != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: swift-campaign-${{ github.sha }}-g${{ matrix.group-size }}-n${{ matrix.shard-count }}-s${{ matrix.shard-index }}-${{ matrix.cache-mode }}-${{ github.run_attempt }}
+          path: ${{ steps.campaign-evidence.outputs.root }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Remove uploaded campaign evidence
+        if: ${{ always() && steps.campaign-upload.outcome == 'success' }}
+        env:
+          CAMPAIGN_ROOT: ${{ steps.campaign-evidence.outputs.root }}
+        run: python3 Scripts/ci_swift_test_campaign.py cleanup "$CAMPAIGN_ROOT"
 
   lint-build-test:
     runs-on: ubuntu-24.04
@@ -530,11 +603,22 @@ jobs:
           hash -r
           swift --version
 
+      - name: Observe Linux build storage before release
+        run: python3 Scripts/ci_swift_test_campaign.py measure-linux --phase before-release
+
       - name: Build CodexBarCLI (release, static Swift stdlib)
         run: swift build -c release --product CodexBarCLI --static-swift-stdlib
 
+      - name: Observe Linux build storage after release
+        if: ${{ always() }}
+        run: python3 Scripts/ci_swift_test_campaign.py measure-linux --phase after-release
+
       - name: Swift Test (Linux only)
         run: ./Scripts/test.sh --command swift test --parallel
+
+      - name: Observe Linux build storage after tests
+        if: ${{ always() }}
+        run: python3 Scripts/ci_swift_test_campaign.py measure-linux --phase after-tests
 
       - name: Smoke test CodexBarCLI
         shell: bash

@@ -24,7 +24,7 @@ The source base is `d1d53b2b24284a70f6ea35b6eb4043ebc7ab9d88` in
 linked worktree. Publication and hosted qualification are authorized; merge,
 installation, signing, and host changes are excluded.
 
-The workflow change is confined to the macOS toolchain/cache steps before the
+The published cache change affects the macOS toolchain/cache steps before the
 test/capture steps. PR [#29](https://github.com/Jones-Systems/CodexBar/pull/29),
 observed at `4e322d58943ff85e03a8ab12157c30dc44c16719`, owns added reset-capture
 steps around `Swift Test`; those hunks remain with that PR. PR
@@ -86,6 +86,9 @@ GitHub cache policy; no quota increase or manual deletion is part of this task.
 
 ## Local validation
 
+These receipts describe the published cache/recovery checkpoint. The local
+campaign continuation has its separate cumulative receipts below.
+
 The unchanged focused regression module has SHA256
 `8741ae2aeb32e5a8f81b22a1c41b69ca7bd3a4a23530254baf24cbe4ffd18139`.
 On source base `d1d53b2b24284a70f6ea35b6eb4043ebc7ab9d88`,
@@ -146,7 +149,8 @@ Local observations and logs belong in the task worktree's ignored
 and retained until portfolio handoff. Synthetic fixtures belong to each harness
 invocation and are removed on normal success, failure and handled cancellation.
 Native evidence remains in GitHub Actions logs and step summaries under the
-existing retention policy. Cached build output remains in the existing `.build`
+existing retention policy; the local campaign continuation below adds bounded
+manual-run artifacts. Cached build output remains in the existing `.build`
 and SwiftPM-cache paths, owned by the repository's existing Actions cache policy.
 The build-helper check uses an approved unique private scratch root outside the
 Swift package, with a 5 MiB peak estimate on a disk reporting more than 490 GiB
@@ -168,6 +172,226 @@ must establish native full-suite results. Current-count, N1, count-plus-one, and
 larger-count comparisons remain unmeasured; sharding tax and attainment of the
 390-second qualification/job target are unknown. A faster warm discovery step
 would not by itself establish either bound.
+
+## Local controlled campaign continuation
+
+PR [#30](https://github.com/Jones-Systems/CodexBar/pull/30) remains frozen at
+`b5685a87c2c3cceca0008e89be138fb5a79bf86a` for the coordinator's observations.
+The continuation is local only: no push, dispatch, or duplicate CI observation.
+Its governing contract is
+`spec.test-runtime-portfolio#iface.codexbar-campaign.001` at V3 revision
+`1d28ba0ef683a5fc26ccd5e103cfc81cb599b5ed`. Its exact writer scope is this note,
+`.github/workflows/ci.yml`, `Scripts/ci_swift_test_by_suite.py`,
+`Scripts/ci_swift_test_campaign.py`, `Scripts/test_swift_test_evidence.py`, and
+`Scripts/test_swift_test_sharding.sh`. No compiler helper, `test.sh`, Swift source,
+or PR 29 capture step is changed. PR 29 was revalidated at the same head above
+before editing; reporting/artifact steps follow the existing shard summary.
+
+Ordinary push/PR execution still resolves to group four and two shards, with the
+same check names, fixture isolation, exclusion, 120-second command deadlines,
+strict non-timeout failures, isolated timeout recovery, 70-minute test-step cap,
+80-minute job cap, and every macOS/Linux/musl/lint/plugin/smoke qualification.
+Manual inputs accept only group four/twelve, N1/N2/N3, an exact lowercase source
+SHA matching the checked-out ref, and seed/warm/cold treatment. Each group still
+launches a fresh `swift test --skip-build --no-parallel --filter` process through
+the existing compiler admission and descendant drain. No direct binary path or
+process reuse is introduced.
+
+Seed permits compatible cache restoration or a miss. Warm requires an exact
+source/toolchain/dependency cache hit. Cold bypasses the cache action, including
+save, and requires absent `.build` output without deleting anything. Cold means
+an absent application build plus no Actions restore; it does not assert that
+every operating-system cache is cold. Build-enabled discovery remains mandatory.
+The primary cache key, hit result, selected toolchain hash, runner image/OS/arch,
+source, run/attempt, and all controls are bound into each receipt. Seed runs are
+preparation, not a warm baseline. A warm miss fails instead of being relabeled.
+
+Capture is enabled only in the main Swift Test step, so plugin-engine aggregate
+commands retain their existing path. The actual selected toolchain must advertise
+both event-stream options before discovery. Every attempt, including recovery,
+gets a separate directory containing native Swift Testing JSON v0 and complete
+stdout/stderr, including XCTest output. Console files are replayed after process
+drain; live 30-second process diagnostics remain. The raw event files are retained
+unchanged. Process receipts carry PID and birth, session, full command, selected
+isolation environment, drain outcome, and the fixture parent's device/inode,
+allocation, and verified removal. Missing process metadata fails qualification.
+
+The validator checks the complete raw discovery digest, exact selected partition
+and union, the deliberate macOS-only CLIEntryTests exclusion, both framework
+outcomes, skips, known/unknown issues, filter, invocation, timeout, serial fresh
+processes, and fixture cleanup. Recovery evidence is retained but cannot qualify
+a clean first-pass comparison. Cross-arm comparison uses multisets, including
+multiplicity, rather than totals. It requires every shard and matching source,
+cache treatment, toolchain, architecture and runner image. This establishes
+equivalence between complete observations; it is not a new independent native
+test census inferred from counts.
+
+Swift Testing's [JSON v0 schema](https://github.com/swiftlang/swift-testing/blob/swift-6.2-RELEASE/Documentation/ABI/JSON.md)
+provides opaque function IDs and optional display information, without a required
+parameter-case ID. Its [native encoding](https://github.com/swiftlang/swift-testing/blob/swift-6.2-RELEASE/Sources/Testing/ABI/Encoded/ABI.EncodedTest.swift)
+also has an optional, non-schema `_testCase` ID/display extension, and the
+[argument-message producer](https://github.com/swiftlang/swift-testing/blob/swift-6.2-RELEASE/Sources/Testing/Events/Recorder/Event.HumanReadableOutputRecorder.swift)
+can supply a comparable representation. The validator accepts these observed
+native fields without claiming they are round-trippable selectors. It retains native
+test declarations and every available case-start field, with all terminal fields
+also preserved in raw events. It does not invent case IDs or selectors. Missing,
+generic, repeated/ambiguous, or changed parameter representations prevent a full
+parity claim; function-level results and raw evidence remain available. The small
+source-backed synthetic v0 fixture proves that empty case fields cannot silently
+compare equal. Actual toolchain support and native parity remain unproved locally.
+
+The evidence producer allocates one secure workspace directory separate from
+fixture scratch. Its allocation estimate is 128 MiB plus a 512 MiB residual
+reserve, checked on the actual workspace filesystem. A sampled byte check during
+command polling stops and drains a producer that exceeds the evidence budget;
+this is an admission/observation bound, not a filesystem quota. Evidence is checked
+again between attempts. Uploads retain the exact raw tree for seven days, including
+failed validation, then remove only the uploaded, identity-matched root after
+proved command drain. Missing completion, unproved drain, or failed upload retains
+the job-owned root until hosted-runner teardown. Ordinary fixtures keep their
+existing creator-owned cleanup; unconditional runner termination remains outside
+Python's signal/finally guarantees. Neither evidence nor fixture roots are cached.
+
+The new module's CLI docstring, native-schema comments, console/drain comments,
+workflow default comment, and source-backed fixture comment use `keep near code`:
+they describe the command, protocol limitation, lifecycle, default, or fixture
+provenance needed at that boundary. The old literal matrix assertion is replaced
+structurally by direct ordinary-event matrix tests plus the workflow connection
+check. The old matrix comments' amortization and cold-build budget rationale moves
+to this note's baseline and cap discussion (`move to durable context`); matrix
+and cap tests protect the preserved defaults. The Linux observer docstring uses
+`keep near code` for its read-only/status-preservation contract. The existing
+selection, retry and cleanup comments retain their meaning.
+
+### Local continuation checks
+
+The two unchanged new-feature activation assertions failed on the frozen
+`b5685a87c2c3cceca0008e89be138fb5a79bf86a` workflow/runner, then passed after the
+controls and opt-in capture were added. This is activation evidence, not a claim
+that the old source already had a campaign defect. Development checks caught an
+XCTest active-case bookkeeping error and the Linux observer treating an absent
+pre-build directory as an unavailable scan; both were corrected, and their same
+assertions pass in the final group.
+
+| Final cumulative check | Result |
+| --- | --- |
+| `PYTHONDONTWRITEBYTECODE=1 bash Scripts/test_swift_test_sharding.sh` | Passed in 46.98 s; 36 evidence/control/measurement tests and 95 existing containment tests, with 19 platform skips; scratch success/failure/HUP/INT/TERM cleanup passed |
+| `PYTHONDONTWRITEBYTECODE=1 ./Scripts/test.sh --command bash Scripts/test_ci_path_gate.sh` | Passed; fixture parent removed and absence verified |
+| `bash -n Scripts/test_swift_test_sharding.sh`; Python AST parse of the three changed modules; PyYAML workflow parse; `git diff --check` | Passed |
+| `node Scripts/check-documentation-links.mjs` | Passed, 277 local links |
+| `PYTHONDONTWRITEBYTECODE=1 make test` | Unavailable: Swift absent; make returned 2 and the owned fixture parent was removed |
+| `make check` | Unavailable: Swift lint/format tools absent; automatic installation remains outside scope |
+| Hosted Actions validation / native case parity / same-revision tax | Not run by this local continuation; parent owns publication and dispatch |
+
+Every local test/check used the shared portfolio lock and fresh same-host
+admission. Final sharding: CPU 21.88%, available RAM 26.39 GiB; path gates:
+23.36%/30.29 GiB; static group: 11.36%/30.28 GiB. One fully used core was 6.25%
+of sampled capacity. All admitted one serial command. No test remains running.
+
+The final evidence-module SHA256 is
+`f37d05640746d4e87ba24a6cca64cd15f49927ef1860da6f222b097096d782ef`.
+The synthetic six-arm fixture contains 28 raw discovery IDs, digest
+`14023b101a05539e0abf5af97ff10be6b1cc94f73df86cf0ec67849cf2a0515e`, and 27
+selected units after the deliberate exclusion, digest
+`0f10c615a13d3ea7f6a67752bbb4ccc8f5773dd6f5266a338796b9a6dfa629c5`.
+All six synthetic G4/G12 × N1/N2/N3 unions and native-shaped outcome multisets
+compare exactly. Those fixtures are synthetic; they do not replace hosted native
+inventory. Detailed local logs and `campaign-manifest.json` remain under the
+existing task-owned 10 MiB evidence allowance through coordinator handoff.
+
+### Campaign observations and dispatch prerequisites
+
+Historical run 39899148493 has 261 group-four launches, 1939.2 seconds of summed
+execution and 718.47 seconds of reported Swift Testing bodies. The residual is
+1220.73 seconds, or 4.68 seconds per group; it includes more than startup alone.
+Holding that residual per launch constant predicts an 813.82-second reduction
+when grouping 1044 selections into 87 groups of twelve. This is a model, not
+native group-twelve evidence:
+
+| Group size | Ideal summed execution (s) | Ideal N2 wall (s) | Ideal N3 wall (s) |
+| --- | ---: | ---: | ---: |
+| 4 | 1939.20 | 969.60 | 646.40 |
+| 12 | 1125.38 | 562.69 | 375.13 |
+
+The modeled group-twelve/N3 execution leaves only 14.87 seconds below 390 before
+discovery, setup, teardown, shard-zero formatting/goldens, or start stagger.
+Historical shard-zero extra checks cost roughly 138–171 seconds. No arm is
+predicted to satisfy the whole-job/graph target from this model.
+
+The coordinator must first release the PR30 head freeze, publish one candidate,
+and bind all arms to that new exact branch SHA. The existing Actions workflow
+identity is the hosted route; its new branch dispatch capability is unverified
+until the authorized dispatch succeeds. There is no available local Swift/Mac
+route, and the previous Mini authentication failure authorizes no alternate route.
+Manual branch caches must be seeded at the candidate source: PR merge-ref keys
+and the frozen PR30 source are not interchangeable with a new branch candidate.
+Run a seed before warm arms, require exact hits, then run sequential same-source
+G4/N1,N2,N3 and G12/N1,N2,N3 controls as authorized. Preserve cold arms separately.
+Use `python3 Scripts/ci_swift_test_campaign.py compare --baseline <N1 receipt.json>
+--candidate <each shard receipt.json>` after downloading complete artifacts.
+Compare G4/G12 native outcomes as well as each group's N1/sharded arms.
+
+Use completed GitHub job timestamps for complete-job runner-seconds, start
+stagger and wall time; include macOS, both glibc Linux jobs, musl, lint and the
+aggregate gate. Report queue time separately. Compute each group's tax as summed
+passing sharded job seconds divided by passing N1 job seconds minus one, on the
+same source/cache treatment/runner class and coverage. The helper intentionally
+does not substitute process-loop timings for completed-job tax. Failed/time-out
+arms and missing/ambiguous identities cannot provide its denominator. The
+390-second and 10% bounds remain unknown until these native observations exist.
+
+### Completed Linux observation and next cache proposal
+
+Completed job logs from [run 39921416999](https://github.com/Jones-Systems/CodexBar/actions/runs/39921416999)
+were read once without CI status polling:
+
+| Job | Complete job (s) | Checkout (s) | Toolchain restore (s) | Install/setup (s) | Release build (s) | Test step (s) | Native test build (s) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Linux x64, 120307703163 | 603 | 3 | 25 | 48 | 366 | 155 | 142.19 |
+| Linux ARM64, 120307703267 | 597 | 3 | 14 | 17 | 425 | 135 | 124.04 |
+
+Both toolchain caches hit. Application outputs are currently uncached, so the
+release build and second, debug test build dominate. Native output reported
+8 cases plus 566 cases (574 total), with 0.424/12.040-second x64 and
+0.370/9.893-second ARM64 body summaries. These totals are not complete raw-identity
+coverage proof. Both complete jobs exceed 390 seconds; macOS-only improvements
+cannot satisfy the complete-run objective.
+
+Read-only proposal for coordinator disposition: add a `.build` cache only in the
+existing glibc `build-linux-cli` job, after selected Swift installation and before
+the unchanged release build. Bind its namespace to Linux runner image/OS/arch,
+actual `swift --version` and `swift package --version`, dependency manifests, and
+source SHA. Permit only the identical image/toolchain/arch/dependency family as a
+restore prefix. Always run release build, debug `swift test --parallel`, and the
+existing release CLI smoke; SwiftPM must validate restored source output. Do not
+cache fixture parents, home, evidence, or the musl SDK tree. The compiler helpers
+and PR29's macOS capture hunks have no overlap with this Linux hunk.
+
+Before implementing that proposal, bind storage admission to the existing build
+root: measure cold/warm `.build` size per architecture, declare restore plus build
+peak and reserve, and identify GitHub cache entry/repository retention bounds.
+Do not claim the existing approximately 1 GiB toolchain archives measure app
+output size. A source miss saves a new validated source build; an exact hit never
+skips validation. Cold misses retain their current build cost. Qualification
+requires full same-source cold/warm Linux jobs, raw native identities where
+available, both architecture outcomes, cache contents excluding fixture paths,
+and whole-job/graph timing. Affected checks are the cache workflow contract in
+the existing evidence module, path/aggregate gates, and hosted release/debug/
+smoke lanes. Application caching is not implemented or dispatched by this continuation.
+
+The coordinator accepted measurement first. Three metadata-only receipts now
+surround the existing glibc release build and debug tests: before release, after
+release and after tests. They print source-bound logical bytes, regular-file and
+symlink counts, available workspace bytes, the proposed `[".build"]` cache-path
+manifest, fixture-parent absence and fixture/evidence references inside `.build`.
+They read no file contents, follow no directory symlinks, and change no files.
+Each walk stops at 200,000 entries or a sampled ten-second bound. Errors produce
+an `unavailable` receipt with a zero observer exit status, preserving all original
+build/test failure and skip behavior. The after steps run even on failures. No
+additional build/test invocation or application-cache action is introduced.
+These checkpoint sizes are observations, not proof of the transient build peak;
+the eventual peak/reserve estimate and cache retention disposition still need
+native evidence and coordinator acceptance before restore is enabled.
 
 Contributors: root thread **Cross-Repo Tests Under 6:30**,
 `486fcff1-4c33-40b0-9a64-7f4aa4227ccc`, coordination; native subagent
