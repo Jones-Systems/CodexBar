@@ -929,7 +929,7 @@ extension OverviewFleetAccountsTests {
             }
             let items = buttons(in: picker)
             #expect(items.count == 5)
-            #expect(Set(items.compactMap(\.toolTip)) == Set(["Malcolm", "Jace", "Umich", "Steven", "Wallace"]))
+            #expect(Set(items.compactMap(\.toolTip)) == Set(["Malcolm", "Jace", "UMICH", "Steven", "Wallace"]))
             #expect(items.allSatisfy { !$0.title.contains("Workspace") && $0.title != "default" })
         }
     }

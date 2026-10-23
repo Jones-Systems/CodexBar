@@ -91,3 +91,28 @@ The delivery sequence requires successful CI and packaging, a standing-policy
 merge, preservation of the prior Jones bundle, and installation/launch of the exact
 verified candidate. Runtime replacement receipts remain host-local. Do not switch
 live credentials as a test.
+
+## Hosted repair checkpoint
+
+PR27 head `8329406f69e56918516e72f455efaa8b7b8c2d24` passed lint,
+all three Linux builds, and Jones arm64 packaging. The package archive and
+receipt-bound executable hashes, source stamp, bundle identity, architecture and
+strict deep ad-hoc signature passed local inspection. The synthetic menu captures
+were inspected and attached to the PR; the old rows are explicitly reconstructed.
+The candidate has not been installed or launched.
+
+CI run `39902518946` failed in two native test groups. Shard 0's unchanged
+`CodexLoginRunnerTests` cancellation fixture did not report ready before its
+timeout, supporting a transient startup/scheduling possibility. An attempted
+single-job rerun returned HTTP 403 while the other shard remained active;
+no rerun took effect. Shard 1 exposed an existing overview tooltip assertion
+expecting `Umich`; this checkpoint updates that exact expectation to the requested
+`UMICH`. No test is removed, skipped or weakened. A new head requires the complete
+applicable CI and package qualification again; the earlier failures remain evidence.
+`make check` passed after the assertion repair, with zero SwiftLint violations
+across 2,172 files. No local cold Swift build was started; native execution
+remains assigned to the hosted workflow.
+
+Local free space briefly fell below 1 GB, so package download was stopped without
+extracting or replacing an app. A later measurement admitted the download and
+inspection. Storage must be revalidated immediately before installation.
