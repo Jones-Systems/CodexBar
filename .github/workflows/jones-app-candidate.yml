@@ -113,6 +113,9 @@ jobs:
           python3 -B Scripts/jones_candidate_admission.py \
             --workspace "$GITHUB_WORKSPACE" --scratch "$candidate_scratch" --compiler-jobs 6 --wait-seconds 180
           bash Scripts/test.sh --command python3 -B Scripts/test_jones_candidate_artifact.py
+          python3 -B Scripts/jones_candidate_admission.py \
+            --workspace "$GITHUB_WORKSPACE" --scratch "$candidate_scratch" --compiler-jobs 1 --wait-seconds 180
+          bash Scripts/test.sh --command python3 -B Scripts/test_verify_packaged_app_launch.py
 
       - name: Require bounded compiler and resource-only packaging support
         shell: bash
@@ -130,7 +133,8 @@ jobs:
           set -euo pipefail
           [[ ! -e .mac-release.jones.env && ! -L .mac-release.jones.env ]]
           git check-ignore --quiet .mac-release.jones.env
-          candidate_scratch=$(mktemp -d "$GITHUB_WORKSPACE/.build/candidate-package.XXXXXX")
+          # The launch smoke sandbox denies the checkout, including any copy staged beneath it.
+          candidate_scratch=$(mktemp -d "$RUNNER_TEMP/codexbar-candidate-package.XXXXXX")
           candidate_overlay_owned=0
           cleanup_candidate_package() {
             local result=$?

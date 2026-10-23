@@ -277,6 +277,14 @@ reported separately.
 
 ## Isolated native update proof
 
+Before archiving, candidate packaging probes both the app and bundled CLI with
+the source checkout denied by the sandbox. Its owned package scratch lives under
+the hosted runner's `RUNNER_TEMP`, outside that checkout, and is removed on
+success, failure or handled cancellation. The smoke checker refuses scratch
+inside the denied checkout before launching a probe. Portable fixtures exercise
+the actual workflow shell and this placement/cleanup contract; only the native
+candidate run proves resource loading under the real macOS sandbox.
+
 The candidate workflow builds the actual app, then makes two fixture bundles
 from that executable. They use only `com.jonessystems.codexbar.update-harness`,
 have no production state key, app group or iCloud metadata/entitlements, and

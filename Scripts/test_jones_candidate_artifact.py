@@ -867,7 +867,7 @@ class WorkflowContractTests(unittest.TestCase):
         package = source.index("Scripts/package_app.sh release")
         self.assertLess(source.index("jones_candidate_artifact.py check-packager"), package)
         self.assertLess(source.index('--jobs-output "$candidate_scratch/compiler-jobs"'), package)
-        self.assertEqual(source.count("--wait-seconds 180"), 4)
+        self.assertEqual(source.count("--wait-seconds 180"), 5)
         self.assertIn("xcrun swiftc -j 1", source)
         self.assertIn("Scripts/jones_update_harness.py run", source)
         self.assertIn(".build/jones-update-fixture/fixture.json", source)
