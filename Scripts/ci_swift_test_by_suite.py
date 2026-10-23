@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import build_jobs
 import ctypes
 import errno
 import fcntl
@@ -168,7 +169,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--swift-command-arg", action="append", default=[])
     parser.add_argument(
         "--command", nargs=argparse.REMAINDER,
-        help="run an unchanged command once inside the fixture lifecycle, without discovery or sharding",
+        help="run a command once inside the fixture lifecycle, preserving selection without discovery or sharding",
     )
     return parser.parse_args()
 
@@ -522,6 +523,17 @@ def stop_unreaped_child(process: subprocess.Popen) -> None:
 
 
 def run_command(command: list[str], timeout: int | None = None, *, stdout=None, stderr=None) -> int:
+    if command and Path(command[0]).name == "swift":
+        try:
+            with build_jobs.admission(command, cleanup_proved=lambda: _scratch_cleanup_safe) as bounded:
+                return _run_command(bounded, timeout, stdout=stdout, stderr=stderr)
+        except build_jobs.AdmissionError as error:
+            print(f"build not started: {error}", file=sys.stderr, flush=True)
+            return 75
+    return _run_command(command, timeout, stdout=stdout, stderr=stderr)
+
+
+def _run_command(command: list[str], timeout: int | None = None, *, stdout=None, stderr=None) -> int:
     global _scratch_cleanup_safe
     if sys.platform != "darwin" and not sys.platform.startswith("linux"):
         raise RuntimeError("Swift test process containment requires macOS or Linux")

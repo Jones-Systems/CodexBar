@@ -19,6 +19,13 @@ extension StatusItemController {
         var absoluteResetDates: [Date] = []
         for provider in providers {
             let resetDates = self.menuBarDisplayedResetDates(for: provider, now: now)
+            if self.settings.menuBarIconStyle == .iconAndPercent,
+               let credit = self.menuBarResetCreditCountdown(
+                   for: provider, snapshot: self.store.menuBarSnapshot(for: provider.instanceID), now: now)
+            {
+                // Credit expiry always displays a countdown, including an absolute-reset layout.
+                countdownResetDates.append(credit.expiresAt)
+            }
             let resolution = self.settings.menuBarLayoutResolution(for: provider)
             if !resolution.usesLegacyRendering,
                self.settings.menuBarIconStyle == .iconAndPercent
@@ -55,6 +62,9 @@ extension StatusItemController {
         if let delay = Self.menuBarCountdownRefreshDelay(resetDates: countdownResetDates, now: now) {
             // Countdown text ticks every minute; refresh on each displayed-minute boundary (the last of
             // which lands at the reset, flipping a smart-exhausted lane back to the percentage).
+            delays.append(delay)
+        }
+        if let delay = Self.menuBarResetUrgencyRefreshDelay(resetDates: absoluteResetDates, now: now) {
             delays.append(delay)
         }
         if let delay = Self.menuBarAbsoluteRefreshDelay(resetDates: absoluteResetDates, now: now) {
@@ -100,6 +110,16 @@ extension StatusItemController {
             return max(
                 self.menuBarCountdownRefreshEpsilon,
                 remaining - nextBoundaryRemaining + self.menuBarCountdownRefreshEpsilon)
+        }.min()
+    }
+
+    nonisolated static func menuBarResetUrgencyRefreshDelay(
+        resetDates: [Date],
+        now: Date) -> TimeInterval?
+    {
+        resetDates.compactMap { resetAt -> TimeInterval? in
+            let delay = resetAt.addingTimeInterval(-24 * 3600).timeIntervalSince(now)
+            return delay > 0 ? delay + self.menuBarCountdownRefreshEpsilon : nil
         }.min()
     }
 

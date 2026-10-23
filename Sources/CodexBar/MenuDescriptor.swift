@@ -77,6 +77,7 @@ struct MenuDescriptor {
         case openCodexWorkspaces
         case settings
         case providerSettings(UsageProvider)
+        case selectClaudeNativeProfile(alias: String)
         case about
         case quit
         case copyError(String)
@@ -806,7 +807,7 @@ extension MenuDescriptor.MenuAction {
         case .statusPage: MenuDescriptor.MenuActionSystemImage.statusPage.rawValue
         case .changelog: MenuDescriptor.MenuActionSystemImage.changelog.rawValue
         case .addCodexAccount, .addProviderAccount: MenuDescriptor.MenuActionSystemImage.addAccount.rawValue
-        case .requestCodexSystemPromotion:
+        case .requestCodexSystemPromotion, .selectClaudeNativeProfile:
             nil
         case .switchAccount: MenuDescriptor.MenuActionSystemImage.switchAccount.rawValue
         case .openTerminal: MenuDescriptor.MenuActionSystemImage.openTerminal.rawValue

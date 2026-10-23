@@ -28,16 +28,16 @@ docs-list:
 	node Scripts/docs-list.mjs
 
 build:
-	swift build
+	python3 Scripts/build_jobs.py -- swift build
 
 test:
 	./Scripts/test.sh
 
 test-tty:
-	CODEXBAR_SUPPRESS_TEST_KEYCHAIN_ACCESS=1 swift test --filter TTYIntegrationTests
+	CODEXBAR_SUPPRESS_TEST_KEYCHAIN_ACCESS=1 python3 Scripts/build_jobs.py -- swift test --filter TTYIntegrationTests
 
 test-live:
-	LIVE_TEST=1 CODEXBAR_ALLOW_TEST_KEYCHAIN_ACCESS=1 swift test --filter LiveAccountTests
+	LIVE_TEST=1 CODEXBAR_ALLOW_TEST_KEYCHAIN_ACCESS=1 python3 Scripts/build_jobs.py -- swift test --filter LiveAccountTests
 
 release:
 	./Scripts/package_app.sh release

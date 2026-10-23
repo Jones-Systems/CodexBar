@@ -1,0 +1,124 @@
+name: Jones menu candidate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - .github/workflows/jones-menu-candidate.yml
+      - Sources/CodexBar/Jones/JonesAccountAggregate.swift
+      - Sources/CodexBar/Jones/JonesCompactAccountPresentation.swift
+      - Sources/CodexBar/MenuCardAccountAggregateRowView.swift
+      - Sources/CodexBar/MenuCardCompactAccountRow.swift
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jones-menu-candidate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  package-jones-menu:
+    if: ${{ !github.event.pull_request.draft && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: macos-26
+    timeout-minutes: 70
+    env:
+      ARCHES: arm64
+      CODEXBAR_SIGNING: adhoc
+      CODEXBAR_SKIP_LAUNCH_SMOKE: 1
+      CODEXBAR_FORCE_CLEAN: 0
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Select matching Xcode
+        shell: bash
+        run: |
+          set -euo pipefail
+          for candidate in /Applications/Xcode_26.3.app /Applications/Xcode_26.2.app; do
+            if [[ -d "$candidate" ]]; then
+              echo "DEVELOPER_DIR=${candidate}/Contents/Developer" >> "$GITHUB_ENV"
+              break
+            fi
+          done
+          xcodebuild -version
+          swift --version
+
+      - name: Check runner storage
+        run: |
+          python3 - <<'PY'
+          import pathlib, shutil
+          free = shutil.disk_usage(pathlib.Path.cwd()).free
+          print(f"Available runner storage: {free / 1024**3:.1f} GiB")
+          if free < 40 * 1024**3:
+              raise SystemExit("Jones packaging requires 40 GiB available; no build started")
+          PY
+
+      - name: Run required checks remotely
+        run: make check
+
+      - name: Package Jones candidate without launching
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > .mac-release.jones.env <<'ENV'
+          JONES_BUNDLE_ID=com.jonessystems.codexbar
+          JONES_TEAM_ID=JONESLOCAL
+          JONES_STATE_KEY=jones
+          JONES_DISPLAY_NAME='CodexBar Jones'
+          ENV
+          Scripts/package_app.sh release
+
+      - name: Verify and archive candidate
+        shell: bash
+        env:
+          CANDIDATE_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          codesign --verify --deep --strict CodexBar.app
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, plistlib, subprocess
+          app = pathlib.Path("CodexBar.app")
+          info = plistlib.loads((app / "Contents/Info.plist").read_bytes())
+          expected = {
+              "CFBundleIdentifier": "com.jonessystems.codexbar",
+              "JonesStateKey": "jones",
+              "JonesAppBundleID": "com.jonessystems.codexbar",
+              "JonesAppGroupID": "JONESLOCAL.com.jonessystems.codexbar",
+              "JonesICloudID": "iCloud.com.jonessystems.codexbar",
+          }
+          assert all(info.get(key) == value for key, value in expected.items()), "Jones identity mismatch"
+          head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          assert head == os.environ["CANDIDATE_HEAD"]
+          assert head.startswith(info["CodexGitCommit"]), "Packaged source mismatch"
+          executable = app / "Contents/MacOS/CodexBar"
+          arch = subprocess.check_output(["lipo", "-archs", str(executable)], text=True).strip()
+          assert arch == "arm64", arch
+          widgets = list((app / "Contents/PlugIns").glob("*.appex/Contents/Info.plist"))
+          assert len(widgets) == 1
+          widget = plistlib.loads(widgets[0].read_bytes())
+          assert widget["CFBundleIdentifier"] == expected["CFBundleIdentifier"] + ".widget"
+          receipt = dict(sourceHead=head, executableSha256=hashlib.sha256(executable.read_bytes()).hexdigest(),
+                         buildTimestamp=info["CodexBuildTimestamp"], architecture=arch, identity=expected,
+                         launchSmoke="skipped; installed app launch is a separate authorized operation")
+          pathlib.Path("jones-menu-candidate.json").write_text(json.dumps(receipt, indent=2) + "\n")
+          PY
+          ditto -c -k --sequesterRsrc --keepParent CodexBar.app CodexBar-Jones-candidate.zip
+          shasum -a 256 CodexBar-Jones-candidate.zip > CodexBar-Jones-candidate.zip.sha256
+
+      - name: Upload verified candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: jones-menu-${{ github.event.pull_request.head.sha }}
+          path: |
+            CodexBar-Jones-candidate.zip
+            CodexBar-Jones-candidate.zip.sha256
+            jones-menu-candidate.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Remove runner-local identity overlay
+        if: ${{ always() }}
+        run: rm -f -- "$GITHUB_WORKSPACE/.mac-release.jones.env"

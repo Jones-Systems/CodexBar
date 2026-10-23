@@ -1,5 +1,6 @@
 import CodexBarCore
 import Foundation
+import SwiftUI
 import Testing
 @testable import CodexBar
 
@@ -21,7 +22,9 @@ struct JonesCompactAccountPresentationTests {
                 primary: RateWindow(usedPercent: 10, windowMinutes: 300, resetsAt: nil, resetDescription: nil),
                 secondary: weekly,
                 codexResetCredits: CodexRateLimitResetCreditsSnapshot(
-                    credits: credits, availableCount: 99, updatedAt: self.detailNow),
+                    credits: credits,
+                    availableCount: 99,
+                    updatedAt: self.detailNow),
                 updatedAt: self.detailNow) : nil,
             error: error,
             sourceLabel: "synthetic")
@@ -53,7 +56,9 @@ struct JonesCompactAccountPresentationTests {
             resetDescription: nil)
         let account = Self.detailAccount(weekly: weekly)
         let detail = JonesCompactAccountPresentation.codexRowDetail(
-            account: account, resetStyle: .countdown, now: Self.detailNow)
+            account: account,
+            resetStyle: .countdown,
+            now: Self.detailNow)
         let reset = try #require(UsageFormatter.resetLine(for: weekly, style: .countdown, now: Self.detailNow))
 
         #expect(detail.text == reset)
@@ -72,7 +77,9 @@ struct JonesCompactAccountPresentationTests {
             weekly: weekly,
             credits: [Self.resetCredit(id: "banked", expiresIn: 172_800)])
         let detail = JonesCompactAccountPresentation.codexRowDetail(
-            account: account, resetStyle: .absolute, now: Self.detailNow)
+            account: account,
+            resetStyle: .absolute,
+            now: Self.detailNow)
         let reset = try #require(UsageFormatter.resetLine(for: weekly, style: .absolute, now: Self.detailNow))
 
         #expect(detail.text == reset)
@@ -93,7 +100,9 @@ struct JonesCompactAccountPresentationTests {
                 Self.resetCredit(id: "nearest", expiresIn: 86400),
             ])
         let detail = JonesCompactAccountPresentation.codexRowDetail(
-            account: account, resetStyle: .countdown, now: Self.detailNow)
+            account: account,
+            resetStyle: .countdown,
+            now: Self.detailNow)
 
         #expect(detail.text == nil)
         #expect(detail.trailingDetail?.text == "1d")
@@ -125,7 +134,9 @@ struct JonesCompactAccountPresentationTests {
             resetsAt: nil,
             resetDescription: "in 4d")
         let undated = JonesCompactAccountPresentation.codexRowDetail(
-            account: Self.detailAccount(weekly: weekly), resetStyle: .countdown, now: Self.detailNow)
+            account: Self.detailAccount(weekly: weekly),
+            resetStyle: .countdown,
+            now: Self.detailNow)
         #expect(undated.text == nil)
         for account in [
             Self.detailAccount(weekly: nil),
@@ -133,14 +144,17 @@ struct JonesCompactAccountPresentationTests {
             Self.detailAccount(weekly: weekly, hasSnapshot: false),
         ] {
             let detail = JonesCompactAccountPresentation.codexRowDetail(
-                account: account, resetStyle: .countdown, now: Self.detailNow)
+                account: account,
+                resetStyle: .countdown,
+                now: Self.detailNow)
             #expect(detail.text == nil)
             #expect(detail.trailingDetail == nil)
         }
     }
 
     @Test
-    func `Claude reset detail preserves window order and rejects unknown placeholder and error timing`() throws {
+    @MainActor
+    func `Claude reset detail places weekly left and session right without credit decoration`() throws {
         let session = RateWindow(
             usedPercent: 90,
             windowMinutes: 300,
@@ -158,26 +172,47 @@ struct JonesCompactAccountPresentationTests {
             resetDescription: nil,
             isSyntheticPlaceholder: true)
         let undated = RateWindow(usedPercent: 99, windowMinutes: 300, resetsAt: nil, resetDescription: "tomorrow")
+        let invalid = RateWindow(
+            usedPercent: 0,
+            windowMinutes: 300,
+            resetsAt: Date(timeIntervalSinceReferenceDate: .infinity),
+            resetDescription: nil)
+        let windows: [RateWindow?] = [session, placeholder, undated, invalid, nil]
+        let weeklyWindows: [RateWindow?] = [weekly, placeholder, undated, invalid, nil]
         for style in [ResetTimeDisplayStyle.countdown, .absolute] {
             let sessionText = try #require(UsageFormatter.resetLine(for: session, style: style, now: Self.detailNow))
             let weeklyText = try #require(UsageFormatter.resetLine(for: weekly, style: style, now: Self.detailNow))
-            for (primary, expected) in [
-                (session, sessionText + " · " + weeklyText),
-                (placeholder, weeklyText),
-                (undated, weeklyText),
-            ] {
-                let account = ProviderAccountUsageSnapshot(
-                    id: .init(source: "claude-native-profile", opaqueID: "synthetic"),
-                    provider: .claude,
-                    displayLabel: "Synthetic",
-                    isActive: false,
-                    snapshot: UsageSnapshot(primary: primary, secondary: weekly, updatedAt: Self.detailNow),
-                    error: nil,
-                    sourceLabel: nil)
-                let detail = JonesCompactAccountPresentation.claudeRowDetail(
-                    account: account, resetStyle: style, now: Self.detailNow)
-                #expect(detail.text == expected)
-                #expect(detail.trailingDetail == nil)
+            for primary in windows {
+                for secondary in weeklyWindows {
+                    let account = ProviderAccountUsageSnapshot(
+                        id: .init(source: "claude-native-profile", opaqueID: "synthetic"),
+                        provider: .claude,
+                        displayLabel: "Synthetic",
+                        isActive: false,
+                        snapshot: UsageSnapshot(primary: primary, secondary: secondary, updatedAt: Self.detailNow),
+                        error: nil,
+                        sourceLabel: nil)
+                    let detail = JonesCompactAccountPresentation.claudeRowDetail(
+                        account: account,
+                        resetStyle: style,
+                        now: Self.detailNow)
+                    #expect(detail.text == (secondary == weekly ? weeklyText : nil))
+                    if primary == session {
+                        let trailing = try #require(detail.trailingDetail)
+                        let date = try #require(session.resetsAt)
+                        let timing = style == .countdown
+                            ? UsageFormatter.resetCountdownDescription(from: date, now: Self.detailNow)
+                            : UsageFormatter.resetDescription(from: date, now: Self.detailNow)
+                        #expect(trailing.text == "5h \(timing)")
+                        #expect(trailing.accessibilityLabel == "Session, \(sessionText)")
+                        #expect(trailing.count == nil)
+                        #expect(trailing.expiryUrgency == nil)
+                        #expect(trailing.foregroundColor(highlighted: false) == MenuHighlightStyle.normalSecondaryText)
+                        #expect(trailing.foregroundColor(highlighted: true) == MenuHighlightStyle.selectionText)
+                    } else {
+                        #expect(detail.trailingDetail == nil)
+                    }
+                }
             }
         }
         for (snapshot, error) in [
@@ -200,7 +235,9 @@ struct JonesCompactAccountPresentationTests {
                 error: error,
                 sourceLabel: nil)
             let detail = JonesCompactAccountPresentation.claudeRowDetail(
-                account: account, resetStyle: .countdown, now: Self.detailNow)
+                account: account,
+                resetStyle: .countdown,
+                now: Self.detailNow)
             #expect(detail.text == nil)
             #expect(detail.trailingDetail == nil)
         }
@@ -247,7 +284,9 @@ struct JonesCompactAccountPresentationTests {
             #expect(empty.isRefreshing)
         }
         #expect(JonesCompactAccountPresentation.claudeRowDetail(
-            account: account, resetStyle: .countdown, now: Self.detailNow).text == nil)
+            account: account,
+            resetStyle: .countdown,
+            now: Self.detailNow).text == nil)
     }
 
     private func accounts(
@@ -395,7 +434,9 @@ struct JonesCompactAccountPresentationTests {
         let initial = JonesCompactAccountPresentation.plan(for: .codex, accounts: accounts)
         #expect(self.accountIDs(in: initial).count == count)
         let revealed = JonesCompactAccountPresentation.plan(
-            for: .codex, accounts: accounts, healthyTailExpanded: true)
+            for: .codex,
+            accounts: accounts,
+            healthyTailExpanded: true)
         #expect(Set(self.accountIDs(in: revealed)) == Set(accounts.map(\.id)))
         #expect(revealed.rows.count == count)
         let visibleIDs = Set(self.accountIDs(in: initial))
@@ -501,5 +542,126 @@ struct JonesCompactAccountPresentationTests {
             #expect(Set(self.accountIDs(in: plan)) == Set(accounts.map(\.id)))
             #expect(plan.rows.count == accounts.count)
         }
+    }
+}
+
+extension JonesCompactAccountPresentationTests {
+    @Test
+    func `low quota reset detail stays neutral while percentage severity and errors survive`() {
+        let snapshot = Self.detailAccount(weekly: RateWindow(
+            usedPercent: 96,
+            windowMinutes: 10080,
+            resetsAt: Self.detailNow.addingTimeInterval(399_600),
+            resetDescription: nil)).snapshot
+        let healthy = JonesCompactAccountPresentation.overviewSummaryRow(
+            .init(
+                provider: .codex,
+                label: "Synthetic account",
+                snapshot: snapshot,
+                hasError: false,
+                isRefreshing: false),
+            resetStyle: .countdown,
+            now: Self.detailNow)
+        #expect(healthy.severity == .critical)
+        #expect(healthy.headroomLabel == "4%")
+        #expect(healthy.detailIsResetTiming)
+        #expect(!healthy.detailIsError)
+        let unavailable = JonesCompactAccountPresentation.overviewSummaryRow(
+            .init(
+                provider: .codex,
+                label: "Synthetic account",
+                snapshot: snapshot,
+                hasError: true,
+                isRefreshing: false),
+            resetStyle: .countdown,
+            now: Self.detailNow)
+        #expect(unavailable.detailIsError)
+        #expect(!unavailable.detailIsResetTiming)
+        var quota = healthy
+        quota.detailIsResetTiming = false
+        #expect(quota.detailIsError)
+        #expect(quota.heightFingerprint != healthy.heightFingerprint)
+    }
+}
+
+extension JonesCompactAccountPresentationTests {
+    @Test(arguments: [1.0, 86400.0, 86401.0, 172_800.0])
+    @MainActor
+    func `banked expiry urgency colors the trailing detail and preserves selection contrast`(
+        remainingSeconds: TimeInterval) throws
+    {
+        let account = Self.detailAccount(
+            weekly: nil,
+            credits: [
+                Self.resetCredit(id: "later", expiresIn: remainingSeconds + 86400),
+                Self.resetCredit(id: "redeemed", expiresIn: 1, status: .redeemed),
+                Self.resetCredit(id: "expired", expiresIn: 0),
+                Self.resetCredit(id: "nearest", expiresIn: remainingSeconds),
+                Self.resetCredit(id: "undated", expiresIn: nil),
+            ])
+        let detail = JonesCompactAccountPresentation.codexRowDetail(
+            account: account,
+            resetStyle: .countdown,
+            now: Self.detailNow)
+        let trailing = try #require(detail.trailingDetail)
+        let isUrgent = remainingSeconds <= 86400
+        #expect(trailing.expiryUrgency == (isUrgent ? .urgent : .upcoming))
+        let expectedColor = Color(nsColor: isUrgent ? .systemRed : .systemOrange)
+        #expect(trailing.foregroundColor(highlighted: false) == expectedColor)
+        #expect(trailing.foregroundColor(highlighted: true) == MenuHighlightStyle.selectionText)
+        #expect(trailing.count == 3)
+        #expect(detail.text == nil)
+    }
+
+    @Test
+    func `expired nearest credit yields the next available credit urgency`() throws {
+        let account = Self.detailAccount(
+            weekly: nil,
+            credits: [
+                Self.resetCredit(id: "soon", expiresIn: 60),
+                Self.resetCredit(id: "later", expiresIn: 3 * 86400),
+            ])
+        let before = JonesCompactAccountPresentation.codexRowDetail(
+            account: account,
+            resetStyle: .countdown,
+            now: Self.detailNow)
+        let after = JonesCompactAccountPresentation.codexRowDetail(
+            account: account,
+            resetStyle: .countdown,
+            now: Self.detailNow.addingTimeInterval(60))
+        let beforeTrailing = try #require(before.trailingDetail)
+        let afterTrailing = try #require(after.trailingDetail)
+        #expect(beforeTrailing.expiryUrgency == .urgent)
+        #expect(afterTrailing.expiryUrgency == .upcoming)
+        #expect(after.trailingDetail?.count == 1)
+    }
+
+    @Test
+    @MainActor
+    func `trailing urgency participates in row identity without changing left detail severity`() {
+        let trailing = MenuCardCompactAccountRowView.TrailingDetail(
+            text: "1d",
+            count: 3,
+            accessibilityLabel: "Synthetic expiry",
+            expiryUrgency: .upcoming)
+        var row = MenuCardCompactAccountRowView.Model(
+            label: "Synthetic account",
+            headroomPercent: 4,
+            severity: .critical,
+            constraintDetail: "Resets in 4d 15h",
+            hasError: false,
+            showsBestBadge: false,
+            trailingDetail: trailing,
+            detailIsResetTiming: true)
+        let original = row
+        row.trailingDetail?.expiryUrgency = .urgent
+        #expect(row != original)
+        #expect(row.heightFingerprint != original.heightFingerprint)
+        #expect(!row.detailIsError)
+        #expect(row.severity == .critical)
+        #expect(row.headroomLabel == "4%")
+        var neutral = trailing
+        neutral.expiryUrgency = nil
+        #expect(neutral.foregroundColor(highlighted: false) == MenuHighlightStyle.normalSecondaryText)
     }
 }

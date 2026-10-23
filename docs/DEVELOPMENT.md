@@ -8,6 +8,9 @@ read_when:
 
 # CodexBar Development Guide
 
+The partial [UI map](ui-map/README.md) records reset timing surfaces and fixture
+journeys, including their interaction coverage limits.
+
 ## Quick Start
 
 The package declares Swift tools 6.2 and macOS 14+. macOS app packaging also builds

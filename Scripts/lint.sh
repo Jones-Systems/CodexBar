@@ -73,6 +73,10 @@ check_mimo_usage_script() {
   python3 "${ROOT_DIR}/Scripts/test_mimo_usage.py"
 }
 
+check_build_jobs() {
+  python3 -B "${ROOT_DIR}/Scripts/test_build_jobs.py"
+}
+
 check_ci_isolated_commands() {
   "${ROOT_DIR}/Scripts/test.sh" --command python3 -B "${ROOT_DIR}/Scripts/test_ci_isolated_commands.py"
 }
@@ -135,6 +139,7 @@ run_portable_checks() {
   check_release_checksum
   check_sparkle_signing_paths
   check_mimo_usage_script
+  check_build_jobs
   check_ci_isolated_commands
   check_swift_test_sharding
   check_ci_path_gate
