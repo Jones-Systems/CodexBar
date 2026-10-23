@@ -23,6 +23,7 @@ import unittest
 from unittest.mock import Mock, patch
 import zipfile
 
+import build_jobs
 import jones_candidate_admission as admission
 import jones_candidate_artifact as candidate
 
@@ -591,13 +592,57 @@ class AdmissionTests(RejectionAssertions, unittest.TestCase):
                              ({"volumes": [{"available_bytes": True}]}, "storage-unknown")):
             self.rejects(code, self.decide, **values)
 
-    def test_cpu_uses_second_interval_and_memory_excludes_speculative_claims(self):
-        text = "CPU usage: 90.0% user, 5.0% sys, 5.0% idle\nCPU usage: 12.0% user, 8.0% sys, 80.0% idle\n"
-        self.assertEqual(admission.parse_cpu(text), 20.0)
-        self.rejects("cpu-unknown", admission.parse_cpu, "CPU usage: 0% user, 0% sys, 100% idle")
+    def test_cpu_uses_two_counter_observations_including_nice_work(self):
+        with patch.object(build_jobs, "cpu_ticks", side_effect=[(100, 100, 100, 100), (110, 120, 165, 105)]) as ticks, \
+                patch.object(admission.time, "sleep") as sleep, \
+                patch.object(admission.time, "monotonic", side_effect=[0, 1]):
+            self.assertEqual(admission.sample_cpu(), 35.0)
+        self.assertEqual(ticks.call_count, 2)
+        sleep.assert_called_once_with(1)
+
+    def test_invalid_cpu_counters_or_elapsed_interval_never_admit(self):
+        first = (100, 100, 100, 100)
+        for last, elapsed in ((first, 1), ((99, 110, 110, 110), 1), ((110, 110, 110), 1),
+                              ((110, 110, 110, 110), 0.5), ((110, 110, 110, 110), 11)):
+            with self.subTest(last=last, elapsed=elapsed), \
+                    patch.object(build_jobs, "cpu_ticks", side_effect=[first, last]), \
+                    patch.object(admission.time, "sleep"), \
+                    patch.object(admission.time, "monotonic", side_effect=[0, elapsed]):
+                self.rejects("cpu-unknown", admission.sample_cpu)
+        for failure in (OSError("unavailable"), build_jobs.AdmissionError("unavailable")):
+            with patch.object(build_jobs, "cpu_ticks", side_effect=failure):
+                self.rejects("cpu-unknown", admission.sample_cpu)
+
+    def test_memory_excludes_speculative_claims(self):
         vm = "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free: 100.\nPages inactive: 200.\n"
         self.assertEqual(admission.parse_memory(vm, candidate.GIB), 300 * 16384)
         self.rejects("memory-unknown", admission.parse_memory, vm.replace("Pages free", "Pages unknown"), candidate.GIB)
+
+    def test_host_sample_uses_cpu_counters_instead_of_ambiguous_top_decimal_display(self):
+        # Apple's top formats the hundredths field without zero padding: .5 can mean .05.
+        replies = {
+            ("/usr/bin/top", "-l", "2", "-s", "1", "-n", "0"):
+                "CPU usage: 0.0% user, 0.0% sys, 100.0% idle\n"
+                "CPU usage: 10.5% user, 20.5% sys, 69.90% idle\n",
+            ("/usr/sbin/sysctl", "-n", "hw.logicalcpu"): "8",
+            ("/usr/sbin/sysctl", "-n", "hw.memsize"): str(16 * candidate.GIB),
+            ("/usr/sbin/sysctl", "-n", "kern.memorystatus_vm_pressure_level"): "1",
+            ("/usr/bin/vm_stat",): "Mach Virtual Memory Statistics: (page size of 16384 bytes)\n"
+                "Pages free: 262144.\nPages inactive: 262144.\n",
+        }
+        with patch.object(admission.sys, "platform", "darwin"), \
+                patch.object(admission.platform, "machine", return_value="arm64"), \
+                patch.object(admission, "build_jobs", build_jobs, create=True), \
+                patch.object(build_jobs, "cpu_ticks", side_effect=[(0, 0, 0, 0), (1005, 2005, 6990, 0)]), \
+                patch.object(admission.time, "sleep"), \
+                patch.object(admission.time, "monotonic", side_effect=[0, 1]), \
+                patch.object(admission, "storage_observations", return_value=self.volumes), \
+                patch.object(admission, "command", side_effect=lambda args, **kwargs:
+                             Mock(stdout=replies[tuple(args)].encode("ascii"))):
+            result = admission.sample(Path("/fixture"), Path("/scratch"),
+                                      {"GITHUB_ACTIONS": "true", "RUNNER_ENVIRONMENT": "github-hosted"}, 6)
+        self.assertAlmostEqual(result["cpu_used_percent"], 30.1)
+        self.assertEqual(result["start_ceiling"], 1)
 
     def test_shared_filesystem_budgets_are_added_once_with_one_reserve(self):
         with tempfile.TemporaryDirectory(prefix="jones-storage-fixture-") as temporary:

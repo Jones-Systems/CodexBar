@@ -18,6 +18,7 @@ import shutil
 import sys
 import time
 
+import build_jobs
 from jones_candidate_artifact import CandidateError, GIB, command, require
 
 
@@ -27,16 +28,18 @@ RESERVE_BYTES = 2 * GIB
 OUTPUT_BUDGETS = (("build-and-products", 8 * GIB), ("scratch-and-artifact", 4 * GIB), ("user-caches", 2 * GIB))
 
 
-def parse_cpu(text):
-    samples = re.findall(r"CPU usage:\s*([0-9.]+)% user,\s*([0-9.]+)% sys,\s*([0-9.]+)% idle", text)
-    require(len(samples) >= 2, "cpu-unknown", "Two CPU observations are required")
+def sample_cpu():
+    # Reuse the compiler wrapper's Mach counters; top's decimal display is ambiguous.
+    started = time.monotonic()
     try:
-        user, system, idle = (float(value) for value in samples[-1])
-    except ValueError as error:
-        raise CandidateError("cpu-unknown", "Malformed CPU sample") from error
-    require(all(math.isfinite(value) and 0 <= value <= 100 for value in (user, system, idle))
-            and abs(user + system + idle - 100) <= 0.5, "cpu-unknown", "Inconsistent CPU sample")
-    return round(100 - idle, 2)
+        first = build_jobs.cpu_ticks()
+        time.sleep(1)
+        last = build_jobs.cpu_ticks()
+        elapsed = time.monotonic() - started
+        require(1 <= elapsed <= 10, "cpu-unknown", "Invalid CPU sample interval")
+        return float(100 * build_jobs.busy_fraction(first, last))
+    except (build_jobs.AdmissionError, OSError) as error:
+        raise CandidateError("cpu-unknown", "CPU counters unavailable or inconsistent") from error
 
 
 def parse_memory(text, total_bytes):
@@ -119,7 +122,7 @@ def sample(workspace, scratch, environment, requested_jobs):
     require(sys.platform == "darwin" and platform.machine() == "arm64", "runner-platform", "arm64 macOS is required")
     require(environment.get("GITHUB_ACTIONS") == "true" and environment.get("RUNNER_ENVIRONMENT") == "github-hosted",
             "runner-identity", "Admission is limited to GitHub-hosted CI")
-    cpu = parse_cpu(command(["/usr/bin/top", "-l", "2", "-s", "1", "-n", "0"], timeout=15).stdout.decode("utf-8"))
+    cpu = sample_cpu()
 
     def sysctl(name):
         raw = command(["/usr/sbin/sysctl", "-n", name]).stdout.decode("ascii").strip()
