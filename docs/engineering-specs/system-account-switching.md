@@ -11,7 +11,7 @@ Governing artifact: `none`
 
 Specification owner: CodexBar maintainer
 
-Integration owner: Jones Code thread `b8d16f9b-7c98-41e6-b8da-855b7145b198`
+Integration owner: CodexBar repair coordinator
 
 Consumers: CodexBar app, account promotion, and native verification
 

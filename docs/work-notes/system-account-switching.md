@@ -9,7 +9,7 @@ Purpose: Preserve the account-switching diagnosis, bounded repair, and installed
 
 Governing artifact: `spec.system-account-switching`
 
-Continuity owner: Jones Code thread `b8d16f9b-7c98-41e6-b8da-855b7145b198`
+Continuity owner: CodexBar repair coordinator
 
 Consumers: CodexBar maintainers and M Jones
 
@@ -51,7 +51,8 @@ Contributing threads: `Fix CodexBar Account Switching`, native ID
 `b8d16f9b-7c98-41e6-b8da-855b7145b198`, coordination, source, verification and delivery;
 native subagents `/root/switch_source_diagnosis` (source evidence),
 `/root/home_launch_framing` (bounded launch diagnosis), and `/root/named_system_menu`
-(menu implementation and synthetic capture); their native IDs are unavailable.
+(menu implementation and synthetic capture), plus `/root/switch_correctness_review`
+(focused source correctness review); their native IDs are unavailable.
 The earlier compatibility/fleet-login/signing threads above are referenced sources,
 not contributors to this repair.
 
@@ -74,7 +75,8 @@ Record exact candidate and installed postconditions before claiming completion.
 The bounded launch policy and menu implementation are complete. The actual-helper
 subprocess proof passed three cases and verified scratch cleanup; see
 `docs/review-evidence/system-account-launch-proof.json`. SwiftFormat passed on all
-12 touched/new Swift files. Full native CI and packaged-app results belong to the
+12 touched/new Swift files. `make check` then passed, including zero SwiftLint
+violations across 2,172 files. Full native CI and packaged-app results belong to the
 exact PR check/artifact records and are required before delivery.
 
 The existing Jones candidate workflow also captures the actual SwiftUI menu-row
