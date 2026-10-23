@@ -293,19 +293,23 @@ old bundles without it retain the ad-hoc contract. The default remains ad-hoc.
 
 The production app retains CloudKit at `iCloud.com.jonessystems.codexbar` with
 the Production entitlement. Packaging requires separate valid app and widget
-Developer ID profiles that grant their exact application identifiers and shared
-app group and authorize the selected signing certificate. Ad-hoc absence of
+Developer ID profiles that grant their exact application identifiers and authorize
+the selected signing certificate. The signed App Group entitlement stays exact;
+a profile may authorize it with the exact group or Apple’s documented
+`2CUPSQS986.*` team grant. Foreign-team and unconstrained wildcards are refused. Ad-hoc absence of
 CloudKit entitlements is not evidence that existing users have no sync state.
 Availability of real Jones profiles and the production CloudKit schema is unknown.
 
 The change from `JONESLOCAL` changes the shared defaults/widget container.
 Keeping the state key and app ID does not prove shared preferences or widget
 snapshot continuity. Production automatic updates are therefore disabled by
-both package metadata and the runtime trust policy. The installer refuses every
-cross-team replacement and cross-identity restore; no override flag exists.
-An owner-approved bootstrap and validated migration evidence are prerequisites
-to a future transition implementation. This source adds no migration or data-loss
-claim. Native Keychain and login-item consent remains owned by macOS.
+both package metadata and the runtime trust policy. Ordinary installation and
+restore still refuse cross-team replacement. CB-MIGRATION-R1 adds a separate
+[explicit bootstrap transaction](INSTALL-AND-UPDATES.md#explicit-owner-bootstrap-cb-migration-r1),
+using the production-signed app before application initialization and an exact
+private receipt. No generic team-change override or startup migration exists.
+Source support does not prove native access, data continuity or permission to run
+the migration. Native Keychain and login-item consent remains owned by macOS.
 
 Signing and notarization establish Apple distribution identity, independently of
 Sparkle's Jones Ed25519 feed/archive trust. The canonical feed restrictions,

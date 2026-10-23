@@ -66,6 +66,13 @@ def validate_profile(profile, identifier, certificate_sha1, now=None):
     for key, value in entitlements(identifier).items():
         if key == "com.apple.security.app-sandbox":
             continue
+        if key == "com.apple.security.application-groups":
+            # Mac profiles may authorize the exact signed group with the owning team's wildcard.
+            groups = granted.get(key)
+            require(isinstance(groups, list) and bool(groups)
+                    and all(group in (GROUP, TEAM + ".*") for group in groups),
+                    "Provisioning profile does not authorize the selected Jones app group")
+            continue
         require(type(granted.get(key)) is type(value) and granted[key] == value,
                 f"Provisioning profile does not authorize exact {key}")
     require(granted.get("get-task-allow", False) is False

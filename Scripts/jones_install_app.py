@@ -41,6 +41,7 @@ _SIGNING_SPEC.loader.exec_module(_SIGNING_MODULE)
 
 SCHEMA = "jones-app-install/v1"
 STATE_SCHEMA = "jones-app-install-state/v1"
+BOOTSTRAP_STATE_SCHEMA = "jones-app-install-state/v2"
 BUNDLE_ID = "com.jonessystems.codexbar"
 GROUP_ID = "JONESLOCAL." + BUNDLE_ID
 ICLOUD_ID = "iCloud." + BUNDLE_ID
@@ -256,7 +257,7 @@ function run(argv) {
 
 
 class MacOperations:
-    """Bounded public bundle metadata/process operations; no provider or defaults access."""
+    """Bundle/process operations; private-store access exists only in the explicit signed bootstrap command."""
 
     def __init__(self, signing_mode="adhoc"):
         self.signing_mode = signing_mode
@@ -333,6 +334,10 @@ class MacOperations:
 
     def checkpoint(self, _phase):
         pass
+
+    def bootstrap(self, bundle, action, root):
+        self.run([str(bundle / "Contents/MacOS/CodexBar"), "--jones-bootstrap", action,
+                  "--request", str(root / "request.json"), "--receipt", str(root / "receipt.json")])
 
 
 def inspect_bundle(path, operations, expected_revision=None, allow_legacy=False):
@@ -598,14 +603,19 @@ class State:
         manifest = json_file(manifest_path) if exists(manifest_path) else None
         allowed = {"owner.json", "lock"}
         if manifest is not None:
-            require(set(manifest) == {"schema", "target", "transaction", "current", "previous", "retired"}
-                    and manifest["schema"] == STATE_SCHEMA and manifest["target"] == str(self.target)
+            fields = {"schema", "target", "transaction", "current", "previous", "retired"}
+            if manifest.get("schema") == BOOTSTRAP_STATE_SCHEMA:
+                fields.add("bootstrap_previous")
+            require(set(manifest) == fields
+                    and manifest["schema"] in (STATE_SCHEMA, BOOTSTRAP_STATE_SCHEMA)
+                    and manifest["target"] == str(self.target)
                     and re.fullmatch(r"[0-9a-f]{32}", str(manifest["transaction"])) is not None
                     and manifest["retired"] == [], "manifest", "Unknown or unfinished recovery manifest.")
             allowed.add("manifest.json")
             verify_record(self.target, manifest["current"], operations)
-            previous = manifest["previous"]
-            if previous is not None:
+            for previous in (manifest["previous"], manifest.get("bootstrap_previous")):
+                if previous is None:
+                    continue
                 require(isinstance(previous, dict) and set(previous) == {"name", "record"}
                         and isinstance(previous["name"], str) and PREVIOUS_RE.fullmatch(previous["name"]) is not None,
                         "manifest", "Invalid owned previous-bundle path.")
@@ -614,6 +624,20 @@ class State:
         require(set(item.name for item in self.root.iterdir()) == allowed,
                 "unknown_state", "Recovery storage has missing or unowned entries; no automatic cleanup is allowed.")
         return manifest
+
+    def require_bootstrap_launched(self):
+        if not exists(self.root / "manifest.json"):
+            return
+        manifest = json_file(self.root / "manifest.json")
+        if manifest.get("schema") != BOOTSTRAP_STATE_SCHEMA:
+            return
+        root = self.root.with_name(self.root.name + ".bootstrap")
+        no_symlink_components(root)
+        installed = json_file(root / "installed.json")
+        require(installed.get("schema") == "jones-bootstrap-install/v1"
+                and installed.get("target") == str(self.target)
+                and installed.get("phase") == "launch-attempted", "bootstrap_pending",
+                "Complete explicit bootstrap launch or prelaunch rollback before ordinary updates/restore.")
 
     @contextmanager
     def lock(self, create=False):
@@ -749,10 +773,10 @@ def owned_scratch(parent):
                         raise InstallError("scratch_cleanup", message, 3) from cleanup
 
 
-def transaction(state, operations, manifest, current, source, candidate, restoring=False):
+def transaction(state, operations, manifest, current, source, candidate, restoring=False, bootstrap=None):
     token = uuid.uuid4().hex
     stage = source if restoring else state.root / ("stage-" + token + ".app")
-    backup = state.root / ("previous-" + token + ".app")
+    backup = bootstrap.root / "legacy.app" if bootstrap else state.root / ("previous-" + token + ".app")
     payload = {"schema": STATE_SCHEMA, "transaction": token, "target": str(state.target),
                "action": "restore" if restoring else "install", "source": str(stage), "backup": str(backup),
                "before": current, "manifest_before": manifest, "candidate": candidate}
@@ -773,6 +797,8 @@ def transaction(state, operations, manifest, current, source, candidate, restori
         payload["staged"] = staged
         state.journal(payload, "prepared", operations)
         graceful_quit(operations, state.target)
+        if bootstrap:
+            bootstrap.revalidate(operations, source, current, candidate)
         if current is not None:
             verify_record(state.target, current, operations)
         else:
@@ -788,10 +814,13 @@ def transaction(state, operations, manifest, current, source, candidate, restori
         sync_directory(state.target.parent)
         state.journal(payload, "installed_uncommitted", operations)
         verify_record(state.target, staged, operations)
-        previous = {"name": backup.name, "record": current} if current is not None else None
-        retired = [] if restoring or manifest is None or manifest["previous"] is None else [manifest["previous"]]
+        previous = {"name": backup.name, "record": current} if current is not None and not bootstrap else None
+        retired = [] if bootstrap or restoring or manifest is None or manifest["previous"] is None else [manifest["previous"]]
         new_manifest = {"schema": STATE_SCHEMA, "target": str(state.target), "transaction": token,
                         "current": staged, "previous": previous, "retired": retired}
+        if bootstrap or (manifest and manifest["schema"] == BOOTSTRAP_STATE_SCHEMA):
+            new_manifest["schema"] = BOOTSTRAP_STATE_SCHEMA
+            new_manifest["bootstrap_previous"] = (manifest["previous"] if manifest else None) if bootstrap else manifest["bootstrap_previous"]
         state.journal(payload, "will_commit", operations)
         atomic_json(state.root / "manifest.json", new_manifest)
         committed = True
@@ -880,14 +909,210 @@ def launch_installed(operations, target, expected):
                            3, target=str(target), launch_error=str(error)) from error
 
 
+
+class Bootstrap:
+    """Private one-time transition evidence, separate from rotating same-identity rollback storage."""
+
+    def __init__(self, state, receipt=None, receipt_hash=None):
+        self.state = state
+        self.root = state.root.with_name(state.root.name + ".bootstrap")
+        self.receipt = self.root / "receipt.json"
+        self.expected_hash = receipt_hash
+        if receipt is not None:
+            require(Path(receipt).absolute() == self.receipt, "bootstrap_path",
+                    "Receipt must belong to this exact installation's bootstrap storage.")
+        self.value = None
+        self.data_descriptor = None
+
+    @contextmanager
+    def lock(self, create=False):
+        no_symlink_components(self.root)
+        if create:
+            self.root.mkdir(mode=0o700)
+        info = self.root.lstat()
+        require(stat.S_ISDIR(info.st_mode) and info.st_uid == os.getuid() and not info.st_mode & 0o077,
+                "bootstrap_owner", "Bootstrap storage must be a private owner directory.")
+        descriptor = os.open(str(self.root / "install.lock"), os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+        try:
+            info = os.fstat(descriptor)
+            require(stat.S_ISREG(info.st_mode) and info.st_uid == os.getuid() and info.st_nlink == 1
+                    and not info.st_mode & 0o077, "bootstrap_owner", "Unsafe bootstrap lock.")
+            try:
+                fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError as error:
+                raise InstallError("busy", "Another bootstrap owns this installation.") from error
+            yield
+        finally:
+            if self.data_descriptor is not None:
+                os.close(self.data_descriptor)
+                self.data_descriptor = None
+            os.close(descriptor)
+
+    def lock_data(self):
+        descriptor = os.open(str(self.root / "data.lock"), os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+        try:
+            info = os.fstat(descriptor)
+            require(stat.S_ISREG(info.st_mode) and info.st_uid == os.getuid() and info.st_nlink == 1
+                    and not info.st_mode & 0o077, "bootstrap_owner", "Unsafe migration data lock.")
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BaseException:
+            os.close(descriptor)
+            raise
+        self.data_descriptor = descriptor
+
+    @staticmethod
+    def transition(current, candidate):
+        require(current is not None and current["bundle"]["identity"] == IDENTITY
+                and candidate["identity"] == dict(IDENTITY, CodexBarTeamID=_SIGNING_MODULE.TEAM,
+                                                   JonesAppGroupID=_SIGNING_MODULE.GROUP),
+                "bootstrap_identity", "Bootstrap requires the exact legacy Jones to production Jones transition.")
+        old = tuple(int(part) for part in current["bundle"]["build"].split("."))
+        new = tuple(int(part) for part in candidate["build"].split("."))
+        require(new > old, "not_newer", "Bootstrap candidate must be newer than the legacy app.")
+
+    def load(self, current, candidate, archive, phases=("data-verified",)):
+        value = json_file(self.receipt)
+        require(isinstance(self.expected_hash, str) and HASH_RE.fullmatch(self.expected_hash) is not None
+                and hashlib.sha256(self.receipt.read_bytes()).hexdigest() == self.expected_hash,
+                "bootstrap_receipt", "Receipt hash differs from the reviewed exact receipt.")
+        require(set(value) == {"schema", "plan", "planSHA256", "phase"}
+                and value["schema"] == "jones-bootstrap-receipt/v1" and value["phase"] in phases,
+                "bootstrap_receipt", "Unsupported, incomplete or consumed bootstrap receipt.")
+        plan = value["plan"]
+        require(isinstance(plan, dict) and set(plan) == {"request", "oldGroup", "newGroup", "locations", "sources", "items"},
+                "bootstrap_receipt", "Malformed migration plan.")
+        encoded = json.dumps(plan, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        require(hashlib.sha256(encoded).hexdigest() == value["planSHA256"],
+                "bootstrap_receipt", "Migration plan hash differs.")
+        request = plan["request"]
+        require(isinstance(request, dict) and set(request) == {"schema", "transaction", "uid", "target", "oldTree",
+                                                               "candidateTree", "archive", "revision", "snapshotSource"}
+                and request["schema"] == "jones-bootstrap-request/v1" and type(request["uid"]) is int
+                and request["uid"] == os.getuid() and request["target"] == str(self.state.target)
+                and request["oldTree"] == current["bundle"]["tree_sha256"]
+                and request["candidateTree"] == candidate["tree_sha256"]
+                and request["archive"] == archive and request["revision"] == candidate["revision"]
+                and request["snapshotSource"] in ("auto", "old-group", "fallback")
+                and str(uuid.UUID(request["transaction"])) == request["transaction"],
+                "bootstrap_binding", "Receipt does not bind this user, installation, source and candidate.")
+        require(plan["oldGroup"] == GROUP_ID and plan["newGroup"] == _SIGNING_MODULE.GROUP
+                and json_file(self.root / "request.json") == request,
+                "bootstrap_binding", "Bootstrap identity or request has changed.")
+        self.transition(current, candidate)
+        self.value = value
+        return value
+
+    def revalidate(self, operations, source, current, candidate):
+        if self.data_descriptor is not None:
+            os.close(self.data_descriptor)
+            self.data_descriptor = None
+        require(not exists(self.root / "installed.json") and not exists(self.root / "legacy.app"),
+                "bootstrap_replay", "Bootstrap was consumed or has an uncertain previous effect.")
+        require(not process_rows(operations, self.state.target), "bootstrap_running", "Legacy app must remain quiescent.")
+        verify_record(self.state.target, current, operations)
+        self.load(current, candidate, self.value["plan"]["request"]["archive"])
+        operations.bootstrap(source, "verify", self.root)
+        self.lock_data()
+        self.load(current, candidate, self.value["plan"]["request"]["archive"])
+        require(not process_rows(operations, self.state.target), "bootstrap_running", "Legacy app restarted during verification.")
+
+    def prepared(self, args, operations, source, current, candidate, archive):
+        self.transition(current, candidate)
+        require(not process_rows(operations, self.state.target), "bootstrap_running",
+                "Quit the exact legacy app before explicit migration preparation.")
+        request = {"schema": "jones-bootstrap-request/v1", "transaction": str(uuid.uuid4()), "uid": os.getuid(),
+                   "target": str(self.state.target), "oldTree": current["bundle"]["tree_sha256"],
+                   "candidateTree": candidate["tree_sha256"], "archive": archive,
+                   "revision": candidate["revision"], "snapshotSource": args.snapshot_source}
+        if args.bootstrap_resume:
+            old = json_file(self.root / "request.json")
+            request["transaction"] = old.get("transaction")
+            require(old == request and not exists(self.root / "installed.json") and not exists(self.root / "legacy.app"),
+                    "bootstrap_binding", "Resume requires the exact unconsumed request and unchanged app/candidate.")
+        else:
+            require(set(item.name for item in self.root.iterdir()) == {"install.lock"},
+                    "bootstrap_replay", "Preparation requires new bootstrap storage.")
+            atomic_json(self.root / "request.json", request)
+        operations.bootstrap(source, "resume" if args.bootstrap_resume else "prepare", self.root)
+        operations.bootstrap(source, "verify", self.root)
+        self.expected_hash = hashlib.sha256(self.receipt.read_bytes()).hexdigest()
+        self.load(current, candidate, archive)
+        verify_record(self.state.target, current, operations)
+        require(not process_rows(operations, self.state.target), "bootstrap_running", "Legacy app restarted during preparation.")
+        return {"schema": SCHEMA, "status": "data-verified", "receipt": str(self.receipt),
+                "receipt_sha256": self.expected_hash, "transaction": request["transaction"]}
+
+    def committed(self, manifest_before, completed, current):
+        self.value["phase"] = "installed"
+        atomic_json(self.receipt, self.value)
+        atomic_json(self.root / "installed.json", {
+            "schema": "jones-bootstrap-install/v1", "phase": "installed", "target": str(self.state.target),
+            "transaction": self.value["plan"]["request"]["transaction"], "legacy": current,
+            "manifest_before": manifest_before, "manifest_after": completed,
+            "receipt_sha256": hashlib.sha256(self.receipt.read_bytes()).hexdigest()})
+        return {"schema": SCHEMA, "status": "installed-not-launched", "receipt": str(self.receipt),
+                "receipt_sha256": hashlib.sha256(self.receipt.read_bytes()).hexdigest(),
+                "legacy_path": str(self.root / "legacy.app")}
+
+    def finish(self, args, operations):
+        with self.lock(), self.state.lock():
+            manifest = self.state.load(operations)
+            installed = json_file(self.root / "installed.json")
+            require(installed.get("schema") == "jones-bootstrap-install/v1" and installed.get("phase") == "installed"
+                    and installed.get("target") == str(self.state.target)
+                    and installed.get("manifest_after") == manifest
+                    and installed.get("receipt_sha256") == self.expected_hash,
+                    "bootstrap_replay", "Bootstrap launch/rollback requires the exact not-yet-launched installation.")
+            legacy = installed["legacy"]
+            candidate = manifest["current"]["bundle"]
+            receipt = json_file(self.receipt)
+            self.load(legacy, candidate, receipt["plan"]["request"]["archive"], phases=("installed",))
+            require(installed["transaction"] == self.value["plan"]["request"]["transaction"],
+                    "bootstrap_binding", "Installed transaction differs.")
+            verify_record(self.root / "legacy.app", legacy, operations)
+            require(not process_rows(operations, self.state.target), "bootstrap_running", "App must remain quiescent.")
+            operations.bootstrap(self.state.target, "verify-installed", self.root)
+            self.lock_data()
+            self.load(legacy, candidate, receipt["plan"]["request"]["archive"], phases=("installed",))
+            if args.bootstrap_launch:
+                self.value["phase"] = "launch-attempted"
+                atomic_json(self.receipt, self.value)
+                installed["phase"] = "launch-attempted"
+                atomic_json(self.root / "installed.json", installed)
+                process = launch_installed(operations, self.state.target, manifest["current"])
+                return {"schema": SCHEMA, "status": "bootstrap-launched", "running": process}
+            require(not exists(self.root / "production.app"), "bootstrap_replay", "Rollback preservation path exists.")
+            installed["phase"] = "rollback-intent"
+            atomic_json(self.root / "installed.json", installed)
+            verify_record(self.state.target, manifest["current"], operations)
+            os.rename(str(self.state.target), str(self.root / "production.app"))
+            os.rename(str(self.root / "legacy.app"), str(self.state.target))
+            sync_directory(self.state.target.parent)
+            before = installed["manifest_before"]
+            if before is None:
+                (self.state.root / "manifest.json").unlink()
+                sync_directory(self.state.root)
+            else:
+                atomic_json(self.state.root / "manifest.json", before)
+            verify_record(self.state.target, legacy, operations)
+            installed["phase"] = "rolled-back"
+            atomic_json(self.root / "installed.json", installed)
+            return {"schema": SCHEMA, "status": "bootstrap-rolled-back", "target": str(self.state.target)}
+
+
 def execute(args, operations):
     target = target_path(args.target)
     state = State(target)
     parent = nearest_directory(target.parent)
     state.load(operations)
+    if args.bootstrap_launch or args.bootstrap_rollback:
+        return Bootstrap(state, args.bootstrap_receipt, args.receipt_sha256).finish(args, operations)
+    if not (args.bootstrap_prepare or args.bootstrap_resume or args.bootstrap_receipt):
+        state.require_bootstrap_launched()
     if args.restore:
         with state.lock():
             manifest = state.load(operations)
+            state.require_bootstrap_launched()
             require(manifest is not None and manifest["previous"] is not None, "no_previous",
                     "No completed manifest-owned previous bundle is available.")
             capacity(operations, parent, RESERVE)
@@ -938,15 +1163,21 @@ def execute(args, operations):
         candidate = inspect_bundle(source, operations, args.expect_revision)
         # Refusals precede creation of persistent recovery directories, even on first use.
         observed = record_bundle(target, operations, allow_legacy=True) if exists(target) else None
-        if observed is not None:
+        bootstrapping = bool(args.bootstrap_prepare or args.bootstrap_resume or args.bootstrap_receipt)
+        if bootstrapping:
+            Bootstrap.transition(observed, candidate)
+        elif observed is not None:
             newer(candidate, observed["bundle"])
         process_rows(operations, target)
         with state.lock(create=not args.preflight):
             manifest = state.load(operations)
+            if not bootstrapping:
+                state.require_bootstrap_launched()
             current = record_bundle(target, operations, allow_legacy=True) if exists(target) else None
             require(current == observed, "target_changed", "Target changed during validation; no transaction started.")
             if current is not None:
-                newer(candidate, current["bundle"])
+                if not bootstrapping:
+                    newer(candidate, current["bundle"])
                 require(current["directory"]["device"] == parent.stat().st_dev, "volume",
                         "Target bundle is a separate mount; same-volume rename is required.")
             rows = process_rows(operations, target)
@@ -958,6 +1189,15 @@ def execute(args, operations):
             if args.preflight:
                 return result
             capacity(operations, state.root, expanded + RESERVE)
+            if bootstrapping:
+                bootstrap = Bootstrap(state, args.bootstrap_receipt, args.receipt_sha256)
+                with bootstrap.lock(create=args.bootstrap_prepare):
+                    if args.bootstrap_prepare or args.bootstrap_resume:
+                        return bootstrap.prepared(args, operations, source, current, candidate, digest.hexdigest())
+                    bootstrap.load(current, candidate, digest.hexdigest())
+                    bootstrap.revalidate(operations, source, current, candidate)
+                    completed = transaction(state, operations, manifest, current, source, candidate, bootstrap=bootstrap)
+                    return bootstrap.committed(manifest, completed, current)
             completed = transaction(state, operations, manifest, current, source, candidate)
             result["running"] = launch_installed(operations, target, completed["current"])
             result["status"] = "installed"
@@ -975,7 +1215,32 @@ def arguments(argv):
     parser.add_argument("--preflight", action="store_true")
     parser.add_argument("--restore", action="store_true")
     parser.add_argument("--signing-mode", choices=("adhoc", "developer-id"), default="adhoc")
+    bootstrap = parser.add_mutually_exclusive_group()
+    bootstrap.add_argument("--bootstrap-prepare", action="store_true")
+    bootstrap.add_argument("--bootstrap-resume", action="store_true")
+    bootstrap.add_argument("--bootstrap-launch", action="store_true")
+    bootstrap.add_argument("--bootstrap-rollback", action="store_true")
+    parser.add_argument("--bootstrap-receipt")
+    parser.add_argument("--receipt-sha256")
+    parser.add_argument("--snapshot-source", choices=("auto", "old-group", "fallback"), default="auto")
     args = parser.parse_args(argv)
+    using_bootstrap = any((args.bootstrap_prepare, args.bootstrap_resume, args.bootstrap_launch,
+                          args.bootstrap_rollback, args.bootstrap_receipt, args.receipt_sha256))
+    require(not using_bootstrap or (args.signing_mode == "developer-id" and not args.preflight and not args.restore),
+            "arguments", "Explicit bootstrap is separate from ordinary preflight/restore and requires Developer ID mode.")
+    require(args.snapshot_source == "auto" or args.bootstrap_prepare or args.bootstrap_resume,
+            "arguments", "Snapshot choice belongs only to explicit bootstrap preparation/resume.")
+    if args.bootstrap_prepare or args.bootstrap_resume:
+        require(not args.bootstrap_receipt and not args.receipt_sha256,
+                "arguments", "Preparation/resume uses its bound journal, not a receipt override.")
+    elif using_bootstrap:
+        require(bool(args.bootstrap_receipt) and isinstance(args.receipt_sha256, str)
+                and HASH_RE.fullmatch(args.receipt_sha256) is not None,
+                "arguments", "Supply the exact receipt path and reviewed SHA-256 together.")
+    if args.bootstrap_launch or args.bootstrap_rollback:
+        require(not args.archive and not args.sha256 and not args.expect_revision,
+                "arguments", "Bootstrap launch/rollback consumes the committed installation, not a new archive.")
+        return args
     if args.restore:
         require(not args.archive and not args.sha256 and not args.expect_revision and not args.preflight,
                 "arguments", "--restore is separate from archive/preflight arguments.")

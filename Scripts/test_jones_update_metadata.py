@@ -537,6 +537,19 @@ class DeveloperIDTests(unittest.TestCase):
                 with self.subTest(mutation=mutation), self.assertRaises(signing.SigningError):
                     signing.validate_profile(dict(profile, **mutation), identifier, self.certificate)
 
+    def test_team_wildcard_profile_authorizes_exact_group_but_never_changes_signed_entitlements(self):
+        for identifier in (signing.BUNDLE, signing.BUNDLE + ".widget"):
+            for groups in ([signing.TEAM + ".*"], [signing.GROUP, signing.TEAM + ".*"]):
+                profile = self.profile(identifier)
+                profile["Entitlements"]["com.apple.security.application-groups"] = groups
+                signing.validate_profile(profile, identifier, self.certificate)
+                self.assertEqual(signing.entitlements(identifier)["com.apple.security.application-groups"], [signing.GROUP])
+            for groups in (["*"], ["OTHERTEAM1.*"], [signing.TEAM + ".com.*"], [], [signing.GROUP, "*"]):
+                profile = self.profile(identifier)
+                profile["Entitlements"]["com.apple.security.application-groups"] = groups
+                with self.subTest(groups=groups), self.assertRaises(signing.SigningError):
+                    signing.validate_profile(profile, identifier, self.certificate)
+
     def test_production_signature_requires_team_runtime_timestamp_resources_and_chain(self):
         text = "\n".join([
             "Identifier=" + signing.BUNDLE, "TeamIdentifier=" + signing.TEAM,
