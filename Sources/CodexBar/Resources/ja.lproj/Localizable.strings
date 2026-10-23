@@ -1600,3 +1600,22 @@
 
 "No system observations are available." = "システムの観測データはありません。";
 "Historical provider cache; not a billing receipt or an identified account." = "プロバイダーの過去のキャッシュです。請求の領収書や特定されたアカウントではありません。";
+
+/* Jones updates */
+"jones_updates_automatic" = "アップデートを自動でダウンロードし、アイドル時にインストール";
+"jones_updates_bootstrap" = "このビルドではアップデートが設定されていません。検証済みの Jones ビルドをインストールしてください。";
+"jones_updates_channel_none" = "手動インストール";
+"jones_updates_channel_stable" = "Jones 安定版";
+"jones_updates_idle" = "アップデートを確認できます。";
+"jones_updates_checking" = "アップデートを確認中…";
+"jones_updates_downloading" = "アップデート %@ をダウンロード中…";
+"jones_updates_preparing" = "アップデート %@ を準備中…";
+"jones_updates_ready_idle" = "アップデート %@ の準備ができました。アイドル時または終了時にインストールします。";
+"jones_updates_ready_quit" = "アップデート %@ の準備ができました。終了時にインストールします。";
+"jones_updates_installing" = "アップデート %@ をインストール中…";
+"jones_updates_current" = "最新の状態です。";
+"jones_updates_trust_failure" = "アップデート元を検証できませんでした。検証済みの Jones ビルドをインストールしてください。";
+"jones_updates_failure" = "アップデートに失敗しました。もう一度確認してください。";
+"jones_updates_size_failure" = "このアップデートを安全にダウンロードできません。検証済みの Jones ビルドをインストールしてください。";
+"jones_updates_capacity_unknown" = "空き容量を確認できませんでした。ディスクを確認してから再試行してください。";
+"jones_updates_capacity_low" = "アップデートには少なくとも %@ の空き容量が必要です。空き容量を増やして再試行してください。";

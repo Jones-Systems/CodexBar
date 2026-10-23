@@ -257,3 +257,26 @@ New fork-owned files: `.mac-release.jones.env.example`,
 `Tests/CodexBarTests/JonesStateRootTests.swift`, this identity manifest, and
 `docs/work-notes/trial-identity.md`. Source-only ownership returns to the coordinator
 at handoff; publication and integration are the coordinator's responsibility.
+
+## Local installation and update ledger
+
+JONES(app-updates), APP-UPDATES-20261022: the following additive source surfaces
+implement the local installation contract. They do not close the trial/native
+gates above or establish an installed build, public release, key custody or a
+working authenticated feed. The scoped [installation/update guide](INSTALL-AND-UPDATES.md)
+owns the artifact, CLI, preflight JSON, journal, retention and recovery contracts.
+
+| Fork-owned surface | Contract and boundary |
+| --- | --- |
+| `Scripts/jones_install_app.sh` | Version-checked Python 3.9+ entry point; no runtime/tool installation |
+| `Scripts/jones_install_app.py` | Verified local canonical-main artifact; fixed Jones identity and exact ad-hoc app/widget entitlements; same-volume replacement and one manifest-owned previous bundle; explicit restore |
+| `Scripts/test_jones_install_app.py` | Portable `jones-local-installer` affected-check group; synthetic bundle/command fixtures and owned cleanup; no native app or private-state access |
+| `docs/jones/INSTALL-AND-UPDATES.md` | Separates CI bootstrap, held release trust, recurring native consent, binary-only restore and native qualification |
+
+The installed build-135 provenance exception applies only to an exact verified
+previous Jones bundle. Candidates always require complete canonical-main source
+metadata. This local ad-hoc route preserves iCloud bundle metadata while requiring
+the existing absence of iCloud entitlements; any signed-entitlement drift is a
+refusal. Upstream applications, unknown pending Jones siblings, preferences,
+Keychain grants, application state and Sparkle-owned staging are outside installer
+cleanup ownership. No post-launch or application-data rollback is promised.

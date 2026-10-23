@@ -1604,3 +1604,22 @@
 
 "No system observations are available." = "ไม่มีข้อมูลการสังเกตระบบ";
 "Historical provider cache; not a billing receipt or an identified account." = "แคชประวัติของผู้ให้บริการ ไม่ใช่ใบเสร็จการเรียกเก็บเงินหรือบัญชีที่ระบุตัวตนแล้ว";
+
+/* Jones updates */
+"jones_updates_automatic" = "ดาวน์โหลดอัปเดตอัตโนมัติและติดตั้งเมื่อไม่ได้ใช้งาน";
+"jones_updates_bootstrap" = "รุ่นนี้ยังไม่ได้กำหนดค่าการอัปเดต โปรดติดตั้งรุ่น Jones ที่ผ่านการตรวจสอบแล้ว";
+"jones_updates_channel_none" = "ติดตั้งด้วยตนเอง";
+"jones_updates_channel_stable" = "Jones รุ่นเสถียร";
+"jones_updates_idle" = "พร้อมตรวจสอบอัปเดต";
+"jones_updates_checking" = "กำลังตรวจสอบอัปเดต…";
+"jones_updates_downloading" = "กำลังดาวน์โหลดอัปเดต %@…";
+"jones_updates_preparing" = "กำลังเตรียมอัปเดต %@…";
+"jones_updates_ready_idle" = "อัปเดต %@ พร้อมแล้ว จะติดตั้งเมื่อไม่ได้ใช้งานหรือเมื่อออกจากแอป";
+"jones_updates_ready_quit" = "อัปเดต %@ พร้อมแล้ว จะติดตั้งเมื่อออกจากแอป";
+"jones_updates_installing" = "กำลังติดตั้งอัปเดต %@…";
+"jones_updates_current" = "คุณใช้รุ่นล่าสุดแล้ว";
+"jones_updates_trust_failure" = "ไม่สามารถตรวจสอบแหล่งอัปเดตได้ โปรดติดตั้งรุ่น Jones ที่ผ่านการตรวจสอบแล้ว";
+"jones_updates_failure" = "อัปเดตไม่สำเร็จ โปรดลองตรวจสอบอีกครั้ง";
+"jones_updates_size_failure" = "ไม่สามารถดาวน์โหลดอัปเดตนี้อย่างปลอดภัยได้ โปรดติดตั้งรุ่น Jones ที่ผ่านการตรวจสอบแล้ว";
+"jones_updates_capacity_unknown" = "ไม่สามารถตรวจสอบพื้นที่ว่างได้ โปรดตรวจสอบดิสก์แล้วลองอีกครั้ง";
+"jones_updates_capacity_low" = "การอัปเดตต้องใช้พื้นที่ว่างอย่างน้อย %@ โปรดเพิ่มพื้นที่ว่างแล้วลองอีกครั้ง";

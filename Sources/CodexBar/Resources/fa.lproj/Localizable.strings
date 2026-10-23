@@ -1604,3 +1604,22 @@
 
 "No system observations are available." = "هیچ مشاهده‌ای از سیستم در دسترس نیست.";
 "Historical provider cache; not a billing receipt or an identified account." = "حافظهٔ نهان تاریخی ارائه‌دهنده؛ نه رسید صورتحساب است و نه حسابی با هویت مشخص.";
+
+/* Jones updates */
+"jones_updates_automatic" = "بارگیری خودکار به‌روزرسانی‌ها و نصب هنگام بیکاری";
+"jones_updates_bootstrap" = "به‌روزرسانی در این نسخه پیکربندی نشده است. یک نسخهٔ تأییدشدهٔ Jones نصب کنید.";
+"jones_updates_channel_none" = "نصب دستی";
+"jones_updates_channel_stable" = "Jones پایدار";
+"jones_updates_idle" = "آمادهٔ بررسی به‌روزرسانی‌ها.";
+"jones_updates_checking" = "در حال بررسی به‌روزرسانی‌ها…";
+"jones_updates_downloading" = "در حال بارگیری به‌روزرسانی %@…";
+"jones_updates_preparing" = "در حال آماده‌سازی به‌روزرسانی %@…";
+"jones_updates_ready_idle" = "به‌روزرسانی %@ آماده است. هنگام بیکاری یا خروج نصب می‌شود.";
+"jones_updates_ready_quit" = "به‌روزرسانی %@ آماده است. هنگام خروج نصب می‌شود.";
+"jones_updates_installing" = "در حال نصب به‌روزرسانی %@…";
+"jones_updates_current" = "نسخهٔ شما به‌روز است.";
+"jones_updates_trust_failure" = "منبع به‌روزرسانی تأیید نشد. یک نسخهٔ تأییدشدهٔ Jones نصب کنید.";
+"jones_updates_failure" = "به‌روزرسانی ناموفق بود. دوباره بررسی کنید.";
+"jones_updates_size_failure" = "بارگیری امن این به‌روزرسانی ممکن نیست. یک نسخهٔ تأییدشدهٔ Jones نصب کنید.";
+"jones_updates_capacity_unknown" = "فضای ذخیره‌سازی آزاد بررسی نشد. دیسک‌ها را بررسی کنید و دوباره تلاش کنید.";
+"jones_updates_capacity_low" = "به‌روزرسانی‌ها به دست‌کم %@ فضای آزاد نیاز دارند. فضا آزاد کنید و دوباره تلاش کنید.";

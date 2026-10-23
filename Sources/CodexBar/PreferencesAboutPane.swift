@@ -10,6 +10,27 @@ struct AboutPane: View {
     private var updateChannelRaw: String = UpdateChannel.defaultChannel.rawValue
     @State private var didLoadUpdaterState = false
 
+    private var isJonesBuild: Bool {
+        Bundle.main.bundleIdentifier == "com.jonessystems.codexbar"
+    }
+
+    private var displayName: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "CodexBar"
+    }
+
+    private var projectURL: String {
+        self.isJonesBuild ? "https://github.com/Jones-Systems/CodexBar" : "https://github.com/steipete/CodexBar"
+    }
+
+    private var sourceRevision: String? {
+        guard self.isJonesBuild else { return nil }
+        return Bundle.main.object(forInfoDictionaryKey: "JonesSourceRevision") as? String
+    }
+
+    private var jonesUpdater: JonesUpdateController? {
+        self.updater as? JonesUpdateController
+    }
+
     private var versionString: String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String
@@ -39,26 +60,47 @@ struct AboutPane: View {
 
             if self.updater.isAvailable {
                 Section {
-                    Toggle(L("check_updates_auto"), isOn: self.$autoUpdateEnabled)
+                    Toggle(
+                        L(self.isJonesBuild ? "jones_updates_automatic" : "check_updates_auto"),
+                        isOn: self.$autoUpdateEnabled)
 
-                    Picker(selection: self.updateChannelBinding) {
-                        ForEach(UpdateChannel.allCases) { channel in
-                            Text(channel.displayName).tag(channel)
+                    if let jonesUpdater {
+                        LabeledContent(L("update_channel"), value: L("jones_updates_channel_stable"))
+                        Text(JonesUpdatePresentation.status(jonesUpdater.detail))
+                            .foregroundStyle(.secondary)
+                        if jonesUpdater.updateStatus.isUpdateReady {
+                            Button(L("Update ready, restart now?")) { jonesUpdater.installUpdate() }
                         }
-                    } label: {
-                        SettingsRowLabel(L("update_channel"), subtitle: self.updateChannel.description)
+                    } else {
+                        Picker(selection: self.updateChannelBinding) {
+                            ForEach(UpdateChannel.allCases) { channel in
+                                Text(channel.displayName).tag(channel)
+                            }
+                        } label: {
+                            SettingsRowLabel(L("update_channel"), subtitle: self.updateChannel.description)
+                        }
                     }
 
                     LabeledContent(String(format: L("version_format"), self.versionString)) {
                         Button(L("check_for_updates")) { self.updater.checkForUpdates(nil) }
+                            .disabled(self.jonesUpdater?.detail.canCheckForUpdates == false)
                     }
                 } header: {
                     Text(L("section_updates"))
                 }
             } else {
                 Section {
-                    Text(self.updater.unavailableReason ?? L("updates_unavailable"))
-                        .foregroundStyle(.secondary)
+                    if let jonesUpdater {
+                        LabeledContent(
+                            L("update_channel"),
+                            value: L(jonesUpdater.policy.channel == .stable ?
+                                "jones_updates_channel_stable" : "jones_updates_channel_none"))
+                        Text(JonesUpdatePresentation.status(jonesUpdater.detail))
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text(self.updater.unavailableReason ?? L("updates_unavailable"))
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
 
@@ -66,10 +108,12 @@ struct AboutPane: View {
                 AboutLinkRow(
                     icon: "chevron.left.slash.chevron.right",
                     title: L("link_github"),
-                    url: "https://github.com/steipete/CodexBar")
-                AboutLinkRow(icon: "globe", title: L("link_website"), url: "https://steipete.me")
-                AboutLinkRow(icon: "bird", title: L("link_twitter"), url: "https://twitter.com/steipete")
-                AboutLinkRow(icon: "envelope", title: L("link_email"), url: "mailto:peter@steipete.me")
+                    url: self.projectURL)
+                if !self.isJonesBuild {
+                    AboutLinkRow(icon: "globe", title: L("link_website"), url: "https://steipete.me")
+                    AboutLinkRow(icon: "bird", title: L("link_twitter"), url: "https://twitter.com/steipete")
+                    AboutLinkRow(icon: "envelope", title: L("link_email"), url: "mailto:peter@steipete.me")
+                }
             } header: {
                 Text(L("section_links"))
             } footer: {
@@ -115,7 +159,7 @@ struct AboutPane: View {
             }
 
             VStack(spacing: 2) {
-                Text("CodexBar")
+                Text(self.displayName)
                     .font(.title3).bold()
                 Text(String(format: L("version_format"), self.versionString))
                     .foregroundStyle(.secondary)
@@ -123,6 +167,14 @@ struct AboutPane: View {
                     Text(String(format: L("built_format"), buildTimestamp))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
+                }
+                if let sourceRevision {
+                    LabeledContent(L("Source")) {
+                        Text(sourceRevision)
+                            .font(.caption.monospaced())
+                            .textSelection(.enabled)
+                    }
+                    .foregroundStyle(.secondary)
                 }
                 Text(L("about_tagline"))
                     .font(.footnote)
@@ -146,7 +198,7 @@ struct AboutPane: View {
     }
 
     private func openProjectHome() {
-        guard let url = URL(string: "https://github.com/steipete/CodexBar") else { return }
+        guard let url = URL(string: self.projectURL) else { return }
         NSWorkspace.shared.open(url)
     }
 }

@@ -53,6 +53,14 @@ check_package_info_plist() {
   "${ROOT_DIR}/Scripts/test_package_info_plist.sh"
 }
 
+check_jones_update_tools() {
+  "${ROOT_DIR}/Scripts/test.sh" --command python3 -B "${ROOT_DIR}/Scripts/test_jones_update_metadata.py"
+  "${ROOT_DIR}/Scripts/test.sh" --command python3 -B "${ROOT_DIR}/Scripts/test_jones_candidate_artifact.py"
+  "${ROOT_DIR}/Scripts/test.sh" --command python3 -B "${ROOT_DIR}/Scripts/test_jones_install_app.py"
+  "${ROOT_DIR}/Scripts/test.sh" --command python3 -B "${ROOT_DIR}/Scripts/test_verify_packaged_app_launch.py"
+  "${ROOT_DIR}/Scripts/test.sh" --command python3 -B "${ROOT_DIR}/Scripts/test_jones_update_harness.py"
+}
+
 check_cli_installer() {
   /bin/bash "${ROOT_DIR}/Scripts/test_install_codexbar_cli.sh"
 }
@@ -135,6 +143,7 @@ run_portable_checks() {
   check_package_strip
   check_package_signing
   check_package_info_plist
+  check_jones_update_tools
   check_release_dsym_paths
   check_release_checksum
   check_sparkle_signing_paths

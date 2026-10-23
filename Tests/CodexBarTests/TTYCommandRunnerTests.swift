@@ -45,6 +45,25 @@ struct TTYCommandRunnerEnvTests {
     }
 
     @Test
+    func `idle update safety includes launch reservations and shutdown`() {
+        TTYCommandRunner.withIsolatedActiveProcessRegistryForTesting {
+            #expect(!TTYCommandRunner.hasActiveProcesses)
+            #expect(TTYCommandRunner._test_beginTrackedProcessLaunch())
+            #expect(TTYCommandRunner.hasActiveProcesses)
+            TTYCommandRunner._test_endTrackedProcessLaunch()
+            #expect(!TTYCommandRunner.hasActiveProcesses)
+
+            #expect(TTYCommandRunner.registerActiveProcessForAppShutdown(pid: 1001, binary: "fixture"))
+            #expect(TTYCommandRunner.hasActiveProcesses)
+            TTYCommandRunner.unregisterActiveProcessForAppShutdown(pid: 1001)
+            #expect(!TTYCommandRunner.hasActiveProcesses)
+
+            #expect(TTYCommandRunner._test_drainTrackedProcessesForShutdown().isEmpty)
+            #expect(TTYCommandRunner.hasActiveProcesses)
+        }
+    }
+
+    @Test
     func `cached CLI sessions share shutdown tracking`() {
         TTYCommandRunner.withIsolatedActiveProcessRegistryForTesting {
             TTYCommandRunner._test_resetTrackedProcesses()

@@ -1604,3 +1604,22 @@
 
 "No system observations are available." = "لا تتوفر ملاحظات عن الأنظمة.";
 "Historical provider cache; not a billing receipt or an identified account." = "ذاكرة تخزين مؤقت تاريخية لمزوّد الخدمة؛ ليست إيصال فوترة ولا حسابًا محدد الهوية.";
+
+/* Jones updates */
+"jones_updates_automatic" = "تنزيل التحديثات تلقائيًا وتثبيتها عند الخمول";
+"jones_updates_bootstrap" = "لم تُضبط التحديثات في هذا الإصدار. ثبّت إصدار Jones تم التحقق منه.";
+"jones_updates_channel_none" = "تثبيت يدوي";
+"jones_updates_channel_stable" = "Jones المستقر";
+"jones_updates_idle" = "جاهز للتحقق من التحديثات.";
+"jones_updates_checking" = "جارٍ التحقق من التحديثات…";
+"jones_updates_downloading" = "جارٍ تنزيل التحديث %@…";
+"jones_updates_preparing" = "جارٍ تجهيز التحديث %@…";
+"jones_updates_ready_idle" = "التحديث %@ جاهز. سيُثبّت عند الخمول أو الخروج.";
+"jones_updates_ready_quit" = "التحديث %@ جاهز. سيُثبّت عند الخروج.";
+"jones_updates_installing" = "جارٍ تثبيت التحديث %@…";
+"jones_updates_current" = "لديك أحدث إصدار.";
+"jones_updates_trust_failure" = "تعذّر التحقق من مصدر التحديث. ثبّت إصدار Jones تم التحقق منه.";
+"jones_updates_failure" = "فشل التحديث. حاول التحقق مرة أخرى.";
+"jones_updates_size_failure" = "لا يمكن تنزيل هذا التحديث بأمان. ثبّت إصدار Jones تم التحقق منه.";
+"jones_updates_capacity_unknown" = "تعذّر التحقق من مساحة التخزين المتاحة. تحقّق من الأقراص ثم حاول مجددًا.";
+"jones_updates_capacity_low" = "تحتاج التحديثات إلى %@ على الأقل من المساحة المتاحة. أفرغ مساحة ثم حاول مجددًا.";

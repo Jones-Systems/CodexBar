@@ -1599,3 +1599,22 @@
 
 "No system observations are available." = "Er zijn geen systeemwaarnemingen beschikbaar.";
 "Historical provider cache; not a billing receipt or an identified account." = "Historische providercache; geen factuurbewijs of geïdentificeerd account.";
+
+/* Jones updates */
+"jones_updates_automatic" = "Updates automatisch downloaden en installeren bij inactiviteit";
+"jones_updates_bootstrap" = "Updates zijn niet ingesteld in deze versie. Installeer een geverifieerde Jones-versie.";
+"jones_updates_channel_none" = "Handmatige installatie";
+"jones_updates_channel_stable" = "Jones stabiel";
+"jones_updates_idle" = "Gereed om naar updates te zoeken.";
+"jones_updates_checking" = "Zoeken naar updates…";
+"jones_updates_downloading" = "Update %@ downloaden…";
+"jones_updates_preparing" = "Update %@ voorbereiden…";
+"jones_updates_ready_idle" = "Update %@ is gereed. Installatie bij inactiviteit of afsluiten.";
+"jones_updates_ready_quit" = "Update %@ is gereed. Installatie bij afsluiten.";
+"jones_updates_installing" = "Update %@ installeren…";
+"jones_updates_current" = "Je bent bijgewerkt.";
+"jones_updates_trust_failure" = "De updatebron kon niet worden geverifieerd. Installeer een geverifieerde Jones-versie.";
+"jones_updates_failure" = "De update is mislukt. Zoek opnieuw naar updates.";
+"jones_updates_size_failure" = "Deze update kan niet veilig worden gedownload. Installeer een geverifieerde Jones-versie.";
+"jones_updates_capacity_unknown" = "De beschikbare opslag kon niet worden gecontroleerd. Controleer je schijven en probeer het opnieuw.";
+"jones_updates_capacity_low" = "Updates vereisen minstens %@ beschikbare opslag. Maak ruimte vrij en probeer het opnieuw.";

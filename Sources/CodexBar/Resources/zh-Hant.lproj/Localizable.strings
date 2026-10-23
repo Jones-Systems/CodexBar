@@ -1631,3 +1631,22 @@
 
 "No system observations are available." = "暫無系統觀測資料。";
 "Historical provider cache; not a billing receipt or an identified account." = "供應商的歷史快取；不是帳單收據，也不代表已識別的帳戶。";
+
+/* Jones updates */
+"jones_updates_automatic" = "自動下載更新並在閒置時安裝";
+"jones_updates_bootstrap" = "此建置版本尚未設定更新。請安裝已驗證的 Jones 建置版本。";
+"jones_updates_channel_none" = "手動安裝";
+"jones_updates_channel_stable" = "Jones 穩定版";
+"jones_updates_idle" = "已準備好檢查更新。";
+"jones_updates_checking" = "正在檢查更新…";
+"jones_updates_downloading" = "正在下載更新 %@…";
+"jones_updates_preparing" = "正在準備更新 %@…";
+"jones_updates_ready_idle" = "更新 %@ 已準備就緒。將在閒置時或結束時安裝。";
+"jones_updates_ready_quit" = "更新 %@ 已準備就緒。將在結束時安裝。";
+"jones_updates_installing" = "正在安裝更新 %@…";
+"jones_updates_current" = "已是最新版本。";
+"jones_updates_trust_failure" = "無法驗證更新來源。請安裝已驗證的 Jones 建置版本。";
+"jones_updates_failure" = "更新失敗。請重新檢查。";
+"jones_updates_size_failure" = "無法安全下載此更新。請安裝已驗證的 Jones 建置版本。";
+"jones_updates_capacity_unknown" = "無法檢查可用儲存空間。請檢查磁碟後再試。";
+"jones_updates_capacity_low" = "更新至少需要 %@ 的可用儲存空間。請釋出空間後再試。";

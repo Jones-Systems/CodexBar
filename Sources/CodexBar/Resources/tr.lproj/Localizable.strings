@@ -1602,3 +1602,22 @@
 
 "No system observations are available." = "Sistem gözlemi bulunmuyor.";
 "Historical provider cache; not a billing receipt or an identified account." = "Sağlayıcının geçmiş önbelleği; fatura makbuzu veya kimliği belirlenmiş bir hesap değildir.";
+
+/* Jones updates */
+"jones_updates_automatic" = "Güncellemeleri otomatik indir ve boşta kalınca yükle";
+"jones_updates_bootstrap" = "Bu derlemede güncellemeler yapılandırılmamış. Doğrulanmış bir Jones derlemesi yükleyin.";
+"jones_updates_channel_none" = "Elle yükleme";
+"jones_updates_channel_stable" = "Jones kararlı";
+"jones_updates_idle" = "Güncellemeleri denetlemeye hazır.";
+"jones_updates_checking" = "Güncellemeler denetleniyor…";
+"jones_updates_downloading" = "%@ güncellemesi indiriliyor…";
+"jones_updates_preparing" = "%@ güncellemesi hazırlanıyor…";
+"jones_updates_ready_idle" = "%@ güncellemesi hazır. Boşta kalınca veya çıkışta yüklenir.";
+"jones_updates_ready_quit" = "%@ güncellemesi hazır. Çıkışta yüklenir.";
+"jones_updates_installing" = "%@ güncellemesi yükleniyor…";
+"jones_updates_current" = "Güncelsiniz.";
+"jones_updates_trust_failure" = "Güncelleme kaynağı doğrulanamadı. Doğrulanmış bir Jones derlemesi yükleyin.";
+"jones_updates_failure" = "Güncelleme başarısız oldu. Güncellemeleri yeniden denetleyin.";
+"jones_updates_size_failure" = "Bu güncelleme güvenli bir şekilde indirilemiyor. Doğrulanmış bir Jones derlemesi yükleyin.";
+"jones_updates_capacity_unknown" = "Kullanılabilir alan denetlenemedi. Disklerinizi kontrol ettikten sonra tekrar deneyin.";
+"jones_updates_capacity_low" = "Güncellemeler için en az %@ kullanılabilir alan gerekir. Yer açıp tekrar deneyin.";

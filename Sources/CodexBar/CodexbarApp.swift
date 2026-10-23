@@ -21,6 +21,9 @@ enum CodexBarLaunchMode: Equatable {
 enum CodexBarEntryPoint {
     @MainActor
     static func main() {
+        if JonesUpdateHarness.isMarked(Bundle.main.infoDictionary ?? [:]) {
+            JonesUpdateHarness.run()
+        }
         // Packaging launch smoke check (#2738): force the resource loads that
         // trapped in 0.48.0 and exit before any AppKit/UI setup.
         if CodexBarCoreResourceSmoke.isRequested() {
@@ -362,6 +365,28 @@ private func makeUpdaterController() -> UpdaterProviding {
         return DisabledUpdaterController(unavailableReason: "Updates unavailable in this build.")
     }
 
+    // JONES(updates): package identity and trust precede the upstream Developer ID policy.
+    let info = Bundle.main.infoDictionary ?? [:]
+    if Bundle.main.bundleIdentifier == JonesUpdateTrustPolicy.productionBundleID ||
+        info["JonesStateKey"] != nil || info["JonesUpdateHarness"] != nil
+    {
+        do {
+            let policy = try JonesUpdateTrustPolicy.validate(infoDictionary: info)
+            let savedAutoUpdate = UserDefaults.standard.object(forKey: "autoUpdateEnabled") as? Bool ?? true
+            return try JonesUpdateController(
+                policy: policy,
+                savedAutoUpdate: savedAutoUpdate,
+                capacityProvider: {
+                    guard let cacheURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+                    else { return .unknown }
+                    return .read(appURL: bundleURL, cacheURL: cacheURL)
+                },
+                describeFailure: { JonesUpdatePresentation.failure($0) })
+        } catch {
+            return DisabledUpdaterController(unavailableReason: L("jones_updates_trust_failure"))
+        }
+    }
+
     if InstallOrigin.isHomebrewCask(appBundleURL: bundleURL) {
         return DisabledUpdaterController(
             unavailableReason: "Updates managed by Homebrew. Run: brew upgrade --cask steipete/tap/codexbar")
@@ -420,6 +445,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.settingsWindowController?.window === window
         })
     private var hasInstalledLimitResetObservers = false
+    private var updateTrackingMenus: Set<ObjectIdentifier> = []
     #if DEBUG
     private var debugMemoryPressureObserver: NSObjectProtocol?
     #endif
@@ -447,6 +473,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 guard let self else { return }
                 await self.runProviderLoginFlow(provider)
             })
+        if let updater = self.updaterController as? JonesUpdateController {
+            updater.setIdleSafetyProvider { [weak self] in
+                guard let self, let anyInput = CGEventType(rawValue: UInt32.max) else { return .unknown }
+                // kCGAnyInputEventType measures keyboard, mouse and tablet activity together.
+                let idle = CGEventSource.secondsSinceLastEventType(.hidSystemState, eventType: anyInput)
+                let accountBlocked = self.codexAccountPromotionCoordinator.map { $0.isInteractionBlocked() }
+                return JonesUpdateIdleSafetyInputs(
+                    hidIdleTime: idle.isFinite && idle >= 0 ? idle : nil,
+                    hasBlockedAccountInteraction: accountBlocked.map { $0 || self.store?.isRefreshing != false },
+                    hasActiveTTYProcesses: TTYCommandRunner.hasActiveProcesses,
+                    hasVisibleWindows: NSApp.windows.contains { $0.isVisible && $0.level != .statusBar },
+                    hasVisibleMenus: !self.updateTrackingMenus.isEmpty)
+            }
+        }
     }
 
     func applicationWillFinishLaunching(_ notification: Notification) {
@@ -461,6 +501,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(self.updateMenuDidBeginTracking(_:)),
+            name: NSMenu.didBeginTrackingNotification,
+            object: nil)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(self.updateMenuDidEndTracking(_:)),
+            name: NSMenu.didEndTrackingNotification,
+            object: nil)
         self.dockIconController.start()
         self.memoryPressureMonitor.start()
         #if DEBUG
@@ -523,6 +573,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        (self.updaterController as? JonesUpdateController)?.disableIdleApplication()
+        NotificationCenter.default.removeObserver(self, name: NSMenu.didBeginTrackingNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSMenu.didEndTrackingNotification, object: nil)
         self.cloudSyncCoordinator?.stop()
         self.memoryPressureMonitor.stop()
         #if DEBUG
@@ -532,6 +585,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.confettiOverlayController.dismiss()
         self.dismissAppKitWindowsForShutdown()
         self.terminateActiveProcessesForAppShutdown()
+    }
+
+    @objc private func updateMenuDidBeginTracking(_ notification: Notification) {
+        guard let menu = notification.object as? NSMenu else { return }
+        self.updateTrackingMenus.insert(ObjectIdentifier(menu))
+    }
+
+    @objc private func updateMenuDidEndTracking(_ notification: Notification) {
+        guard let menu = notification.object as? NSMenu else { return }
+        self.updateTrackingMenus.remove(ObjectIdentifier(menu))
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {

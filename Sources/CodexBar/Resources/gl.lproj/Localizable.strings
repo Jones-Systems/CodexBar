@@ -1599,3 +1599,22 @@
 
 "No system observations are available." = "Non hai observacións de sistemas dispoñibles.";
 "Historical provider cache; not a billing receipt or an identified account." = "Caché histórica do provedor; non é un recibo de facturación nin unha conta identificada.";
+
+/* Jones updates */
+"jones_updates_automatic" = "Descargar actualizacións automaticamente e instalalas durante a inactividade";
+"jones_updates_bootstrap" = "As actualizacións non están configuradas nesta versión. Instala unha versión de Jones verificada.";
+"jones_updates_channel_none" = "Instalación manual";
+"jones_updates_channel_stable" = "Jones estable";
+"jones_updates_idle" = "Listo para buscar actualizacións.";
+"jones_updates_checking" = "Buscando actualizacións…";
+"jones_updates_downloading" = "Descargando a actualización %@…";
+"jones_updates_preparing" = "Preparando a actualización %@…";
+"jones_updates_ready_idle" = "A actualización %@ está lista. Instalarase durante a inactividade ou ao saír.";
+"jones_updates_ready_quit" = "A actualización %@ está lista. Instalarase ao saír.";
+"jones_updates_installing" = "Instalando a actualización %@…";
+"jones_updates_current" = "Estás ao día.";
+"jones_updates_trust_failure" = "Non se puido verificar a orixe da actualización. Instala unha versión de Jones verificada.";
+"jones_updates_failure" = "A actualización fallou. Volve buscar actualizacións.";
+"jones_updates_size_failure" = "Esta actualización non se pode descargar de forma segura. Instala unha versión de Jones verificada.";
+"jones_updates_capacity_unknown" = "Non se puido comprobar o espazo dispoñible. Revisa os discos e téntao de novo.";
+"jones_updates_capacity_low" = "As actualizacións precisan polo menos %@ de espazo dispoñible. Libera espazo e téntao de novo.";

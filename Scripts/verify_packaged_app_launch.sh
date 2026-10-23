@@ -14,7 +14,7 @@
 set -euo pipefail
 
 APP_BUNDLE="${1:?usage: verify_packaged_app_launch.sh /path/to/CodexBar.app}"
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 
 SMOKE_SECONDS="${CODEXBAR_LAUNCH_SMOKE_SECONDS:-6}"
 # Swift runtime trap signatures for a missing SwiftPM resource bundle. These
@@ -76,6 +76,15 @@ cleanup() {
   rm -rf "$SMOKE_DIR"
 }
 trap cleanup EXIT INT TERM
+
+# The copy must remain readable when the sandbox denies every checkout read.
+SMOKE_DIR="$(cd "$SMOKE_DIR" && pwd -P)"
+case "$SMOKE_DIR" in
+  "$ROOT"|"$ROOT"/*)
+    echo "ERROR: Launch smoke scratch must be outside the checkout; set TMPDIR to an owned external directory." >&2
+    exit 1
+    ;;
+esac
 
 cp -R "$APP_BUNDLE" "$SMOKE_DIR/CodexBar.app"
 SMOKE_BIN="$SMOKE_DIR/CodexBar.app/Contents/MacOS/CodexBar"
@@ -197,6 +206,13 @@ if [[ "$PROBE_STATUS" -ne 0 ]] || ! grep -q "CODEXBAR_RESOURCE_SMOKE_OK" "$PROBE
   fail_with_probe_log "Launch smoke check FAILED: packaged app cannot load its resource bundles without the build checkout (the 0.48.0 crash class, #2738). Do not ship this build. Exit status: ${PROBE_STATUS}."
 fi
 log "Launch smoke check: resource probe OK."
+
+# Candidate packaging can prove resources without starting provider/account work.
+# All three probes above must still pass; this opt-in skips only the UI lifetime check.
+if [[ "${CODEXBAR_LAUNCH_SMOKE_RESOURCE_ONLY:-0}" == "1" ]]; then
+  log "Launch smoke check: resource-only verification complete; application lifetime was not tested."
+  exit 0
+fi
 
 # Phase 2: launch the app for real and require it to stay alive.
 log "Launch smoke check: running packaged binary with ${ROOT} unreadable for ${SMOKE_SECONDS}s."

@@ -21,6 +21,13 @@ configuration. `Scripts/sign-and-notarize.sh` also names the upstream Developer 
 directly. The examples below describe that existing upstream flow; they are not a
 configured Jones Systems release route.
 
+The inherited Release CLI workflow accepts manual artifact builds in this
+repository, but its automatic release jobs and upstream Homebrew tap dispatch
+run only in `steipete/CodexBar`. Publishing a Jones release cannot select those
+jobs. The Jones candidate/install flow is documented in
+[Jones installation and updates](jones/INSTALL-AND-UPDATES.md); a candidate is
+not a public release or an activated update feed.
+
 Before execution, establish the intended repository, feed, download destination,
 bundle identity, signing identity, Sparkle key relationship, tag behavior, and
 publication authority. Changing the repository name alone is insufficient.

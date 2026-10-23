@@ -1599,3 +1599,22 @@
 
 "No system observations are available." = "Aucune observation de système disponible.";
 "Historical provider cache; not a billing receipt or an identified account." = "Cache historique du fournisseur ; ni reçu de facturation ni compte identifié.";
+
+/* Jones updates */
+"jones_updates_automatic" = "Télécharger automatiquement les mises à jour et les installer en cas d’inactivité";
+"jones_updates_bootstrap" = "Les mises à jour ne sont pas configurées dans cette version. Installez une version Jones vérifiée.";
+"jones_updates_channel_none" = "Installation manuelle";
+"jones_updates_channel_stable" = "Jones stable";
+"jones_updates_idle" = "Prêt à rechercher des mises à jour.";
+"jones_updates_checking" = "Recherche de mises à jour…";
+"jones_updates_downloading" = "Téléchargement de la mise à jour %@…";
+"jones_updates_preparing" = "Préparation de la mise à jour %@…";
+"jones_updates_ready_idle" = "La mise à jour %@ est prête. Installation en cas d’inactivité ou à la fermeture.";
+"jones_updates_ready_quit" = "La mise à jour %@ est prête. Installation à la fermeture.";
+"jones_updates_installing" = "Installation de la mise à jour %@…";
+"jones_updates_current" = "Vous êtes à jour.";
+"jones_updates_trust_failure" = "La source de mise à jour n’a pas pu être vérifiée. Installez une version Jones vérifiée.";
+"jones_updates_failure" = "La mise à jour a échoué. Relancez la recherche.";
+"jones_updates_size_failure" = "Cette mise à jour ne peut pas être téléchargée en toute sécurité. Installez une version Jones vérifiée.";
+"jones_updates_capacity_unknown" = "L’espace disponible n’a pas pu être vérifié. Vérifiez vos disques, puis réessayez.";
+"jones_updates_capacity_low" = "Les mises à jour nécessitent au moins %@ d’espace disponible. Libérez de l’espace et réessayez.";

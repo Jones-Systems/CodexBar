@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# This read-only query precedes configuration, tool discovery and all packaging effects.
+if [[ "${1:-}" == "--jones-candidate-capabilities" ]]; then
+  [[ "$#" == "1" ]] || { echo 'The capability query accepts no other arguments.' >&2; exit 2; }
+  printf '%s\n' '{"schema":"jones-candidate-packager/v1","compiler_jobs_env":"CODEXBAR_BUILD_JOBS","compiler_jobs_max":6,"bounded_compilers":["swift-build","xcodebuild"],"resource_only_smoke_env":"CODEXBAR_LAUNCH_SMOKE_RESOURCE_ONLY","resource_only_smoke_value":"1"}'
+  exit 0
+fi
+
 # JONES(trial-identity): pure identity resolution; fixture tests source only this block.
 resolve_package_identity() {
   BUNDLE_ID="com.steipete.codexbar"
@@ -22,16 +29,30 @@ resolve_package_identity() {
   if [[ -f "$ROOT/.mac-release.jones.env" ]]; then
     source "$ROOT/.mac-release.jones.env"
     : "${JONES_BUNDLE_ID:?Missing JONES_BUNDLE_ID}" "${JONES_TEAM_ID:?Missing JONES_TEAM_ID}"
-    [[ "$JONES_BUNDLE_ID" =~ ^[a-zA-Z0-9]+([.-][a-zA-Z0-9]+)+$ && "$JONES_BUNDLE_ID" != *steipete* ]] || return 1
-    [[ "$JONES_TEAM_ID" =~ ^[A-Z0-9_]+$ && "$JONES_TEAM_ID" != "Y5PE65HELJ" ]] || return 1
+    [[ "$JONES_BUNDLE_ID" == "com.jonessystems.codexbar" ]] || return 1
+    [[ "$JONES_TEAM_ID" == "JONESLOCAL" ]] || return 1
     [[ "${JONES_STATE_KEY:-}" == "jones" ]] || return 1
     [[ "${JONES_DISPLAY_NAME:-}" == "CodexBar Jones" ]] || return 1
     BUNDLE_ID="$JONES_BUNDLE_ID"
     APP_TEAM_ID="$JONES_TEAM_ID"
     DISPLAY_NAME="$JONES_DISPLAY_NAME"
-    FEED_URL=""
-    PUBLIC_ED_KEY=""
+    JONES_UPDATE_CHANNEL="${JONES_UPDATE_CHANNEL-none}"
+    FEED_URL="${JONES_UPDATE_FEED_URL:-}"
+    PUBLIC_ED_KEY="${JONES_UPDATE_PUBLIC_ED_KEY:-}"
     AUTO_CHECKS=false
+    case "$JONES_UPDATE_CHANNEL" in
+      none)
+        [[ -z "$FEED_URL" && -z "$PUBLIC_ED_KEY" ]] || return 1
+        ;;
+      stable)
+        [[ "$FEED_URL" == "https://github.com/Jones-Systems/CodexBar/releases/latest/download/appcast.xml" ]] || return 1
+        # Canonical base64 for exactly 32 bytes, including the final padding bits.
+        [[ "$PUBLIC_ED_KEY" =~ ^[A-Za-z0-9+/]{42}[AEIMQUYcgkosw048]=$ ]] || return 1
+        [[ "$PUBLIC_ED_KEY" != "AGCY8w5vHirVfGGDGc8Szc5iuOqupZSh9pMj/Qs67XI=" ]] || return 1
+        AUTO_CHECKS=true
+        ;;
+      *) return 1 ;;
+    esac
     JONES_OVERLAY=1
   fi
   WIDGET_BUNDLE_ID="${BUNDLE_ID}.widget"
@@ -47,7 +68,13 @@ resolve_package_identity() {
     <key>JonesStateKey</key><string>jones</string>
     <key>JonesAppBundleID</key><string>${BUNDLE_ID}</string>
     <key>JonesAppGroupID</key><string>${APP_GROUP_ID}</string>
-    <key>JonesICloudID</key><string>${ICLOUD_ID}</string>"
+    <key>JonesICloudID</key><string>${ICLOUD_ID}</string>
+    <key>JonesUpdateChannel</key><string>${JONES_UPDATE_CHANNEL}</string>
+    <key>SUAutomaticallyUpdate</key><${AUTO_CHECKS}/>
+    <key>SUAllowsAutomaticUpdates</key><${AUTO_CHECKS}/>
+    <key>SURequireSignedFeed</key><true/>
+    <key>SUVerifyUpdateBeforeExtraction</key><true/>
+    <key>SUSignedFeedFailureExpirationInterval</key><integer>0</integer>"
     if [[ "$SIGNING_MODE" == "identity" ]]; then
       : "${JONES_SIGNING_IDENTITY:?Fork signing identity must be explicitly supplied}"
       [[ "$JONES_SIGNING_IDENTITY" != *Y5PE65HELJ* ]] || return 1
@@ -55,6 +82,22 @@ resolve_package_identity() {
   fi
 }
 # JONES(trial-identity): end pure identity resolution.
+
+# JONES(updates): Git/CI reads stay outside the shell-only identity fixture seam.
+prepare_jones_update_metadata() {
+  [[ "$JONES_OVERLAY" == "1" ]] || return 0
+  local metadata
+  metadata=$(python3 "$ROOT/Scripts/jones_update_metadata.py" metadata \
+    --repo "$ROOT" --build-number "$BUILD_NUMBER" \
+    --origin "${JONES_BUILD_ORIGIN-local}" --build-run "${JONES_BUILD_RUN:-}" \
+    --bundle-id "$BUNDLE_ID" --team-id "$APP_TEAM_ID" --state-key "$JONES_STATE_KEY" \
+    --display-name "$DISPLAY_NAME" --app-group-id "$APP_GROUP_ID" --icloud-id "$ICLOUD_ID" \
+    --channel "$JONES_UPDATE_CHANNEL" --feed-url "$FEED_URL" --public-ed-key "$PUBLIC_ED_KEY" \
+    --format shell) || return 1
+  # Only fixed assignment names and shlex-quoted, validated public values are emitted.
+  eval "$metadata"
+  JONES_METADATA+="$JONES_PROVENANCE_METADATA"
+}
 
 resolve_package_signing_mode() {
   local requested="${CODEXBAR_SIGNING:-adhoc}"
@@ -107,6 +150,7 @@ source "$ROOT/version.env"
 source "$ROOT/Scripts/package_product_paths.sh"
 source "$ROOT/Scripts/sparkle_signing_paths.sh"
 resolve_package_identity # JONES(trial-identity): resolve before any build or packaging effects.
+prepare_jones_update_metadata # JONES(updates): reject dirty/shallow source and invalid CI claims before builds.
 
 # Clean build only when explicitly requested (slower).
 if [[ "${CODEXBAR_FORCE_CLEAN:-0}" == "1" ]]; then
@@ -152,8 +196,11 @@ text = path.read_text()
 if ".keyboardShortcutsSafeBundle" in text:
     sys.exit(0)
 
+preimage = 'NSLocalizedString(self, bundle: .module, comment: self)'
+if text.count(preimage) != 1:
+    raise SystemExit("Unexpected resource lookup in Utilities.swift; patch failed.")
 text = text.replace(
-    'NSLocalizedString(self, bundle: .module, comment: self)',
+    preimage,
     'NSLocalizedString(self, bundle: .keyboardShortcutsSafeBundle, comment: self)',
 )
 
@@ -189,7 +236,7 @@ private extension Bundle {
 """
 
 marker = "}\n\n\nextension Data {"
-if marker not in text:
+if text.count(marker) != 1:
     raise SystemExit("Marker not found in Utilities.swift; patch failed.")
 
 text = text.replace(marker, "}\n\n" + inject + "\n\nextension Data {")
@@ -198,10 +245,43 @@ PY
 }
 
 KEYBOARD_SHORTCUTS_UTIL="$ROOT/.build/checkouts/KeyboardShortcuts/Sources/KeyboardShortcuts/Utilities.swift"
+PACKAGE_RESOLVED_HASH=$(python3 - "$ROOT/Package.resolved" <<'PY'
+import hashlib
+import sys
+from pathlib import Path
+print(hashlib.sha256(Path(sys.argv[1]).read_bytes()).hexdigest())
+PY
+)
 if [[ ! -f "$KEYBOARD_SHORTCUTS_UTIL" ]]; then
-  python3 "$ROOT/Scripts/build_jobs.py" -- swift build -c "$CONF" --arch "${ARCH_LIST[0]}"
+  # Resolve the pinned checkout before patching; a product build here would be discarded.
+  python3 "$ROOT/Scripts/build_jobs.py" -- swift package resolve --force-resolved-versions
+fi
+if [[ ! -f "$KEYBOARD_SHORTCUTS_UTIL" ]]; then
+  echo "ERROR: Dependency resolution did not provide KeyboardShortcuts/Utilities.swift." >&2
+  exit 1
 fi
 patch_keyboard_shortcuts
+python3 - "$ROOT/Package.resolved" "$PACKAGE_RESOLVED_HASH" "$KEYBOARD_SHORTCUTS_UTIL" <<'PY'
+import hashlib
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+resolved, expected_hash, utility = Path(sys.argv[1]), sys.argv[2], Path(sys.argv[3])
+data = resolved.read_bytes()
+if hashlib.sha256(data).hexdigest() != expected_hash:
+    raise SystemExit("Package.resolved changed during dependency preparation.")
+pin = next(item for item in json.loads(data)["pins"] if item["identity"] == "keyboardshortcuts")
+revision = subprocess.check_output(
+    ["git", "-C", str(utility.parent), "rev-parse", "HEAD"], text=True, timeout=15).strip()
+if revision != pin["state"]["revision"]:
+    raise SystemExit("KeyboardShortcuts checkout does not match Package.resolved.")
+print("Prepared package dependency: " + json.dumps({
+    "dependency": "keyboardshortcuts", "revision": revision,
+    "resolved_sha256": expected_hash, "patched_source_sha256": hashlib.sha256(utility.read_bytes()).hexdigest(),
+}, sort_keys=True), flush=True)
+PY
 
 # Resolve SwiftPM's current output path without relying on a fixed build-system layout.
 # The output variable keeps the per-arch cache in this shell instead of losing it to
@@ -484,7 +564,8 @@ build_widget_extension() {
 
   mkdir -p "$derived_dir"
   echo "Building CodexBarWidget Xcode extension (${xcode_conf}, ${archs})." >&2
-  python3 "$ROOT/Scripts/build_jobs.py" --kind xcode -- xcodebuild \
+  python3 "$ROOT/Scripts/package_widget.py" --log "$build_log" \
+    --products "$derived_dir/Build" --timeout "$timeout_seconds" -- xcodebuild \
     -project "$project_dir" \
     -scheme CodexBarWidgetExtension \
     -configuration "$xcode_conf" \
@@ -494,6 +575,7 @@ build_widget_extension() {
     -disableAutomaticPackageResolution \
     -skipMacroValidation \
     -skipPackagePluginValidation \
+    -showBuildTimingSummary \
     CODEXBAR_WIDGET_BUNDLE_ID="$WIDGET_BUNDLE_ID" \
     CODEXBAR_TEAM_ID="$APP_TEAM_ID" \
     MARKETING_VERSION="$MARKETING_VERSION" \
@@ -501,29 +583,10 @@ build_widget_extension() {
     CODE_SIGNING_ALLOWED=NO \
     ARCHS="$archs" \
     ONLY_ACTIVE_ARCH=NO \
-    build >"$build_log" 2>&1 &
-
-  local xcodebuild_pid=$!
-  local elapsed=0
-  while kill -0 "$xcodebuild_pid" 2>/dev/null; do
-    if [[ "$elapsed" -ge "$timeout_seconds" ]]; then
-      kill "$xcodebuild_pid" 2>/dev/null || true
-      wait "$xcodebuild_pid" 2>/dev/null || true
-      tail -80 "$build_log" >&2 || true
-      echo "ERROR: Timed out building CodexBarWidget extension after ${timeout_seconds}s" >&2
-      exit 1
-    fi
-    sleep 5
-    elapsed=$((elapsed + 5))
-    if (( elapsed > 0 && elapsed % 60 == 0 )); then
-      echo "Still building CodexBarWidget extension (${elapsed}s)..." >&2
-    fi
-  done
-  if ! wait "$xcodebuild_pid"; then
-    tail -120 "$build_log" >&2 || true
+    build || {
     echo "ERROR: Failed to build CodexBarWidget extension" >&2
     exit 1
-  fi
+  }
 
   local appex="$derived_dir/Build/Products/${xcode_conf}/CodexBarWidget.appex"
   if [[ ! -f "$appex/Contents/MacOS/CodexBarWidget" ]]; then
@@ -647,6 +710,10 @@ if [[ "$JONES_OVERLAY" == "1" && -d "${APP}/Contents/PlugIns/CodexBarWidget.appe
   /usr/libexec/PlistBuddy -c "Add :JonesAppBundleID string ${BUNDLE_ID}" "$WIDGET_INFO"
   /usr/libexec/PlistBuddy -c "Add :JonesAppGroupID string ${APP_GROUP_ID}" "$WIDGET_INFO"
   /usr/libexec/PlistBuddy -c "Add :JonesICloudID string ${ICLOUD_ID}" "$WIDGET_INFO"
+  /usr/libexec/PlistBuddy -c "Add :JonesSourceRevision string ${JONES_SOURCE_REVISION}" "$WIDGET_INFO"
+  /usr/libexec/PlistBuddy -c "Add :JonesBuildOrigin string ${JONES_BUILD_ORIGIN}" "$WIDGET_INFO"
+  /usr/libexec/PlistBuddy -c "Add :JonesBuildRun string ${JONES_BUILD_RUN}" "$WIDGET_INFO"
+  /usr/libexec/PlistBuddy -c "Add :JonesUpdateChannel string ${JONES_UPDATE_CHANNEL}" "$WIDGET_INFO"
 fi
 
 # Sign widget extension if present
