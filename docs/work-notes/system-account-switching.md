@@ -116,3 +116,11 @@ remains assigned to the hosted workflow.
 Local free space briefly fell below 1 GB, so package download was stopped without
 extracting or replacing an app. A later measurement admitted the download and
 inspection. Storage must be revalidated immediately before installation.
+
+Head `8fddaeec213075c3fbe0ba7ffb4c1aa19d25888e` passed hosted lint,
+Linux builds and packaging. CI run `39917881914`, macOS shard 1, reached the
+provider architecture gate and rejected the new Codex-specific label condition
+without an adjacent rationale. The required near-code comment now explains that
+the enrolled Codex UMICH alias retains its institutional spelling. Runtime
+behavior and architecture enforcement are unchanged. The complete current-head
+CI and package still require qualification after publication of this correction.
