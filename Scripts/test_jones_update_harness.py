@@ -3,12 +3,14 @@
 
 import base64
 from contextlib import redirect_stderr
+import errno
 import io
 import json
 import os
 from pathlib import Path
 import plistlib
 import signal
+import socket
 import subprocess
 import tempfile
 import unittest
@@ -221,6 +223,48 @@ class HarnessTests(unittest.TestCase):
                 server.server_close()
                 worker.join(timeout=3)
             self.assertFalse(worker.is_alive())
+
+    def closed_feed_response(self, address):
+        # Let the server close first, retaining its TIME_WAIT state after this client closes.
+        with socket.create_connection(address, timeout=2) as client:
+            client.sendall(b"GET /appcast.xml HTTP/1.0\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n")
+            response = bytearray()
+            while chunk := client.recv(4096):
+                response.extend(chunk)
+                self.assertLessEqual(len(response), 32768)
+        return bytes(response).partition(b"\r\n\r\n")[2]
+
+    def test_all_scenarios_rebind_the_same_port_after_server_closed_connections(self):
+        manifest = {"port": 0}
+        feeds = {scenario: f"<rss>{scenario}</rss>" for scenario in harness.SCENARIOS}
+        for scenario in harness.SCENARIOS:
+            with self.subTest(scenario=scenario), harness.serving(manifest, feeds, scenario, self.root) as server:
+                manifest["port"] = server.server_address[1]
+                self.assertEqual(self.closed_feed_response(server.server_address), feeds[scenario].encode())
+            self.assertEqual(server.socket.fileno(), -1)
+            self.assertFalse(any(thread.name == "jones-fixture-http" for thread in harness.threading.enumerate()))
+
+    def test_active_listener_is_exclusive_and_binding_failure_identifies_errno(self):
+        feeds = {"quit": "<rss>owned listener</rss>"}
+        with harness.serving({"port": 0}, feeds, "quit", self.root) as server:
+            with self.assertRaises(harness.candidate.CandidateError) as caught:
+                with harness.serving({"port": server.server_address[1]}, feeds, "quit", self.root):
+                    self.fail("A second listener acquired the active fixture port")
+            self.assertEqual(caught.exception.code, "fixture-listener")
+            self.assertIn(f"errno={errno.EADDRINUSE}", str(caught.exception))
+            self.assertEqual(self.closed_feed_response(server.server_address), feeds["quit"].encode())
+
+    def test_server_releases_listener_after_case_failure(self):
+        feeds = {"quit": "<rss>owned listener</rss>"}
+        port = None
+        with self.assertRaisesRegex(RuntimeError, "synthetic case failure"):
+            with harness.serving({"port": 0}, feeds, "quit", self.root) as server:
+                port = server.server_address[1]
+                self.closed_feed_response(server.server_address)
+                raise RuntimeError("synthetic case failure")
+        self.assertIsNotNone(port)
+        with harness.serving({"port": port}, feeds, "quit", self.root) as server:
+            self.assertEqual(self.closed_feed_response(server.server_address), feeds["quit"].encode())
 
     def home(self):
         home = self.root / "home"

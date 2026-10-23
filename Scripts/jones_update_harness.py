@@ -279,7 +279,9 @@ def verify_fixture(root, expected_revision):
 
 
 class FixtureServer(http.server.HTTPServer):
-    allow_reuse_address = False
+    # Let sequential cases rebind while prior connections remain in TIME_WAIT.
+    allow_reuse_address = True
+    allow_reuse_port = False
 
     def __init__(self, port, content, archive, tamper):
         self.content, self.archive, self.tamper = content, archive, tamper
@@ -321,8 +323,12 @@ class FixtureHandler(http.server.BaseHTTPRequestHandler):
 
 @contextmanager
 def serving(manifest, feeds, scenario, root):
-    server = FixtureServer(manifest["port"], feeds[scenario].encode("utf-8"), root / "B.zip",
-                           scenario == "tampered-archive")
+    try:
+        server = FixtureServer(manifest["port"], feeds[scenario].encode("utf-8"), root / "B.zip",
+                               scenario == "tampered-archive")
+    except OSError as error:
+        raise candidate.CandidateError(
+            "fixture-listener", f"Cannot bind isolated loopback listener (errno={error.errno})") from error
     server.timeout = 5
     thread = threading.Thread(target=server.serve_forever, name="jones-fixture-http", daemon=True)
     thread.start()
