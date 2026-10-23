@@ -3,7 +3,7 @@ import Testing
 @testable import CodexBar
 
 enum JonesUpdateTestFixtures {
-    // Public fixture bytes only; no signing identity, key store, defaults suite, or filesystem fixture.
+    /// Public fixture bytes only; no signing identity, key store, defaults suite, or filesystem fixture.
     static func package(channel: String = "stable") -> [String: Any] {
         [
             "CFBundleIdentifier": JonesUpdateTrustPolicy.productionBundleID,
@@ -150,7 +150,8 @@ struct JonesUpdateTrustPolicyTests {
     @Test
     func `production accepts only the packaged canonical HTTPS feed`() {
         for feed in [
-            "http://127.0.0.1/appcast.xml", "http://github.com/Jones-Systems/CodexBar/releases/latest/download/appcast.xml",
+            "http://127.0.0.1/appcast.xml",
+            "http://github.com/Jones-Systems/CodexBar/releases/latest/download/appcast.xml",
             "https://example.com/appcast.xml", JonesUpdateTrustPolicy.stableFeedURL + "?override=1",
             "https://github.com.evil.example/Jones-Systems/CodexBar/appcast.xml",
             "https://user:password@github.com/Jones-Systems/CodexBar/releases/latest/download/appcast.xml",
@@ -223,13 +224,15 @@ struct JonesUpdateTrustPolicyTests {
     @Test
     func `archive URLs obey the same upstream and transport boundary`() throws {
         let policy = try JonesUpdateTestFixtures.policy()
-        try policy.validateArchiveURL(URL(string: "https://github.com/Jones-Systems/CodexBar/releases/download/v1/app.zip"))
+        try policy.validateArchiveURL(
+            URL(string: "https://github.com/Jones-Systems/CodexBar/releases/download/v1/app.zip"))
         #expect(throws: JonesUpdateTrustPolicy.Rejection.feedURL) { try policy.validateArchiveURL(nil) }
         #expect(throws: JonesUpdateTrustPolicy.Rejection.feedURL) {
             try policy.validateArchiveURL(URL(string: "http://127.0.0.1/app.zip"))
         }
         #expect(throws: JonesUpdateTrustPolicy.Rejection.upstreamTrust) {
-            try policy.validateArchiveURL(URL(string: "https://github.com/steipete/CodexBar/releases/download/v1/app.zip"))
+            try policy.validateArchiveURL(
+                URL(string: "https://github.com/steipete/CodexBar/releases/download/v1/app.zip"))
         }
     }
 }

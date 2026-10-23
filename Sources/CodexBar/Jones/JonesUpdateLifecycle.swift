@@ -155,10 +155,14 @@ final class JonesUpdateDetail {
     var automaticUpdatesEnabled = false
     var idleDecision: JonesUpdateApplyPolicy.Decision = .deferred(.notPrepared)
 
-    var preparedUpdate: JonesPreparedUpdate? { self.state.preparedUpdate }
+    var preparedUpdate: JonesPreparedUpdate? {
+        self.state.preparedUpdate
+    }
 
     /// Disabling automatic updates cannot revoke Sparkle's already-prepared install at normal quit.
-    var installsPreparedUpdateAtQuit: Bool { self.preparedUpdate != nil }
+    var installsPreparedUpdateAtQuit: Bool {
+        self.preparedUpdate != nil
+    }
 
     init(state: JonesUpdateState) {
         self.state = state

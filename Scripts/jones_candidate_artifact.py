@@ -402,7 +402,7 @@ def validate_zip(archive, manifest):
 
 def packager_contract(repo):
     # This query must return before configuration, build, signing or launch effects.
-    # The baseline packager rejects the flag; parent integration owns its support.
+    # Its compiler claims depend on the shared build_jobs.py wrapper at every build boundary.
     try:
         raw = command(["/bin/bash", repo / "Scripts/package_app.sh", "--jones-candidate-capabilities"],
                       cwd=repo, timeout=30).stdout

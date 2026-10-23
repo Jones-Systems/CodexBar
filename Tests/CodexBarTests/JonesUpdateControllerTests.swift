@@ -48,8 +48,8 @@ struct JonesUpdateControllerTests {
     @Test
     func `disabled channel starts no driver and manual actions have no effects`() throws {
         let driver = JonesUpdateFixtureDriver()
-        let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(channel: "none"), driver: driver)
+        let controller = try JonesUpdateController(
+            policy: JonesUpdateTestFixtures.policy(channel: "none"), driver: driver)
         #expect(driver.starts == 0)
         #expect(!controller.isAvailable)
         #expect(!controller.detail.canCheckForUpdates)
@@ -65,8 +65,8 @@ struct JonesUpdateControllerTests {
     @Test
     func `check availability and automatic preferences follow the injected driver`() throws {
         let driver = JonesUpdateFixtureDriver()
-        let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(), driver: driver, savedAutoUpdate: true)
+        let controller = try JonesUpdateController(
+            policy: JonesUpdateTestFixtures.policy(), driver: driver, savedAutoUpdate: true)
         let updater: any UpdaterProviding = controller
         #expect(updater.isAvailable)
         #expect(driver.starts == 1)
@@ -94,8 +94,8 @@ struct JonesUpdateControllerTests {
     @Test
     func `preparation is synchronous and manual apply consumes the handler before reentrancy`() throws {
         let timer = JonesUpdateFixtureTimer()
-        let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(),
+        let controller = try JonesUpdateController(
+            policy: JonesUpdateTestFixtures.policy(),
             driver: JonesUpdateFixtureDriver(),
             scheduleIdle: timer.schedule)
         var installations = 0
@@ -105,10 +105,11 @@ struct JonesUpdateControllerTests {
         #expect(!controller.updateStatus.isUpdateReady)
         #expect(timer.starts == 0)
         let accepted = controller.prepared(
-            version: "135.2", generation: controller.lifecycle.generation) { [weak controller] in
-                installations += 1
-                controller?.installUpdate()
-            }
+            version: "135.2", generation: controller.lifecycle.generation)
+        { [weak controller] in
+            installations += 1
+            controller?.installUpdate()
+        }
         #expect(accepted)
         #expect(controller.updateStatus.isUpdateReady)
         #expect(timer.starts == 1)
@@ -124,7 +125,7 @@ struct JonesUpdateControllerTests {
     @Test
     func `manual apply before ready neither installs nor starts a new check`() throws {
         let driver = JonesUpdateFixtureDriver()
-        let controller = JonesUpdateController(policy: try JonesUpdateTestFixtures.policy(), driver: driver)
+        let controller = try JonesUpdateController(policy: JonesUpdateTestFixtures.policy(), driver: driver)
         controller.installUpdate()
         controller.beginCheck()
         controller.found(version: "135.2")
@@ -140,8 +141,8 @@ struct JonesUpdateControllerTests {
         ]
         for outcome in outcomes {
             let timer = JonesUpdateFixtureTimer()
-            let controller = JonesUpdateController(
-                policy: try JonesUpdateTestFixtures.policy(),
+            let controller = try JonesUpdateController(
+                policy: JonesUpdateTestFixtures.policy(),
                 driver: JonesUpdateFixtureDriver(),
                 scheduleIdle: timer.schedule)
             var installations = 0
@@ -164,8 +165,8 @@ struct JonesUpdateControllerTests {
     @Test
     func `dismissal and successful cycle do not fabricate readiness or installation`() throws {
         let timer = JonesUpdateFixtureTimer()
-        let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(),
+        let controller = try JonesUpdateController(
+            policy: JonesUpdateTestFixtures.policy(),
             driver: JonesUpdateFixtureDriver(),
             scheduleIdle: timer.schedule)
         controller.beginCheck()
@@ -192,8 +193,8 @@ struct JonesUpdateControllerTests {
     func `default unknown safety denies idle while manual apply bypasses idle gates`() throws {
         let timer = JonesUpdateFixtureTimer()
         var now: TimeInterval = 0
-        let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(),
+        let controller = try JonesUpdateController(
+            policy: JonesUpdateTestFixtures.policy(),
             driver: JonesUpdateFixtureDriver(),
             savedAutoUpdate: true,
             clock: { now },
@@ -220,8 +221,8 @@ struct JonesUpdateControllerTests {
         let timer = JonesUpdateFixtureTimer()
         var now: TimeInterval = 0
         var safety = JonesUpdateTestFixtures.idleSafety
-        let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(),
+        let controller = try JonesUpdateController(
+            policy: JonesUpdateTestFixtures.policy(),
             driver: JonesUpdateFixtureDriver(),
             savedAutoUpdate: true,
             idleSafetyProvider: { safety },
@@ -253,8 +254,8 @@ struct JonesUpdateControllerTests {
     func `explicit no idle hook denies until integration supplies safety again`() throws {
         let timer = JonesUpdateFixtureTimer()
         var now: TimeInterval = 0
-        let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(),
+        let controller = try JonesUpdateController(
+            policy: JonesUpdateTestFixtures.policy(),
             driver: JonesUpdateFixtureDriver(),
             savedAutoUpdate: true,
             idleSafetyProvider: { JonesUpdateTestFixtures.idleSafety },
@@ -279,8 +280,8 @@ struct JonesUpdateControllerTests {
     @Test
     func `termination uncertainty and installation cancellation never silently rearm a handler`() throws {
         let timer = JonesUpdateFixtureTimer()
-        let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(),
+        let controller = try JonesUpdateController(
+            policy: JonesUpdateTestFixtures.policy(),
             driver: JonesUpdateFixtureDriver(),
             scheduleIdle: timer.schedule)
         var installations = 0
@@ -305,8 +306,8 @@ struct JonesUpdateControllerTests {
     @Test
     func `cycle errors clear readiness and preserve an actionable admission reason`() throws {
         let timer = JonesUpdateFixtureTimer()
-        let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(),
+        let controller = try JonesUpdateController(
+            policy: JonesUpdateTestFixtures.policy(),
             driver: JonesUpdateFixtureDriver(),
             scheduleIdle: timer.schedule)
         controller.beginCheck()
@@ -329,8 +330,8 @@ struct JonesUpdateControllerTests {
     func `deinitialization releases driver callbacks handler and prepared timer`() throws {
         let timer = JonesUpdateFixtureTimer()
         let driver = JonesUpdateFixtureDriver()
-        var controller: JonesUpdateController? = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(), driver: driver, scheduleIdle: timer.schedule)
+        var controller: JonesUpdateController? = try JonesUpdateController(
+            policy: JonesUpdateTestFixtures.policy(), driver: driver, scheduleIdle: timer.schedule)
         weak var weakController = controller
         controller?.beginCheck()
         controller?.found(version: "135.2")
@@ -347,7 +348,7 @@ struct JonesUpdateControllerTests {
     func `startup failure is unavailable and never enables checks`() throws {
         let driver = JonesUpdateFixtureDriver()
         driver.startError = NSError(domain: "fixture", code: 9)
-        let controller = JonesUpdateController(policy: try JonesUpdateTestFixtures.policy(), driver: driver)
+        let controller = try JonesUpdateController(policy: JonesUpdateTestFixtures.policy(), driver: driver)
         #expect(!controller.isAvailable)
         #expect(!controller.detail.canCheckForUpdates)
         #expect(controller.detail.state == .failed(.sparkle(domain: "fixture", code: 9)))
@@ -363,8 +364,8 @@ struct JonesUpdateControllerTests {
             isDelta: false,
             installationType: "application")
         var capacity = JonesUpdateAdmission.Capacity.unknown
-        let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(),
+        let controller = try JonesUpdateController(
+            policy: JonesUpdateTestFixtures.policy(),
             driver: JonesUpdateFixtureDriver(),
             capacityProvider: { capacity })
         controller.beginCheck()
@@ -380,8 +381,8 @@ struct JonesUpdateControllerTests {
 
     @Test
     func `delta and package updates are rejected through the actual admission seam`() throws {
-        let controller = JonesUpdateController(
-            policy: try JonesUpdateTestFixtures.policy(),
+        let controller = try JonesUpdateController(
+            policy: JonesUpdateTestFixtures.policy(),
             driver: JonesUpdateFixtureDriver(),
             capacityProvider: { .init(appVolume: .max, cacheVolume: .max) })
         let url = URL(string: "https://github.com/Jones-Systems/CodexBar/releases/download/v1/app.zip")

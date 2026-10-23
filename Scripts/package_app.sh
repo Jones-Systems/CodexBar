@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# This read-only query precedes configuration, tool discovery and all packaging effects.
+if [[ "${1:-}" == "--jones-candidate-capabilities" ]]; then
+  [[ "$#" == "1" ]] || { echo 'The capability query accepts no other arguments.' >&2; exit 2; }
+  printf '%s\n' '{"schema":"jones-candidate-packager/v1","compiler_jobs_env":"CODEXBAR_BUILD_JOBS","compiler_jobs_max":6,"bounded_compilers":["swift-build","xcodebuild"],"resource_only_smoke_env":"CODEXBAR_LAUNCH_SMOKE_RESOURCE_ONLY","resource_only_smoke_value":"1"}'
+  exit 0
+fi
+
 # JONES(trial-identity): pure identity resolution; fixture tests source only this block.
 resolve_package_identity() {
   BUNDLE_ID="com.steipete.codexbar"

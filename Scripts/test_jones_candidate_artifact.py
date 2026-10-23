@@ -519,6 +519,33 @@ class CleanupAndCLITests(RejectionAssertions, unittest.TestCase):
             with patch.object(candidate, "command", return_value=response):
                 self.rejects("packager-contract", candidate.packager_contract, Path("/fixture"))
 
+    def test_real_packager_query_has_no_build_or_configuration_effects(self):
+        repo = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory(prefix="jones-packager-query-") as temporary:
+            root = Path(temporary)
+            scripts = root / "Scripts"
+            scripts.mkdir()
+            package = scripts / "package_app.sh"
+            package.write_bytes((repo / "Scripts/package_app.sh").read_bytes())
+            (root / "version.env").write_text("exit 91\n", encoding="ascii")
+            (root / ".mac-release.jones.env").write_text("exit 92\n", encoding="ascii")
+            before = sorted(str(path.relative_to(root)) for path in root.rglob("*"))
+            environment = {"PATH": str(root / "no-tools"), "CODEXBAR_SIGNING": "invalid"}
+            result = subprocess.run(
+                ["/bin/bash", str(package), "--jones-candidate-capabilities"],
+                cwd=root, env=environment, capture_output=True, timeout=5)
+            self.assertEqual(result.returncode, 0, result.stderr.decode())
+            capabilities = json.loads(result.stdout)
+            self.assertEqual(capabilities["schema"], "jones-candidate-packager/v1")
+            self.assertEqual(capabilities["compiler_jobs_max"], 6)
+            self.assertEqual(capabilities["bounded_compilers"], ["swift-build", "xcodebuild"])
+            self.assertEqual(capabilities["resource_only_smoke_value"], "1")
+            extra = subprocess.run(
+                ["/bin/bash", str(package), "--jones-candidate-capabilities", "release"],
+                cwd=root, env=environment, capture_output=True, timeout=5)
+            self.assertNotEqual(extra.returncode, 0)
+            self.assertEqual(sorted(str(path.relative_to(root)) for path in root.rglob("*")), before)
+
     def test_cli_returns_json_rejection_without_traceback(self):
         stderr = io.StringIO()
         with patch.object(candidate, "inspect_context", side_effect=OSError("private path not printed")), \

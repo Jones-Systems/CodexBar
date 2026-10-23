@@ -52,13 +52,13 @@ enum JonesUpdateApplyPolicy {
     static let minimumHIDIdleTime: TimeInterval = 15 * 60
 
     static func evaluate(_ snapshot: Snapshot) -> Decision {
-        guard let prepared = Self.knownDuration(snapshot.preparedAge) else {
+        guard let prepared = self.knownDuration(snapshot.preparedAge) else {
             return .deferred(.unknown(.preparedAge))
         }
-        guard let launch = Self.knownDuration(snapshot.launchAge) else {
+        guard let launch = self.knownDuration(snapshot.launchAge) else {
             return .deferred(.unknown(.launchAge))
         }
-        guard let idle = Self.knownDuration(snapshot.safety.hidIdleTime) else {
+        guard let idle = self.knownDuration(snapshot.safety.hidIdleTime) else {
             return .deferred(.unknown(.hidIdleTime))
         }
         guard let automatic = snapshot.automaticUpdatesEnabled else {
@@ -75,9 +75,9 @@ enum JonesUpdateApplyPolicy {
         }
         guard let menus = snapshot.safety.hasVisibleMenus else { return .deferred(.unknown(.menus)) }
         guard automatic else { return .deferred(.automaticUpdatesDisabled) }
-        guard prepared >= Self.minimumPreparedAge else { return .deferred(.recentlyPrepared) }
-        guard launch >= Self.minimumLaunchAge else { return .deferred(.recentlyLaunched) }
-        guard idle >= Self.minimumHIDIdleTime else { return .deferred(.userActive) }
+        guard prepared >= self.minimumPreparedAge else { return .deferred(.recentlyPrepared) }
+        guard launch >= self.minimumLaunchAge else { return .deferred(.recentlyLaunched) }
+        guard idle >= self.minimumHIDIdleTime else { return .deferred(.userActive) }
         guard !interaction else { return .deferred(.accountInteraction) }
         guard !processes else { return .deferred(.activeTTYProcesses) }
         guard !windows else { return .deferred(.visibleWindows) }

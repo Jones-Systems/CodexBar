@@ -31,9 +31,11 @@ final class JonesUpdateController: NSObject, UpdaterProviding {
     typealias CapacityProvider = @MainActor () -> JonesUpdateAdmission.Capacity
     typealias IdleScheduler = @MainActor (@escaping @MainActor () -> Void) -> JonesUpdateCancellation
 
+    @MainActor
     private struct PreparedInstallation {
         let update: JonesPreparedUpdate
-        let install: @MainActor () -> Void
+        // Sparkle's block is not Sendable; its storage and invocation stay on this actor.
+        let install: () -> Void
     }
 
     let policy: JonesUpdateTrustPolicy
@@ -103,7 +105,9 @@ final class JonesUpdateController: NSObject, UpdaterProviding {
         }
     }
 
-    var isAvailable: Bool { self.policy.isEnabled && self.started }
+    var isAvailable: Bool {
+        self.policy.isEnabled && self.started
+    }
 
     var automaticallyChecksForUpdates: Bool {
         get { self.driver?.automaticallyChecksForUpdates ?? false }
@@ -199,7 +203,7 @@ final class JonesUpdateController: NSObject, UpdaterProviding {
     func prepared(
         version: String,
         generation: UUID,
-        install: @escaping @MainActor () -> Void) -> Bool
+        install: @escaping () -> Void) -> Bool
     {
         guard let prepared = self.lifecycle.prepared(version: version, generation: generation, at: self.clock()) else {
             return false
@@ -332,13 +336,15 @@ final class JonesUpdateController: NSObject, UpdaterProviding {
 #if canImport(Sparkle) && ENABLE_SPARKLE
 import Sparkle
 
-// Sparkle 2.9.3 marks SPUUpdaterDelegate NS_SWIFT_UI_ACTOR. Keep every transition synchronous.
+/// Sparkle 2.9.3 marks SPUUpdaterDelegate NS_SWIFT_UI_ACTOR. Keep every transition synchronous.
 extension JonesUpdateController: SPUUpdaterDelegate {
     func feedURLString(for updater: SPUUpdater) -> String? {
         self.policy.feedURL?.absoluteString
     }
 
-    func allowedChannels(for updater: SPUUpdater) -> Set<String> { [] }
+    func allowedChannels(for updater: SPUUpdater) -> Set<String> {
+        []
+    }
 
     func updater(_ updater: SPUUpdater, mayPerform updateCheck: SPUUpdateCheck) throws {
         self.beginCheck()
@@ -461,7 +467,9 @@ private final class JonesSparkleUpdateDriver: JonesUpdateDriver {
         set { self.controller.updater.automaticallyDownloadsUpdates = newValue }
     }
 
-    var canCheckForUpdates: Bool { self.controller.updater.canCheckForUpdates }
+    var canCheckForUpdates: Bool {
+        self.controller.updater.canCheckForUpdates
+    }
 
     func start() throws {
         try self.controller.updater.start()

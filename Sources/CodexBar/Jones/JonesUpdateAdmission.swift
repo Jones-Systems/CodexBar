@@ -16,7 +16,7 @@ enum JonesUpdateAdmission {
 
         /// These observations reserve no space and do not bound Sparkle's actual downloaded bytes.
         static func read(appURL: URL, cacheURL: URL) -> Self {
-            Self(appVolume: Self.available(at: appURL), cacheVolume: Self.available(at: cacheURL))
+            Self(appVolume: self.available(at: appURL), cacheVolume: self.available(at: cacheURL))
         }
 
         private static func available(at url: URL) -> Int64? {
@@ -42,9 +42,9 @@ enum JonesUpdateAdmission {
 
     static func validate(archiveLength: UInt64?, capacity: Capacity) throws -> Int64 {
         guard let archiveLength, archiveLength > 0 else { throw Rejection.unknownLength }
-        guard archiveLength <= Self.maximumArchiveLength else { throw Rejection.archiveTooLarge }
+        guard archiveLength <= self.maximumArchiveLength else { throw Rejection.archiveTooLarge }
         // The length bound precedes arithmetic, including the conversion from Sparkle's UInt64.
-        let required = 4 * Int64(archiveLength) + Self.reserveBytes
+        let required = 4 * Int64(archiveLength) + self.reserveBytes
         guard let app = capacity.appVolume, app >= 0 else { throw Rejection.unknownAppCapacity }
         guard let cache = capacity.cacheVolume, cache >= 0 else { throw Rejection.unknownCacheCapacity }
         guard app >= required else { throw Rejection.insufficientAppCapacity(required: required) }

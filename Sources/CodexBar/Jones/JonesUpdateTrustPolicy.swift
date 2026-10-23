@@ -47,7 +47,9 @@ struct JonesUpdateTrustPolicy: Equatable, Sendable {
     let feedURL: URL?
     let publicKey: String?
 
-    var isEnabled: Bool { self.channel == .stable }
+    var isEnabled: Bool {
+        self.channel == .stable
+    }
 
     private init(
         identity: Identity,
@@ -68,7 +70,7 @@ struct JonesUpdateTrustPolicy: Equatable, Sendable {
     }
 
     static func validate(infoDictionary info: [String: Any]) throws -> Self {
-        let identity = try Self.validateIdentity(info)
+        let identity = try self.validateIdentity(info)
         guard let revision = info["JonesSourceRevision"] as? String,
               revision.utf8.count == 40,
               revision.utf8.allSatisfy({ (48...57).contains($0) || (97...102).contains($0) })
@@ -77,7 +79,7 @@ struct JonesUpdateTrustPolicy: Equatable, Sendable {
               let origin = BuildOrigin(rawValue: rawOrigin)
         else { throw Rejection.buildOrigin }
         guard let run = info["JonesBuildRun"] as? String,
-              origin == .local ? run.isEmpty : Self.isCanonicalBuildRun(run)
+              origin == .local ? run.isEmpty : self.isCanonicalBuildRun(run)
         else { throw Rejection.buildRun }
         guard let rawChannel = info["JonesUpdateChannel"] as? String,
               let channel = Channel(rawValue: rawChannel)
@@ -98,16 +100,16 @@ struct JonesUpdateTrustPolicy: Equatable, Sendable {
                 publicKey: nil)
         }
 
-        guard key != Self.upstreamPublicKey else { throw Rejection.upstreamTrust }
+        guard key != self.upstreamPublicKey else { throw Rejection.upstreamTrust }
         guard let decoded = Data(base64Encoded: key), decoded.count == 32,
               decoded.base64EncodedString() == key
         else { throw Rejection.publicKey }
-        let feedURL = try Self.validateURL(feed, identity: identity)
-        guard identity == .harness || feed == Self.stableFeedURL else { throw Rejection.feedURL }
-        guard Self.plistBoolean(info["SURequireSignedFeed"]) == true else {
+        let feedURL = try self.validateURL(feed, identity: identity)
+        guard identity == .harness || feed == self.stableFeedURL else { throw Rejection.feedURL }
+        guard self.plistBoolean(info["SURequireSignedFeed"]) == true else {
             throw Rejection.signedFeedRequired
         }
-        guard Self.plistBoolean(info["SUVerifyUpdateBeforeExtraction"]) == true else {
+        guard self.plistBoolean(info["SUVerifyUpdateBeforeExtraction"]) == true else {
             throw Rejection.verificationBeforeExtractionRequired
         }
         guard let expiry = info["SUSignedFeedFailureExpirationInterval"] as? NSNumber,
@@ -136,14 +138,14 @@ struct JonesUpdateTrustPolicy: Equatable, Sendable {
     }
 
     private static func validateIdentity(_ info: [String: Any]) throws -> Identity {
-        if info["CFBundleIdentifier"] as? String == Self.harnessBundleID {
-            guard Self.plistBoolean(info["JonesUpdateHarness"]) == true,
+        if info["CFBundleIdentifier"] as? String == self.harnessBundleID {
+            guard self.plistBoolean(info["JonesUpdateHarness"]) == true,
                   info["JonesStateKey"] == nil
             else { throw Rejection.identity }
             return .harness
         }
-        guard info["CFBundleIdentifier"] as? String == Self.productionBundleID,
-              info["JonesAppBundleID"] as? String == Self.productionBundleID,
+        guard info["CFBundleIdentifier"] as? String == self.productionBundleID,
+              info["JonesAppBundleID"] as? String == self.productionBundleID,
               info["CFBundleDisplayName"] as? String == "CodexBar Jones",
               info["JonesStateKey"] as? String == "jones",
               info["CodexBarTeamID"] as? String == "JONESLOCAL",
