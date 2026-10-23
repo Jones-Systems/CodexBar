@@ -1,8 +1,8 @@
 ---
-summary: "Load-aware macOS compiler job limits and participating build launchers."
+summary: "CPU and storage admission for participating macOS build launchers."
 read_when:
   - Running local builds or tests
-  - Diagnosing compiler CPU usage or blocked admission
+  - Diagnosing compiler CPU usage, storage, or blocked admission
 ---
 
 # Compiler resource limits
@@ -41,6 +41,40 @@ Cancellation while waiting starts nothing. Existing CPU/memory preflight
 requirements still apply. A valid `CODEXBAR_BUILD_JOBS` value can lower the
 budget, but cannot raise it. Excessive or duplicate job flags cannot raise it
 either. Unsupported compiler-level concurrency overrides are rejected.
+
+Immediately after CPU admission, while still holding the shared lock, the helper
+checks available storage before writing the in-progress record or starting a
+child. The provisional ordinary-operation budget is a **30 GiB residual reserve
+plus 10 GiB estimated additional peak allocation**, requiring **40 GiB available**.
+These are conservative initial estimates, not measured workload bounds. Equality
+passes using integer bytes; existing output size is not subtracted again.
+
+`CODEXBAR_BUILD_RESERVE_BYTES` and `CODEXBAR_BUILD_PEAK_BYTES` may explicitly
+increase their respective defaults. Empty, malformed, zero, negative or smaller
+values fail closed. Multi-architecture builds, packaging/staging and other larger
+operations must declare a larger additional peak covering transient overlap.
+The estimate covers the combined outputs on each filesystem, not a separate
+allowance per directory. The check is a snapshot, not a quota or reservation
+against unrelated writers.
+
+SwiftPM output selection follows `--package-path` and `--scratch-path`, including
+`--option=value` forms. It also checks explicit cache/config/security and xUnit
+output paths. Xcode selection includes `-derivedDataPath`, `-archivePath`, result
+and package-cache destinations. Defaults include the package's `.build` (the
+current directory's `.build` at the package root; nested working directories
+follow SwiftPM's upward `Package.swift` search), the standard shared caches,
+Xcode DerivedData/Archives as applicable, and temporary storage. Nonexistent
+outputs resolve to their nearest existing ancestor without creating them.
+Unresolved path expressions, unsupported destination overrides and opaque compiler
+output flags are rejected. The diagnostic names the output, measured ancestor,
+available bytes, reserve and additional peak; unavailable or insufficient evidence
+starts no child and performs no cleanup. Compiler-free `--skip-build` commands
+retain the storage check because tests can still allocate output.
+
+Build outputs and shared caches retain their existing owners and lifetimes. This
+admission change does not impose retention bounds or authorize deleting existing
+`.build`, cache, packaging, installed or rollback artifacts. Packaging retention
+and its existing cleanup behavior remain separate work.
 
 The shared lock file also retains a minimal in-progress record until owned
 child cleanup is proved. An abandoned or unknown-cleanup record prevents a new

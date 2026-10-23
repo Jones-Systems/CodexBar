@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -40,12 +41,156 @@ class BuildJobsTests(unittest.TestCase):
         self.stack.enter_context(patch.object(jobs, "lock_directory", return_value=self.directory / "lock"))
         self.stack.enter_context(patch.object(jobs.os, "cpu_count", return_value=12))
         self.stack.enter_context(patch.dict(os.environ, {}, clear=True))
+        self.disk = self.stack.enter_context(patch.object(jobs.os, "statvfs", return_value=SimpleNamespace(
+            f_bavail=40 * 1024 ** 3, f_frsize=1)))
         self.ticks = 0
         self.cpu = self.stack.enter_context(patch.object(jobs, "cpu_ticks", side_effect=self.read_ticks))
 
     def read_ticks(self):
         self.ticks += 1
         return (20 * self.ticks, 0, 80 * self.ticks, 0)
+
+    def test_storage_exact_threshold_and_larger_budget(self):
+        import ci_swift_test_by_suite as runner
+        with patch.object(runner, "_scratch_cleanup_safe", True), \
+                patch.object(runner, "_run_command", return_value=37) as execute:
+            self.assertEqual(jobs.run(["swift", "build"], "swift"), 37)
+            self.assertEqual(execute.call_count, 1)
+            with patch.dict(os.environ, {"CODEXBAR_BUILD_PEAK_BYTES": str(10 * 1024 ** 3 + 1)}):
+                with self.assertRaisesRegex(jobs.AdmissionError, "insufficient storage"):
+                    jobs.run(["swift", "build"], "swift")
+                self.assertEqual(execute.call_count, 1)
+                self.disk.return_value.f_bavail += 1
+                self.assertEqual(jobs.run(["swift", "build"], "swift"), 37)
+            self.assertEqual(execute.call_count, 2)
+
+    def test_storage_budget_rejects_invalid_or_lower_values(self):
+        for name, minimum in [("CODEXBAR_BUILD_RESERVE_BYTES", 30 * 1024 ** 3),
+                              ("CODEXBAR_BUILD_PEAK_BYTES", 10 * 1024 ** 3)]:
+            for raw in ["", "-1", "0", "1.2", "NaN", " 40000000000", str(minimum - 1)]:
+                with self.subTest(name=name, raw=raw), self.assertRaises(jobs.AdmissionError):
+                    jobs.storage_budget({name: raw})
+            actual = jobs.storage_budget({name: str(minimum + 1)})
+            self.assertIn(minimum + 1, actual)
+
+    def test_storage_unavailable_or_invalid_starts_no_child(self):
+        import ci_swift_test_by_suite as runner
+        for evidence in [OSError("unavailable"), SimpleNamespace(f_bavail=-1, f_frsize=1),
+                         SimpleNamespace(f_bavail=100, f_frsize=0),
+                         SimpleNamespace(f_bavail=40 * 1024 ** 3, f_frsize=1.0)]:
+            with self.subTest(evidence=evidence), patch.object(runner, "_run_command") as execute:
+                self.disk.side_effect = evidence if isinstance(evidence, Exception) else None
+                self.disk.return_value = evidence
+                with self.assertRaisesRegex(jobs.AdmissionError, "storage evidence unavailable"):
+                    jobs.run(["swift", "build"], "swift")
+                execute.assert_not_called()
+                self.assertEqual((self.directory / "lock/compiler.lock").read_bytes(), b"")
+
+    def test_storage_measurement_follows_wait_and_cpu_window(self):
+        events = []
+        def acquire(*_):
+            events.append("lock")
+            if len(events) == 1:
+                raise BlockingIOError()
+        def cpu(_):
+            events.append("cpu")
+            return Fraction(0), Fraction(0), 30
+        def disk(_):
+            events.append("disk")
+            self.assertEqual((self.directory / "lock/compiler.lock").read_bytes(), b"")
+            raise OSError("changed while waiting")
+        with patch.object(jobs.fcntl, "flock", side_effect=acquire), \
+                patch.object(jobs, "sample_window", side_effect=cpu):
+            self.disk.side_effect = disk
+            with self.assertRaises(jobs.AdmissionError):
+                with jobs.admission(["swift", "build"]):
+                    self.fail("launched")
+        self.assertEqual(events, ["lock", "lock", "cpu", "disk"])
+
+    def test_storage_measurement_cannot_extend_admission_deadline(self):
+        def disk(_):
+            self.clock.now = 300
+            return SimpleNamespace(f_bavail=40 * 1024 ** 3, f_frsize=1)
+        self.disk.side_effect = disk
+        with self.assertRaisesRegex(jobs.AdmissionError, "deadline expired"):
+            with jobs.admission(["swift", "build"]):
+                self.fail("launched")
+        self.assertEqual((self.directory / "lock/compiler.lock").read_bytes(), b"")
+
+    def test_storage_swift_destinations_and_nonexistent_ancestor(self):
+        package = self.directory / "package"
+        package.mkdir()
+        external = self.directory / "volume"
+        external.mkdir()
+        alias = self.directory / "alias"
+        alias.symlink_to(external, target_is_directory=True)
+        scratch = alias / "new/build"
+        with patch.object(jobs.Path, "cwd", return_value=self.directory):
+            for args in [["--package-path", "package", "--scratch-path", str(scratch)],
+                         ["--package-path=package", "--scratch-path=" + str(scratch)]]:
+                destinations = jobs.output_destinations(["build", *args], "swift", {})
+                self.assertIn(package, destinations)
+                self.assertIn(scratch, destinations)
+                self.assertEqual(jobs.existing_output_ancestor(scratch), external.resolve())
+                self.assertFalse((external / "new").exists())
+            self.assertIn(self.directory / ".build", jobs.output_destinations(["build"], "swift", {}))
+            self.assertIn(package / ".build", jobs.output_destinations(
+                ["build", "--package-path", "package"], "swift", {}))
+            for option in ["--cache-path", "--config-path", "--security-path", "--xunit-output"]:
+                self.assertIn(external, jobs.output_destinations(["test", option + "=" + str(external)], "swift", {}))
+
+    def test_storage_finds_package_from_nested_working_directory(self):
+        package = self.directory / "package"
+        nested = package / "Sources/Nested"
+        nested.mkdir(parents=True)
+        (package / "Package.swift").touch()
+        with patch.object(jobs.Path, "cwd", return_value=nested):
+            paths = jobs.output_destinations(["build"], "swift", {})
+            self.assertIn(package / ".build", paths)
+            self.assertNotIn(nested / ".build", paths)
+        with patch.object(jobs.Path, "cwd", return_value=self.directory):
+            paths = jobs.output_destinations(["build", "--package-path=package/Sources"], "swift", {})
+            self.assertIn(package / ".build", paths)
+
+    def test_storage_checks_each_destination_filesystem(self):
+        first = self.directory / "volume-a"
+        second = self.directory / "volume-b"
+        first.mkdir()
+        second.mkdir()
+        seen = []
+        def evidence(path):
+            seen.append(path)
+            return SimpleNamespace(f_bavail=40 * 1024 ** 3 - (path == second.resolve()), f_frsize=1)
+        self.disk.side_effect = evidence
+        with self.assertRaisesRegex(jobs.AdmissionError, "insufficient storage"):
+            with jobs.admission(["xcodebuild", "build", "-derivedDataPath", str(first / "derived"),
+                                 "-archivePath=" + str(second / "archive")], "xcode"):
+                self.fail("launched")
+        self.assertIn(first.resolve(), seen)
+        self.assertIn(second.resolve(), seen)
+        self.assertFalse((first / "derived").exists())
+        self.assertFalse((second / "archive").exists())
+
+    def test_storage_xcode_extra_destinations_and_safe_settings(self):
+        for option in ["-resultBundlePath", "-resultStreamPath", "-clonedSourcePackagesDirPath", "-packageCachePath"]:
+            for args in [[option, "output"], [option + "=output"]]:
+                paths = jobs.output_destinations(["build", *args, "ARCHS=arm64", "CODE_SIGNING_ALLOWED=NO"], "xcode", {})
+                self.assertIn(Path.cwd() / "output", paths)
+
+    def test_storage_rejects_unknown_output_overrides(self):
+        for kind, args in [("swift", ["--scratch-path="]), ("swift", ["--scratch-path", "$(ROOT)/build"]),
+                           ("swift", ["--scratch-path", "~/build"]), ("swift", ["--new-output-path", "elsewhere"]),
+                           ("swift", ["-Xswiftc", "-module-cache-path"]), ("swift", ["-Xcc=-fmodules-cache-path=x"]),
+                           ("swift", ["--scratch-path=a", "--scratch-path=b"]),
+                           ("swift", ["-C", "elsewhere"]), ("swift", ["--toolset=opaque.json"]),
+                           ("swift", ["--multiroot-data-file", "workspace.json"]),
+                           ("xcode", ["SYMROOT=elsewhere"]), ("xcode", ["OBJROOT[sdk=macosx*]=elsewhere"]),
+                           ("xcode", ["-exportPath", "elsewhere"])]:
+            with self.subTest(args=args), self.assertRaises(jobs.AdmissionError):
+                jobs.output_destinations(args, kind, {})
+        for name in ["SWIFTPM_BUILD_DIR", "SWIFTPM_MODULECACHE_OVERRIDE", "LLVM_PROFILE_FILE", "XCODE_XCCONFIG_FILE"]:
+            with self.subTest(name=name), self.assertRaises(jobs.AdmissionError):
+                jobs.output_destinations(["build"], "swift", {name: "elsewhere"})
 
     def test_capacity_examples_and_exact_boundary(self):
         for percentage, expected in [(20, 6), (50, 3), (70, 1), (75, 0), (80, 0), (100, 0)]:
@@ -127,6 +272,7 @@ class BuildJobsTests(unittest.TestCase):
             with jobs.admission(command) as actual:
                 self.assertEqual(actual, command)
         self.cpu.assert_not_called()
+        self.disk.assert_not_called()
         self.assertFalse((self.directory / "lock").exists())
 
     def test_skip_build_serializes_without_sampling(self):
@@ -281,6 +427,25 @@ class BuildJobsTests(unittest.TestCase):
             self.assertEqual(jobs.run([sys.executable, "-c", "import os,signal; os.kill(os.getpid(),signal.SIGTERM)"], "swift"), 143)
 
 
+class StorageAdmissionTests(unittest.TestCase):
+    def test_one_byte_short_never_starts_child_or_marks_lock(self):
+        import ci_swift_test_by_suite as runner
+        with tempfile.TemporaryDirectory() as raw, ExitStack() as stack:
+            lock = Path(raw) / "lock"
+            stack.enter_context(patch.object(jobs, "PLATFORM", "darwin"))
+            stack.enter_context(patch.object(jobs, "lock_directory", return_value=lock))
+            stack.enter_context(patch.object(jobs, "sample_window", return_value=(Fraction(0), Fraction(0), 30)))
+            stack.enter_context(patch.object(jobs.os, "cpu_count", return_value=12))
+            stack.enter_context(patch.dict(os.environ, {}, clear=True))
+            stack.enter_context(patch.object(jobs.os, "statvfs", return_value=SimpleNamespace(
+                f_bavail=40 * 1024 ** 3 - 1, f_frsize=1)))
+            execute = stack.enter_context(patch.object(runner, "_run_command", return_value=0))
+            with self.assertRaisesRegex(jobs.AdmissionError, "insufficient storage"):
+                jobs.run(["swift", "build"], "swift")
+            execute.assert_not_called()
+            self.assertEqual((lock / "compiler.lock").read_bytes(), b"")
+
+
 class RealLockTests(unittest.TestCase):
     def test_cancel_drains_owned_descendant_before_unlock(self):
         import ci_swift_test_by_suite as runner
@@ -295,6 +460,8 @@ class RealLockTests(unittest.TestCase):
                          "from pathlib import Path; from fractions import Fraction; b.PLATFORM='darwin'; "
                          "b.lock_directory=lambda:Path(sys.argv[2]); "
                          "b.sample_window=lambda deadline:(Fraction(0),Fraction(0),30); "
+                         "from types import SimpleNamespace; "
+                         "b.os.statvfs=lambda path:SimpleNamespace(f_bavail=40*1024**3,f_frsize=1); "
                          "sys.exit(b.run([sys.executable,'-c',sys.argv[3]],'swift'))")
             child = subprocess.Popen([sys.executable, "-B", "-c", bootstrap, str(Path(__file__).parent),
                                       str(root / "lock"), compiler], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
