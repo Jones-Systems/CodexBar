@@ -99,6 +99,11 @@ task-owned directory under `.build` and run the isolated focused tests. This exp
 `claude-selected.png` from the production SwiftUI usage section with synthetic data.
 These are component captures, not installed-app screenshots. The current candidate's
 PR records whether these captures and required local checks were available.
+The existing macOS CI test shards also export these synthetic captures and the
+tested checkout commit in `reset-timing-<commit>-<shard>` artifacts retained for
+seven days. Each job creates its own capture root outside the build cache,
+uploads evidence even on failure, then removes and checks absence of that root.
+The capture upload does not change test selection or add another build.
 
 Map guidance: `Jones-Systems/Frontend-Development` revision
 `3a1f6935061597c2d4bfaabac9387d4b83874ee1`, UI view maps. This map is partial;
