@@ -133,24 +133,30 @@ jobs:
           [[ "$(/usr/bin/xcodebuild -version)" == Xcode\ 26.* ]]
           /usr/bin/xcodebuild -version
 
+      - name: Swift toolchain version
+        id: swift-toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcode_version="$(/usr/bin/xcodebuild -version)"
+          swift_version="$(swift --version)"
+          swiftpm_version="$(swift package --version)"
+          toolchain_info="$(printf '%s\n' "$xcode_version" "$swift_version" "$swiftpm_version")"
+          printf '%s\n' "$toolchain_info"
+          cache_id="$(printf '%s\n' "$toolchain_info" | shasum -a 256 | awk '{print $1}')"
+          printf 'cache-id=%s\n' "$cache_id" >> "$GITHUB_OUTPUT"
+
       - name: Restore SwiftPM build cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             .build
             ~/Library/Caches/org.swift.swiftpm
-          # Keyed on dependency state: saves once per Package.resolved change,
-          # and partial hits (restore-keys) still carry the dependency builds,
-          # which dominate the cold-build time.
-          key: swiftpm-macos26-arm64-${{ hashFiles('Package.resolved', 'Package.swift') }}
+          # Save source builds after a revision changes; an exact dependency-only
+          # hit never refreshed them. SwiftPM still validates every restored build.
+          key: swiftpm-macos26-v2-${{ runner.arch }}-${{ steps.swift-toolchain.outputs.cache-id }}-${{ hashFiles('Package.resolved', 'Package.swift') }}-${{ github.sha }}
           restore-keys: |
-            swiftpm-macos26-arm64-
-
-      - name: Swift toolchain version
-        run: |
-          set -euo pipefail
-          swift --version
-          swift package --version
+            swiftpm-macos26-v2-${{ runner.arch }}-${{ steps.swift-toolchain.outputs.cache-id }}-${{ hashFiles('Package.resolved', 'Package.swift') }}-
 
       - name: Check app locales and Swift formatting
         if: ${{ matrix.shard-index == 0 }}

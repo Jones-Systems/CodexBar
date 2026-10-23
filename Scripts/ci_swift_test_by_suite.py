@@ -8,6 +8,8 @@ import build_jobs
 import ctypes
 import errno
 import fcntl
+import hashlib
+import json
 import os
 from pathlib import Path
 import re
@@ -113,6 +115,9 @@ class TestSelection:
 
 @dataclass
 class RunStats:
+    discovered_tests: int = 0
+    discovery_manifest_sha256: str = ""
+    selected_manifest_sha256: str = ""
     discovered_selections: int = 0
     selected_selections: int = 0
     selected_groups: int = 0
@@ -136,6 +141,9 @@ class RunStats:
         return [
             ("Shard", shard),
             ("Group size", str(self.group_size)),
+            ("Discovered test identities", str(self.discovered_tests)),
+            ("Discovery manifest SHA256", self.discovery_manifest_sha256),
+            ("Selected manifest SHA256", self.selected_manifest_sha256),
             ("Discovered selections", str(self.discovered_selections)),
             ("Selected selections", str(self.selected_selections)),
             ("Selected groups", str(self.selected_groups)),
@@ -701,13 +709,29 @@ def repair_sparkle_test_runtime(swift_command: list[str]) -> bool:
         return sparkle_runtime_matches_source(destination, source)
 
 
-def swift_test_list(swift_command: list[str]) -> list[TestSelection]:
+def manifest_digest(names: Iterable[str]) -> str:
+    return hashlib.sha256(("\n".join(sorted(names)) + "\n").encode("utf-8")).hexdigest()
+
+
+def emit_evidence(event: str, **fields) -> None:
+    record = {
+        "schema": "codexbar.swift-test-evidence/v1",
+        "event": event,
+        "source_revision": os.environ.get("GITHUB_SHA"),
+        **fields,
+    }
+    print(f"Swift test evidence: {json.dumps(record, sort_keys=True)}", file=sys.stderr, flush=True)
+
+
+def swift_test_list(swift_command: list[str], stats: RunStats | None = None) -> list[TestSelection]:
     command = [*swift_command, "test", "list"]
     result = run_captured_command(command)
     if result.returncode != 0 and is_missing_sparkle_runtime_failure(result):
         if repair_sparkle_test_runtime(swift_command):
             print("Recovered SwiftPM Sparkle test runtime; retrying discovery once.", file=sys.stderr, flush=True)
-            result = run_captured_command(command)
+            # The missing-library diagnostic proves discovery reached the built executable.
+            # Repeat discovery without another build or compiler CPU-sampling window.
+            result = run_captured_command([*command, "--skip-build"])
     if result.returncode != 0:
         print(f"+ {swift_command[0]} test list", file=sys.stderr, flush=True)
         if result.stdout:
@@ -749,6 +773,12 @@ def swift_test_list(swift_command: list[str]) -> list[TestSelection]:
     if unknown:
         rendered = "\n".join(f"- {line}" for line in unknown)
         raise RuntimeError(f"Unrecognized `swift test list` output:\n{rendered}")
+    test_ids = sorted(result.stdout.splitlines())
+    digest = manifest_digest(test_ids)
+    if stats is not None:
+        stats.discovered_tests = len(test_ids)
+        stats.discovery_manifest_sha256 = digest
+    emit_evidence("discovery", test_ids=test_ids, sha256=digest)
     return sorted(selections, key=lambda selection: selection.name)
 
 
@@ -814,11 +844,25 @@ def filter_for(suites: list[TestSelection]) -> str:
     return rf"({'|'.join(suite.filter_pattern for suite in suites)})"
 
 
-def run_group(suites: list[TestSelection], timeout: int, swift_command: list[str]) -> int:
-    return run_command(
-        [*swift_command, "test", "--skip-build", "--no-parallel", "--filter", filter_for(suites)],
-        timeout=timeout,
-    )
+def run_group(
+    suites: list[TestSelection], timeout: int, swift_command: list[str], *, attempt: str = "first",
+) -> int:
+    started = time.monotonic()
+    result = None
+    pattern = filter_for(suites)
+    try:
+        result = run_command(
+            [*swift_command, "test", "--skip-build", "--no-parallel", "--filter", pattern],
+            timeout=timeout,
+        )
+        return result
+    finally:
+        error = sys.exc_info()[0]
+        emit_evidence(
+            "attempt", attempt=attempt, selections=[suite.name for suite in suites],
+            filter_pattern=pattern, exit_code=result, error=error.__name__ if error else None,
+            elapsed_seconds=round(time.monotonic() - started, 6), timeout_seconds=timeout,
+        )
 
 
 def retry_selections_individually(
@@ -830,7 +874,7 @@ def retry_selections_individually(
     for suite in suites:
         stats.isolated_selection_retries += 1
         print(f"::group::Swift test retry {suite.name}", flush=True)
-        retry_result = run_group([suite], timeout, swift_command)
+        retry_result = run_group([suite], timeout, swift_command, attempt="selection-retry")
         print("::endgroup::", flush=True)
         if retry_result != 0:
             return retry_result
@@ -864,7 +908,7 @@ def run_suites() -> int:
     try:
         discovery_started = time.monotonic()
         try:
-            suites = prioritized_suites(filtered_suites_for_environment(swift_test_list(swift_command)))
+            suites = prioritized_suites(filtered_suites_for_environment(swift_test_list(swift_command, stats)))
         finally:
             stats.discovery_seconds = time.monotonic() - discovery_started
         stats.discovered_selections = len(suites)
@@ -880,6 +924,11 @@ def run_suites() -> int:
             suite_groups = suite_groups[: args.limit_groups]
         stats.selected_selections = sum(len(group) for group in suite_groups)
         stats.selected_groups = len(suite_groups)
+        stats.selected_manifest_sha256 = manifest_digest(suite.name for group in suite_groups for suite in group)
+        emit_evidence(
+            "selection", groups=[[suite.name for suite in group] for group in suite_groups],
+            sha256=stats.selected_manifest_sha256, shard_index=args.shard_index, shard_count=args.shard_count,
+        )
 
         shard_suffix = ""
         if args.shard_index is not None and args.shard_count is not None:
@@ -928,7 +977,7 @@ def run_suites() -> int:
 
                 stats.full_group_retries += 1
                 print(f"Group {group_index} failed with exit code {group_result}; retrying group once", flush=True)
-                retry_result = run_group(group, args.timeout, swift_command)
+                retry_result = run_group(group, args.timeout, swift_command, attempt="group-retry")
                 if retry_result == 0:
                     stats.recovered_groups += 1
                     continue
