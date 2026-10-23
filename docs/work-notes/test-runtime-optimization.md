@@ -773,3 +773,57 @@ Test bytes were identical across red/green, SHA256
 `80605026ea68e9ef13e0407f4d09ebc9b1b0933ca4c82fad1b976066ecdf3229`.
 Publication is authorized through PR30; the new frozen-source manual comparison
 remains a separate coordinator-owned dispatch, with no cache removal implied.
+
+## Hosted compiler admission backport
+
+This continuation starts from clean `ffe942dd89b5e33f6722761bd870ff3599545077`.
+It backports PR28 (`7418c4008289506d36f851d9d69c3240324c8182`, merged as
+`a7d7c90bb11c9606eff7f1c4c9fcb045bd67ae8d`) into the PR30 branch. Non-Darwin
+commands and the exact joint identity `GITHUB_ACTIONS=true` plus
+`RUNNER_ENVIRONMENT=github-hosted` yield the original command before local
+normalization, locking, CPU sampling or storage admission. Local, incomplete
+and self-hosted identities retain the six-job ceiling, compiler flags, storage
+guard and owned-child cleanup fence. The newer event-stream option registrations
+remain intact. No unrelated main changes were imported.
+
+This corrects branch-based manual campaigns. The inspected ordinary PR merge
+checkout `5e4fc814700c9d23fdc5613e2eb191b95c520b1f` already contains the bypass;
+this is not evidence that its ordinary merged-PR run used capped concurrency.
+Open PRs 18, 25, 26 and 29 had no changed-path overlap with the three backported
+files; PR29 was at `72b26fb939e79c68652bf7d69aa36410d053e44b` when checked.
+
+The three PR28 regression methods and RealLock environment isolation are
+retained, with one added assertion that hosted admission performs no storage
+query. Before the helper edit, the unchanged hosted-command case failed in
+0.005 seconds: all five command shapes reached local normalization and rejected
+the deliberately invalid local-only jobs value. The corrected helper passed
+the complete `python3 -B Scripts/test_build_jobs.py -v` group: **46 tests in
+1.187 seconds**, including all 43 prior methods with byte-identical bodies.
+The tests prove unchanged hosted Swift/Xcode argv, no local lock/sampling/storage,
+preserved child status 37, and retained local/self-hosted limits and lifecycle.
+
+The unchanged canonical evidence group passed **70 tests in 1.087 seconds**:
+`PYTHONDONTWRITEBYTECODE=1 ./Scripts/test.sh --command python3 Scripts/test_swift_test_evidence.py -v`.
+The canonical path gate passed through the same launcher. AST/diff checks passed;
+workflow, campaign, runner, evidence, sharding and isolated-command fixture bytes
+are unchanged. Ordinary group 4/two shards, qualification commands, cache limits,
+default-off timestamp controls and timeout/recovery behavior remain intact.
+The helper docstring and fixture-isolation comment are kept near code; the
+compiler guide now states the hosted exception, including storage admission.
+
+The single nonblocking-mutex producer completed in 7.479 seconds with enclosing
+status zero. Six fresh samples reported CPU 21.56–34.49%, available RAM
+33.95–34.44 GiB and one core at 6.25%; each admitted one serial test process.
+Both enclosing fixture parents and the private external scratch were absent
+after proved drain, and the mutex was released. The 120-second envelope,
+1 GiB scratch estimate plus 4 GiB reserve and 128 KiB receipt limit were retained.
+Exact commands, native statuses, method manifest, hashes and cleanup evidence
+are in `.t3/test-runtime-optimization/hosted-bypass-20261023-` receipts with
+seven-day retention. No candidate test failed or skipped.
+
+Native Swift/macOS, required `make test`, and the lint/format dependencies of
+`make check` remain unavailable locally. The original native Mac event-output
+failure and all earlier performance limitations remain preserved. This
+publication changes no campaign budget: no manual dispatch, cancellation,
+installation, main merge or performance qualification is included. Native
+parity and the complete-run 390-second/tax target remain unproved.

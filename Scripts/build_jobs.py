@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bound participating macOS compiler commands; see docs/compiler-resource-limits.md."""
+"""Bound local macOS compiler commands; see docs/compiler-resource-limits.md."""
 
 from __future__ import annotations
 
@@ -337,7 +337,10 @@ def open_lock() -> int:
 
 @contextmanager
 def admission(command: list[str], kind: str = "swift", *, cleanup_proved=None):
-    if PLATFORM != "darwin":
+    if PLATFORM != "darwin" or (
+        os.environ.get("GITHUB_ACTIONS") == "true"
+        and os.environ.get("RUNNER_ENVIRONMENT") == "github-hosted"
+    ):
         yield command
         return
     arguments, limit = normalize(command[1:], kind, dict(os.environ))
