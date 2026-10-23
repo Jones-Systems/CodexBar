@@ -24,8 +24,14 @@ public enum JonesBootstrapMigration {
         public var snapshotSource: String
 
         public init(
-            transaction: String, uid: UInt32, target: String, oldTree: String,
-            candidateTree: String, archive: String, revision: String, snapshotSource: String)
+            transaction: String,
+            uid: UInt32,
+            target: String,
+            oldTree: String,
+            candidateTree: String,
+            archive: String,
+            revision: String,
+            snapshotSource: String)
         {
             self.transaction = transaction
             self.uid = uid
@@ -176,8 +182,12 @@ public enum JonesBootstrapMigration {
             ?? inventory.destination["debugDisableKeychainAccess"])
         guard oldPolicy == newPolicy else { throw Failure.conflict }
         return Plan(
-            request: request, oldGroup: self.oldGroup, newGroup: self.newGroup,
-            locations: inventory.locations, sources: self.sources(inventory), items: items)
+            request: request,
+            oldGroup: self.oldGroup,
+            newGroup: self.newGroup,
+            locations: inventory.locations,
+            sources: self.sources(inventory),
+            items: items)
     }
 
     private static func validateSources(_ plan: Plan, inventory: Inventory) throws {

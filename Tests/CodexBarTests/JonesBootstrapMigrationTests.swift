@@ -10,7 +10,8 @@ private final class JonesBootstrapMemoryStorage: JonesBootstrapMigration.Storage
             "fallback": "/synthetic/fallback",
             "standard": "/synthetic/preferences",
         ],
-        sources: [:], destination: [:])
+        sources: [:],
+        destination: [:])
     var receipt: JonesBootstrapMigration.Receipt?
     var writes: [String] = []
     var unavailable = false
@@ -46,10 +47,14 @@ private final class JonesBootstrapMemoryStorage: JonesBootstrapMigration.Storage
 struct JonesBootstrapMigrationTests {
     private func request(choice: String = "auto") -> JonesBootstrapMigration.Request {
         .init(
-            transaction: "12345678-1234-1234-1234-123456789abc", uid: 501,
-            target: "/synthetic/Applications/CodexBar Jones.app", oldTree: String(repeating: "a", count: 64),
-            candidateTree: String(repeating: "b", count: 64), archive: String(repeating: "c", count: 64),
-            revision: String(repeating: "d", count: 40), snapshotSource: choice)
+            transaction: "12345678-1234-1234-1234-123456789abc",
+            uid: 501,
+            target: "/synthetic/Applications/CodexBar Jones.app",
+            oldTree: String(repeating: "a", count: 64),
+            candidateTree: String(repeating: "b", count: 64),
+            archive: String(repeating: "c", count: 64),
+            revision: String(repeating: "d", count: 40),
+            snapshotSource: choice)
     }
 
     private func populated() -> JonesBootstrapMemoryStorage {
@@ -99,7 +104,8 @@ struct JonesBootstrapMigrationTests {
     }
 
     @Test
-    func `shared only disable is copied and local false retains precedence without changing local preferences`() throws {
+    func `shared only disable is copied and local false retains precedence without changing local preferences`() throws
+    {
         for local in [nil, Data("false".utf8), Data("true".utf8)] {
             let storage = self.populated()
             storage.inventory.sources["localPolicy"] = local

@@ -301,7 +301,8 @@ private struct JonesBootstrapNativeStorage: JonesBootstrapMigration.Storage {
                 "fallback": self.fallback.path,
                 "standard": self.standard.path,
             ],
-            sources: sources, destination: target)
+            sources: sources,
+            destination: target)
     }
 
     func write(_ value: Data, key: String) throws {
@@ -318,8 +319,11 @@ private struct JonesBootstrapNativeStorage: JonesBootstrapMigration.Storage {
             else { throw JonesBootstrapMigration.Failure.invalid }
             let object = try JSONSerialization.jsonObject(with: value, options: [.fragmentsAllowed])
             CFPreferencesSetValue(
-                key as CFString, object as CFPropertyList, JonesBootstrapMigration.newGroup as CFString,
-                kCFPreferencesCurrentUser, kCFPreferencesAnyHost)
+                key as CFString,
+                object as CFPropertyList,
+                JonesBootstrapMigration.newGroup as CFString,
+                kCFPreferencesCurrentUser,
+                kCFPreferencesAnyHost)
             guard CFPreferencesAppSynchronize(JonesBootstrapMigration.newGroup as CFString) else {
                 throw JonesBootstrapMigration.Failure.unavailable
             }
