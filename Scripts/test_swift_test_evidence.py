@@ -651,7 +651,7 @@ class LinuxStorageObservationTests(unittest.TestCase):
             self.assertEqual(json.loads(output.getvalue())["status"], "unavailable")
             self.assertEqual(json.loads(output.getvalue())["error_errno"], 5)
 
-    def test_workflow_measurements_surround_existing_builds_without_enabling_cache(self):
+    def test_workflow_measurements_surround_existing_builds(self):
         workflow = (ROOT / ".github/workflows/ci.yml").read_text()
         linux = workflow.split("  build-linux-cli:\n", 1)[1]
         steps = ("measure-linux --phase before-release", "swift build -c release --product CodexBarCLI --static-swift-stdlib",
@@ -664,6 +664,300 @@ class LinuxStorageObservationTests(unittest.TestCase):
         for name in ("Observe Linux build storage after release", "Observe Linux build storage after tests"):
             step = linux.split(f"- name: {name}\n", 1)[1].split("      - name:", 1)[0]
             self.assertIn("if: ${{ always() }}", step)
+
+
+@contextlib.contextmanager
+def linux_cache_fixture(mode="auto"):
+    parent = Path(os.environ.get(runner.SCRATCH_PARENT_KEY, ROOT))
+    with tempfile.TemporaryDirectory(prefix=".test-linux-cache-", dir=parent) as temporary:
+        workspace = Path(temporary) / "workspace"
+        staging = Path(temporary) / "staging"
+        workspace.mkdir()
+        staging.mkdir()
+        (workspace / "Package.swift").write_text("// synthetic package identity\n")
+        (workspace / "Package.resolved").write_text('{"pins":[]}\n')
+        env = campaign_environment(workspace, RUNNER_OS="Linux", RUNNER_ARCH="X64", ImageOS="ubuntu24",
+            ImageVersion="20261001.1", RUNNER_TEMP=str(staging), LINUX_RUNNER_LABEL="ubuntu-24.04",
+            GITHUB_REPOSITORY="Jones-Systems/CodexBar",
+            GITHUB_EVENT_NAME="push" if mode == "auto" else "workflow_dispatch",
+            LINUX_CACHE_MODE=mode, LINUX_DEFAULT_BRANCH="main")
+        context = campaign.linux_cache_source(env, SHA)
+        context = campaign.linux_cache_plan(context, env, lambda command: "native " + " ".join(command) + "\n")
+        yield workspace, env, context
+
+
+def cache_metadata(context, key=None, **changes):
+    entry = {"id": 42, "key": key or context["requested_key"], "version": "native-cache-version",
+             "ref": context["ref"], "size_in_bytes": 1024, "created_at": "2026-10-23T00:00:00Z", **changes}
+    return {"total_count": 1, "actions_caches": [entry]}
+
+
+class LinuxCacheTests(unittest.TestCase):
+    def test_source_controls_are_independent_and_manual_sha_is_checked_even_when_off(self):
+        with linux_cache_fixture("off") as (_, env, context):
+            self.assertFalse(context["enabled"])
+            self.assertEqual(context["macos_cache_mode"], "warm")
+            self.assertEqual(context["linux_cache_mode"], "off")
+            self.assertEqual(context["actual_sha"], context["event_sha"])
+            for field, value in (("CAMPAIGN_EXPECTED_SHA", "b" * 40), ("GITHUB_SHA", "b" * 40),
+                                 ("LINUX_CACHE_MODE", "cold"), ("CAMPAIGN_GROUP_SIZE", "8")):
+                with self.subTest(field=field), self.assertRaises(ValueError):
+                    campaign.linux_cache_source({**env, field: value}, SHA)
+            ordinary = campaign.linux_cache_source({**env, "GITHUB_EVENT_NAME": "pull_request",
+                                                   "LINUX_CACHE_MODE": "untrusted"}, SHA)
+            self.assertEqual((ordinary["linux_cache_mode"], ordinary["group_size"], ordinary["shard_count"]),
+                             ("auto", 4, 2))
+
+    def test_identity_key_changes_only_with_its_bound_family_or_actual_source(self):
+        with linux_cache_fixture() as (workspace, env, context):
+            self.assertTrue(context["enabled"])
+            self.assertTrue(context["requested_key"].endswith("-" + SHA))
+            self.assertEqual(context["requested_key"], context["restore_prefix"] + SHA)
+            self.assertEqual(context["toolchain"]["swiftpm"], "native swift package --version\n")
+            for field, value in (("RUNNER_ARCH", "ARM64"), ("LINUX_RUNNER_LABEL", "ubuntu-24.04-arm"),
+                                 ("ImageOS", "ubuntu-next"), ("ImageVersion", "20261002.1")):
+                changed = campaign.linux_cache_plan(copy.deepcopy(context), {**env, field: value},
+                                                   lambda command: "native " + " ".join(command) + "\n")
+                self.assertNotEqual(changed["restore_prefix"], context["restore_prefix"])
+            toolchain = campaign.linux_cache_plan(copy.deepcopy(context), env, lambda _: "changed compiler")
+            self.assertNotEqual(toolchain["identity_hashes"]["toolchain"], context["identity_hashes"]["toolchain"])
+            self.assertEqual(toolchain["identity_hashes"]["image"], context["identity_hashes"]["image"])
+            newer = {**env, "GITHUB_SHA": "b" * 40}
+            changed = campaign.linux_cache_plan(campaign.linux_cache_source(newer, "b" * 40), newer,
+                                               lambda command: "native " + " ".join(command) + "\n")
+            self.assertEqual(changed["restore_prefix"], context["restore_prefix"])
+            self.assertNotEqual(changed["requested_key"], context["requested_key"])
+            (workspace / "Package.resolved").write_text('{"pins":["changed"]}\n')
+            changed = campaign.linux_cache_plan(copy.deepcopy(context), env, lambda _: "same version")
+            self.assertNotEqual(changed["identity_hashes"]["dependencies"], context["identity_hashes"]["dependencies"])
+
+    def test_missing_identities_disable_ordinary_cache_and_fail_warm(self):
+        for mode in ("auto", "warm"):
+            with linux_cache_fixture(mode) as (_, env, original):
+                for field in ("RUNNER_ARCH", "LINUX_RUNNER_LABEL", "ImageOS", "ImageVersion"):
+                    with self.subTest(mode=mode, field=field):
+                        context = campaign.linux_cache_plan(copy.deepcopy(original), {**env, field: ""},
+                                                           lambda _: "version")
+                        self.assertFalse(context["enabled"])
+                        self.assertEqual(context["fatal"], mode == "warm")
+                context = campaign.linux_cache_plan(copy.deepcopy(original), env, lambda _: "")
+                self.assertFalse(context["enabled"])
+                self.assertEqual(context["fatal"], mode == "warm")
+
+    def test_complete_scan_checks_containment_fixtures_special_files_and_limits(self):
+        for kind in ("valid", "root-link", "escape-link", "dangling-link", "fixture", "cache-fixture", "parent", "fifo",
+                     "bytes", "entries", "time"):
+            with self.subTest(kind=kind), linux_cache_fixture() as (workspace, _, _):
+                build = workspace / ".build"
+                outside = workspace / "outside"
+                outside.mkdir()
+                (outside / "sentinel").write_text("preserved")
+                if kind == "root-link":
+                    build.symlink_to(outside)
+                else:
+                    build.mkdir()
+                    (build / "object").write_bytes(b"1234")
+                if kind == "valid":
+                    (build / "reference").symlink_to("object")
+                elif kind in ("escape-link", "dangling-link"):
+                    (build / "reference").symlink_to(outside if kind == "escape-link" else "missing")
+                elif kind == "fixture":
+                    (build / ".swift-test-evidence-owned").mkdir()
+                elif kind == "cache-fixture":
+                    (build / ".test-linux-cache-owned").mkdir()
+                elif kind == "parent":
+                    (workspace / ".test-fixtures-owned").mkdir()
+                elif kind == "fifo":
+                    os.mkfifo(build / "pipe")
+                with contextlib.ExitStack() as stack:
+                    if kind == "bytes":
+                        stack.enter_context(patch.object(campaign, "LINUX_CACHE_BYTES", 3))
+                    if kind == "entries":
+                        stack.enter_context(patch.object(campaign, "LINUX_SCAN_ENTRIES", 1))
+                    if kind == "time":
+                        stack.enter_context(patch.object(campaign.time, "monotonic", side_effect=[0, 11, 12]))
+                    scanned = campaign.linux_build_scan(workspace)
+                self.assertEqual(scanned["complete"], kind == "valid")
+                self.assertEqual((outside / "sentinel").read_text(), "preserved")
+                if kind == "valid":
+                    self.assertEqual((scanned["logical_bytes"], scanned["regular_files"], scanned["symlinks"]),
+                                     (4, 1, 1))
+
+    def test_space_admission_uses_both_actual_filesystems(self):
+        gib = 1024 ** 3
+        for same, available, allowed in ((True, (8, 8), True), (True, (8, 7), False),
+                                         (False, (6, 4), True), (False, (5, 4), False), (False, (6, 3), False)):
+            with self.subTest(same=same, available=available), \
+                    patch.object(Path, "stat", side_effect=[SimpleNamespace(st_dev=1),
+                                                           SimpleNamespace(st_dev=1 if same else 2)]), \
+                    patch.object(campaign.shutil, "disk_usage", side_effect=[
+                        SimpleNamespace(free=value * gib) for value in available]):
+                self.assertEqual(campaign.linux_storage(Path("/workspace"), Path("/staging"))["eligible"], allowed)
+        self.assertEqual(campaign.LINUX_CACHE_BYTES, 2 * gib)
+
+    def test_exact_and_compatible_prefix_hits_are_approved_but_warm_needs_exact(self):
+        for mode in ("auto", "seed", "warm"):
+            with linux_cache_fixture(mode) as (_, env, original):
+                for suffix in (SHA, "b" * 40):
+                    context = copy.deepcopy(original)
+                    matched = context["restore_prefix"] + suffix
+                    approved = campaign.linux_approve_restore(context,
+                        {**env, "LINUX_LOOKUP_OUTCOME": "success", "LINUX_MATCHED_KEY": matched},
+                        lambda _env, key: cache_metadata(context, key))
+                    allowed = mode != "warm" or suffix == SHA
+                    self.assertEqual(approved["restore"], allowed)
+                    self.assertEqual(approved.get("fatal", False), not allowed)
+                    if allowed:
+                        self.assertEqual(approved["producer_source"], suffix)
+
+    def test_metadata_ambiguity_truncation_size_ref_and_family_refuse_before_restore(self):
+        with linux_cache_fixture() as (_, env, original):
+            valid = cache_metadata(original)
+            documents = [None, {}, {"total_count": 2, "actions_caches": valid["actions_caches"]},
+                         {"total_count": 2, "actions_caches": valid["actions_caches"] * 2},
+                         {"total_count": 1, "actions_caches": [None]}]
+            documents += [cache_metadata(original, **changes) for changes in (
+                {"size_in_bytes": campaign.LINUX_CACHE_BYTES + 1}, {"size_in_bytes": -1},
+                {"version": ""}, {"ref": "refs/heads/unrelated"}, {"id": None})]
+            for document in documents:
+                context = copy.deepcopy(original)
+                result = campaign.linux_approve_restore(context,
+                    {**env, "LINUX_LOOKUP_OUTCOME": "success", "LINUX_MATCHED_KEY": context["requested_key"]},
+                    lambda *_args: document)
+                self.assertFalse(result["restore"])
+                self.assertFalse(result["fatal"])
+            with patch.object(campaign, "linux_cache_metadata") as metadata:
+                result = campaign.linux_approve_restore(copy.deepcopy(original),
+                    {**env, "LINUX_LOOKUP_OUTCOME": "success", "LINUX_MATCHED_KEY": "other-family-" + SHA})
+                self.assertFalse(result["restore"])
+                metadata.assert_not_called()
+
+    def test_metadata_http_read_is_bounded_and_rejects_pagination(self):
+        with linux_cache_fixture() as (_, env, context):
+            for body, headers, allowed in ((campaign.encode(cache_metadata(context)).encode(), {}, True),
+                                           (b"x" * (campaign.LINUX_METADATA_BYTES + 1), {}, False),
+                                           (b"{}", {"Link": "next page"}, False)):
+                response = io.BytesIO(body)
+                response.headers = headers
+                requests = []
+                def open_request(request, timeout):
+                    requests.append((request, timeout))
+                    return response
+                with patch.object(campaign.urllib.request, "build_opener",
+                                  return_value=SimpleNamespace(open=open_request)):
+                    if allowed:
+                        self.assertEqual(campaign.linux_cache_metadata(
+                            {**env, "GH_TOKEN": "synthetic"}, context["requested_key"]),
+                                         cache_metadata(context))
+                    else:
+                        with self.assertRaises(ValueError):
+                            campaign.linux_cache_metadata({**env, "GH_TOKEN": "synthetic"}, context["requested_key"])
+                self.assertEqual(requests[0][1], 10)
+                self.assertIn("/repos/Jones-Systems/CodexBar/actions/caches?", requests[0][0].full_url)
+
+    def test_failed_or_changed_restore_never_becomes_a_cold_success(self):
+        for fault in ("none", "action", "matched", "absent", "symlink", "version"):
+            with self.subTest(fault=fault), linux_cache_fixture("warm") as (workspace, env, context):
+                metadata = lambda _env, key: cache_metadata(context, key)
+                context = campaign.linux_approve_restore(context,
+                    {**env, "LINUX_LOOKUP_OUTCOME": "success", "LINUX_MATCHED_KEY": context["requested_key"]}, metadata)
+                if fault != "absent":
+                    (workspace / ".build").mkdir()
+                    (workspace / ".build/object").write_text("retained")
+                if fault == "symlink":
+                    (workspace / ".build/escape").symlink_to(workspace)
+                restored_env = {**env, "LINUX_RESTORE_OUTCOME": "failure" if fault == "action" else "success",
+                                "LINUX_RESTORED_KEY": "wrong-key" if fault == "matched" else context["requested_key"]}
+                observed = lambda _env, key: cache_metadata(
+                    context, key, version="changed" if fault == "version" else "native-cache-version")
+                result = campaign.linux_after_restore(context, restored_env, observed)
+                self.assertEqual(result.get("fatal", False), fault != "none")
+                self.assertEqual(result.get("restored_exact", False), fault == "none")
+                if fault != "absent":
+                    self.assertEqual((workspace / ".build/object").read_text(), "retained")
+
+    def test_save_requires_all_commands_final_scan_storage_and_a_new_key(self):
+        with linux_cache_fixture("seed") as (workspace, env, original):
+            (workspace / ".build").mkdir()
+            (workspace / ".build/object").write_text("compiled")
+            passing = {**env, **{"LINUX_" + name + "_OUTCOME": "success" for name in ("RELEASE", "TESTS", "SMOKE")}}
+            self.assertTrue(campaign.linux_before_save(copy.deepcopy(original), passing)["save"])
+            for name in ("RELEASE", "TESTS", "SMOKE"):
+                self.assertFalse(campaign.linux_before_save(copy.deepcopy(original),
+                    {**passing, "LINUX_" + name + "_OUTCOME": "failure"})["save"])
+            self.assertFalse(campaign.linux_before_save(
+                {**copy.deepcopy(original), "restored_exact": True}, passing)["save"])
+            with patch.object(campaign, "linux_storage", return_value={"eligible": False}):
+                self.assertFalse(campaign.linux_before_save(copy.deepcopy(original), passing)["save"])
+            (workspace / ".test-fixtures-live").mkdir()
+            self.assertFalse(campaign.linux_before_save(copy.deepcopy(original), passing)["save"])
+
+    def test_save_success_requires_exact_metadata_readback_to_claim_availability(self):
+        with linux_cache_fixture("seed") as (_, env, original):
+            for outcome, available in (("success", True), ("success", False), ("failure", True)):
+                context = {**copy.deepcopy(original), "save": True}
+                result = campaign.linux_after_save(context, {**env, "LINUX_SAVE_OUTCOME": outcome},
+                    lambda *_args: cache_metadata(context) if available else {"total_count": 0, "actions_caches": []})
+                self.assertEqual(result["publication"], "exact-entry-observed; producer-run-unproved"
+                                 if available and outcome == "success" else "unavailable")
+
+    def test_cli_phase_receipts_round_trip_through_actual_step_outputs(self):
+        with linux_cache_fixture("warm") as (workspace, env, context):
+            output = workspace / "step-output"
+            env = {**env, "GITHUB_OUTPUT": str(output), "LINUX_LOOKUP_OUTCOME": "success",
+                   "LINUX_RESTORE_OUTCOME": "success", "LINUX_SAVE_OUTCOME": "skipped",
+                   **{"LINUX_" + name + "_OUTCOME": "success" for name in ("RELEASE", "TESTS", "SMOKE")}}
+            for phase in ("source", "plan", "approve-restore", "after-restore", "before-save", "after-save"):
+                if phase == "after-restore":
+                    (workspace / ".build").mkdir()
+                    (workspace / ".build/object").write_text("synthetic build")
+                command = ["campaign", "linux-cache", phase]
+                if phase == "source":
+                    command += ["--checkout-sha", SHA]
+                env.update(LINUX_CACHE_CONTEXT=campaign.encode(context),
+                           LINUX_MATCHED_KEY=context.get("requested_key", ""),
+                           LINUX_RESTORED_KEY=context.get("requested_key", ""))
+                with patch.dict(os.environ, env, clear=True), patch.object(sys, "argv", command), \
+                        patch.object(campaign, "linux_version", return_value="native compiler identity\n"), \
+                        patch.object(campaign, "linux_cache_metadata", side_effect=lambda _env, key:
+                                     cache_metadata(context, key)), \
+                        contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(campaign.main(), 0, phase)
+                values = dict(line.split("=", 1) for line in output.read_text().splitlines())
+                context = json.loads(values["context"])
+                self.assertEqual(context["phase"], phase)
+                self.assertEqual(context["expected_sha"], SHA)
+                self.assertFalse(context["hard_extraction_byte_limit"])
+            self.assertTrue(context["restored_exact"])
+            self.assertEqual(context["save_disposition"], "exact-key-already-restored")
+            self.assertEqual(context["publication"], "not-attempted")
+
+    def test_workflow_preserves_commands_and_controls_manual_concurrency_and_cache_limits(self):
+        workflow = (ROOT / ".github/workflows/ci.yml").read_text()
+        self.assertIn("group: ${{ github.event_name == 'workflow_dispatch' && "
+                      "format('ci-manual-{0}-{1}-{2}-{3}', github.workflow, github.ref, "
+                      "github.run_id, github.run_attempt) || format('ci-{0}-{1}', github.workflow, github.ref) }}",
+                      workflow)
+        self.assertIn("cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}", workflow)
+        linux = workflow.split("  build-linux-cli:\n", 1)[1]
+        self.assertIn("actions: read", linux)
+        self.assertLess(linux.index("Validate Linux campaign source"), linux.index("Restore Swift toolchain cache"))
+        self.assertIn("lookup-only: true", linux)
+        for name in ("Restore approved Linux application cache", "Save admitted Linux application cache"):
+            step = linux.split("- name: " + name + "\n", 1)[1].split("      - name:", 1)[0]
+            self.assertIn("timeout-minutes: 2", step)
+            self.assertIn("SEGMENT_DOWNLOAD_TIMEOUT_MINS: '1'", step)
+            self.assertIn("path: .build", step)
+            self.assertIn("@55cc8345863c7cc4c66a329aec7e433d2d1c52a9", step)
+        for name in ("Build CodexBarCLI (release, static Swift stdlib)", "Swift Test (Linux only)",
+                     "Smoke test CodexBarCLI"):
+            step = linux.split("- name: " + name + "\n", 1)[1].split("      - name:", 1)[0]
+            self.assertNotIn("if:", step)
+            self.assertNotIn("cache-hit", step)
+        self.assertIn("run: swift build -c release --product CodexBarCLI --static-swift-stdlib", linux)
+        self.assertIn("run: ./Scripts/test.sh --command swift test --parallel", linux)
+        self.assertIn("steps.linux-cache-restore.outcome", linux)
+        self.assertIn("linux-cache after-save", linux)
 
 
 class EvidenceTests(unittest.TestCase):

@@ -24,15 +24,21 @@ on:
         required: true
         type: string
       cache_mode:
-        description: Seed permits a miss; warm requires an exact hit; cold bypasses cache
+        description: macOS cache only; seed permits a miss, warm requires an exact hit, cold bypasses cache
         required: true
         type: choice
         options: [seed, warm, cold]
         default: seed
+      linux_cache_mode:
+        description: Linux application cache only; off bypasses, seed permits a miss, warm requires an exact hit
+        required: true
+        type: choice
+        options: ['off', seed, warm]
+        default: 'off'
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.event_name == 'workflow_dispatch' && format('ci-manual-{0}-{1}-{2}-{3}', github.workflow, github.ref, github.run_id, github.run_attempt) || format('ci-{0}-{1}', github.workflow, github.ref) }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 env:
   SWIFT_VERSION: 6.3.3
@@ -63,6 +69,7 @@ jobs:
           CAMPAIGN_SHARD_COUNT: ${{ inputs.shard_count }}
           CAMPAIGN_EXPECTED_SHA: ${{ inputs.expected_sha }}
           CAMPAIGN_CACHE_MODE: ${{ inputs.cache_mode }}
+          LINUX_CACHE_MODE: ${{ inputs.linux_cache_mode || 'off' }}
         run: python3 Scripts/ci_swift_test_campaign.py plan
 
       - name: Detect macOS test impact
@@ -525,6 +532,9 @@ jobs:
 
   build-linux-cli:
     timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
     strategy:
       fail-fast: false
       matrix:
@@ -534,8 +544,20 @@ jobs:
           - name: linux-arm64
             runs-on: ubuntu-24.04-arm
     runs-on: ${{ matrix.runs-on }}
+    env:
+      CAMPAIGN_EXPECTED_SHA: ${{ inputs.expected_sha }}
+      CAMPAIGN_GROUP_SIZE: ${{ inputs.group_size }}
+      CAMPAIGN_SHARD_COUNT: ${{ inputs.shard_count }}
+      CAMPAIGN_CACHE_MODE: ${{ inputs.cache_mode }}
+      LINUX_CACHE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.linux_cache_mode || 'auto' }}
+      LINUX_RUNNER_LABEL: ${{ matrix.runs-on }}
+      LINUX_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Validate Linux campaign source
+        id: linux-cache-source
+        run: python3 Scripts/ci_swift_test_campaign.py linux-cache source --checkout-sha "$(git rev-parse HEAD)"
 
       - name: Runner info
         run: |
@@ -603,24 +625,90 @@ jobs:
           hash -r
           swift --version
 
+      - name: Plan Linux application cache
+        id: linux-cache-plan
+        timeout-minutes: 1
+        env:
+          LINUX_CACHE_CONTEXT: ${{ steps.linux-cache-source.outputs.context }}
+        run: python3 Scripts/ci_swift_test_campaign.py linux-cache plan
+
+      - name: Look up Linux application cache
+        id: linux-cache-lookup
+        if: ${{ steps.linux-cache-plan.outputs.enabled == 'true' }}
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build
+          key: ${{ steps.linux-cache-plan.outputs.key }}
+          restore-keys: ${{ steps.linux-cache-plan.outputs.restore-prefix }}
+          lookup-only: true
+
+      - name: Approve Linux cache metadata and storage
+        id: linux-cache-approve
+        if: ${{ steps.linux-cache-plan.outputs.enabled == 'true' }}
+        timeout-minutes: 1
+        env:
+          LINUX_CACHE_CONTEXT: ${{ steps.linux-cache-plan.outputs.context }}
+          LINUX_LOOKUP_OUTCOME: ${{ steps.linux-cache-lookup.outcome }}
+          LINUX_MATCHED_KEY: ${{ steps.linux-cache-lookup.outputs.cache-matched-key }}
+          GH_TOKEN: ${{ github.token }}
+        run: python3 Scripts/ci_swift_test_campaign.py linux-cache approve-restore
+
+      - name: Restore approved Linux application cache
+        id: linux-cache-restore
+        if: ${{ steps.linux-cache-approve.outputs.restore == 'true' }}
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: '1'
+        with:
+          path: .build
+          key: ${{ steps.linux-cache-approve.outputs.approved-key }}
+          fail-on-cache-miss: true
+
+      - name: Verify restored Linux application cache
+        id: linux-cache-restored
+        if: ${{ always() && steps.linux-cache-approve.outputs.restore == 'true' }}
+        timeout-minutes: 1
+        env:
+          LINUX_CACHE_CONTEXT: ${{ steps.linux-cache-approve.outputs.context }}
+          LINUX_RESTORE_OUTCOME: ${{ steps.linux-cache-restore.outcome }}
+          LINUX_RESTORED_KEY: ${{ steps.linux-cache-restore.outputs.cache-matched-key }}
+          GH_TOKEN: ${{ github.token }}
+        run: python3 Scripts/ci_swift_test_campaign.py linux-cache after-restore
+
       - name: Observe Linux build storage before release
-        run: python3 Scripts/ci_swift_test_campaign.py measure-linux --phase before-release
+        id: linux-before-release
+        env:
+          LINUX_CACHE_ACTIVE: ${{ steps.linux-cache-plan.outputs.enabled }}
+        run: python3 Scripts/ci_swift_test_campaign.py measure-linux --phase before-release --step-times
 
       - name: Build CodexBarCLI (release, static Swift stdlib)
+        id: linux-release
         run: swift build -c release --product CodexBarCLI --static-swift-stdlib
 
       - name: Observe Linux build storage after release
+        id: linux-after-release
         if: ${{ always() }}
-        run: python3 Scripts/ci_swift_test_campaign.py measure-linux --phase after-release
+        env:
+          LINUX_CACHE_ACTIVE: ${{ steps.linux-cache-plan.outputs.enabled }}
+        run: python3 Scripts/ci_swift_test_campaign.py measure-linux --phase after-release --step-times
 
       - name: Swift Test (Linux only)
+        id: linux-tests
         run: ./Scripts/test.sh --command swift test --parallel
 
       - name: Observe Linux build storage after tests
+        id: linux-after-tests
         if: ${{ always() }}
-        run: python3 Scripts/ci_swift_test_campaign.py measure-linux --phase after-tests
+        env:
+          LINUX_CACHE_ACTIVE: ${{ steps.linux-cache-plan.outputs.enabled }}
+        run: python3 Scripts/ci_swift_test_campaign.py measure-linux --phase after-tests --step-times
 
       - name: Smoke test CodexBarCLI
+        id: linux-smoke
         shell: bash
         run: |
           set -euo pipefail
@@ -634,6 +722,43 @@ jobs:
           fi
           "$BIN" usage --provider codex --web 2>&1 | tee /tmp/codexbarcli-stderr.txt >/dev/null || true
           grep -q "macOS" /tmp/codexbarcli-stderr.txt
+
+      - name: Admit Linux application cache save
+        id: linux-cache-save-plan
+        if: ${{ always() && steps.linux-cache-source.outputs.context != '' }}
+        timeout-minutes: 1
+        env:
+          LINUX_CACHE_CONTEXT: ${{ steps.linux-cache-restored.outputs.context || steps.linux-cache-approve.outputs.context || steps.linux-cache-plan.outputs.context || steps.linux-cache-source.outputs.context }}
+          LINUX_RELEASE_OUTCOME: ${{ steps.linux-release.outcome }}
+          LINUX_TESTS_OUTCOME: ${{ steps.linux-tests.outcome }}
+          LINUX_SMOKE_OUTCOME: ${{ steps.linux-smoke.outcome }}
+          LINUX_BEFORE_RELEASE_END: ${{ steps.linux-before-release.outputs.finished-at }}
+          LINUX_AFTER_RELEASE_START: ${{ steps.linux-after-release.outputs.started-at }}
+          LINUX_AFTER_RELEASE_END: ${{ steps.linux-after-release.outputs.finished-at }}
+          LINUX_AFTER_TESTS_START: ${{ steps.linux-after-tests.outputs.started-at }}
+          LINUX_AFTER_TESTS_END: ${{ steps.linux-after-tests.outputs.finished-at }}
+        run: python3 Scripts/ci_swift_test_campaign.py linux-cache before-save
+
+      - name: Save admitted Linux application cache
+        id: linux-cache-save
+        if: ${{ steps.linux-cache-save-plan.outputs.save == 'true' }}
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: '1'
+        with:
+          path: .build
+          key: ${{ steps.linux-cache-save-plan.outputs.key }}
+
+      - name: Record Linux cache publication availability
+        if: ${{ always() && steps.linux-cache-save-plan.outputs.context != '' }}
+        timeout-minutes: 1
+        env:
+          LINUX_CACHE_CONTEXT: ${{ steps.linux-cache-save-plan.outputs.context }}
+          LINUX_SAVE_OUTCOME: ${{ steps.linux-cache-save.outcome }}
+          GH_TOKEN: ${{ github.token }}
+        run: python3 Scripts/ci_swift_test_campaign.py linux-cache after-save
 
       - name: Summarize Linux CLI build
         if: ${{ always() }}
