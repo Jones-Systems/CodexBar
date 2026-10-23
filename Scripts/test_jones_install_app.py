@@ -96,6 +96,11 @@ def zip_bundle(bundle, archive):
 
 
 class NativeQuarantineAdapterTests(unittest.TestCase):
+    def test_native_adapter_binds_explicit_signing_mode_without_running_a_command(self):
+        with patch.object(installer.sys, "platform", "darwin"):
+            self.assertEqual(installer.MacOperations().signing_mode, "adhoc")
+            self.assertEqual(installer.MacOperations("developer-id").signing_mode, "developer-id")
+
     def test_reads_every_owned_entry_without_traversing_symlink_destinations(self):
         with tempfile.TemporaryDirectory(prefix="jones-quarantine-", dir=SCRATCH_PARENT) as temporary:
             root = Path(temporary)
@@ -200,6 +205,24 @@ class FakeOperations:
     def pause(self):
         pass
 
+    def bootstrap(self, bundle, action, root):
+        self.events.append(("bootstrap", action))
+        if getattr(self, "bootstrap_error", False):
+            raise installer.InstallError("synthetic_data_drift", "Synthetic migration data changed.")
+        request = installer.json_file(root / "request.json")
+        if action in ("prepare", "resume"):
+            plan = {"request": request, "oldGroup": installer.GROUP_ID, "newGroup": installer._SIGNING_MODULE.GROUP,
+                    "locations": {"old": str(root / "synthetic-old"), "destination": str(root / "synthetic-new"),
+                                  "fallback": str(root / "synthetic-fallback"), "standard": str(root / "synthetic-local")},
+                    "sources": {}, "items": []}
+            encoded = json.dumps(plan, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode()
+            installer.atomic_json(root / "receipt.json", {"schema": "jones-bootstrap-receipt/v1", "plan": plan,
+                                  "planSHA256": hashlib.sha256(encoded).hexdigest(), "phase": "prepared"})
+        elif action == "verify":
+            receipt = installer.json_file(root / "receipt.json")
+            receipt["phase"] = "data-verified"
+            installer.atomic_json(root / "receipt.json", receipt)
+
     def checkpoint(self, phase):
         self.events.append(("phase", phase))
         if phase == self.failure_phase:
@@ -247,6 +270,210 @@ class InstallerTests(unittest.TestCase):
 
     def assert_no_scratch(self):
         self.assertEqual(list(self.root.rglob(".jones-install-preflight-*")), [])
+
+    def production_fixture(self):
+        changes = dict(JonesSigningMode="developer-id", CodexBarTeamID=installer._SIGNING_MODULE.TEAM,
+                       JonesAppGroupID=installer._SIGNING_MODULE.GROUP, SUFeedURL="", SUPublicEDKey="",
+                       SUEnableAutomaticChecks=False, SUAutomaticallyUpdate=False, SUAllowsAutomaticUpdates=False)
+        change_plist(self.bundle, **changes)
+        change_plist(self.bundle / "Contents/PlugIns/CodexBarWidget.appex", **changes)
+        self.repack()
+
+    def test_production_requires_explicit_mode_and_legacy_transition_is_held_before_mutation(self):
+        self.production_fixture()
+        self.assert_error("signing_mode", lambda: self.run_install(preflight=True))
+        self.ops.signing_mode = "developer-id"
+        self.old()
+        adhoc_signature = self.ops.verify_signature
+
+        def signature(bundle, identifier):
+            info = installer.read_plist(bundle / "Contents/Info.plist")
+            if info.get("JonesSigningMode") == "developer-id":
+                return "c" * 40, installer._SIGNING_MODULE.entitlements(identifier)
+            return adhoc_signature(bundle, identifier)
+
+        before = installer.tree_hash(self.target)
+        with patch.object(self.ops, "verify_signature", side_effect=signature):
+            self.assert_error("migration_held", lambda: self.run_install(preflight=True))
+            self.assert_error("migration_held", self.run_install)
+        self.assertEqual(installer.tree_hash(self.target), before)
+        self.assertFalse(installer.State(self.target).root.exists())
+        self.assertFalse(any(event[0] in ("quit", "launch", "ditto") for event in self.ops.events))
+        self.assert_no_scratch()
+
+    def test_production_opt_in_can_preflight_first_install_but_not_enable_feed(self):
+        self.production_fixture()
+        self.ops.signing_mode = "developer-id"
+        with patch.object(self.ops, "verify_signature", side_effect=lambda bundle, identifier:
+                          ("c" * 40, installer._SIGNING_MODULE.entitlements(identifier))):
+            result = self.run_install(preflight=True)
+            self.assertEqual(result["candidate"]["identity"]["CodexBarTeamID"], "2CUPSQS986")
+            self.assertFalse(self.target.exists())
+            change_plist(self.bundle, JonesUpdateChannel="stable")
+            self.repack()
+            self.assert_error("migration_held", lambda: self.run_install(preflight=True))
+
+    def bootstrap_fixture(self):
+        self.old()
+        self.production_fixture()
+        self.ops.signing_mode = "developer-id"
+        adhoc_signature = self.ops.verify_signature
+
+        def signature(bundle, identifier):
+            if installer.read_plist(bundle / "Contents/Info.plist").get("JonesSigningMode") == "developer-id":
+                return "c" * 40, installer._SIGNING_MODULE.entitlements(identifier)
+            return adhoc_signature(bundle, identifier)
+
+        self.ops.verify_signature = signature
+        args = self.args()
+        args.signing_mode = "developer-id"
+        args.bootstrap_prepare = True
+        result = installer.execute(args, self.ops)
+        args.bootstrap_prepare = False
+        args.bootstrap_receipt = result["receipt"]
+        args.receipt_sha256 = result["receipt_sha256"]
+        return args
+
+    def bootstrap_finish_args(self, result, action):
+        return installer.arguments([action, "--target", str(self.target), "--signing-mode", "developer-id",
+                                    "--bootstrap-receipt", result["receipt"],
+                                    "--receipt-sha256", result["receipt_sha256"]])
+
+    def test_bootstrap_prepare_install_and_explicit_launch_keep_separate_legacy(self):
+        args = self.bootstrap_fixture()
+        old = installer.tree_hash(self.target)
+        result = installer.execute(args, self.ops)
+        self.assertEqual(result["status"], "installed-not-launched")
+        self.assertFalse(any(event[0] == "launch" for event in self.ops.events))
+        self.assertEqual(installer.tree_hash(Path(result["legacy_path"])), old)
+        manifest = installer.State(self.target).load(self.ops)
+        self.assertEqual(manifest["schema"], installer.BOOTSTRAP_STATE_SCHEMA)
+        self.assertIsNone(manifest["previous"])
+        launched = installer.execute(self.bootstrap_finish_args(result, "--bootstrap-launch"), self.ops)
+        self.assertEqual(launched["status"], "bootstrap-launched")
+        self.assert_error("bootstrap_replay", lambda: installer.execute(
+            self.bootstrap_finish_args(result, "--bootstrap-rollback"), self.ops))
+
+    def test_bootstrap_before_launch_rollback_preserves_prepared_data_and_production(self):
+        args = self.bootstrap_fixture()
+        old = installer.tree_hash(self.target)
+        result = installer.execute(args, self.ops)
+        root = Path(result["receipt"]).parent
+        sentinel = root / "synthetic-prepared-data"
+        sentinel.write_bytes(b"prepared destination data")
+        restored = installer.execute(self.bootstrap_finish_args(result, "--bootstrap-rollback"), self.ops)
+        self.assertEqual(restored["status"], "bootstrap-rolled-back")
+        self.assertEqual(installer.tree_hash(self.target), old)
+        self.assertEqual(sentinel.read_bytes(), b"prepared destination data")
+        self.assertTrue((root / "production.app").is_dir())
+        self.assertIsNone(installer.State(self.target).load(self.ops))
+        self.assert_error("bootstrap_replay", lambda: installer.execute(
+            self.bootstrap_finish_args(result, "--bootstrap-launch"), self.ops))
+
+    def test_bootstrap_receipt_wrong_hash_or_binding_and_source_drift_never_swap(self):
+        args = self.bootstrap_fixture()
+        before = installer.tree_hash(self.target)
+        original_hash = args.receipt_sha256
+        args.receipt_sha256 = "f" * 64
+        self.assert_error("bootstrap_receipt", lambda: installer.execute(args, self.ops))
+        args.receipt_sha256 = original_hash
+        receipt_path = Path(args.bootstrap_receipt)
+        original = installer.json_file(receipt_path)
+        for field, replacement in (("uid", os.getuid() + 1), ("target", "/other/CodexBar Jones.app"),
+                                   ("oldTree", "f" * 64), ("candidateTree", "f" * 64),
+                                   ("revision", "f" * 40), ("archive", "f" * 64)):
+            receipt = copy.deepcopy(original)
+            receipt["plan"]["request"][field] = replacement
+            plan = json.dumps(receipt["plan"], sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode()
+            receipt["planSHA256"] = hashlib.sha256(plan).hexdigest()
+            installer.atomic_json(receipt_path, receipt)
+            args.receipt_sha256 = hashlib.sha256(receipt_path.read_bytes()).hexdigest()
+            self.assert_error("bootstrap_binding", lambda: installer.execute(args, self.ops))
+        installer.atomic_json(receipt_path, original)
+        args.receipt_sha256 = hashlib.sha256(receipt_path.read_bytes()).hexdigest()
+        self.ops.bootstrap_error = True
+        self.assert_error("synthetic_data_drift", lambda: installer.execute(args, self.ops))
+        self.assertEqual(installer.tree_hash(self.target), before)
+        self.assertFalse(any(event[0] in ("ditto", "launch") for event in self.ops.events))
+
+    def test_bootstrap_stale_app_and_changed_receipt_refuse(self):
+        args = self.bootstrap_fixture()
+        change_plist(self.target, CFBundleShortVersionString="0.56.5")
+        self.assert_error("bootstrap_binding", lambda: installer.execute(args, self.ops))
+        self.assertFalse(any(event[0] == "ditto" for event in self.ops.events))
+
+    def test_bootstrap_journal_interruption_preserves_legacy_before_commit(self):
+        args = self.bootstrap_fixture()
+        before = installer.tree_hash(self.target)
+        for phase in ("staging", "prepared", "will_move_previous", "will_install", "installed_uncommitted", "will_commit"):
+            self.ops.failure_phase = phase
+            self.assert_error("injected", lambda: installer.execute(args, self.ops))
+            self.assertEqual(installer.tree_hash(self.target), before)
+            self.assertFalse((Path(args.bootstrap_receipt).parent / "legacy.app").exists())
+        result = installer.execute(args, self.ops)
+        self.assertEqual(result["status"], "installed-not-launched")
+
+    def test_bootstrap_consumed_receipt_and_unknown_schema_refuse(self):
+        args = self.bootstrap_fixture()
+        path = Path(args.bootstrap_receipt)
+        receipt = installer.json_file(path)
+        for schema, phase in (("unknown", "data-verified"), ("jones-bootstrap-receipt/v1", "launch-attempted")):
+            changed = dict(receipt, schema=schema, phase=phase)
+            installer.atomic_json(path, changed)
+            args.receipt_sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
+            self.assert_error("bootstrap_receipt", lambda: installer.execute(args, self.ops))
+
+    def test_bootstrap_concurrent_invocation_refuses_before_native_data_command(self):
+        args = self.bootstrap_fixture()
+        bootstrap = installer.Bootstrap(installer.State(self.target), args.bootstrap_receipt, args.receipt_sha256)
+        with bootstrap.lock():
+            self.assert_error("busy", lambda: installer.execute(args, self.ops))
+
+    def test_bootstrap_preserves_v1_previous_and_future_production_rotation(self):
+        self.old()
+        self.run_install()
+        self.ops.running = []
+        before = installer.State(self.target).load(self.ops)
+        legacy = installer.tree_hash(self.target)
+        self.production_fixture()
+        change_plist(self.bundle, CFBundleVersion="135.3")
+        change_plist(self.bundle / "Contents/PlugIns/CodexBarWidget.appex", CFBundleVersion="135.3")
+        self.repack()
+        self.ops.signing_mode = "developer-id"
+        adhoc_signature = self.ops.verify_signature
+        self.ops.verify_signature = lambda bundle, identifier: (
+            ("c" * 40, installer._SIGNING_MODULE.entitlements(identifier))
+            if installer.read_plist(bundle / "Contents/Info.plist").get("JonesSigningMode") == "developer-id"
+            else adhoc_signature(bundle, identifier))
+        args = self.args()
+        args.bootstrap_prepare = True
+        prepared = installer.execute(args, self.ops)
+        args.bootstrap_prepare = False
+        args.bootstrap_receipt = prepared["receipt"]
+        args.receipt_sha256 = prepared["receipt_sha256"]
+        result = installer.execute(args, self.ops)
+        state = installer.State(self.target)
+        self.assertEqual(state.load(self.ops)["bootstrap_previous"], before["previous"])
+        self.assert_error("bootstrap_pending", lambda: installer.execute(self.args(), self.ops))
+        self.assert_error("bootstrap_pending", self.restore)
+        installer.execute(self.bootstrap_finish_args(result, "--bootstrap-launch"), self.ops)
+        for build in ("135.4", "135.5"):
+            change_plist(self.bundle, CFBundleVersion=build)
+            change_plist(self.bundle / "Contents/PlugIns/CodexBarWidget.appex", CFBundleVersion=build)
+            self.repack()
+            installer.execute(self.args(), self.ops)
+        self.assertEqual(installer.tree_hash(Path(result["legacy_path"])), legacy)
+        self.assertEqual(state.load(self.ops)["bootstrap_previous"], before["previous"])
+        restored = self.restore()
+        self.assertEqual(restored["candidate"]["build"], "135.4")
+        self.assertEqual(installer.tree_hash(Path(result["legacy_path"])), legacy)
+
+    def test_bootstrap_argument_routes_do_not_weaken_ordinary_restore(self):
+        for values in (["--restore", "--bootstrap-prepare"],
+                       ["--bootstrap-prepare", "--preflight", "--signing-mode", "developer-id"],
+                       ["--bootstrap-launch", "--signing-mode", "developer-id"],
+                       ["--bootstrap-receipt", "/some/receipt.json"]):
+            self.assert_error("arguments", lambda: installer.arguments(values))
 
     def test_preflight_has_machine_contract_and_no_persistent_effect(self):
         before = sorted(str(path.relative_to(self.root)) for path in self.root.rglob("*"))

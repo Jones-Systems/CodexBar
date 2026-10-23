@@ -21,6 +21,10 @@ enum CodexBarLaunchMode: Equatable {
 enum CodexBarEntryPoint {
     @MainActor
     static func main() {
+        if JonesBootstrapCommand.isRequested(CommandLine.arguments) { // JONES(bootstrap-migration)
+            exit(JonesBootstrapCommand.run(CommandLine.arguments))
+        }
+        guard JonesBootstrapCommand.admitNormalLaunch() else { exit(2) } // JONES(bootstrap-migration)
         if JonesUpdateHarness.isMarked(Bundle.main.infoDictionary ?? [:]) {
             JonesUpdateHarness.run()
         }

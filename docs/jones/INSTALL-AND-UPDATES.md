@@ -7,7 +7,7 @@ installation, a working feed, or a public release. Keep the existing
 
 ## Candidate artifact and external verification
 
-The bootstrap artifact is an **ad-hoc sealed, universal ARM64/x86_64, canonical-main CI bundle**.
+The default bootstrap artifact is an **ad-hoc sealed, universal ARM64/x86_64, canonical-main CI bundle**.
 It is for the separately authorized local Jones install. It is not a signed,
 notarized public distribution. PR artifacts and local builds are not eligible
 for this installer.
@@ -99,7 +99,7 @@ seal and matching app/widget architecture slices. ARM64 must be present, either
 alone for retained thin builds or alongside x86_64 for universal builds. Unknown,
 duplicate or mismatched slices are refused. Recovery records keep the existing
 `architecture=arm64` value for thin builds; universal builds record
-`architecture=arm64+x86_64`. Required production metadata is:
+`architecture=arm64+x86_64`. Required default ad-hoc metadata is:
 
 | Field | Value |
 | --- | --- |
@@ -292,7 +292,7 @@ build slices, 4 GiB scratch/artifacts, 2 GiB user caches and a 2 GiB reserve per
 filesystem (24 GiB when all share one device). Actual capacity is sampled before
 each serial command; these estimates reserve no resources.
 
-Every shipped Mach-O, including the unchanged Sparkle binaries, must contain
+Every default ad-hoc candidate/harness Mach-O, including the unchanged Sparkle binaries, must contain
 exactly ARM64 and x86_64. Candidate provenance records those verified slices;
 missing or unknown slices fail qualification. Hosted resource and updater tests
 exercise the Intel slice. The native result records its host architecture, and
@@ -354,3 +354,178 @@ The app's privacy manifest declares local capacity admission (`E174.1`), elapsed
 timer calculations (`35F9.1`) and app/app-group preferences (`CA92.1`, `1C8F.1`).
 Capacity and uptime observations are not transmitted by the updater. These
 reasons follow [Apple's required-reason API definitions](https://developer.apple.com/documentation/bundleresources/app-privacy-configuration/nsprivacyaccessedapitypes/nsprivacyaccessedapitypereasons).
+
+## Explicit Developer ID inspection and transition hold
+
+CB-SIGN-R1 adds `--signing-mode developer-id` to the installer. The default stays
+`adhoc`, including existing API callers and build-135 handling. In Developer ID
+mode the candidate must explicitly seal `JonesSigningMode=developer-id`, team
+`2CUPSQS986`, and group `2CUPSQS986.com.jonessystems.codexbar`; app, widget,
+display name, state key, archive bounds, arm64, canonical-main provenance,
+monotonic build and hash requirements remain unchanged. Explicit Developer ID
+packaging remains ARM64-only for Jones products; only binaries within the pinned
+Sparkle framework may retain its existing ARM64 or ARM64/x86_64 slices. No vendor
+bytes are thinned or rewritten. Missing, duplicate and unknown slices are refused.
+Selection comes from the validated explicit signing mode, never host architecture
+or untrusted artifact claims. Provenance reports the actual validated product
+slices separately from each Mach-O's actual slices; a universal Sparkle does not
+label an ARM64 Developer ID product universal. The native adapter
+requires strict/deep code verification, Developer ID authority chain, exact team,
+hardened runtime, secure timestamp, sealed resources, exact app/widget signed
+entitlements, matching unexpired embedded profiles, an accepted stapled ticket
+and Gatekeeper assessment. Signing metadata alone is insufficient.
+
+The production app entitlement set includes its exact application/team IDs,
+shared group, CloudKit service/container and Production environment. The widget
+includes its own application ID, the same team/group and sandbox=true. Unknown signed
+entitlements fail closed. Profiles may authorize the exact signed group with
+`2CUPSQS986.*`; foreign-team and unconstrained wildcard grants fail closed.
+Real profile availability is unknown.
+
+The source permits an explicitly selected first installation or same-identity
+replacement after external artifact verification and applicable authorization.
+Ordinary installation **refuses an installed `JONESLOCAL` → `2CUPSQS986`
+transition**, including preflight, before quit or swap. Restore cannot cross that
+boundary either. The separate explicit bootstrap below requires a validated data
+receipt; it is not a generic identity override. Removing an old app to evade the
+ordinary check is not a supported migration procedure.
+
+Production channel `none`, empty feed/key, and all automatic-update settings false
+are mandatory. Do not publish these bootstrap ZIPs into a live legacy update feed.
+Apple signing does not replace the separate Jones Ed25519 feed/archive signature.
+No update activation, publication, installation, private-store migration or
+Keychain change has been executed by this source work. It does not prove data
+continuity. Binary rollback
+retains its existing limits; it is not application-data rollback.
+
+## CB-SIGN-R1 affected checks
+
+The existing group manifests are extended in place; no new test module is added.
+
+| Group | Exact invocation | Added coverage |
+| --- | --- | --- |
+| `jones-update-metadata` | `python3 -B Scripts/test_jones_update_metadata.py` | Explicit production metadata; profiles/certificate/expiry; runtime/timestamp/resources; main-only dispatch; secret-free argv and cleanup success/failure/cancellation with fake operations |
+| `jones-candidate-artifact` | `python3 -B Scripts/test_jones_candidate_artifact.py` | Explicit signing mode, production metadata, dispatch SHA/workflow binding, held channel, mode-specific architecture validation and archive-roundtrip reporting |
+| `jones-local-installer` | `python3 -B Scripts/test_jones_install_app.py` | Explicit adapter mode, legacy transition refusal before mutation, first-install preflight and held feed |
+| `jones-identity-overlay` | `bash Scripts/test_jones_identity_overlay.sh` | Production identity selection, release/identity-only mode and required profiles; retains original upstream hashes |
+| `jones-update-trust` | `bash Scripts/test.sh --filter JonesUpdateTrustPolicyTests` | Runtime production identity and channel hold; existing harness/feed trust cases |
+| `jones-update-harness` | `python3 -B Scripts/test_jones_update_harness.py` | Universal app/vendor validation, host architecture reporting and existing six-scenario regression contract |
+
+`make check` and `make test` remain required and are delegated to hosted CI when
+local compiler execution is unavailable. The signing workflow's `source-checks`
+job compiles the Security.framework import helper without credentials. The
+protected signing job never runs on a PR. Pure profile fixtures and fake native
+operations do not prove Apple acceptance, actual signing, provisioning,
+notarization, installation, native app-state preservation, or a live feed.
+
+New feature: failing-before evidence was not manufactured by signing or installing
+an old app. The available local seams cover the added contract directly. Touched
+comments/docstrings are kept near code for identity, secret handling, scratch
+ownership and cleanup boundaries; prior ad-hoc-only descriptions are corrected
+here and in the identity/release guides.
+
+
+## Explicit owner bootstrap (CB-MIGRATION-R1)
+
+This source-only route supports exactly the ad-hoc `JONESLOCAL` Jones app to
+Developer ID team `2CUPSQS986`, retaining bundle ID `com.jonessystems.codexbar`,
+state key `jones`, and channel `none`. Execution requires separate exact approval
+for the named private-store reads/writes, signed artifact, installation and launch.
+Production CloudKit capability/schema readiness must be established before normal
+launch. Unchanged container strings do not prove record continuity.
+
+The signed app's `--jones-bootstrap` command is intercepted before the harness,
+resource smoke, `CodexBarApp`, AppDelegate, SettingsStore, UsageStore, providers or
+CloudSyncEngine. It disables process-local Keychain access before inspecting any
+store and exits after its operation. It never calls CloudSyncPersistence.load,
+exports credentials, edits Keychain ACLs, or changes standard preferences/config.
+
+The native adapter resolves the destination using the entitlement-aware App Group
+container API, with no fallback. It independently proves source filesystem access
+and uses exact persistent preference domains, excluding global, registration and
+argument defaults. Permission, decoding, synchronization and I/O errors stop the
+operation. An inaccessible group is not an empty group. Native old-group access
+may require consent and remains unproved.
+
+Only these data are copied, with all items preflighted before any data write:
+
+- Shared `debugDisableKeychainAccess`, `widgetSelectedProvider`, and
+  `providerAccentColors`. Existing local Keychain preference takes precedence;
+  an old shared-only disable remains effective before normal initialization.
+- `widget-snapshot.json`, considering both the old group and
+  `~/Library/Application Support/CodexBar Jones/`. Two different snapshots require
+  `--snapshot-source old-group` or `--snapshot-source fallback`; timestamps do not
+  choose the source. Equal destinations are no-ops; different values stop.
+
+The old group, fallback, standard domain, `~/.codexbar-jones/config.json`, Keychain
+items/ACLs and `CodexBar Jones/sync/engine-state.json` are retained. The destination
+uses supported CFPreferences writes, checked synchronization, and a fresh helper
+process for readback. No preference or snapshot payload is printed.
+
+The separately approved sequence uses the existing verified archive, SHA-256,
+source revision and exact target arguments plus `--signing-mode developer-id`:
+
+1. Quit the exact old Jones app. Add `--bootstrap-prepare` to validate the artifact,
+   write the private request/intent, prepare allowlisted data and invoke a fresh
+   verification process. The result returns only the receipt path/hash and
+   transaction ID. `--bootstrap-resume` reuses that exact request after interrupted
+   preparation; source drift, changed candidate or unknown effects refuse.
+2. Consume the reviewed `--bootstrap-receipt PATH --receipt-sha256 HASH` with the
+   same artifact arguments. The installer checks UID, target, old bundle tree,
+   candidate archive/tree, source revision, identities, plan hash and receipt hash,
+   then repeats data verification under quiescence immediately before the swap.
+   It stops at `installed-not-launched` and returns a new receipt hash.
+3. Use `--bootstrap-launch --bootstrap-receipt PATH --receipt-sha256 HASH` with
+   the same target and signing mode, without archive arguments, only when the
+   normal-launch approval and CloudKit readiness are satisfied. A durable
+   `launch-attempted` marker precedes launch. Failure cannot trigger automatic
+   rollback. Ordinary updates/restore are blocked until this explicit boundary.
+   The early normal-entry guard also refuses manual opening while the private
+   bootstrap marker is incomplete or installed; it reads only generated installer
+   metadata and performs no migration. First installations without bootstrap
+   storage retain their normal entry behavior.
+4. Before any normal launch, the exact alternative is `--bootstrap-rollback`
+   with that installed receipt/hash. It restores the proved old bundle, retains
+   the production bundle and prepared destination data, and consumes the rollback
+   path. It does not launch either app or restore application data.
+
+The private bootstrap directory is a deterministic sibling of the installer's
+existing recovery directory, ending `.noindex.bootstrap`. Directory mode is 0700;
+request/receipt/locks and install markers are 0600. The versioned receipt binds
+transaction, UID, target, bundle fingerprints, archive, revision, resolved paths,
+and per-item source/preimage/postimage SHA-256 or proven absence. Its canonical
+plan is hashed; the outer receipt hash is supplied explicitly to each consuming
+operation. Hashes bind evidence, not approval. Unknown schemas and replay refuse.
+
+Journal phases are `incomplete`, `prepared`, `data-verified`, `installed` and
+`launch-attempted`. Intent precedes data writes; interrupted preparation accepts
+only recorded preimages or postimages. Missing journals, interrupted durable
+commit, interrupted rollback and uncertain renames require exact reconciliation,
+not journal deletion or blind rerun. Data are not deleted on a bundle rollback.
+Locks prevent concurrent installer/helper writes; external source changes still
+cause a fresh readback refusal.
+
+The bootstrap's original `legacy.app` lives outside the rotating production
+`previous` slot. The v1 installer manifest remains readable. Bootstrap creates a
+v2 manifest preserving any v1 previous bundle in `bootstrap_previous`; later
+same-identity updates and restores retain it and the separate legacy copy. No
+cleanup/retirement of those retained bootstrap artifacts is implicit.
+
+### CB-MIGRATION-R1 affected checks
+
+| Group | Exact invocation | Contract |
+| --- | --- | --- |
+| `jones-bootstrap-migration` | `bash Scripts/test.sh --filter JonesBootstrapMigrationTests` | Dictionary-backed source/destination, no ambient defaults/files, conflict/error no-write, snapshots, policy, interruption/resume, drift/schema checks |
+| `jones-bootstrap-launch` | `bash Scripts/test.sh --filter CodexBarLaunchModeTests` | Explicit routing and Keychain disable before the injected operation |
+| `jones-local-installer` | `python3 -B Scripts/test_jones_install_app.py` | Receipt bindings, replay, quiescence, locks, rollback boundaries, v1/v2 compatibility, separate legacy retention and ordinary signed update/restore |
+| `jones-update-metadata` | `python3 -B Scripts/test_jones_update_metadata.py` | Exact signed entitlement with documented team-scoped profile grant |
+| `jones-update-trust` | `bash Scripts/test.sh --filter JonesUpdateTrustPolicyTests` | Automatic cross-team update remains disabled |
+| `jones-bootstrap-compatibility` | `bash Scripts/test.sh --filter 'SettingsStoreKeychainPreferenceTests|AppGroupSupportTests|JonesStateRootTests'` | Existing policy, upstream migration and Jones isolation contracts |
+
+Also retain the `jones-candidate-artifact`, `jones-update-harness` and
+`jones-identity-overlay` groups above. `make check` and `make test` remain required;
+Swift compilation and these native tests use hosted CI under the local compiler
+restriction. Portable fixtures cannot establish actual source-group consent,
+profile availability, native preferences durability, CloudKit record/schema
+continuity, login-item behavior or installed-owner-app recovery. Those remain
+protected execution gates. See the [fork ledger](bootstrap-migration-ledger.md).

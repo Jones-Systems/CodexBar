@@ -1,0 +1,102 @@
+name: Jones macOS signing
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - '.github/workflows/jones-macos-signing.yml'
+      - 'Scripts/jones_*'
+      - 'Scripts/test_jones_*'
+      - 'Scripts/package_app.sh'
+      - 'Sources/CodexBar/Jones/JonesUpdateTrustPolicy.swift'
+      - 'Tests/CodexBarTests/JonesUpdateTrustPolicyTests.swift'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jones-macos-signing-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  source-checks:
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.draft == false }}
+    runs-on: macos-26
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Check public contracts and compile import helper without credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .build
+          signing_check_scratch=$(mktemp -d "$GITHUB_WORKSPACE/.build/signing-check.XXXXXX")
+          trap 'rm -rf -- "$signing_check_scratch"' EXIT
+          export TMPDIR="$signing_check_scratch"
+          python3 -B Scripts/jones_candidate_admission.py --workspace "$GITHUB_WORKSPACE" \
+            --scratch "$signing_check_scratch" --compiler-jobs 1 --wait-seconds 180
+          python3 -B Scripts/test_jones_update_metadata.py
+          python3 -B Scripts/test_jones_candidate_artifact.py
+          python3 -B Scripts/test_jones_install_app.py
+          bash Scripts/test_jones_identity_overlay.sh
+          xcrun swiftc -j 1 -module-cache-path "$signing_check_scratch/module-cache" \
+            Scripts/jones_import_identity.swift -o "$signing_check_scratch/importer"
+
+  sign:
+    if: >-
+      github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' &&
+      github.repository == 'Jones-Systems/CodexBar' && github.repository_id == '1425008735' &&
+      vars.JONES_MACOS_SIGNING_ENABLED == 'true'
+    environment: macos-signing
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      CODEXBAR_ALLOW_LLDB: '0'
+      CODEXBAR_SKIP_LAUNCH_SMOKE: '0'
+      CODEXBAR_LAUNCH_SMOKE_RESOURCE_ONLY: '1'
+      CODEXBAR_RESOURCE_SMOKE: '1'
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate canonical main and prepare the credential importer without secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RUNNER_ENVIRONMENT" == github-hosted && "$(uname -m)" == arm64 ]]
+          python3 -B Scripts/jones_candidate_artifact.py context --repo "$GITHUB_WORKSPACE" --signing-mode developer-id
+          mkdir -p .build
+          signing_compile_scratch=$(mktemp -d "$GITHUB_WORKSPACE/.build/signing-compile.XXXXXX")
+          trap 'rm -rf -- "$signing_compile_scratch"' EXIT
+          export TMPDIR="$signing_compile_scratch"
+          python3 -B Scripts/jones_candidate_admission.py --workspace "$GITHUB_WORKSPACE" \
+            --scratch "$signing_compile_scratch" --compiler-jobs 1 --wait-seconds 180
+          xcrun swiftc -j 1 -module-cache-path "$signing_compile_scratch/module-cache" \
+            Scripts/jones_import_identity.swift -o .build/jones-import-identity
+      - name: Sign, notarize, staple and verify the held bootstrap artifact
+        shell: bash
+        env:
+          MACOS_SIGNING_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_SIGNING_CERTIFICATE_P12_BASE64 }}
+          MACOS_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_SIGNING_CERTIFICATE_PASSWORD }}
+          APPLE_NOTARY_API_KEY_P8_BASE64: ${{ secrets.APPLE_NOTARY_API_KEY_P8_BASE64 }}
+          APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+          JONES_APP_PROVISIONING_PROFILE_BASE64: ${{ vars.JONES_APP_PROVISIONING_PROFILE_BASE64 }}
+          JONES_WIDGET_PROVISIONING_PROFILE_BASE64: ${{ vars.JONES_WIDGET_PROVISIONING_PROFILE_BASE64 }}
+        run: python3 -B Scripts/jones_sign_and_notarize.py
+      - name: Retain only the verified public artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: Jones-CodexBar-DeveloperID-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .build/jones-signed-artifact/
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+      # Hosted VM teardown bounds builds and any scratch retained after uncertain cleanup.
+      # No release, appcast publication, installed-app mutation or migration runs here.

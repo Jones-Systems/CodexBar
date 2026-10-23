@@ -220,6 +220,25 @@ struct IdentityProof {
                           '\n</dict></plist>\nPLIST\n', extra).stdout
             assert plistlib.loads(cloud)["com.apple.developer.icloud-container-identifiers"] == [result["ICLOUD_ID"]]
             count += 1
+    production_example = example.replace('JONES_TEAM_ID="JONESLOCAL"', 'JONES_TEAM_ID="2CUPSQS986"')
+    production_example += '\nJONES_SIGNING_MODE="developer-id"\n'
+    overlay.write_text(production_example)
+    production_inputs = {"JONES_SIGNING_IDENTITY": "A" * 40,
+                         "JONES_PROVISIONING_PROFILE": "/synthetic/app.profile",
+                         "JONES_WIDGET_PROVISIONING_PROFILE": "/synthetic/widget.profile"}
+    production = values(fixture, "release", "identity", production_inputs)
+    assert production["APP_TEAM_ID"] == "2CUPSQS986"
+    assert production["APP_GROUP_ID"] == "2CUPSQS986.com.jonessystems.codexbar"
+    assert production["ICLOUD_ID"] == "iCloud.com.jonessystems.codexbar"
+    assert production["AUTO_CHECKS"] == "false"
+    for config, mode in (("debug", "identity"), ("release", "adhoc")):
+        assert shell(fixture, config, mode, "true", production_inputs, check=False).returncode != 0
+    for key in production_inputs:
+        missing = dict(production_inputs)
+        missing.pop(key)
+        assert shell(fixture, "release", "identity", "true", missing, check=False).returncode != 0
+    count += 6
+    overlay.write_text(example)
     # Synthetic public bytes exercise stable rendering without activating a real feed/key.
     stable_feed = "https://github.com/Jones-Systems/CodexBar/releases/latest/download/appcast.xml"
     stable_key = base64.b64encode(bytes(range(32))).decode("ascii")

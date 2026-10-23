@@ -16,6 +16,7 @@ resolve_package_identity() {
   PUBLIC_ED_KEY="AGCY8w5vHirVfGGDGc8Szc5iuOqupZSh9pMj/Qs67XI="
   DISPLAY_NAME="CodexBar"
   JONES_OVERLAY=0
+  JONES_SIGNING_MODE=adhoc
   JONES_METADATA=""
   if [[ "$LOWER_CONF" == "debug" ]]; then
     BUNDLE_ID="com.steipete.codexbar.debug"
@@ -30,7 +31,18 @@ resolve_package_identity() {
     source "$ROOT/.mac-release.jones.env"
     : "${JONES_BUNDLE_ID:?Missing JONES_BUNDLE_ID}" "${JONES_TEAM_ID:?Missing JONES_TEAM_ID}"
     [[ "$JONES_BUNDLE_ID" == "com.jonessystems.codexbar" ]] || return 1
-    [[ "$JONES_TEAM_ID" == "JONESLOCAL" ]] || return 1
+    JONES_SIGNING_MODE="${JONES_SIGNING_MODE:-adhoc}"
+    case "$JONES_SIGNING_MODE" in
+      adhoc) [[ "$JONES_TEAM_ID" == "JONESLOCAL" ]] || return 1 ;;
+      developer-id)
+        [[ "$JONES_TEAM_ID" == "2CUPSQS986" && "$SIGNING_MODE" == "identity" && "$LOWER_CONF" == "release" ]] || return 1
+        [[ "${ALLOW_LLDB:-0}" == "0" && "${JONES_UPDATE_CHANNEL:-none}" == "none" ]] || return 1
+        [[ "${JONES_SIGNING_IDENTITY:-}" =~ ^[A-Fa-f0-9]{40}$ ]] || return 1
+        : "${JONES_PROVISIONING_PROFILE:?Explicit app profile required}"
+        : "${JONES_WIDGET_PROVISIONING_PROFILE:?Explicit widget profile required}"
+        ;;
+      *) return 1 ;;
+    esac
     [[ "${JONES_STATE_KEY:-}" == "jones" ]] || return 1
     [[ "${JONES_DISPLAY_NAME:-}" == "CodexBar Jones" ]] || return 1
     BUNDLE_ID="$JONES_BUNDLE_ID"
@@ -65,6 +77,7 @@ resolve_package_identity() {
   if [[ "$JONES_OVERLAY" == "1" ]]; then
     APP_GROUP_ID="${APP_TEAM_ID}.${BUNDLE_ID}"
     JONES_METADATA="
+    <key>JonesSigningMode</key><string>${JONES_SIGNING_MODE}</string>
     <key>JonesStateKey</key><string>jones</string>
     <key>JonesAppBundleID</key><string>${BUNDLE_ID}</string>
     <key>JonesAppGroupID</key><string>${APP_GROUP_ID}</string>
@@ -92,7 +105,8 @@ prepare_jones_update_metadata() {
     --origin "${JONES_BUILD_ORIGIN-local}" --build-run "${JONES_BUILD_RUN:-}" \
     --bundle-id "$BUNDLE_ID" --team-id "$APP_TEAM_ID" --state-key "$JONES_STATE_KEY" \
     --display-name "$DISPLAY_NAME" --app-group-id "$APP_GROUP_ID" --icloud-id "$ICLOUD_ID" \
-    --channel "$JONES_UPDATE_CHANNEL" --feed-url "$FEED_URL" --public-ed-key "$PUBLIC_ED_KEY" \
+    --signing-mode "${JONES_SIGNING_MODE:-adhoc}" --channel "$JONES_UPDATE_CHANNEL" \
+    --feed-url "$FEED_URL" --public-ed-key "$PUBLIC_ED_KEY" \
     --format shell) || return 1
   # Only fixed assignment names and shlex-quoted, validated public values are emitted.
   eval "$metadata"
@@ -151,6 +165,11 @@ source "$ROOT/Scripts/package_product_paths.sh"
 source "$ROOT/Scripts/sparkle_signing_paths.sh"
 resolve_package_identity # JONES(trial-identity): resolve before any build or packaging effects.
 prepare_jones_update_metadata # JONES(updates): reject dirty/shallow source and invalid CI claims before builds.
+if [[ "${JONES_SIGNING_MODE:-adhoc}" == "developer-id" ]]; then
+  python3 -B "$ROOT/Scripts/jones_signing.py" \
+    --app-profile "$JONES_PROVISIONING_PROFILE" --widget-profile "$JONES_WIDGET_PROVISIONING_PROFILE" \
+    --certificate-sha1 "$JONES_SIGNING_IDENTITY"
+fi
 
 # Clean build only when explicitly requested (slower).
 if [[ "${CODEXBAR_FORCE_CLEAN:-0}" == "1" ]]; then
@@ -386,6 +405,13 @@ cat > "$WIDGET_ENTITLEMENTS" <<PLIST
 </dict>
 </plist>
 PLIST
+
+if [[ "${JONES_SIGNING_MODE:-adhoc}" == "developer-id" ]]; then
+  python3 -B "$ROOT/Scripts/jones_signing.py" \
+    --app-profile "$JONES_PROVISIONING_PROFILE" --widget-profile "$JONES_WIDGET_PROVISIONING_PROFILE" \
+    --certificate-sha1 "$JONES_SIGNING_IDENTITY" \
+    --app-entitlements "$APP_ENTITLEMENTS" --widget-entitlements "$WIDGET_ENTITLEMENTS"
+fi
 BUILD_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 GIT_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
@@ -618,6 +644,9 @@ else
   if [[ "$JONES_OVERLAY" == "1" ]]; then CODESIGN_ID="$JONES_SIGNING_IDENTITY"; fi # JONES(trial-identity)
   CODESIGN_ARGS=(--force --timestamp --options runtime --sign "$CODESIGN_ID")
 fi
+if [[ "${JONES_SIGNING_MODE:-adhoc}" == "developer-id" && -n "${JONES_SIGNING_KEYCHAIN:-}" ]]; then
+  CODESIGN_ARGS+=(--keychain "$JONES_SIGNING_KEYCHAIN")
+fi
 function resign() { codesign "${CODESIGN_ARGS[@]}" "$1"; }
 # Validate Sparkle's nested layout before signing so framework layout drift fails clearly.
 SPARKLE_SIGNING_TARGETS=$(codexbar_sparkle_signing_targets "$SPARKLE")
@@ -687,6 +716,7 @@ fi
 # JONES(trial-identity): widget metadata carries the same identity; CLI reads its enclosing app metadata.
 if [[ "$JONES_OVERLAY" == "1" && -d "${APP}/Contents/PlugIns/CodexBarWidget.appex" ]]; then
   WIDGET_INFO="${APP}/Contents/PlugIns/CodexBarWidget.appex/Contents/Info.plist"
+  /usr/libexec/PlistBuddy -c "Add :JonesSigningMode string ${JONES_SIGNING_MODE}" "$WIDGET_INFO"
   /usr/libexec/PlistBuddy -c "Add :JonesStateKey string jones" "$WIDGET_INFO"
   /usr/libexec/PlistBuddy -c "Add :JonesAppBundleID string ${BUNDLE_ID}" "$WIDGET_INFO"
   /usr/libexec/PlistBuddy -c "Add :JonesAppGroupID string ${APP_GROUP_ID}" "$WIDGET_INFO"
@@ -698,6 +728,9 @@ if [[ "$JONES_OVERLAY" == "1" && -d "${APP}/Contents/PlugIns/CodexBarWidget.appe
 fi
 
 # Sign widget extension if present
+if [[ "${JONES_SIGNING_MODE:-adhoc}" == "developer-id" ]]; then
+  cp "$JONES_WIDGET_PROVISIONING_PROFILE" "$APP/Contents/PlugIns/CodexBarWidget.appex/Contents/embedded.provisionprofile"
+fi
 if [[ -d "${APP}/Contents/PlugIns/CodexBarWidget.appex" ]]; then
   codesign "${CODESIGN_ARGS[@]}" \
     --entitlements "$WIDGET_ENTITLEMENTS" \
