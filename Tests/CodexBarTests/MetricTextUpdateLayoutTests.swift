@@ -68,6 +68,17 @@ struct MetricTextUpdateLayoutTests {
         try Self.export(reopened, name: "pace-overflow-reopened")
     }
 
+    @Test(arguments: [UsageProvider.codex, .claude])
+    func `expanded reset clock captures use the normal footnote height`(_ provider: UsageProvider) throws {
+        let model = try MenuCardMetricTimingTests.fixtureModel(provider: provider)
+        let regular = try Self.render(model: model, layoutModel: model, width: 314)
+        let selected = try Self.render(model: model, layoutModel: model, width: 314, highlighted: true)
+        #expect(regular.size == selected.size)
+        #expect(regular.pixels != selected.pixels)
+        try Self.exportClock(regular, name: "\(provider.rawValue)-expanded")
+        try Self.exportClock(selected, name: "\(provider.rawValue)-selected")
+    }
+
     private static func model(kind: TextKind, text: String) -> UsageMenuCardView.Model {
         UsageMenuCardView.Model(
             provider: .kimi,
@@ -103,22 +114,25 @@ struct MetricTextUpdateLayoutTests {
 
     private static func render(
         model: UsageMenuCardView.Model,
-        layoutModel: UsageMenuCardView.Model) throws -> RenderedSection
+        layoutModel: UsageMenuCardView.Model,
+        width: CGFloat = 320,
+        highlighted: Bool = false) throws -> RenderedSection
     {
         let view = UsageMenuCardUsageSectionView(
             model: model,
             layoutModel: layoutModel,
             showBottomDivider: false,
             bottomPadding: 6,
-            width: 320)
+            width: width)
+            .environment(\.menuItemHighlighted, highlighted)
             .environment(\.locale, Locale(identifier: "en_US_POSIX"))
             .environment(\.colorScheme, .light)
             .environment(\.displayScale, 2)
-            .background(Color.white)
+            .background(highlighted ? Color(nsColor: .selectedContentBackgroundColor) : Color.white)
         let hosting = NSHostingView(rootView: view)
         hosting.appearance = NSAppearance(named: .aqua)
         let size = hosting.fittingSize
-        #expect(size.width == 320)
+        #expect(size.width == width)
         #expect(size.height > 0)
         hosting.frame = CGRect(origin: .zero, size: size)
         hosting.layoutSubtreeIfNeeded()
@@ -147,6 +161,13 @@ struct MetricTextUpdateLayoutTests {
             size: size,
             pixels: Data(bytes: pixels, count: byteCount),
             png: #require(representation.representation(using: .png, properties: [:])))
+    }
+
+    private static func exportClock(_ rendered: RenderedSection, name: String) throws {
+        guard let path = ProcessInfo.processInfo.environment["CODEXBAR_CLOCK_RESET_CAPTURE_DIR"] else { return }
+        let directory = URL(fileURLWithPath: NSString(string: path).expandingTildeInPath, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try rendered.png.write(to: directory.appendingPathComponent("\(name).png"), options: .atomic)
     }
 
     private static func export(_ rendered: RenderedSection, name: String) throws {

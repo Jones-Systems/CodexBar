@@ -25,12 +25,6 @@ struct UsageMenuCardView: View {
         }
 
         struct Metric: Identifiable {
-            struct LinePresentation: Equatable {
-                let titleText: String
-                let resetText: String?
-                let metaText: String?
-            }
-
             let id: String
             let title: String
             let percent: Double
@@ -49,6 +43,7 @@ struct UsageMenuCardView: View {
             let workdayTickAppearance: WorkdayTickAppearance
             let cardStyle: Bool
             let sessionEquivalentDetail: UsagePaceText.SessionEquivalentDetail?
+            let timing: MenuCardMetricTiming?
 
             init(
                 id: String,
@@ -67,7 +62,8 @@ struct UsageMenuCardView: View {
                 workdayMarkerPercents: [Double] = [],
                 workdayTickAppearance: WorkdayTickAppearance = .subtle,
                 cardStyle: Bool = false,
-                sessionEquivalentDetail: UsagePaceText.SessionEquivalentDetail? = nil)
+                sessionEquivalentDetail: UsagePaceText.SessionEquivalentDetail? = nil,
+                timing: MenuCardMetricTiming? = nil)
             {
                 self.id = id
                 self.title = title
@@ -86,29 +82,11 @@ struct UsageMenuCardView: View {
                 self.workdayTickAppearance = workdayTickAppearance
                 self.cardStyle = cardStyle
                 self.sessionEquivalentDetail = sessionEquivalentDetail
+                self.timing = timing
             }
 
             var percentLabel: String {
                 UsageFormatter.percentText(self.percent, suffix: self.percentStyle.labelSuffix)
-            }
-
-            func linePresentation(title: String) -> LinePresentation {
-                // Keep the title aligned with the configured used/remaining label semantics.
-                let metaParts = [
-                    self.detailLeftText,
-                    self.detailRightText,
-                    self.sessionEquivalentDetail?.leftText,
-                    self.sessionEquivalentDetail?.rightText,
-                ].compactMap { text -> String? in
-                    guard let text = text?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty else {
-                        return nil
-                    }
-                    return text
-                }
-                return LinePresentation(
-                    titleText: "\(title) \(self.percentLabel)",
-                    resetText: self.resetText,
-                    metaText: metaParts.isEmpty ? nil : metaParts.joined(separator: " · "))
             }
         }
 
@@ -565,11 +543,8 @@ private struct MetricRow: View {
                     warningMarkerPercents: self.metric.warningMarkerPercents,
                     workdayMarkerPercents: self.metric.workdayMarkerPercents,
                     workdayTickAppearance: self.metric.workdayTickAppearance)
-                if let layoutMetaText = layoutPresentation.metaText {
-                    self.layoutPreservingText(
-                        presentation.metaText,
-                        layoutText: layoutMetaText,
-                        lineLimit: 2)
+                if let layoutMeta = layoutPresentation.meta {
+                    self.layoutPreservingMeta(presentation.meta, layout: layoutMeta)
                 }
                 if let layoutDetailText = self.layoutMetric.detailText {
                     self.layoutPreservingText(
@@ -583,6 +558,26 @@ private struct MetricRow: View {
         .padding(self.metric.cardStyle ? 10 : 0)
         .background(self.metric.cardStyle ? Color.secondary.opacity(self.isHighlighted ? 0.2 : 0.08) : Color.clear)
         .clipShape(RoundedRectangle(cornerRadius: self.metric.cardStyle ? 10 : 0))
+    }
+
+    private func layoutPreservingMeta(_ line: MenuCardMetricLine?, layout: MenuCardMetricLine) -> some View {
+        layout.text
+            .font(.footnote)
+            .lineLimit(2)
+            .fixedSize(horizontal: false, vertical: true)
+            .hidden()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .overlay(alignment: .topLeading) {
+                if let line {
+                    line.text
+                        .font(.footnote)
+                        .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
+                        .lineLimit(2)
+                        .truncationMode(.tail)
+                        .accessibilityLabel(line.accessibilityText)
+                }
+            }
+            .clipped()
     }
 
     private func layoutPreservingText(
@@ -1360,7 +1355,8 @@ extension UsageMenuCardView.Model {
                 paceOnTop: tertiaryPaceDetail?.paceOnTop ?? true,
                 warningMarkerPercents: Self.warningMarkerPercents(
                     thresholds: input.quotaWarningThresholds[.weekly],
-                    showUsed: input.usageBarsShowUsed)))
+                    showUsed: input.usageBarsShowUsed),
+                timing: MenuCardMetricTiming.make(provider: input.provider, window: opus, now: input.now)))
         }
         metrics.append(contentsOf: Self.extraRateWindowMetrics(
             snapshot: snapshot,
@@ -1457,7 +1453,8 @@ extension UsageMenuCardView.Model {
             sessionEquivalentDetail: Self.sessionEquivalentDetail(
                 input: input,
                 weeklyWindow: primary,
-                weeklyWindowID: nil))
+                weeklyWindowID: nil),
+            timing: MenuCardMetricTiming.make(provider: input.provider, window: primary, now: input.now))
     }
 
     private static func secondaryMetric(
@@ -1592,7 +1589,8 @@ extension UsageMenuCardView.Model {
             sessionEquivalentDetail: Self.sessionEquivalentDetail(
                 input: input,
                 weeklyWindow: weekly,
-                weeklyWindowID: nil))
+                weeklyWindowID: nil),
+            timing: MenuCardMetricTiming.make(provider: input.provider, window: weekly, now: input.now))
     }
 }
 

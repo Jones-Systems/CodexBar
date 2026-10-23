@@ -264,7 +264,8 @@ extension UsageMenuCardView.Model {
                 workdayMarkerPercents: metric.workdayMarkerPercents,
                 workdayTickAppearance: metric.workdayTickAppearance,
                 cardStyle: metric.cardStyle,
-                sessionEquivalentDetail: nil)
+                sessionEquivalentDetail: nil,
+                timing: metric.timing)
         }
     }
 
@@ -295,7 +296,8 @@ extension UsageMenuCardView.Model {
                 workdayMarkerPercents: metric.workdayMarkerPercents,
                 workdayTickAppearance: metric.workdayTickAppearance,
                 cardStyle: metric.cardStyle,
-                sessionEquivalentDetail: metric.sessionEquivalentDetail)
+                sessionEquivalentDetail: metric.sessionEquivalentDetail,
+                timing: metric.timing)
         }
     }
 

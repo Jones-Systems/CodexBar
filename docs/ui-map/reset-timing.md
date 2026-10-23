@@ -25,12 +25,26 @@ The menu-bar percentage and countdown retain normal menu-bar text color and the
 existing layout font size. An available Codex credit expiring before the displayed
 quota reset supplies the countdown and the same hourglass symbol used by the
 layout editor's Runs out chip, configured at the surrounding text's point size.
-The attachment keeps the configured symbol's natural size instead of shrinking
-its whole canvas to cap height. The existing countdown formatter keeps `h` and `m`.
+The attachment scales the configured symbol's natural canvas to 80% in both
+dimensions and centers it on the text's cap height. The existing countdown
+formatter keeps `h` and `m`.
 Expired credits do not control the display. Healthy left account-list reset labels
 use secondary text; actual account errors retain error styling. The right-hand
 banked expiry clock, countdown and count use orange beyond 24 hours and red at or
 within 24 hours; selection highlighting preserves the menu's selected text color.
+
+Expanded Codex and Claude quota metrics show the forecast first, then the pace
+balance, then the existing settings clock symbol and the quota reset weekday/time:
+`Runs out in 1d 5m · 19% in deficit · [clock] Thu 3:00 PM`. Each metric uses its own
+rate window's actual reset, independently of estimated depletion and credit expiry.
+Missing or elapsed resets omit the clock detail. Reset timing remains visible when
+pace is hidden, and the existing header countdown remains available. Other providers
+retain their existing metadata order.
+
+The footnote retains the standard font, neutral/selected colors and two-line wrapping;
+accessibility identifies the clock detail as the reset time. Weekday/time uses
+America/New_York with daylight-saving conversion, without calendar dates or a timezone
+suffix. Aggregate Runs out labels and timing help also omit the timezone suffix.
 
 ## Reproducible journeys
 
@@ -44,6 +58,7 @@ import a real account or change shared defaults to manufacture these states.
 | Menu-bar reset display | Use synthetic quota windows and reset credits. Render with weekly reset later than the credit expiry; verify the earlier countdown and trailing hourglass. Repeat with later, expired, and absent credits. | Model/renderer fixtures; installed menu-bar interaction requires separate observation. |
 | Countdown refresh | Advance the injected clock through the 24-hour boundary and credit expiry; verify account-row urgency and menu-bar fallback to the quota reset or next eligible credit. | Deterministic clock checks, without waiting on wall time. |
 | Compact account menu | Supply a healthy account with low remaining quota and a dated reset. Verify neutral left reset detail alongside quota severity, and orange/red right-hand banked expiry details. Supply an actual account error and preserve its error indication. | Shared presentation/component checks; account activation is outside this task. |
+| Expanded Codex and Claude | Supply synthetic session and weekly windows with distinct reset dates. Verify forecast, pace balance and clock weekday/time order; hide pace and preserve the reset; compare normal and selected rows at 314 points. | `MenuCardMetricTimingTests`, `MetricTextUpdateLayoutTests`, and model/layout checks; installed navigation and live provider data require separate observation. |
 | Overview and layout editor | These consume the same row and reset renderer. Verify shared data propagation; opening every settings/Overview entry remains unverified unless explicitly captured. | Shared-component coverage does not prove all navigation paths. |
 
 ## Evidence
@@ -60,8 +75,9 @@ ignores the earlier credit expiry and the healthy account reset label is red:
 
 ![Before: red reset label beneath a healthy synthetic account](../screenshots/reset-display-before-account-row.png)
 
-With the same synthetic account and deadlines, the updated title shows the
-banked expiry and a text-sized trailing hourglass in normal menu-bar color; the account percentage and right-hand urgent expiry remain red:
+The following historical captures predate the 80% hourglass adjustment. With the
+same synthetic account and deadlines, they show banked expiry and a trailing
+hourglass in normal menu-bar color; the account percentage and urgent expiry remain red:
 
 ![After: 4% with a neutral five-hour credit countdown and text-sized hourglass](../screenshots/reset-display-after-menu-bar.png)
 
@@ -77,7 +93,14 @@ illustrate the reported behavior but are not a synthetic baseline. Never present
 an HTML mockup as a capture of the native app. No live provider or credential
 probe is needed for these checks.
 
+For native expanded-card captures, set `CODEXBAR_CLOCK_RESET_CAPTURE_DIR` to a
+task-owned directory under `.build` and run the isolated focused tests. This exports
+`codex-expanded.png`, `codex-selected.png`, `claude-expanded.png`, and
+`claude-selected.png` from the production SwiftUI usage section with synthetic data.
+These are component captures, not installed-app screenshots. The current candidate's
+PR records whether these captures and required local checks were available.
+
 Map guidance: `Jones-Systems/Frontend-Development` revision
-`e61b1c2794827f210b21e3a2b66b3516acef6196`, UI view maps. This map is partial;
+`3a1f6935061597c2d4bfaabac9387d4b83874ee1`, UI view maps. This map is partial;
 other provider cards, settings navigation, widgets, and accessibility text-size
 variants remain outside its verified coverage.
