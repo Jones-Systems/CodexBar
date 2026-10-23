@@ -46,7 +46,8 @@ jobs:
   candidate:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     runs-on: macos-26-intel
-    timeout-minutes: 60
+    # Cold universal compilation took 55 minutes before the widget and native proof.
+    timeout-minutes: 120
     env:
       CODEXBAR_SIGNING: adhoc
       ARCHES: arm64 x86_64
