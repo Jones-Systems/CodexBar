@@ -105,6 +105,22 @@ seven days. Each job creates its own capture root outside the build cache,
 uploads evidence even on failure, then removes and checks absence of that root.
 The capture upload does not change test selection or add another build.
 
+Expanded-card native captures below were produced by CI run `39907176540`,
+shard 1, at tested merge `6aef75dc17a7afb65cd8b88cec715cecd009463c`. Its tree
+`7b9f1f10a330d749d3b8c94ab13edada91672f89` exactly matches source candidate
+`4e322d58943ff85e03a8ab12157c30dc44c16719`. They remain representative after the
+provider-gate repair, which changes only a source explanation and test anchor
+locations. The capture test passed for both providers; that shard subsequently
+failed its architecture gate, so these images do not establish a passing suite.
+
+![Codex expanded timing with the native clock](../screenshots/clock-reset-codex-expanded.png)
+
+![Claude expanded timing with the native clock](../screenshots/clock-reset-claude-expanded.png)
+
+![Codex timing in the selected state](../screenshots/clock-reset-codex-selected.png)
+
+![Claude timing in the selected state](../screenshots/clock-reset-claude-selected.png)
+
 Map guidance: `Jones-Systems/Frontend-Development` revision
 `3a1f6935061597c2d4bfaabac9387d4b83874ee1`, UI view maps. This map is partial;
 other provider cards, settings navigation, widgets, and accessibility text-size

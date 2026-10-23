@@ -10,6 +10,8 @@ struct MenuCardMetricTiming: Equatable {
     }
 
     static func make(provider: UsageProvider, window: RateWindow, now: Date) -> Self? {
+        // Provider-specific by design: the expanded reset clock is enabled only for the approved Codex and Claude
+        // cards.
         guard provider == .codex || provider == .claude else { return nil }
         guard let reset = window.resetsAt, reset > now else { return Self(resetTime: nil) }
         let formatter = DateFormatter()
