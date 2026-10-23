@@ -11,18 +11,23 @@ struct JonesUpdateLifecycleTests {
         let generation = lifecycle.generation
         #expect(lifecycle.state == .checking)
         #expect(lifecycle.state.preparedUpdate == nil)
-        #expect(lifecycle.found(version: "135.2", generation: generation))
+        let found = lifecycle.found(version: "135.2", generation: generation)
+        #expect(found)
         #expect(lifecycle.state == .downloading(version: "135.2"))
         #expect(lifecycle.state.preparedUpdate == nil)
-        #expect(lifecycle.preparing(version: "135.2", generation: generation))
+        let preparing = lifecycle.preparing(version: "135.2", generation: generation)
+        #expect(preparing)
         #expect(lifecycle.state == .preparing(version: "135.2"))
         #expect(lifecycle.state.preparedUpdate == nil)
-        let prepared = try #require(lifecycle.prepared(version: "135.2", generation: generation, at: 100))
+        let preparedUpdate = lifecycle.prepared(version: "135.2", generation: generation, at: 100)
+        let prepared = try #require(preparedUpdate)
         #expect(lifecycle.state == .ready(prepared))
-        #expect(lifecycle.requestInstall(prepared))
+        let requestedInstall = lifecycle.requestInstall(prepared)
+        #expect(requestedInstall)
         #expect(lifecycle.state == .installing(version: "135.2"))
         #expect(lifecycle.state.preparedUpdate == nil)
-        #expect(!lifecycle.requestInstall(prepared))
+        let repeatedInstall = lifecycle.requestInstall(prepared)
+        #expect(!repeatedInstall)
     }
 
     @Test
@@ -31,18 +36,26 @@ struct JonesUpdateLifecycleTests {
         lifecycle.beginCheck()
         let oldGeneration = lifecycle.generation
         lifecycle.found(version: "135.2", generation: oldGeneration)
-        let oldPrepared = try #require(lifecycle.prepared(version: "135.2", generation: oldGeneration, at: 100))
+        let oldPreparedUpdate = lifecycle.prepared(version: "135.2", generation: oldGeneration, at: 100)
+        let oldPrepared = try #require(oldPreparedUpdate)
         lifecycle.beginCheck()
         let generation = lifecycle.generation
         lifecycle.found(version: "135.3", generation: generation)
-        #expect(!lifecycle.requestInstall(oldPrepared))
-        #expect(lifecycle.prepared(version: "135.2", generation: oldGeneration, at: 200) == nil)
-        #expect(lifecycle.prepared(version: "135.2", generation: generation, at: 200) == nil)
-        #expect(lifecycle.prepared(version: "135.3", generation: oldGeneration, at: 200) == nil)
-        let current = try #require(lifecycle.prepared(version: "135.3", generation: generation, at: 200))
-        #expect(lifecycle.prepared(version: "135.3", generation: generation, at: 201) == nil)
+        let oldInstall = lifecycle.requestInstall(oldPrepared)
+        #expect(!oldInstall)
+        let stalePrepared = lifecycle.prepared(version: "135.2", generation: oldGeneration, at: 200)
+        #expect(stalePrepared == nil)
+        let wrongVersion = lifecycle.prepared(version: "135.2", generation: generation, at: 200)
+        #expect(wrongVersion == nil)
+        let wrongGeneration = lifecycle.prepared(version: "135.3", generation: oldGeneration, at: 200)
+        #expect(wrongGeneration == nil)
+        let currentPrepared = lifecycle.prepared(version: "135.3", generation: generation, at: 200)
+        let current = try #require(currentPrepared)
+        let duplicatePrepared = lifecycle.prepared(version: "135.3", generation: generation, at: 201)
+        #expect(duplicatePrepared == nil)
         #expect(lifecycle.state.preparedUpdate == current)
-        #expect(!lifecycle.preparing(version: "135.3", generation: generation))
+        let preparingAgain = lifecycle.preparing(version: "135.3", generation: generation)
+        #expect(!preparingAgain)
     }
 
     @Test
@@ -56,15 +69,20 @@ struct JonesUpdateLifecycleTests {
             lifecycle.beginCheck()
             let generation = lifecycle.generation
             lifecycle.found(version: "135.2", generation: generation)
-            let prepared = try #require(lifecycle.prepared(version: "135.2", generation: generation, at: 100))
+            let preparedUpdate = lifecycle.prepared(version: "135.2", generation: generation, at: 100)
+            let prepared = try #require(preparedUpdate)
             lifecycle.finish(outcome)
             #expect(lifecycle.state == outcome.state)
             #expect(lifecycle.version == nil)
             #expect(lifecycle.generation != generation)
-            #expect(!lifecycle.requestInstall(prepared))
-            #expect(!lifecycle.willInstall(version: "135.2", generation: generation))
-            #expect(!lifecycle.found(version: "135.2", generation: generation))
-            #expect(lifecycle.prepared(version: "135.2", generation: generation, at: 200) == nil)
+            let requestedInstall = lifecycle.requestInstall(prepared)
+            #expect(!requestedInstall)
+            let willInstall = lifecycle.willInstall(version: "135.2", generation: generation)
+            #expect(!willInstall)
+            let found = lifecycle.found(version: "135.2", generation: generation)
+            #expect(!found)
+            let latePrepared = lifecycle.prepared(version: "135.2", generation: generation, at: 200)
+            #expect(latePrepared == nil)
         }
     }
 
@@ -73,11 +91,14 @@ struct JonesUpdateLifecycleTests {
         var lifecycle = JonesUpdateLifecycle()
         lifecycle.beginCheck()
         let generation = lifecycle.generation
-        #expect(lifecycle.prepared(version: "135.2", generation: generation, at: 100) == nil)
-        #expect(!lifecycle.found(version: "", generation: generation))
+        let unknownCandidate = lifecycle.prepared(version: "135.2", generation: generation, at: 100)
+        #expect(unknownCandidate == nil)
+        let emptyVersionFound = lifecycle.found(version: "", generation: generation)
+        #expect(!emptyVersionFound)
         lifecycle.found(version: "135.2", generation: generation)
         for time in [-1, Double.nan, Double.infinity] {
-            #expect(lifecycle.prepared(version: "135.2", generation: generation, at: time) == nil)
+            let prepared = lifecycle.prepared(version: "135.2", generation: generation, at: time)
+            #expect(prepared == nil)
         }
         #expect(lifecycle.state == .downloading(version: "135.2"))
     }

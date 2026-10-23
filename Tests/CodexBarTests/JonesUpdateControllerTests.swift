@@ -27,12 +27,12 @@ private final class JonesUpdateFixtureDriver: JonesUpdateDriver {
     }
 }
 
+@MainActor
 private final class JonesUpdateFixtureTimer {
     var starts = 0
     var cancellations = 0
     var tick: (@MainActor () -> Void)?
 
-    @MainActor
     func schedule(_ tick: @escaping @MainActor () -> Void) -> JonesUpdateCancellation {
         self.starts += 1
         self.tick = tick
