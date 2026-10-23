@@ -9,8 +9,16 @@ read_when:
 
 Use the repository's build and test launchers on macOS. They apply a maximum
 of **six build jobs** on both a laptop and a Mac Mini, reduced when recent CPU
-use leaves less room. The limit also applies on macOS CI; Linux commands keep
-their existing behavior.
+use leaves less room. These restrictions apply to local and self-hosted Macs.
+GitHub-hosted runners and Linux commands keep their existing compiler settings.
+
+GitHub-hosted runners are identified by both `GITHUB_ACTIONS=true` and
+`RUNNER_ENVIRONMENT=github-hosted`, using GitHub's
+[documented runner variables](https://docs.github.com/en/actions/reference/workflows-and-actions/variables).
+There the helper passes the original command through without a local lock,
+CPU sampling, job normalization or added compiler flags. `CODEXBAR_BUILD_JOBS`
+does not constrain hosted runners. A generic `CI=true`, incomplete runner
+identity or `RUNNER_ENVIRONMENT=self-hosted` does not bypass local protection.
 
 The shared `Scripts/build_jobs.py` helper owns this policy. Ordinary Makefile
 builds, the isolated test runner (including `--command swift test ...`), plugin
@@ -18,7 +26,7 @@ tests, repository-sync tests and app packaging call it at the compiler
 boundary. Packaging also applies Xcode's job control. Do not bypass the helper
 with bare, uncapped SwiftPM or Xcode commands.
 
-Release builds also limit each Swift compiler job to one backend thread.
+Local Release builds also limit each Swift compiler job to one backend thread.
 SwiftPM receives a final `-Xswiftc -num-threads -Xswiftc 1`; Xcode receives
 `SWIFT_USE_PARALLEL_WHOLE_MODULE_OPTIMIZATION=NO` together with the literal
 `OTHER_SWIFT_FLAGS=$(inherited) -num-threads 1` build setting. The first disables
@@ -81,7 +89,7 @@ child cleanup is proved. An abandoned or unknown-cleanup record prevents a new
 build; the diagnostic identifies its evidence file. Do not delete that file or
 clear it because a PID disappeared. Reconcile the recorded owned work first,
 then clear that exact record while holding the lock. There is no automatic
-recovery or bypass setting.
+recovery or local bypass setting.
 
 The chosen budget stays fixed for the command. Compiler-free `--skip-build`
 test groups do not need another 30-second compiler measurement. The helper
