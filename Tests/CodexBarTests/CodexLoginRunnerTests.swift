@@ -12,16 +12,11 @@ struct CodexLoginRunnerTests {
         defer { try? FileManager.default.removeItem(at: root) }
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let ready = root.appendingPathComponent("ready")
-        let finished = root.appendingPathComponent("finished")
         let executable = root.appendingPathComponent("codex")
         try """
-        #!/usr/bin/python3
-        import os, time
-        with open(os.environ["CODEXBAR_TEST_READY"], "w") as f:
-            f.write(str(os.getpid()))
-        time.sleep(30)
-        with open(os.environ["CODEXBAR_TEST_FINISHED"], "w") as f:
-            f.write("finished")
+        #!/bin/sh
+        printf '%s\\n' "$$" > "$CODEXBAR_TEST_READY"
+        exec /bin/sleep 30
         """.write(to: executable, atomically: true, encoding: .utf8)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: executable.path)
         let task = Task {
@@ -32,24 +27,31 @@ struct CodexLoginRunnerTests {
                 environment: [
                     "PATH": root.path,
                     "CODEXBAR_TEST_READY": ready.path,
-                    "CODEXBAR_TEST_FINISHED": finished.path,
                 ], loginPATH: nil)
         }
+        var readyPID: pid_t?
         for _ in 0..<200 {
-            if FileManager.default.fileExists(atPath: ready.path) { break }
+            if let pidText = try? String(contentsOf: ready, encoding: .utf8),
+               pidText.hasSuffix("\n"),
+               let pid = pid_t(pidText.dropLast()), pid > 0
+            {
+                readyPID = pid
+                break
+            }
             try? await Task.sleep(for: .milliseconds(10))
         }
-        let started = FileManager.default.fileExists(atPath: ready.path)
+        let wasAliveBeforeCancellation = readyPID.map { kill($0, 0) == 0 } ?? false
         let cancelledAt = Date()
         task.cancel()
         let result = await task.value
-        #expect(started)
         #expect(result.outcome == .cancelled)
         #expect(Date().timeIntervalSince(cancelledAt) < 3)
-        #expect(!FileManager.default.fileExists(atPath: finished.path))
-        if let pidText = try? String(contentsOf: ready, encoding: .utf8), let pid = pid_t(pidText) {
-            #expect(kill(pid, 0) == -1)
-        }
+        let pid = try #require(readyPID)
+        #expect(wasAliveBeforeCancellation)
+        let exitProbe = kill(pid, 0)
+        let exitProbeError = errno
+        #expect(exitProbe == -1)
+        #expect(exitProbeError == ESRCH)
     }
 
     @Test

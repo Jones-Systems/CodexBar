@@ -92,6 +92,86 @@ verification when that environment and operation are authorized.
 These commands and documentation do not grant permission to terminate unrelated
 processes, access live accounts or credentials, sign, or publish.
 
+### Native workflow proofs
+
+`Scripts/verify_packaged_relocation.sh` exercises only the packaged **resource**
+entrypoints (CB-N6): copied helper, symlinked helper, and app resource smoke, followed
+by all three missing-bundle negative controls. Every invocation sets
+`CODEXBAR_RESOURCE_SMOKE=1`. It never executes ordinary app startup or the survival
+phase in `verify_packaged_app_launch.sh`. Resource success is not menu, window,
+provider, installed-app, or full native UI proof. This resource-only check needs no
+Aqua session; a future ordinary-app/UI proof would need one and an independently
+qualified synthetic startup boundary.
+
+Before running, qualify the exact disposable build against its source and review
+both smoke entrypoints plus their transitive initialization. The review flag below
+records that prerequisite; it cannot prove provenance by itself. The script checks
+the bundle's embedded commit prefix against the full supplied SHA and records copied
+executable hashes. Build qualification, architecture/signature checks, and any build
+commands belong to the caller. Do not supply an installed app or build via an
+automatic launch wrapper. When packaging is authorized separately, use the existing
+`CODEXBAR_SKIP_LAUNCH_SMOKE=1` option to suppress its ordinary launch smoke.
+
+```bash
+bash Scripts/verify_packaged_relocation.sh \
+  --app /absolute/path/to/qualified/CodexBar.app \
+  --checkout /absolute/path/to/source-checkout \
+  --scratch-parent /absolute/path/to/existing-owned-proof-parent \
+  --qualified-source-commit FULL_40_CHARACTER_SOURCE_SHA \
+  --resource-entrypoints-reviewed
+```
+
+Use an existing canonical, disk-backed scratch parent outside the denied checkout
+and bundle. The caller owns that parent. The verifier allocates one private child,
+copies the bundle, and removes only that child after its exact direct process drains.
+HUP, INT, TERM, failures and timeouts use the same cleanup. An unproved process drain
+or changed root identity preserves scratch and fails; unconditional process/host
+termination cannot guarantee cleanup. Distinct invocations retain distinct roots.
+Each command has a 20-second deadline inside a 180-second run budget; copy/setup
+time counts toward that budget, checked before each command. Cleanup has a separate
+five-second child-drain bound. There are no behavior retries.
+
+The sandbox denies by default, allowing system-library reads and owned scratch while
+explicitly denying checkout reads. It allows reading the literal root directory for
+dyld startup; that grant does not allow reading descendant file contents. It grants no network, preference/Keychain Mach
+service access, or child forks. A readable control and a denied checkout read must
+both succeed before any smoke entrypoint runs. This is needed even for the resource
+smoke: plugin engine selection currently consults `UserDefaults.standard`. Synthetic
+`HOME` alone does not isolate defaults. If the restricted smoke cannot initialize,
+report failure and investigate; do not weaken it to access live defaults or providers.
+Only exit 1 with the exact missing-bundle diagnostic counts as a negative control;
+timeouts, crashes, signing failures and other startup errors do not.
+
+Capture stdout/stderr outside disposable scratch through the caller's evidence
+mechanism. JSON lines preserve source/build identity, phase outputs/timings, primary
+failure and cleanup readback. A final status of zero is required; an intermediate
+resource pass followed by cleanup failure is a failed run. Missing macOS or
+`sandbox-exec` is unavailable (exit 2), never a skipped pass. Synthetic lifecycle
+regressions are run separately with
+`bash Scripts/test_verify_packaged_relocation.sh`; they use fake resource responses
+and owned Python children, not a real bundle, TCC, live stores, or providers.
+
+G-CB1 is a separate, bounded no-prompt query:
+
+```bash
+bash Scripts/verify_packaged_relocation.sh --ax-trust-probe
+```
+
+It calls `AXIsProcessTrustedWithOptions` with `kAXTrustedCheckOptionPrompt=false`
+through the system frameworks, records the boolean and executing Python process,
+parent, binary hash, OS and architecture, and exits 3 when untrusted. It neither
+requests consent nor changes TCC. A false result holds CB-N1/CB-N3 on an owner-only
+Accessibility grant; it is not a failing resource proof. A true result is scoped to
+that execution context: a later AX driver must check its own trust without prompting.
+
+`StatusMenuProviderNativeProofTests` and `CodexWorkspacesNativeProofTests` remain
+opt-in fixture hosts. Their external-driver journeys require that trust gate and
+native visible-action/state evidence. They must use synthetic state and never touch
+the installed app, live defaults, Keychain, authentication or provider accounts.
+Ordinary CI or resource-smoke success does not establish those journeys. Run local
+checks/probes only after the coordinating owner's CPU/test-slot admission; required
+delivery checks remain `make test` and `make check`.
+
 ## Keychain Prompts (Development)
 
 ### First Launch After Fresh Clone
