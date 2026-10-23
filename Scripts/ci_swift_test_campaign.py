@@ -693,7 +693,8 @@ def linux_cache_plan(context, environment, version_reader=None):
         dependencies = linux_dependencies(workspace)
         hashes = {name: hashlib.sha256(encode(value).encode()).hexdigest()
                   for name, value in (("image", image), ("toolchain", versions), ("dependencies", dependencies))}
-        prefix = f"codexbar-linux-glibc-build-v1-{image['RUNNER_ARCH']}-" + "-".join(hashes.values()) + "-"
+        family = "campaign" if context["event"] == "workflow_dispatch" else "build"
+        prefix = f"codexbar-linux-glibc-{family}-v1-{image['RUNNER_ARCH']}-" + "-".join(hashes.values()) + "-"
         context.update(workspace=str(workspace), staging=str(staging), image=image, toolchain=versions,
                        dependencies=dependencies, identity_hashes=hashes, restore_prefix=prefix,
                        requested_key=prefix + context["actual_sha"],

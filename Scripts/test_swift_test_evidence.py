@@ -1013,6 +1013,97 @@ class LinuxCacheTests(unittest.TestCase):
         self.assertIn("linux-cache after-save", linux)
 
 
+class LinuxCacheFamilyTests(unittest.TestCase):
+    def test_ordinary_push_and_pull_request_keep_the_complete_existing_key(self):
+        with linux_cache_fixture() as (_, env, original):
+            hashes = original["identity_hashes"]
+            prefix = ("codexbar-linux-glibc-build-v1-X64-" + hashes["image"] + "-"
+                      + hashes["toolchain"] + "-" + hashes["dependencies"] + "-")
+            for event in ("push", "pull_request"):
+                options = {**env, "GITHUB_EVENT_NAME": event, "LINUX_CACHE_MODE": "warm",
+                           "LINUX_TIMESTAMP_MODE": "replay", "GITHUB_RUN_ID": "456", "GITHUB_RUN_ATTEMPT": "3"}
+                context = campaign.linux_cache_plan(campaign.linux_cache_source(options, SHA), options,
+                                                   lambda command: "native " + " ".join(command) + "\n")
+                self.assertTrue(context["enabled"])
+                self.assertEqual(context["restore_prefix"], prefix)
+                self.assertEqual(context["requested_key"], prefix + SHA)
+                self.assertEqual(context["requested_key"], original["requested_key"])
+                self.assertEqual((context["linux_cache_mode"], context["linux_timestamp_mode"]), ("auto", "off"))
+
+    def test_manual_treatments_share_one_key_independent_of_modes_and_run_attempt(self):
+        with linux_cache_fixture() as (_, env, ordinary):
+            prefix = ordinary["restore_prefix"].replace("glibc-build-v1-", "glibc-campaign-v1-", 1)
+            for mode, treatment, run_id, attempt in (("seed", "record", "101", "1"),
+                                                    ("warm", "off", "202", "2"),
+                                                    ("warm", "replay", "303", "3")):
+                options = {**env, "GITHUB_EVENT_NAME": "workflow_dispatch", "LINUX_CACHE_MODE": mode,
+                           "LINUX_TIMESTAMP_MODE": treatment, "GITHUB_RUN_ID": run_id, "GITHUB_RUN_ATTEMPT": attempt}
+                source = campaign.linux_cache_source(options, SHA)
+                context = campaign.linux_cache_plan(source, options,
+                                                   lambda command: "native " + " ".join(command) + "\n")
+                self.assertTrue(context["enabled"])
+                self.assertEqual(context["restore_prefix"], prefix)
+                self.assertEqual(context["requested_key"], prefix + SHA)
+                self.assertEqual(context["identity_hashes"], ordinary["identity_hashes"])
+                self.assertEqual((context["run_id"], context["run_attempt"]), (run_id, attempt))
+                rebound = campaign.linux_cache_plan(copy.deepcopy(context), {**options, "GITHUB_EVENT_NAME": "push"},
+                                                   lambda command: "native " + " ".join(command) + "\n")
+                self.assertEqual(rebound["requested_key"], context["requested_key"])
+
+    def test_cross_family_hits_are_refused_before_metadata_and_warm_stays_fatal(self):
+        with linux_cache_fixture() as (_, env, ordinary), linux_cache_fixture("seed") as (_, manual_env, manual):
+            for original, options, foreign, fatal in (
+                (ordinary, env, manual["requested_key"], False),
+                (manual, manual_env, ordinary["requested_key"], False),
+                ({**manual, "linux_cache_mode": "warm"}, manual_env, ordinary["requested_key"], True),
+            ):
+                with self.subTest(event=original["event"], mode=original["linux_cache_mode"]), \
+                        patch.object(campaign, "linux_cache_metadata", return_value=cache_metadata(original, foreign)) as metadata:
+                    result = campaign.linux_approve_restore(copy.deepcopy(original),
+                        {**options, "LINUX_LOOKUP_OUTCOME": "success", "LINUX_MATCHED_KEY": foreign})
+                    self.assertFalse(result["restore"])
+                    self.assertEqual(result["fatal"], fatal)
+                    metadata.assert_not_called()
+
+    def test_manual_seed_is_reusable_by_warm_and_retains_all_identity_and_record_guards(self):
+        with linux_cache_fixture("seed") as (seed_workspace, seed_env, seed), \
+                linux_cache_fixture("warm") as (workspace, env, original):
+            self.assertTrue(seed["requested_key"].startswith("codexbar-linux-glibc-campaign-v1-"))
+            options = {**env, "GITHUB_RUN_ID": "456", "GITHUB_RUN_ATTEMPT": "2"}
+            versions = lambda command: "native " + " ".join(command) + "\n"
+            warm = campaign.linux_cache_plan(campaign.linux_cache_source(options, SHA), options, versions)
+            self.assertEqual((warm["requested_key"], warm["restore_prefix"]),
+                             (seed["requested_key"], seed["restore_prefix"]))
+            metadata = cache_metadata(seed)
+            approved = campaign.linux_approve_restore(warm,
+                {**options, "LINUX_LOOKUP_OUTCOME": "success", "LINUX_MATCHED_KEY": seed["requested_key"]},
+                lambda *_: metadata)
+            self.assertTrue(approved["restore"])
+            (workspace / ".build").mkdir()
+            (workspace / ".build/restored-object").write_bytes(b"synthetic cached output")
+            restored = campaign.linux_after_restore(approved,
+                {**options, "LINUX_RESTORE_OUTCOME": "success", "LINUX_RESTORED_KEY": seed["requested_key"]},
+                lambda *_: metadata)
+            self.assertTrue(restored["restored_exact"])
+            self.assertEqual(restored["approved_entry"]["version"], "native-cache-version")
+            record = {**restored, "linux_cache_mode": "seed", "linux_timestamp_mode": "record"}
+            self.assertTrue(campaign.linux_input_timestamps(record, options)["fatal"])
+            self.assertEqual(record["input_timestamps"]["attempted"], 0)
+            for field, value in (("RUNNER_ARCH", "ARM64"), ("LINUX_RUNNER_LABEL", "ubuntu-24.04-arm"),
+                                 ("ImageOS", "ubuntu-next"), ("ImageVersion", "20261002.1")):
+                changed = campaign.linux_cache_plan(copy.deepcopy(seed), {**seed_env, field: value}, versions)
+                self.assertNotEqual(changed["restore_prefix"], seed["restore_prefix"])
+            toolchain = campaign.linux_cache_plan(copy.deepcopy(seed), seed_env, lambda _: "changed compiler")
+            self.assertNotEqual(toolchain["restore_prefix"], seed["restore_prefix"])
+            newer = {**seed_env, "GITHUB_SHA": "b" * 40, "CAMPAIGN_EXPECTED_SHA": "b" * 40}
+            changed = campaign.linux_cache_plan(campaign.linux_cache_source(newer, "b" * 40), newer, versions)
+            self.assertEqual(changed["restore_prefix"], seed["restore_prefix"])
+            self.assertNotEqual(changed["requested_key"], seed["requested_key"])
+            (seed_workspace / "Package.resolved").write_text('{"pins":["changed"]}\n')
+            changed = campaign.linux_cache_plan(copy.deepcopy(seed), seed_env, versions)
+            self.assertNotEqual(changed["restore_prefix"], seed["restore_prefix"])
+
+
 @contextlib.contextmanager
 def linux_timestamp_fixture(qualify=True):
     with linux_cache_fixture("seed") as (workspace, env, context):

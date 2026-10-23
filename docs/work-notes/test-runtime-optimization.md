@@ -717,3 +717,59 @@ The evidence-file SHA256 remained
 `fbe37fefbfafbdd33e9b4c994db2eaa41a582bac0c89b255fede80d562497122`
 across red/green. Source publication and a new matched native campaign remain
 coordinator-owned next steps, requiring their separate checkpoint grant.
+
+## Manual Linux cache family
+
+This repair starts from `0c0df6f341d598c2054a81e7490c86b1d73cdf62`. Ordinary
+and manual jobs previously selected the same application-cache family. An
+ordinary immutable exact-source entry could therefore prevent a manual record
+seed from producing the manifest required for its matched timestamp comparison.
+The accepted change selects `codexbar-linux-glibc-campaign-v1-` only from a
+validated `workflow_dispatch` context. Push/PR keys remain byte-identical under
+`codexbar-linux-glibc-build-v1-`. Architecture, image, toolchain, dependency and
+actual-source suffixes and the action cache version remain unchanged.
+
+Manual seed/record, warm/off and warm/replay share one key and restore prefix;
+treatment, cache mode, run and attempt never enter that key. Existing family and
+exact-source checks refuse ordinary/manual cross-family matches before metadata
+access. Requested warm still fails qualification, and record still refuses an
+already-restored exact entry. No arbitrary namespace option, workflow/helper
+change, cache deletion or cancellation is included.
+
+Four additive cases cover full ordinary push/PR keys, equality across the three
+manual arms with different run/attempt identities, cross-family refusal before
+metadata, and valid manual seed-to-warm reuse with identity and record guards.
+All 66 existing method bodies and assertions are retained. The bounded check
+plan is one discriminating pre-fix case, the cache-family/LinuxCache/LinuxTimestamp
+union after the repair, then the complete evidence file once. The 43 unchanged
+compiler fixtures need no repeat. The producer has a 120-second bound, one
+nonblocking portfolio-mutex acquisition, fresh admission per group, a private
+1 GiB scratch estimate plus 4 GiB reserve, exact drain/cleanup, and at most
+128 KiB new receipts retained for seven days. Native parity, performance and the
+390-second target remain unproved.
+
+The producer completed in 5.520 seconds with enclosing status zero. The new
+manual-treatment identity case failed against the unchanged production source
+in 0.002 seconds because it selected `build-v1` instead of `campaign-v1`. With
+the exact event-family selection applied, the unchanged case passed in the
+31-case `LinuxCacheFamilyTests LinuxCacheTests LinuxTimestampTests` union
+(0.212 seconds). The final canonical evidence-file invocation passed all 70
+tests in 1.053 seconds:
+`PYTHONDONTWRITEBYTECODE=1 ./Scripts/test.sh --command python3 Scripts/test_swift_test_evidence.py -v`.
+No candidate tests failed or skipped. AST/diff checks verified the exact two-line
+production repair, all 66 prior method bodies, the three-path scope, and unchanged
+workflow/compiler-helper/runner bytes. No compiler or native Swift work ran.
+
+Four fresh samples admitted one serial process: CPU 6.29–16.51%, available RAM
+33.15–33.30 GiB and one core at 6.25% of capacity. Three enclosing fixture parents
+and the unique external scratch were absent after cleanup; process drain was
+proved and the mutex released. New bounded receipts used 38.5 KiB before final
+documentation/hash bookkeeping, without truncation. They are retained under
+`.t3/test-runtime-optimization/linux-cache-family-20261023-` as `red.log`,
+`focused.log`, `evidence.log`, four admission JSON files and `receipt.json`.
+The latter records the exact commands and 70-method manifest SHA256
+`57b46d7215fcd50b35b7cf5d5534334d622295b7d8be1b8eb370146f977caf50`.
+Test bytes were identical across red/green, SHA256
+`80605026ea68e9ef13e0407f4d09ebc9b1b0933ca4c82fad1b976066ecdf3229`.
+Publication is authorized through PR30; the new frozen-source manual comparison
+remains a separate coordinator-owned dispatch, with no cache removal implied.
