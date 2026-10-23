@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One-shot admission on the hosted macOS candidate runner; never a VPS/Mac slot.
+"""Resource admission on the hosted macOS candidate runner; never a VPS/Mac slot.
 
 CPU percentages describe the whole host; 100 / logical CPUs is one core's
 share. Memory availability is the conservative free + inactive page estimate.
@@ -16,6 +16,7 @@ import platform
 import re
 import shutil
 import sys
+import time
 
 from jones_candidate_artifact import CandidateError, GIB, command, require
 
@@ -137,16 +138,47 @@ def sample(workspace, scratch, environment, requested_jobs):
     return result
 
 
+def sample_until_admitted(workspace, scratch, environment, requested_jobs, wait_seconds):
+    require(type(wait_seconds) is int and 0 <= wait_seconds <= 180,
+            "admission-wait", "Admission wait must be between zero and 180 seconds")
+    started = time.monotonic()
+    deadline = started + wait_seconds
+    transient = {"cpu-at-or-above-85-percent", "less-than-3-GiB-available-memory",
+                 "memory-pressure-not-normal"}
+    attempts = 0
+    while True:
+        # Unknown telemetry raises immediately; only measured pressure can be retried.
+        result = sample(workspace, scratch, environment, requested_jobs)
+        attempts += 1
+        now = time.monotonic()
+        result["admission_attempts"] = attempts
+        result["waited_seconds"] = round(now - started, 3)
+        if (result["start_ceiling"] == 1 or now >= deadline
+                or not set(result["hold_reasons"]).issubset(transient)):
+            return result
+        delay = min(30, deadline - now)
+        print(json.dumps({"status": "waiting", "start_ceiling": 0,
+                          "hold_reasons": result["hold_reasons"], "next_sample_seconds": delay,
+                          "cpu_used_percent": result["cpu_used_percent"],
+                          "one_core_whole_host_percent": result["one_core_whole_host_percent"],
+                          "memory_available_estimate_bytes": result["memory_available_estimate_bytes"],
+                          "memory_pressure": result["memory_pressure"]}), file=sys.stderr, flush=True)
+        time.sleep(delay)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--workspace", type=Path, required=True)
     parser.add_argument("--scratch", type=Path, required=True)
     parser.add_argument("--compiler-jobs", type=int, default=6)
+    parser.add_argument("--wait-seconds", type=int, default=0,
+                        help="Wait up to 180 seconds for known transient CPU/memory holds; gates never change")
     parser.add_argument("--github-env", type=Path)
     parser.add_argument("--jobs-output", type=Path)
     args = parser.parse_args(argv)
     try:
-        result = sample(args.workspace, args.scratch, os.environ, args.compiler_jobs)
+        result = sample_until_admitted(args.workspace, args.scratch, os.environ, args.compiler_jobs,
+                                      args.wait_seconds)
         print(json.dumps(result, sort_keys=True, indent=2))
         if result["start_ceiling"] != 1:
             return 1

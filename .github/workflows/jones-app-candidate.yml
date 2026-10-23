@@ -111,7 +111,7 @@ jobs:
           trap 'exit 143' TERM
           export TMPDIR="$candidate_scratch"
           python3 -B Scripts/jones_candidate_admission.py \
-            --workspace "$GITHUB_WORKSPACE" --scratch "$candidate_scratch" --compiler-jobs 6
+            --workspace "$GITHUB_WORKSPACE" --scratch "$candidate_scratch" --compiler-jobs 6 --wait-seconds 180
           bash Scripts/test.sh --command python3 -B Scripts/test_jones_candidate_artifact.py
 
       - name: Require bounded compiler and resource-only packaging support
@@ -163,7 +163,7 @@ jobs:
           JONES_OVERLAY
           python3 -B Scripts/jones_candidate_admission.py \
             --workspace "$GITHUB_WORKSPACE" --scratch "$candidate_scratch" \
-            --compiler-jobs 6 --jobs-output "$candidate_scratch/compiler-jobs"
+            --compiler-jobs 6 --jobs-output "$candidate_scratch/compiler-jobs" --wait-seconds 180
           read -r CODEXBAR_BUILD_JOBS < "$candidate_scratch/compiler-jobs"
           [[ "$CODEXBAR_BUILD_JOBS" =~ ^[1-6]$ ]]
           export CODEXBAR_BUILD_JOBS
@@ -205,7 +205,7 @@ jobs:
           trap 'exit 143' TERM
           export TMPDIR="$harness_scratch"
           python3 -B Scripts/jones_candidate_admission.py \
-            --workspace "$GITHUB_WORKSPACE" --scratch "$harness_scratch" --compiler-jobs 1
+            --workspace "$GITHUB_WORKSPACE" --scratch "$harness_scratch" --compiler-jobs 1 --wait-seconds 180
           xcrun swiftc -j 1 -module-cache-path "$harness_scratch/module-cache" \
             Scripts/jones_update_fixture_signer.swift -o "$harness_scratch/fixture-signer"
           python3 -B Scripts/jones_update_harness.py prepare \
@@ -237,7 +237,7 @@ jobs:
           trap 'exit 143' TERM
           export TMPDIR="$harness_scratch"
           python3 -B Scripts/jones_candidate_admission.py \
-            --workspace "$GITHUB_WORKSPACE" --scratch "$harness_scratch" --compiler-jobs 1
+            --workspace "$GITHUB_WORKSPACE" --scratch "$harness_scratch" --compiler-jobs 1 --wait-seconds 180
           bash Scripts/test.sh --command python3 -B Scripts/jones_update_harness.py run \
             --fixture "$GITHUB_WORKSPACE/.build/jones-update-fixture" \
             --scratch-parent "$harness_scratch" --expect-revision "$EXPECTED_REVISION" \

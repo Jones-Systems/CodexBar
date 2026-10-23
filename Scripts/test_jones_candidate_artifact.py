@@ -625,6 +625,60 @@ class AdmissionTests(RejectionAssertions, unittest.TestCase):
             self.assertEqual(status, 1)
             self.assertFalse(output.exists())
 
+    def test_admission_wait_uses_fresh_sample_without_relaxing_any_gate(self):
+        held = self.decide(cpu=95, available_memory=admission.MIN_MEMORY_BYTES - 1)
+        ready = self.decide(cpu=25)
+        with patch.object(admission, "sample", side_effect=[held, ready]) as sample, \
+                patch.object(admission.time, "monotonic", side_effect=[0, 1, 32]), \
+                patch.object(admission.time, "sleep") as sleep, redirect_stderr(io.StringIO()):
+            result = admission.sample_until_admitted(Path("/fixture"), Path("/scratch"), {}, 6, 180)
+        self.assertEqual(sample.call_count, 2)
+        sleep.assert_called_once_with(30)
+        self.assertEqual(result["start_ceiling"], 1)
+        self.assertEqual(result["admission_attempts"], 2)
+        self.assertEqual(result["cpu_used_percent"], 25)
+        self.assertEqual(held["start_ceiling"], 0)
+        self.assertEqual(held["hold_reasons"],
+                         ["cpu-at-or-above-85-percent", "less-than-3-GiB-available-memory"])
+
+    def test_wait_exhaustion_still_fails_and_writes_no_compiler_job_budget(self):
+        with tempfile.TemporaryDirectory(prefix="jones-wait-fixture-") as temporary:
+            output = Path(temporary) / "jobs"
+            with patch.object(admission, "sample", side_effect=lambda *args: self.decide(cpu=95)) as sample, \
+                    patch.object(admission.time, "monotonic", side_effect=[0, 1, 32]), \
+                    patch.object(admission.time, "sleep") as sleep, \
+                    redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                status = admission.main(["--workspace", temporary, "--scratch", temporary,
+                                         "--jobs-output", str(output), "--wait-seconds", "30"])
+            self.assertEqual(status, 1)
+            self.assertFalse(output.exists())
+            self.assertEqual(sample.call_count, 2)
+            sleep.assert_called_once_with(29)
+
+    def test_unknown_telemetry_storage_and_invalid_wait_never_retry(self):
+        with patch.object(admission.time, "sleep") as sleep:
+            with patch.object(admission, "sample", side_effect=candidate.CandidateError("cpu-unknown", "missing")):
+                self.rejects("cpu-unknown", admission.sample_until_admitted,
+                             Path("/fixture"), Path("/scratch"), {}, 6, 180)
+            held = self.decide(volumes=[dict(self.volumes[0], available_bytes=1)])
+            with patch.object(admission, "sample", return_value=held) as sample:
+                self.assertEqual(admission.sample_until_admitted(
+                    Path("/fixture"), Path("/scratch"), {}, 6, 180)["start_ceiling"], 0)
+                self.assertEqual(sample.call_count, 1)
+            for wait in (-1, 181, True):
+                self.rejects("admission-wait", admission.sample_until_admitted,
+                             Path("/fixture"), Path("/scratch"), {}, 6, wait)
+            sleep.assert_not_called()
+
+    def test_cancelled_admission_wait_never_takes_another_sample(self):
+        with patch.object(admission, "sample", return_value=self.decide(cpu=95)) as sample, \
+                patch.object(admission.time, "monotonic", side_effect=[0, 1]), \
+                patch.object(admission.time, "sleep", side_effect=KeyboardInterrupt), \
+                redirect_stderr(io.StringIO()):
+            with self.assertRaises(KeyboardInterrupt):
+                admission.sample_until_admitted(Path("/fixture"), Path("/scratch"), {}, 6, 180)
+        self.assertEqual(sample.call_count, 1)
+
 
 class WorkflowContractTests(unittest.TestCase):
     def test_candidate_workflow_has_only_existing_pins_read_permission_and_hosted_runner(self):
@@ -648,6 +702,7 @@ class WorkflowContractTests(unittest.TestCase):
         package = source.index("Scripts/package_app.sh release")
         self.assertLess(source.index("jones_candidate_artifact.py check-packager"), package)
         self.assertLess(source.index('--jobs-output "$candidate_scratch/compiler-jobs"'), package)
+        self.assertEqual(source.count("--wait-seconds 180"), 4)
         self.assertIn("xcrun swiftc -j 1", source)
         self.assertIn("Scripts/jones_update_harness.py run", source)
         self.assertIn(".build/jones-update-fixture/fixture.json", source)
