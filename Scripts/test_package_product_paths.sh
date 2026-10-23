@@ -63,25 +63,34 @@ if codexbar_resolve_dsym_path "$STAGE_ROOT" "$SWIFTBUILD_DIR" CodexBar arm64 \
 fi
 grep -Fq "$SWIFTBUILD_DIR/CodexBar.dSYM" "$TEMP_DIR/missing-dsym.log"
 
-swift() {
-  [[ "$*" == "build --show-bin-path -c release --arch arm64" ]]
-  printf '%s\n' "$SWIFTBUILD_DIR"
-}
+mkdir "$TEMP_DIR/tools"
+cat > "$TEMP_DIR/tools/python3" <<'FAKE'
+#!/usr/bin/env bash
+set -euo pipefail
+[[ "$1" == */Scripts/build_jobs.py && "$2" == -- && "$3" == swift ]]
+shift 3
+[[ "$*" == "build --show-bin-path -c release --arch arm64" ]]
+case "$FAKE_QUERY_MODE" in
+  success) printf '%s\n' "$FAKE_QUERY_PATH" ;;
+  failure) exit 23 ;;
+  empty) exit 0 ;;
+esac
+FAKE
+chmod +x "$TEMP_DIR/tools/python3"
+export PATH="$TEMP_DIR/tools:$PATH"
+export FAKE_QUERY_PATH="$SWIFTBUILD_DIR"
+export FAKE_QUERY_MODE=success
 reported=$(codexbar_swiftpm_bin_path release arm64)
 [[ "$reported" == "$SWIFTBUILD_DIR" ]]
 
-swift() {
-  return 23
-}
+export FAKE_QUERY_MODE=failure
 if codexbar_swiftpm_bin_path release arm64 2>"$TEMP_DIR/query.log"; then
   echo "ERROR: SwiftPM bin-path query failure was ignored." >&2
   exit 1
 fi
 grep -Fq "SwiftPM failed to report" "$TEMP_DIR/query.log"
 
-swift() {
-  return 0
-}
+export FAKE_QUERY_MODE=empty
 if codexbar_swiftpm_bin_path release arm64 2>"$TEMP_DIR/empty.log"; then
   echo "ERROR: Empty SwiftPM bin path was accepted." >&2
   exit 1

@@ -49,19 +49,30 @@ struct MenuCardAccountAggregateRowView: View {
             .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
             .lineLimit(1)
             if self.isExpanded {
-                ForEach(Array(self.model.expandedLines.enumerated()), id: \.offset) { _, line in
-                    Text(line.text)
-                        .font(.footnote.monospacedDigit())
-                        .foregroundStyle(self.toneColor(line.tone))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(self.model.compactBalanceLabel)
+                        .foregroundStyle(self.toneColor(self.model.balanceTone))
+                    Spacer(minLength: 8)
+                    Text(self.model.compactCapacityLabel)
+                        .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
                 }
+                .font(.footnote.monospacedDigit())
+                .lineLimit(1)
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(L("Runs out ≈"))
+                        .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
+                    Spacer(minLength: 8)
+                    Text(self.model.compactExhaustionLabel)
+                }
+                .font(.footnote.monospacedDigit())
+                .lineLimit(1)
             }
         }
         .foregroundStyle(MenuHighlightStyle.primary(self.isHighlighted))
         .padding(.horizontal, UsageMenuCardLayout.horizontalPadding)
         .padding(.vertical, 5)
         .frame(width: self.width, alignment: .leading)
+        .help(self.model.expandedHelpText)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(self.model.accessibilityText(isExpanded: self.isExpanded))
         .accessibilityValue(self.isExpanded ? L("Expanded") : L("Collapsed"))

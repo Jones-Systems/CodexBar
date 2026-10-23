@@ -158,6 +158,8 @@ extension StatusItemController {
             "settings"
         case let .providerSettings(provider):
             "providerSettings:\(provider.rawValue)"
+        case let .selectClaudeNativeProfile(alias):
+            "selectClaudeNativeProfile:\(alias)"
         case .about:
             "about"
         case .quit:

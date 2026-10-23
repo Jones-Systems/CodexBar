@@ -28,8 +28,11 @@ class IsolatedCICommandsTests(unittest.TestCase):
         self.workspace = self.root / "workspace"
         scripts = self.workspace / "Scripts"
         scripts.mkdir(parents=True)
-        for name in ("test.sh", "test-plugin-engines.sh", "ci_swift_test_by_suite.py"):
+        for name in ("test.sh", "test-plugin-engines.sh", "ci_swift_test_by_suite.py", "build_jobs.py"):
             shutil.copy2(ROOT / "Scripts" / name, scripts / name)
+        helper = scripts / "build_jobs.py"
+        helper.write_text(helper.read_text().replace(
+            'PLATFORM = sys.platform', 'PLATFORM = "linux"'))
         tools = self.root / "tools"
         tools.mkdir()
         swift = tools / "swift"
@@ -91,6 +94,20 @@ sys.exit(int(os.environ.get("CI_COMMAND_EXIT", "0")))
         self.assertEqual(status, 0, self.output)
         records = self.records()
         self.assertEqual([item["args"] for item in records], [["test", "--parallel"]])
+        self.assert_owned_cleanup(records)
+
+    def test_focused_command_caps_explicit_twelve_on_macos(self):
+        helper = self.workspace / "Scripts/build_jobs.py"
+        helper.write_text(helper.read_text().replace('PLATFORM = "linux"', 'PLATFORM = "darwin"') +
+                          '\nlock_directory = lambda: Path(' + repr(str(self.root / "lock")) + ')\n' +
+                          'sample_window = lambda deadline: (Fraction(1, 5), Fraction(1, 5), 30)\n' +
+                          'os.cpu_count = lambda: 12\n')
+        status = self.invoke([str(self.workspace / "Scripts/test.sh"), "--command", "swift", "test",
+                              "--filter", "FocusedTests", "-j12"])
+        self.assertEqual(status, 0, self.output)
+        records = self.records()
+        self.assertEqual(records[0]["args"], ["test", "--filter", "FocusedTests", "--jobs", "6",
+                                               "-Xswiftc", "-num-threads", "-Xswiftc", "1"])
         self.assert_owned_cleanup(records)
 
     def test_plugin_passes_share_parent_and_preserve_filters(self):
