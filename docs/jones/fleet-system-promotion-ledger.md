@@ -15,6 +15,8 @@ is introduced.
 
 Fork-owned additions:
 
+- `Sources/CodexBarCore/Jones/JonesCodexAppLaunchEnvironment.swift`: app-entry normalization of uniquely enrolled inherited homes; explicit profile and CLI routing remain separate.
+- `Tests/CodexBarTests/JonesCodexAppLaunchEnvironmentTests.swift`: pure environment policy, explicit profile routing and distinct refusal messages.
 - `Sources/CodexBarCore/Jones/JonesCodexSystemPromotionTarget.swift`: typed managed/fleet provenance and captured identity.
 - `Sources/CodexBar/Jones/JonesCodexFleetPromotionAdmission.swift`: fresh membership, identity, default-home and preservation-path admission; prepared target sum type.
 - `Tests/CodexBarTests/Jones/JonesCodexFleetPromotionTests.swift`: copy, separate homes, queued changes, absence, override and cancellation tests.
@@ -27,8 +29,9 @@ accounts for this delta; it does not reclassify unrelated historical fork edits.
 
 | Exact hook path | Hook and reason |
 | --- | --- |
+| `Sources/CodexBar/CodexbarApp.swift` | `JONES(fleet-system-promotion)` normalizes a verified inherited fleet home before application consumers initialize; smoke/hook exits remain earlier. |
 | `Sources/CodexBarCore/Providers/Codex/CodexVisibleAccountProjection.swift` | Carry the optional typed promotion target; construct it only from fleet-proven profile rows. Managed ID fallback preserves existing callers. |
-| `Sources/CodexBar/Providers/Codex/CodexProviderImplementation.swift` | Enable existing System Account submenu entries from typed targets. |
+| `Sources/CodexBar/Providers/Codex/CodexProviderImplementation.swift` | Enable System Account entries from typed targets using the named roster and friendly labels when enrolled. |
 | `Sources/CodexBar/MenuDescriptor.swift` | Replace UUID-only action payload with typed target. |
 | `Sources/CodexBar/StatusItemController+MenuActionMapping.swift` | Preserve the target in `representedObject`. |
 | `Sources/CodexBar/StatusItemController+Actions.swift` | Decode the typed target and call the existing coordinator. |

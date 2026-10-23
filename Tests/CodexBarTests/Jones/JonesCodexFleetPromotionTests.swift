@@ -177,7 +177,9 @@ struct JonesCodexFleetPromotionTests {
                 fleetHomePaths: { [profile.codexHomePath] },
                 baseEnvironment: ["CODEX_HOME": profile.codexHomePath],
                 defaultHomeURL: sameDestination ? URL(fileURLWithPath: profile.codexHomePath) : fixture.liveHomeURL)
-            await #expect(throws: CodexAccountPromotionError.fleetDestinationAmbiguous) {
+            let expectedError: CodexAccountPromotionError = sameDestination
+                ? .fleetDestinationAmbiguous : .fleetLaunchHomeOverride
+            await #expect(throws: expectedError) {
                 try await service.promote(target: target)
             }
             #expect(reader.readHomes.isEmpty)

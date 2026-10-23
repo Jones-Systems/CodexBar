@@ -12,6 +12,7 @@ enum JonesAccountDisplayLabel {
         if let override = self.nonempty(override) { return override }
         if let alias = self.nonempty(verifiedAlias) {
             if alias == "default" { return alias }
+            if provider == .codex, alias.lowercased() == "umich" { return "UMICH" }
             return alias.prefix(1).uppercased() + alias.dropFirst()
         }
         let key = self.overrideKey(provider: provider, profileIdentity: profileIdentity)
