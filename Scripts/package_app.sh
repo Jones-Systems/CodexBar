@@ -196,8 +196,11 @@ text = path.read_text()
 if ".keyboardShortcutsSafeBundle" in text:
     sys.exit(0)
 
+preimage = 'NSLocalizedString(self, bundle: .module, comment: self)'
+if text.count(preimage) != 1:
+    raise SystemExit("Unexpected resource lookup in Utilities.swift; patch failed.")
 text = text.replace(
-    'NSLocalizedString(self, bundle: .module, comment: self)',
+    preimage,
     'NSLocalizedString(self, bundle: .keyboardShortcutsSafeBundle, comment: self)',
 )
 
@@ -233,7 +236,7 @@ private extension Bundle {
 """
 
 marker = "}\n\n\nextension Data {"
-if marker not in text:
+if text.count(marker) != 1:
     raise SystemExit("Marker not found in Utilities.swift; patch failed.")
 
 text = text.replace(marker, "}\n\n" + inject + "\n\nextension Data {")
@@ -242,10 +245,43 @@ PY
 }
 
 KEYBOARD_SHORTCUTS_UTIL="$ROOT/.build/checkouts/KeyboardShortcuts/Sources/KeyboardShortcuts/Utilities.swift"
+PACKAGE_RESOLVED_HASH=$(python3 - "$ROOT/Package.resolved" <<'PY'
+import hashlib
+import sys
+from pathlib import Path
+print(hashlib.sha256(Path(sys.argv[1]).read_bytes()).hexdigest())
+PY
+)
 if [[ ! -f "$KEYBOARD_SHORTCUTS_UTIL" ]]; then
-  python3 "$ROOT/Scripts/build_jobs.py" -- swift build -c "$CONF" --arch "${ARCH_LIST[0]}"
+  # Resolve the pinned checkout before patching; a product build here would be discarded.
+  python3 "$ROOT/Scripts/build_jobs.py" -- swift package resolve --force-resolved-versions
+fi
+if [[ ! -f "$KEYBOARD_SHORTCUTS_UTIL" ]]; then
+  echo "ERROR: Dependency resolution did not provide KeyboardShortcuts/Utilities.swift." >&2
+  exit 1
 fi
 patch_keyboard_shortcuts
+python3 - "$ROOT/Package.resolved" "$PACKAGE_RESOLVED_HASH" "$KEYBOARD_SHORTCUTS_UTIL" <<'PY'
+import hashlib
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+resolved, expected_hash, utility = Path(sys.argv[1]), sys.argv[2], Path(sys.argv[3])
+data = resolved.read_bytes()
+if hashlib.sha256(data).hexdigest() != expected_hash:
+    raise SystemExit("Package.resolved changed during dependency preparation.")
+pin = next(item for item in json.loads(data)["pins"] if item["identity"] == "keyboardshortcuts")
+revision = subprocess.check_output(
+    ["git", "-C", str(utility.parent), "rev-parse", "HEAD"], text=True, timeout=15).strip()
+if revision != pin["state"]["revision"]:
+    raise SystemExit("KeyboardShortcuts checkout does not match Package.resolved.")
+print("Prepared package dependency: " + json.dumps({
+    "dependency": "keyboardshortcuts", "revision": revision,
+    "resolved_sha256": expected_hash, "patched_source_sha256": hashlib.sha256(utility.read_bytes()).hexdigest(),
+}, sort_keys=True), flush=True)
+PY
 
 # Resolve SwiftPM's current output path without relying on a fixed build-system layout.
 # The output variable keeps the per-arch cache in this shell instead of losing it to
@@ -528,7 +564,8 @@ build_widget_extension() {
 
   mkdir -p "$derived_dir"
   echo "Building CodexBarWidget Xcode extension (${xcode_conf}, ${archs})." >&2
-  python3 "$ROOT/Scripts/build_jobs.py" --kind xcode -- xcodebuild \
+  python3 "$ROOT/Scripts/package_widget.py" --log "$build_log" \
+    --products "$derived_dir/Build" --timeout "$timeout_seconds" -- xcodebuild \
     -project "$project_dir" \
     -scheme CodexBarWidgetExtension \
     -configuration "$xcode_conf" \
@@ -538,6 +575,7 @@ build_widget_extension() {
     -disableAutomaticPackageResolution \
     -skipMacroValidation \
     -skipPackagePluginValidation \
+    -showBuildTimingSummary \
     CODEXBAR_WIDGET_BUNDLE_ID="$WIDGET_BUNDLE_ID" \
     CODEXBAR_TEAM_ID="$APP_TEAM_ID" \
     MARKETING_VERSION="$MARKETING_VERSION" \
@@ -545,29 +583,10 @@ build_widget_extension() {
     CODE_SIGNING_ALLOWED=NO \
     ARCHS="$archs" \
     ONLY_ACTIVE_ARCH=NO \
-    build >"$build_log" 2>&1 &
-
-  local xcodebuild_pid=$!
-  local elapsed=0
-  while kill -0 "$xcodebuild_pid" 2>/dev/null; do
-    if [[ "$elapsed" -ge "$timeout_seconds" ]]; then
-      kill "$xcodebuild_pid" 2>/dev/null || true
-      wait "$xcodebuild_pid" 2>/dev/null || true
-      tail -80 "$build_log" >&2 || true
-      echo "ERROR: Timed out building CodexBarWidget extension after ${timeout_seconds}s" >&2
-      exit 1
-    fi
-    sleep 5
-    elapsed=$((elapsed + 5))
-    if (( elapsed > 0 && elapsed % 60 == 0 )); then
-      echo "Still building CodexBarWidget extension (${elapsed}s)..." >&2
-    fi
-  done
-  if ! wait "$xcodebuild_pid"; then
-    tail -120 "$build_log" >&2 || true
+    build || {
     echo "ERROR: Failed to build CodexBarWidget extension" >&2
     exit 1
-  fi
+  }
 
   local appex="$derived_dir/Build/Products/${xcode_conf}/CodexBarWidget.appex"
   if [[ ! -f "$appex/Contents/MacOS/CodexBarWidget" ]]; then

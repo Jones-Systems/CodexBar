@@ -853,6 +853,7 @@ class WorkflowContractTests(unittest.TestCase):
         uses = re.findall(r"uses:\s+(\S+)", source)
         self.assertEqual(uses, ["actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0",
                                "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+                               "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
                                "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"])
         self.assertIn("permissions:\n  contents: read", source)
         self.assertEqual(re.findall(r"^    runs-on: (.+)$", source, re.MULTILINE), ["macos-26-intel"])
@@ -871,7 +872,15 @@ class WorkflowContractTests(unittest.TestCase):
         package = source.index("Scripts/package_app.sh release")
         self.assertLess(source.index("jones_candidate_artifact.py check-packager"), package)
         self.assertLess(source.index('--jobs-output "$candidate_scratch/compiler-jobs"'), package)
-        self.assertEqual(source.count("--wait-seconds 180"), 6)
+        self.assertEqual(source.count("--wait-seconds 180"), 7)
+        self.assertIn("Scripts/test_package_build.py", source)
+        diagnostics = source.index("name: Retain bounded widget build diagnostics")
+        cleanup = source.index("name: Remove this hosted job's generated products")
+        self.assertLess(package, diagnostics)
+        self.assertLess(diagnostics, cleanup)
+        for filename in ("widget-progress.jsonl", "widget-build-result.json", "xcodebuild-tail.log"):
+            self.assertIn(f".build/xcode-widget-extension-release/{filename}", source)
+        self.assertIn(".build/xcode-widget-extension-release/widget-build-active", source)
         self.assertIn("Scripts/test_jones_update_harness.py", source)
         self.assertIn("xcrun swiftc -j 1", source)
         self.assertIn("Scripts/jones_update_harness.py run", source)

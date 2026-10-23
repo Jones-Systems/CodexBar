@@ -46,11 +46,13 @@ jobs:
   candidate:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     runs-on: macos-26-intel
-    # Cold universal compilation took 55 minutes before the widget and native proof.
-    timeout-minutes: 120
+    # Same-run cold architecture builds reached 36.6 minutes; reserve two plus
+    # 20% margin for the widget, then retain time for both app slices and native proof.
+    timeout-minutes: 180
     env:
       CODEXBAR_SIGNING: adhoc
       ARCHES: arm64 x86_64
+      CODEXBAR_WIDGET_EXTENSION_TIMEOUT_SECONDS: '5400'
       CODEXBAR_ALLOW_LLDB: '0'
       CODEXBAR_SKIP_LAUNCH_SMOKE: '0'
       CODEXBAR_LAUNCH_SMOKE_RESOURCE_ONLY: '1'
@@ -82,6 +84,8 @@ jobs:
           [[ "$(/usr/bin/xcodebuild -version)" == Xcode\ 26.* ]]
           printf 'DEVELOPER_DIR=%s\n' "$DEVELOPER_DIR" >> "$GITHUB_ENV"
           /usr/bin/xcodebuild -version
+          xcrun swift --version
+          xcrun swift package --version
 
       - name: Validate repository, event and exact source
         id: context
@@ -120,6 +124,9 @@ jobs:
           python3 -B Scripts/jones_candidate_admission.py \
             --workspace "$GITHUB_WORKSPACE" --scratch "$candidate_scratch" --compiler-jobs 1 --wait-seconds 180
           bash Scripts/test.sh --command python3 -B Scripts/test_jones_update_harness.py
+          python3 -B Scripts/jones_candidate_admission.py \
+            --workspace "$GITHUB_WORKSPACE" --scratch "$candidate_scratch" --compiler-jobs 1 --wait-seconds 180
+          bash Scripts/test.sh --command python3 -B Scripts/test_package_build.py
 
       - name: Require bounded compiler and resource-only packaging support
         shell: bash
@@ -179,6 +186,20 @@ jobs:
           python3 -B Scripts/jones_candidate_artifact.py create \
             --repo "$GITHUB_WORKSPACE" --app "$GITHUB_WORKSPACE/CodexBar.app" \
             --output "$GITHUB_WORKSPACE/.build/jones-candidate-artifact" --channel none
+
+      - name: Retain bounded widget build diagnostics
+        if: ${{ always() && steps.context.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: >-
+            Jones-CodexBar-widget-build-${{ steps.context.outputs.revision }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .build/xcode-widget-extension-release/widget-progress.jsonl
+            .build/xcode-widget-extension-release/widget-build-result.json
+            .build/xcode-widget-extension-release/xcodebuild-tail.log
+          if-no-files-found: ignore
+          retention-days: 14
+          compression-level: 0
 
       - name: Retain the static candidate for fourteen days
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -277,6 +298,10 @@ jobs:
           # Uploaded candidates and public fixtures have a separate fourteen-day lifetime.
           if [[ -e "$HOME/Library/Caches/.com.jonessystems.codexbar.update-harness.lock" ]]; then
             echo 'Native drain is unproved; preserve owned executables until hosted VM teardown.' >&2
+            exit 1
+          fi
+          if [[ -e .build/xcode-widget-extension-release/widget-build-active ]]; then
+            echo 'Widget compiler drain is unproved; preserve owned products until hosted VM teardown.' >&2
             exit 1
           fi
           [[ ! -L .build && ! -L CodexBar.app ]]
