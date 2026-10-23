@@ -37,8 +37,14 @@ CloudKit persistence and Keychain ACL logic are unchanged.
 
 The affected groups and exact invocations are in
 [INSTALL-AND-UPDATES](INSTALL-AND-UPDATES.md#cb-migration-r1-affected-checks).
-The initial portable cumulative run passed 52 installer, 42 metadata, 53 candidate
-and 14 harness tests. Later candidate checks belong to the PR's exact revision.
+The integrated portable run at `009876d7aaa8d9c8b79c18448669d5d9b4108c1a`
+passed 52 installer, 42 metadata, 53 candidate, 14 harness and five inherited
+launch-smoke fixture tests: 166 passed, no skips. The parent integration is a
+normal merge of verified `e6703210ea79cadcfbb4c9fec5249837d8892835`; its lifecycle
+variant preserves the same assertions and operation order. The final Swift-only
+error-output adjustment and this evidence note do not alter those Python groups.
+Prebuilt SwiftFormat 0.61.1 formatted only the five owned Swift paths, with its
+cache disabled; no tool was installed.
 The unchanged wildcard profile test failed against the in-memory validator from
 `889d2f34` with the expected App Group grant refusal, then passed the candidate.
 An initial baseline harness import-path failure was excluded from that evidence.

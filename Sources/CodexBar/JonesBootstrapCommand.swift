@@ -121,7 +121,8 @@ enum JonesBootstrapCommand {
             return 0
         } catch {
             // Private payloads and filesystem errors stay out of stdout/stderr and CI artifacts.
-            fputs("Jones bootstrap refused; preserve its private journal for exact reconciliation.\n", stderr)
+            let message = "Jones bootstrap refused; preserve its private journal for exact reconciliation.\n"
+            FileHandle.standardError.write(Data(message.utf8))
             return 2
         }
     }
