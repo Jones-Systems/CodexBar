@@ -9,6 +9,7 @@ import argparse
 from contextlib import contextmanager
 import fcntl
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -25,6 +26,13 @@ import unicodedata
 import uuid
 import zipfile
 from xml.parsers.expat import ExpatError
+
+# The shell wrapper uses Python -I; load only this adjacent owned helper without
+# adding a search path or accepting PYTHONPATH/site-package overrides.
+_XATTR_SPEC = importlib.util.spec_from_file_location("jones_xattrs", Path(__file__).with_name("jones_xattrs.py"))
+_XATTR_MODULE = importlib.util.module_from_spec(_XATTR_SPEC)
+_XATTR_SPEC.loader.exec_module(_XATTR_MODULE)
+list_xattrs = _XATTR_MODULE.list_xattrs
 
 
 SCHEMA = "jones-app-install/v1"
@@ -283,7 +291,7 @@ class MacOperations:
                 paths.extend(Path(parent) / name for name in dirs + files)
         for path in paths:
             try:
-                attributes = os.listxattr(str(path), follow_symlinks=False)
+                attributes = list_xattrs(path)
             except OSError as error:
                 raise InstallError("quarantine_unknown", "Cannot inspect quarantine metadata: " + str(path)) from error
             require("com.apple.quarantine" not in attributes, "quarantine",

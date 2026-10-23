@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
-"""Portable candidate/admission fixtures. Every Mac and Git command is a fake.
+"""Portable candidate/admission fixtures, plus one macOS-only synthetic xattr proof.
 
 Affected check: python3 -B Scripts/test_jones_candidate_artifact.py
 TemporaryDirectory owns the small per-test tree, including failure fixtures.
+Only the native xattr test reaches Mac commands, confined to its owned fixture.
 """
 
 import base64
 from contextlib import redirect_stderr, redirect_stdout
 from copy import deepcopy
 from dataclasses import replace
+import ctypes
+import errno
 import io
 import json
 import os
@@ -18,6 +21,7 @@ import re
 import signal
 import stat
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import Mock, patch
@@ -26,6 +30,7 @@ import zipfile
 import build_jobs
 import jones_candidate_admission as admission
 import jones_candidate_artifact as candidate
+import jones_xattrs as xattrs
 
 
 REVISION = "a" * 40
@@ -341,7 +346,7 @@ class ArtifactTests(RejectionAssertions, unittest.TestCase):
         self.bundle = make_bundle(self.root)
         self.mac = FakeMac()
         for patcher in (patch.object(candidate, "command", self.mac), patch.object(candidate.sys, "platform", "darwin"),
-                        patch.object(candidate.os, "listxattr", return_value=[]),
+                        patch.object(candidate, "list_xattrs", return_value=[]),
                         patch.object(candidate.shutil, "disk_usage", return_value=Mock(free=5 * candidate.GIB))):
             patcher.start()
             self.addCleanup(patcher.stop)
@@ -372,9 +377,9 @@ class ArtifactTests(RejectionAssertions, unittest.TestCase):
         self.rejects("entitlements", candidate.inspect_bundle, self.bundle, CONTEXT, "none")
 
     def test_quarantine_failure_is_not_treated_as_absence(self):
-        with patch.object(candidate.os, "listxattr", return_value=["com.apple.quarantine"]):
+        with patch.object(candidate, "list_xattrs", return_value=["com.apple.quarantine"]):
             self.rejects("quarantine", candidate.inspect_bundle, self.bundle, CONTEXT, "none")
-        with patch.object(candidate.os, "listxattr", side_effect=OSError("fixture unavailable")):
+        with patch.object(candidate, "list_xattrs", side_effect=OSError("fixture unavailable")):
             with self.assertRaises(OSError):
                 candidate.inspect_bundle(self.bundle, CONTEXT, "none")
 
@@ -556,6 +561,97 @@ class CleanupAndCLITests(RejectionAssertions, unittest.TestCase):
         self.assertEqual(rejection["code"], "invalid-input-or-io")
         self.assertNotIn("private path", stderr.getvalue())
         self.assertNotIn("Traceback", stderr.getvalue())
+
+
+class AttributeNamesTests(unittest.TestCase):
+    def native_call(self, payload):
+        def call(path, buffer, size, options):
+            self.assertEqual(path, b"/synthetic/link")
+            self.assertEqual(options, 1)
+            if buffer is None:
+                self.assertEqual(size, 0)
+                return len(payload)
+            self.assertEqual(size, len(payload))
+            ctypes.memmove(buffer, payload, len(payload))
+            return len(payload)
+        return call
+
+    def test_native_name_list_is_bounded_and_never_follows_final_symlink(self):
+        for payload, expected in ((b"", []), (b"com.apple.quarantine\0custom\0",
+                                             ["com.apple.quarantine", "custom"])):
+            with patch.object(xattrs.sys, "platform", "darwin"), \
+                    patch.object(xattrs, "_darwin_listxattr", return_value=self.native_call(payload)):
+                self.assertEqual(xattrs.list_xattrs(Path("/synthetic/link")), expected)
+
+    def test_native_errors_and_oversized_or_malformed_names_are_never_absence(self):
+        for reply in (-1, xattrs.MAX_NAMES_BYTES + 1):
+            with patch.object(xattrs.sys, "platform", "darwin"), \
+                    patch.object(xattrs, "_darwin_listxattr", return_value=Mock(return_value=reply)), \
+                    patch.object(xattrs.ctypes, "get_errno", return_value=errno.EACCES):
+                with self.assertRaises(OSError):
+                    xattrs.list_xattrs("/synthetic/link")
+        for payload in (b"unterminated", b"first\0\0second\0", b"\0", b"\0first\0"):
+            with patch.object(xattrs.sys, "platform", "darwin"), \
+                    patch.object(xattrs, "_darwin_listxattr", return_value=self.native_call(payload)):
+                with self.assertRaises(OSError):
+                    xattrs.list_xattrs("/synthetic/link")
+        for failure in (errno.EACCES, errno.EIO):
+            native = Mock(side_effect=[8, -1])
+            with patch.object(xattrs.sys, "platform", "darwin"), \
+                    patch.object(xattrs, "_darwin_listxattr", return_value=native), \
+                    patch.object(xattrs.ctypes, "get_errno", return_value=failure):
+                with self.assertRaises(OSError):
+                    xattrs.list_xattrs("/synthetic/link")
+            self.assertEqual(native.call_count, 2)
+
+    def test_growing_attribute_list_has_only_three_bounded_attempts(self):
+        native = Mock(side_effect=[8, -1] * 3)
+        with patch.object(xattrs.sys, "platform", "darwin"), \
+                patch.object(xattrs, "_darwin_listxattr", return_value=native), \
+                patch.object(xattrs.ctypes, "get_errno", return_value=errno.ERANGE):
+            with self.assertRaises(OSError) as caught:
+                xattrs.list_xattrs("/synthetic/link")
+        self.assertEqual(caught.exception.errno, errno.ERANGE)
+        self.assertEqual(native.call_count, 6)
+
+    def test_list_growth_is_resampled_and_buffer_overrun_is_rejected(self):
+        payload = b"com.apple.quarantine\0"
+        success = self.native_call(payload)
+        replies = iter((8, -1, len(payload)))
+
+        def grows(path, buffer, size, options):
+            reply = next(replies, None)
+            return reply if reply is not None else success(path, buffer, size, options)
+
+        with patch.object(xattrs.sys, "platform", "darwin"), \
+                patch.object(xattrs, "_darwin_listxattr", return_value=grows), \
+                patch.object(xattrs.ctypes, "get_errno", return_value=errno.ERANGE):
+            self.assertEqual(xattrs.list_xattrs("/synthetic/link"), ["com.apple.quarantine"])
+        with patch.object(xattrs.sys, "platform", "darwin"), \
+                patch.object(xattrs, "_darwin_listxattr", return_value=Mock(side_effect=[8, 9])):
+            with self.assertRaises(OSError):
+                xattrs.list_xattrs("/synthetic/link")
+
+    def test_null_path_and_unsupported_platform_never_reach_native_reader(self):
+        with patch.object(xattrs, "_darwin_listxattr") as native:
+            with patch.object(xattrs.sys, "platform", "darwin"), self.assertRaises(OSError):
+                xattrs.list_xattrs("/synthetic\0/link")
+            with patch.object(xattrs.sys, "platform", "linux"), self.assertRaises(OSError):
+                xattrs.list_xattrs("/synthetic/link")
+            native.assert_not_called()
+
+    @unittest.skipUnless(sys.platform == "darwin", "Native synthetic xattr proof requires macOS")
+    def test_native_fixture_reports_quarantine_without_following_a_symlink(self):
+        with tempfile.TemporaryDirectory(prefix="jones-native-xattrs-") as temporary:
+            target = Path(temporary) / "synthetic.txt"
+            target.write_bytes(b"Public synthetic quarantine fixture")
+            self.assertNotIn("com.apple.quarantine", xattrs.list_xattrs(target))
+            subprocess.run(["/usr/bin/xattr", "-w", "com.apple.quarantine", "0083;0;JonesFixture;", str(target)],
+                           check=True, capture_output=True, timeout=15)
+            self.assertIn("com.apple.quarantine", xattrs.list_xattrs(target))
+            link = Path(temporary) / "link"
+            link.symlink_to(target.name)
+            self.assertNotIn("com.apple.quarantine", xattrs.list_xattrs(link))
 
 
 class AdmissionTests(RejectionAssertions, unittest.TestCase):

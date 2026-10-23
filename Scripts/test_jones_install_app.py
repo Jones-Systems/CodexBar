@@ -16,6 +16,7 @@ import plistlib
 import shutil
 import signal
 import stat
+import subprocess
 import sys
 import tempfile
 from types import SimpleNamespace
@@ -92,6 +93,49 @@ def zip_bundle(bundle, archive):
             else:
                 output.write(str(path), name)
     return archive
+
+
+class NativeQuarantineAdapterTests(unittest.TestCase):
+    def test_reads_every_owned_entry_without_traversing_symlink_destinations(self):
+        with tempfile.TemporaryDirectory(prefix="jones-quarantine-", dir=SCRATCH_PARENT) as temporary:
+            root = Path(temporary)
+            bundle = make_bundle(root / "candidate.app")
+            outside = root / "outside"
+            outside.mkdir()
+            (outside / "unread.txt").write_text("synthetic", encoding="ascii")
+            link = bundle / "Contents/link"
+            link.symlink_to(outside, target_is_directory=True)
+            with patch.object(installer.sys, "platform", "darwin"), \
+                    patch.object(installer, "list_xattrs", return_value=[]) as read:
+                installer.MacOperations().quarantine(bundle)
+            inspected = [call.args[0] for call in read.call_args_list]
+            self.assertIn(bundle, inspected)
+            self.assertIn(bundle / "Contents/MacOS/CodexBar", inspected)
+            self.assertIn(link, inspected)
+            self.assertFalse(any(path == outside or outside in path.parents for path in inspected))
+
+    def test_quarantine_and_unknown_metadata_both_refuse_the_native_adapter(self):
+        with tempfile.TemporaryDirectory(prefix="jones-quarantine-", dir=SCRATCH_PARENT) as temporary:
+            path = Path(temporary) / "archive.zip"
+            path.write_bytes(b"synthetic")
+            for attributes, failure, code in ((["com.apple.quarantine"], None, "quarantine"),
+                                               (None, OSError("unavailable"), "quarantine_unknown")):
+                with patch.object(installer.sys, "platform", "darwin"), \
+                        patch.object(installer, "list_xattrs", return_value=attributes, side_effect=failure):
+                    with self.assertRaises(installer.InstallError) as caught:
+                        installer.MacOperations().quarantine(path)
+                self.assertEqual(caught.exception.code, code)
+
+    def test_isolated_cli_loads_its_owned_helper_without_pythonpath_overrides(self):
+        with tempfile.TemporaryDirectory(prefix="jones-isolated-cli-", dir=SCRATCH_PARENT) as temporary:
+            root = Path(temporary)
+            (root / "jones_xattrs.py").write_text("raise RuntimeError('foreign helper loaded')\n", encoding="ascii")
+            wrapper = Path(__file__).with_name("jones_install_app.sh")
+            result = subprocess.run(["/bin/bash", str(wrapper), "--help"], cwd=root,
+                                    env=dict(os.environ, PYTHONPATH=str(root)), capture_output=True, text=True, timeout=15)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("--expect-revision", result.stdout)
+            self.assertEqual(sorted(path.name for path in root.iterdir()), ["jones_xattrs.py"])
 
 
 class FakeOperations:

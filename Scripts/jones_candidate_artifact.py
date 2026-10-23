@@ -28,6 +28,8 @@ import zipfile
 import zlib
 from xml.parsers.expat import ExpatError
 
+from jones_xattrs import list_xattrs
+
 
 REPOSITORY = "Jones-Systems/CodexBar"
 REPOSITORY_ID = "1425008735"
@@ -288,7 +290,7 @@ def tree_manifest(bundle, check_quarantine=False):
         mode = stat.S_IMODE(metadata.st_mode)
         require(not mode & (stat.S_ISUID | stat.S_ISGID), "bundle-mode", "Set-ID files are not accepted")
         if check_quarantine:
-            require("com.apple.quarantine" not in os.listxattr(path, follow_symlinks=False),
+            require("com.apple.quarantine" not in list_xattrs(path),
                     "quarantine", "Bundle contains quarantine attributes")
         name = path.relative_to(bundle.parent).as_posix()
         if stat.S_ISLNK(metadata.st_mode):

@@ -34,7 +34,7 @@ final class JonesUpdateController: NSObject, UpdaterProviding {
     @MainActor
     private struct PreparedInstallation {
         let update: JonesPreparedUpdate
-        // Sparkle's block is not Sendable; its storage and invocation stay on this actor.
+        /// Sparkle's block is not Sendable; its storage and invocation stay on this actor.
         let install: () -> Void
     }
 
