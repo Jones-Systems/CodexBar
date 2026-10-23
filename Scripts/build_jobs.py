@@ -32,6 +32,7 @@ VALUE_OPTIONS = {
     "--cache-path", "--config-path", "--security-path", "--arch", "--triple", "--sdk",
     "--toolchain", "--swift-sdk", "--destination", "--product", "--target",
     "--test-product", "--xunit-output", "--parallel-worker-count",
+    "--event-stream-version", "--event-stream-output-path",
     "-project", "-workspace", "-scheme", "-configuration", "-destination",
     "-derivedDataPath", "-archivePath", "-sdk", "-toolchain", "-resultBundlePath",
     "-resultStreamPath", "-clonedSourcePackagesDirPath", "-packageCachePath",
@@ -129,7 +130,7 @@ def output_destinations(arguments: list[str], kind: str, environment: dict[str, 
         return cwd / raw
 
     swift_paths = {"--package-path", "--scratch-path", "--cache-path", "--config-path",
-                   "--security-path", "--xunit-output"}
+                   "--security-path", "--xunit-output", "--event-stream-output-path"}
     xcode_paths = {"-derivedDataPath", "-archivePath", "-resultBundlePath", "-resultStreamPath",
                    "-clonedSourcePackagesDirPath", "-packageCachePath"}
     paths = swift_paths if kind == "swift" else xcode_paths

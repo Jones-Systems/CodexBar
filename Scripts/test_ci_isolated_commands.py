@@ -28,7 +28,8 @@ class IsolatedCICommandsTests(unittest.TestCase):
         self.workspace = self.root / "workspace"
         scripts = self.workspace / "Scripts"
         scripts.mkdir(parents=True)
-        for name in ("test.sh", "test-plugin-engines.sh", "ci_swift_test_by_suite.py", "build_jobs.py"):
+        for name in ("test.sh", "test-plugin-engines.sh", "ci_swift_test_by_suite.py",
+                     "ci_swift_test_campaign.py", "build_jobs.py"):
             shutil.copy2(ROOT / "Scripts" / name, scripts / name)
         helper = scripts / "build_jobs.py"
         helper.write_text(helper.read_text().replace(

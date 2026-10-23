@@ -16,7 +16,7 @@ GitHub-hosted runners are identified by both `GITHUB_ACTIONS=true` and
 `RUNNER_ENVIRONMENT=github-hosted`, using GitHub's
 [documented runner variables](https://docs.github.com/en/actions/reference/workflows-and-actions/variables).
 There the helper passes the original command through without a local lock,
-CPU sampling, job normalization or added compiler flags. `CODEXBAR_BUILD_JOBS`
+CPU sampling, job normalization, storage admission or added compiler flags. `CODEXBAR_BUILD_JOBS`
 does not constrain hosted runners. A generic `CI=true`, incomplete runner
 identity or `RUNNER_ENVIRONMENT=self-hosted` does not bypass local protection.
 

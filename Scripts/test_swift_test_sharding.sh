@@ -3,8 +3,20 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TEMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/codexbar-test-sharding.XXXXXX")"
-trap 'rm -rf "${TEMP_DIR}"' EXIT
+TEMP_DIR="$(mktemp -d "${ROOT_DIR}/.test-sharding.XXXXXX")"
+cleanup() {
+  local status=$?
+  if ! rm -rf -- "${TEMP_DIR}"; then
+    printf 'Failed to remove sharding-test scratch: %s\n' "${TEMP_DIR}" >&2
+    [[ "${status}" -ne 0 ]] || status=1
+  fi
+  exit "${status}"
+}
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+export TMPDIR="${TEMP_DIR}"
 
 IFS= read -r -d '' FAKE_SWIFT_SCRIPT <<'EOF' || true
 set -euo pipefail
@@ -14,7 +26,7 @@ if [[ "$*" == "build --show-bin-path" ]]; then
   printf '%s\n' "${FAKE_SWIFT_BIN_PATH:?}"
   exit 0
 fi
-if [[ "$*" == "test list" ]]; then
+if [[ "$*" == "test list" || "$*" == "test list --skip-build" ]]; then
   if [[ "${FAKE_SWIFT_MODE:-success}" == "list_fail" ]]; then
     sleep 0.25
     printf 'test-list stdout marker\n'
@@ -131,10 +143,17 @@ required_not_deferred = (
 )
 if required_not_deferred not in job:
     raise SystemExit("swift-test-macos must skip only required tests explicitly deferred for drafts")
-if not re.search(r"(?m)^\s+shard-index:\s+\[0,\s*1\]\s*$", job):
-    raise SystemExit("swift-test-macos must run exactly two shard indexes: [0, 1]")
-if not re.search(r"(?m)^\s+shard-count:\s+\[2\]\s*$", job):
-    raise SystemExit("swift-test-macos shard-count must be [2]")
+sys.path.insert(0, str(pathlib.Path(sys.argv[1]).resolve().parents[2] / "Scripts"))
+from ci_swift_test_campaign import resolve_plan
+expected = [{"shard-index": index, "shard-count": 2, "group-size": 4,
+             "cache-mode": "ordinary", "campaign": False} for index in (0, 1)]
+for event in ("pull_request", "push"):
+    if resolve_plan(event)["include"] != expected:
+        raise SystemExit("ordinary CI must retain group four and exactly two shards")
+if "matrix: ${{ fromJSON(needs.changes.outputs.macos-matrix) }}" not in job:
+    raise SystemExit("macOS must consume the validated campaign matrix")
+if "name: swift-test-macos (${{ matrix.shard-index }}, ${{ matrix.shard-count }})" not in job:
+    raise SystemExit("ordinary macOS check names must remain stable")
 if "CODEXBAR_TEST_SHARD_INDEX=${{ matrix.shard-index }}" not in job:
     raise SystemExit("swift-test-macos must pass matrix.shard-index to Scripts/test.sh")
 if "CODEXBAR_TEST_SHARD_COUNT=${{ matrix.shard-count }}" not in job:
@@ -288,12 +307,36 @@ touch "${FAKE_SWIFT_BIN_PATH}/Sparkle.framework/Versions/B/Sparkle"
 ln -s ../Wrong.framework "${FAKE_SWIFT_BIN_PATH}/PackageFrameworks/Sparkle.framework"
 run_harness --group-size 1 --limit-groups 1 --timeout 10 > "${TEMP_DIR}/sparkle-recovery.log" 2> "${TEMP_DIR}/sparkle-recovery.stderr"
 [[ "$(readlink "${FAKE_SWIFT_BIN_PATH}/PackageFrameworks/Sparkle.framework")" == "../Sparkle.framework" ]]
-[[ "$(grep -c '^test list$' "${FAKE_SWIFT_LOG}")" -eq 2 ]]
+[[ "$(grep -c '^test list$' "${FAKE_SWIFT_LOG}")" -eq 1 ]]
+[[ "$(grep -c '^test list --skip-build$' "${FAKE_SWIFT_LOG}")" -eq 1 ]]
 [[ "$(grep -c '^build --show-bin-path$' "${FAKE_SWIFT_LOG}")" -eq 1 ]]
 grep -Fq "Recovered SwiftPM Sparkle test runtime; retrying discovery once." \
   "${TEMP_DIR}/sparkle-recovery.stderr"
 unset FAKE_SWIFT_BIN_PATH
 
+python3 -B "${ROOT_DIR}/Scripts/test_swift_test_evidence.py"
 python3 "${ROOT_DIR}/Scripts/test_swift_test_process_cleanup.py"
+
+python3 - "${BASH_SOURCE[0]}" "${TEMP_DIR}" <<'PY'
+from pathlib import Path
+import subprocess
+import sys
+
+source = Path(sys.argv[1]).read_text().split("IFS= read -r -d '' FAKE_SWIFT_SCRIPT", 1)[0]
+fixture = Path(sys.argv[2]) / "scratch-lifecycle"
+(fixture / "Scripts").mkdir(parents=True)
+probe = fixture / "Scripts" / "probe.sh"
+sentinel = fixture / "unrelated"
+sentinel.write_text("keep")
+for command, expected in [("exit 0", 0), ("exit 23", 23), ("kill -HUP $$", 129),
+                          ("kill -INT $$", 130), ("kill -TERM $$", 143)]:
+    probe.write_text(source + '\nprintf "%s\\n" "$TEMP_DIR" > "$ROOT_DIR/allocated"\n' + command + "\n")
+    result = subprocess.run(["/bin/bash", str(probe)], timeout=5)
+    assert result.returncode == expected, (command, result.returncode)
+    allocated = Path((fixture / "allocated").read_text().strip())
+    assert allocated.parent == fixture and not allocated.exists(), allocated
+    assert sentinel.read_text() == "keep"
+print("Sharding scratch success, failure, and cancellation cleanup passed.")
+PY
 
 echo "Swift test sharding tests passed."
