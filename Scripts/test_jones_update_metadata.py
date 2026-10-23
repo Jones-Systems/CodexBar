@@ -5,6 +5,9 @@ import base64
 from copy import deepcopy
 from dataclasses import replace
 import io
+import hashlib
+from datetime import datetime, timezone
+from types import SimpleNamespace
 import json
 import os
 from pathlib import Path
@@ -18,6 +21,8 @@ import unittest
 from unittest.mock import Mock, patch
 
 import jones_update_metadata as metadata
+import jones_signing as signing
+import jones_sign_and_notarize as signing_operation
 
 
 REVISION = "a" * 40
@@ -483,6 +488,161 @@ class PreparationHookTests(unittest.TestCase):
         result = self.invoke("printf 'unexpected helper invocation'; return 37", overlay="0")
         self.assertEqual(result.returncode, 0, result.stderr.decode())
         self.assertEqual(result.stdout, b"135\0<key>JonesStateKey</key><string>jones</string>\0")
+
+
+
+class DeveloperIDTests(unittest.TestCase):
+    def profile(self, identifier=signing.BUNDLE):
+        return {"TeamIdentifier": [signing.TEAM], "ApplicationIdentifierPrefix": [signing.TEAM],
+                "ExpirationDate": datetime(2099, 1, 1), "ProvisionsAllDevices": True,
+                "DeveloperCertificates": [b"public synthetic certificate"],
+                "Entitlements": signing.entitlements(identifier)}
+
+    @property
+    def certificate(self):
+        return hashlib.sha1(b"public synthetic certificate").hexdigest()
+
+    def test_exact_production_identity_preserves_cloudkit_and_holds_updates(self):
+        configuration = replace(metadata.UpdateConfiguration(), signing_mode="developer-id",
+                                team_id=signing.TEAM, app_group_id=signing.GROUP)
+        info = configuration.metadata()
+        self.assertEqual(info["JonesSigningMode"], "developer-id")
+        self.assertEqual(info["JonesStateKey"], "jones")
+        self.assertFalse(info["SUAutomaticallyUpdate"])
+        for invalid in (replace(configuration, signing_mode="identity"),
+                        replace(configuration, team_id="JONESLOCAL"),
+                        replace(configuration, app_group_id=metadata.APP_GROUP_ID),
+                        replace(configuration, channel="stable", feed_url=metadata.STABLE_FEED_URL,
+                                public_ed_key=FIXTURE_KEY)):
+            with self.assertRaises(metadata.MetadataError):
+                invalid.validate()
+        self.assertEqual(signing.entitlements(signing.BUNDLE)["com.apple.developer.icloud-container-identifiers"],
+                         ["iCloud.com.jonessystems.codexbar"])
+
+    def test_profiles_require_exact_team_certificate_expiry_and_entitlement_grants(self):
+        for identifier in (signing.BUNDLE, signing.BUNDLE + ".widget"):
+            profile = self.profile(identifier)
+            signing.validate_profile(profile, identifier, self.certificate)
+            mutations = [{"TeamIdentifier": ["OTHERTEAM1"]}, {"ApplicationIdentifierPrefix": ["OTHERTEAM1"]},
+                         {"ExpirationDate": datetime(2000, 1, 1)}, {"ExpirationDate": "2099"},
+                         {"ProvisionsAllDevices": False}, {"ProvisionedDevices": ["device"]},
+                         {"DeveloperCertificates": [b"another certificate"]}, {"Entitlements": {}},
+                         {"Entitlements": dict(profile["Entitlements"], **{"get-task-allow": True})}]
+            for key in signing.entitlements(identifier):
+                if key != "com.apple.security.app-sandbox":
+                    bad = dict(profile["Entitlements"])
+                    bad[key] = "*"
+                    mutations.append({"Entitlements": bad})
+            for mutation in mutations:
+                with self.subTest(mutation=mutation), self.assertRaises(signing.SigningError):
+                    signing.validate_profile(dict(profile, **mutation), identifier, self.certificate)
+
+    def test_production_signature_requires_team_runtime_timestamp_resources_and_chain(self):
+        text = "\n".join([
+            "Identifier=" + signing.BUNDLE, "TeamIdentifier=" + signing.TEAM,
+            "Authority=Developer ID Application: Fixture (2CUPSQS986)",
+            "Authority=Developer ID Certification Authority", "Authority=Apple Root CA",
+            "Timestamp=Oct 22, 2026", "CodeDirectory v=20500 size=500 flags=0x10000(runtime) hashes=1+2",
+            "CDHash=" + "a" * 40, "Sealed Resources version=2 rules=13 files=18"])
+        self.assertEqual(signing.validate_signature(text, signing.BUNDLE), "a" * 40)
+        for row in text.splitlines():
+            with self.subTest(row=row), self.assertRaises(signing.SigningError):
+                signing.validate_signature(text.replace(row, ""), signing.BUNDLE)
+        for altered in (text + "\nSignature=adhoc", text.replace("2CUPSQS986", "Y5PE65HELJ"),
+                        text + "\nTeamIdentifier=" + signing.TEAM):
+            with self.assertRaises(signing.SigningError):
+                signing.validate_signature(altered, signing.BUNDLE)
+
+    def test_only_exact_main_signing_dispatch_can_claim_ci_main(self):
+        environment, event = ci_fixture()
+        environment.update(GITHUB_EVENT_NAME="workflow_dispatch", GITHUB_WORKFLOW_SHA=REVISION,
+                           GITHUB_WORKFLOW_REF=f"{metadata.REPOSITORY}/{signing.WORKFLOW}@refs/heads/main")
+        event = {"repository": repository(), "inputs": {}}
+        result = metadata.provenance_metadata(SOURCE, "135", "ci-main", environment=environment,
+                                              event=event, signing_mode="developer-id")
+        self.assertEqual(result["JonesBuildOrigin"], "ci-main")
+        for mutation in ({"GITHUB_REF": "refs/heads/topic"}, {"GITHUB_WORKFLOW_SHA": MERGE_REVISION},
+                         {"GITHUB_EVENT_NAME": "pull_request_target"}, {"GITHUB_WORKFLOW_REF": "foreign"}):
+            with self.assertRaises(metadata.MetadataError):
+                metadata.provenance_metadata(SOURCE, "135", "ci-main", environment=dict(environment, **mutation),
+                                             event=event, signing_mode="developer-id")
+        with self.assertRaises(metadata.MetadataError):
+            metadata.provenance_metadata(SOURCE, "135", "ci-main", environment=environment, event=event)
+
+    def test_command_timeout_drains_owned_group_and_reports_unknown_descendants(self):
+        process = Mock(pid=12345, returncode=0)
+        process.communicate.side_effect = [subprocess.TimeoutExpired("fixture", 1), (b"", b"")]
+        with patch.object(signing_operation.subprocess, "Popen", return_value=process) as launch, \
+                patch.object(signing_operation.os, "killpg") as kill, \
+                patch.object(signing_operation, "group_exists", return_value=False):
+            with self.assertRaises(subprocess.TimeoutExpired):
+                signing_operation.run(["fixture"], {}, timeout=1)
+            kill.assert_called_once_with(12345, signal.SIGTERM)
+            self.assertTrue(launch.call_args.kwargs["start_new_session"])
+        process.communicate.side_effect = None
+        process.communicate.return_value = (b"", b"")
+        with patch.object(signing_operation.subprocess, "Popen", return_value=process), \
+                patch.object(signing_operation, "group_exists", return_value=True):
+            with self.assertRaises(signing_operation.ProcessDrainUnknown):
+                signing_operation.run(["fixture"], {})
+
+    def test_secret_free_argv_and_owned_cleanup_on_success_failure_and_cancellation(self):
+        for failure in (None, "partition", "notary", "cancel"):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory(prefix=".jones-signing-test-", dir=ROOT) as name:
+                root = Path(name)
+                script = root / "Scripts/jones_sign_and_notarize.py"
+                script.parent.mkdir()
+                (root / ".build").mkdir()
+                (root / ".build/jones-import-identity").write_text("synthetic importer")
+                fixture_environment = {"PATH": os.environ.get("PATH", ""), "RUNNER_ENVIRONMENT": "github-hosted",
+                                       "MACOS_SIGNING_CERTIFICATE_PASSWORD": "synthetic-password-only",
+                                       "APPLE_NOTARY_KEY_ID": "AAAAAAAAAA",
+                                       "APPLE_NOTARY_ISSUER_ID": "00000000-0000-0000-0000-000000000000"}
+                for key in ("MACOS_SIGNING_CERTIFICATE_P12_BASE64", "APPLE_NOTARY_API_KEY_P8_BASE64",
+                            "JONES_APP_PROVISIONING_PROFILE_BASE64", "JONES_WIDGET_PROVISIONING_PROFILE_BASE64"):
+                    fixture_environment[key] = base64.b64encode(b"synthetic input").decode()
+                commands = []
+
+                def fake_run(args, environment, timeout=120):
+                    args = [str(arg) for arg in args]
+                    commands.append(args)
+                    self.assertNotIn("synthetic-password-only", args)
+                    if Path(args[0]).name == "jones-import-identity":
+                        self.assertEqual(environment["MACOS_SIGNING_CERTIFICATE_PASSWORD"], "synthetic-password-only")
+                        return self.certificate.upper().encode()
+                    self.assertFalse(set(signing_operation.SECRETS) & set(environment))
+                    if "create-keychain" in args:
+                        Path(args[-1]).touch()
+                    if "list-keychains" in args and "-s" not in args:
+                        return b'"/synthetic/login.keychain-db"\n'
+                    if "set-key-partition-list" in args:
+                        if failure == "partition":
+                            raise signing.SigningError("fixture partition failure")
+                        if failure == "cancel":
+                            raise SystemExit(143)
+                    if "notarytool" in args:
+                        return json.dumps({"status": "Invalid" if failure == "notary" else "Accepted"}).encode()
+                    return b""
+
+                with patch.dict(os.environ, fixture_environment, clear=True), \
+                        patch.object(signing_operation, "__file__", str(script)), \
+                        patch.object(signing_operation.candidate, "inspect_context", return_value=SimpleNamespace(origin="ci-main")), \
+                        patch.object(signing_operation.candidate, "create_artifact") as artifact, \
+                        patch.object(signing_operation, "run", side_effect=fake_run), \
+                        patch.object(signing, "profile_from_file", side_effect=lambda path: self.profile(
+                            signing.BUNDLE + ".widget" if path.name.startswith("widget") else signing.BUNDLE)), \
+                        patch.object(signing, "verify_bundle"):
+                    if failure:
+                        with self.assertRaises((signing.SigningError, SystemExit)):
+                            signing_operation.main()
+                        artifact.assert_not_called()
+                    else:
+                        signing_operation.main()
+                        artifact.assert_called_once()
+                self.assertFalse((root / ".mac-release.jones.env").exists())
+                self.assertEqual([path.name for path in (root / ".build").iterdir()], ["jones-import-identity"])
+                self.assertTrue(any("delete-keychain" in args for args in commands))
+                self.assertTrue(any("list-keychains" in args and "-s" in args for args in commands))
 
 
 if __name__ == "__main__":

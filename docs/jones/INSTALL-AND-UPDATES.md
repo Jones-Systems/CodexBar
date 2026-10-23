@@ -7,7 +7,7 @@ installation, a working feed, or a public release. Keep the existing
 
 ## Candidate artifact and external verification
 
-The bootstrap artifact is an **ad-hoc sealed, arm64, canonical-main CI bundle**.
+The default bootstrap artifact is an **ad-hoc sealed, arm64, canonical-main CI bundle**.
 It is for the separately authorized local Jones install. It is not a signed,
 notarized public distribution. PR artifacts and local builds are not eligible
 for this installer.
@@ -95,7 +95,7 @@ estimates, not reserved space or enforced quotas.
 The helper checks the archive hash before extraction, contained file/link
 layout, quarantine on the archive and bundle, the full identity tuple, strict
 deep code-signature verification, typed ad-hoc signature metadata, the resource
-seal and the arm64 app/widget executables. Required production metadata is:
+seal and the arm64 app/widget executables. Required default ad-hoc metadata is:
 
 | Field | Value |
 | --- | --- |
@@ -323,3 +323,62 @@ The app's privacy manifest declares local capacity admission (`E174.1`), elapsed
 timer calculations (`35F9.1`) and app/app-group preferences (`CA92.1`, `1C8F.1`).
 Capacity and uptime observations are not transmitted by the updater. These
 reasons follow [Apple's required-reason API definitions](https://developer.apple.com/documentation/bundleresources/app-privacy-configuration/nsprivacyaccessedapitypes/nsprivacyaccessedapitypereasons).
+
+## Explicit Developer ID inspection and transition hold
+
+CB-SIGN-R1 adds `--signing-mode developer-id` to the installer. The default stays
+`adhoc`, including existing API callers and build-135 handling. In Developer ID
+mode the candidate must explicitly seal `JonesSigningMode=developer-id`, team
+`2CUPSQS986`, and group `2CUPSQS986.com.jonessystems.codexbar`; app, widget,
+display name, state key, archive bounds, arm64, canonical-main provenance,
+monotonic build and hash requirements remain unchanged. The native adapter
+requires strict/deep code verification, Developer ID authority chain, exact team,
+hardened runtime, secure timestamp, sealed resources, exact app/widget signed
+entitlements, matching unexpired embedded profiles, an accepted stapled ticket
+and Gatekeeper assessment. Signing metadata alone is insufficient.
+
+The production app entitlement set includes its exact application/team IDs,
+shared group, CloudKit service/container and Production environment. The widget
+includes its own application ID, the same team/group and sandbox=true. Unknown
+entitlements or profile grants fail closed. Real profile availability is unknown.
+
+The source permits an explicitly selected first installation or same-identity
+replacement after external artifact verification and applicable authorization.
+It **refuses an installed `JONESLOCAL` → `2CUPSQS986` transition**, including
+preflight, before quit or swap. Restore cannot cross that boundary either.
+There is no migration-bypass option. Removing an old app to evade this check is
+not a supported migration procedure: its shared defaults, widget data and other
+state may remain. Owner bootstrap and a validated migration plan are still needed.
+
+Production channel `none`, empty feed/key, and all automatic-update settings false
+are mandatory. Do not publish these bootstrap ZIPs into a live legacy update feed.
+Apple signing does not replace the separate Jones Ed25519 feed/archive signature.
+This source does not enable updates, publish a release, install an app, transfer
+preferences, change Keychain grants or prove data continuity. Binary rollback
+retains its existing limits; it is not application-data rollback.
+
+## CB-SIGN-R1 affected checks
+
+The existing group manifests are extended in place; no new test module is added.
+
+| Group | Exact invocation | Added coverage |
+| --- | --- | --- |
+| `jones-update-metadata` | `python3 -B Scripts/test_jones_update_metadata.py` | Explicit production metadata; profiles/certificate/expiry; runtime/timestamp/resources; main-only dispatch; secret-free argv and cleanup success/failure/cancellation with fake operations |
+| `jones-candidate-artifact` | `python3 -B Scripts/test_jones_candidate_artifact.py` | Explicit signing mode, production metadata, dispatch SHA/workflow binding and held channel |
+| `jones-local-installer` | `python3 -B Scripts/test_jones_install_app.py` | Explicit adapter mode, legacy transition refusal before mutation, first-install preflight and held feed |
+| `jones-identity-overlay` | `bash Scripts/test_jones_identity_overlay.sh` | Production identity selection, release/identity-only mode and required profiles; retains original upstream hashes |
+| `jones-update-trust` | `bash Scripts/test.sh --filter JonesUpdateTrustPolicyTests` | Runtime production identity and channel hold; existing harness/feed trust cases |
+| `jones-update-harness` | `python3 -B Scripts/test_jones_update_harness.py` | Unchanged regression contract |
+
+`make check` and `make test` remain required and are delegated to hosted CI when
+local compiler execution is unavailable. The signing workflow's `source-checks`
+job compiles the Security.framework import helper without credentials. The
+protected signing job never runs on a PR. Pure profile fixtures and fake native
+operations do not prove Apple acceptance, actual signing, provisioning,
+notarization, installation, native app-state preservation, or a live feed.
+
+New feature: failing-before evidence was not manufactured by signing or installing
+an old app. The available local seams cover the added contract directly. Touched
+comments/docstrings are kept near code for identity, secret handling, scratch
+ownership and cleanup boundaries; prior ad-hoc-only descriptions are corrected
+here and in the identity/release guides.

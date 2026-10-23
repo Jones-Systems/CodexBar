@@ -96,6 +96,11 @@ def zip_bundle(bundle, archive):
 
 
 class NativeQuarantineAdapterTests(unittest.TestCase):
+    def test_native_adapter_binds_explicit_signing_mode_without_running_a_command(self):
+        with patch.object(installer.sys, "platform", "darwin"):
+            self.assertEqual(installer.MacOperations().signing_mode, "adhoc")
+            self.assertEqual(installer.MacOperations("developer-id").signing_mode, "developer-id")
+
     def test_reads_every_owned_entry_without_traversing_symlink_destinations(self):
         with tempfile.TemporaryDirectory(prefix="jones-quarantine-", dir=SCRATCH_PARENT) as temporary:
             root = Path(temporary)
@@ -247,6 +252,48 @@ class InstallerTests(unittest.TestCase):
 
     def assert_no_scratch(self):
         self.assertEqual(list(self.root.rglob(".jones-install-preflight-*")), [])
+
+    def production_fixture(self):
+        changes = dict(JonesSigningMode="developer-id", CodexBarTeamID=installer._SIGNING_MODULE.TEAM,
+                       JonesAppGroupID=installer._SIGNING_MODULE.GROUP, SUFeedURL="", SUPublicEDKey="",
+                       SUEnableAutomaticChecks=False, SUAutomaticallyUpdate=False, SUAllowsAutomaticUpdates=False)
+        change_plist(self.bundle, **changes)
+        change_plist(self.bundle / "Contents/PlugIns/CodexBarWidget.appex", **changes)
+        self.repack()
+
+    def test_production_requires_explicit_mode_and_legacy_transition_is_held_before_mutation(self):
+        self.production_fixture()
+        self.assert_error("signing_mode", lambda: self.run_install(preflight=True))
+        self.ops.signing_mode = "developer-id"
+        self.old()
+        adhoc_signature = self.ops.verify_signature
+
+        def signature(bundle, identifier):
+            info = installer.read_plist(bundle / "Contents/Info.plist")
+            if info.get("JonesSigningMode") == "developer-id":
+                return "c" * 40, installer._SIGNING_MODULE.entitlements(identifier)
+            return adhoc_signature(bundle, identifier)
+
+        before = installer.tree_hash(self.target)
+        with patch.object(self.ops, "verify_signature", side_effect=signature):
+            self.assert_error("migration_held", lambda: self.run_install(preflight=True))
+            self.assert_error("migration_held", self.run_install)
+        self.assertEqual(installer.tree_hash(self.target), before)
+        self.assertFalse(installer.State(self.target).root.exists())
+        self.assertFalse(any(event[0] in ("quit", "launch", "ditto") for event in self.ops.events))
+        self.assert_no_scratch()
+
+    def test_production_opt_in_can_preflight_first_install_but_not_enable_feed(self):
+        self.production_fixture()
+        self.ops.signing_mode = "developer-id"
+        with patch.object(self.ops, "verify_signature", side_effect=lambda bundle, identifier:
+                          ("c" * 40, installer._SIGNING_MODULE.entitlements(identifier))):
+            result = self.run_install(preflight=True)
+            self.assertEqual(result["candidate"]["identity"]["CodexBarTeamID"], "2CUPSQS986")
+            self.assertFalse(self.target.exists())
+            change_plist(self.bundle, JonesUpdateChannel="stable")
+            self.repack()
+            self.assert_error("migration_held", lambda: self.run_install(preflight=True))
 
     def test_preflight_has_machine_contract_and_no_persistent_effect(self):
         before = sorted(str(path.relative_to(self.root)) for path in self.root.rglob("*"))

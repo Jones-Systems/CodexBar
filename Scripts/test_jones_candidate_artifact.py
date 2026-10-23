@@ -98,6 +98,16 @@ class RejectionAssertions:
 
 
 class ContextTests(RejectionAssertions, unittest.TestCase):
+    def test_signing_dispatch_is_bound_to_canonical_main_workflow_and_sha(self):
+        environment, event = event_fixture("workflow_dispatch")
+        environment["GITHUB_WORKFLOW_REF"] = f"{candidate.REPOSITORY}/{candidate.jones_signing.WORKFLOW}@refs/heads/main"
+        self.assertEqual(candidate.validate_event(environment, event, REVISION, "developer-id")[0], "ci-main")
+        for mutation in ({"GITHUB_REF": "refs/heads/topic"}, {"GITHUB_WORKFLOW_SHA": MERGE_SHA},
+                         {"GITHUB_EVENT_NAME": "pull_request"}, {"GITHUB_WORKFLOW_REF": "foreign"}):
+            with self.assertRaises(candidate.CandidateError):
+                candidate.validate_event(dict(environment, **mutation), event, REVISION, "developer-id")
+
+
     def test_only_exact_main_push_claims_ci_main(self):
         for event_name, origin in (("push", "ci-main"), ("pull_request", "ci-pr"), ("workflow_dispatch", "local")):
             with self.subTest(event=event_name):
@@ -182,6 +192,20 @@ class ContextTests(RejectionAssertions, unittest.TestCase):
 
 
 class PlistTests(RejectionAssertions, unittest.TestCase):
+    def test_developer_id_is_explicit_and_cannot_enable_updates(self):
+        app, widget = plists()
+        for info in (app, widget):
+            info.update(JonesSigningMode="developer-id", CodexBarTeamID=candidate.jones_signing.TEAM,
+                        JonesAppGroupID=candidate.jones_signing.GROUP)
+        candidate.validate_plists(app, widget, CONTEXT, "none", "developer-id")
+        self.rejects("signing-mode", candidate.validate_plists, app, widget, CONTEXT, "none")
+        self.rejects("migration-held", candidate.validate_plists, app, widget, CONTEXT, "stable", "developer-id")
+        for info in (app, widget):
+            altered = dict(info, JonesSigningMode="adhoc")
+            self.rejects("plist-value", candidate.validate_plists,
+                         altered if info is app else app, widget if info is app else altered,
+                         CONTEXT, "none", "developer-id")
+
     def test_bootstrap_and_stable_metadata_roundtrip(self):
         for channel in ("none", "stable"):
             app, widget = plists(channel=channel)

@@ -33,6 +33,10 @@ _XATTR_SPEC = importlib.util.spec_from_file_location("jones_xattrs", Path(__file
 _XATTR_MODULE = importlib.util.module_from_spec(_XATTR_SPEC)
 _XATTR_SPEC.loader.exec_module(_XATTR_MODULE)
 list_xattrs = _XATTR_MODULE.list_xattrs
+_SIGNING_SPEC = importlib.util.spec_from_file_location("jones_signing", Path(__file__).with_name("jones_signing.py"))
+_SIGNING_MODULE = importlib.util.module_from_spec(_SIGNING_SPEC)
+_SIGNING_SPEC.loader.exec_module(_SIGNING_MODULE)
+
 
 
 SCHEMA = "jones-app-install/v1"
@@ -254,7 +258,8 @@ function run(argv) {
 class MacOperations:
     """Bounded public bundle metadata/process operations; no provider or defaults access."""
 
-    def __init__(self):
+    def __init__(self, signing_mode="adhoc"):
+        self.signing_mode = signing_mode
         require(sys.platform == "darwin", "platform",
                 "Installation/preflight requires macOS; portable tests use fakes.")
 
@@ -270,6 +275,11 @@ class MacOperations:
         return result
 
     def verify_signature(self, bundle, identifier):
+        if read_plist(bundle / "Contents/Info.plist").get("JonesSigningMode") == "developer-id":
+            try:
+                return _SIGNING_MODULE.verify_bundle(bundle, identifier, distribution=identifier == BUNDLE_ID)
+            except _SIGNING_MODULE.SigningError as error:
+                raise InstallError("signature", str(error)) from error
         self.run(["/usr/bin/codesign", "--verify", "--deep", "--strict", str(bundle)])
         displayed = self.run(["/usr/bin/codesign", "--display", "--verbose=4", str(bundle)])
         seal = signature_details(displayed.stderr, identifier)
@@ -329,7 +339,20 @@ def inspect_bundle(path, operations, expected_revision=None, allow_legacy=False)
     check_tree(path)
     operations.quarantine(path)
     info = read_plist(path / "Contents/Info.plist")
-    require(all(info.get(key) == value for key, value in IDENTITY.items()), "identity",
+    signing_mode = info.get("JonesSigningMode", "adhoc")
+    require(signing_mode in ("adhoc", "developer-id"), "identity", "Unknown signing mode.")
+    production = signing_mode == "developer-id"
+    require(not production or getattr(operations, "signing_mode", "adhoc") == "developer-id",
+            "signing_mode", "Developer ID candidates require explicit --signing-mode developer-id.")
+    identity = dict(IDENTITY)
+    if production:
+        identity.update(CodexBarTeamID=_SIGNING_MODULE.TEAM, JonesAppGroupID=_SIGNING_MODULE.GROUP)
+        require(info.get("JonesUpdateChannel") == "none" and info.get("SUFeedURL") == ""
+                and info.get("SUPublicEDKey") == ""
+                and all(info.get(key) is False for key in
+                        ("SUEnableAutomaticChecks", "SUAutomaticallyUpdate", "SUAllowsAutomaticUpdates")),
+                "migration_held", "Developer ID automatic updates remain held.")
+    require(all(info.get(key) == value for key, value in identity.items()), "identity",
             "Bundle identity, group, iCloud metadata, state, display name, or team differs from Jones production.")
     require(not any(key.startswith("JonesUpdateHarness") for key in info),
             "identity", "An update harness cannot be installed as the owner app.")
@@ -340,7 +363,7 @@ def inspect_bundle(path, operations, expected_revision=None, allow_legacy=False)
         value = info.get(key)
         require(value is None or (isinstance(value, str) and len(value) <= 256), "provenance",
                 "Invalid or oversized provenance field: " + key)
-    legacy = allow_legacy and revision is None and build == "135"
+    legacy = allow_legacy and not production and revision is None and build == "135"
     if not legacy:
         require(isinstance(build, str) and BUILD_RE.fullmatch(build) is not None, "build",
                 "Expected the monotonic <BUILD_NUMBER>.<first-parent-count> bundle version.")
@@ -358,9 +381,10 @@ def inspect_bundle(path, operations, expected_revision=None, allow_legacy=False)
             and re.fullmatch(r"[0-9]+(?:\.[0-9]+){1,3}", info["CFBundleShortVersionString"]) is not None,
             "version", "Missing or invalid dotted display version.")
     main_seal, main_entitlements = operations.verify_signature(path, BUNDLE_ID)
-    require(main_entitlements == {"com.apple.security.application-groups": [GROUP_ID]}, "entitlements",
-            "Unexpected signed app entitlements (including iCloud). "
-            "This ad-hoc route requires the known local entitlement set.")
+    expected_app = (_SIGNING_MODULE.entitlements(BUNDLE_ID) if production
+                    else {"com.apple.security.application-groups": [GROUP_ID]})
+    require(main_entitlements == expected_app, "entitlements",
+            "Signed app entitlements differ from the exact selected signing-mode contract.")
     executable = path / "Contents/MacOS/CodexBar"
     require(executable.is_file() and not executable.is_symlink() and os.access(str(executable), os.X_OK),
             "executable", "Missing real executable with execute permission.")
@@ -368,7 +392,9 @@ def inspect_bundle(path, operations, expected_revision=None, allow_legacy=False)
             "This local installer requires an arm64-only bundle.")
     widget = path / "Contents/PlugIns/CodexBarWidget.appex"
     widget_info = read_plist(widget / "Contents/Info.plist")
-    widget_identity = dict(IDENTITY)
+    widget_identity = dict(identity)
+    if production:
+        widget_identity["JonesSigningMode"] = "developer-id"
     widget_identity.pop("CFBundleDisplayName")
     widget_identity["CFBundleIdentifier"] = BUNDLE_ID + ".widget"
     require(all(widget_info.get(key) == value for key, value in widget_identity.items())
@@ -380,14 +406,15 @@ def inspect_bundle(path, operations, expected_revision=None, allow_legacy=False)
     require(widget_binary.is_file() and not widget_binary.is_symlink() and os.access(str(widget_binary), os.X_OK),
             "executable", "Missing real widget executable with execute permission.")
     widget_seal, widget_entitlements = operations.verify_signature(widget, BUNDLE_ID + ".widget")
+    expected_widget = (_SIGNING_MODULE.entitlements(BUNDLE_ID + ".widget") if production else
+                       {"com.apple.security.app-sandbox": True, "com.apple.security.application-groups": [GROUP_ID]})
     require(widget_entitlements.get("com.apple.security.app-sandbox") is True
-            and widget_entitlements == {"com.apple.security.app-sandbox": True,
-                                    "com.apple.security.application-groups": [GROUP_ID]},
+            and widget_entitlements == expected_widget,
             "entitlements", "Unexpected signed widget entitlements.")
     require(operations.architectures(widget_binary) == ["arm64"],
             "architecture", "This local installer requires an arm64-only widget.")
     return {
-        "identity": dict(IDENTITY), "version": info["CFBundleShortVersionString"], "build": build,
+        "identity": identity, "version": info["CFBundleShortVersionString"], "build": build,
         "revision": revision, "origin": info.get("JonesBuildOrigin"), "run": info.get("JonesBuildRun"),
         "channel": info.get("JonesUpdateChannel"), "legacy_build_135": legacy,
         "architecture": "arm64", "seal": main_seal, "widget_seal": widget_seal,
@@ -410,6 +437,8 @@ def verify_record(path, record, operations):
 
 
 def newer(candidate, current):
+    require(candidate["identity"].get("CodexBarTeamID") == current["identity"].get("CodexBarTeamID"), "migration_held",
+            "Cross-team app-group transition is held pending validated migration and owner bootstrap.")
     new = tuple(int(part) for part in candidate["build"].split("."))
     old = tuple(int(part) for part in current["build"].split("."))
     old = old + (0,) * (len(new) - len(old))
@@ -864,6 +893,8 @@ def execute(args, operations):
             capacity(operations, parent, RESERVE)
             previous = manifest["previous"]
             candidate = previous["record"]["bundle"]
+            require(candidate["identity"] == manifest["current"]["bundle"]["identity"], "migration_held",
+                    "Restore cannot cross the legacy/Developer ID app-group boundary.")
             result = transaction(state, operations, manifest, manifest["current"], state.root / previous["name"],
                                  candidate, restoring=True)
             process = launch_installed(operations, target, result["current"])
@@ -943,6 +974,7 @@ def arguments(argv):
     parser.add_argument("--target", default=str(Path.home() / "Applications/CodexBar Jones.app"))
     parser.add_argument("--preflight", action="store_true")
     parser.add_argument("--restore", action="store_true")
+    parser.add_argument("--signing-mode", choices=("adhoc", "developer-id"), default="adhoc")
     args = parser.parse_args(argv)
     if args.restore:
         require(not args.archive and not args.sha256 and not args.expect_revision and not args.preflight,
@@ -956,7 +988,8 @@ def arguments(argv):
 def main(argv=None):
     try:
         with cancellation_handlers():
-            result = execute(arguments(argv), MacOperations())
+            args = arguments(argv)
+            result = execute(args, MacOperations(args.signing_mode))
         print(json.dumps(result, sort_keys=True))
         return 0
     except InstallError as error:
