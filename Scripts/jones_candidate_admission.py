@@ -24,8 +24,8 @@ from jones_candidate_artifact import CandidateError, GIB, command, require
 
 MIN_MEMORY_BYTES = 3 * GIB
 RESERVE_BYTES = 2 * GIB
-# Hosted-job lifetime only, without persisted caches. Include nested producers.
-OUTPUT_BUDGETS = (("build-and-products", 8 * GIB), ("scratch-and-artifact", 4 * GIB), ("user-caches", 2 * GIB))
+# Hosted-job lifetime only; include both compiler slices and nested producers, without persisted caches.
+OUTPUT_BUDGETS = (("build-and-products", 16 * GIB), ("scratch-and-artifact", 4 * GIB), ("user-caches", 2 * GIB))
 
 
 def sample_cpu():
@@ -119,7 +119,9 @@ def decide(cpu, cores, total_memory, available_memory, pressure, volumes, reques
 
 
 def sample(workspace, scratch, environment, requested_jobs):
-    require(sys.platform == "darwin" and platform.machine() == "arm64", "runner-platform", "arm64 macOS is required")
+    architecture = platform.machine()
+    require(sys.platform == "darwin" and architecture in ("arm64", "x86_64"),
+            "runner-platform", "Native arm64 or x86_64 macOS is required")
     require(environment.get("GITHUB_ACTIONS") == "true" and environment.get("RUNNER_ENVIRONMENT") == "github-hosted",
             "runner-identity", "Admission is limited to GitHub-hosted CI")
     cpu = sample_cpu()
@@ -137,6 +139,7 @@ def sample(workspace, scratch, environment, requested_jobs):
     result = decide(cpu, cores, total, available, pressure,
                     storage_observations(workspace, scratch, user_cache), requested_jobs)
     result["sampled_at"] = datetime.now(timezone.utc).isoformat()
+    result["host_architecture"] = architecture
     result["output_lifetime"] = "owned scratch cleanup plus hosted runner teardown; no saved build cache"
     return result
 

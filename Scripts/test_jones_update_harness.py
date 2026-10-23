@@ -12,7 +12,7 @@ import signal
 import subprocess
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 import urllib.error
 import urllib.request
 import uuid
@@ -90,6 +90,60 @@ class HarnessTests(unittest.TestCase):
             self.rejects("fixture-ci", harness.prepare, self.root / "unused.app", self.root / "output",
                          self.root / "signer", 39541, {})
         self.assertEqual(list(self.root.iterdir()), [])
+
+    def test_native_fixture_checks_both_slices_of_app_and_sparkle(self):
+        bundle = self.root / "CodexBar.app"
+        manifest = {"fixture_id": FIXTURE_ID, "source_revision": REVISION, "public_key": KEY, "port": 39541}
+        info = harness.fixture_info(self.original(), FIXTURE_ID, KEY, 39541, harness.BUILD_A)
+        main = bundle / "Contents/MacOS/CodexBar"
+        sparkle = bundle / "Contents/Frameworks/Sparkle.framework/Sparkle"
+        for binary in (main, sparkle):
+            binary.parent.mkdir(parents=True, exist_ok=True)
+            binary.write_bytes(b"\xca\xfe\xba\xbe" + b"synthetic universal fixture")
+            binary.chmod(0o755)
+        (bundle / "Contents/Info.plist").write_bytes(plistlib.dumps(info))
+        architectures = {str(main): b"x86_64 arm64\n", str(sparkle): b"arm64 x86_64\n"}
+
+        def native(arguments):
+            args = [str(value) for value in arguments]
+            stdout, stderr = b"", b""
+            if args[0] == "/usr/bin/lipo":
+                stdout = architectures[args[-1]]
+            elif "--entitlements" in args:
+                stdout = plistlib.dumps({})
+            elif "--display" in args:
+                stderr = f"Identifier={harness.BUNDLE_ID}\nSignature=adhoc\nTeamIdentifier=not set\n".encode()
+            else:
+                self.assertIn("--verify", args)
+            return subprocess.CompletedProcess(args, 0, stdout, stderr)
+
+        with patch.object(harness, "command", side_effect=native), \
+                patch.object(harness.candidate, "list_xattrs", return_value=[]):
+            self.assertEqual(harness.inspect_harness(bundle, manifest, harness.BUILD_A),
+                             harness.candidate.tree_manifest(bundle))
+            for binary in (main, sparkle):
+                for invalid in (b"arm64\n", b"x86_64\n", b"arm64 arm64\n", b"arm64 x86_64 arm64e\n"):
+                    with self.subTest(binary=binary.name, invalid=invalid):
+                        architectures[str(binary)] = invalid
+                        self.rejects("fixture-architecture", harness.inspect_harness, bundle, manifest, harness.BUILD_A)
+                architectures[str(binary)] = b"arm64 x86_64\n"
+            main.write_bytes(b"not a Mach-O executable")
+            self.rejects("fixture-architecture", harness.inspect_harness, bundle, manifest, harness.BUILD_A)
+
+    def test_native_result_records_host_architecture_and_keeps_all_six_scenarios(self):
+        fixture, manifest = self.export()
+        for architecture in ("arm64", "x86_64"):
+            with self.subTest(architecture=architecture), patch.object(harness.sys, "platform", "darwin"), \
+                    patch.object(harness.platform, "machine", return_value=architecture), \
+                    patch.object(harness.shutil, "disk_usage", return_value=Mock(free=4 * 1024 ** 3)), \
+                    patch.object(harness, "run_case", side_effect=lambda _root, _scratch, _manifest, _feeds, scenario:
+                                 {"scenario": scenario, "result": "passed"}) as run_case, \
+                    patch("sys.stdout", new=io.StringIO()):
+                result = harness.run(fixture, self.root, REVISION)
+            self.assertEqual(result["host_architecture"], architecture)
+            self.assertEqual(result["fixture_id"], manifest["fixture_id"])
+            self.assertEqual([row["scenario"] for row in result["scenarios"]], list(harness.SCENARIOS))
+            self.assertEqual(run_case.call_count, 6)
 
     def export(self):
         fixture = self.root / "export"

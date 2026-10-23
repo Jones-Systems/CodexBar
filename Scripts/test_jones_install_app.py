@@ -487,6 +487,34 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(before, sorted(str(path.relative_to(self.root)) for path in self.root.rglob("*")))
         self.assertFalse(any(event[0] in ("quit", "launch", "ditto") for event in self.ops.events))
 
+    def test_universal_upgrade_preserves_thin_arm64_recovery_record(self):
+        old = self.old()
+        recorded = installer.record_bundle(old, self.ops, allow_legacy=True)
+        self.assertEqual(recorded["bundle"]["architecture"], "arm64")
+        (self.bundle / "Contents/MacOS/CodexBar").write_text("x86_64 arm64", encoding="ascii")
+        (self.bundle / "Contents/PlugIns/CodexBarWidget.appex/Contents/MacOS/CodexBarWidget").write_text(
+            "arm64 x86_64", encoding="ascii")
+        self.repack()
+        preflight = self.run_install(preflight=True)
+        self.assertEqual(preflight["candidate"]["architecture"], "arm64+x86_64")
+        result = self.run_install()
+        self.assertEqual(result["status"], "installed")
+        installer.verify_record(Path(result["previous_path"]), recorded, self.ops)
+        restored = self.restore()
+        self.assertEqual(restored["status"], "restored")
+        self.assertEqual(installer.inspect_bundle(self.target, self.ops, allow_legacy=True), recorded["bundle"])
+        self.assert_no_scratch()
+
+    def test_candidate_requires_matching_known_app_and_widget_slices(self):
+        binary = self.bundle / "Contents/MacOS/CodexBar"
+        for invalid in ("x86_64", "arm64 arm64", "arm64 arm64e", "arm64 x86_64", ""):
+            with self.subTest(invalid=invalid):
+                binary.write_text(invalid, encoding="ascii")
+                self.repack()
+                self.assert_error("architecture", lambda: self.run_install(preflight=True))
+                self.assertFalse(self.target.exists())
+                self.assert_no_scratch()
+
     def test_hash_mismatch_refuses_without_state(self):
         args = self.args()
         args.sha256 = "0" * 64

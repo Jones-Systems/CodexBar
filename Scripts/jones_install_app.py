@@ -393,8 +393,10 @@ def inspect_bundle(path, operations, expected_revision=None, allow_legacy=False)
     executable = path / "Contents/MacOS/CodexBar"
     require(executable.is_file() and not executable.is_symlink() and os.access(str(executable), os.X_OK),
             "executable", "Missing real executable with execute permission.")
-    require(operations.architectures(executable) == ["arm64"], "architecture",
-            "This local installer requires an arm64-only bundle.")
+    architectures = operations.architectures(executable)
+    require(len(architectures) == len(set(architectures))
+            and set(architectures) in ({"arm64"}, {"arm64", "x86_64"}), "architecture",
+            "This local installer requires arm64, optionally with the x86_64 slice.")
     widget = path / "Contents/PlugIns/CodexBarWidget.appex"
     widget_info = read_plist(widget / "Contents/Info.plist")
     widget_identity = dict(identity)
@@ -416,13 +418,14 @@ def inspect_bundle(path, operations, expected_revision=None, allow_legacy=False)
     require(widget_entitlements.get("com.apple.security.app-sandbox") is True
             and widget_entitlements == expected_widget,
             "entitlements", "Unexpected signed widget entitlements.")
-    require(operations.architectures(widget_binary) == ["arm64"],
-            "architecture", "This local installer requires an arm64-only widget.")
+    require(sorted(operations.architectures(widget_binary)) == sorted(architectures),
+            "architecture", "Widget architectures must match the app.")
     return {
         "identity": identity, "version": info["CFBundleShortVersionString"], "build": build,
         "revision": revision, "origin": info.get("JonesBuildOrigin"), "run": info.get("JonesBuildRun"),
         "channel": info.get("JonesUpdateChannel"), "legacy_build_135": legacy,
-        "architecture": "arm64", "seal": main_seal, "widget_seal": widget_seal,
+        # Keep the existing thin-arm64 record byte-compatible for retained-bundle recovery.
+        "architecture": "+".join(sorted(architectures)), "seal": main_seal, "widget_seal": widget_seal,
         "entitlements": main_entitlements, "widget_entitlements": widget_entitlements,
         "tree_sha256": tree_hash(path),
     }

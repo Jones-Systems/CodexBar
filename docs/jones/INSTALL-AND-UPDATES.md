@@ -7,7 +7,7 @@ installation, a working feed, or a public release. Keep the existing
 
 ## Candidate artifact and external verification
 
-The default bootstrap artifact is an **ad-hoc sealed, arm64, canonical-main CI bundle**.
+The default bootstrap artifact is an **ad-hoc sealed, universal ARM64/x86_64, canonical-main CI bundle**.
 It is for the separately authorized local Jones install. It is not a signed,
 notarized public distribution. PR artifacts and local builds are not eligible
 for this installer.
@@ -95,7 +95,11 @@ estimates, not reserved space or enforced quotas.
 The helper checks the archive hash before extraction, contained file/link
 layout, quarantine on the archive and bundle, the full identity tuple, strict
 deep code-signature verification, typed ad-hoc signature metadata, the resource
-seal and the arm64 app/widget executables. Required default ad-hoc metadata is:
+seal and matching app/widget architecture slices. ARM64 must be present, either
+alone for retained thin builds or alongside x86_64 for universal builds. Unknown,
+duplicate or mismatched slices are refused. Recovery records keep the existing
+`architecture=arm64` value for thin builds; universal builds record
+`architecture=arm64+x86_64`. Required default ad-hoc metadata is:
 
 | Field | Value |
 | --- | --- |
@@ -277,6 +281,25 @@ reported separately.
 
 ## Isolated native update proof
 
+The candidate uses GitHub's standard `macos-26-intel` runner and the existing
+universal packaging path. The 14 GB Intel runner provides more memory than the
+7 GB ARM64 runner without requiring a larger paid runner in this public
+repository. [GitHub runner specifications](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)
+The existing full Swift test shards remain on `macos-26` ARM64. Candidate
+admission keeps the same CPU, 3 GiB available-memory, normal-pressure and compiler
+limits. Its conservative additional allocation estimate includes 16 GiB for both
+build slices, 4 GiB scratch/artifacts, 2 GiB user caches and a 2 GiB reserve per
+filesystem (24 GiB when all share one device). Actual capacity is sampled before
+each serial command; these estimates reserve no resources.
+
+Every default ad-hoc candidate/harness Mach-O, including the unchanged Sparkle binaries, must contain
+exactly ARM64 and x86_64. Candidate provenance records those verified slices;
+missing or unknown slices fail qualification. Hosted resource and updater tests
+exercise the Intel slice. The native result records its host architecture, and
+the exact exported fixtures still require root-scheduled ARM64 execution before
+owner installation. Intel proof and ARM64 source tests do not establish that
+artifact's ARM64 updater behavior.
+
 Before archiving, candidate packaging probes both the app and bundled CLI with
 the source checkout denied by the sandbox. Its owned package scratch lives under
 the hosted runner's `RUNNER_TEMP`, outside that checkout, and is removed on
@@ -339,7 +362,14 @@ CB-SIGN-R1 adds `--signing-mode developer-id` to the installer. The default stay
 mode the candidate must explicitly seal `JonesSigningMode=developer-id`, team
 `2CUPSQS986`, and group `2CUPSQS986.com.jonessystems.codexbar`; app, widget,
 display name, state key, archive bounds, arm64, canonical-main provenance,
-monotonic build and hash requirements remain unchanged. The native adapter
+monotonic build and hash requirements remain unchanged. Explicit Developer ID
+packaging remains ARM64-only for Jones products; only binaries within the pinned
+Sparkle framework may retain its existing ARM64 or ARM64/x86_64 slices. No vendor
+bytes are thinned or rewritten. Missing, duplicate and unknown slices are refused.
+Selection comes from the validated explicit signing mode, never host architecture
+or untrusted artifact claims. Provenance reports the actual validated product
+slices separately from each Mach-O's actual slices; a universal Sparkle does not
+label an ARM64 Developer ID product universal. The native adapter
 requires strict/deep code verification, Developer ID authority chain, exact team,
 hardened runtime, secure timestamp, sealed resources, exact app/widget signed
 entitlements, matching unexpired embedded profiles, an accepted stapled ticket
@@ -375,11 +405,11 @@ The existing group manifests are extended in place; no new test module is added.
 | Group | Exact invocation | Added coverage |
 | --- | --- | --- |
 | `jones-update-metadata` | `python3 -B Scripts/test_jones_update_metadata.py` | Explicit production metadata; profiles/certificate/expiry; runtime/timestamp/resources; main-only dispatch; secret-free argv and cleanup success/failure/cancellation with fake operations |
-| `jones-candidate-artifact` | `python3 -B Scripts/test_jones_candidate_artifact.py` | Explicit signing mode, production metadata, dispatch SHA/workflow binding and held channel |
+| `jones-candidate-artifact` | `python3 -B Scripts/test_jones_candidate_artifact.py` | Explicit signing mode, production metadata, dispatch SHA/workflow binding, held channel, mode-specific architecture validation and archive-roundtrip reporting |
 | `jones-local-installer` | `python3 -B Scripts/test_jones_install_app.py` | Explicit adapter mode, legacy transition refusal before mutation, first-install preflight and held feed |
 | `jones-identity-overlay` | `bash Scripts/test_jones_identity_overlay.sh` | Production identity selection, release/identity-only mode and required profiles; retains original upstream hashes |
 | `jones-update-trust` | `bash Scripts/test.sh --filter JonesUpdateTrustPolicyTests` | Runtime production identity and channel hold; existing harness/feed trust cases |
-| `jones-update-harness` | `python3 -B Scripts/test_jones_update_harness.py` | Unchanged regression contract |
+| `jones-update-harness` | `python3 -B Scripts/test_jones_update_harness.py` | Universal app/vendor validation, host architecture reporting and existing six-scenario regression contract |
 
 `make check` and `make test` remain required and are delegated to hosted CI when
 local compiler execution is unavailable. The signing workflow's `source-checks`
