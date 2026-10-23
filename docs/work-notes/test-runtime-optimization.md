@@ -527,3 +527,193 @@ Contributors: root thread **Cross-Repo Tests Under 6:30**,
 `486fcff1-4c33-40b0-9a64-7f4aa4227ccc`, coordination; native subagent
 `codexbar_optimize`, implementation and local evidence, with no separately
 supplied T3 ID.
+
+## Default-off Linux input timestamp experiment
+
+This additive preparation starts from published `1795cbf98de48638d2561c4732876b0e381bcdb8`.
+The coordinator owns the existing manual cohort and any future publication or
+dispatch. Its three-dispatch budget is exhausted; this preparation grants no new
+campaign. No native source/test body, test selection, compiler flag or binary
+invocation changes are included.
+
+Coordinator-supplied warm evidence is retained under
+`/home/malcolmjones/test-runtime-portfolio-20261023/codexbar-linux-campaign-1795cbf/`:
+`warm-arm64-sanitized.log`, `warm-x64-sanitized.log` and
+`warm-linux-qualification.json`. The latter binds warm run `39952016772` to the
+exact published source and per-architecture seed cache entry, image, toolchain
+and dependency identities. ARM/x64 warm jobs took 507/568 seconds; release builds
+still took 362.09/382.69 seconds, debug builds 84.14/125.37 seconds, and the main
+Swift Testing runs about 10.11/13.31 seconds. Restore receipt windows were only
+4.53/5.03 seconds. The accepted framing also recorded seed jobs of 548/708 seconds
+and off jobs of 578/725 seconds. These complete jobs still miss 390 seconds.
+
+The saved warm logs show package-owned CQuickJS/Core/CLI release recompilation
+and Core/Linux-test debug recompilation, while cached dependency compilation is
+absent. Checkout input mtimes are the strongest current explanation, with medium
+confidence; they are not a proven cause or a predicted speedup. The earlier
+inventory estimate was 2,454 regular package inputs, about 35.94 MB, plus five
+contained test-source symlinks. The experiment must measure its own actual set.
+
+The manual option is `linux_timestamp_mode: off|record|replay`, default `off`.
+Ordinary CI forces `off`. `record` requires Linux `seed` and an exact key that was
+not already restored, so the qualified manifest can accompany a new cache entry.
+`replay` requires Linux `warm`, a verified exact restore and matching producer
+source. Untreated warm uses `off` against the same recorded seed entry. The CLI
+phase is `python3 Scripts/ci_swift_test_campaign.py linux-cache input-timestamps`;
+its existing JSON context carries the validated option. All standard SwiftPM
+release, debug-test and CLI smoke commands still execute unchanged.
+
+The bounded manifest is `.build/.codexbar-input-timestamps.json`. It covers the
+complete tracked `Package.swift`, `Package.resolved`, `Sources/`, `Tests/`,
+`TestsLinux/` and `TestsPlugin/` trees, including resources. These are the input
+roots of the inspected package manifest; they are bound in the receipt, not
+inferred from file extensions. Committed and index inventories must agree;
+new untracked inputs are rejected, including ignored files inside these roots.
+The checkout SHA must still match. Each entry records path, Git type/object,
+actual mode, content SHA256 and integer nanosecond mtime; symlinks additionally
+record their literal and contained target. Streaming content checks also verify
+the committed Git blob identity. Same-size edits cannot pass a timestamp match.
+
+Limits are 8,192 paths, 64 MiB input bytes, 4 MiB metadata and a sampled 20-second
+processing bound per phase. Metadata lives inside the existing 2 GiB cache
+envelope; existing storage reserves, cache keys, transfer limits and all guards
+remain. One temporary manifest of at most 4 MiB is written alongside the final
+file and atomically replaced; exact-name cleanup runs in `finally`. An interrupted
+hosted job retains uncertain diagnostics until its ephemeral runner is torn down.
+No shared cache, source content or external metadata directory is removed.
+
+Recording precedes the build; successful save admission rereads the entire input
+set and requires unchanged content, type/mode and mtimes through all producer
+commands before changing the manifest state to `qualified`. Replay verifies that
+complete qualified manifest, repeats the complete read-only snapshot and requires
+equal entries and fingerprints before its first timestamp update. It checks each
+input again while updating, then rechecks the complete result. File reads and updates
+use no-follow descriptors and checked directory ancestry. Contained direct
+symlinks receive link timestamps without following their leaf; absolute,
+escaping, chained or unsupported targets fail closed. File identity, size, mode,
+mtime and ctime checks detect observed read/replay races. Two reads are not an
+atomic filesystem snapshot: changes after the last pre-update observation can
+still fail after earlier files received timestamps. A failure after any
+attempted update records possible partial replay, attempted/applied counts and
+the last path, fails the treatment and preserves its manifest. There is no silent
+rollback or claim that a partially applied treatment is off.
+
+Receipts retain producer binding and manifest digest, before/after timestamp
+matching counts, input count/bytes, verification passes and elapsed processing
+time. Replay performs four bounded streaming passes; after-command validation
+adds one separately. The second pre-update scan adds at most 64 MiB of input reads
+and 8,192 input records; its cost is unmeasured and the shared 20-second phase guard
+is unchanged. Existing native `Build complete!` summaries and job-step durations
+remain the source for actual compiler/command walls; existing receipt windows
+are upper bounds. These records identify a candidate treatment, not cache
+authenticity, producer ownership or proven binary equivalence.
+
+Qualification requires a new frozen source and an authorized, causally matched
+record-seed → untreated-warm → replay-warm campaign, with identical architecture,
+image, toolchain, dependencies and macOS/group/shard controls. Missing manifests,
+existing immutable seed keys, native capabilities or matching identities fail
+the experiment rather than weakening its controls. No future dispatch is implied.
+
+## Native event-output admission repair
+
+The coordinator reported that seed run `39947460547`, job `120393602535`, failed
+before Swift started: `unsupported output destination override: --event-stream-output-path`.
+The first group returned 75 in 0.007 seconds; there were zero successful groups,
+one failed group and no timeout. Native support, execution/parity and cleanup
+remain unproved; the operator retains the original log/artifact. No retry or
+cancellation belongs to this lane.
+
+Source inspection traced the exact generated `run_group` command into
+`build_jobs.output_destinations`. The explicit event path is not registered and
+therefore reaches its unknown-output guard. The coordinator extended this lane's
+scope only for two registration lines in `Scripts/build_jobs.py`: both event
+flags become value options, and the output-path flag becomes a Swift output
+destination. Admission, storage, concurrency and hosted-runner guards stay intact.
+The three additive command fixtures exercise the actual generated private path,
+its independent low-space refusal, and unknown/unresolved/duplicate destination
+rejection. They retain the original failure as the cheap red-before seam.
+
+Collision evidence: open PRs 18/25/26/29/30 contain no compiler-helper/test-helper
+edits. PR29 head `c855bb563cab72e2f227936bb94c7947b696d8dd` has the identical
+compiler helper blob `849c836cd4f7271e009b2a769a4a331711aa8b72` as this branch;
+its workflow changes own only reset-capture preparation/upload/cleanup. Main
+`aa17d050e2e3d50e598c74f1aba20c6b272b0a02` has the same output parser and the
+separate hosted-runner exemption from merged PR28 (`a7d7c90`). That exemption is
+absent from the frozen manual source and is not imported by this repair. Open
+heads and the local helper blob were revalidated before the scope extension.
+
+The combined affected-check plan is the three new command fixtures against the
+unchanged helper, the exact registration repair, all 65 evidence tests, the 43
+existing compiler fixtures, the canonical path gate, and AST/YAML/diff checks.
+The coordinator granted one nonblocking shared-lock acquisition and an aggregate
+180-second envelope with fresh admission per serial group. Compiler-fixture
+scratch uses a secure task-owned child outside the Swift package, capped at a
+1 GiB estimate plus 4 GiB reserve, with exact cleanup/absence verification; logs
+and manifests are capped at 128 KiB. Native Swift and tool installation remain
+excluded. New input/race comments use `keep near code` for their containment and
+failure contracts.
+
+The first bounded check stopped after 3.736 seconds. The unchanged helper failed
+the two intended event-output fixtures while the unknown-output guard passed;
+after the exact registration, all three passed within the evidence suite. That
+suite reported 64/65 passes: the initial-scan race fixture expected zero timestamp
+attempts but observed two. Both enclosing fixture parents and external scratch
+were removed, process drain was proved and the mutex released. Compiler, path
+and static checks did not start. The original logs and source-bound receipt remain
+unchanged under `.t3/test-runtime-optimization/timestamp-event-20261023-*`.
+
+The accepted repair retains the zero-attempt assertion and makes its early race
+deterministic by normalizing only A.swift's observed ctime to its captured value.
+It still writes changed same-size bytes and restores the actual nanosecond mtime.
+The fixture records initial-snapshot/read ordinals and real versus observed
+fingerprints; this models limited metadata precision, not a diagnosis of this
+host's filesystem. The second full scan must catch that persistent mutation
+before replay. A new race during the second scan deliberately demonstrates the
+remaining observation boundary: fatal status, two attempted/applied Package
+updates, explicit possible partial replay, unchanged A.swift mtime, preserved
+changed bytes and retained manifest. The existing `(attempted, applied) = (2, 1)`
+update-error fixture remains unchanged. The focused repair/check producer is
+limited to one nonblocking mutex acquisition, 180 seconds, fresh admission per
+group and the same storage/cleanup bounds; new receipts have a seven-day retention
+bound. No commit, publication or dispatch is claimed.
+
+The repair/check producer completed in 8.664 seconds with enclosing exit status
+zero. Its deterministic pre-fix case failed in 0.019 seconds with injection at
+initial snapshot 1/read 1, equal observed fingerprints and `(attempted, applied)
+= (2, 2)`. The identical test bytes passed after the second-scan source fix with
+zero attempts. The early/late/update-error union passed all three cases in
+0.038 seconds, retaining the second-scan `(2, 2)` and update-error `(2, 1)`
+boundaries. These fixtures model ctime observation precision; they do not diagnose
+the original uninstrumented run's exact fingerprint values or host filesystem.
+
+On the cumulative candidate, the canonical evidence command
+`PYTHONDONTWRITEBYTECODE=1 ./Scripts/test.sh --command python3 Scripts/test_swift_test_evidence.py -v`
+passed all 66 tests in 1.060 seconds. With the unique external scratch as `TMPDIR`,
+`python3 -B Scripts/test_build_jobs.py` passed all 43 unchanged compiler fixtures
+in 0.702 seconds. The canonical
+`PYTHONDONTWRITEBYTECODE=1 ./Scripts/test.sh --command bash Scripts/test_ci_path_gate.sh`
+passed. No compiler/storage gate was bypassed. Python AST, PyYAML, exact workflow
+preservation, the exact two-line helper registration, five-path scope and
+`git diff --check` passed. All 49 evidence method bodies from `1795cbf` were
+unchanged. Removing only the accepted timestamp input/environment/step/context
+additions reproduced that revision's complete parsed workflow, including normal
+commands, groups/shards, cache limits, qualification steps and macOS/musl jobs.
+
+Six fresh samples admitted one serial process each: CPU 16.51–25.39%, available
+RAM 32.90–33.31 GiB and one core at 6.25% of capacity. The four enclosing fixture
+parents and unique external scratch were absent after cleanup; process drain was
+proved and the shared mutex released. New logs/receipts totaled 71.9 KiB before
+the final documentation/hash receipt, below the 128 KiB cap. There was no output
+truncation. Native Swift, `make test`, `make check`, macOS parameter parity and
+`actionlint` remain unavailable on this host; no installation or hosted dispatch
+was attempted. Native timing benefit and the 390-second target remain unproved.
+
+Receipts: `.t3/test-runtime-optimization/timestamp-second-scan-20261023-` with
+`red.log`, `race-green.log`, `evidence.log`, `compiler.log`, `path.log`, six
+admission JSON files and `receipt.json`. The latter binds exact commands, source
+hashes, real/observed fingerprints, cleanup and the 66-method manifest SHA256
+`3cef633faa4fe8dc1d820bdb1f32e8bfe82f30cec137f3612c29d87c71a857ca`.
+The evidence-file SHA256 remained
+`fbe37fefbfafbdd33e9b4c994db2eaa41a582bac0c89b255fede80d562497122`
+across red/green. Source publication and a new matched native campaign remain
+coordinator-owned next steps, requiring their separate checkpoint grant.

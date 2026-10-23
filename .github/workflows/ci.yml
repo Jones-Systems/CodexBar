@@ -35,6 +35,12 @@ on:
         type: choice
         options: ['off', seed, warm]
         default: 'off'
+      linux_timestamp_mode:
+        description: Experimental Linux inputs; record with seed, replay with exact warm, off leaves timestamps alone
+        required: true
+        type: choice
+        options: ['off', record, replay]
+        default: 'off'
 
 concurrency:
   group: ${{ github.event_name == 'workflow_dispatch' && format('ci-manual-{0}-{1}-{2}-{3}', github.workflow, github.ref, github.run_id, github.run_attempt) || format('ci-{0}-{1}', github.workflow, github.ref) }}
@@ -70,6 +76,7 @@ jobs:
           CAMPAIGN_EXPECTED_SHA: ${{ inputs.expected_sha }}
           CAMPAIGN_CACHE_MODE: ${{ inputs.cache_mode }}
           LINUX_CACHE_MODE: ${{ inputs.linux_cache_mode || 'off' }}
+          LINUX_TIMESTAMP_MODE: ${{ inputs.linux_timestamp_mode || 'off' }}
         run: python3 Scripts/ci_swift_test_campaign.py plan
 
       - name: Detect macOS test impact
@@ -550,6 +557,7 @@ jobs:
       CAMPAIGN_SHARD_COUNT: ${{ inputs.shard_count }}
       CAMPAIGN_CACHE_MODE: ${{ inputs.cache_mode }}
       LINUX_CACHE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.linux_cache_mode || 'auto' }}
+      LINUX_TIMESTAMP_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.linux_timestamp_mode || 'off' }}
       LINUX_RUNNER_LABEL: ${{ matrix.runs-on }}
       LINUX_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
     steps:
@@ -679,6 +687,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: python3 Scripts/ci_swift_test_campaign.py linux-cache after-restore
 
+      - name: Prepare experimental Linux input timestamps
+        id: linux-input-timestamps
+        if: ${{ env.LINUX_TIMESTAMP_MODE != 'off' }}
+        timeout-minutes: 1
+        env:
+          LINUX_CACHE_CONTEXT: ${{ steps.linux-cache-restored.outputs.context || steps.linux-cache-approve.outputs.context || steps.linux-cache-plan.outputs.context }}
+        run: python3 Scripts/ci_swift_test_campaign.py linux-cache input-timestamps
+
       - name: Observe Linux build storage before release
         id: linux-before-release
         env:
@@ -728,7 +744,7 @@ jobs:
         if: ${{ always() && steps.linux-cache-source.outputs.context != '' }}
         timeout-minutes: 1
         env:
-          LINUX_CACHE_CONTEXT: ${{ steps.linux-cache-restored.outputs.context || steps.linux-cache-approve.outputs.context || steps.linux-cache-plan.outputs.context || steps.linux-cache-source.outputs.context }}
+          LINUX_CACHE_CONTEXT: ${{ steps.linux-input-timestamps.outputs.context || steps.linux-cache-restored.outputs.context || steps.linux-cache-approve.outputs.context || steps.linux-cache-plan.outputs.context || steps.linux-cache-source.outputs.context }}
           LINUX_RELEASE_OUTCOME: ${{ steps.linux-release.outcome }}
           LINUX_TESTS_OUTCOME: ${{ steps.linux-tests.outcome }}
           LINUX_SMOKE_OUTCOME: ${{ steps.linux-smoke.outcome }}

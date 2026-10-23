@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
-"""Validate manual campaign inputs and native receipts without dispatching work."""
+"""Validate campaign receipts and run explicit Linux cache/input-timestamp phases."""
 
 from __future__ import annotations
 
 import argparse
 from collections import Counter
+import contextlib
 import hashlib
 import json
 import os
 from pathlib import Path
 import re
+import selectors
 import shutil
 import stat
 import subprocess
@@ -19,6 +21,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
 
 
 ENV_KEY = "CODEXBAR_TEST_EVIDENCE_DIR"
@@ -33,6 +36,12 @@ LINUX_SCAN_SECONDS = 10
 LINUX_METADATA_BYTES = 256 * 1024
 FIXTURE_PREFIXES = (".test-fixtures-", ".swift-test-evidence-", ".test-sharding.", ".test-campaign-",
                     ".test-storage-", ".test-linux-cache-")
+LINUX_INPUT_ROOTS = ("Package.swift", "Package.resolved", "Sources", "Tests", "TestsLinux", "TestsPlugin")
+LINUX_INPUT_PATHS = 8192
+LINUX_INPUT_BYTES = 64 * 1024 ** 2
+LINUX_INPUT_METADATA_BYTES = 4 * 1024 ** 2
+LINUX_INPUT_SECONDS = 20
+LINUX_INPUT_MANIFEST = ".codexbar-input-timestamps.json"
 
 
 def require(condition, message):
@@ -49,7 +58,7 @@ def digest(values):
 
 
 def resolve_plan(event, group_size="", shard_count="", expected_sha="", source_sha="", cache_mode="",
-                 linux_cache_mode="off"):
+                 linux_cache_mode="off", linux_timestamp_mode="off"):
     if event != "workflow_dispatch":
         group_size, shard_count, cache_mode = "4", "2", "ordinary"
     else:
@@ -57,6 +66,10 @@ def resolve_plan(event, group_size="", shard_count="", expected_sha="", source_s
         require(shard_count in ("1", "2", "3"), "shard_count must be 1, 2 or 3")
         require(cache_mode in ("seed", "warm", "cold"), "cache_mode must be seed, warm or cold")
         require(linux_cache_mode in ("off", "seed", "warm"), "linux_cache_mode must be off, seed or warm")
+        require(linux_timestamp_mode in ("off", "record", "replay"), "unknown Linux timestamp mode")
+        require(linux_timestamp_mode == "off" or
+                (linux_timestamp_mode, linux_cache_mode) in (("record", "seed"), ("replay", "warm")),
+                "timestamp record requires Linux seed; replay requires Linux warm")
         require(re.fullmatch("[0-9a-f]{40}", expected_sha or ""), "expected_sha must be an exact lowercase commit")
         require(expected_sha == source_sha, "expected_sha differs from the checkout")
     return {"include": [
@@ -534,11 +547,12 @@ def compare(baseline, candidate):
 def linux_cache_source(environment, checkout_sha):
     manual = environment.get("GITHUB_EVENT_NAME") == "workflow_dispatch"
     mode = environment.get("LINUX_CACHE_MODE", "off") if manual else "auto"
+    timestamps = environment.get("LINUX_TIMESTAMP_MODE", "off") if manual else "off"
     expected = environment.get("CAMPAIGN_EXPECTED_SHA", "")
     if manual:
         resolve_plan("workflow_dispatch", environment.get("CAMPAIGN_GROUP_SIZE", ""),
                      environment.get("CAMPAIGN_SHARD_COUNT", ""), expected, checkout_sha,
-                     environment.get("CAMPAIGN_CACHE_MODE", ""), mode)
+                     environment.get("CAMPAIGN_CACHE_MODE", ""), mode, timestamps)
         require(checkout_sha == environment.get("GITHUB_SHA"), "manual Linux checkout differs from event SHA")
     return {
         "schema": "codexbar.linux-build-cache/v1", "phase": "source", "actual_sha": checkout_sha,
@@ -546,6 +560,7 @@ def linux_cache_source(environment, checkout_sha):
         "event": environment.get("GITHUB_EVENT_NAME", ""), "run_id": environment.get("GITHUB_RUN_ID", ""),
         "run_attempt": environment.get("GITHUB_RUN_ATTEMPT", ""), "ref": environment.get("GITHUB_REF", ""),
         "repository": environment.get("GITHUB_REPOSITORY", ""), "linux_cache_mode": mode,
+        "linux_timestamp_mode": timestamps,
         "macos_cache_mode": environment.get("CAMPAIGN_CACHE_MODE", "") if manual else "ordinary",
         "group_size": int(environment["CAMPAIGN_GROUP_SIZE"]) if manual else 4,
         "shard_count": int(environment["CAMPAIGN_SHARD_COUNT"]) if manual else 2,
@@ -791,6 +806,361 @@ def linux_after_restore(context, environment, metadata_reader=None):
     return context
 
 
+def linux_input_deadline(deadline):
+    require(time.monotonic() <= deadline, "input metadata processing exceeded time bound")
+
+
+def linux_input_git(workspace, arguments, deadline):
+    """Bound Git's metadata pipe; no hooks, text conversion, or external diff is requested."""
+    command = ["git", "-c", "core.fsmonitor=false", "-C", str(workspace), *arguments]
+    output = bytearray()
+    with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process:
+        try:
+            with selectors.DefaultSelector() as selector:
+                selector.register(process.stdout, selectors.EVENT_READ)
+                while True:
+                    linux_input_deadline(deadline)
+                    require(selector.select(max(0, deadline - time.monotonic())), "input Git read timed out")
+                    block = os.read(process.stdout.fileno(), 65536)
+                    if not block:
+                        break
+                    output.extend(block)
+                    require(len(output) <= LINUX_INPUT_METADATA_BYTES, "input Git inventory exceeded byte bound")
+            require(process.wait(timeout=max(0.001, deadline - time.monotonic())) == 0, "input Git read failed")
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+    return bytes(output)
+
+
+def linux_input_inventory(workspace, source, deadline):
+    require(linux_input_git(workspace, ["rev-parse", "HEAD"], deadline).decode().strip() == source,
+            "input checkout source changed")
+    committed = linux_input_git(workspace, ["ls-tree", "-r", "-z", "--full-tree", source,
+                                           "--", *LINUX_INPUT_ROOTS], deadline)
+    indexed = linux_input_git(workspace, ["ls-files", "--stage", "--cached", "--others",
+                                         "-z", "--", *LINUX_INPUT_ROOTS], deadline)
+
+    def parse(raw, tree):
+        require(raw.endswith(b"\0"), "missing or unterminated input inventory")
+        records = []
+        for line in raw[:-1].split(b"\0"):
+            header, path = line.split(b"\t", 1)
+            fields = header.decode("ascii").split(" ")
+            require(len(fields) == 3 and fields[0] in ("100644", "100755", "120000"),
+                    "untracked, conflicted or unsupported input")
+            require(fields[1 if tree else 2] == ("blob" if tree else "0"), "non-file or conflicted input")
+            oid = fields[2 if tree else 1]
+            require(re.fullmatch("[0-9a-f]{40}", oid), "unsupported input object identity")
+            records.append({"path": path.decode("utf-8"), "git_mode": fields[0], "git_oid": oid})
+        records.sort(key=lambda item: item["path"])
+        require(0 < len(records) <= LINUX_INPUT_PATHS
+                and len({item["path"] for item in records}) == len(records), "input count or uniqueness failed")
+        return records
+
+    records = parse(committed, True)
+    require(records == parse(indexed, False), "complete input set/index differs from committed source")
+    return records
+
+
+def linux_input_parts(path):
+    require(isinstance(path, str) and 0 < len(path.encode()) <= 4096, "invalid input path length")
+    parts = path.split("/")
+    require(all(part and part not in (".", "..", ".git", ".build") and "\0" not in part
+                and not part.startswith(FIXTURE_PREFIXES) for part in parts), "input path leaves containment")
+    return parts
+
+
+def linux_input_fingerprint(info):
+    return (info.st_dev, info.st_ino, info.st_mode, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+
+
+@contextlib.contextmanager
+def linux_input_parent(root_fd, path):
+    parts = linux_input_parts(path)
+    with contextlib.ExitStack() as stack:
+        current = root_fd
+        chain = []
+        for part in parts[:-1]:
+            child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=current)
+            stack.callback(os.close, child)
+            chain.append((current, part, child))
+            current = child
+
+        def check():
+            for parent, name, child in chain:
+                observed = os.stat(name, dir_fd=parent, follow_symlinks=False)
+                opened = os.fstat(child)
+                require(stat.S_ISDIR(observed.st_mode)
+                        and (observed.st_dev, observed.st_ino) == (opened.st_dev, opened.st_ino),
+                        "input ancestor changed during processing")
+
+        check()
+        yield current, parts[-1], check
+        check()
+
+
+def linux_input_link(root_fd, path, text):
+    require(text and not text.startswith("/") and len(text.encode()) <= 4096, "unsupported input symlink target")
+    target = path.split("/")[:-1]
+    for part in text.split("/"):
+        if part in ("", "."):
+            continue
+        if part == "..":
+            require(target, "input symlink escapes checkout")
+            target.pop()
+        else:
+            target.append(part)
+    resolved = "/".join(target)
+    linux_input_parts(resolved)
+    with linux_input_parent(root_fd, resolved) as (parent, name, check):
+        info = os.stat(name, dir_fd=parent, follow_symlinks=False)
+        require(stat.S_ISREG(info.st_mode) or stat.S_ISDIR(info.st_mode),
+                "input symlink target is missing, chained or unsupported")
+        check()
+    return resolved
+
+
+def linux_input_content(entry):
+    return {key: value for key, value in entry.items() if key != "mtime_ns"}
+
+
+def linux_input_update(descriptor, parent, name, current, mtime_ns):
+    # Descriptor/no-follow updates never traverse the leaf symlink. A race is a failed treatment.
+    if descriptor is not None:
+        os.utime(descriptor, ns=(current.st_atime_ns, mtime_ns))
+    else:
+        os.utime(name, ns=(current.st_atime_ns, mtime_ns), dir_fd=parent, follow_symlinks=False)
+
+
+def linux_input_visit(root_fd, item, deadline, remaining, expected=None, fingerprint=None, progress=None):
+    linux_input_deadline(deadline)
+    with linux_input_parent(root_fd, item["path"]) as (parent, name, check), contextlib.ExitStack() as stack:
+        before = os.stat(name, dir_fd=parent, follow_symlinks=False)
+        before_id = linux_input_fingerprint(before)
+        require(fingerprint is None or before_id == fingerprint, "input changed after complete verification")
+        require(0 <= before.st_size <= remaining, "input content exceeded byte bound")
+        entry = {**item, "mode": stat.S_IMODE(before.st_mode), "size": before.st_size,
+                 "mtime_ns": before.st_mtime_ns}
+        blob = hashlib.sha1(f"blob {before.st_size}\0".encode())
+        digest = hashlib.sha256()
+        descriptor = None
+        if stat.S_ISREG(before.st_mode) and item["git_mode"] in ("100644", "100755"):
+            require(bool(before.st_mode & 0o111) == (item["git_mode"] == "100755"),
+                    "input executable mode differs from committed source")
+            descriptor = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
+            stack.callback(os.close, descriptor)
+            require(linux_input_fingerprint(os.fstat(descriptor)) == before_id, "input replaced while opening")
+            total = 0
+            while True:
+                linux_input_deadline(deadline)
+                block = os.read(descriptor, 65536)
+                if not block:
+                    break
+                total += len(block)
+                require(total <= before.st_size, "input grew while hashing")
+                blob.update(block)
+                digest.update(block)
+            require(total == before.st_size and linux_input_fingerprint(os.fstat(descriptor)) == before_id,
+                    "input changed while hashing")
+            entry["type"] = "file"
+        elif stat.S_ISLNK(before.st_mode) and item["git_mode"] == "120000":
+            text = os.readlink(name, dir_fd=parent)
+            data = os.fsencode(text)
+            require(len(data) == before.st_size, "input symlink changed while reading")
+            blob.update(data)
+            digest.update(data)
+            entry.update(type="symlink", target=text, contained_target=linux_input_link(root_fd, item["path"], text))
+        else:
+            raise ValueError("input type differs from committed file/symlink")
+        entry["sha256"] = digest.hexdigest()
+        require(blob.hexdigest() == item["git_oid"], "input content differs from committed source")
+        require(linux_input_fingerprint(os.stat(name, dir_fd=parent, follow_symlinks=False)) == before_id,
+                "input replaced while verifying")
+        check()
+        if expected is not None:
+            require(linux_input_content(entry) == linux_input_content(expected), "input content/type/mode changed")
+            if entry["mtime_ns"] != expected["mtime_ns"]:
+                linux_input_deadline(deadline)
+                progress.update(attempted=progress["attempted"] + 1, last_path=item["path"])
+                current = os.fstat(descriptor) if descriptor is not None else before
+                linux_input_update(descriptor, parent, name, current, expected["mtime_ns"])
+                after = os.stat(name, dir_fd=parent, follow_symlinks=False)
+                require((after.st_dev, after.st_ino, after.st_mode, after.st_size) == before_id[:4]
+                        and after.st_mtime_ns == expected["mtime_ns"], "input timestamp update was not exact")
+                check()
+                progress["applied"] += 1
+        return entry, before_id
+
+
+def linux_input_snapshot(workspace, context, deadline, inventory_reader=None):
+    reader = inventory_reader or linux_input_inventory
+    inventory = reader(workspace, context["actual_sha"], deadline)
+    require(0 < len(inventory) <= LINUX_INPUT_PATHS, "input count exceeds bound")
+    entries, fingerprints, total = [], {}, 0
+    root_fd = os.open(workspace, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        for item in inventory:
+            entry, fingerprint = linux_input_visit(root_fd, item, deadline, LINUX_INPUT_BYTES - total)
+            total += entry["size"]
+            entries.append(entry)
+            fingerprints[item["path"]] = fingerprint
+        require(inventory == reader(workspace, context["actual_sha"], deadline), "input inventory changed during scan")
+        linux_input_deadline(deadline)
+        return entries, fingerprints
+    finally:
+        os.close(root_fd)
+
+
+@contextlib.contextmanager
+def linux_input_build_fd(workspace, create=False):
+    root = os.open(workspace, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        if create:
+            try:
+                os.mkdir(".build", dir_fd=root)
+            except FileExistsError:
+                pass
+        build = os.open(".build", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root)
+        try:
+            yield build
+        finally:
+            os.close(build)
+    finally:
+        os.close(root)
+
+
+def linux_input_manifest(workspace, value=None):
+    with linux_input_build_fd(workspace, create=value is not None) as build:
+        if value is None:
+            descriptor = os.open(LINUX_INPUT_MANIFEST, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=build)
+            with os.fdopen(descriptor, "rb") as stream:
+                before = os.fstat(stream.fileno())
+                require(stat.S_ISREG(before.st_mode) and before.st_size <= LINUX_INPUT_METADATA_BYTES,
+                        "input manifest is not a bounded regular file")
+                data = stream.read(LINUX_INPUT_METADATA_BYTES + 1)
+                require(linux_input_fingerprint(before) == linux_input_fingerprint(os.fstat(stream.fileno())),
+                        "input manifest changed while reading")
+            require(len(data) <= LINUX_INPUT_METADATA_BYTES, "input manifest exceeded byte bound")
+            value = json.loads(data)
+        else:
+            data = (encode(value) + "\n").encode()
+            require(len(data) <= LINUX_INPUT_METADATA_BYTES, "input manifest exceeded byte bound")
+            temporary = ".codexbar-input-timestamps-" + uuid.uuid4().hex
+            try:
+                descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                                     0o600, dir_fd=build)
+                with os.fdopen(descriptor, "wb") as stream:
+                    stream.write(data)
+                    stream.flush()
+                    os.fsync(stream.fileno())
+                os.replace(temporary, LINUX_INPUT_MANIFEST, src_dir_fd=build, dst_dir_fd=build)
+            finally:
+                try:
+                    os.unlink(temporary, dir_fd=build)
+                except FileNotFoundError:
+                    pass
+    return value, hashlib.sha256(data).hexdigest(), len(data)
+
+
+def linux_input_binding(context):
+    return {key: context[key] for key in ("actual_sha", "requested_key", "identity_hashes")}
+
+
+def linux_input_validate_manifest(manifest, context, state):
+    require(isinstance(manifest, dict) and manifest.get("schema") == "codexbar.linux-input-timestamps/v1"
+            and manifest.get("state") == state and manifest.get("roots") == list(LINUX_INPUT_ROOTS)
+            and manifest.get("binding") == linux_input_binding(context), "input manifest source/state/binding differs")
+    entries = manifest.get("entries")
+    require(isinstance(entries, list) and 0 < len(entries) <= LINUX_INPUT_PATHS
+            and all(isinstance(entry, dict) and type(entry.get("mtime_ns")) is int
+                    and 0 <= entry["mtime_ns"] < 2 ** 63 for entry in entries), "invalid input timestamp entries")
+    producer = manifest.get("producer", {})
+    require(all(isinstance(producer.get(key), str) and producer[key] for key in ("run_id", "run_attempt", "ref")),
+            "input producer identity unavailable")
+    return entries
+
+
+def linux_input_timestamps(context, environment, inventory_reader=None):
+    mode = context.get("linux_timestamp_mode", "off")
+    if mode == "off":
+        return context
+    started = time.monotonic()
+    deadline = started + LINUX_INPUT_SECONDS
+    receipt = context["input_timestamps"] = {"mode": mode, "status": "unavailable", "attempted": 0, "applied": 0,
+        "input_byte_limit": LINUX_INPUT_BYTES, "path_limit": LINUX_INPUT_PATHS,
+        "metadata_byte_limit": LINUX_INPUT_METADATA_BYTES, "time_limit_seconds": LINUX_INPUT_SECONDS}
+    try:
+        require(context["event"] == "workflow_dispatch" and environment.get("RUNNER_OS") == "Linux"
+                and context["enabled"] and not context.get("fatal"), "timestamp treatment was not admitted")
+        workspace, _ = linux_directories(environment)
+        if mode == "record":
+            require(context["linux_cache_mode"] == "seed" and not context.get("restored_exact"),
+                    "timestamp seed must be able to publish a new exact cache entry")
+            entries, _ = linux_input_snapshot(workspace, context, deadline, inventory_reader)
+            manifest = {"schema": "codexbar.linux-input-timestamps/v1", "state": "before-build",
+                "roots": list(LINUX_INPUT_ROOTS), "binding": linux_input_binding(context), "entries": entries,
+                "producer": {key: context[key] for key in ("run_id", "run_attempt", "ref")}}
+            _, digest, size = linux_input_manifest(workspace, manifest)
+            receipt.update(status="recorded-before-build", manifest_sha256=digest, manifest_bytes=size,
+                           before_matching=len(entries), verification_passes=1)
+        else:
+            require(mode == "replay" and context["linux_cache_mode"] == "warm" and context.get("restored_exact")
+                    and context.get("restored") and context.get("producer_source") == context["actual_sha"],
+                    "timestamp replay requires a verified exact-source warm restore")
+            require(os.utime in os.supports_fd and os.utime in os.supports_follow_symlinks,
+                    "native nanosecond/no-follow timestamp capability is unavailable")
+            manifest, digest, size = linux_input_manifest(workspace)
+            expected = linux_input_validate_manifest(manifest, context, "qualified")
+            entries, fingerprints = linux_input_snapshot(workspace, context, deadline, inventory_reader)
+            require([linux_input_content(item) for item in entries] == [linux_input_content(item) for item in expected],
+                    "complete input manifest differs before replay")
+            # A second content read detects persistent writes hidden by metadata observation precision.
+            confirmed, confirmed_fingerprints = linux_input_snapshot(workspace, context, deadline, inventory_reader)
+            require(confirmed == entries and confirmed_fingerprints == fingerprints,
+                    "input changed between complete pre-replay scans")
+            receipt.update(manifest_sha256=digest, manifest_bytes=size, producer=manifest["producer"],
+                           before_matching=sum(a["mtime_ns"] == b["mtime_ns"] for a, b in zip(entries, expected)))
+            root = os.open(workspace, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+            try:
+                for current, saved in zip(entries, expected):
+                    item = {key: current[key] for key in ("path", "git_mode", "git_oid")}
+                    linux_input_visit(root, item, deadline, LINUX_INPUT_BYTES, saved,
+                                      fingerprints[item["path"]], receipt)
+            finally:
+                os.close(root)
+            verified, _ = linux_input_snapshot(workspace, context, deadline, inventory_reader)
+            require(verified == expected, "input contents/timestamps changed during replay")
+            receipt.update(status="replayed-and-verified", after_matching=len(verified), verification_passes=4)
+        receipt.update(input_count=len(entries), input_bytes=sum(item["size"] for item in entries))
+        linux_input_deadline(deadline)
+    except (OSError, ValueError, KeyError, TypeError, RuntimeError, subprocess.SubprocessError) as error:
+        receipt.update(status="failed", reason=str(error), partial_replay_possible=receipt["attempted"] > 0)
+        context.update(fatal=True, refusal="input timestamp treatment failed")
+    receipt["elapsed_seconds"] = round(time.monotonic() - started, 6)
+    return context
+
+
+def linux_input_after_build(context, environment, inventory_reader=None):
+    mode = context.get("linux_timestamp_mode", "off")
+    if mode == "off":
+        return
+    started = time.monotonic()
+    workspace, _ = linux_directories(environment)
+    manifest, digest, _ = linux_input_manifest(workspace)
+    expected = linux_input_validate_manifest(manifest, context, "before-build" if mode == "record" else "qualified")
+    require(digest == context["input_timestamps"]["manifest_sha256"], "input manifest changed during native commands")
+    entries, _ = linux_input_snapshot(workspace, context, started + LINUX_INPUT_SECONDS, inventory_reader)
+    require(entries == expected, "producer/native build changed input contents, modes, set or timestamps")
+    if mode == "record":
+        manifest["state"] = "qualified"
+        _, digest, size = linux_input_manifest(workspace, manifest)
+        context["input_timestamps"].update(manifest_sha256=digest, manifest_bytes=size, status="qualified-after-build")
+    context["input_timestamps"].update(after_build_matching=len(entries),
+                                      after_build_seconds=round(time.monotonic() - started, 6))
+
+
 def linux_before_save(context, environment):
     context["save"] = False
     context["command_outcomes"] = {name: environment.get("LINUX_" + name.upper() + "_OUTCOME", "unknown")
@@ -813,14 +1183,17 @@ def linux_before_save(context, environment):
                 "qualification command did not pass")
         workspace, staging = linux_directories(environment)
         require(linux_dependencies(workspace) == context["dependencies"], "dependency manifests changed during build")
+        linux_input_after_build(context, environment)
         context.update(scan_before_save=linux_build_scan(workspace),
                        storage_before_save=linux_storage(workspace, staging))
         require(context["scan_before_save"]["complete"] and context["scan_before_save"]["exists"]
                 and context["storage_before_save"]["eligible"], "save scan/storage admission refused")
         context["save"] = not context.get("restored_exact", False)
         context["save_disposition"] = "eligible" if context["save"] else "exact-key-already-restored"
-    except (OSError, ValueError, KeyError, TypeError) as error:
+    except (OSError, ValueError, KeyError, TypeError, RuntimeError, subprocess.SubprocessError) as error:
         context["save_disposition"] = str(error)
+        if context.get("linux_timestamp_mode", "off") != "off":
+            context.update(fatal=True, refusal="timestamp treatment did not qualify after native commands")
     return context
 
 
@@ -854,7 +1227,8 @@ def linux_cache_command(args, environment):
                 and context["run_attempt"] == environment["GITHUB_RUN_ATTEMPT"]
                 and context["ref"] == environment["GITHUB_REF"], "cache receipt owner changed")
         handlers = {"plan": linux_cache_plan, "approve-restore": linux_approve_restore,
-                    "after-restore": linux_after_restore, "before-save": linux_before_save,
+                    "after-restore": linux_after_restore, "input-timestamps": linux_input_timestamps,
+                    "before-save": linux_before_save,
                     "after-save": linux_after_save}
         context = handlers[args.phase](context, environment)
     context["phase"] = args.phase
@@ -946,7 +1320,7 @@ def main():
     measure_parser.add_argument("--step-times", action="store_true")
     linux_parser = commands.add_parser("linux-cache")
     linux_parser.add_argument("phase", choices=("source", "plan", "approve-restore", "after-restore",
-                                               "before-save", "after-save"))
+                                               "input-timestamps", "before-save", "after-save"))
     linux_parser.add_argument("--checkout-sha")
     compare_parser = commands.add_parser("compare")
     compare_parser.add_argument("--baseline", type=Path, nargs="+", required=True)
@@ -958,7 +1332,7 @@ def main():
             matrix = resolve_plan(env["GITHUB_EVENT_NAME"], env.get("CAMPAIGN_GROUP_SIZE", ""),
                                   env.get("CAMPAIGN_SHARD_COUNT", ""), env.get("CAMPAIGN_EXPECTED_SHA", ""),
                                   env["GITHUB_SHA"], env.get("CAMPAIGN_CACHE_MODE", ""),
-                                  env.get("LINUX_CACHE_MODE", "off"))
+                                  env.get("LINUX_CACHE_MODE", "off"), env.get("LINUX_TIMESTAMP_MODE", "off"))
             with open(env["GITHUB_OUTPUT"], "a") as output:
                 output.write("matrix=" + encode(matrix) + "\n")
             print(encode(matrix))

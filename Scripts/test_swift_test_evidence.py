@@ -322,6 +322,59 @@ class NativeOutcomeTests(unittest.TestCase):
 
 
 class CampaignCaptureTests(unittest.TestCase):
+    def test_native_event_stream_command_keeps_private_destination_in_compiler_admission(self):
+        selection = runner.TestSelection("CodexBarTests.Legacy", r"^CodexBarTests\.Legacy/")
+        jobs = runner.build_jobs
+        with capture_fixture() as (capture, _):
+            def invoke(command, *, timeout, stdout, stderr):
+                self.assertEqual(timeout, 120)
+                self.assertEqual(command[:6], ["swift", "test", "--skip-build", "--no-parallel", "--filter",
+                                              runner.filter_for([selection])])
+                normalized, limit = jobs.normalize(command[1:], "swift", {})
+                self.assertEqual(normalized, command[1:])
+                self.assertEqual(limit, jobs.MAX_JOBS)
+                output = Path(command[command.index("--event-stream-output-path") + 1])
+                self.assertEqual(output.parent, capture.root / "0001-first")
+                self.assertTrue(output.is_relative_to(capture.root))
+                self.assertIn(output, jobs.output_destinations(normalized, "swift", {}))
+                output.write_text(native_stream())
+                stdout.write(xctest_console())
+                return 0
+            with patch.object(runner, "_campaign", capture), patch.object(runner, "run_command", side_effect=invoke), \
+                    contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(runner.run_group([selection], 120, ["swift"]), 0)
+
+    def test_native_event_stream_destination_still_requires_its_storage_reserve(self):
+        jobs = runner.build_jobs
+        with capture_fixture() as (capture, _):
+            attempt = capture.begin_attempt("first")
+            output = attempt / "swift-testing.jsonl"
+            command = ["test", "--skip-build", "--no-parallel", "--filter", "^Synthetic/",
+                       "--event-stream-version", "0", "--event-stream-output-path", str(output)]
+            seen = []
+            def counters(path):
+                seen.append(path)
+                return SimpleNamespace(f_bavail=jobs.RESERVE_BYTES + jobs.PEAK_BYTES - int(path == attempt),
+                                       f_frsize=1)
+            with patch.object(jobs, "existing_output_ancestor", side_effect=lambda path:
+                              attempt if path == output else capture.root), \
+                    patch.object(jobs.os, "statvfs", side_effect=counters), \
+                    contextlib.redirect_stderr(io.StringIO()), \
+                    self.assertRaisesRegex(jobs.AdmissionError, "insufficient storage"):
+                jobs.admit_storage(command, "swift", {})
+            self.assertIn(attempt, seen)
+            self.assertFalse(output.exists())
+            capture.end_attempt(attempt)
+
+    def test_native_event_registration_does_not_admit_arbitrary_or_ambiguous_outputs(self):
+        jobs = runner.build_jobs
+        variants = [["--unknown-event-output-path", "elsewhere"], ["--event-stream-output-path", "~/outside"],
+                    ["--event-stream-output-path", "$(ROOT)/output"], ["--event-stream-output-path="],
+                    ["--event-stream-output-path=a", "--event-stream-output-path=b"]]
+        for arguments in variants:
+            with self.subTest(arguments=arguments), self.assertRaises(jobs.AdmissionError):
+                jobs.output_destinations(["test", *arguments], "swift", {})
+
     def test_capture_rejects_partial_selection_changed_policy_and_non_native_route(self):
         with capture_fixture() as (capture, _), patch.object(sys, "argv", [
                 "runner", "--group-size", "4", "--shard-count", "1", "--shard-index", "0",
@@ -958,6 +1011,329 @@ class LinuxCacheTests(unittest.TestCase):
         self.assertIn("run: ./Scripts/test.sh --command swift test --parallel", linux)
         self.assertIn("steps.linux-cache-restore.outcome", linux)
         self.assertIn("linux-cache after-save", linux)
+
+
+@contextlib.contextmanager
+def linux_timestamp_fixture(qualify=True):
+    with linux_cache_fixture("seed") as (workspace, env, context):
+        (workspace / "Sources").mkdir()
+        (workspace / "Sources/A.swift").write_bytes(b"let a = 1\n")
+        (workspace / "Sources/B.swift").write_bytes(b"let b = 2\n")
+        (workspace / "Sources/link.swift").symlink_to("A.swift")
+        inventory = []
+        for index, path in enumerate(("Package.resolved", "Package.swift", "Sources/A.swift",
+                                      "Sources/B.swift", "Sources/link.swift")):
+            target = workspace / path
+            symlink = target.is_symlink()
+            data = os.fsencode(os.readlink(target)) if symlink else target.read_bytes()
+            inventory.append({"path": path, "git_mode": "120000" if symlink else "100644",
+                              "git_oid": hashlib.sha1(f"blob {len(data)}\0".encode() + data).hexdigest()})
+            stamp = 1700000000123456789 + index
+            os.utime(target, ns=(stamp, stamp), follow_symlinks=False)
+        reader = lambda *_args: copy.deepcopy(inventory)
+        context["linux_timestamp_mode"] = "record"
+        campaign.linux_input_timestamps(context, env, reader)
+        if context.get("fatal"):
+            raise AssertionError(context["input_timestamps"])
+        if qualify:
+            campaign.linux_input_after_build(context, env, reader)
+        yield workspace, env, context, inventory, reader
+
+
+def linux_timestamp_warm(workspace, context):
+    warm = {**copy.deepcopy(context), "linux_cache_mode": "warm", "linux_timestamp_mode": "replay",
+            "restored": True, "restored_exact": True, "producer_source": SHA}
+    manifest, _, _ = campaign.linux_input_manifest(workspace)
+    for item in manifest["entries"]:
+        path = workspace / item["path"]
+        stamp = item["mtime_ns"] + 5000000007
+        os.utime(path, ns=(stamp, stamp), follow_symlinks=False)
+    return warm, manifest
+
+
+@contextlib.contextmanager
+def linux_timestamp_read_race(workspace, snapshot_index):
+    path = workspace / "Sources/A.swift"
+    identity = path.stat()
+    real_read = os.read
+    real_fingerprint = campaign.linux_input_fingerprint
+    snapshot = campaign.linux_input_snapshot
+    evidence = {"changed": False, "snapshot": 0, "read_ordinal": 0, "reads_by_snapshot": {}}
+
+    def fingerprint(info):
+        value = real_fingerprint(info)
+        if (info.st_dev, info.st_ino) == (identity.st_dev, identity.st_ino):
+            # Model coarse ctime observation only; all other identity/content checks stay real.
+            return (*value[:-1], identity.st_ctime_ns)
+        return value
+
+    def observed_snapshot(*args, **kwargs):
+        evidence["snapshot"] += 1
+        return snapshot(*args, **kwargs)
+
+    def raced_read(descriptor, amount):
+        before = os.fstat(descriptor)
+        data = real_read(descriptor, amount)
+        if (before.st_dev, before.st_ino) == (identity.st_dev, identity.st_ino):
+            evidence["read_ordinal"] += 1
+            phase = evidence["snapshot"]
+            evidence["reads_by_snapshot"][phase] = evidence["reads_by_snapshot"].get(phase, 0) + 1
+            if not evidence["changed"] and phase == snapshot_index:
+                evidence["changed"] = True
+                path.write_bytes(b"let a = 9\n")
+                os.utime(path, ns=(identity.st_atime_ns, identity.st_mtime_ns))
+                after = os.fstat(descriptor)
+                evidence["injection"] = {"snapshot": phase, "read_ordinal": evidence["read_ordinal"],
+                    "snapshot_read_ordinal": evidence["reads_by_snapshot"][phase],
+                    "real_before": real_fingerprint(before), "real_after": real_fingerprint(after),
+                    "observed_before": fingerprint(before), "observed_after": fingerprint(after)}
+        return data
+
+    with patch.object(campaign, "linux_input_snapshot", side_effect=observed_snapshot), \
+            patch.object(campaign, "linux_input_fingerprint", side_effect=fingerprint), \
+            patch.object(campaign.os, "read", side_effect=raced_read):
+        yield evidence
+
+
+class LinuxTimestampTests(unittest.TestCase):
+    def test_controls_are_default_off_and_only_admit_manual_record_seed_or_replay_warm(self):
+        with linux_cache_fixture("off") as (_, env, context):
+            self.assertEqual(context["linux_timestamp_mode"], "off")
+            for timestamp, cache, allowed in (("record", "seed", True), ("replay", "warm", True),
+                                              ("record", "warm", False), ("replay", "seed", False),
+                                              ("replay", "off", False), ("unknown", "seed", False)):
+                options = {**env, "LINUX_TIMESTAMP_MODE": timestamp, "LINUX_CACHE_MODE": cache}
+                if allowed:
+                    self.assertEqual(campaign.linux_cache_source(options, SHA)["linux_timestamp_mode"], timestamp)
+                else:
+                    with self.assertRaises(ValueError):
+                        campaign.linux_cache_source(options, SHA)
+            ordinary = campaign.linux_cache_source({**env, "GITHUB_EVENT_NAME": "push",
+                                                    "LINUX_TIMESTAMP_MODE": "replay"}, SHA)
+            self.assertEqual(ordinary["linux_timestamp_mode"], "off")
+            with patch.object(campaign, "linux_input_update") as update:
+                self.assertIs(campaign.linux_input_timestamps(ordinary, {}), ordinary)
+                campaign.linux_input_after_build(ordinary, {})
+                update.assert_not_called()
+
+    def test_record_binds_complete_inputs_and_qualifies_only_unchanged_producer_inputs(self):
+        with linux_timestamp_fixture(qualify=False) as (workspace, env, context, _, reader):
+            manifest, before_hash, _ = campaign.linux_input_manifest(workspace)
+            self.assertEqual(manifest["state"], "before-build")
+            self.assertEqual(manifest["binding"], campaign.linux_input_binding(context))
+            self.assertEqual(manifest["roots"], list(campaign.LINUX_INPUT_ROOTS))
+            self.assertEqual(len(manifest["entries"]), 5)
+            self.assertEqual(manifest["entries"][0]["mtime_ns"], 1700000000123456789)
+            campaign.linux_input_after_build(context, env, reader)
+            qualified, after_hash, size = campaign.linux_input_manifest(workspace)
+            self.assertEqual(qualified["state"], "qualified")
+            self.assertNotEqual(before_hash, after_hash)
+            self.assertEqual(context["input_timestamps"]["manifest_sha256"], after_hash)
+            self.assertLess(size, campaign.LINUX_INPUT_METADATA_BYTES)
+            self.assertEqual(list((workspace / ".build").iterdir()),
+                             [workspace / ".build" / campaign.LINUX_INPUT_MANIFEST])
+
+    def test_replay_preserves_nanoseconds_and_symlink_target_while_matching_all_inputs(self):
+        with linux_timestamp_fixture() as (workspace, env, context, _, reader):
+            warm, manifest = linux_timestamp_warm(workspace, context)
+            result = campaign.linux_input_timestamps(warm, env, reader)
+            self.assertFalse(result.get("fatal", False))
+            receipt = result["input_timestamps"]
+            self.assertEqual((receipt["before_matching"], receipt["after_matching"], receipt["applied"]), (0, 5, 5))
+            for entry in manifest["entries"]:
+                self.assertEqual((workspace / entry["path"]).lstat().st_mtime_ns, entry["mtime_ns"])
+            self.assertEqual(os.readlink(workspace / "Sources/link.swift"), "A.swift")
+            self.assertEqual((workspace / "Sources/A.swift").read_bytes(), b"let a = 1\n")
+            campaign.linux_input_after_build(result, env, reader)
+            self.assertEqual(result["input_timestamps"]["after_build_matching"], 5)
+
+    def test_same_size_edit_is_rejected_before_any_timestamp_changes(self):
+        with linux_timestamp_fixture() as (workspace, env, context, _, reader):
+            warm, _ = linux_timestamp_warm(workspace, context)
+            (workspace / "Sources/A.swift").write_bytes(b"let a = 9\n")
+            with patch.object(campaign, "linux_input_update") as update:
+                result = campaign.linux_input_timestamps(warm, env, reader)
+                self.assertTrue(result["fatal"])
+                self.assertIn("content differs", result["input_timestamps"]["reason"])
+                update.assert_not_called()
+
+    def test_missing_new_mode_and_source_mismatches_refuse_the_complete_manifest(self):
+        for fault in ("missing", "new", "mode", "source", "pending", "exact"):
+            with self.subTest(fault=fault), linux_timestamp_fixture() as (workspace, env, context, inventory, reader):
+                warm, manifest = linux_timestamp_warm(workspace, context)
+                if fault == "missing":
+                    (workspace / "Sources/B.swift").unlink()
+                elif fault == "new":
+                    (workspace / "Sources/new.swift").write_bytes(b"new")
+                    inventory.append({"path": "Sources/new.swift", "git_mode": "100644",
+                                      "git_oid": hashlib.sha1(b"blob 3\0new").hexdigest()})
+                elif fault == "mode":
+                    (workspace / "Sources/B.swift").chmod(0o755)
+                elif fault == "source":
+                    warm["actual_sha"] = "b" * 40
+                    warm["producer_source"] = "b" * 40
+                elif fault == "pending":
+                    manifest["state"] = "before-build"
+                    campaign.linux_input_manifest(workspace, manifest)
+                else:
+                    warm["restored_exact"] = False
+                with patch.object(campaign, "linux_input_update") as update:
+                    self.assertTrue(campaign.linux_input_timestamps(warm, env, reader)["fatal"])
+                    update.assert_not_called()
+
+    def test_git_inventory_rejects_new_untracked_and_staged_inputs(self):
+        with linux_timestamp_fixture() as (workspace, _, _, inventory, _):
+            tree = b"".join(f"{item['git_mode']} blob {item['git_oid']}\t{item['path']}\0".encode()
+                            for item in inventory)
+            index = b"".join(f"{item['git_mode']} {item['git_oid']} 0\t{item['path']}\0".encode()
+                             for item in inventory)
+            for raw, allowed in ((index, True), (index + b"Sources/new.swift\0", False),
+                                  (index.replace(b"Sources/B.swift", b"Sources/C.swift"), False)):
+                with patch.object(campaign, "linux_input_git", side_effect=[(SHA + "\n").encode(), tree, raw]) as read:
+                    if allowed:
+                        self.assertEqual(campaign.linux_input_inventory(workspace, SHA, 1), inventory)
+                    else:
+                        with self.assertRaises(ValueError):
+                            campaign.linux_input_inventory(workspace, SHA, 1)
+                    self.assertNotIn("--exclude-standard", read.call_args.args[1])
+
+    def test_symlink_escape_ancestry_chain_and_special_files_are_rejected_without_updates(self):
+        for fault in ("escape", "ancestor", "chain", "fifo"):
+            with self.subTest(fault=fault), linux_timestamp_fixture() as (workspace, env, context, _, reader):
+                warm, _ = linux_timestamp_warm(workspace, context)
+                sentinel = workspace.parent / "outside.swift"
+                sentinel.write_text("outside remains unchanged")
+                stamp = sentinel.stat().st_mtime_ns
+                if fault == "ancestor":
+                    (workspace / "Sources").rename(workspace / "elsewhere")
+                    (workspace / "Sources").symlink_to("elsewhere")
+                elif fault == "fifo":
+                    (workspace / "Sources/B.swift").unlink()
+                    os.mkfifo(workspace / "Sources/B.swift")
+                else:
+                    link = workspace / "Sources/link.swift"
+                    link.unlink()
+                    if fault == "chain":
+                        (workspace / "Sources/second").symlink_to("A.swift")
+                    link.symlink_to("second" if fault == "chain" else "../../outside.swift")
+                with patch.object(campaign, "linux_input_update") as update:
+                    self.assertTrue(campaign.linux_input_timestamps(warm, env, reader)["fatal"])
+                    update.assert_not_called()
+                self.assertEqual(sentinel.stat().st_mtime_ns, stamp)
+
+    def test_hashing_race_fails_even_when_size_and_mtime_are_restored(self):
+        with linux_timestamp_fixture() as (workspace, env, context, _, reader):
+            warm, _ = linux_timestamp_warm(workspace, context)
+            with linux_timestamp_read_race(workspace, 1) as race:
+                result = campaign.linux_input_timestamps(warm, env, reader)
+            print("Timestamp race fixture: " + campaign.encode({"race": race, "receipt": result["input_timestamps"]}))
+            self.assertTrue(race["changed"])
+            injection = race["injection"]
+            self.assertEqual((injection["snapshot"], injection["read_ordinal"],
+                              injection["snapshot_read_ordinal"]), (1, 1, 1))
+            self.assertEqual(injection["observed_before"], injection["observed_after"])
+            self.assertEqual(injection["real_before"][:-1], injection["real_after"][:-1])
+            self.assertTrue(result["fatal"])
+            self.assertEqual(result["input_timestamps"]["attempted"], 0)
+
+    def test_second_scan_race_reports_exact_partial_replay_without_timestamping_changed_input(self):
+        with linux_timestamp_fixture() as (workspace, env, context, _, reader):
+            warm, manifest = linux_timestamp_warm(workspace, context)
+            original_manifest = campaign.linux_input_manifest(workspace)
+            path = workspace / "Sources/A.swift"
+            warm_mtime = path.stat().st_mtime_ns
+            with linux_timestamp_read_race(workspace, 2) as race:
+                result = campaign.linux_input_timestamps(warm, env, reader)
+            receipt = result["input_timestamps"]
+            print("Timestamp race fixture: " + campaign.encode({"race": race, "receipt": receipt}))
+            self.assertTrue(race["changed"])
+            self.assertEqual((race["injection"]["snapshot"], race["injection"]["snapshot_read_ordinal"]), (2, 1))
+            self.assertEqual(race["injection"]["observed_before"], race["injection"]["observed_after"])
+            self.assertTrue(result["fatal"])
+            self.assertEqual((receipt["attempted"], receipt["applied"]), (2, 2))
+            self.assertTrue(receipt["partial_replay_possible"])
+            updated = [entry["path"] for entry in manifest["entries"]
+                       if (workspace / entry["path"]).lstat().st_mtime_ns == entry["mtime_ns"]]
+            self.assertEqual(updated, ["Package.resolved", "Package.swift"])
+            self.assertEqual(path.stat().st_mtime_ns, warm_mtime)
+            self.assertEqual(path.read_bytes(), b"let a = 9\n")
+            self.assertEqual(campaign.linux_input_manifest(workspace), original_manifest)
+
+    def test_change_between_complete_verification_and_replay_is_detected(self):
+        with linux_timestamp_fixture() as (workspace, env, context, _, reader):
+            warm, _ = linux_timestamp_warm(workspace, context)
+            snapshot = campaign.linux_input_snapshot
+            def changed_after_scan(*args):
+                result = snapshot(*args)
+                (workspace / "Package.resolved").write_bytes(b"changed")
+                return result
+            with patch.object(campaign, "linux_input_snapshot", side_effect=changed_after_scan), \
+                    patch.object(campaign, "linux_input_update") as update:
+                result = campaign.linux_input_timestamps(warm, env, reader)
+                self.assertTrue(result["fatal"])
+                update.assert_not_called()
+
+    def test_partial_update_failure_is_explicit_and_retains_manifest_diagnostics(self):
+        with linux_timestamp_fixture() as (workspace, env, context, _, reader):
+            warm, manifest = linux_timestamp_warm(workspace, context)
+            real_update = campaign.linux_input_update
+            calls = 0
+            def fail_second(*args, **kwargs):
+                nonlocal calls
+                calls += 1
+                if calls == 2:
+                    raise OSError("synthetic partial replay failure")
+                return real_update(*args, **kwargs)
+            with patch.object(campaign, "linux_input_update", side_effect=fail_second):
+                result = campaign.linux_input_timestamps(warm, env, reader)
+            receipt = result["input_timestamps"]
+            self.assertTrue(result["fatal"])
+            self.assertEqual((receipt["attempted"], receipt["applied"]), (2, 1))
+            self.assertTrue(receipt["partial_replay_possible"])
+            self.assertEqual((workspace / manifest["entries"][0]["path"]).stat().st_mtime_ns,
+                             manifest["entries"][0]["mtime_ns"])
+            self.assertTrue((workspace / ".build" / campaign.LINUX_INPUT_MANIFEST).is_file())
+
+    def test_producer_changes_fail_save_and_preserve_pending_manifest(self):
+        with linux_timestamp_fixture(qualify=False) as (workspace, env, context, _, reader):
+            (workspace / "Sources/A.swift").write_bytes(b"let a = 9\n")
+            passing = {**env, **{"LINUX_" + name + "_OUTCOME": "success" for name in ("RELEASE", "TESTS", "SMOKE")}}
+            with patch.object(campaign, "linux_input_inventory", side_effect=reader):
+                result = campaign.linux_before_save(context, passing)
+            self.assertFalse(result["save"])
+            self.assertTrue(result["fatal"])
+            self.assertEqual(campaign.linux_input_manifest(workspace)[0]["state"], "before-build")
+
+    def test_input_byte_path_time_and_metadata_limits_refuse_without_large_allocations(self):
+        for field, limit in (("LINUX_INPUT_BYTES", 1), ("LINUX_INPUT_PATHS", 1),
+                             ("LINUX_INPUT_SECONDS", -1), ("LINUX_INPUT_METADATA_BYTES", 1)):
+            with self.subTest(field=field), linux_timestamp_fixture() as (workspace, env, context, _, reader):
+                warm, _ = linux_timestamp_warm(workspace, context)
+                with patch.object(campaign, field, limit):
+                    result = campaign.linux_input_timestamps(warm, env, reader)
+                self.assertTrue(result["fatal"])
+                self.assertEqual(result["input_timestamps"]["attempted"], 0)
+        self.assertEqual(campaign.LINUX_CACHE_BYTES, 2 * 1024 ** 3)
+
+    def test_workflow_experiment_preserves_default_off_commands_and_cache_guards(self):
+        workflow = (ROOT / ".github/workflows/ci.yml").read_text()
+        options = workflow.split("      linux_timestamp_mode:\n", 1)[1].split("\nconcurrency:", 1)[0]
+        self.assertIn("options: ['off', record, replay]", options)
+        self.assertIn("default: 'off'", options)
+        linux = workflow.split("  build-linux-cli:\n", 1)[1]
+        self.assertIn("github.event_name == 'workflow_dispatch' && inputs.linux_timestamp_mode || 'off'", linux)
+        self.assertLess(linux.index("linux-cache after-restore"), linux.index("linux-cache input-timestamps"))
+        self.assertLess(linux.index("linux-cache input-timestamps"), linux.index("run: swift build"))
+        self.assertIn("steps.linux-input-timestamps.outputs.context ||", linux)
+        for name in ("Build CodexBarCLI (release, static Swift stdlib)", "Swift Test (Linux only)",
+                     "Smoke test CodexBarCLI"):
+            step = linux.split("- name: " + name + "\n", 1)[1].split("      - name:", 1)[0]
+            self.assertNotIn("if:", step)
+            self.assertNotIn("--skip-build", step)
+        for name in ("Restore approved Linux application cache", "Save admitted Linux application cache"):
+            step = linux.split("- name: " + name + "\n", 1)[1].split("      - name:", 1)[0]
+            self.assertIn("timeout-minutes: 2", step)
+            self.assertIn("SEGMENT_DOWNLOAD_TIMEOUT_MINS: '1'", step)
 
 
 class EvidenceTests(unittest.TestCase):
