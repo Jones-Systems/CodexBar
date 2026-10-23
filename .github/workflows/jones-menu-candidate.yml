@@ -5,6 +5,11 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - .github/workflows/jones-menu-candidate.yml
+      - Sources/CodexBar/CodexbarApp.swift
+      - Sources/CodexBar/CodexAccountMenuPresentation.swift
+      - Sources/CodexBar/Providers/Codex/CodexProviderImplementation.swift
+      - Sources/CodexBar/Jones/JonesAccountDisplayLabel.swift
+      - Sources/CodexBarCore/Jones/JonesCodexAppLaunchEnvironment.swift
       - Sources/CodexBar/Jones/JonesAccountAggregate.swift
       - Sources/CodexBar/Jones/JonesCompactAccountPresentation.swift
       - Sources/CodexBar/MenuCardAccountAggregateRowView.swift
@@ -58,6 +63,11 @@ jobs:
 
       - name: Run required checks remotely
         run: make check
+
+      - name: Capture synthetic System Account menus
+        env:
+          CODEXBAR_SYSTEM_ACCOUNT_MENU_CAPTURE: 1
+        run: ./Scripts/test.sh --command swift test --filter JonesCodexFleetPromotionMenuTests
 
       - name: Package Jones candidate without launching
         shell: bash
@@ -116,7 +126,9 @@ jobs:
             CodexBar-Jones-candidate.zip
             CodexBar-Jones-candidate.zip.sha256
             jones-menu-candidate.json
+            .t3/pr-media/system-account-menu/*.png
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 7
 
       - name: Remove runner-local identity overlay

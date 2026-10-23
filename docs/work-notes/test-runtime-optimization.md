@@ -827,3 +827,49 @@ failure and all earlier performance limitations remain preserved. This
 publication changes no campaign budget: no manual dispatch, cancellation,
 installation, main merge or performance qualification is included. Native
 parity and the complete-run 390-second/tax target remain unproved.
+
+## Canonical main integration after conflict notice
+
+The explicit integration capsule authorizes a normal merge of verified canonical
+main `aa17d050e2e3d50e598c74f1aba20c6b272b0a02` into the task branch at
+`0077a65b1f397f0cfb8e3f445c4c3e77f2f418e0`, without merging the PR into main.
+Fork URL, both live refs, branch, clean status and sole Git ownership were
+revalidated. Their common ancestor is
+`d1d53b2b24284a70f6ea35b6eb4043ebc7ab9d88`.
+
+The no-commit merge reported exactly two content conflicts:
+`Scripts/test_build_jobs.py` and `docs/compiler-resource-limits.md`. Both were
+the additive hosted storage assertion/description already verified in the
+backport. Resolution retains `self.disk.assert_not_called()` and the documented
+storage-admission exception. The helper merged automatically, preserving PR28's
+hosted bypass and both event-stream option registrations. No regression methods
+were removed or duplicated. Main's 18 other paths, including its merged System
+Account source, Swift tests, workflow and documentation, were imported unchanged.
+
+On the merged tree, the three hosted/local identity methods plus `RealLockTests`
+passed **6 tests in 0.560 seconds**, using `python3 -B Scripts/test_build_jobs.py`
+with those exact selectors and `-v`. Parent comparison proved all 46 compiler
+methods and the complete helper/test files byte-identical to `0077a65b1`.
+The prior 46-compiler/70-evidence/path-gate passes therefore remain bound to
+unchanged implementation bytes; those full groups were not repeated. AST,
+duplicate-method, both workflow YAML and whitespace checks passed. Every path
+changed by either parent matched its intended parent exactly before this
+receipt append: ten PR30 paths and eighteen canonical-main paths. The ordinary
+CI workflow, group 4/two shards, cache/timestamp controls and runner lifecycle
+are unchanged. The inherited menu-candidate workflow is canonical-main content,
+checked using the Jones GitHub Actions skill; no shared workflow was changed.
+
+The nonblocking-mutex producer completed in 1.924 seconds, native and enclosing
+status zero. Fresh samples were CPU 27.67/26.98%, available RAM 33.53/33.39 GiB,
+one core 6.25%; each admitted one serial process. Owned scratch was absent after
+proved drain and the mutex was released. Bounds remain 120 seconds, 1 GiB new
+scratch plus 4 GiB reserve and 128 KiB receipts retained for seven days.
+Exact selectors, parent/file hashes and cleanup are retained under
+`.t3/test-runtime-optimization/main-integration-20261023-`.
+
+The imported native Swift tests and required native `make test`/`make check`
+remain unavailable locally and require current-head hosted CI. No test failure
+or skip occurred in the selected local group. The parent retains the native PR
+watch; no child watcher, manual dispatch, cancellation, installation, rebase,
+force push or PR merge is part of this integration. Performance qualification
+and the original 390-second target remain unproved.

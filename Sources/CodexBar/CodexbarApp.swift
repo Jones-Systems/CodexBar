@@ -29,6 +29,10 @@ enum CodexBarEntryPoint {
         guard CodexBarLaunchMode.resolve(arguments: CommandLine.arguments) == .application else {
             return
         }
+        // JONES(fleet-system-promotion): inherited fleet homes must not redefine the app's System Account.
+        if case let .available(homes) = CodexFleetProfileDiscovery.discover() {
+            JonesCodexAppLaunchEnvironment.prepareForApplication(fleetHomePaths: homes)
+        }
         CodexBarApp.main()
     }
 }

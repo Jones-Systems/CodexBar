@@ -137,7 +137,11 @@ final class CodexAccountPromotionCoordinator {
             case .fleetTargetAuthMissing, .fleetTargetAuthUnreadable:
                 "CodexBar could not read the canonical Authfleet credentials. Restore them in Authfleet and try again."
             case .fleetDestinationAmbiguous:
-                "CodexBar cannot safely identify the default Codex home. Open CodexBar without a CODEX_HOME override."
+                "The default Codex home overlaps an enrolled or saved account. " +
+                    "Restore separate account homes before switching."
+            case .fleetLaunchHomeOverride:
+                "CodexBar was launched with a custom Codex home. " +
+                    "Quit and reopen CodexBar without a CODEX_HOME override."
             case .targetManagedAccountNotFound:
                 L("That account is no longer available in CodexBar. Refresh the account list and try again.")
             case .targetManagedAccountAuthMissing:
