@@ -575,12 +575,15 @@ def run_case(root, scratch_parent, manifest, feeds, scenario):
                     phase = "initial-report"
                     processes.append(launch(bundle, log))
                     first = wait_for(read_report,
-                                     lambda value: value and value["build"] == BUILD_A and value["canCheck"], phase=phase)
+                                     lambda value: value and value["build"] == BUILD_A, phase=phase)
                     require(first["pid"] == processes[0].pid, "fixture-process", "Unexpected initial process")
                     phase = "update-readiness"
-                    write_command(directory, manifest, BUILD_A, "check")
+                    # Fresh fixture state starts an automatic check. A prepared session can keep
+                    # canCheck false until installation; observe this cycle without requesting another.
                     outcome = wait_for(read_report,
                                        lambda value: value and value["state"] in ("ready", "failed"), phase=phase)
+                    require(outcome["build"] == BUILD_A and outcome["pid"] == first["pid"],
+                            "fixture-process", "Update outcome must come from the initial fixture process")
                     if scenario in ("quit", "immediate"):
                         require(outcome["state"] == "ready" and server.archive_requests > 0,
                                 "fixture-readiness", "The real installer never prepared an authenticated archive")
