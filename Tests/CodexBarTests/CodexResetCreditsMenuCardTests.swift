@@ -101,15 +101,17 @@ struct CodexResetCreditsMenuCardTests {
     }
 
     @Test
-    func `metric metadata may disappear but cannot appear in frozen tracked layout`() throws {
-        let (withMetadata, withoutMetadata) = try Self.weeklyResetTransitionModels()
-        let currentWeekly = try #require(withMetadata.metrics.first { $0.id == "secondary" })
-        let candidateWeekly = try #require(withoutMetadata.metrics.first { $0.id == "secondary" })
+    func `reset clock preserves metric metadata when pace disappears`() throws {
+        let (withPace, withoutPace) = try Self.weeklyResetTransitionModels()
+        let currentWeekly = try #require(withPace.metrics.first { $0.id == "secondary" })
+        let candidateWeekly = try #require(withoutPace.metrics.first { $0.id == "secondary" })
 
-        #expect(currentWeekly.linePresentation(title: currentWeekly.title).metaText != nil)
-        #expect(candidateWeekly.linePresentation(title: candidateWeekly.title).metaText == nil)
-        #expect(withMetadata.hasCompatibleTrackedLayout(with: withoutMetadata))
-        #expect(!withoutMetadata.hasCompatibleTrackedLayout(with: withMetadata))
+        #expect(currentWeekly.detailLeftText != nil)
+        #expect(candidateWeekly.detailLeftText == nil)
+        #expect(currentWeekly.linePresentation(title: currentWeekly.title).meta?.resetTime != nil)
+        #expect(candidateWeekly.linePresentation(title: candidateWeekly.title).meta?.resetTime != nil)
+        #expect(withPace.hasCompatibleTrackedLayout(with: withoutPace))
+        #expect(withoutPace.hasCompatibleTrackedLayout(with: withPace))
     }
 
     @MainActor

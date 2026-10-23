@@ -46,7 +46,7 @@ struct JonesAccountAggregate: Equatable {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone(identifier: "America/New_York")
-        formatter.dateFormat = compact ? "EEE h:mm a z" : "EEE MMM d h:mm a z"
+        formatter.dateFormat = compact ? "EEE h:mm a" : "EEE MMM d h:mm a"
         return formatter.string(from: date)
     }
 

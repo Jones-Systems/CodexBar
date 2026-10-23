@@ -429,8 +429,21 @@ extension MenuBarResetTimeDisplayTests {
             image: NSImage(size: NSSize(width: 16, height: 16)),
             title: " 4% " + credit.markedText)
         let styled = credit.styling(title)
-        #expect(styled.attribute(.attachment, at: 0, effectiveRange: nil) is NSTextAttachment)
-        #expect(styled.attribute(.attachment, at: styled.length - 1, effectiveRange: nil) is NSTextAttachment)
+        let brandAttachment = try #require(styled.attribute(
+            .attachment,
+            at: 0,
+            effectiveRange: nil) as? NSTextAttachment)
+        let hourglass = try #require(styled.attribute(
+            .attachment,
+            at: styled.length - 1,
+            effectiveRange: nil) as? NSTextAttachment)
+        let image = try #require(hourglass.image)
+        let font = try #require(styled.attribute(.font, at: styled.length - 1, effectiveRange: nil) as? NSFont)
+        #expect(brandAttachment.bounds.size == NSSize(width: 16, height: 16))
+        #expect(font.pointSize == NSFont.systemFontSize)
+        #expect(hourglass.bounds.width == image.size.width * 0.8)
+        #expect(hourglass.bounds.height == image.size.height * 0.8)
+        #expect(hourglass.bounds.minY == ((font.capHeight - image.size.height * 0.8) / 2).rounded())
         #expect(styled
             .attribute(.foregroundColor, at: styled.length - 1, effectiveRange: nil) as? NSColor == .labelColor)
     }

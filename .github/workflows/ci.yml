@@ -156,6 +156,21 @@ jobs:
         if: ${{ matrix.shard-index == 0 }}
         run: ./Scripts/lint.sh lint-macos
 
+      - name: Prepare synthetic reset timing captures
+        shell: bash
+        run: |
+          set -euo pipefail
+          capture_root="$(mktemp -d "$RUNNER_TEMP/reset-captures.XXXXXX")"
+          trap 'rm -rf -- "$capture_root"' ERR
+          mkdir "$capture_root/expanded" "$capture_root/credit" "$capture_root/orange"
+          {
+            printf 'CODEXBAR_RESET_CAPTURE_ROOT=%s\n' "$capture_root"
+            printf 'CODEXBAR_CLOCK_RESET_CAPTURE_DIR=%s/expanded\n' "$capture_root"
+            printf 'CODEXBAR_RESET_DISPLAY_CAPTURE_DIR=%s/credit\n' "$capture_root"
+            printf 'CODEXBAR_RESET_DISPLAY_ORANGE_CAPTURE_DIR=%s/orange\n' "$capture_root"
+          } >> "$GITHUB_ENV"
+          git rev-parse HEAD > "$capture_root/source-commit.txt"
+
       - name: Swift Test
         # Keep small batches to reduce SwiftPM process overhead without returning to one aggregate run.
         timeout-minutes: 70
@@ -166,6 +181,23 @@ jobs:
             CODEXBAR_TEST_SHARD_INDEX=${{ matrix.shard-index }} \
             CODEXBAR_TEST_SHARD_COUNT=${{ matrix.shard-count }} \
             ./Scripts/test.sh
+
+      - name: Upload synthetic reset timing captures
+        if: ${{ always() && env.CODEXBAR_RESET_CAPTURE_ROOT != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: reset-timing-${{ github.sha }}-${{ matrix.shard-index }}
+          path: ${{ env.CODEXBAR_RESET_CAPTURE_ROOT }}
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Remove runner-local reset timing captures
+        if: ${{ always() && env.CODEXBAR_RESET_CAPTURE_ROOT != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf -- "$CODEXBAR_RESET_CAPTURE_ROOT"
+          test ! -e "$CODEXBAR_RESET_CAPTURE_ROOT"
 
       - name: Provider plugin engine A/B goldens
         if: ${{ matrix.shard-index == 0 }}
