@@ -1,0 +1,13 @@
+{
+  "sourceBase": "dd23db9c61065e35bb8855777f82b33e8f232a57",
+  "helperSha256": "890b5defcad4898143a7e8b2e2c914cf8a2de749cf635761d179ec9050fa42a5",
+  "compiler": "Apple Swift via /usr/bin/swiftc; one backend thread; owned module cache",
+  "cases": {
+    "pairedFleetHomes": "passed: ProcessInfo CODEX_HOME and paired CODEX_SQLITE_HOME absent",
+    "independentSQLiteHome": "passed: CODEX_HOME absent; custom SQLite path preserved",
+    "customCodexHome": "passed: custom CODEX_HOME preserved"
+  },
+  "processEnvironment": "synthetic child only; test runner not mutated",
+  "cleanup": "owned compiler scratch and runner fixture parent removed; absence verified",
+  "fullNativeSuite": "not run locally: insufficient storage; required hosted CI pending"
+}

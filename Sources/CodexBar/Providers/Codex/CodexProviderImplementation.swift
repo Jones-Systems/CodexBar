@@ -294,15 +294,17 @@ struct CodexProviderImplementation: ProviderImplementation {
 
         let isInteractionBlocked = context.codexAccountPromotionCoordinator?.isInteractionBlocked() ?? false
 
-        let submenuItems = projection.visibleAccounts.map { account in
-            let isChecked = account.id == projection.liveVisibleAccountID
+        let liveAccountID = projection.systemAccountMenuLiveAccount?.id
+        let submenuItems = projection.systemAccountMenuAccounts.map { account in
+            let isChecked = account.id == liveAccountID
             let isEnabled = !isInteractionBlocked &&
                 !isChecked &&
                 account.systemPromotionTarget != nil
             // JONES(fleet-system-promotion): managed and canonical fleet targets share the existing menu.
             let action = account.systemPromotionTarget.map(MenuDescriptor.MenuAction.requestCodexSystemPromotion)
             return MenuDescriptor.SubmenuItem(
-                title: account.displayName,
+                title: projection.hasNamedFleetRoster
+                    ? context.settings.codexAccountDisplayLabel(for: account) : account.displayName,
                 action: action,
                 isEnabled: isEnabled,
                 isChecked: isChecked)
