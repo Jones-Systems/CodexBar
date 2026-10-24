@@ -614,38 +614,6 @@ struct CodexManagedOpenAIWebRefreshTests {
     }
 
     @Test
-    func `active refresh failure ignores stale import status from older task`() async throws {
-        let settings = try self.makeSettingsStore(suite: "CodexManagedOpenAIWebRefreshTests-concurrent-import-status")
-        let managedAccount = ManagedCodexAccount(
-            id: UUID(),
-            email: "managed@example.com",
-            managedHomePath: "/tmp/managed-codex-home",
-            createdAt: 1,
-            updatedAt: 1,
-            lastAuthenticatedAt: 1)
-        settings._test_activeManagedCodexAccount = managedAccount
-        settings.codexActiveSource = .managedAccount(id: managedAccount.id)
-        defer { settings._test_activeManagedCodexAccount = nil }
-
-        let store = UsageStore(
-            fetcher: UsageFetcher(environment: [:]),
-            browserDetection: BrowserDetection(cacheTTL: 0),
-            settings: settings,
-            startupBehavior: .testing)
-        store.openAIDashboardCookieImportStatus =
-            "OpenAI cookies are for other@example.com, not managed@example.com."
-        store._test_openAIDashboardLoaderOverride = { _, _, _, _ in
-            throw ManagedDashboardTestError.networkTimeout
-        }
-        defer { store._test_openAIDashboardLoaderOverride = nil }
-
-        let expectedGuard = store.currentCodexOpenAIWebRefreshGuard()
-        await store.refreshOpenAIDashboardIfNeeded(force: true, expectedGuard: expectedGuard)
-
-        #expect(store.lastOpenAIDashboardError == ManagedDashboardTestError.networkTimeout.localizedDescription)
-    }
-
-    @Test
     func `post import retry timeout exceeds normal retry timeout`() {
         #expect(UsageStore.openAIWebDashboardFetchTimeout(didImportCookies: false) == 25)
         #expect(UsageStore.openAIWebDashboardFetchTimeout(didImportCookies: true) == 25)

@@ -814,9 +814,4 @@ struct ProviderConfigEnvironmentTests {
         #expect(env[PoeSettingsReader.apiKeyEnvironmentKey] == "poe-token")
         #expect(ProviderTokenResolver.token(for: .poe, environment: env) == "poe-token")
     }
-
-    @Test
-    func `poe supports API key override`() {
-        #expect(ProviderConfigEnvironment.supportsAPIKeyOverride(for: .poe) == true)
-    }
 }

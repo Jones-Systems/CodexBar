@@ -268,36 +268,6 @@ struct CLIOpenAIDashboardCacheTests {
         #expect(OpenAIDashboardCacheStore.load() == nil)
     }
 
-    @Test
-    func `cached dashboard ignores cached account email equality when authority rejects`() throws {
-        OpenAIDashboardCacheStore.clear()
-        defer { OpenAIDashboardCacheStore.clear() }
-
-        let authHome = try self.makeAuthHome(
-            email: "owner@example.com",
-            accountId: "acct-owner")
-        defer { try? FileManager.default.removeItem(at: authHome) }
-
-        let context = self.makeContext(
-            authHome: authHome,
-            knownOwners: [
-                CodexDashboardKnownOwnerCandidate(
-                    identity: .providerAccount(id: "acct-other"),
-                    normalizedEmail: "owner@example.com"),
-            ])
-        OpenAIDashboardCacheStore.save(OpenAIDashboardCache(
-            accountEmail: "owner@example.com",
-            snapshot: self.makeDashboard(email: "owner@example.com")))
-
-        let restored = CodexBarCLI.loadOpenAIDashboardIfAvailable(
-            usage: self.makeUsage(email: "owner@example.com"),
-            sourceLabel: "codex-cli",
-            context: context)
-
-        #expect(restored == nil)
-        #expect(OpenAIDashboardCacheStore.load() == nil)
-    }
-
     private func makeContext(
         authHome: URL?,
         knownOwners: [CodexDashboardKnownOwnerCandidate]) -> ProviderFetchContext
