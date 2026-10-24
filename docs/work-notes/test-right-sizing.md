@@ -213,7 +213,7 @@ removed from platform steps. Ordinary glibc PRs share debug compilation between
 CLI, portable tests and smoke checks; main/manual runs retain release/static
 standard-library builds. macOS retains two full shards. Their duplicated full
 build/discovery is a recorded remaining cost, not a claimed solved item.
-Required and advisory checks are declared in [AGENTS.md](../../AGENTS.md) and
+Required and advisory checks are declared in [AGENTS.md](https://github.com/Jones-Systems/CodexBar/blob/main/AGENTS.md#required-and-advisory-ci-checks) and
 [the development guide](../DEVELOPMENT.md#ci-aggregate-contract).
 No GitHub ruleset or branch protection was changed.
 
