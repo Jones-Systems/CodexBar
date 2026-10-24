@@ -10,6 +10,7 @@ from __future__ import annotations
 import ctypes
 import hashlib
 import json
+import os
 from pathlib import Path, PurePosixPath
 import platform
 import posixpath
@@ -44,6 +45,10 @@ LOADS = {0xC, 0x80000018, 0x8000001F, 0x80000023, 0x20}
 WEAK = 0x80000018
 SYSTEM_ROOTS = (Path("/usr/lib"), Path("/System/Library/Frameworks"),
                 Path("/System/Library/PrivateFrameworks"))
+# An observed XCUIAutomation dependency installed outside the Xcode bundle.
+# Traverse declared dependencies only; never enumerate this root or its parent.
+APPLE_RUNTIME_FRAMEWORKS = (Path("/Library/Developer/PrivateFrameworks/CoreDevice.framework"),)
+TEST_LAUNCHERS = ("xctest", "swiftpm-xctest-helper", "swiftpm-testing-helper")
 
 
 class UnsupportedRuntime(ValueError):
@@ -142,7 +147,8 @@ def validate_diagnostic(value):
                  and text(item["path"]) and text(item["canonical"], True) and digest(item["sha256"])
                  and isinstance(item["kind"], str)
                  and item["kind"] in {"uninspected", "missing", "bundled", "xcode", "system-file",
-                                     "system-cache", "system-swift-shim"}, "invalid-native-diagnostic")
+                                     "system-cache", "system-swift-shim", "developer-framework"},
+                 "invalid-native-diagnostic")
         if "file" in value:
             need(isinstance(value["file"], dict) and "type" not in value["file"], "invalid-native-diagnostic")
             validate_diagnostic(value["file"])
@@ -342,6 +348,21 @@ class SystemCache:
         return bool(self._contains(str(path).encode("utf-8")))
 
 
+def swift_testing_helper(toolchain_usr, xcode):
+    # SwiftPM 6.2.4 UserToolchain.getSwiftTestingHelper/getTool: the host SDK
+    # has one toolset root, usr/bin, followed by its libexec/swift/pm sibling.
+    for directory in (toolchain_usr / "bin", toolchain_usr / "libexec/swift/pm"):
+        path = directory / "swiftpm-testing-helper"
+        try:
+            canonical = path.resolve(strict=True)
+        except FileNotFoundError:
+            continue
+        need(canonical.is_relative_to(xcode), "native-swift-testing-helper-outside-selected-xcode")
+        if canonical.is_file() and os.access(path, os.X_OK):
+            return canonical
+    raise UnsupportedRuntime("native-swift-testing-helper-unavailable")
+
+
 class Host:
     def __init__(self, workspace, build, environment, capture, system=None, swift_command=None):
         self.budget = Budget()
@@ -386,6 +407,7 @@ class Host:
         need(helper.is_file() and helper.resolve(strict=True).is_relative_to(self.xcode),
              "native-xctest-helper-unavailable")
         self.tools["swiftpm-xctest-helper"] = helper.resolve(strict=True)
+        self.tools["swiftpm-testing-helper"] = swift_testing_helper(toolchain_usr, self.xcode)
         manifest_library = toolchain_usr / "lib/swift/pm/ManifestAPI/libPackageDescription.dylib"
         need(manifest_library.is_file() and manifest_library.resolve(strict=True).is_relative_to(self.xcode),
              "native-manifest-runtime-unavailable")
@@ -435,6 +457,7 @@ class Host:
             "swiftpm_config_sha256": configuration_sha256,
             "test_framework_roots": [str(path) for path in self.test_framework_roots],
             "test_library_roots": [str(path) for path in self.test_library_roots],
+            "developer_framework_roots": [str(path) for path in APPLE_RUNTIME_FRAMEWORKS],
             "tools": {name: {"path": str(path), "sha256": self.budget.digest(path)}
                       for name, path in sorted(self.tools.items())},
         }
@@ -446,6 +469,10 @@ class Host:
             root, kind = self.build, "bundled"
         elif logical.is_relative_to(self.xcode):
             physical, root, kind = logical, self.xcode, "xcode"
+        elif any(logical.is_relative_to(root) for root in APPLE_RUNTIME_FRAMEWORKS):
+            root = next(root for root in APPLE_RUNTIME_FRAMEWORKS if logical.is_relative_to(root))
+            need(root.resolve(strict=True) == root, "noncanonical-developer-framework-root")
+            physical, kind = logical, "developer-framework"
         elif logical == getattr(self, "entrypoint", None) == Path("/usr/bin/swift"):
             physical, root, kind = logical, Path("/usr/bin"), "system-swift-shim"
         else:
@@ -531,7 +558,7 @@ class RuntimeClosure:
                     raw = token + "/" + str(path.relative_to(root))
                     break
             else:
-                if not (any(path.is_relative_to(root) for root in SYSTEM_ROOTS)
+                if not (any(path.is_relative_to(root) for root in (*SYSTEM_ROOTS, *APPLE_RUNTIME_FRAMEWORKS))
                         or path == Path("/usr/bin/swift")):
                     raw = "<outside-approved-roots:" + hashlib.sha256(raw.encode("utf-8", "surrogatepass")).hexdigest() + ">"
         elif not raw.startswith(("@rpath/", "@loader_path", "@executable_path", "<")):
@@ -553,7 +580,7 @@ class RuntimeClosure:
 
     def permitted(self, path):
         return (path.is_relative_to(self.host.logical_build) or path.is_relative_to(self.host.xcode)
-                or any(path.is_relative_to(root) for root in SYSTEM_ROOTS)
+                or any(path.is_relative_to(root) for root in (*SYSTEM_ROOTS, *APPLE_RUNTIME_FRAMEWORKS))
                 or path == getattr(self.host, "entrypoint", None))
 
     def add(self, logical, image=None, candidate=None):
@@ -708,11 +735,14 @@ class RuntimeClosure:
             need(self.images, "native-runtime-images-unavailable")
             tests = sorted(key for key in bundled if self.images[key]["kind"] == 8
                            and ".xctest/" in key and Path(key).name.endswith("Tests"))
-            test_launchers = {tools[name] for name in ("xctest", "swiftpm-xctest-helper") if name in tools}
-            need(not tests or len(test_launchers) == 2, "native-test-launch-context-unavailable")
+            test_launchers = {tools[name] for name in TEST_LAUNCHERS if name in tools}
+            need(not tests or len(test_launchers) == len(TEST_LAUNCHERS), "native-test-launch-context-unavailable")
             roots = sorted(key for key, image in self.images.items() if image["kind"] in (2, 7))
             for key in roots:
-                modes = ("plain", "swiftpm-test") if key in bundled or key in test_launchers else ("plain",)
+                # SwiftPM constructs the test environment for all three native
+                # launchers. A plain launch is not part of this harness path.
+                modes = (("swiftpm-test",) if key in test_launchers else
+                         ("plain", "swiftpm-test") if key in bundled else ("plain",))
                 for mode in modes:
                     for variant in self.images[key]["variants"]:
                         bindings = {}

@@ -46,6 +46,17 @@ does establish that combining all executables' rpaths and applying test override
 to ordinary tools creates artificial candidate conflicts. The repair replaces
 that model; it does not declare the old ambiguity a proved real loader conflict.
 
+Run `40135413579` at `a61c4c6c2c36e62f188d5ec0686a4c9887a37228` identifies a
+plain xctest → XCTest → XCUIAutomation dependency outside the original roots.
+Its redacted install-name SHA256
+`b731e0a584599aaffe55a2567d1c3a7330227073f2e4bfa9ff32042e271017e0`
+matches `/Library/Developer/PrivateFrameworks/CoreDevice.framework/Versions/A/CoreDevice`.
+The coordinator reports producer, lint/Linux and one worker passed; the other
+worker rejected strict image fallback. This is partial restored-build proof,
+not two-shard qualification. Existing artifacts contain no external CoreDevice
+headers, so further imports cannot be established from those archives. No
+speculative sibling frameworks are admitted.
+
 Keep repository, source, run/attempt, workflow, profile/manifest, package/lock,
 workspace, toolchain, runner OS/architecture and image OS exact. Image versions
 remain recorded provenance. A different version can pass only with a complete,
@@ -58,8 +69,11 @@ fails even when image versions match.
 
 Collect actual sw_vers product/build and arm64; canonical selected Xcode path and
 version; selected macOS SDK path/version/build and SDKSettings SHA256; selected
-Swift, SwiftPM, XCTest launcher and swiftpm-xctest-helper bytes. Resolve these
-through fixed xcrun calls and validate paths inside the selected Xcode bundle.
+Swift, SwiftPM, XCTest launcher, swiftpm-xctest-helper and swiftpm-testing-helper
+bytes. Resolve tools through fixed xcrun calls and source-defined helper paths;
+validate canonical paths inside the selected Xcode bundle.
+For Swift Testing, reproduce UserToolchain's first executable match in the host
+toolchain's usr/bin, then usr/libexec/swift/pm, rejecting canonical escapes.
 Include SwiftPM's ManifestAPI runtime and installed configuration, because package
 parsing can still occur with skip-build. Admit the actual Swift entrypoint only
 when it is the selected tool or Apple's `/usr/bin/swift` shim; include its bytes
@@ -86,7 +100,14 @@ Audit every regular loadable file below the complete `.build`, including
 framework/helper children and dependency tools, plus the selected native launchers. Follow declared
 dependencies recursively. Bundled dependencies stay below .build and are also
 covered by archive integrity; external dependencies must resolve inside the
-selected Xcode or system-library roots and receive SHA256 identities. Preserve
+selected Xcode, system-library roots or the explicitly reviewed CoreDevice
+framework root and receive SHA256 identities. The sole additional root is
+`/Library/Developer/PrivateFrameworks/CoreDevice.framework`; require the root
+itself canonical and each reached runtime file canonically contained. Include
+only declared dependencies and their nested framework/dylib closure, with full
+hashes and existing file/byte/time limits. Do not enumerate the framework or its
+parent, admit sibling frameworks, follow symlink escapes, or accept host roots
+from metadata. Missing or unsupported further dependencies stay incomplete. Preserve
 weak-link absence as explicit evidence; unresolved strong, ambiguous, unsupported
 or escaping dependencies make the proof incomplete. Inspect no provider state.
 Handle bounded fat32/fat64 ARM64 slices, weak/reexport/upward/lazy library loads,
@@ -101,7 +122,9 @@ each image's load-command order. Its
 precede raw paths. Select the first supported existing candidate in that proven
 order; never combine unrelated executable paths. Preserve every ARM64 variant's
 ordered commands. Audit each transferred executable separately in plain and
-inherited test environments, and the XCTest bundle under both selected launchers.
+inherited test environments. Audit xctest, XCTest discovery and Swift Testing
+helpers only in the source-proved SwiftPM test environment, and audit each test
+bundle under all three selected launchers. Ordinary tools retain plain launches.
 Audit remaining loadable libraries without inventing parents. Every recursively
 selected external image receives its canonical path, whole-file SHA256 and slice
 identity; cache members remain bound to the native cache UUID. Record launch,
@@ -128,7 +151,7 @@ dSYM and static-archive payloads are nonloadable. A foreign-only loadable image 
 unsupported rather than silently excluded. Command budgets apply across all
 ARM64 variants of one file.
 
-[SwiftPM's test environment](https://github.com/swiftlang/swift-package-manager/blob/swift-6.2-RELEASE/Sources/Commands/Utilities/TestingSupport.swift)
+[SwiftPM's test environment](https://github.com/swiftlang/swift-package-manager/blob/swift-6.2.4-RELEASE/Sources/Commands/Utilities/TestingSupport.swift)
 uses its XCTest helper and adds overrides only for test subprocesses. Reproduce
 the [platform paths](https://github.com/swiftlang/swift-package-manager/blob/swift-6.2-RELEASE/Sources/PackageModel/SwiftSDKs/SwiftSDK.swift)
 in order: Developer/Library/Frameworks, Developer/Library/PrivateFrameworks, and
@@ -138,11 +161,19 @@ before platform paths using UserToolchain's fixed derivation and extension test.
 Match Apple's framework-leaf rule; a nested framework Libraries child uses library
 overrides. The dylinker is not a library-path override. Do not assume XCTest is
 provided only by the system or that a version string proves runtime-library bytes.
-The [selected toolchain implementation](https://github.com/swiftlang/swift-package-manager/blob/swift-6.2-RELEASE/Sources/PackageModel/UserToolchain.swift)
+The [selected toolchain implementation](https://github.com/swiftlang/swift-package-manager/blob/swift-6.2.4-RELEASE/Sources/PackageModel/UserToolchain.swift)
 also identifies compiler/library overrides. Nonempty DYLD variables, custom
 Swift/SDK/toolchain/library overrides, or a different Swift entrypoint are rejected
 requests, rather than incomplete evidence eligible for fallback. Reject nonempty
 `SWIFTPM_PLATFORM_PATH_*` overrides too.
+
+The hosted toolchain reports Apple Swift 6.2.4. Its
+[test command](https://github.com/swiftlang/swift-package-manager/blob/swift-6.2.4-RELEASE/Sources/Commands/SwiftTestCommand.swift)
+constructs the test environment in runTestProducts and passes it to TestRunner,
+which chooses xctest or getSwiftTestingHelper before launching. XCTest discovery
+also calls constructTestEnvironment. Therefore an additional plain launch of
+these helpers is outside this harness's actual path. This corrects context
+selection without omitting any selected helper, transferred image or dependency.
 
 Cap collection at 90 seconds, 50,000 scanned entries, 512 images, 4,096 cached-path
 queries, 4,096 launch/ancestor contexts, 32-image chains, 16,384 edges, 128 search
@@ -184,10 +215,15 @@ legacy fallback boundary; they do not prove that every installed image tool matc
 
 Before producer compilation, run this same bounded collector over selected tools
 and their external dependencies without scanning `.build` or executing any native
-artifact. Emit `native-tool-preflight` host/closure timing and actionable unsupported
-evidence early. Unavailability retains the existing same-image fallback policy;
-preflight never substitutes for the full product proof. Recollect a fresh host
-and full closure after compilation so the native time budget cannot span the
+artifact. Emit `native-tool-preflight` host/closure timing, `host_status`,
+`build_allowed` and actionable capped diagnostics. With complete host evidence,
+an incomplete selected-tool closure fails before compilation. This explicitly
+narrows producer fallback to avoid compiling while a known tool-only dependency
+is unsupported. Unavailable host/API evidence retains the original exact-image
+fallback; post-build and worker incomplete-evidence paths retain it too. Different
+images still require complete proof. Preflight never substitutes for the full
+product proof. Recollect a fresh host and full closure after compilation so the
+native time budget cannot span the
 build. Workers retain host admission before extraction and staged full closure
 before installation/discovery. No extra campaign or workflow job is introduced.
 

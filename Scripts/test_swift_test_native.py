@@ -95,7 +95,7 @@ class NativeTests(unittest.TestCase):
         tool = self.write("Xcode.app/Contents/Developer/usr/bin/swift-package",
                           image(dependencies=[(0xC, "/usr/lib/libSystem.B.dylib")]))
         host.tools = {"swift-package":tool}
-        for name in ("xctest", "swiftpm-xctest-helper"):
+        for name in ("xctest", "swiftpm-xctest-helper", "swiftpm-testing-helper"):
             host.tools[name] = self.write("Xcode.app/Contents/Developer/usr/bin/" + name,
                                          image(dependencies=[(0xC, "/usr/lib/libSystem.B.dylib")]))
         host.context = {"schema":native.SCHEMA, "os_build":"25G83", "arch":"arm64",
@@ -437,7 +437,94 @@ class NativeTests(unittest.TestCase):
         for test, target in expected.items():
             self.assertEqual({tuple(edge["targets"]) for edge in fingerprint["edges"][test]}, {(target,)})
             self.assertEqual({Path(edge["context"]["executable"]).name for edge in fingerprint["edges"][test]},
-                             {"xctest", "swiftpm-xctest-helper"})
+                             {"xctest", "swiftpm-xctest-helper", "swiftpm-testing-helper"})
+
+    def test_selected_test_launchers_use_only_swiftpm_environment_without_invented_plain_launch(self):
+        self.products()
+        host = self.host()
+        raw = "/Library/Developer/PrivateFrameworks/OverrideOnly.framework/Versions/A/OverrideOnly"
+        framework = self.write("Xcode.app/Contents/Developer/Library/PrivateFrameworks/OverrideOnly.framework/Versions/A/OverrideOnly",
+                               image(kind=6, dependencies=[(0xC, "/usr/lib/libSystem.B.dylib")]))
+        for name in ("xctest", "swiftpm-xctest-helper", "swiftpm-testing-helper"):
+            host.tools[name].write_bytes(image(dependencies=[(0xC, raw)]))
+        fingerprint = host.closure()
+        for name in ("xctest", "swiftpm-xctest-helper", "swiftpm-testing-helper"):
+            edges = fingerprint["edges"][str(host.tools[name])]
+            self.assertEqual({edge["context"]["mode"] for edge in edges}, {"swiftpm-test"})
+            self.assertEqual({tuple(edge["targets"]) for edge in edges}, {(str(framework),)})
+        self.assertEqual({edge["context"]["mode"]
+                          for edge in fingerprint["edges"][str(host.tools["swift-package"])]}, {"plain"})
+        self.assertNotIn(raw, fingerprint["entries"])
+
+    def test_coredevice_closure_hashes_only_reached_nested_runtime_and_rejects_changes(self):
+        self.products()
+        host = self.host()
+        root = self.root / "Library/Developer/PrivateFrameworks/CoreDevice.framework"
+        nested = self.write(str((root / "Versions/A/Frameworks/Nested.framework/Versions/A/Nested").relative_to(self.root)),
+                            image(kind=6, dependencies=[(0xC, "/usr/lib/libSystem.B.dylib")]))
+        core = self.write(str((root / "Versions/A/CoreDevice").relative_to(self.root)), image(kind=6,
+            dependencies=[(0xC, "@loader_path/Frameworks/Nested.framework/Versions/A/Nested")]))
+        unused = self.write(str((root / "unused.dylib").relative_to(self.root)), b"not a runtime image")
+        host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(core))]))
+        with patch.object(native, "APPLE_RUNTIME_FRAMEWORKS", (root,)):
+            original = host.closure()
+            self.assertEqual(original["entries"][str(core)]["kind"], "developer-framework")
+            self.assertEqual(original["entries"][str(nested)]["sha256"], hashlib.sha256(nested.read_bytes()).hexdigest())
+            self.assertNotIn(str(unused), original["entries"])
+            nested.write_bytes(nested.read_bytes() + b"changed nested runtime")
+            changed = host.closure()
+            self.assertEqual(original["entries"][str(core)], changed["entries"][str(core)])
+            self.assertNotEqual(original["entries"][str(nested)], changed["entries"][str(nested)])
+            with self.assertRaisesRegex(native.UnsupportedRuntime, "differs"):
+                native.same_native_fingerprint(original, changed)
+            sibling = root.with_name("Unreviewed.framework") / "Versions/A/Unreviewed"
+            host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(sibling))]))
+            with patch.object(host, "location", wraps=host.location) as location, \
+                    self.assertRaisesRegex(native.UnsupportedRuntime, "outside-approved-roots"):
+                host.closure(include_build=False)
+            self.assertFalse(any(call.args[0] == sibling for call in location.call_args_list))
+
+    def test_coredevice_root_and_nested_symlink_escapes_are_rejected_before_hashing(self):
+        host = self.host()
+        root = self.root / "Library/Developer/PrivateFrameworks/CoreDevice.framework"
+        real = self.write("Library/Developer/PrivateFrameworks/Real.framework/Versions/A/CoreDevice", image(kind=6))
+        root.symlink_to(real.parents[2], target_is_directory=True)
+        with patch.object(native, "APPLE_RUNTIME_FRAMEWORKS", (root,)), \
+                self.assertRaisesRegex(native.UnsupportedRuntime, "noncanonical-developer-framework-root"):
+            host.location(root / "Versions/A/CoreDevice")
+        root.unlink()
+        root.mkdir()
+        (root / "Escape.dylib").symlink_to(real)
+        with patch.object(native, "APPLE_RUNTIME_FRAMEWORKS", (root,)), \
+                self.assertRaisesRegex(native.UnsupportedRuntime, "runtime-symlink-escapes-root"):
+            host.location(root / "Escape.dylib")
+
+    def test_swift_testing_helper_selection_matches_first_executable_and_refuses_escape_or_absence(self):
+        usr = self.xcode / "Developer/Toolchains/Selected.xctoolchain/usr"
+        libexec = self.write(str((usr / "libexec/swift/pm/swiftpm-testing-helper").relative_to(self.root)), image())
+        libexec.chmod(0o755)
+        self.assertEqual(native.swift_testing_helper(usr, self.xcode), libexec)
+        binary = self.write(str((usr / "bin/swiftpm-testing-helper").relative_to(self.root)), image() + b"preferred")
+        binary.chmod(0o755)
+        self.assertEqual(native.swift_testing_helper(usr, self.xcode), binary)
+        binary.chmod(0o644)
+        self.assertEqual(native.swift_testing_helper(usr, self.xcode), libexec)
+        libexec.unlink()
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "native-swift-testing-helper-unavailable"):
+            native.swift_testing_helper(usr, self.xcode)
+        binary.unlink()
+        outside = self.write("outside-selected-xcode", image())
+        outside.chmod(0o755)
+        binary.symlink_to(outside)
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "native-swift-testing-helper-outside-selected-xcode"):
+            native.swift_testing_helper(usr, self.xcode)
+
+    def test_missing_selected_test_helper_cannot_leave_bundle_coverage_partial(self):
+        self.products()
+        host = self.host()
+        del host.tools["swiftpm-testing-helper"]
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "native-test-launch-context-unavailable"):
+            host.closure()
 
     def test_variant_rpaths_keep_load_order_and_ignore_unvisited_later_roots(self):
         self.products()

@@ -158,10 +158,91 @@ The workflow, nightly schedule, aggregate, package/product/test sources and
 frozen handoff patches have no changes in this repair. The nine previously
 transferred packaging/doc residuals remain unstaged and outside this commit.
 
-Limit: an unavailable tool preflight emits early evidence and continues to the
-existing fallback path; it cannot reject every unavailable native collector
+At the resolver checkpoint, an unavailable tool preflight emitted early evidence
+and continued to the existing fallback path; it could not reject every unavailable native collector
 without also removing the allowed same-image fallback before worker images are
 known. Full post-build and staged proofs remain mandatory for different images.
 No native completeness, new hosted runtime result, API/layout proof or savings
 claim follows from these local fixtures. Root owns the next automatic candidate's
 observation and any final integration decision; no extra campaign was dispatched.
+
+## Selected test launch and CoreDevice repair intent
+
+Resume at `a61c4c6c2c36e62f188d5ec0686a4c9887a37228`. Run `40135413579`
+reports `runtime-path-outside-approved-roots` before and after compilation in
+plain-mode xctest → XCTest → XCUIAutomation. The diagnostic install-name SHA256
+`b731e0a584599aaffe55a2567d1c3a7330227073f2e4bfa9ff32042e271017e0`
+matches exactly `/Library/Developer/PrivateFrameworks/CoreDevice.framework/Versions/A/CoreDevice`.
+This is an identified declared edge, not evidence that its closure is complete.
+
+Hosted Apple Swift is 6.2.4. Its primary
+[test command](https://github.com/swiftlang/swift-package-manager/blob/swift-6.2.4-RELEASE/Sources/Commands/SwiftTestCommand.swift)
+and [test environment](https://github.com/swiftlang/swift-package-manager/blob/swift-6.2.4-RELEASE/Sources/Commands/Utilities/TestingSupport.swift)
+launch xctest, the XCTest discovery helper, and the Swift Testing helper with
+the constructed test environment. Their extra plain launch was invented by this
+collector. Retain ordinary tool plain launches and all transferred image audits;
+cover test bundles under all three actual helpers. The selected
+[UserToolchain](https://github.com/swiftlang/swift-package-manager/blob/swift-6.2.4-RELEASE/Sources/PackageModel/UserToolchain.swift)
+chooses the first executable Swift Testing helper from toolchain bin, then
+libexec/swift/pm. Include that selected helper's identity and recursive closure.
+
+Root approved exactly the CoreDevice framework root, including canonically
+contained nested runtime files reached by dependency traversal. Require the root
+itself canonical, reject sibling and escaping symlink paths, retain full hashes
+and all budgets, and do not enumerate its parent or execute runtime binaries.
+Other external roots stay unsupported. No existing artifact contains CoreDevice
+headers, so further closed-framework imports remain unproved; no speculative
+CoreDeviceUtilities/Mercury admission follows from third-party reports.
+
+Affected checks will prove the exact failing-before launch shape, selected-helper
+search/absence/containment, all three bundle contexts, exact CoreDevice/nested
+bytes and changed-byte rejection, sibling refusal, root/leaf symlink escapes,
+and retained artifact/fallback/isolation/aggregate contracts. The coordinator
+retains native watching; there is no new agent, campaign, SDK or host mutation.
+
+Root also approved an early producer gate: complete native host evidence with
+an incomplete selected-tool closure fails before compilation, after emitting the
+bounded diagnostic. This supersedes producer fallback only for that case.
+Unavailable host/API evidence retains original exact-image fallback, as do the
+existing post-build/worker incomplete-evidence paths. The affected harness proof
+uses a compiler sentinel and separately verifies unavailable-host continuation.
+
+## Selected runtime repair result and limits
+
+The implementation admits only the approved CoreDevice framework and hashes
+its declared recursive closure, including reached nested images. The root itself
+must be canonical. Selected Swift Testing helper lookup follows the first
+executable candidate in the two source-defined locations; its path/bytes join
+host identity and full closure. All three test launchers use only the constructed
+test environment. Ordinary tools and transferred-image coverage remain intact.
+The producer emits host status and build admission separately, stopping before
+the compiler when complete host evidence exposes unsupported selected-tool
+dependencies. Unavailable-host, post-build and worker fallback remain exact-image
+only. No additional external root is inferred or admitted.
+
+The final deduplicated union passed 147 artifact/native/evidence/isolated-command
+checks in 14.293 seconds, existing path-gate/aggregate fixtures, and 302 local
+documentation links. Fresh admission was 25.79% CPU and 48.64 GiB available RAM;
+one serial process held the nonblocking portfolio lock. Exact fixture-parent
+cleanup was verified. Required `make test` and `make check` were attempted under
+fresh admission/lock and both exit 2 for missing Swift and plutil respectively.
+One earlier make-check admission found the portfolio lock busy and did not run;
+source inspection proceeded before the later admitted attempt. No tools were
+installed.
+
+The unchanged contained launch regression in
+`.evidence-compiled-tests-20261024/prove_test_launch_repair.py` fails on exact
+`a61c4c6c2c36e62f188d5ec0686a4c9887a37228` with
+`runtime-path-outside-approved-roots` and passes the candidate on the same fixture.
+Its SHA256 is `477ede2abaac5e027845733bbd5985c406a7ffe098382952ac47e67dc6b94295`;
+the native candidate SHA256 is
+`8f67385258f6ce3b9ba8c7baa72964021e2805c315aa65ff8084c369cd3dee40`.
+The durable result binds both source hashes, the fixture hash and exact scratch
+cleanup. These are synthetic parser/contract proofs, not real CoreDevice or Mac
+loader proof. Further external imports can still fail the early producer gate;
+native completeness, collection overhead and both-shard qualification remain
+hosted gaps owned by the coordinator's existing watch.
+
+The workflow, daily 05:00 America/New_York schedule, required aggregate, product
+sources and frozen handoff bytes are unchanged. Nine known packaging/doc residuals
+remain outside this six-file repair. No extra campaign or native execution ran.

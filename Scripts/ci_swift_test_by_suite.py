@@ -1081,11 +1081,18 @@ def run_suites() -> int:
             if preflight is not None:
                 tool_runtime, tool_seconds = build_artifact.native_finish(
                     preflight, Path.cwd() / ".build", include_build=False)
+                host_complete = preflight["host"] is not None
+                build_allowed = not host_complete or tool_runtime["status"] == "complete"
                 emit_evidence("native-tool-preflight", status=tool_runtime["status"],
+                              host_status="complete" if host_complete else "unavailable",
+                              build_allowed=build_allowed,
                               reason=tool_runtime.get("reason"), host_seconds=preflight["host_seconds"],
                               closure_seconds=tool_seconds, diagnostic=tool_runtime.get("diagnostic"))
-                # Early evidence cannot replace the complete post-build proof or
-                # change its original exact-image fallback when unavailable.
+                if not build_allowed:
+                    raise ValueError("native selected-tool runtime closure incomplete before compilation: "
+                                     + tool_runtime["reason"])
+                # Unavailable host/API evidence retains exact-image fallback.
+                # Complete tool preflight never replaces the post-build proof.
         discovered = swift_test_list(swift_command, stats, skip_build=args.use_build is not None)
         if restored is not None:
             build_artifact.require(stats.test_ids == restored["test_ids"],
