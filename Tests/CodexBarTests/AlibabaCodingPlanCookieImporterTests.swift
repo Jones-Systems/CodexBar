@@ -136,14 +136,4 @@ struct AlibabaCodingPlanCookieImporterTests {
         #expect(candidates.contains(.chrome) == false)
     }
 }
-
-#else
-
-struct AlibabaCodingPlanCookieImporterTests {
-    @Test
-    func `non mac OS placeholder`() {
-        #expect(true)
-    }
-}
-
 #endif
