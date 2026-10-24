@@ -438,8 +438,6 @@
         "Tests/CodexBarTests/KiroBinaryLocatorTests.swift",
         "Tests/CodexBarTests/KiroLoginRunnerTests.swift",
         "Tests/CodexBarTests/KiroMenuCardModelTests.swift",
-        "Tests/CodexBarTests/KiroStatusProbeTTYHardStopTests.swift",
-        "Tests/CodexBarTests/KiroStatusProbeTTYProcessTests.swift",
         "Tests/CodexBarTests/KiroStatusProbeTests.swift",
         "Tests/CodexBarTests/KiroTransportRaceTests.swift",
         "Tests/CodexBarTests/KiroUsageLimitsAPITests.swift"

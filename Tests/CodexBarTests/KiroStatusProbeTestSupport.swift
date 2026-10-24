@@ -6,6 +6,14 @@ import Darwin
 import Glibc
 #endif
 
+#if !CODEXBAR_FULL_TEST_PROFILE
+import Testing
+
+// Full declares this serialized suite with its provider tests; normal retains its shared TTY regressions.
+@Suite(.serialized)
+struct KiroStatusProbeTests {}
+#endif
+
 final class KiroTestProcessRegistry: @unchecked Sendable {
     private struct Record {
         var processGroup: pid_t?

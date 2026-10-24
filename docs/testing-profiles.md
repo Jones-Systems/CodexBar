@@ -43,7 +43,9 @@ Keep Codex/Claude account switching, credential isolation, persistence, package
 resource resolution, permission/security/privacy and relevant shipped regressions.
 OpenAI dashboard/web and OpenCodex ingestion are Codex app coverage. OpenAI API is
 a separate unused provider. MiniMax-named LogRedactor tests cover shared redaction.
-Local fleet/account tests are distinct from iCloud synchronization. Shared
+Kiro-named TTY process/hard-stop suites protect shared process cleanup used by
+Codex and Claude and remain normal. Local fleet/account tests are distinct from
+iCloud synchronization. Shared
 invariants retain representative unused-provider fixtures where their subject is
 shared behavior. `CodexBarCoreResourcesPortableTests` remains in the plugin test
 target because the app/helper resource contract is shared.
@@ -95,7 +97,7 @@ exact method identity in the manifest.
 | JetBrains | unused_provider | 3 | JetBrains provider-specific behavior is outside the owner’s Codex/Claude app use. |
 | Kilo | unused_provider | 7 | Kilo provider-specific behavior is outside the owner’s Codex/Claude app use. |
 | Kimi | unused_provider | 2 | Kimi provider-specific behavior is outside the owner’s Codex/Claude app use. |
-| Kiro | unused_provider | 8 | Kiro provider-specific behavior is outside the owner’s Codex/Claude app use. |
+| Kiro | unused_provider | 6 | Kiro provider-specific behavior is outside the owner’s Codex/Claude app use. |
 | LLMProxy | unused_provider | 2 | LLMProxy provider-specific behavior is outside the owner’s Codex/Claude app use. |
 | LiteLLM | unused_provider | 2 | LiteLLM provider-specific behavior is outside the owner’s Codex/Claude app use. |
 | LongCat | unused_provider | 2 | LongCat provider-specific behavior is outside the owner’s Codex/Claude app use. |

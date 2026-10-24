@@ -70,6 +70,8 @@ class ProfileContractTests(unittest.TestCase):
         excluded = {p for g in manifest["full_only_groups"] for p in g["files"]}
         for retained in ("TestsPlugin/CodexBarCoreResourcesPortableTests.swift",
                          "Tests/CodexBarTests/MiniMaxLogRedactorTests.swift",
+                         "Tests/CodexBarTests/KiroStatusProbeTTYHardStopTests.swift",
+                         "Tests/CodexBarTests/KiroStatusProbeTTYProcessTests.swift",
                          "Tests/CodexBarTests/OpenCodexUsageFanOutTests.swift",
                          "Tests/CodexBarTests/CLIWebFallbackTests.swift",
                          "Tests/CodexBarTests/RefreshFailureHookStatusTests.swift"):

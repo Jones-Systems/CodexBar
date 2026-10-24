@@ -21,18 +21,19 @@ include platform conditions and do not expand parameterized cases.
 
 | Profile/source category | Unique files | Lexical declarations |
 | --- | ---: | ---: |
-| Whole-file unused-provider behavior | 283 | 3,043 |
+| Whole-file unused-provider behavior | 281 | 3,036 |
 | Whole-file unused hooks | 8 | 63 |
 | Whole-file unused plugins | 11 | 111 |
 | Whole-file unused iCloud | 2 | 38 |
 | Mixed declarations guarded full-only | 15 modified files | 145 |
-| Normal retained | 750 source files, including mixed files/helpers | 7,372 |
+| Normal retained | 752 source files, including mixed files/helpers | 7,379 |
 | Full restored | 1,054 | 10,772 |
 
-This disables 3,400 declarations normally, with **zero deletions or rewritten
+This disables 3,393 declarations normally, with **zero deletions or rewritten
 assertions**. Only 54 conditional guard lines were inserted into 15 existing
-test files. Removing those added lines exactly reproduces every file’s base
-bytes. Five alias paths in the manifest do not add files/cases. Product Sources,
+test files. The TTY support file also receives a normal-only serialized suite
+declaration because its full-profile declaration lives with excluded provider
+tests. Removing all added lines exactly reproduces every test file’s base bytes. Five alias paths in the manifest do not add files/cases. Product Sources,
 Package.resolved, product targets, dependencies and copied fixtures are unchanged.
 
 Whole-file classification was corrected for ten misleading names/helper owners.
@@ -42,7 +43,9 @@ Antigravity/Crof/OpenCodeGo helper definitions used by normal tests, guarding on
 their unused-provider test declarations. Warp icon and OneConsole behavior are
 also full-only. Shared account/menu/concurrency/cache and platform safety suites
 stay normal despite representative unused-provider fixtures. Shared refresh
-error privacy coverage stays normal. The selector and exact mixed identities,
+error privacy coverage stays normal. Final bulk review restored both Kiro-named
+TTY process/hard-stop suites (seven declarations): they exercise shared process
+cleanup used by Codex and Claude, including delayed discovery and pre-kill hooks. The selector and exact mixed identities,
 reasons and [restoration guide](../testing-profiles.md) are checked in.
 
 CLI research established no app module dependency, but remote Agent Sessions
@@ -93,6 +96,8 @@ PR Linux debug is reported separately. Record native manifests/outcomes, phase
 durations, queue-excluded platform totals and longest job. Do not infer minutes
 saved from lexical counts or call differing cache/configuration samples controlled.
 
-Final bulk review and hosted measurements are pending. Required/advisory check
+The Astra/xhigh bulk review found one seven-test shared TTY restoration group
+(applied) and stale development-guide profile claims (corrected). No other
+supported findings were returned. Hosted outcomes and measurements remain pending. Required/advisory check
 policy is unchanged; manual full is an explicit future re-enable route, with no
 nightly or schedule-timing edits. No CI budget target is claimed yet.
