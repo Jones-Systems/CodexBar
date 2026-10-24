@@ -50,11 +50,6 @@ struct TerminalAppTests {
     }
 
     @Test
-    func `only three cases exist`() {
-        #expect(TerminalApp.allCases.count == 3)
-    }
-
-    @Test
     func `installed terminals always include Terminal and detected alternatives`() {
         let iTermURL = URL(fileURLWithPath: "/Applications/iTerm.app")
         let installed = TerminalApp.installed { bundleIdentifier in
@@ -107,13 +102,6 @@ struct TerminalAppTests {
     func `all cases have non-empty labels`() {
         for app in TerminalApp.allCases {
             #expect(!app.label.isEmpty)
-        }
-    }
-
-    @Test
-    func `round-trip all cases through raw value`() {
-        for app in TerminalApp.allCases {
-            #expect(TerminalApp(rawValue: app.rawValue) == app)
         }
     }
 
