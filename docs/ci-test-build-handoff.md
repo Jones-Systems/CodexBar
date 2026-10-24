@@ -39,7 +39,10 @@ Files are written into a new workspace staging directory; symlinks come last.
 The verified tree is installed only when the worker's `.build` is absent.
 Metadata is never evaluated as commands.
 
-Transfer roots and extraction staging are unique workspace children. Archive
+Transfer roots and extraction staging are unique workspace children. Transfer
+roots use a visible `swift-test-build-` prefix because the artifact action excludes
+hidden directory ancestors. Upload selects only the owned `manifest.json` and
+`build.tar.gz`, with hidden files excluded; no workspace-wide glob is used. Archive
 limits are 4 GiB compressed, 12 GiB expanded, 200,000 members, and 16 MiB manifest;
 packaging/restoring checks available disk space with a 2 GiB residual reserve.
 These are conservative admission limits, not measured runtime sizes. Producer

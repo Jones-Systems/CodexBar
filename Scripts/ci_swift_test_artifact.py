@@ -27,7 +27,9 @@ MAX_PAYLOAD_BYTES = 12 * 1024 ** 3
 MAX_ARCHIVE_BYTES = 4 * 1024 ** 3
 MAX_MANIFEST_BYTES = 16 * 1024 ** 2
 RESERVE_BYTES = 2 * 1024 ** 3
-ROOT_PREFIX = ".swift-test-build-"
+# upload-artifact excludes hidden ancestors by default. Keep this owned root visible;
+# the workflow uploads only the two named payload files, never the whole workspace.
+ROOT_PREFIX = "swift-test-build-"
 
 
 def require(condition, message):

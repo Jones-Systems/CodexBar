@@ -68,6 +68,36 @@ class BuildArtifactTests(unittest.TestCase):
         self.assertFalse((self.workspace / ".build").exists())
         self.assertEqual(list(self.workspace.glob(".swift-test-restore-*")), [])
 
+    def test_upload_selects_only_visible_owned_manifest_and_archive_before_cleanup(self):
+        environment_file = self.workspace / "github-environment"
+        with patch.dict(os.environ, {"GITHUB_WORKSPACE": str(self.workspace),
+                                     "GITHUB_ENV": str(environment_file)}, clear=True), \
+                patch.object(sys, "argv", ["artifact", "prepare-transfer"]):
+            artifact.main()
+        environment = dict(line.split("=", 1) for line in environment_file.read_text().splitlines())
+        root = Path(environment["CODEXBAR_TEST_BUILD_ROOT"])
+        self.assertEqual(root.parent, self.workspace)
+        self.assertFalse(root.name.startswith("."), "upload-artifact excludes hidden staging ancestors")
+        self.runtime()
+        artifact.export_build(self.workspace, root, self.current, TEST_IDS)
+        (root / ".unrelated-metadata").write_text("must not be uploaded")
+        (self.workspace / "unrelated-workspace-file").write_text("must not be uploaded")
+        workflow = (ROOT / ".github/workflows/ci.yml").read_text()
+        upload = workflow.split("      - name: Upload compiled macOS tests\n", 1)[1].split("\n      - name:", 1)[0]
+        selected = upload.split("          path: |\n", 1)[1].split("          include-hidden-files:", 1)[0]
+        paths = [Path(line.strip().replace("${{ env.CODEXBAR_TEST_BUILD_ROOT }}", str(root)))
+                 for line in selected.splitlines() if line.strip()]
+        self.assertEqual(set(paths), {root / artifact.MANIFEST, root / artifact.ARCHIVE})
+        self.assertTrue(all(path.is_file() and not path.is_symlink() for path in paths))
+        self.assertIn("include-hidden-files: false", upload)
+        self.assertIn("if-no-files-found: error", upload)
+        self.assertLess(workflow.index("Upload compiled macOS tests"),
+                        workflow.index("Remove runner-local compiled test transfer"))
+        with patch.dict(os.environ, {"GITHUB_WORKSPACE": str(self.workspace), **environment}, clear=True), \
+                patch.object(sys, "argv", ["artifact", "cleanup-transfer"]):
+            artifact.main()
+        self.assertFalse(root.exists())
+
     def test_runtime_roundtrip_preserves_tools_resources_frameworks_and_executable_modes(self):
         manifest, digest = self.export()
         restored = artifact.restore_build(self.workspace, self.root, digest, self.current)
