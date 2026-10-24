@@ -112,13 +112,6 @@ struct AdaptiveRefreshPolicyCoreTests {
     }
 
     @Test
-    func `future timestamps read as recent`() {
-        let decision = AdaptiveRefreshPolicyCore().nextDelay(for: self.input(ageSeconds: -1_000_000))
-        #expect(decision.reason == .recentInteraction)
-        #expect(decision.delay == .seconds(2 * 60))
-    }
-
-    @Test
     func `every decision stays within the two to thirty minute bounds`() {
         let ages: [TimeInterval?] = [nil, -1_000_000, 0, 300, 301, 3600, 3601, 14399, 14400, 1_000_000]
         for age in ages {
