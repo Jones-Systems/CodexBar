@@ -1,7 +1,7 @@
 {
   "schema": "codexbar-product-removal-comparison/v1",
   "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
-  "candidateSourceRevision": "b0e2069e515ffecd72de920f0aca96547750ab55",
+  "candidateSourceRevision": "ad4aea4f101ba50a48f38e285d683359f8e81672",
   "pullRequest": "https://github.com/Jones-Systems/CodexBar/pull/41",
   "baseBranch": "work/test-value-bar-pass2-20261024",
   "method": "Exact committed Git blobs; files include Swift source under Sources and tests under Tests, TestsLinux, TestsPlugin; line count uses bytes.splitlines; lexical Swift Testing @Test declaration counts exclude comments/strings and do not represent parameterized/runtime cases.",
@@ -26,8 +26,8 @@
     "after": {
       "productSwift": {
         "files": 651,
-        "lines": 193239,
-        "bytes": 7944157
+        "lines": 193236,
+        "bytes": 7944030
       },
       "productCHeaders": {
         "files": 1,
@@ -36,8 +36,8 @@
       },
       "testSwift": {
         "files": 734,
-        "lines": 252221,
-        "bytes": 10933181
+        "lines": 252279,
+        "bytes": 10933846
       }
     }
   },
@@ -365,19 +365,19 @@
       "status": "unavailable",
       "exitCode": 2,
       "reason": "plutil absent",
-      "latestAttemptRevision": "b0e2069e515ffecd72de920f0aca96547750ab55"
+      "latestAttemptRevision": "ad4aea4f101ba50a48f38e285d683359f8e81672"
     },
     "makeTest": {
       "status": "unavailable",
       "exitCode": 2,
       "reason": "Swift absent; no test executable ran",
-      "latestAttemptRevision": "b0e2069e515ffecd72de920f0aca96547750ab55"
+      "latestAttemptRevision": "ad4aea4f101ba50a48f38e285d683359f8e81672"
     },
     "normalAndFullProfileManifests": "pass",
     "documentationLinks": {
       "status": "pass",
       "localLinks": 178,
-      "latestAttemptRevision": "b0e2069e515ffecd72de920f0aca96547750ab55"
+      "latestAttemptRevision": "ad4aea4f101ba50a48f38e285d683359f8e81672"
     },
     "llmsIndex": "pass",
     "whitespace": "pass",
@@ -390,7 +390,9 @@
       "status": "pass",
       "method": "Existing generator --write followed by --check",
       "value": "56738678d8c0245c",
-      "generatedOnlyRepairRevision": "e0575c44592208fa16d0ac71d7b14044c0b49418"
+      "generatedOnlyRepairRevision": "e0575c44592208fa16d0ac71d7b14044c0b49418",
+      "latestCheckRevision": "ad4aea4f101ba50a48f38e285d683359f8e81672",
+      "latestCheckMethod": "Existing generator --check; value unchanged"
     },
     "portableHarnessFixtures": {
       "profileTests": 4,
@@ -449,7 +451,7 @@
         "x64": 120959755819,
         "arm64": 120959755774
       },
-      "qualification": "Both architectures compiled successfully then failed three CLICardsRendererTests with four issues; current repair requires new-head CI. Product Swift bytes unchanged.",
+      "qualification": "Both architectures compiled successfully then failed three CLICardsRendererTests with four issues. Repairs were later qualified on both Linux architectures at 41b9f8a; this remains historical compile evidence.",
       "source": "Root exact-head CI observation"
     },
     "siteLintFailure": {
@@ -457,6 +459,30 @@
       "job": 120959693184,
       "cause": "README banner literal and stale 69-provider locale/site copy; repaired with truthful two-provider copy plus explicit ID inventories",
       "repairRevision": "b0e2069e515ffecd72de920f0aca96547750ab55"
+    },
+    "linuxAndMuslSuccess": {
+      "status": "pass",
+      "revision": "41b9f8af54d3c989c74e7abb0e96d20d0ead251f",
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40124736394",
+      "jobs": {
+        "linuxX64": "success",
+        "linuxARM64": "success",
+        "linuxMusl": "success"
+      },
+      "source": "Root exact-head completed-run observation, October 24, 2026, 3:26:07 PM EDT",
+      "qualification": "Renderer fixture repairs passed on both Linux architectures; aggregate failed only the known 38 SwiftLint violations; draft macOS jobs skipped. Later comment/format repairs preserve tokens/literals but change blobs, so these are not new-head check passes."
+    },
+    "swiftLintFailure": {
+      "revision": "41b9f8af54d3c989c74e7abb0e96d20d0ead251f",
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40124736394",
+      "job": 120963638168,
+      "violations": {
+        "superfluousDisableCommand": 5,
+        "lineLength": 28,
+        "multilineArguments": 5
+      },
+      "repairRevision": "ad4aea4f101ba50a48f38e285d683359f8e81672",
+      "qualification": "Direct completed-job log inspected; all 38 reported violations addressed without new disables. Native SwiftLint/SwiftFormat remain unavailable locally; exact new-head lint is pending."
     }
   },
   "appSizeAndBuildComparison": {
@@ -580,7 +606,156 @@
       }
     ],
     "productSwiftChanges": false,
-    "newNativeValidation": "pending",
+    "newNativeValidation": "Pass on Linux x64 and ARM64 at exact 41b9f8af54d3c989c74e7abb0e96d20d0ead251f; macOS remains pending",
     "repairRevision": "b0e2069e515ffecd72de920f0aca96547750ab55"
+  },
+  "lintRepair": {
+    "baseRevision": "41b9f8af54d3c989c74e7abb0e96d20d0ead251f",
+    "scope": "12 formatting/comment files plus 11 exact catalog line anchors; bounded lexical evidence, not Swift parsing or native tests",
+    "files": [
+      {
+        "path": "Sources/CodexBar/IconRenderer.swift",
+        "codeTokensIdentical": true,
+        "tokenCount": 4811,
+        "literalByteSequenceIdentical": true,
+        "literals": 0,
+        "beforeBlob": "61062105f0832fceda48d83612d703f5aa92270b",
+        "afterBlob": "8cef7e7c497076817b50ac2143d91883b4010511"
+      },
+      {
+        "path": "Sources/CodexBarCLI/CLICardsCommand.swift",
+        "codeTokensIdentical": true,
+        "tokenCount": 1294,
+        "literalByteSequenceIdentical": true,
+        "literals": 45,
+        "beforeBlob": "dc1b63084ed902a5a07272d65ddf97724d972c65",
+        "afterBlob": "beb592d68900f8976225b207b4e0a4b798fc9048"
+      },
+      {
+        "path": "Sources/CodexBarCore/CostUsageFetcher.swift",
+        "codeTokensIdentical": true,
+        "tokenCount": 7932,
+        "literalByteSequenceIdentical": true,
+        "literals": 22,
+        "beforeBlob": "cce3aa530d7985933d9c08e9fb5bbbe34b081b69",
+        "afterBlob": "b6f3e7e7f4024554f40f04a3429febf2d6860103"
+      },
+      {
+        "path": "Tests/CodexBarTests/CLISnapshotTests.swift",
+        "codeTokensIdentical": true,
+        "tokenCount": 3915,
+        "literalByteSequenceIdentical": true,
+        "literals": 138,
+        "beforeBlob": "48a2b675ff66c50f995a2eed5cfc25cd64fb09b5",
+        "afterBlob": "2b7e3854e6ba6fe63b9f0332930bbd20e3539e0b"
+      },
+      {
+        "path": "Tests/CodexBarTests/CLIUnificationGoldenTests.swift",
+        "codeTokensIdentical": true,
+        "tokenCount": 661,
+        "literalByteSequenceIdentical": true,
+        "literals": 6,
+        "beforeBlob": "19b3f509e9a2ec560ae12749a6f93037ca39a667",
+        "afterBlob": "5dc9dce916010f4aeb6b4566a551e71b39adbd3c"
+      },
+      {
+        "path": "Tests/CodexBarTests/HistoricalUsagePaceBackfillAuthorityTests.swift",
+        "codeTokensIdentical": true,
+        "tokenCount": 4187,
+        "literalByteSequenceIdentical": true,
+        "literals": 35,
+        "beforeBlob": "6fe45545d5c8d6b961d31a02b6bba2bf534336e4",
+        "afterBlob": "d9252670d8a35dc7a49ab1907dcd430c430c13ad"
+      },
+      {
+        "path": "Tests/CodexBarTests/ProviderArchitectureGatekeeperTests.swift",
+        "catalogAnchorsShifted": 11,
+        "entriesValidated": 312,
+        "allOtherBytesIdentical": true
+      },
+      {
+        "path": "Tests/CodexBarTests/ProviderConfigEnvironmentTests.swift",
+        "codeTokensIdentical": true,
+        "tokenCount": 166,
+        "literalByteSequenceIdentical": true,
+        "literals": 8,
+        "beforeBlob": "b460cc9903d86005d058f9ca5748436c5f2ee66f",
+        "afterBlob": "a31068e07d12919f8d29debb7fd3ec512b361a03"
+      },
+      {
+        "path": "Tests/CodexBarTests/SessionEquivalentForecastMigrationTests.swift",
+        "codeTokensIdentical": true,
+        "tokenCount": 2809,
+        "literalByteSequenceIdentical": true,
+        "literals": 22,
+        "beforeBlob": "48fac1a0115d20a41ed027a5abe54d8aeee4452f",
+        "afterBlob": "cef760828c16ed89fa9eb0086c92c8db4a25588a"
+      },
+      {
+        "path": "Tests/CodexBarTests/SessionEquivalentForecastTests.swift",
+        "codeTokensIdentical": true,
+        "tokenCount": 9456,
+        "literalByteSequenceIdentical": true,
+        "literals": 52,
+        "beforeBlob": "52a0f14b6a7d300a500b7246a3e27bb6c1b2ce94",
+        "afterBlob": "59ae30f959a221f76f347df3d91e92d6a5879570"
+      },
+      {
+        "path": "Tests/CodexBarTests/SettingsStoreTests.swift",
+        "codeTokensIdentical": true,
+        "tokenCount": 8204,
+        "literalByteSequenceIdentical": true,
+        "literals": 111,
+        "beforeBlob": "021450fa5f79ed29e612c6bcfdeb5563ab8af8e6",
+        "afterBlob": "1b0a348d5ebd2d75b75326c694a33f887e830eeb"
+      },
+      {
+        "path": "Tests/CodexBarTests/SharedTokenPublicationTests.swift",
+        "codeTokensIdentical": true,
+        "tokenCount": 691,
+        "literalByteSequenceIdentical": true,
+        "literals": 7,
+        "beforeBlob": "2c570124de7a59bc231c5142d44b265792f7c66d",
+        "afterBlob": "11aa1d0f137e44d13a94a2fe4785bf50108f9b16"
+      },
+      {
+        "path": "Tests/CodexBarTests/UsageStorePlanUtilizationCelebrationTests.swift",
+        "codeTokensIdentical": true,
+        "tokenCount": 8045,
+        "literalByteSequenceIdentical": true,
+        "literals": 70,
+        "beforeBlob": "56018f0b967ce570a0c6f4236c040f332af312c5",
+        "afterBlob": "50190d39712fddf2a71136129a0e4f92fc932c90"
+      }
+    ],
+    "repairRevision": "ad4aea4f101ba50a48f38e285d683359f8e81672",
+    "reportedViolations": {
+      "superfluousDisableCommand": 5,
+      "lineLength": 28,
+      "multilineArguments": 5
+    },
+    "noDeclarationsAssertionsFixtureValuesOrLimitsChanged": true,
+    "sourceBlobIdentityToLinuxQualifiedHead": false,
+    "architectureScannerByteIdentical": true,
+    "catalogOnlyChange": "Eleven source line numbers decrease by one; all 312 entries, counts, fingerprints, anchors, reasons and scanner bytes are otherwise identical.",
+    "localVerification": {
+      "codeTokenAndStringLiteralEquivalence": "pass for 12 edited Swift files, bounded lexical inspection against 41b9f8a; not a compiler proof",
+      "balancedCodeDelimiters": "pass for those 12 files",
+      "allExactCatalogAnchors": "pass: 312",
+      "newLinesOver120Characters": 0,
+      "parserHashCheck": "pass",
+      "makeCheck": "unavailable: plutil absent, exit 2",
+      "makeTest": "unavailable: Swift absent, exit 2; no test executable ran",
+      "setupCorrections": "First scratch checker overcounted three in-test catalog fixtures; narrowed to actual catalog. First make test attempt needed the explicitly supplied owned fixture parent created before the subsequent Swift-unavailable attempt. No product/test code changed in response. The first documentation-index invocation used a nonexistent filename; the actual lint route Scripts/generate-llms.mjs --check passed.",
+      "freshCPUUsedPercent": {
+        "lexicalProof": 15.05,
+        "parserHash": 14.06,
+        "makeCheck": 15.05,
+        "makeTest": 8.1
+      },
+      "nonblockingSharedBenchmarkLock": "acquired for each serial command",
+      "documentationLinks": "pass: 178 local links",
+      "llmsIndex": "pass: actual Scripts/generate-llms.mjs --check"
+    }
   }
 }

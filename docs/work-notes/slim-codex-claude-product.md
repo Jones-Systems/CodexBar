@@ -212,13 +212,42 @@ process drain and absence is verified. No manual hosted rerun is dispatched.
 This follow-up does not change product source/build-size metrics. It removes two
 lexical test declarations; hosted native qualification remains pending.
 
+Root reported completed run `40124736394` at exact
+`41b9f8af54d3c989c74e7abb0e96d20d0ead251f`: Linux x64, Linux ARM64 and musl
+all succeeded. This qualifies the renderer fixture repair on both Linux architectures;
+the aggregate failed only known lint, and draft macOS skips remain unqualified.
+The direct lint job `120963638168` log lists exactly 38 SwiftLint errors: five
+obsolete suppression rules, 28 long lines and five multiline-argument violations.
+Repair `ad4aea4f101ba50a48f38e285d683359f8e81672` removes only the named rules
+(and the matching golden-test enable), wraps existing expressions and preserves
+all assertion tokens, fixture literals, scanner/persistence limits and declarations.
+No renderer behavior changed and no new rule was disabled. Removing source comments
+shifts 11 existing catalog line anchors by one; all 312 entries, fingerprints,
+counts, anchors, reasons and scanner bytes otherwise remain identical.
+
+Bounded lexical inspection against `41b9f8a` passes for all 12 formatted/comment
+files, including exact string-literal byte sequences and balanced code delimiters.
+All 312 recorded catalog anchors match. These files have new Git blobs; token
+preservation is not exact-blob or new-head compiler/SwiftLint qualification. The
+60 cost-suite blobs and four critical history/identity/catch-up suites still match
+the original base exactly, and no shared fixture changed. Existing parser-hash
+`--check` passes unchanged. Fresh per-command CPU samples were below 85% and each
+serial command acquired the nonblocking shared lock. Required `make check` and
+`make test` were attempted: plutil and Swift respectively are absent (exit 2), so
+no native formatter/test pass is claimed and no tools were installed. Initial
+scratch-catalog, fixture-parent and index-command setup errors were corrected;
+none ran native tests or prompted product/assertion changes. Details and the final
+passing static results are in the comparison record. Owned scratch is removed
+after process drain. Root retains the CI watch; no manual run or extra agent is
+started. Exact new-head lint/native qualification and the existing draft hold remain.
+
 Exact committed-blob [comparison](../engineering-specs/slim-codex-claude-comparison.json):
 
 | Inventory | Base | Product candidate |
 | --- | ---: | ---: |
-| Product Swift files / lines | 1,201 / 307,271 | 651 / 193,239 |
+| Product Swift files / lines | 1,201 / 307,271 | 651 / 193,236 |
 | Product C/header files / lines | 21 / 79,719 | 1 / 1 |
-| Test Swift files / lines | 1,059 / 368,064 | 734 / 252,221 |
+| Test Swift files / lines | 1,059 / 368,064 | 734 / 252,279 |
 | Lexical Swift Testing declarations | 10,575 | 6,544 |
 
 330 test paths were removed and 5 added, including shared-suite renames; these are
@@ -238,5 +267,5 @@ next gate is qualified compile-once/patch02 integration followed by exact compar
 macOS builds with the same toolchain, architecture, configuration and dependency/cache
 conditions, then required macOS/Linux coverage for the final source. Source counts
 are not build-time or binary-size estimates. Draft state prevents a readiness claim;
-the first automatic run's draft macOS skip and failed lint do not qualify this head.
+the Linux/musl successes at `41b9f8a` and draft macOS skips do not qualify the new head.
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->
