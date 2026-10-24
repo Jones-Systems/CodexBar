@@ -30,6 +30,11 @@ RESERVE_BYTES = 2 * 1024 ** 3
 # upload-artifact excludes hidden ancestors by default. Keep this owned root visible;
 # the workflow uploads only the two named payload files, never the whole workspace.
 ROOT_PREFIX = "swift-test-build-"
+IDENTITY_FIELDS = frozenset({
+    "repository", "source_revision", "run_id", "run_attempt", "workflow_ref", "workspace", "profile",
+    "profile_manifest_sha256", "package_sha256", "resolved_sha256", "toolchain_id", "runner_os",
+    "runner_arch", "image_os", "image_version",
+})
 
 
 def require(condition, message):
@@ -192,6 +197,32 @@ def export_build(workspace, root, current, test_ids):
         raise
 
 
+def require_identity(producer, current):
+    if producer == current:
+        return
+
+    def public_value(value):
+        # Identity contains public CI identifiers, never arbitrary manifest metadata.
+        if not isinstance(value, str):
+            return "<non-string>"
+        return value if len(value) <= 256 else "<oversized>"
+
+    differences = {}
+    if isinstance(producer, dict) and isinstance(current, dict):
+        for key in sorted(IDENTITY_FIELDS):
+            if (key in producer) != (key in current) or producer.get(key) != current.get(key):
+                differences[key] = {
+                    "producer": public_value(producer[key]) if key in producer else "<missing>",
+                    "worker": public_value(current[key]) if key in current else "<missing>",
+                }
+        if set(producer) - IDENTITY_FIELDS or set(current) - IDENTITY_FIELDS:
+            differences["schema"] = "unrecognized identity fields (values omitted)"
+    else:
+        differences["schema"] = "identity must be an object (value omitted)"
+    raise ValueError("build identity differs from this source/profile/run/toolchain/runner; mismatches="
+                     + json.dumps(differences, sort_keys=True, ensure_ascii=True))
+
+
 def read_manifest(root, expected_sha256, current):
     require(re.fullmatch(r"[0-9a-f]{64}", expected_sha256 or ""), "producer manifest hash is required")
     path = root / MANIFEST
@@ -202,7 +233,7 @@ def read_manifest(root, expected_sha256, current):
     require(set(manifest) == {"schema", "identity", "archive_sha256", "archive_bytes", "payload_bytes",
                               "entries", "test_ids", "discovery_sha256"} and manifest["schema"] == SCHEMA,
             "unsupported build manifest")
-    require(manifest["identity"] == current, "build identity differs from this source/profile/run/toolchain/runner")
+    require_identity(manifest["identity"], current)
     for key, ceiling in (("archive_bytes", MAX_ARCHIVE_BYTES), ("payload_bytes", MAX_PAYLOAD_BYTES),
                          ("entries", MAX_ENTRIES)):
         require(type(manifest[key]) is int and 0 < manifest[key] <= ceiling, f"invalid {key}")

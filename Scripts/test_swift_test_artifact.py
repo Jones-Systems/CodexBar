@@ -119,13 +119,54 @@ class BuildArtifactTests(unittest.TestCase):
         _, digest = self.export()
         for key in self.current:
             changed = {**self.current, key: "different"}
-            with self.subTest(key=key), self.assertRaisesRegex(ValueError, "identity differs"):
+            with self.subTest(key=key), self.assertRaisesRegex(ValueError, "identity differs") as error:
                 artifact.restore_build(self.workspace, self.root, digest, changed)
+            self.assertIn(key, str(error.exception))
             self.assert_no_restore()
         for value in (None, "", "0" * 64):
             with self.subTest(hash=value), self.assertRaises(ValueError):
                 artifact.restore_build(self.workspace, self.root, value, self.current)
             self.assert_no_restore()
+
+    def test_hosted_image_rollout_mismatch_reports_versions_and_rejects_before_extraction(self):
+        self.current["image_version"] = "20261013.0424.1"
+        _, digest = self.export()
+        worker = {**self.current, "image_version": "20261021.0445.8"}
+        with patch.object(artifact, "extract_build") as extract, \
+                self.assertRaisesRegex(ValueError, "identity differs") as error:
+            artifact.restore_build(self.workspace, self.root, digest, worker)
+        extract.assert_not_called()
+        details = json.loads(str(error.exception).split("mismatches=", 1)[1])
+        self.assertEqual(details, {"image_version": {"producer": "20261013.0424.1",
+                                                   "worker": "20261021.0445.8"}})
+        self.assert_no_restore()
+
+    def test_identity_diagnostics_omit_unknown_metadata_and_structured_or_oversized_values(self):
+        producer = {**self.current, "unexpected_secret": "must-never-appear",
+                    "profile": {"secret": "must-never-appear"}, "workspace": "x" * 257}
+        with self.assertRaisesRegex(ValueError, "identity differs") as error:
+            artifact.require_identity(producer, self.current)
+        message = str(error.exception)
+        self.assertNotIn("must-never-appear", message)
+        self.assertNotIn("unexpected_secret", message)
+        self.assertNotIn("x" * 257, message)
+        details = json.loads(message.split("mismatches=", 1)[1])
+        self.assertEqual(details["profile"]["producer"], "<non-string>")
+        self.assertEqual(details["workspace"]["producer"], "<oversized>")
+        self.assertIn("schema", details)
+
+    def test_identity_diagnostics_escape_controls_and_report_missing_fields(self):
+        producer = {**self.current, "profile": "full\n::error::injected"}
+        del producer["image_version"]
+        with self.assertRaisesRegex(ValueError, "identity differs") as error:
+            artifact.require_identity(producer, self.current)
+        self.assertNotIn("\n", str(error.exception))
+        details = json.loads(str(error.exception).split("mismatches=", 1)[1])
+        self.assertEqual(details["image_version"]["producer"], "<missing>")
+        self.assertEqual(details["profile"]["producer"], "full\n::error::injected")
+        with self.assertRaisesRegex(ValueError, "value omitted") as malformed:
+            artifact.require_identity(["must-never-appear"], self.current)
+        self.assertNotIn("must-never-appear", str(malformed.exception))
 
     def test_current_identity_requires_real_checkout_and_toolchain_evidence(self):
         (self.workspace / "Scripts").mkdir()
