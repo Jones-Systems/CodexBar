@@ -17,6 +17,8 @@ from unittest.mock import patch
 
 import ci_swift_test_artifact as artifact
 import ci_swift_test_by_suite as runner
+# The existing portable artifact-suite entrypoint owns these affected contract checks.
+from test_swift_test_native import NativeTests
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -31,9 +33,11 @@ class BuildArtifactTests(unittest.TestCase):
         self.root = self.workspace / (artifact.ROOT_PREFIX + "transfer")
         self.root.mkdir()
         self.current = {
+            "repository": "Jones-Systems/CodexBar", "workflow_ref": "Jones-Systems/CodexBar/.github/workflows/ci.yml@refs/pull/40/merge",
             "source_revision": "a" * 40, "profile": "normal", "profile_manifest_sha256": "b" * 64,
             "run_id": "123", "run_attempt": "1", "toolchain_id": "c" * 64, "runner_arch": "ARM64",
-            "workspace": str(self.workspace), "image_version": "20261024.1",
+            "workspace": str(self.workspace), "image_version": "20261024.1", "image_os": "macos26",
+            "runner_os": "macOS", "package_sha256": "d" * 64, "resolved_sha256": "e" * 64,
         }
 
     def runtime(self):
@@ -204,6 +208,109 @@ class BuildArtifactTests(unittest.TestCase):
                 return capture(command, **kwargs)
             with self.assertRaises(subprocess.CalledProcessError):
                 artifact.identity(self.workspace, environment, ["swift"], dirty)
+
+    def native_export(self, complete=True):
+        fingerprint = {"schema": "codexbar.swift-test-native/v1", "context": {"os_build":"25G83"},
+                       "entries": {"runtime": {"sha256":"a" * 64}}, "edges": {}}
+        self.runtime()
+        payload = {"status":"complete", "fingerprint":fingerprint} if complete else {
+            "status":"unavailable", "reason":"native-cache-api-unavailable"}
+        manifest, digest = artifact.export_build(self.workspace, self.root, self.current, TEST_IDS,
+                                                 native_runtime=payload)
+        shutil.rmtree(self.workspace / ".build")
+        return manifest, digest, fingerprint
+
+    def test_complete_native_identity_allows_image_rollout_only_after_staged_closure(self):
+        manifest, digest, fingerprint = self.native_export()
+        worker = {**self.current, "image_version":"20261021.0445.8"}
+        def staged():
+            self.assertFalse((self.workspace / ".build").exists())
+            self.assertTrue((host.build / "debug/CodexBarCLI").is_file())
+            return fingerprint
+        host = SimpleNamespace(context=fingerprint["context"], closure=staged)
+        state = {"host":host, "reason":None, "host_seconds":0.25}
+        observed = []
+        with patch.object(artifact, "ENABLE_NATIVE_COMPATIBILITY", True):
+            restored = artifact.restore_build(self.workspace, self.root, digest, worker, state,
+                                               lambda **fields: observed.append(fields))
+        self.assertEqual(restored, manifest)
+        self.assertEqual(observed[0]["mode"], "complete-fingerprint")
+        self.assertEqual(observed[0]["status"], "verified")
+        self.assertEqual(observed[0]["worker_image"], worker["image_version"])
+        self.assertEqual(observed[0]["host_seconds"], 0.25)
+
+    def test_native_host_mismatch_fails_before_extraction_even_with_identical_image(self):
+        _, digest, _ = self.native_export()
+        state = {"host":SimpleNamespace(context={"os_build":"different"}), "reason":None, "host_seconds":0}
+        with patch.object(artifact, "ENABLE_NATIVE_COMPATIBILITY", True), \
+                patch.object(artifact, "extract_build") as extract, \
+                self.assertRaisesRegex(ValueError, "before restore"):
+            artifact.restore_build(self.workspace, self.root, digest, self.current, state)
+        extract.assert_not_called()
+        self.assert_no_restore()
+
+    def test_incomplete_native_identity_uses_only_strict_exact_image_fallback(self):
+        _, digest, _ = self.native_export(complete=False)
+        state = {"host":None, "reason":"native-cache-api-unavailable", "host_seconds":0.1}
+        observed = []
+        with patch.object(artifact, "ENABLE_NATIVE_COMPATIBILITY", True):
+            with patch.object(artifact, "extract_build") as extract, self.assertRaisesRegex(ValueError, "identity differs"):
+                artifact.restore_build(self.workspace, self.root, digest,
+                                       {**self.current, "image_version":"different"}, state)
+            extract.assert_not_called()
+            self.assert_no_restore()
+            artifact.restore_build(self.workspace, self.root, digest, self.current, state,
+                                   lambda **fields: observed.append(fields))
+        self.assertEqual(observed[0]["mode"], "exact-image-fallback")
+        self.assertEqual(observed[0]["reason"], "native-cache-api-unavailable")
+
+    def test_complete_native_proof_never_relaxes_other_identity_or_integrity_boundaries(self):
+        _, digest, fingerprint = self.native_export()
+        state = {"host":SimpleNamespace(context=fingerprint["context"]), "reason":None, "host_seconds":0}
+        self.assertEqual(set(self.current), artifact.IDENTITY_FIELDS)
+        with patch.object(artifact, "ENABLE_NATIVE_COMPATIBILITY", True), \
+                patch.object(artifact, "extract_build") as extract:
+            for key in sorted(artifact.IDENTITY_FIELDS - {"image_version"}):
+                with self.subTest(key=key), self.assertRaisesRegex(ValueError, "identity differs"):
+                    artifact.restore_build(self.workspace, self.root, digest, {**self.current, key:"changed"}, state)
+                self.assert_no_restore()
+            with self.assertRaisesRegex(ValueError, "manifest integrity"):
+                artifact.restore_build(self.workspace, self.root, "f" * 64, self.current, state)
+            archive = self.root / artifact.ARCHIVE
+            archive.write_bytes(archive.read_bytes() + b"corruption")
+            with self.assertRaisesRegex(ValueError, "archive (size|integrity)"):
+                artifact.restore_build(self.workspace, self.root, digest, self.current, state)
+        extract.assert_not_called()
+        self.assert_no_restore()
+
+    def test_incomplete_staged_closure_cannot_admit_a_different_image(self):
+        import ci_swift_test_native as native
+        _, digest, fingerprint = self.native_export()
+        def unsupported():
+            raise native.UnsupportedRuntime("unresolved-runtime-dependency")
+        state = {"host":SimpleNamespace(context=fingerprint["context"], closure=unsupported),
+                 "reason":None, "host_seconds":0}
+        observed = []
+        with patch.object(artifact, "ENABLE_NATIVE_COMPATIBILITY", True), \
+                self.assertRaisesRegex(ValueError, "identity differs"):
+            artifact.restore_build(self.workspace, self.root, digest,
+                                   {**self.current, "image_version":"different"}, state,
+                                   lambda **fields: observed.append(fields))
+        self.assertEqual(observed[0]["mode"], "exact-image-fallback")
+        self.assertEqual(observed[0]["status"], "rejected")
+        self.assertEqual(observed[0]["reason"], "unresolved-runtime-dependency")
+        self.assert_no_restore()
+
+    def test_complete_staged_dependency_mismatch_fails_before_install(self):
+        import ci_swift_test_native as native
+        _, digest, fingerprint = self.native_export()
+        changed = {**fingerprint, "entries":{"runtime":{"sha256":"b" * 64}}}
+        state = {"host":SimpleNamespace(context=fingerprint["context"], closure=lambda:changed),
+                 "reason":None, "host_seconds":0}
+        with patch.object(artifact, "ENABLE_NATIVE_COMPATIBILITY", True), \
+                self.assertRaisesRegex(native.UnsupportedRuntime, "differs"):
+            artifact.restore_build(self.workspace, self.root, digest, self.current, state)
+        self.assert_no_restore()
 
     def test_manifest_and_archive_corruption_fail_closed(self):
         _, digest = self.export()

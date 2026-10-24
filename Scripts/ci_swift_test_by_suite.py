@@ -1055,8 +1055,14 @@ def run_suites() -> int:
             current = build_artifact.identity(Path.cwd(), dict(os.environ), swift_command, run_captured_command)
         if args.use_build is not None:
             artifact_started = time.monotonic()
+            native_state = build_artifact.native_precheck(Path.cwd(), run_captured_command, swift_command)
+            if native_state is not None:
+                emit_evidence("native-host-precheck", status="complete" if native_state["host"] else "unavailable",
+                              reason=native_state["reason"], host_seconds=native_state["host_seconds"])
             restored = build_artifact.restore_build(
                 Path.cwd(), args.use_build, os.environ.get("CODEXBAR_TEST_BUILD_MANIFEST_SHA256"), current,
+                native_state=native_state,
+                native_observer=lambda **fields: emit_evidence("native-compatibility", **fields),
             )
             info = (Path.cwd() / ".build").stat()
             restored_identity = (info.st_dev, info.st_ino)
@@ -1074,9 +1080,17 @@ def run_suites() -> int:
             build_artifact.require(stats.test_ids == restored["test_ids"],
                                    "worker discovery differs from compiled build manifest")
         if args.export_build is not None:
+            native_state = build_artifact.native_precheck(Path.cwd(), run_captured_command, swift_command)
+            native_runtime = None
+            if native_state is not None:
+                native_runtime, native_seconds = build_artifact.native_finish(native_state, Path.cwd() / ".build")
+                emit_evidence("native-compatibility-produced", status=native_runtime["status"],
+                              reason=native_runtime.get("reason"), host_seconds=native_state["host_seconds"],
+                              closure_seconds=native_seconds)
             artifact_started = time.monotonic()
             manifest, manifest_sha256 = build_artifact.export_build(
                 Path.cwd(), args.export_build, current, stats.test_ids,
+                native_runtime=native_runtime,
             )
             stats.artifact_seconds = time.monotonic() - artifact_started
             emit_evidence("build-exported", manifest_sha256=manifest_sha256,

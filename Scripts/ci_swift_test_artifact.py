@@ -13,13 +13,18 @@ import posixpath
 import re
 import shutil
 import stat
+import subprocess
 import tarfile
 import tempfile
+import time
 
 from test_profiles import manifest_digest, selected_profile
 
 
 SCHEMA = "codexbar.swift-test-build/v1"
+NATIVE_SCHEMA = "codexbar.swift-test-build/v2"
+# Root reviews the complete native proof before this is activated/published.
+ENABLE_NATIVE_COMPATIBILITY = False
 MANIFEST = "manifest.json"
 ARCHIVE = "build.tar.gz"
 MAX_ENTRIES = 200000
@@ -150,7 +155,7 @@ def inventory(build):
     return entries, total
 
 
-def export_build(workspace, root, current, test_ids):
+def export_build(workspace, root, current, test_ids, native_runtime=None):
     root = transfer_root(workspace, str(root))
     require(not any(root.iterdir()), "build transfer output must be empty")
     discovery = test_manifest(test_ids)
@@ -186,6 +191,9 @@ def export_build(workspace, root, current, test_ids):
             "archive_bytes": (root / ARCHIVE).stat().st_size, "payload_bytes": total,
             "entries": len(entries), "test_ids": test_ids, "discovery_sha256": discovery,
         }
+        if native_runtime is not None:
+            manifest["schema"] = NATIVE_SCHEMA
+            manifest["native_runtime"] = native_runtime
         encoded = (json.dumps(manifest, sort_keys=True) + "\n").encode()
         require(len(encoded) <= MAX_MANIFEST_BYTES, "build manifest budget exceeded")
         with (root / MANIFEST).open("xb") as output:
@@ -223,17 +231,84 @@ def require_identity(producer, current):
                      + json.dumps(differences, sort_keys=True, ensure_ascii=True))
 
 
-def read_manifest(root, expected_sha256, current):
+def native_precheck(workspace, capture, swift_command=None):
+    if not ENABLE_NATIVE_COMPATIBILITY:
+        return None
+    import ci_swift_test_native as native
+    started = time.monotonic()
+    state = {"host": None, "reason": None, "host_seconds": 0.0}
+    try:
+        state["host"] = native.Host(workspace, workspace / ".build", dict(os.environ), capture,
+                                    swift_command=swift_command)
+    except native.UnsupportedRuntime as error:
+        state["reason"] = str(error)
+    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        state["reason"] = "native-host-evidence-unavailable"
+    state["host_seconds"] = time.monotonic() - started
+    return state
+
+
+def native_finish(state, build):
+    import ci_swift_test_native as native
+    if state["host"] is None:
+        return {"status": "unavailable", "reason": state["reason"]}, 0.0
+    state["host"].build = build
+    started = time.monotonic()
+    try:
+        payload = {"status": "complete", "fingerprint": state["host"].closure()}
+    except native.UnsupportedRuntime as error:
+        payload = {"status": "unavailable", "reason": str(error)}
+    except OSError:
+        payload = {"status": "unavailable", "reason": "native-runtime-file-unavailable"}
+    return payload, time.monotonic() - started
+
+
+def native_payload(value):
+    require(isinstance(value, dict), "invalid native runtime proof")
+    if value.get("status") == "unavailable":
+        require(set(value) == {"status", "reason"}
+                and isinstance(value["reason"], str)
+                and re.fullmatch(r"[a-z0-9-]{1,80}", value["reason"]), "invalid native unavailability reason")
+    else:
+        require(set(value) == {"status", "fingerprint"} and value["status"] == "complete",
+                "invalid native runtime proof status")
+        fingerprint = value["fingerprint"]
+        require(isinstance(fingerprint, dict) and set(fingerprint) == {"schema", "context", "entries", "edges"}
+                and fingerprint["schema"] == "codexbar.swift-test-native/v1"
+                and all(isinstance(fingerprint[key], dict) for key in ("context", "entries", "edges")),
+                "incomplete native runtime proof")
+    return value
+
+
+def read_manifest(root, expected_sha256, current, native_state=None):
     require(re.fullmatch(r"[0-9a-f]{64}", expected_sha256 or ""), "producer manifest hash is required")
     path = root / MANIFEST
     require(path.is_file() and not path.is_symlink() and path.stat().st_size <= MAX_MANIFEST_BYTES,
             "build manifest is absent or oversized")
     require(sha256(path) == expected_sha256, "build manifest integrity mismatch")
     manifest = json.loads(path.read_bytes())
-    require(set(manifest) == {"schema", "identity", "archive_sha256", "archive_bytes", "payload_bytes",
-                              "entries", "test_ids", "discovery_sha256"} and manifest["schema"] == SCHEMA,
+    fields = {"schema", "identity", "archive_sha256", "archive_bytes", "payload_bytes",
+              "entries", "test_ids", "discovery_sha256"}
+    modern = manifest.get("schema") == NATIVE_SCHEMA
+    require(set(manifest) == fields | ({"native_runtime"} if modern else set())
+            and (modern and ENABLE_NATIVE_COMPATIBILITY or manifest["schema"] == SCHEMA),
             "unsupported build manifest")
-    require_identity(manifest["identity"], current)
+    proof = native_payload(manifest["native_runtime"]) if modern else None
+    ready = (proof is not None and proof["status"] == "complete" and native_state is not None
+             and native_state["host"] is not None)
+    if ready:
+        # Image revision alone is provenance; every other original field stays exact.
+        require(isinstance(manifest["identity"], dict) and set(manifest["identity"]) == set(current),
+                "invalid build identity fields")
+        version = manifest["identity"]["image_version"]
+        require(isinstance(version, str) and 0 < len(version) <= 256
+                and not any(c in version for c in "\r\n\0"), "invalid producer image provenance")
+        require_identity({key: value for key, value in manifest["identity"].items() if key != "image_version"},
+                         {key: value for key, value in current.items() if key != "image_version"})
+        require(proof["fingerprint"]["context"] == native_state["host"].context,
+                "native host identity differs before restore")
+    else:
+        require_identity(manifest["identity"], current)
     for key, ceiling in (("archive_bytes", MAX_ARCHIVE_BYTES), ("payload_bytes", MAX_PAYLOAD_BYTES),
                          ("entries", MAX_ENTRIES)):
         require(type(manifest[key]) is int and 0 < manifest[key] <= ceiling, f"invalid {key}")
@@ -290,15 +365,35 @@ def extract_build(archive_path, destination, manifest):
                     "archive symlink chain escapes build tree")
 
 
-def restore_build(workspace, root, expected_sha256, current):
+def restore_build(workspace, root, expected_sha256, current, native_state=None, native_observer=None):
     root = transfer_root(workspace, str(root))
     require(not os.path.lexists(workspace / ".build"), "worker build tree already exists; refusing replacement")
-    manifest = read_manifest(root, expected_sha256, current)
+    manifest = read_manifest(root, expected_sha256, current, native_state)
     require(shutil.disk_usage(workspace).free >= RESERVE_BYTES + manifest["payload_bytes"],
             "insufficient storage for build restore and residual reserve")
     with tempfile.TemporaryDirectory(prefix=".swift-test-restore-", dir=workspace) as temporary:
         stage = Path(temporary)
         extract_build(root / ARCHIVE, stage, manifest)
+        if native_state is not None:
+            actual, seconds = native_finish(native_state, stage / ".build")
+            expected = manifest.get("native_runtime", {"status": "unavailable", "reason": "legacy-manifest"})
+            complete = expected["status"] == actual["status"] == "complete"
+            status = "rejected"
+            try:
+                if complete:
+                    import ci_swift_test_native as native
+                    native.same_native_fingerprint(expected["fingerprint"], actual["fingerprint"])
+                else:
+                    # Missing API/SDK/closure evidence never permits a different image.
+                    require_identity(manifest["identity"], current)
+                status = "verified"
+            finally:
+                if native_observer is not None:
+                    native_observer(mode="complete-fingerprint" if complete else "exact-image-fallback",
+                                    status=status, producer_image=manifest["identity"]["image_version"],
+                                    worker_image=current["image_version"], host_seconds=native_state["host_seconds"],
+                                    closure_seconds=seconds,
+                                    reason=None if complete else actual.get("reason", expected.get("reason")))
         require(not os.path.lexists(workspace / ".build"), "worker build tree appeared during restore")
         (stage / ".build").rename(workspace / ".build")
     return manifest
