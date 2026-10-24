@@ -63,8 +63,13 @@ struct SharedTokenPublicationTests {
             last30DaysCostUSD: nil,
             historyCoverageIsEstablished: available,
             daily: available ? [.init(
-                date: "2026-08-27", inputTokens: 100, outputTokens: 98,
-                totalTokens: 198, costUSD: nil, modelsUsed: nil, modelBreakdowns: nil)] : [],
+                date: "2026-08-27",
+                inputTokens: 100,
+                outputTokens: 98,
+                totalTokens: 198,
+                costUSD: nil,
+                modelsUsed: nil,
+                modelBreakdowns: nil)] : [],
             updatedAt: self.now)
     }
 

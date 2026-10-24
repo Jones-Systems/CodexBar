@@ -44,7 +44,6 @@ struct CLIUnificationGoldenTests {
         #expect(output == expected)
     }
 
-    // swiftlint:disable function_body_length
     @Test
     func `Codex and Claude JSON output golden`() throws {
         let payloads = Self.paceFixtures.map { fixture in
@@ -145,8 +144,6 @@ struct CLIUnificationGoldenTests {
         """
         #expect(output == expected)
     }
-
-    // swiftlint:enable function_body_length
 
     private struct Fixture {
         let provider: UsageProvider

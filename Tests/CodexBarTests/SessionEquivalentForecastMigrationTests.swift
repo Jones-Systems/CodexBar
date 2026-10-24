@@ -22,7 +22,8 @@ extension SessionEquivalentForecastTests {
                 resetsAt: now.addingTimeInterval(3 * 24 * 3600),
                 resetDescription: nil),
             updatedAt: now)
-        let identity = try #require(store._genericSessionEquivalentWindowsForTesting(snapshot: snapshot)?.historyIdentity)
+        let identity = try #require(
+            store._genericSessionEquivalentWindowsForTesting(snapshot: snapshot)?.historyIdentity)
         store.planUtilizationHistory[.claude] = PlanUtilizationHistoryBuckets(unscoped: [
             planSeries(
                 name: .session,
@@ -85,7 +86,8 @@ extension SessionEquivalentForecastTests {
                 resetsAt: now.addingTimeInterval(3 * 24 * 3600),
                 resetDescription: nil),
             updatedAt: now)
-        let identity = try #require(store._genericSessionEquivalentWindowsForTesting(snapshot: snapshot)?.historyIdentity)
+        let identity = try #require(
+            store._genericSessionEquivalentWindowsForTesting(snapshot: snapshot)?.historyIdentity)
         let legacySnapshot = UsageSnapshot(
             primary: snapshot.primary,
             secondary: nil,
@@ -95,7 +97,8 @@ extension SessionEquivalentForecastTests {
                 resetsAt: now.addingTimeInterval(3 * 24 * 3600),
                 resetDescription: nil),
             updatedAt: now)
-        let legacyIdentity = try #require(store._genericSessionEquivalentWindowsForTesting(snapshot: legacySnapshot)?.historyIdentity)
+        let legacyIdentity = try #require(
+            store._genericSessionEquivalentWindowsForTesting(snapshot: legacySnapshot)?.historyIdentity)
         #expect(legacyIdentity != identity)
         store.planUtilizationHistory[.claude] = PlanUtilizationHistoryBuckets(unscoped: [
             planSeries(
@@ -154,7 +157,8 @@ extension SessionEquivalentForecastTests {
                 resetsAt: now.addingTimeInterval(3 * 24 * 3600),
                 resetDescription: nil),
             updatedAt: now)
-        let sourceIdentity = try #require(store._genericSessionEquivalentWindowsForTesting(snapshot: snapshot)?.historyIdentity)
+        let sourceIdentity = try #require(
+            store._genericSessionEquivalentWindowsForTesting(snapshot: snapshot)?.historyIdentity)
         let targetSnapshot = UsageSnapshot(
             primary: snapshot.primary,
             secondary: nil,
@@ -164,7 +168,8 @@ extension SessionEquivalentForecastTests {
                 resetsAt: now.addingTimeInterval(3 * 24 * 3600),
                 resetDescription: nil),
             updatedAt: now)
-        let targetIdentity = try #require(store._genericSessionEquivalentWindowsForTesting(snapshot: targetSnapshot)?.historyIdentity)
+        let targetIdentity = try #require(
+            store._genericSessionEquivalentWindowsForTesting(snapshot: targetSnapshot)?.historyIdentity)
         #expect(targetIdentity != sourceIdentity)
         let account = ProviderTokenAccount(
             id: UUID(),
@@ -235,7 +240,8 @@ extension SessionEquivalentForecastTests {
                 resetsAt: now.addingTimeInterval(3 * 24 * 3600),
                 resetDescription: nil),
             updatedAt: now)
-        let sourceIdentity = try #require(store._genericSessionEquivalentWindowsForTesting(snapshot: snapshot)?.historyIdentity)
+        let sourceIdentity = try #require(
+            store._genericSessionEquivalentWindowsForTesting(snapshot: snapshot)?.historyIdentity)
         let staleTargetSnapshot = UsageSnapshot(
             primary: snapshot.primary,
             secondary: nil,
@@ -245,7 +251,8 @@ extension SessionEquivalentForecastTests {
                 resetsAt: now.addingTimeInterval(3 * 24 * 3600),
                 resetDescription: nil),
             updatedAt: now)
-        let staleTargetIdentity = try #require(store._genericSessionEquivalentWindowsForTesting(snapshot: staleTargetSnapshot)?.historyIdentity)
+        let staleTargetIdentity = try #require(
+            store._genericSessionEquivalentWindowsForTesting(snapshot: staleTargetSnapshot)?.historyIdentity)
         #expect(staleTargetIdentity != sourceIdentity)
         let account = ProviderTokenAccount(
             id: UUID(),
@@ -283,7 +290,9 @@ extension SessionEquivalentForecastTests {
         #expect(migrated.unscoped.isEmpty)
         #expect(migrated.sessionEquivalentWindowPairIdentity(for: accountKey) == sourceIdentity)
         #expect(
-            store.legacySessionEquivalentHistoryIdentity(provider: .claude, accountKey: accountKey) == staleTargetIdentity)
+            store.legacySessionEquivalentHistoryIdentity(
+                provider: .claude,
+                accountKey: accountKey) == staleTargetIdentity)
         let histories = migrated.histories(for: accountKey)
         #expect(findSeries(histories, name: .session, windowMinutes: 300)?.entries.map(\.usedPercent) == [10, 20])
         #expect(findSeries(histories, name: .weekly, windowMinutes: 10080)?.entries.map(\.usedPercent) == [30, 40])
@@ -306,7 +315,8 @@ extension SessionEquivalentForecastTests {
                 resetsAt: now.addingTimeInterval(3 * 24 * 3600),
                 resetDescription: nil),
             updatedAt: now)
-        let sourceIdentity = try #require(identityStore._genericSessionEquivalentWindowsForTesting(snapshot: snapshot)?.historyIdentity)
+        let sourceIdentity = try #require(
+            identityStore._genericSessionEquivalentWindowsForTesting(snapshot: snapshot)?.historyIdentity)
         let targetSnapshot = UsageSnapshot(
             primary: snapshot.primary,
             secondary: nil,
@@ -316,7 +326,8 @@ extension SessionEquivalentForecastTests {
                 resetsAt: now.addingTimeInterval(3 * 24 * 3600),
                 resetDescription: nil),
             updatedAt: now)
-        let targetIdentity = try #require(identityStore._genericSessionEquivalentWindowsForTesting(snapshot: targetSnapshot)?.historyIdentity)
+        let targetIdentity = try #require(
+            identityStore._genericSessionEquivalentWindowsForTesting(snapshot: targetSnapshot)?.historyIdentity)
         #expect(targetIdentity != sourceIdentity)
 
         for targetHasHistory in [false, true] {

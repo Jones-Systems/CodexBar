@@ -737,7 +737,10 @@ extension SessionEquivalentForecastTests {
                 resetsAt: now.addingTimeInterval(2 * 3600),
                 resetDescription: nil),
             updatedAt: now.addingTimeInterval(3600))
-        await store._recordGenericSessionEquivalentHistoryForTesting(provider: .claude, snapshot: complete, now: complete.updatedAt)
+        await store._recordGenericSessionEquivalentHistoryForTesting(
+            provider: .claude,
+            snapshot: complete,
+            now: complete.updatedAt)
 
         let histories = store.planUtilizationHistory(for: .claude)
         #expect(findSeries(histories, name: .session, windowMinutes: 300)?.entries.map(\.usedPercent) == [30])
@@ -824,12 +827,18 @@ extension SessionEquivalentForecastTests {
             accountKey: nil,
             historyIdentity: store._genericSessionEquivalentWindowsForTesting(snapshot: first)?.historyIdentity))
 
-        await store._recordGenericSessionEquivalentHistoryForTesting(provider: .claude, snapshot: first, now: first.updatedAt)
+        await store._recordGenericSessionEquivalentHistoryForTesting(
+            provider: .claude,
+            snapshot: first,
+            now: first.updatedAt)
         #expect(store._genericSessionEquivalentHistoryIdentityMatchesForTesting(
             provider: .claude,
             accountKey: nil,
             historyIdentity: store._genericSessionEquivalentWindowsForTesting(snapshot: first)?.historyIdentity))
-        await store._recordGenericSessionEquivalentHistoryForTesting(provider: .claude, snapshot: second, now: second.updatedAt)
+        await store._recordGenericSessionEquivalentHistoryForTesting(
+            provider: .claude,
+            snapshot: second,
+            now: second.updatedAt)
 
         let histories = store.planUtilizationHistory(for: .claude)
         #expect(findSeries(histories, name: .session, windowMinutes: 300)?.entries.map(\.usedPercent) == [20, 30])
@@ -897,7 +906,8 @@ extension SessionEquivalentForecastTests {
                 resetsAt: now.addingTimeInterval(3 * 24 * 3600),
                 resetDescription: nil),
             updatedAt: now)
-        let identity = try #require(store._genericSessionEquivalentWindowsForTesting(snapshot: complete)?.historyIdentity)
+        let identity = try #require(
+            store._genericSessionEquivalentWindowsForTesting(snapshot: complete)?.historyIdentity)
         store.planUtilizationHistory[.claude] = PlanUtilizationHistoryBuckets(unscoped: [
             planSeries(
                 name: .session,
@@ -965,8 +975,14 @@ extension SessionEquivalentForecastTests {
             sessionSlot: 3,
             sessionUsed: 30,
             at: now.addingTimeInterval(3600))
-        await store._recordGenericSessionEquivalentHistoryForTesting(provider: .claude, snapshot: first, now: first.updatedAt)
-        await store._recordGenericSessionEquivalentHistoryForTesting(provider: .claude, snapshot: second, now: second.updatedAt)
+        await store._recordGenericSessionEquivalentHistoryForTesting(
+            provider: .claude,
+            snapshot: first,
+            now: first.updatedAt)
+        await store._recordGenericSessionEquivalentHistoryForTesting(
+            provider: .claude,
+            snapshot: second,
+            now: second.updatedAt)
 
         let histories = store.planUtilizationHistory(for: .claude)
         #expect(findSeries(histories, name: .session, windowMinutes: 300)?.entries.map(\.usedPercent) == [30])
@@ -1013,8 +1029,12 @@ extension SessionEquivalentForecastTests {
         }
 
         let first = exactSnapshot(usedPercent: 10, at: now.addingTimeInterval(-3600))
-        await store._recordGenericSessionEquivalentHistoryForTesting(provider: .claude, snapshot: first, now: first.updatedAt)
-        let firstIdentity = try #require(store._genericSessionEquivalentWindowsForTesting(snapshot: first)?.historyIdentity)
+        await store._recordGenericSessionEquivalentHistoryForTesting(
+            provider: .claude,
+            snapshot: first,
+            now: first.updatedAt)
+        let firstIdentity = try #require(
+            store._genericSessionEquivalentWindowsForTesting(snapshot: first)?.historyIdentity)
         #expect(store._genericSessionEquivalentHistoryIdentityMatchesForTesting(
             provider: .claude,
             accountKey: nil,
@@ -1051,7 +1071,10 @@ extension SessionEquivalentForecastTests {
             historyIdentity: firstIdentity))
 
         let restored = exactSnapshot(usedPercent: 30, at: now.addingTimeInterval(3600))
-        await store._recordGenericSessionEquivalentHistoryForTesting(provider: .claude, snapshot: restored, now: restored.updatedAt)
+        await store._recordGenericSessionEquivalentHistoryForTesting(
+            provider: .claude,
+            snapshot: restored,
+            now: restored.updatedAt)
         let histories = store.planUtilizationHistory(for: .claude)
         #expect(findSeries(histories, name: .session, windowMinutes: 300)?.entries.map(\.usedPercent) == [10, 30])
         #expect(findSeries(histories, name: .weekly, windowMinutes: 10080)?.entries.map(\.usedPercent)
@@ -1091,7 +1114,10 @@ extension SessionEquivalentForecastTests {
         }
 
         let exact = snapshot(weeklyValues: [40], at: now)
-        await store._recordGenericSessionEquivalentHistoryForTesting(provider: .claude, snapshot: exact, now: exact.updatedAt)
+        await store._recordGenericSessionEquivalentHistoryForTesting(
+            provider: .claude,
+            snapshot: exact,
+            now: exact.updatedAt)
 
         let ambiguous = snapshot(weeklyValues: [45, 60], at: now.addingTimeInterval(3600))
         await store._recordGenericSessionEquivalentHistoryForTesting(
@@ -1122,7 +1148,8 @@ extension SessionEquivalentForecastTests {
                 resetsAt: now.addingTimeInterval(3 * 24 * 3600),
                 resetDescription: nil),
             updatedAt: now)
-        let identity = try #require(store._genericSessionEquivalentWindowsForTesting(snapshot: snapshot)?.historyIdentity)
+        let identity = try #require(
+            store._genericSessionEquivalentWindowsForTesting(snapshot: snapshot)?.historyIdentity)
         var buckets = PlanUtilizationHistoryBuckets(unscoped: [
             planSeries(
                 name: .session,
@@ -1227,8 +1254,12 @@ extension SessionEquivalentForecastTests {
             secondary: nil,
             updatedAt: now.addingTimeInterval(3600))
 
-        await store._recordGenericSessionEquivalentHistoryForTesting(provider: .claude, snapshot: complete, now: complete.updatedAt)
-        let identity = try #require(store._genericSessionEquivalentWindowsForTesting(snapshot: complete)?.historyIdentity)
+        await store._recordGenericSessionEquivalentHistoryForTesting(
+            provider: .claude,
+            snapshot: complete,
+            now: complete.updatedAt)
+        let identity = try #require(
+            store._genericSessionEquivalentWindowsForTesting(snapshot: complete)?.historyIdentity)
         await store._recordGenericSessionEquivalentHistoryForTesting(
             provider: .claude,
             snapshot: incomplete,

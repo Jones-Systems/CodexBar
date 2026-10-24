@@ -14,7 +14,8 @@ struct ProviderConfigEnvironmentTests {
             config: config)
 
         #expect(environment[ClaudeAdminAPISettingsReader.adminAPIKeyEnvironmentKey] == "config-admin-token")
-        #expect(environment[ClaudeAdminAPISettingsReader.alternateAdminAPIKeyEnvironmentKey] == "ambient-alternate-token")
+        #expect(
+            environment[ClaudeAdminAPISettingsReader.alternateAdminAPIKeyEnvironmentKey] == "ambient-alternate-token")
         #expect(ProviderTokenResolver.token(for: .claude, environment: environment) == "config-admin-token")
     }
 

@@ -359,7 +359,9 @@ struct SettingsStoreTests {
         let suite = "SettingsStoreTests-merged-overview-invalid-raw"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defaults.removePersistentDomain(forName: suite)
-        defaults.set(["codex", "cursor", "unknown-provider", "claude", "codex"], forKey: "mergedOverviewSelectedProviders")
+        defaults.set(
+            ["codex", "cursor", "unknown-provider", "claude", "codex"],
+            forKey: "mergedOverviewSelectedProviders")
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,

@@ -1025,8 +1025,16 @@ extension UsageStorePlanUtilizationTests {
                 accountOrganization: accountLabel,
                 loginMethod: "pro"))
 
-        await store.recordPlanUtilizationHistorySample(provider: .claude, snapshot: before, account: account, now: before.updatedAt)
-        await store.recordPlanUtilizationHistorySample(provider: .claude, snapshot: after, account: account, now: after.updatedAt)
+        await store.recordPlanUtilizationHistorySample(
+            provider: .claude,
+            snapshot: before,
+            account: account,
+            now: before.updatedAt)
+        await store.recordPlanUtilizationHistorySample(
+            provider: .claude,
+            snapshot: after,
+            account: account,
+            now: after.updatedAt)
 
         let events = recorder.events
         #expect(events.count == 1)

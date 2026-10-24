@@ -1,7 +1,6 @@
 import AppKit
 import CodexBarCore
 
-// swiftlint:disable:next type_body_length
 enum IconRenderer {
     struct QuotaLayoutPolicy: Hashable {
         let reservesMissingSecondaryLane: Bool

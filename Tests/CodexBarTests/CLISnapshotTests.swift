@@ -3,7 +3,6 @@ import Foundation
 import Testing
 @testable import CodexBarCLI
 
-// swiftlint:disable:next type_body_length
 struct CLISnapshotTests {
 
     @Test

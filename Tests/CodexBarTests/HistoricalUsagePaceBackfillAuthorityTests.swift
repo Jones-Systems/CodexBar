@@ -528,7 +528,11 @@ extension HistoricalUsagePaceTests {
             window: barelyIntoWindow,
             dataConfidence: .unknown,
             now: now) == nil)
-        #expect(store.weeklyPace(provider: .claude, window: barelyIntoWindow, dataConfidence: .unknown, now: now) == nil)
+        #expect(store.weeklyPace(
+            provider: .claude,
+            window: barelyIntoWindow,
+            dataConfidence: .unknown,
+            now: now) == nil)
         #expect(
             store.menuBarLayoutPaceText(
                 provider: .claude,
