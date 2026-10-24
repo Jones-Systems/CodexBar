@@ -374,3 +374,79 @@ The previous snapshot lists no additional unapproved absolute declarations from
 its already parsed images, but Mercury itself was unread. Its further declared closure,
 real native completeness, both-shard qualification and measured savings remain
 unproved; the coordinator retains sole hosted watching.
+
+## MobileDevice alias diagnostic intent
+
+Resume at `d2e395c15f7843cba9399f050297c0dfbc806c23`. Run `40139845453`
+stops before compilation on `runtime-symlink-escapes-root`: complete host evidence
+takes 7.948s and selected-tool closure 8.336s. CoreDevice's ARM64e test-launch chain
+requires `/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/MobileDevice`,
+after both selected-Xcode overrides are absent. The nontruncated declaration batch
+is empty. The current error drops the canonical path already computed by
+`Host.location`, leaving no exact destination/alias metadata in saved evidence.
+
+Primary Apple [framework structure](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPFrameworks/Concepts/FrameworkAnatomy.html),
+[lstat](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/lstat.2.html),
+[readlink](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/readlink.2.html)
+and [canonical path](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/realpath.3.html)
+documentation explain link metadata and versioned frameworks, but do not establish
+this runner's actual MobileDevice package layout. Third-party paths are not
+admission evidence. No new framework root or fixed alias is authorized or added.
+
+The authorized diagnostic repair retains the original escape rejection and early
+gate. Attach closed, redacted logical/root/already-computed canonical/root-canonical
+metadata. Inspect at most 32 exact source prefixes under its admitted root with
+the existing shared time budget, stopping at the first symlink. Record only that
+link's path, normalized target, raw target SHA256 and relative flag. Never read,
+hash, parse, execute or stat the escaped target as part of this metadata walk;
+do not enumerate directories or resolve new target paths. The original existing
+canonical resolution remains the only destination resolution. Unavailable or
+capped diagnostics preserve the original error and mark incomplete metadata.
+
+Affected checks: one unchanged fail-before diagnostic fixture at exact `d2e395c`
+and the candidate (both still reject the escape); first-link absolute/relative
+metadata, no escaped binary I/O, redaction/closed schema, component/time/readlink
+caps and metadata failure; artifact round-trip with strict fallback; existing
+deduplicated native/artifact/evidence/isolated-command, path-gate/aggregate and
+documentation fixtures. Native alias admission and completeness remain unproved
+until the root-owned hosted watch supplies exact metadata. Preserve all three
+current roots, schedule, frozen patches and nine packaging/doc residuals.
+
+## MobileDevice diagnostic checks and remaining boundary
+
+The unchanged contained alias fixture fails on exact `d2e395c` because canonical
+and first-link diagnostics are absent; it passes the candidate. Both revisions
+still reject the escape with `runtime-symlink-escapes-root`. The regression binds
+prior collector SHA256
+`73ee60fa7c72aa822e9e9a80e63f9045b4e2af6dd58d1d3a7ec6f7ded7ff7521`,
+candidate collector SHA256
+`2aa767372dff97d55e4d8e780bb809bed8897e0f92d177ddaaaa3cbb174f3e12`
+and unchanged regression script SHA256
+`c6f3ef7757aae6e188ea079c433bd64f7178f30702d3b1610143ee35d520a0e1`.
+This is a synthetic Linux diagnostic contract, not actual runner alias metadata.
+
+The final deduplicated affected union passes 154 tests in 14.647s with zero skips,
+plus existing path-gate/aggregate fixtures and 302 local documentation links.
+It covers absolute/relative first links, raw filesystem bytes including a non-UTF8
+link target, exact source-prefix no-follow metadata, no extra target resolution,
+stat/open/hash/parser/directory access, closed/redacted metadata, component/raw-link
+byte/time caps and failure retention. Artifact round-trip retains strict image
+fallback; existing compiler-sentinel/aggregate/closure negatives still pass.
+The initial sentinel incorrectly blocked Python's internal source
+`stat(follow_symlinks=False)` dispatch for `lstat`; its trace proved a fixture
+error. The corrected sentinel permits only the exact source prefixes with
+no-follow semantics. Initial and final logs are retained. Final admission measured
+CPU 14.87% and 47.45 GiB available RAM; one serial process held the nonblocking
+portfolio lock, and owned scratch removal/absence was verified.
+
+Required `make test` and `make check` each exit 2 because local Swift and `plutil`
+remain unavailable. No tools were installed or native APIs/apps executed. The
+three admitted framework roots and generic escape rejection remain unchanged.
+The actual MobileDevice destination and first alias still require hosted metadata;
+no target root, alias exception, provider access or package provenance is inferred.
+A future exact fixed alias mapping must validate its source/destination and retain
+canonical target containment, recursive full hashes/equality, budgets and negative
+controls. This checkpoint preserves the known precompile failure and adds the
+evidence needed for that decision. Both-shard qualification and savings remain
+unproved; root alone watches CI. The five-file repair preserves the workflow,
+schedule, frozen patches and nine known packaging/doc residuals.

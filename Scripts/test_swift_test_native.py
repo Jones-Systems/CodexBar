@@ -805,7 +805,8 @@ class NativeTests(unittest.TestCase):
         self.assertFalse(any(str(private) in str(call) for call in digest.call_args_list))
         self.assertNotIn("private-person", json.dumps(error.exception.diagnostic))
         self.assertEqual(error.exception.diagnostic["candidates"][-1], {
-            "path":"<xcode>/Developer/Library/Frameworks/Escaping.dylib", "canonical":None,
+            "path":"<xcode>/Developer/Library/Frameworks/Escaping.dylib",
+            "canonical":"<outside-approved-roots:" + hashlib.sha256(str(private).encode()).hexdigest() + ">",
             "kind":"uninspected", "sha256":None})
         host = self.host()
         with patch.object(host, "location", side_effect=PermissionError("/Users/private-person/secret")), \
@@ -813,6 +814,109 @@ class NativeTests(unittest.TestCase):
             host.closure(include_build=False)
         self.assertNotIn("private-person", json.dumps(error.exception.diagnostic))
         native.validate_diagnostic(error.exception.diagnostic)
+
+    def test_mobiledevice_escape_retains_canonical_and_first_alias_without_admission(self):
+        host = self.host()
+        root = self.root / "System/Library/PrivateFrameworks"
+        root.mkdir(parents=True)
+        target = self.write("Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/MobileDevice",
+                            b"escaped bytes must never be read")
+        destination = target.parents[2]
+        alias = root / "MobileDevice.framework"
+        alias.symlink_to(destination, target_is_directory=True)
+        logical = alias / "Versions/A/MobileDevice"
+        host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(logical))]))
+        with patch.object(native, "SYSTEM_ROOTS", (*native.SYSTEM_ROOTS, root)), \
+                patch.object(host.budget, "digest", wraps=host.budget.digest) as digest, \
+                self.assertRaisesRegex(native.UnsupportedRuntime, "runtime-symlink-escapes-root") as error:
+            host.closure(include_build=False)
+        diagnostic = error.exception.diagnostic
+        self.assertIn("location", diagnostic)
+        redact = lambda path: "<outside-approved-roots:" + hashlib.sha256(str(path).encode()).hexdigest() + ">"
+        self.assertEqual(diagnostic["location"], {
+            "path":str(logical), "root":str(root), "canonical":redact(target), "root_canonical":str(root),
+            "status":"first-link", "first_symlink":{
+                "path":str(alias), "target":redact(destination),
+                "raw_target_sha256":hashlib.sha256(str(destination).encode()).hexdigest(), "relative":False}})
+        self.assertEqual(diagnostic["candidates"][-1]["canonical"], redact(target))
+        self.assertIsNone(diagnostic["candidates"][-1]["sha256"])
+        self.assertFalse(any(str(target) in str(call) for call in digest.call_args_list))
+        self.assertNotIn(str(destination), json.dumps(diagnostic))
+        native.validate_diagnostic(diagnostic)
+        for field, value in (("canonical", "x" * 513), ("status", "accepted"), ("first_symlink", None),
+                             ("command", "untrusted")):
+            invalid = json.loads(json.dumps(diagnostic))
+            invalid["location"][field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(native.UnsupportedRuntime, "invalid-native-diagnostic"):
+                native.validate_diagnostic(invalid)
+        for field, value in (("relative", 1), ("raw_target_sha256", None), ("target", "x" * 513),
+                             ("execute", "untrusted")):
+            invalid = json.loads(json.dumps(diagnostic))
+            invalid["location"]["first_symlink"][field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(native.UnsupportedRuntime, "invalid-native-diagnostic"):
+                native.validate_diagnostic(invalid)
+
+    def test_alias_metadata_stops_at_first_absolute_or_relative_link_without_target_queries(self):
+        host = self.host()
+        root = self.frameworks
+        target = self.write("private-person/Target.framework/Versions/A/Target", b"do not inspect")
+        destination = target.parents[2]
+        original_lstat = Path.lstat
+        original_stat = Path.stat
+        for relative in (False, True):
+            with self.subTest(relative=relative):
+                alias = root / ("Relative.framework" if relative else "Absolute.framework")
+                raw = native.posixpath.relpath(str(destination), str(root)) if relative else str(destination)
+                alias.symlink_to(raw, target_is_directory=True)
+                queries = []
+                def source_lstat(path, *args, **kwargs):
+                    queries.append(path)
+                    self.assertIn(path, (root, alias))
+                    return original_lstat(path, *args, **kwargs)
+                def source_stat(path, *args, **kwargs):
+                    self.assertIn(path, (root, alias))
+                    self.assertIs(kwargs.get("follow_symlinks"), False)
+                    return original_stat(path, *args, **kwargs)
+                with patch.object(Path, "lstat", autospec=True, side_effect=source_lstat), \
+                        patch.object(Path, "resolve", side_effect=AssertionError("no new resolution")), \
+                        patch.object(Path, "stat", autospec=True, side_effect=source_stat), \
+                        patch.object(Path, "open", side_effect=AssertionError("no binary read")), \
+                        patch.object(Path, "iterdir", side_effect=AssertionError("no directory scan")), \
+                        patch.object(host.budget, "digest", side_effect=AssertionError("no target hash")), \
+                        patch.object(native, "macho", side_effect=AssertionError("no target parser")):
+                    detail = host.alias_metadata(alias / "Versions/A/Target", alias / "Versions/A/Target",
+                                                 root, target, root)
+                self.assertEqual(queries, [root, alias])
+                self.assertEqual(detail["status"], "first-link")
+                self.assertEqual(detail["first_symlink"], {
+                    "path":str(alias), "target":str(destination), "relative":relative,
+                    "raw_target_sha256":hashlib.sha256(raw.encode()).hexdigest()})
+                alias.unlink()
+
+    def test_alias_metadata_caps_and_io_failure_preserve_the_original_escape(self):
+        host = self.host()
+        root = self.frameworks
+        target = self.write("private-person/Target", b"do not inspect")
+        alias = root / "Alias"
+        alias.symlink_to(target)
+        def detail():
+            return host.alias_metadata(alias, alias, root, target, root)
+        with patch.object(native, "MAX_ALIAS_COMPONENTS", 1):
+            self.assertEqual(detail()["status"], "budget")
+        with patch.object(native.os, "readlink", return_value="x" * 4096):
+            self.assertEqual(detail()["status"], "budget")
+        with patch.object(native.os, "readlink", return_value="\udcff"):
+            self.assertEqual(detail()["first_symlink"]["raw_target_sha256"], hashlib.sha256(b"\xff").hexdigest())
+        with patch.object(Path, "lstat", side_effect=PermissionError("private-person")):
+            unavailable = detail()
+        self.assertEqual(unavailable["status"], "metadata-unavailable")
+        self.assertIsNone(unavailable["first_symlink"])
+        host.budget.started = time.monotonic() - native.MAX_SECONDS
+        with patch.object(Path, "lstat", side_effect=AssertionError("no metadata I/O after time budget")):
+            self.assertEqual(detail()["status"], "budget")
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "runtime-symlink-escapes-root") as error:
+            host.location(alias)
+        self.assertEqual(error.exception.location["status"], "budget")
 
     def test_native_api_signatures_missing_symbols_no_cache_and_non_darwin(self):
         class Function:

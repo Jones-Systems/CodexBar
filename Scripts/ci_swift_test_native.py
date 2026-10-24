@@ -36,6 +36,7 @@ MAX_EDGES = 16384
 MAX_CANDIDATES = 128
 MAX_DIAGNOSTIC_ITEMS = 64
 MAX_DECLARATION_INSPECTIONS = 4096
+MAX_ALIAS_COMPONENTS = 32
 ARM64 = 0x100000C
 # Apple Architecture.cpp: generic, v8, old arm64e, versioned user-space arm64e.
 # Unknown/future/kernel ABI flags do not qualify a complete proof.
@@ -130,7 +131,7 @@ def validate_diagnostic(value):
 
     if isinstance(value, dict) and value.get("type") == "resolver":
         fields = {"type", "loader", "install_name", "executable", "mode", "chain", "rpaths", "candidates", "truncated"}
-        optional = {key for key in ("file", "unapproved_declarations") if key in value}
+        optional = {key for key in ("file", "unapproved_declarations", "location") if key in value}
         need(set(value) == fields | optional
              and text(value["loader"]) and text(value["install_name"], True) and text(value["executable"], True)
              and isinstance(value["mode"], str) and value["mode"] in {"plain", "swiftpm-test", "audit"}
@@ -164,6 +165,21 @@ def validate_diagnostic(value):
                     and type(item["subtype"]) is int and 0 <= item["subtype"] <= 0xFFFFFFFF
                     and type(item["weak"]) is bool and type(item["dylinker"]) is bool,
                     "invalid-native-diagnostic")
+        if "location" in value:
+            item = value["location"]
+            need(isinstance(item, dict) and set(item) == {
+                "path", "root", "canonical", "root_canonical", "first_symlink", "status"}
+                and all(text(item[key]) for key in ("path", "root", "canonical", "root_canonical"))
+                and isinstance(item["status"], str)
+                and item["status"] in {"first-link", "no-link", "metadata-unavailable", "budget"},
+                "invalid-native-diagnostic")
+            link = item["first_symlink"]
+            need((link is not None) == (item["status"] == "first-link"), "invalid-native-diagnostic")
+            if link is not None:
+                need(isinstance(link, dict) and set(link) == {"path", "target", "raw_target_sha256", "relative"}
+                    and text(link["path"]) and text(link["target"])
+                    and isinstance(link["raw_target_sha256"], str) and digest(link["raw_target_sha256"])
+                    and type(link["relative"]) is bool, "invalid-native-diagnostic")
         if "file" in value:
             need(isinstance(value["file"], dict) and "type" not in value["file"], "invalid-native-diagnostic")
             validate_diagnostic(value["file"])
@@ -496,11 +512,46 @@ class Host:
             physical, root, kind = logical, roots[0], "system-file"
         # Do not inspect the destination of an external/escaping symlink.
         resolved = physical.resolve(strict=True)
-        need(resolved.is_relative_to(root.resolve(strict=True)), "runtime-symlink-escapes-root")
+        canonical_root = root.resolve(strict=True)
+        if not resolved.is_relative_to(canonical_root):
+            failure = UnsupportedRuntime("runtime-symlink-escapes-root")
+            failure.location = self.alias_metadata(logical, physical, root, resolved, canonical_root)
+            raise failure
         need(stat.S_ISREG(resolved.stat().st_mode), "runtime-path-is-not-regular")
         canonical = (self.logical_build / resolved.relative_to(self.build.resolve(strict=True))
                      if kind == "bundled" else resolved)
         return physical, str(canonical), kind
+
+    def alias_metadata(self, logical, physical, root, resolved, canonical_root):
+        """Failure data only: stop at the first source symlink, never inspect its target."""
+        result = {"path":str(logical), "root":str(root), "canonical":str(resolved),
+                  "root_canonical":str(canonical_root), "first_symlink":None, "status":"no-link"}
+        prefix = root
+        try:
+            for index, part in enumerate(("", *physical.relative_to(root).parts)):
+                self.budget.tick()
+                if index >= MAX_ALIAS_COMPONENTS:
+                    result["status"] = "budget"
+                    break
+                if part:
+                    prefix /= part
+                if not stat.S_ISLNK(prefix.lstat().st_mode):
+                    continue
+                raw = os.readlink(prefix)
+                encoded = os.fsencode(raw)
+                if len(encoded) >= 4096:
+                    result["status"] = "budget"
+                    break
+                result["first_symlink"] = {
+                    "path":str(prefix), "target":posixpath.normpath(posixpath.join(str(prefix.parent), raw)),
+                    "raw_target_sha256":hashlib.sha256(encoded).hexdigest(), "relative":not raw.startswith("/")}
+                result["status"] = "first-link"
+                break
+        except UnsupportedRuntime:
+            result["status"] = "budget"
+        except OSError:
+            result["status"] = "metadata-unavailable"
+        return result
 
     def cached(self, logical):
         if not any(logical.is_relative_to(root) for root in SYSTEM_ROOTS):
@@ -652,7 +703,12 @@ class RuntimeClosure:
             self.entries[key] = {"kind":"system-cache"}
             candidate.update(canonical=self.label(key), kind="system-cache")
             return key
-        physical, key, kind = self.host.location(logical)
+        try:
+            physical, key, kind = self.host.location(logical)
+        except UnsupportedRuntime as error:
+            if hasattr(error, "location"):
+                candidate["canonical"] = self.label(error.location["canonical"])
+            raise
         candidate.update(canonical=self.label(key), kind=kind)
         if key in self.entries:
             candidate["sha256"] = self.entries[key].get("sha256")
@@ -827,6 +883,15 @@ class RuntimeClosure:
             file_diagnostic = getattr(error, "diagnostic", None)
             if file_diagnostic is not None and "type" not in file_diagnostic:
                 self.diagnostic["file"] = {**file_diagnostic, "path":self.label(file_diagnostic["path"])}
+            location = getattr(error, "location", None)
+            if location is not None:
+                detail = {key:self.label(location[key]) for key in ("path", "root", "canonical", "root_canonical")}
+                detail.update(status=location["status"], first_symlink=None)
+                if location["first_symlink"] is not None:
+                    link = location["first_symlink"]
+                    detail["first_symlink"] = {**link, "path":self.label(link["path"]), "target":self.label(link["target"])}
+                self.diagnostic["location"] = detail
+                self.diagnostic["truncated"] |= location["status"] == "budget"
             self.diagnostic["unapproved_declarations"] = self.unapproved_declarations()
             failure.diagnostic = validate_diagnostic(self.diagnostic)
             raise failure from (error if failure is not error else None)

@@ -82,6 +82,14 @@ approved the exact Apple/System Mercury framework root; no parent or sibling is
 admitted. Lint and all three Linux jobs passed; the aggregate rejected producer
 failure/skipped shards. Recursive Mercury runtime completeness remains unproved.
 
+Run `40139845453` at `d2e395c15f7843cba9399f050297c0dfbc806c23` stops
+before compilation with `runtime-symlink-escapes-root` for CoreDevice's ARM64e
+import `/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/MobileDevice`.
+Host evidence takes 7.948s; tool closure takes 8.336s. The selected-Xcode overrides
+are absent and the declaration batch is empty/nontruncated. Existing diagnostics
+omit the canonical destination and exact alias metadata. Neither an unverified
+destination framework nor an alias is admitted; rejection and early gating remain.
+
 Keep repository, source, run/attempt, workflow, profile/manifest, package/lock,
 workspace, toolchain, runner OS/architecture and image OS exact. Image versions
 remain recorded provenance. A different version can pass only with a complete,
@@ -236,6 +244,23 @@ These declarations may still be satisfied by overrides; they neither prove a
 missing runtime nor admit a target. Unread rejected subtrees remain unknown.
 The actual resolver failure and early gate remain authoritative; the inventory
 never creates a fingerprint or relaxes qualification.
+
+An escaping path may carry optional closed `location` diagnostics: logical path,
+matched root, already computed canonical path/root and metadata status. A bounded
+source-prefix walk uses [lstat](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/lstat.2.html)
+and [readlink](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/readlink.2.html)
+to record at most the first symlink, its normalized target, raw target SHA256 and
+relative flag. Hash the raw filesystem link bytes, capped below 4 KiB. Status is
+one of `first-link`, `no-link`, `metadata-unavailable` or `budget`.
+Inspect at most 32 exact source prefixes, within the shared time
+budget; stop at the first link without querying its target or enumerating any
+directory. Reuse existing canonical resolution; do not resolve another target,
+open/hash/parse/execute escaped bytes, or stat the escaped destination. Redact and
+cap all path fields by the same rules as other diagnostics. Metadata failure or
+budget exhaustion preserves the original escape rejection; mark capped work as
+truncated. This data cannot admit a root or alias and is excluded from fingerprints.
+Actual source/destination metadata and a reviewed exact mapping are required
+before any future alias exception; generic symlink escape rejection stays intact.
 
 A v1 manifest retains the exact original identity gate. Portable fixtures exercise malformed/fat Mach-O,
 recursive dependencies, allowed paths, weak/missing dependencies, hash changes,
