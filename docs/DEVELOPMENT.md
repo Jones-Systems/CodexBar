@@ -616,8 +616,10 @@ The selected checks retain their names: `swift-test-macos (0, 2)`, `swift-test-m
 `build-linux-cli (linux-x64, ubuntu-24.04)`, `build-linux-cli (linux-arm64, ubuntu-24.04-arm)` and
 `build-linux-musl-cli`. Both glibc architectures run the complete portable suite and CLI smoke assertions.
 Ordinary PRs build and smoke-test the debug CLI, sharing compilation with debug tests. Main and manual runs
-retain the release CLI with static Swift standard-library linking; selected musl builds retain release/static
-SDK coverage. Existing Linux campaign step IDs retain their historical `release` label; consult the recorded
+retain the release CLI with static Swift standard-library linking. Selected musl PR builds use debug
+configuration with the same pinned compiler, static SDK, target triple and static SQLite; main/manual musl
+builds retain release configuration. Both configurations reject dynamic-loader or library dependencies.
+Release-only branches and optimizer/link behavior are therefore checked on main/manual runs. Existing Linux campaign step IDs retain their historical `release` label; consult the recorded
 CLI build configuration when comparing PR measurements with older runs. macOS retains two complete shards
 and groups of four. JavaScript checks run in portable lint, and the separate macOS plugin step runs
 JavaScriptCore goldens while the full suite supplies QuickJS coverage.
