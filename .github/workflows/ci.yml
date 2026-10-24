@@ -1,6 +1,9 @@
 name: CI
 
 on:
+  schedule:
+    - cron: '0 5 * * *'
+      timezone: America/New_York
   push:
     branches: [main]
   pull_request:
@@ -49,7 +52,7 @@ on:
         default: 'off'
 
 concurrency:
-  group: ${{ github.event_name == 'workflow_dispatch' && format('ci-manual-{0}-{1}-{2}-{3}', github.workflow, github.ref, github.run_id, github.run_attempt) || format('ci-{0}-{1}', github.workflow, github.ref) }}
+  group: ${{ github.event_name == 'workflow_dispatch' && format('ci-manual-{0}-{1}-{2}-{3}', github.workflow, github.ref, github.run_id, github.run_attempt) || github.event_name == 'schedule' && format('ci-nightly-{0}-{1}', github.workflow, github.ref) || format('ci-{0}-{1}', github.workflow, github.ref) }}
   cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 env:

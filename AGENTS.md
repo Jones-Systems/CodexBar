@@ -99,10 +99,11 @@ provider-isolation contracts.
 Normal test execution uses the owner-scoped Codex/Claude profile in
 `Scripts/test_profiles.json`; see [test profiles](docs/testing-profiles.md).
 Unused-provider, hook, plugin and iCloud test source stays available through
-`CODEXBAR_TEST_PROFILE=full` and the manual CI full input, with no automatic
-nightly. Preserve shared account, persistence, resource, privacy/security and
-relevant regression coverage. CLI-dependent coverage remains normal until its
-usage boundary is confirmed. Product/compiler checks retain their required
+`CODEXBAR_TEST_PROFILE=full` and the manual CI full input. The normal profile runs
+daily at 05:00 America/New_York (EST/EDT), with separate nightly concurrency; full
+has no automatic nightly. Preserve shared account, persistence, resource,
+privacy/security and relevant regression coverage. CLI-dependent coverage remains
+normal until its usage boundary is confirmed. Product/compiler checks retain their required
 status above; profile selection does not change job identity or aggregation.
 
 For app changes, build the tested source with the existing local Jones identity

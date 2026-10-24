@@ -177,6 +177,18 @@ class CacheContractTests(unittest.TestCase):
 
 
 class CampaignActivationTests(unittest.TestCase):
+    def test_nightly_uses_native_timezone_normal_profile_and_separate_concurrency(self):
+        workflow = (ROOT / ".github/workflows/ci.yml").read_text()
+        triggers = workflow.split("on:\n", 1)[1].split("\nconcurrency:\n", 1)[0]
+        schedule = triggers.split("  schedule:\n", 1)[1].split("  push:\n", 1)[0]
+        self.assertEqual(schedule, "    - cron: '0 5 * * *'\n      timezone: America/New_York\n")
+        group = re.search(r"(?m)^  group: (.+)$", workflow).group(1)
+        self.assertIn("github.event_name == 'schedule' && format('ci-nightly-{0}-{1}', github.workflow, github.ref)", group)
+        self.assertIn("format('ci-{0}-{1}', github.workflow, github.ref)", group)
+        self.assertIn("format('ci-manual-{0}-{1}-{2}-{3}', github.workflow, github.ref, github.run_id, github.run_attempt)", group)
+        self.assertIn("cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}", workflow)
+        self.assertIn("CODEXBAR_TEST_PROFILE: ${{ github.event_name == 'workflow_dispatch' && inputs.test_profile || 'normal' }}", workflow)
+
     def test_manual_campaign_has_explicit_validated_controls(self):
         workflow = (ROOT / ".github/workflows/ci.yml").read_text()
         self.assertIn("  workflow_dispatch:", workflow)
@@ -195,7 +207,7 @@ class CampaignActivationTests(unittest.TestCase):
 
 class CampaignPlanTests(unittest.TestCase):
     def test_ordinary_defaults_ignore_manual_inputs(self):
-        for event in ("pull_request", "push"):
+        for event in ("pull_request", "push", "schedule"):
             plan = campaign.resolve_plan(event, "12", "3", "untrusted", SHA, "cold")
             self.assertEqual(plan["include"], [
                 {"shard-index": index, "shard-count": 2, "group-size": 4,
@@ -1017,7 +1029,9 @@ class LinuxCacheTests(unittest.TestCase):
         workflow = (ROOT / ".github/workflows/ci.yml").read_text()
         self.assertIn("group: ${{ github.event_name == 'workflow_dispatch' && "
                       "format('ci-manual-{0}-{1}-{2}-{3}', github.workflow, github.ref, "
-                      "github.run_id, github.run_attempt) || format('ci-{0}-{1}', github.workflow, github.ref) }}",
+                      "github.run_id, github.run_attempt) || github.event_name == 'schedule' && "
+                      "format('ci-nightly-{0}-{1}', github.workflow, github.ref) || "
+                      "format('ci-{0}-{1}', github.workflow, github.ref) }}",
                       workflow)
         self.assertIn("cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}", workflow)
         linux = workflow.split("  build-linux-cli:\n", 1)[1]
