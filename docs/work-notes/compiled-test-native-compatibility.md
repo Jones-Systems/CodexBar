@@ -309,3 +309,68 @@ further recursive imports, both-shard qualification and measured savings remain
 unproved, with hosted watching retained by the coordinator. The five-file repair
 preserves daily 05:00 America/New_York, nine known packaging/doc residuals and
 both frozen handoff patches; no extra campaign or native execution ran.
+
+## Mercury repair intent
+
+Resume at `ae59e4509595390808c2052d81dfbaf8058bc127`. Completed run
+`40139096386` stops before compilation: host evidence is complete in 11.076s,
+tool closure fails in 8.021s, shards skip and the required aggregate fails.
+Lint and all three Linux jobs pass. Its nontruncated declaration snapshot binds
+the same rejected ARM64e import to both already hashed CoreDevice and Utilities.
+The install-name SHA256
+`2d3223142fcf34aa7bb5f17da075c3d3a547856993f899e1f202ce04da702d86`
+matches exactly
+`/Library/Apple/System/Library/PrivateFrameworks/Mercury.framework/Versions/A/Mercury`.
+The initially proposed `/Library/Developer/PrivateFrameworks/Mercury.framework/Versions/A/Mercury`
+instead hashes to `c9c9db500eafed73f3a78b3b90f0101d180b22072c00ca31132a9aa8a6a04b67`.
+This distinction was verified by hashing 18 public path strings locally, with
+no target reads or directory/cache queries. The coordinator accepted the exact
+Apple/System framework root in its October 24, 18:40:40 EDT boundary readback.
+
+Add only `/Library/Apple/System/Library/PrivateFrameworks/Mercury.framework`,
+under the existing canonical-root/leaf containment, declared nested recursion,
+full hashes/equality and file/byte/time budgets. Do not admit its parent, siblings,
+or the incorrect Developer/Mercury path. Retain early gating, diagnostic batching,
+strict fallback, all actual launchers and complete product auditing unchanged.
+
+Affected checks: an unchanged contained ARM64e shared-import fixture against exact
+`ae59e45` and the candidate; inherited changed nested bytes, sibling/root/leaf
+escape negatives for all three exact roots; incorrect Developer/Mercury refusal;
+and the deduplicated artifact/native/evidence/isolated-command union, existing
+path-gate/aggregate fixtures and documentation links. Required make commands may
+remain unavailable without local Swift/plutil. No native/API/app execution,
+host changes or extra campaign is authorized. Root retains hosted watching;
+schedule, frozen handoffs and nine packaging/doc residuals remain unchanged.
+
+## Mercury repair checks
+
+The unchanged shared ARM64e fixture fails on exact `ae59e45` with
+`runtime-path-outside-approved-roots` and passes the candidate, including both
+observed importing loaders and refusal of Developer/Mercury without target I/O.
+Durable regression evidence binds prior collector SHA256
+`2a895f7ffc8daf14866a71035f1688fd3d3c9cde501f7fa28bbe4b4f62f11d58`,
+candidate collector SHA256
+`73ee60fa7c72aa822e9e9a80e63f9045b4e2af6dd58d1d3a7ec6f7ded7ff7521`,
+and unchanged regression script SHA256
+`c542a0ca548a256d06f6fd9d642804353403d44ba25cd2954a7cf5feab41712f`.
+This maps each revision's exact policy into contained synthetic fixture paths;
+it does not establish real native APIs or Apple framework execution.
+
+The deduplicated artifact/native/evidence/isolated-command union passes 151 checks
+in 14.759s with zero skips. Existing changed nested bytes, sibling/root/leaf escape
+negatives now exercise all three exact framework roots. Early compiler sentinel,
+unavailable-host fallback, diagnostic batching/no-I/O, launcher and aggregate
+contracts remain covered. Existing path-gate fixtures and 302 local documentation
+links pass. Fresh admission measured CPU 16.36% and 47.26 GiB available RAM;
+one serial process held the nonblocking portfolio lock. Exact owned fixture scratch
+was removed and its absence verified.
+
+Required `make test` and `make check` each exit 2 because Swift and `plutil`,
+respectively, remain unavailable. No tools were installed. This four-file repair
+changes only the proven root, affected fixtures and native spec/work note; the
+early gate, batching, strict fallback, workflow, daily 05:00 America/New_York,
+nine known packaging/doc residuals and frozen patch bytes are unchanged.
+The previous snapshot lists no additional unapproved absolute declarations from
+its already parsed images, but Mercury itself was unread. Its further declared closure,
+real native completeness, both-shard qualification and measured savings remain
+unproved; the coordinator retains sole hosted watching.

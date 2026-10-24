@@ -492,10 +492,11 @@ class NativeTests(unittest.TestCase):
         for public in native.APPLE_RUNTIME_FRAMEWORKS:
             with self.subTest(root=public.name):
                 root = self.root / public.relative_to("/")
+                root.parent.mkdir(parents=True, exist_ok=True)
                 root.symlink_to(real.parents[2], target_is_directory=True)
                 with patch.object(native, "APPLE_RUNTIME_FRAMEWORKS", (root,)), \
                         self.assertRaisesRegex(native.UnsupportedRuntime, "noncanonical-developer-framework-root"):
-                    host.location(root / "Versions/A/CoreDevice")
+                    host.location(root / "Versions/A" / public.stem)
                 root.unlink()
                 root.mkdir()
                 (root / "Escape.dylib").symlink_to(real)
@@ -515,6 +516,30 @@ class NativeTests(unittest.TestCase):
             fingerprint = host.closure(include_build=False)
         self.assertEqual(fingerprint["entries"][str(utility)]["subtypes"], [0x80000002])
         self.assertEqual({tuple(edge["targets"]) for edge in fingerprint["edges"][str(core)]}, {(str(utility),)})
+
+    def test_mercury_shared_arm64e_import_requires_exact_apple_system_root(self):
+        host = self.host()
+        fixture_roots = tuple(self.root / path.relative_to("/") for path in native.APPLE_RUNTIME_FRAMEWORKS)
+        mercury = self.write("Library/Apple/System/Library/PrivateFrameworks/Mercury.framework/Versions/A/Mercury",
+                             image(kind=6, subtype=0x80000002, dependencies=[(0xC, "/usr/lib/libSystem.B.dylib")]))
+        utility = self.write("Library/Developer/PrivateFrameworks/CoreDeviceUtilities.framework/Versions/A/CoreDeviceUtilities",
+                             image(kind=6, subtype=0x80000002, dependencies=[(0xC, str(mercury))]))
+        core = self.write("Library/Developer/PrivateFrameworks/CoreDevice.framework/Versions/A/CoreDevice", image(
+            kind=6, subtype=0x80000002, dependencies=[(0xC, str(utility)), (0xC, str(mercury))]))
+        host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(core))]))
+        with patch.object(native, "APPLE_RUNTIME_FRAMEWORKS", fixture_roots):
+            fingerprint = host.closure(include_build=False)
+            self.assertEqual(fingerprint["entries"][str(mercury)], {
+                "kind":"developer-framework", "sha256":hashlib.sha256(mercury.read_bytes()).hexdigest(),
+                "subtypes":[0x80000002]})
+            for loader in (core, utility):
+                self.assertIn((str(mercury),), {tuple(edge["targets"]) for edge in fingerprint["edges"][str(loader)]})
+            incorrect = self.root / "Library/Developer/PrivateFrameworks/Mercury.framework/Versions/A/Mercury"
+            host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(incorrect))]))
+            with patch.object(host, "location", wraps=host.location) as location, \
+                    self.assertRaisesRegex(native.UnsupportedRuntime, "outside-approved-roots"):
+                host.closure(include_build=False)
+            self.assertFalse(any(call.args[0] == incorrect for call in location.call_args_list))
 
     def test_swift_testing_helper_selection_matches_first_executable_and_refuses_escape_or_absence(self):
         usr = self.xcode / "Developer/Toolchains/Selected.xctoolchain/usr"

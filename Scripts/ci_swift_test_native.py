@@ -47,9 +47,10 @@ WEAK = 0x80000018
 SYSTEM_ROOTS = (Path("/usr/lib"), Path("/System/Library/Frameworks"),
                 Path("/System/Library/PrivateFrameworks"))
 # Observed dependencies installed outside the Xcode bundle.
-# Traverse declared dependencies only; never enumerate this root or its parent.
+# Traverse declared dependencies only; never enumerate these roots or their parents.
 APPLE_RUNTIME_FRAMEWORKS = (Path("/Library/Developer/PrivateFrameworks/CoreDevice.framework"),
-                            Path("/Library/Developer/PrivateFrameworks/CoreDeviceUtilities.framework"))
+                            Path("/Library/Developer/PrivateFrameworks/CoreDeviceUtilities.framework"),
+                            Path("/Library/Apple/System/Library/PrivateFrameworks/Mercury.framework"))
 TEST_LAUNCHERS = ("xctest", "swiftpm-xctest-helper", "swiftpm-testing-helper")
 
 

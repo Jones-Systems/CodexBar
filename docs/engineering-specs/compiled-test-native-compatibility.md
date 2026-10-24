@@ -69,6 +69,19 @@ the second reviewed framework root, not its complete recursive runtime proof.
 Lint/Linux checks passed; the required aggregate rejected producer failure and
 skipped shards. No independent product/test failure was observed.
 
+Run `40139096386` at `ae59e4509595390808c2052d81dfbaf8058bc127` stops
+before compilation after complete host evidence (11.076s) and unsupported tool
+closure (8.021s). The nontruncated batch binds one external ARM64e import to both
+CoreDevice and CoreDeviceUtilities. Its install-name SHA256
+`2d3223142fcf34aa7bb5f17da075c3d3a547856993f899e1f202ce04da702d86`
+matches exactly
+`/Library/Apple/System/Library/PrivateFrameworks/Mercury.framework/Versions/A/Mercury`.
+Both selected-Xcode override candidates were absent. The proposed Developer/Mercury
+path has a different hash and remains unapproved. The coordinator explicitly
+approved the exact Apple/System Mercury framework root; no parent or sibling is
+admitted. Lint and all three Linux jobs passed; the aggregate rejected producer
+failure/skipped shards. Recursive Mercury runtime completeness remains unproved.
+
 Keep repository, source, run/attempt, workflow, profile/manifest, package/lock,
 workspace, toolchain, runner OS/architecture and image OS exact. Image versions
 remain recorded provenance. A different version can pass only with a complete,
@@ -112,10 +125,11 @@ Audit every regular loadable file below the complete `.build`, including
 framework/helper children and dependency tools, plus the selected native launchers. Follow declared
 dependencies recursively. Bundled dependencies stay below .build and are also
 covered by archive integrity; external dependencies must resolve inside the
-selected Xcode, system-library roots or the two explicitly reviewed developer
+selected Xcode, system-library roots or the three explicitly reviewed Apple
 framework roots and receive SHA256 identities. The additional roots are
-`/Library/Developer/PrivateFrameworks/CoreDevice.framework` and
-`/Library/Developer/PrivateFrameworks/CoreDeviceUtilities.framework`; require each
+`/Library/Developer/PrivateFrameworks/CoreDevice.framework`,
+`/Library/Developer/PrivateFrameworks/CoreDeviceUtilities.framework` and
+`/Library/Apple/System/Library/PrivateFrameworks/Mercury.framework`; require each
 root itself canonical and each reached runtime file canonically contained. Include
 only declared dependencies and their nested framework/dylib closure, with full
 hashes and existing file/byte/time limits. Do not enumerate the framework or its
