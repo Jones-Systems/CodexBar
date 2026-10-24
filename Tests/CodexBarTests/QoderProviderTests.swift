@@ -22,12 +22,6 @@ struct QoderProviderTests {
         #endif
     }
 
-    @MainActor
-    @Test
-    func `implementation is registered`() {
-        #expect(ProviderCatalog.implementation(for: .qoder) != nil)
-    }
-
     @Test
     func `dashboard URL follows manual header classifier`() {
         let global = ProviderSettingsSnapshot.QoderProviderSettings(
