@@ -1058,7 +1058,8 @@ def run_suites() -> int:
             native_state = build_artifact.native_precheck(Path.cwd(), run_captured_command, swift_command)
             if native_state is not None:
                 emit_evidence("native-host-precheck", status="complete" if native_state["host"] else "unavailable",
-                              reason=native_state["reason"], host_seconds=native_state["host_seconds"])
+                              reason=native_state["reason"], host_seconds=native_state["host_seconds"],
+                              diagnostic=native_state.get("diagnostic"))
             restored = build_artifact.restore_build(
                 Path.cwd(), args.use_build, os.environ.get("CODEXBAR_TEST_BUILD_MANIFEST_SHA256"), current,
                 native_state=native_state,
@@ -1086,7 +1087,7 @@ def run_suites() -> int:
                 native_runtime, native_seconds = build_artifact.native_finish(native_state, Path.cwd() / ".build")
                 emit_evidence("native-compatibility-produced", status=native_runtime["status"],
                               reason=native_runtime.get("reason"), host_seconds=native_state["host_seconds"],
-                              closure_seconds=native_seconds)
+                              closure_seconds=native_seconds, diagnostic=native_runtime.get("diagnostic"))
             artifact_started = time.monotonic()
             manifest, manifest_sha256 = build_artifact.export_build(
                 Path.cwd(), args.export_build, current, stats.test_ids,

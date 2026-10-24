@@ -242,6 +242,8 @@ def native_precheck(workspace, capture, swift_command=None):
                                     swift_command=swift_command)
     except native.UnsupportedRuntime as error:
         state["reason"] = str(error)
+        if getattr(error, "diagnostic", None) is not None:
+            state["diagnostic"] = error.diagnostic
     except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
         state["reason"] = "native-host-evidence-unavailable"
     state["host_seconds"] = time.monotonic() - started
@@ -251,13 +253,18 @@ def native_precheck(workspace, capture, swift_command=None):
 def native_finish(state, build):
     import ci_swift_test_native as native
     if state["host"] is None:
-        return {"status": "unavailable", "reason": state["reason"]}, 0.0
+        payload = {"status": "unavailable", "reason": state["reason"]}
+        if state.get("diagnostic") is not None:
+            payload["diagnostic"] = state["diagnostic"]
+        return payload, 0.0
     state["host"].build = build
     started = time.monotonic()
     try:
         payload = {"status": "complete", "fingerprint": state["host"].closure()}
     except native.UnsupportedRuntime as error:
         payload = {"status": "unavailable", "reason": str(error)}
+        if getattr(error, "diagnostic", None) is not None:
+            payload["diagnostic"] = error.diagnostic
     except OSError:
         payload = {"status": "unavailable", "reason": "native-runtime-file-unavailable"}
     return payload, time.monotonic() - started
@@ -266,9 +273,12 @@ def native_finish(state, build):
 def native_payload(value):
     require(isinstance(value, dict), "invalid native runtime proof")
     if value.get("status") == "unavailable":
-        require(set(value) == {"status", "reason"}
+        require(set(value) == {"status", "reason"} | ({"diagnostic"} if "diagnostic" in value else set())
                 and isinstance(value["reason"], str)
                 and re.fullmatch(r"[a-z0-9-]{1,80}", value["reason"]), "invalid native unavailability reason")
+        if "diagnostic" in value:
+            import ci_swift_test_native as native
+            native.validate_diagnostic(value["diagnostic"])
     else:
         require(set(value) == {"status", "fingerprint"} and value["status"] == "complete",
                 "invalid native runtime proof status")
@@ -393,7 +403,8 @@ def restore_build(workspace, root, expected_sha256, current, native_state=None, 
                                     status=status, producer_image=manifest["identity"]["image_version"],
                                     worker_image=current["image_version"], host_seconds=native_state["host_seconds"],
                                     closure_seconds=seconds,
-                                    reason=None if complete else actual.get("reason", expected.get("reason")))
+                                    reason=None if complete else actual.get("reason", expected.get("reason")),
+                                    diagnostic=None if complete else actual.get("diagnostic", expected.get("diagnostic")))
         require(not os.path.lexists(workspace / ".build"), "worker build tree appeared during restore")
         (stage / ".build").rename(workspace / ".build")
     return manifest

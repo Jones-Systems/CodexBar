@@ -1,10 +1,11 @@
 # Engineering Spec — Native compatibility across hosted image rollout
 
 Status: implemented and activated after coordinator source review of exact local
-checkpoint `5f6469e2cc6b314902b9b9b86495cd14e7dc484c`; hosted native evidence is
-pending. Diagnostic checkpoint `0862c61d9` first retained strict image equality.
+checkpoint `5f6469e2cc6b314902b9b9b86495cd14e7dc484c`. Hosted host prechecks now
+complete; full closure and both-shard qualification remain pending after the
+universal-layout repair described below. Diagnostic checkpoint `0862c61d9` first retained strict image equality.
 The CI/harness lane owns this spec and the bounded helper/tests; root owns hosted
-CI watching and integration. This does not claim native API or two-shard success.
+CI watching and integration. Complete native closure and two-shard success are not yet proved.
 
 ## Evidence and required boundary
 
@@ -25,6 +26,15 @@ The archive contains 23 loadable images in total, including dependency SDK tools
 and the lint tool. The collector covers all of them, rather than selecting only
 the product directory. An obsolete unused rpath on the lint tool is not probed;
 a required dependency with an unsupported rpath makes the proof incomplete.
+
+Run `40125346131` at `9b7a1ef81fbf333ba09118d149d86baf011e4c6f` completed native
+host collection on producer and both workers, including the fixed dyld APIs.
+Producer closure rejected an unsupported ARM64 fat layout. Independently verified
+artifact `12573057357` contains 23 loadable images and five nonloadable Sparkle
+dSYM images; every transferred loadable image passed the prior parser. The exact
+external rejected file was not logged. This identifies an external dependency as
+the failure source, without establishing its filename or subtype. Both workers
+correctly rejected image rollout through the strict fallback; no tests ran.
 
 Keep repository, source, run/attempt, workflow, profile/manifest, package/lock,
 workspace, toolchain, runner OS/architecture and image OS exact. Image versions
@@ -77,6 +87,23 @@ union of permitted rpaths to a fixed point: multiple candidates with different
 fingerprints are unsupported. This deliberately sacrifices availability rather
 than guessing which library wins.
 
+Apple's [universal loader](https://github.com/apple-oss-distributions/dyld/blob/main/mach_o/Universal.cpp),
+[architecture definitions](https://github.com/apple-oss-distributions/dyld/blob/main/mach_o/Architecture.cpp)
+and [grading rules](https://github.com/apple-oss-distributions/dyld/blob/main/mach_o/GradedArchitectures.cpp)
+allow distinct ARM64 variants and different launch/load preferences. Cover the
+union of every supported generic, v8, old ARM64e and versioned user-space ARM64e
+slice, preserving full subtype ABI bits and the whole-file SHA256. Never guess a
+selected slice. Follow all variant dependencies/rpaths, with strong linkage
+winning over weak linkage for a shared install name. A missing alternate-variant
+strong dependency remains incomplete. Reject future/kernel ABI variants,
+duplicate normalized architectures, mismatched table/header identities, overlaps,
+invalid alignment/bounds, reserved fat64 data, and mixed payload classes. Apple's
+fat32 legacy extra generic ARM64 descriptor receives the same bounds and overlap
+checks; fat64 does not gain this interpretation. Known object, core, linker-stub,
+dSYM and static-archive payloads are nonloadable. A foreign-only loadable image is
+unsupported rather than silently excluded. Command budgets apply across all
+ARM64 variants of one file.
+
 [SwiftPM's test environment](https://github.com/swiftlang/swift-package-manager/blob/swift-6.2-RELEASE/Sources/Commands/Utilities/TestingSupport.swift)
 adds selected macOS platform library/framework paths and uses its XCTest helper.
 Account for those paths and load-command rpaths. Do not assume XCTest is provided
@@ -98,8 +125,11 @@ host changes, provisioning, installation or full-system hash is part of collecti
 ## Activation and affected checks
 
 `ENABLE_NATIVE_COMPATIBILITY=True` activates the reviewed contract. A v2 manifest
-carries the complete fingerprint or a bounded unavailability reason. A v1 manifest
-retains the exact original identity gate. Preactivation fixtures exercise malformed/fat Mach-O,
+carries the complete fingerprint or a bounded unavailability reason. An unsupported
+file also records only its inspected path (512 characters), size, header/table
+SHA256 and at most 33 bounded slice descriptors. These closed-schema diagnostics
+are log/provenance data: they never select a file, command or compatibility rule.
+A v1 manifest retains the exact original identity gate. Portable fixtures exercise malformed/fat Mach-O,
 recursive dependencies, allowed paths, weak/missing dependencies, hash changes,
 native context changes, cache UUID changes, override refusal and budgets. The
 collector is unsupported on this Linux host; native APIs/SDK/loader behavior need
@@ -118,9 +148,11 @@ legacy fallback boundary; they do not prove that every installed image tool matc
 
 The proof covers declared Mach-O dependencies and the known SwiftPM test/manifest
 runtime, not arbitrary future dynamic loaders or general binary relocation. A new
-runtime root or unsupported loader shape requires an updated contract. Native API
-availability, actual Xcode layouts, collection cost and both hosted shards remain
-unverified locally; fixture mocks cannot supply that evidence.
+runtime root or unsupported loader shape requires an updated contract. Actual
+host prechecks took 15.742 seconds on the producer and 10.377/11.049 seconds on the
+workers in run `40125346131`; the incomplete producer closure took 8.639 seconds.
+Complete closure, supported external layouts, final collection overhead and
+two-shard success remain hosted proof gaps. Fixture mocks cannot supply that evidence.
 
 The separate schedule commit integrates exact nightly intent from
 `0110a56430470106ad7ffed6c96707d3eb5cc636` after the product patch 01 transfer

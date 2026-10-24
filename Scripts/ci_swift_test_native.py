@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bounded native runtime identity; inactive until the handoff caller opts in.
+"""Bounded native runtime identity for the explicit compiled-test handoff.
 
 Apple formats/APIs: xnu EXTERNAL_HEADERS/mach-o/{loader,fat}.h and dyld
 include/mach-o/{dyld,dyld_priv}.h. No artifact-provided command or code is run.
@@ -29,6 +29,11 @@ MAX_QUERIES = 4096
 MAX_COMMAND_BYTES = 1024 ** 2
 MAX_COMMANDS = 4096
 ARM64 = 0x100000C
+# Apple Architecture.cpp: generic, v8, old arm64e, versioned user-space arm64e.
+# Unknown/future/kernel ABI flags do not qualify a complete proof.
+ARM64_SUBTYPES = {0, 1, 2, 0x80000002}
+LOADABLE_KINDS = {2, 6, 7, 8}
+NONLOADABLE_KINDS = {1, 4, 9, 10}  # object, core dump, linker stub, dSYM
 LOADS = {0xC, 0x80000018, 0x8000001F, 0x80000023, 0x20}
 WEAK = 0x80000018
 SYSTEM_ROOTS = (Path("/usr/lib"), Path("/System/Library/Frameworks"),
@@ -96,54 +101,141 @@ def validate_environment(environment):
         raise ValueError("native-loader-or-toolchain-override")
 
 
+def validate_diagnostic(value):
+    """Closed, bounded data only. A manifest diagnostic never selects a file or command."""
+    need(isinstance(value, dict) and set(value) == {"path", "file_bytes", "header_sha256", "fat_slices"},
+         "invalid-native-diagnostic")
+    need(isinstance(value["path"], str) and 0 < len(value["path"]) <= 512
+         and not any(ord(character) < 32 for character in value["path"]), "invalid-native-diagnostic")
+    need(type(value["file_bytes"]) is int and 0 <= value["file_bytes"] < 2 ** 63
+         and isinstance(value["header_sha256"], str)
+         and re.fullmatch(r"[0-9a-f]{64}", value["header_sha256"]), "invalid-native-diagnostic")
+    need(isinstance(value["fat_slices"], list) and len(value["fat_slices"]) <= 33,
+         "invalid-native-diagnostic")
+    for item in value["fat_slices"]:
+        need(isinstance(item, dict) and set(item) == {"cpu", "subtype", "offset", "bytes", "alignment", "hidden"}
+             and type(item["hidden"]) is bool and all(type(item[key]) is int and 0 <= item[key] < 2 ** 64
+                 for key in ("cpu", "subtype", "offset", "bytes", "alignment")), "invalid-native-diagnostic")
+    return value
+
+
 def macho(path):
-    """Read ARM64 load commands only, including an ARM64 slice of a fat file."""
+    """Cover every supported ARM64 variant, rather than guess launch/load grading."""
+    diagnostic = {"path": str(path)[:512], "file_bytes": 0,
+                  "header_sha256": hashlib.sha256(b"").hexdigest(), "fat_slices": []}
+    try:
+        return _macho(path, diagnostic)
+    except UnsupportedRuntime as error:
+        error.diagnostic = validate_diagnostic(diagnostic)
+        raise
+
+
+def _macho(path, diagnostic):
     size = path.stat().st_size
+    diagnostic["file_bytes"] = size
     with path.open("rb") as stream:
         header = stream.read(32)
+        diagnostic["header_sha256"] = hashlib.sha256(header).hexdigest()
         if len(header) < 4:
             return None
-        start, limit = 0, size
+        slices = []
         if header[:4] in (b"\xca\xfe\xba\xbe", b"\xca\xfe\xba\xbf"):
             wide = header[:4] == b"\xca\xfe\xba\xbf"
             need(len(header) >= 8, "truncated-fat-header")
             count = struct.unpack_from(">I", header, 4)[0]
             need(0 < count <= 32, "fat-architecture-budget")
             stream.seek(8)
-            slices = []
             entry_size = 32 if wide else 20
             table_end = 8 + count * entry_size
+            encoded = header[:8]
             for _ in range(count):
                 data = stream.read(entry_size)
                 need(len(data) == entry_size, "truncated-fat-table")
+                encoded += data
                 cpu, subtype = struct.unpack_from(">II", data)
                 offset, length = struct.unpack_from(">QQ" if wide else ">II", data, 8)
-                need(offset >= table_end and length >= 32 and offset + length <= size,
-                     "invalid-fat-slice")
-                slices.append((cpu, subtype, offset, length))
-            ordered = sorted((offset, offset + length) for _, _, offset, length in slices)
+                alignment = struct.unpack_from(">I", data, 24 if wide else 16)[0]
+                slices.append({"cpu":cpu, "subtype":subtype, "offset":offset, "bytes":length,
+                               "alignment":alignment, "hidden":False})
+                diagnostic["fat_slices"] = slices
+                need(not wide or struct.unpack_from(">I", data, 28)[0] == 0, "invalid-fat-reserved-field")
+            # Apple's Universal::forEachSlice recognizes exactly one legacy extra
+            # generic ARM64 descriptor after a fat32 table. It must fit entirely
+            # before every payload, and receives the same containment checks.
+            if not wide and table_end + 20 <= size:
+                extra = stream.read(20)
+                if len(extra) == 20 and struct.unpack_from(">II", extra) == (ARM64, 0):
+                    cpu, subtype, offset, length, alignment = struct.unpack(">IIIII", extra)
+                    slices.append({"cpu":cpu, "subtype":subtype, "offset":offset, "bytes":length,
+                                   "alignment":alignment, "hidden":True})
+                    encoded += extra
+                    table_end += 20
+            diagnostic["header_sha256"] = hashlib.sha256(encoded).hexdigest()
+            need(len(slices) <= 32, "fat-architecture-budget")
+            for item in slices:
+                need(item["offset"] >= table_end and item["bytes"] >= 8
+                     and item["offset"] + item["bytes"] <= size and item["alignment"] <= 63
+                     and item["offset"] % (1 << item["alignment"]) == 0, "invalid-fat-slice")
+            pairs = [(item["cpu"], (0x80000002 if not wide and item["subtype"] == 2 else item["subtype"])
+                      if item["cpu"] == ARM64 else item["subtype"] & 0xFFFFFF) for item in slices]
+            need(len(pairs) == len(set(pairs)), "duplicate-fat-architecture")
+            ordered = sorted((item["offset"], item["offset"] + item["bytes"]) for item in slices)
             need(all(left[1] <= right[0] for left, right in zip(ordered, ordered[1:])),
                  "overlapping-fat-slices")
-            arm = [entry for entry in slices if entry[0] == ARM64]
-            need(len(arm) == 1, "unsupported-fat-arm64-slices")
-            _, _, start, limit = arm[0]
-            limit += start
-            stream.seek(start)
-            header = stream.read(32)
         elif header[:4] in (b"\xbe\xba\xfe\xca", b"\xbf\xba\xfe\xca",
                             b"\xfe\xed\xfa\xcf", b"\xce\xfa\xed\xfe", b"\xfe\xed\xfa\xce"):
             raise UnsupportedRuntime("unsupported-macho-byte-order-or-width")
-        if header[:4] != b"\xcf\xfa\xed\xfe":
+        elif header[:4] != b"\xcf\xfa\xed\xfe":
             return None
-        need(len(header) == 32, "truncated-macho-header")
-        _, cpu, subtype, kind, count, command_bytes, flags, _ = struct.unpack("<8I", header)
-        if kind not in (2, 6, 7, 8):  # executable, dylib, dyld, bundle; .o/debug files are not loaded.
+        else:
+            slices = [{"offset":0, "bytes":size}]
+        images, categories, kinds, command_total, count_total = [], set(), set(), 0, 0
+        for item in slices:
+            stream.seek(item["offset"])
+            header = stream.read(min(32, item["bytes"]))
+            if header.startswith(b"!<arch>\n"):
+                categories.add("archive")
+                continue
+            need(header[:4] == b"\xcf\xfa\xed\xfe" and len(header) == 32, "unsupported-or-truncated-fat-payload")
+            _, cpu, subtype, kind, count, command_bytes, flags, _ = struct.unpack("<8I", header)
+            if "cpu" in item:
+                historical_arm64e = (not wide and cpu == item["cpu"] == ARM64 and item["subtype"] == 2
+                                     and subtype == 0x80000002)
+                need((cpu, subtype) == (item["cpu"], item["subtype"]) or historical_arm64e,
+                     "fat-header-architecture-mismatch")
+            need(kind in LOADABLE_KINDS | NONLOADABLE_KINDS, "unsupported-macho-filetype")
+            categories.add("nonloadable" if kind in NONLOADABLE_KINDS else "loadable")
+            if kind in NONLOADABLE_KINDS:
+                continue
+            kinds.add(kind)
+            need(count <= MAX_COMMANDS and command_bytes <= MAX_COMMAND_BYTES
+                 and 32 + command_bytes <= item["bytes"], "macho-load-command-budget")
+            if cpu != ARM64:
+                continue  # Another architecture's alternative in a fat file; never native ARM64 fallback.
+            need(subtype in ARM64_SUBTYPES, "unsupported-arm64-subtype-abi")
+            count_total += count
+            command_total += command_bytes
+            need(count_total <= MAX_COMMANDS and command_total <= MAX_COMMAND_BYTES, "macho-load-command-budget")
+            data = stream.read(command_bytes)
+            need(len(data) == command_bytes, "truncated-load-commands")
+            images.append({"kind":kind, "subtype":subtype, **load_commands(data, count)})
+        need(len(categories) == 1, "mixed-fat-payload-types")
+        if categories != {"loadable"}:
             return None
-        need(cpu == ARM64 and subtype & 0xFFFFFF in (0, 2), "unsupported-macho-architecture")
-        need(count <= MAX_COMMANDS and command_bytes <= MAX_COMMAND_BYTES
-             and start + 32 + command_bytes <= limit, "macho-load-command-budget")
-        data = stream.read(command_bytes)
-        need(len(data) == command_bytes, "truncated-load-commands")
+        need(images, "loadable-file-has-no-arm64-slice")
+        need(len(kinds) == 1 and len({image["subtype"] for image in images}) == len(images),
+             "ambiguous-fat-arm64-variants")
+    dependencies = {}
+    for image in images:
+        for dependency in image["dependencies"]:
+            raw = dependency["path"]
+            dependencies[raw] = dependencies.get(raw, True) and dependency["weak"]
+    return {"kind":images[0]["kind"], "subtypes":sorted(image["subtype"] for image in images),
+            "dependencies":[{"path":raw, "weak":weak} for raw, weak in sorted(dependencies.items())],
+            "rpaths":sorted({raw for image in images for raw in image["rpaths"]})}
+
+
+def load_commands(data, count):
     dependencies, rpaths, cursor = [], [], 0
     for _ in range(count):
         need(cursor + 8 <= len(data), "truncated-load-command")
@@ -173,7 +265,7 @@ def macho(path):
                 dependencies.append({"path": value, "weak": command == WEAK})
         cursor += length
     need(cursor == len(data), "load-command-count-differs")
-    return {"kind": kind, "subtype": subtype, "dependencies": dependencies, "rpaths": rpaths}
+    return {"dependencies": dependencies, "rpaths": rpaths}
 
 
 class SystemCache:
@@ -383,7 +475,7 @@ class Host:
             need(len(images) < MAX_IMAGES, "native-image-budget")
             image = image if image is not None else macho(physical)
             need(image is not None, "runtime-dependency-is-not-supported-macho")
-            entries[key] = {"kind": kind, "sha256": self.budget.digest(physical)}
+            entries[key] = {"kind": kind, "sha256": self.budget.digest(physical), "subtypes":image["subtypes"]}
             images[key] = image
             for raw in image["rpaths"]:
                 # Old unused rpaths on transferred tools do not select a library. Never probe them.

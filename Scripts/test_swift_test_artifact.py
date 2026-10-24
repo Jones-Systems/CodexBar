@@ -209,12 +209,14 @@ class BuildArtifactTests(unittest.TestCase):
             with self.assertRaises(subprocess.CalledProcessError):
                 artifact.identity(self.workspace, environment, ["swift"], dirty)
 
-    def native_export(self, complete=True):
+    def native_export(self, complete=True, diagnostic=None):
         fingerprint = {"schema": "codexbar.swift-test-native/v1", "context": {"os_build":"25G83"},
                        "entries": {"runtime": {"sha256":"a" * 64}}, "edges": {}}
         self.runtime()
         payload = {"status":"complete", "fingerprint":fingerprint} if complete else {
             "status":"unavailable", "reason":"native-cache-api-unavailable"}
+        if diagnostic is not None:
+            payload["diagnostic"] = diagnostic
         manifest, digest = artifact.export_build(self.workspace, self.root, self.current, TEST_IDS,
                                                  native_runtime=payload)
         shutil.rmtree(self.workspace / ".build")
@@ -263,6 +265,59 @@ class BuildArtifactTests(unittest.TestCase):
                                    lambda **fields: observed.append(fields))
         self.assertEqual(observed[0]["mode"], "exact-image-fallback")
         self.assertEqual(observed[0]["reason"], "native-cache-api-unavailable")
+
+    def test_unavailable_file_diagnostics_are_data_only_and_never_relax_exact_image_fallback(self):
+        import ci_swift_test_native as native
+        diagnostic = {"path":"/Applications/Xcode.app/Contents/Developer/usr/bin/swift-package",
+                      "file_bytes":512, "header_sha256":"a" * 64, "fat_slices":[{
+                          "cpu":native.ARM64, "subtype":0x81000002, "offset":64,
+                          "bytes":128, "alignment":6, "hidden":False}]}
+        _, digest, _ = self.native_export(complete=False, diagnostic=diagnostic)
+        state = {"host":None, "reason":"native-cache-api-unavailable", "host_seconds":0.1}
+        observed = []
+        with patch.object(artifact, "ENABLE_NATIVE_COMPATIBILITY", True):
+            with patch.object(artifact, "extract_build") as extract, self.assertRaisesRegex(ValueError, "identity differs"):
+                artifact.restore_build(self.workspace, self.root, digest,
+                                       {**self.current, "image_version":"different"}, state)
+            extract.assert_not_called()
+            artifact.restore_build(self.workspace, self.root, digest, self.current, state,
+                                   lambda **fields: observed.append(fields))
+        self.assertEqual(observed[0]["diagnostic"], diagnostic)
+        self.assertEqual(observed[0]["mode"], "exact-image-fallback")
+        for payload in ({"status":"unavailable", "reason":"unsupported-fat-layout",
+                         "diagnostic":{**diagnostic, "command":"untrusted"}},
+                        {"status":"complete", "fingerprint":{}, "diagnostic":diagnostic}):
+            with self.assertRaises(ValueError):
+                artifact.native_payload(payload)
+
+    def test_native_file_diagnostic_survives_collection_and_producer_evidence(self):
+        import ci_swift_test_native as native
+        diagnostic = {"path":"/Applications/Xcode.app/Contents/runtime", "file_bytes":64,
+                      "header_sha256":"b" * 64, "fat_slices":[]}
+        failure = native.UnsupportedRuntime("unsupported-arm64-subtype-abi")
+        failure.diagnostic = diagnostic
+        def unavailable():
+            raise failure
+        state = {"host":SimpleNamespace(closure=unavailable), "reason":None, "host_seconds":0.1}
+        payload, seconds = artifact.native_finish(state, self.workspace / ".build")
+        self.assertEqual(payload, {"status":"unavailable", "reason":str(failure), "diagnostic":diagnostic})
+        self.assertGreaterEqual(seconds, 0)
+        with patch.object(artifact, "ENABLE_NATIVE_COMPATIBILITY", True), \
+                patch.object(native, "Host", side_effect=failure):
+            precheck = artifact.native_precheck(self.workspace, None)
+        self.assertIsNone(precheck["host"])
+        self.assertEqual(artifact.native_finish(precheck, self.workspace / ".build")[0], payload)
+        self.runtime()
+        with self.harness(["--export-build", str(self.root)]) as (_, execute), \
+                patch.object(artifact, "native_precheck", return_value=state), \
+                patch.object(runner, "emit_evidence") as evidence:
+            self.assertEqual(runner.run_suites(), 0)
+        produced = [call.kwargs for call in evidence.call_args_list
+                    if call.args == ("native-compatibility-produced",)]
+        self.assertEqual(produced[0]["diagnostic"], diagnostic)
+        self.assertEqual(produced[0]["status"], "unavailable")
+        self.assertEqual(json.loads((self.root / artifact.MANIFEST).read_text())["native_runtime"], payload)
+        execute.assert_not_called()
 
     def test_complete_native_proof_never_relaxes_other_identity_or_integrity_boundaries(self):
         _, digest, fingerprint = self.native_export()
