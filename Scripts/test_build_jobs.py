@@ -290,6 +290,7 @@ class BuildJobsTests(unittest.TestCase):
                 with self.subTest(kind=kind, command=command), jobs.admission(command, kind) as actual:
                     self.assertEqual(actual, command)
         self.cpu.assert_not_called()
+        self.disk.assert_not_called()
         self.assertEqual(self.clock.now, 0)
         self.assertFalse((self.directory / "lock").exists())
 
