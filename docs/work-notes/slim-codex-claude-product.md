@@ -129,4 +129,39 @@ shared process fixtures. The two overview Claude nil-selection assertions still 
 an empty synthetic token store; they do not depend on the removed Cursor dormancy
 policy. Removed Kiro preference localization assertions leave the shared System
 localization checks intact.
+
+Published [draft PR41](https://github.com/Jones-Systems/CodexBar/pull/41), stacked on
+PR39. Source removal commit: `39ebae79e3f0dd31e4afc9d2bb2f4dba5a4ac808`.
+The first hosted lint job caught a stale parser hash before reaching the pending
+CI-sibling contracts. Existing `Scripts/regenerate-codex-parser-hash.sh --write`
+and `--check` produced and verified `56738678d8c0245c`; generated-only repair
+commit `e0575c44592208fa16d0ac71d7b14044c0b49418` changes no generator semantics.
+The final authorized Sol Max reviewer is checking the source commit with that
+explicit generated-only disposition. No further reviewers are authorized here.
+
+Exact committed-blob [comparison](../engineering-specs/slim-codex-claude-comparison.json):
+
+| Inventory | Base | Product candidate |
+| --- | ---: | ---: |
+| Product Swift files / lines | 1,201 / 307,271 | 651 / 193,233 |
+| Product C/header files / lines | 21 / 79,719 | 1 / 1 |
+| Test Swift files / lines | 1,059 / 368,064 | 734 / 252,333 |
+| Lexical Swift Testing declarations | 10,575 | 6,547 |
+
+330 test paths were removed and 5 added, including shared-suite renames; these are
+not runtime case counts. Package targets `CQuickJS` and `CodexBarPluginTests`, core
+JavaScript resources and JavaScriptCore linkage are gone; no external package was
+removed. Provider enum cases go from 69 to 2. Git-blob checks preserve 61 cost
+regression suites, 7 shared process files, 4 critical history/identity/catch-up
+suites and 19 shared fixtures exactly. The lexical removal sweep covers 1,144
+retired top-level declaration names with zero remaining product/test references.
+Architecture scanner code is unchanged; 312 catalog entries match 651 shipped
+Swift files with zero source-inspection findings. None of these replace compilation.
+
+Comparable executable/bundle sizes and cold-build times are unavailable. Root's
+next gate is product-contract integration followed by exact comparable hosted
+macOS builds with the same toolchain, architecture, configuration and dependency/cache
+conditions, then required macOS/Linux coverage for the final source. Source counts
+are not build-time or binary-size estimates. Draft state prevents a readiness claim;
+the first automatic run's draft macOS skip and failed lint do not qualify this head.
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->

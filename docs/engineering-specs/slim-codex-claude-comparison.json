@@ -1,0 +1,173 @@
+{
+  "schema": "codexbar-product-removal-comparison/v1",
+  "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+  "candidateSourceRevision": "e0575c44592208fa16d0ac71d7b14044c0b49418",
+  "pullRequest": "https://github.com/Jones-Systems/CodexBar/pull/41",
+  "baseBranch": "work/test-value-bar-pass2-20261024",
+  "method": "Exact committed Git blobs; files include Swift source under Sources and tests under Tests, TestsLinux, TestsPlugin; line count uses bytes.splitlines; lexical Swift Testing @Test declaration counts exclude comments/strings and do not represent parameterized/runtime cases.",
+  "counts": {
+    "before": {
+      "productSwift": {
+        "files": 1201,
+        "lines": 307271,
+        "bytes": 12636947
+      },
+      "productCHeaders": {
+        "files": 21,
+        "lines": 79719,
+        "bytes": 2700592
+      },
+      "testSwift": {
+        "files": 1059,
+        "lines": 368064,
+        "bytes": 15677754
+      }
+    },
+    "after": {
+      "productSwift": {
+        "files": 651,
+        "lines": 193233,
+        "bytes": 7944129
+      },
+      "productCHeaders": {
+        "files": 1,
+        "lines": 1,
+        "bytes": 21
+      },
+      "testSwift": {
+        "files": 734,
+        "lines": 252333,
+        "bytes": 10937473
+      }
+    }
+  },
+  "swiftTestingDeclarations": {
+    "before": {
+      "swiftTestingDeclarations": 10575,
+      "filesWithTestAttributes": 1006
+    },
+    "after": {
+      "swiftTestingDeclarations": 6547,
+      "filesWithTestAttributes": 692
+    }
+  },
+  "testPathsRemoved": 330,
+  "testPathsAddedIncludingRenames": 5,
+  "providerCasesBefore": 69,
+  "providerCasesAfter": [
+    "codex",
+    "claude"
+  ],
+  "removedTargets": [
+    "CQuickJS",
+    "CodexBarPluginTests"
+  ],
+  "removedLinkage": [
+    "CQuickJS in-repository dependency",
+    "JavaScriptCore framework",
+    "CodexBarCore bundled JavaScript resources"
+  ],
+  "externalPackageDependenciesRemoved": [],
+  "externalPackagesRetained": [
+    "Sparkle",
+    "Commander",
+    "swift-crypto",
+    "swift-log",
+    "KeyboardShortcuts",
+    "Vortex",
+    "SweetCookieKit"
+  ],
+  "retainedBlobProof": {
+    "sharedProcessSource": {
+      "files": 7,
+      "gitBlobIdentical": true,
+      "inventorySHA256": "dbc9da66f8757bcde7ed48800276fdc65b47140de3d4792dacbd3c351da8748d"
+    },
+    "costRegressionSuites": {
+      "files": 61,
+      "gitBlobIdentical": true,
+      "inventorySHA256": "c56b9499bc1720f960d92388703c2d4889a67b0603eca12d1c21de87e1875f9c"
+    },
+    "localHistoryRegressionSuites": {
+      "files": 4,
+      "gitBlobIdentical": true,
+      "inventorySHA256": "2f4fd698e0be67b99ab855056c29cf71a3d128e77311e66a108d61fe059043fe"
+    },
+    "retainedSharedFixtures": {
+      "files": 19,
+      "gitBlobIdentical": true,
+      "inventorySHA256": "060d486bb821586b3f6067134ca31d6164a6ddd81122e8eb914fccbad7fbe22f"
+    }
+  },
+  "staticAudits": {
+    "removedTopLevelDeclarationNames": 1144,
+    "remainingRemovedNameReferences": 0,
+    "architectureCatalogEntriesBefore": 415,
+    "architectureCatalogEntriesAfter": 312,
+    "architectureScannerByteIdentical": true,
+    "shippedSwiftFilesInspected": 651,
+    "architectureSourceFindings": 0
+  },
+  "checks": {
+    "makeCheck": {
+      "status": "unavailable",
+      "exitCode": 2,
+      "reason": "plutil absent"
+    },
+    "makeTest": {
+      "status": "unavailable",
+      "exitCode": 2,
+      "reason": "Swift absent; no test executable ran"
+    },
+    "normalAndFullProfileManifests": "pass",
+    "documentationLinks": {
+      "status": "pass",
+      "localLinks": 179
+    },
+    "llmsIndex": "pass",
+    "whitespace": "pass",
+    "providerManifestGeneration": {
+      "status": "fail",
+      "reason": "Two generator doccomment templates still describe runtime/plugin registrations; pending CI sibling cleanup"
+    },
+    "codexParserHash": {
+      "status": "pass",
+      "method": "Existing generator --write followed by --check",
+      "value": "56738678d8c0245c",
+      "generatedOnlyRepairRevision": "e0575c44592208fa16d0ac71d7b14044c0b49418"
+    }
+  },
+  "hostedEvidence": {
+    "status": "pending root integration/qualification",
+    "firstRunURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40121196414",
+    "firstHeadLint": "failure: stale Codex parser hash; repaired by generated-only commit e0575c44592208fa16d0ac71d7b14044c0b49418; later product-dependent harness/packaging/comment checks await CI sibling integration",
+    "currentHeadChecksMustBeReadFromGitHub": true
+  },
+  "appSizeAndBuildComparison": {
+    "status": "unavailable",
+    "beforeExecutableBytes": null,
+    "afterExecutableBytes": null,
+    "beforeBundleBytes": null,
+    "afterBundleBytes": null,
+    "beforeColdBuildSeconds": null,
+    "afterColdBuildSeconds": null,
+    "nextGate": "Exact comparable hosted macOS builds after CI product-contract integration; same toolchain, configuration, architecture, dependency/cache conditions and unsigned packaging. Root owns scheduling and CI watch. Source reduction is not a binary-size or build-time estimate."
+  },
+  "restorationRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+  "bulkReview": {
+    "status": "in progress",
+    "implementationRevision": "39ebae79e3f0dd31e4afc9d2bb2f4dba5a4ac808",
+    "generatedOnlyDelta": "e0575c44592208fa16d0ac71d7b14044c0b49418",
+    "model": "gpt-6.1-sol",
+    "reasoningEffort": "max",
+    "serviceTier": "default"
+  },
+  "testProfiles": {
+    "normalAndFullAccepted": true,
+    "featureOnlyExclusions": 0,
+    "mixedFullOnlyPartitions": 0,
+    "retainedRepositoryTestSwiftPaths": 734,
+    "manifestSHA256": "136f44cb5604cf4364709c429e2e7ff8d275c0065d26bfb4896e1899008865d8",
+    "platformTargetSelectionUnchanged": true
+  }
+}
