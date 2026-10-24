@@ -40,7 +40,9 @@ check_test_profiles() {
 }
 
 check_plugin_javascript() {
-  "${ROOT_DIR}/Scripts/regenerate-plugin-js.sh" --check
+  if [[ -d "${ROOT_DIR}/Sources/CodexBarCore/Resources/Plugins" ]]; then
+    "${ROOT_DIR}/Scripts/regenerate-plugin-js.sh" --check
+  fi
 }
 
 check_package_product_paths() {
@@ -93,6 +95,7 @@ check_build_jobs() {
 
 check_ci_isolated_commands() {
   "${ROOT_DIR}/Scripts/test.sh" --command python3 -B "${ROOT_DIR}/Scripts/test_ci_isolated_commands.py"
+  "${ROOT_DIR}/Scripts/test.sh" --command python3 -B "${ROOT_DIR}/Scripts/test_swift_test_artifact.py"
 }
 
 check_codexbar_skill() {
@@ -215,8 +218,10 @@ run_oxlint() {
 }
 
 run_typescript_check() {
-  ensure_typescript
-  node "${ROOT_DIR}/.build/lint-tools/typescript/bin/tsc" --project "${ROOT_DIR}/tsconfig.plugins.json"
+  if [[ -d "${ROOT_DIR}/Sources/CodexBarCore/Resources/Plugins" ]]; then
+    ensure_typescript
+    node "${ROOT_DIR}/.build/lint-tools/typescript/bin/tsc" --project "${ROOT_DIR}/tsconfig.plugins.json"
+  fi
 }
 
 run_javascript_checks() {
@@ -252,7 +257,9 @@ case "$cmd" in
     ensure_oxfmt
     collect_javascript_files
     "${BIN_DIR}/oxfmt" --config "${ROOT_DIR}/.oxfmtrc.json" --write "${JAVASCRIPT_FILES[@]}"
-    "${ROOT_DIR}/Scripts/regenerate-plugin-js.sh" --write
+    if [[ -d "${ROOT_DIR}/Sources/CodexBarCore/Resources/Plugins" ]]; then
+      "${ROOT_DIR}/Scripts/regenerate-plugin-js.sh" --write
+    fi
     ;;
   *)
     printf 'Usage: %s [lint|lint-linux|lint-macos|format]\n' "$(basename "$0")" >&2

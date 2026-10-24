@@ -52,7 +52,7 @@ scope, current native review requirements, and resolution of every review thread
 No independent review is required by default. Retain documented finding deferrals.
 
 Require successful applicable checks from GitHub Actions app ID `15368`, workflow
-ID `388934113`, for the exact candidate: `changes`, `lint`, both
+ID `388934113`, for the exact candidate: `changes`, `lint`, `swift-build-macos`, both
 `swift-test-macos (0, 2)` and `swift-test-macos (1, 2)`,
 `build-linux-musl-cli`, `build-linux-cli (linux-x64, ubuntu-24.04)`,
 `build-linux-cli (linux-arm64, ubuntu-24.04-arm)` and `lint-build-test`.
@@ -64,7 +64,7 @@ legacy remote and use the verified canonical remote for local synchronization.
 ### Required and advisory CI checks
 
 `changes`, `lint`, and `lint-build-test` are required on every non-draft PR.
-The two `swift-test-macos` shards, two `build-linux-cli` architecture jobs,
+The `swift-build-macos` producer, two `swift-test-macos` shards, two `build-linux-cli` architecture jobs,
 and `build-linux-musl-cli` are required when their checked-in path gates select
 them. An explicit matching gate may permit a skipped platform job; a missing,
 failed, cancelled, or unexplained skipped job never satisfies the aggregate.
@@ -72,6 +72,10 @@ The aggregate must validate all selected jobs on the current head. Keep the
 GitHub Actions app and workflow identity requirements above. Selected musl PRs
 compile debug with the pinned static SDK; main/manual runs compile release.
 Both must verify static linkage. Release-only compilation is a main/manual check.
+
+Selected macOS runs compile test products once in `swift-build-macos`; both shards must verify and
+restore its same-run artifact and use `--skip-build`. A missing, mismatched or invalid handoff fails
+qualification; workers must never fall back to compilation. See [compiled test handoff](docs/ci-test-build-handoff.md).
 
 Every other check is advisory, including Jones app/menu candidates, native
 workflow proofs, release artifacts, and manual performance campaigns. An
