@@ -3,6 +3,7 @@ import Testing
 @testable import CodexBarCore
 
 struct ProviderFetchErrorTests {
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `missing kiro strategy explains cli requirement`() {
         let message = ProviderFetchError.noAvailableStrategy(.kiro).localizedDescription
@@ -10,6 +11,7 @@ struct ProviderFetchErrorTests {
         #expect(message.contains("Kiro CLI"))
         #expect(message.contains("kiro-cli login"))
     }
+    #endif
 
     @Test
     func `pipeline honors one exact classified retry delay`() async throws {

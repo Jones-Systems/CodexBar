@@ -32,11 +32,13 @@ SHA = "a" * 40
 
 def campaign_environment(workspace, **overrides):
     return {"GITHUB_WORKSPACE": str(workspace), "GITHUB_SHA": SHA, "GITHUB_ACTIONS": "true",
+            "CODEXBAR_TEST_PROFILE": "normal",
             "GITHUB_RUN_ID": "123", "GITHUB_RUN_ATTEMPT": "1", "GITHUB_REF": "refs/heads/work/campaign",
             "RUNNER_OS": "macOS", "RUNNER_ARCH": "ARM64", "ImageVersion": "20261001.1", "ImageOS": "macos26",
             "CAMPAIGN_GROUP_SIZE": "4", "CAMPAIGN_SHARD_COUNT": "1", "CAMPAIGN_SHARD_INDEX": "0",
             "CAMPAIGN_EXPECTED_SHA": SHA, "CAMPAIGN_CACHE_MODE": "warm", "CAMPAIGN_CACHE_HIT": "true",
-            "CAMPAIGN_CACHE_KEY": "swiftpm-toolchain-dependencies-" + SHA, "CAMPAIGN_TOOLCHAIN_ID": "toolchain",
+            "CAMPAIGN_CACHE_KEY": "swiftpm-toolchain-normal-" + campaign.manifest_digest() + "-dependencies-" + SHA,
+            "CAMPAIGN_TOOLCHAIN_ID": "toolchain",
             **overrides}
 
 
@@ -45,7 +47,7 @@ def capture_fixture():
     with tempfile.TemporaryDirectory(prefix=".test-campaign-", dir=ROOT) as temporary:
         environment = campaign_environment(Path(temporary))
         root = campaign.prepare(environment, SHA)
-        with patch.dict(os.environ, {"GITHUB_SHA": SHA, "GITHUB_ACTIONS": "true", **campaign.ISOLATION}):
+        with patch.dict(os.environ, {"GITHUB_SHA": SHA, "GITHUB_ACTIONS": "true", "CODEXBAR_TEST_PROFILE": "normal", **campaign.ISOLATION}):
             capture = campaign.Capture(root)
             try:
                 yield capture, environment
@@ -104,44 +106,54 @@ def evidence_records(output):
 
 class DiscoveryRecoveryTests(unittest.TestCase):
     def test_sparkle_recovery_does_not_repeat_the_build(self):
-        command = ["swift", "test", "list"]
+        build = ["swift", "build", "--build-tests"]
+        command = ["swift", "test", "list", "--skip-build"]
         missing_library = (
             "Library not loaded: @rpath/Sparkle.framework/Versions/B/Sparkle\n"
             "tried: /fixture/PackageFrameworks/Sparkle.framework/Versions/B/Sparkle"
         )
         with patch.object(runner, "run_captured_command", side_effect=[
-            completed(command, 1, missing_library), completed(command),
+            completed(build), completed(command, 1, missing_library), completed(command),
         ]) as invoke, patch.object(runner, "repair_sparkle_test_runtime", return_value=True) as repair:
             selections = runner.swift_test_list(["swift"])
         self.assertEqual([call.args[0] for call in invoke.call_args_list], [
-            command, [*command, "--skip-build"],
+            build, command, command,
         ])
+        self.assertEqual(sum(call.args[0] == build for call in invoke.call_args_list), 1)
         repair.assert_called_once_with(["swift"])
         self.assertEqual([item.name for item in selections], [
             "CodexBarTests.Alpha", "CodexBarTests.Legacy", "CodexBarTests.`top/level works`()",
         ])
 
     def test_other_discovery_failures_do_not_retry_or_claim_a_manifest(self):
-        with patch.object(runner, "run_captured_command", return_value=completed([], 42, "build failed")) as invoke, \
+        with patch.object(runner, "run_captured_command", side_effect=[
+                completed(["swift", "build", "--build-tests"]), completed([], 42, "discovery failed"),
+        ]) as invoke, \
                 patch.object(runner, "repair_sparkle_test_runtime") as repair, \
                 contextlib.redirect_stderr(io.StringIO()) as output:
             with self.assertRaises(subprocess.CalledProcessError) as failure:
                 runner.swift_test_list(["swift"])
         self.assertEqual(failure.exception.returncode, 42)
-        self.assertEqual(invoke.call_count, 1)
+        self.assertEqual([call.args[0] for call in invoke.call_args_list], [
+            ["swift", "build", "--build-tests"], ["swift", "test", "list", "--skip-build"],
+        ])
         repair.assert_not_called()
         self.assertNotIn('"event": "discovery"', output.getvalue())
 
-    def test_unrepaired_sparkle_failure_does_not_skip_build(self):
+    def test_unrepaired_sparkle_failure_stops_after_one_build_and_one_list(self):
         missing_library = (
             "Library not loaded: @rpath/Sparkle.framework/Versions/B/Sparkle\n"
             "tried: /fixture/PackageFrameworks/Sparkle.framework/Versions/B/Sparkle"
         )
-        with patch.object(runner, "run_captured_command", return_value=completed([], 1, missing_library)) as invoke, \
+        with patch.object(runner, "run_captured_command", side_effect=[
+                completed(["swift", "build", "--build-tests"]), completed([], 1, missing_library),
+        ]) as invoke, \
                 patch.object(runner, "repair_sparkle_test_runtime", return_value=False):
             with self.assertRaises(subprocess.CalledProcessError):
                 runner.swift_test_list(["swift"])
-        self.assertEqual(invoke.call_count, 1)
+        self.assertEqual([call.args[0] for call in invoke.call_args_list], [
+            ["swift", "build", "--build-tests"], ["swift", "test", "list", "--skip-build"],
+        ])
 
 
 class CacheContractTests(unittest.TestCase):
@@ -153,6 +165,8 @@ class CacheContractTests(unittest.TestCase):
         self.assertIn("${{ github.sha }}", key)
         self.assertIn("${{ steps.swift-toolchain.outputs.cache-id }}", key)
         self.assertIn("${{ runner.arch }}", key)
+        self.assertIn("${{ env.CODEXBAR_TEST_PROFILE }}", key)
+        self.assertIn("${{ steps.swift-toolchain.outputs.profile-manifest-sha256 }}", key)
         self.assertIn("${{ hashFiles('Package.resolved', 'Package.swift') }}", key)
         restore = re.search(r"(?m)^          restore-keys: \|\n((?:            .+\n)+)", cache).group(1)
         self.assertEqual(restore.strip(), key.removesuffix("${{ github.sha }}"))
@@ -164,9 +178,11 @@ class CampaignActivationTests(unittest.TestCase):
     def test_manual_campaign_has_explicit_validated_controls(self):
         workflow = (ROOT / ".github/workflows/ci.yml").read_text()
         self.assertIn("  workflow_dispatch:", workflow)
-        for name in ("group_size", "shard_count", "expected_sha", "cache_mode"):
+        for name in ("test_profile", "group_size", "shard_count", "expected_sha", "cache_mode"):
             self.assertIn(f"      {name}:", workflow)
         self.assertIn("Scripts/ci_swift_test_campaign.py plan", workflow)
+        self.assertIn("CODEXBAR_TEST_PROFILE: ${{ github.event_name == 'workflow_dispatch' && inputs.test_profile || 'normal' }}", workflow)
+        self.assertIn("if: ${{ env.CODEXBAR_TEST_PROFILE == 'full' && matrix.shard-index == 0 }}", workflow)
 
     def test_native_evidence_is_opt_in(self):
         source = (ROOT / "Scripts/ci_swift_test_by_suite.py").read_text()
@@ -214,7 +230,7 @@ class CampaignPlanTests(unittest.TestCase):
         self.assertLess(job.index("Summarize macOS shard"), job.index("Validate campaign evidence"))
         self.assertIn("retention-days: 7", job)
         self.assertIn("steps.campaign-upload.outcome == 'success'", job)
-        self.assertIn("./Scripts/test.sh --command swift test --parallel", workflow)
+        self.assertIn("./Scripts/test.sh --parallel", workflow)
         self.assertIn("run: ./Scripts/test-plugin-engines.sh --jsc-only", job)
         self.assertNotIn("GITHUB_ENV", (ROOT / "Scripts/ci_swift_test_campaign.py").read_text())
 
@@ -538,7 +554,7 @@ def receipt_fixture(workspace, group_size=4, shard_count=1, shard_index=0):
         record("process-start", launch_id=index, attempt_id=attempt_id, pid=100 + index, birth=[index, 1],
                session=100 + index, command=command, environment={**campaign.ISOLATION,
                "CODEXBAR_TEST_WORKSPACE_ROOT": str(workspace), "CODEXBAR_TEST_SCRATCH_PARENT": str(fixture),
-               "TMPDIR": str(fixture), "live_or_fixture_grant": False})
+               "TMPDIR": str(fixture), "CODEXBAR_TEST_PROFILE": "normal", "live_or_fixture_grant": False})
         record("process-drained", launch_id=index, pid=100 + index, birth=[index, 1])
         record("attempt", attempt="first", attempt_id=attempt_id, selections=group, filter_pattern=pattern,
                exit_code=0, error=None, timeout_seconds=120, elapsed_seconds=1.5)
@@ -614,7 +630,7 @@ class CampaignReceiptTests(unittest.TestCase):
             candidate = [campaign.verify(receipt_fixture(workspace, 12, 2, index)) for index in (0, 1)]
             with self.assertRaisesRegex(ValueError, "every shard"):
                 campaign.compare(baseline, candidate[:1])
-            for mutation in ("identity", "outcome", "multiplicity", "source", "cache", "unknown"):
+            for mutation in ("identity", "outcome", "multiplicity", "source", "cache", "profile", "manifest", "unknown"):
                 changed = copy.deepcopy(candidate)
                 if mutation == "identity":
                     changed[0]["functions"][0]["id"] = "other native ID"
@@ -626,6 +642,10 @@ class CampaignReceiptTests(unittest.TestCase):
                     changed[0]["context"]["source_revision"] = "b" * 40
                 elif mutation == "cache":
                     changed[0]["context"]["cache_hit"] = "false"
+                elif mutation == "profile":
+                    changed[0]["context"]["test_profile"] = "full"
+                elif mutation == "manifest":
+                    changed[0]["context"]["test_profile_manifest_sha256"] = "b" * 64
                 else:
                     changed[0]["complete_identity"] = False
                 with self.subTest(mutation=mutation), self.assertRaises(ValueError):
@@ -709,7 +729,7 @@ class LinuxStorageObservationTests(unittest.TestCase):
         workflow = (ROOT / ".github/workflows/ci.yml").read_text()
         linux = workflow.split("  build-linux-cli:\n", 1)[1]
         steps = ("measure-linux --phase before-release", 'swift build "${build_args[@]}"',
-                 "measure-linux --phase after-release", "./Scripts/test.sh --command swift test --parallel",
+                 "measure-linux --phase after-release", "./Scripts/test.sh --parallel",
                  "measure-linux --phase after-tests", "- name: Smoke test CodexBarCLI")
         positions = [linux.index(step) for step in steps]
         self.assertEqual(positions, sorted(positions))
@@ -1013,16 +1033,17 @@ class LinuxCacheTests(unittest.TestCase):
         self.assertIn('if [[ "$LINUX_BUILD_CONFIGURATION" == release ]]; then', linux)
         self.assertIn('build_args+=(--static-swift-stdlib)', linux)
         self.assertIn('swift build "${build_args[@]}"', linux)
-        self.assertIn("run: ./Scripts/test.sh --command swift test --parallel", linux)
+        self.assertIn("run: ./Scripts/test.sh --parallel", linux)
         self.assertIn("steps.linux-cache-restore.outcome", linux)
         self.assertIn("linux-cache after-save", linux)
 
 
 class LinuxCacheFamilyTests(unittest.TestCase):
-    def test_ordinary_push_and_pull_request_keep_the_complete_existing_key(self):
+    def test_ordinary_push_and_pull_request_keep_the_complete_profile_bound_key(self):
         with linux_cache_fixture() as (_, env, original):
             hashes = original["identity_hashes"]
-            prefix = ("codexbar-linux-glibc-build-v1-X64-" + hashes["image"] + "-"
+            prefix = ("codexbar-linux-glibc-build-v2-X64-normal-"
+                      + campaign.manifest_digest() + "-" + hashes["image"] + "-"
                       + hashes["toolchain"] + "-" + hashes["dependencies"] + "-")
             for event in ("push", "pull_request"):
                 options = {**env, "GITHUB_EVENT_NAME": event, "LINUX_CACHE_MODE": "warm",
@@ -1037,7 +1058,7 @@ class LinuxCacheFamilyTests(unittest.TestCase):
 
     def test_manual_treatments_share_one_key_independent_of_modes_and_run_attempt(self):
         with linux_cache_fixture() as (_, env, ordinary):
-            prefix = ordinary["restore_prefix"].replace("glibc-build-v1-", "glibc-campaign-v1-", 1)
+            prefix = ordinary["restore_prefix"].replace("glibc-build-v2-", "glibc-campaign-v2-", 1)
             for mode, treatment, run_id, attempt in (("seed", "record", "101", "1"),
                                                     ("warm", "off", "202", "2"),
                                                     ("warm", "replay", "303", "3")):
@@ -1054,6 +1075,24 @@ class LinuxCacheFamilyTests(unittest.TestCase):
                 rebound = campaign.linux_cache_plan(copy.deepcopy(context), {**options, "GITHUB_EVENT_NAME": "push"},
                                                    lambda command: "native " + " ".join(command) + "\n")
                 self.assertEqual(rebound["requested_key"], context["requested_key"])
+
+    def test_manual_profiles_cannot_share_application_cache_or_receipt_identity(self):
+        with linux_cache_fixture("seed") as (_, env, normal):
+            options = {**env, "CODEXBAR_TEST_PROFILE": "full"}
+            full = campaign.linux_cache_plan(campaign.linux_cache_source(options, SHA), options,
+                lambda command: "native " + " ".join(command) + "\n")
+            self.assertTrue(full["enabled"])
+            self.assertEqual(full["test_profile"], "full")
+            self.assertEqual(full["test_profile_manifest_sha256"], normal["test_profile_manifest_sha256"])
+            self.assertNotEqual(full["restore_prefix"], normal["restore_prefix"])
+            self.assertNotEqual(full["requested_key"], normal["requested_key"])
+            refused = campaign.linux_approve_restore(copy.deepcopy(full),
+                {**options, "LINUX_LOOKUP_OUTCOME": "success", "LINUX_MATCHED_KEY": normal["requested_key"]})
+            self.assertFalse(refused["restore"])
+            changed = campaign.linux_cache_plan(copy.deepcopy(normal), options,
+                lambda command: "native " + " ".join(command) + "\n")
+            self.assertFalse(changed["enabled"])
+            self.assertIn("test profile changed", changed["refusal"])
 
     def test_cross_family_hits_are_refused_before_metadata_and_warm_stays_fatal(self):
         with linux_cache_fixture() as (_, env, ordinary), linux_cache_fixture("seed") as (_, manual_env, manual):
@@ -1073,7 +1112,7 @@ class LinuxCacheFamilyTests(unittest.TestCase):
     def test_manual_seed_is_reusable_by_warm_and_retains_all_identity_and_record_guards(self):
         with linux_cache_fixture("seed") as (seed_workspace, seed_env, seed), \
                 linux_cache_fixture("warm") as (workspace, env, original):
-            self.assertTrue(seed["requested_key"].startswith("codexbar-linux-glibc-campaign-v1-"))
+            self.assertTrue(seed["requested_key"].startswith("codexbar-linux-glibc-campaign-v2-"))
             options = {**env, "GITHUB_RUN_ID": "456", "GITHUB_RUN_ATTEMPT": "2"}
             versions = lambda command: "native " + " ".join(command) + "\n"
             warm = campaign.linux_cache_plan(campaign.linux_cache_source(options, SHA), options, versions)
@@ -1473,7 +1512,7 @@ class EvidenceTests(unittest.TestCase):
         selection = runner.TestSelection("CodexBarTests.Legacy", r"^CodexBarTests\.Legacy/")
         for status in (0, 23, 124):
             with self.subTest(status=status), \
-                    patch.object(runner, "run_command", return_value=status) as invoke, \
+                    patch.object(runner, "run_test_command", return_value=status) as invoke, \
                     patch.object(runner.time, "monotonic", side_effect=[10.0, 11.25]), \
                     contextlib.redirect_stderr(io.StringIO()) as output:
                 self.assertEqual(runner.run_group([selection], 120, ["swift"], attempt="group-retry"), status)
@@ -1489,7 +1528,7 @@ class EvidenceTests(unittest.TestCase):
             self.assertEqual(record["timeout_seconds"], 120)
 
     def test_unproved_drain_is_reported_and_still_raises(self):
-        with patch.object(runner, "run_command", side_effect=runner.CommandDrainError("unproved drain", 23)), \
+        with patch.object(runner, "run_test_command", side_effect=runner.CommandDrainError("unproved drain", 23)), \
                 contextlib.redirect_stderr(io.StringIO()) as output:
             with self.assertRaises(runner.CommandDrainError):
                 runner.run_group([runner.TestSelection("Alpha", "Alpha")], 120, ["swift"])

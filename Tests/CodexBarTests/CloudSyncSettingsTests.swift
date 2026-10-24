@@ -7,6 +7,7 @@ import Testing
 @Suite(.serialized)
 @MainActor
 struct CloudSyncSettingsTests {
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `sync settings use strict opt in defaults and stay local`() throws {
         let fixture = try self.makeFixture("local-defaults")
@@ -86,6 +87,7 @@ struct CloudSyncSettingsTests {
         fixture.store.applySyncedPreferences(decoded.preferences)
         #expect(fixture.store.paceVisible == false)
     }
+    #endif
 
     @Test
     func `config watcher suppresses self writes and observes external atomic replacement`() async throws {
@@ -113,6 +115,7 @@ struct CloudSyncSettingsTests {
         #expect(changes.value >= 1)
     }
 
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `sync persistence never writes encrypted provider secrets and uses private permissions`() throws {
         let directory = TestFixtureScratch.root
@@ -410,6 +413,7 @@ struct CloudSyncSettingsTests {
 
         #expect(await recorder.values == [1, 2])
     }
+    #endif
 
     private func makeFixture(_ name: String) throws -> (store: SettingsStore, defaults: UserDefaults) {
         let suite = "CloudSyncSettingsTests-\(name)"

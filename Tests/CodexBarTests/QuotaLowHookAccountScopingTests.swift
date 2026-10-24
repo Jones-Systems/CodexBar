@@ -37,6 +37,7 @@ struct QuotaLowHookAccountScopingTests {
         #expect(Set([session, weekly, scoped]).count == 3)
     }
 
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `inactive hooks discard quota-low baselines`() {
         let store = self.makeStore(suiteName: "QuotaLowHookAccountScopingTests-inactive")
@@ -90,6 +91,7 @@ struct QuotaLowHookAccountScopingTests {
         #expect(store.quotaLowHookUsage[retained] == 0.4)
         #expect(store.quotaLowHookUsage[vanished] == nil)
     }
+    #endif
 
     private func makeStore(suiteName: String) -> UsageStore {
         UsageStore(
