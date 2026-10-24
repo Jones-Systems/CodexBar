@@ -23,8 +23,11 @@ cannot validate the macOS menu bar app.
 # Build source without packaging or launching the app
 swift build
 
-# Run the isolated, sharded full suite
+# Run the isolated, sharded normal profile (Codex/Claude and shared app coverage)
 make test
+
+# Explicitly restore all offline provider/plugin/hook/iCloud tests
+CODEXBAR_TEST_PROFILE=full make test
 
 # Required after code changes
 make check
@@ -608,25 +611,26 @@ may defer for a draft, but that still leaves the aggregate incomplete. Whole-wor
 The classifier's explicit portable allowlist is the source of truth. It processes deletions and both sides of
 renames/copies, unions overlapping requirements, rejects malformed evidence and selects all platforms for an
 empty diff. Manual runs and unavailable PR/push bases also select all platforms. Main pushes use the same
-platform gates against the previous main head, running the full suite of each selected platform. Source resources are
+platform gates against the previous main head, running the normal profile on each selected platform. Source resources are
 classified before Markdown suffixes. Changes to the classifier, aggregate verifier and primary CI workflow
-select all platforms. This partition retains every test in each selected scope; it does not remove tests.
+select all platforms. The path partition selects platforms; the [test profile](testing-profiles.md) selects
+normal or explicit-full feature coverage without deleting test source.
 
 The selected checks retain their names: `swift-test-macos (0, 2)`, `swift-test-macos (1, 2)`,
 `build-linux-cli (linux-x64, ubuntu-24.04)`, `build-linux-cli (linux-arm64, ubuntu-24.04-arm)` and
-`build-linux-musl-cli`. Both glibc architectures run the complete portable suite and CLI smoke assertions.
+`build-linux-musl-cli`. Both glibc architectures run the selected profile’s complete portable suite and CLI smoke assertions.
 Ordinary PRs build and smoke-test the debug CLI, sharing compilation with debug tests. Main and manual runs
 retain the release CLI with static Swift standard-library linking. Selected musl PR builds use debug
 configuration with the same pinned compiler, static SDK, target triple and static SQLite; main/manual musl
 builds retain release configuration. Both configurations reject dynamic-loader or library dependencies.
 Release-only branches and optimizer/link behavior are therefore checked on main/manual runs. Existing Linux campaign step IDs retain their historical `release` label; consult the recorded
-CLI build configuration when comparing PR measurements with older runs. macOS retains two complete shards
-and groups of four. JavaScript checks run in portable lint, and the separate macOS plugin step runs
-JavaScriptCore goldens while the full suite supplies QuickJS coverage.
+CLI build configuration when comparing PR measurements with older runs. macOS retains two complete shards of the selected profile
+and groups of four. JavaScript product-integrity checks run in portable lint. The explicit full profile
+also runs plugin JavaScriptCore goldens and QuickJS coverage; normal excludes unused plugin behavior.
 
 `Scripts/test_ci_path_gate.sh` checks platform partitions, malformed changes, rename/deletion behavior,
 result combinations and the workflow's explicit glibc gate/result arguments. `CodexBarLinuxTests` includes
-`AntigravityLocalhostSessionLifetimeTests` on both macOS and Linux. It checks session reuse and concurrent
+`AntigravityLocalhostSessionLifetimeTests` on both macOS and Linux in the explicit full profile. It checks session reuse and concurrent
 synthetic loopback failures without credentials; this coverage does not establish or fix Linux dispatch crashes.
 
 ### Native and packaging tier
@@ -687,7 +691,9 @@ swiftlint --strict
 ### Verification and Handoff
 
 Root `AGENTS.md` requires `make test` before handoff and `make check` after code changes,
-with all reported format/lint issues fixed. `make test` uses the sharded full-suite runner.
+with all reported format/lint issues fixed. `make test` uses the sharded normal-profile runner;
+`CODEXBAR_TEST_PROFILE=full make test` explicitly restores all offline suites. See
+[test execution profiles](testing-profiles.md) for selection and re-enable instructions.
 Add focused `swift test --filter ...` runs for parser/provider fixes when possible;
 preserve the runner's Keychain, Codex-file, and provider-session isolation in direct
 commands. Never enable live access merely to make a check pass.

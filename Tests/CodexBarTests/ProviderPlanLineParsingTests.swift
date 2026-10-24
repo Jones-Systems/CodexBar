@@ -28,6 +28,7 @@ struct ProviderPlanLineParsingTests {
         #expect(identity.loginMethod == "Max")
     }
 
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `Kiro legacy plan matching does not bridge lines`() throws {
         let output = """
@@ -69,4 +70,5 @@ struct ProviderPlanLineParsingTests {
 
         #expect(snapshot.planName == "Kiro")
     }
+    #endif
 }

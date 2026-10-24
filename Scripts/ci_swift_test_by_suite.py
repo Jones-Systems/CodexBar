@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import build_jobs
 import ci_swift_test_campaign as campaign
+import test_profiles
 import ctypes
 import errno
 import fcntl
@@ -132,6 +133,7 @@ class RunStats:
     group_size: int = 0
     shard_index: int | None = None
     shard_count: int | None = None
+    build_seconds: float = 0
     discovery_seconds: float = 0
     execution_seconds: float = 0
     total_seconds: float = 0
@@ -161,6 +163,7 @@ class RunStats:
             ("Recovered groups", str(self.recovered_groups)),
             ("Timed out groups", str(self.timed_out_groups)),
             ("Isolated selection retries", str(self.isolated_selection_retries)),
+            ("Test build seconds", f"{self.build_seconds:.1f}"),
             ("Discovery seconds", f"{self.discovery_seconds:.1f}"),
             ("Execution seconds", f"{self.execution_seconds:.1f}"),
             ("Total seconds", f"{self.total_seconds:.1f}"),
@@ -181,6 +184,7 @@ def parse_args() -> argparse.Namespace:
         help="fail immediately when a group exits without timing out",
     )
     parser.add_argument("--list-only", action="store_true")
+    parser.add_argument("--parallel", action="store_true", help="run one measured Linux-style aggregate after build/discovery")
     parser.add_argument("--swift-command", default="swift")
     parser.add_argument("--swift-command-arg", action="append", default=[])
     parser.add_argument(
@@ -640,7 +644,7 @@ def _run_command(command: list[str], timeout: int | None = None, *, stdout=None,
                 signal.signal(sig, handler)
 
 
-def run_captured_command(command: list[str]) -> subprocess.CompletedProcess[str]:
+def run_captured_command(command: list[str], timeout: int | None = None) -> subprocess.CompletedProcess[str]:
     parent = fixture_scratch_parent(dict(os.environ))
     # Regular files cannot deadlock on a full pipe or a descendant-held output descriptor.
     outputs = []
@@ -649,7 +653,7 @@ def run_captured_command(command: list[str]) -> subprocess.CompletedProcess[str]
         for _ in range(2):
             outputs.append(tempfile.NamedTemporaryFile(mode="w+t", prefix=".command-output-", dir=parent, delete=False))
         stdout, stderr = outputs
-        result = run_command(command, stdout=stdout, stderr=stderr)
+        result = run_command(command, timeout=timeout, stdout=stdout, stderr=stderr)
         stdout.seek(0)
         stderr.seek(0)
         return subprocess.CompletedProcess(command, result, stdout.read(), stderr.read())
@@ -762,14 +766,25 @@ def check_native_evidence_support(swift_command: list[str]) -> None:
 
 
 def swift_test_list(swift_command: list[str], stats: RunStats | None = None) -> list[TestSelection]:
-    command = [*swift_command, "test", "list"]
+    build_started = time.monotonic()
+    build = run_captured_command([*swift_command, "build", "--build-tests"])
+    if stats is not None:
+        stats.build_seconds = time.monotonic() - build_started
+    for output in (build.stdout, build.stderr):
+        if output:
+            print(output, end="" if output.endswith("\n") else "\n", file=sys.stderr, flush=True)
+    build.check_returncode()
+    discovery_started = time.monotonic()
+    command = [*swift_command, "test", "list", "--skip-build"]
     result = run_captured_command(command)
     if result.returncode != 0 and is_missing_sparkle_runtime_failure(result):
         if repair_sparkle_test_runtime(swift_command):
             print("Recovered SwiftPM Sparkle test runtime; retrying discovery once.", file=sys.stderr, flush=True)
             # The missing-library diagnostic proves discovery reached the built executable.
             # Repeat discovery without another build or compiler CPU-sampling window.
-            result = run_captured_command([*command, "--skip-build"])
+            result = run_captured_command(command)
+    if stats is not None:
+        stats.discovery_seconds = time.monotonic() - discovery_started
     if result.returncode != 0:
         print(f"+ {swift_command[0]} test list", file=sys.stderr, flush=True)
         if result.stdout:
@@ -777,6 +792,8 @@ def swift_test_list(swift_command: list[str], stats: RunStats | None = None) -> 
         if result.stderr:
             print(result.stderr, end="" if result.stderr.endswith("\n") else "\n", file=sys.stderr, flush=True)
         result.check_returncode()
+    if stats is not None:
+        stats.discovery_seconds = time.monotonic() - discovery_started
     selections: set[TestSelection] = set()
     unknown: list[str] = []
     for line in result.stdout.splitlines():
@@ -882,6 +899,21 @@ def filter_for(suites: list[TestSelection]) -> str:
     return rf"({'|'.join(suite.filter_pattern for suite in suites)})"
 
 
+def run_test_command(command: list[str], timeout: int | None = None) -> int:
+    captured = run_captured_command(command, timeout=timeout)
+    for output, stream in ((captured.stdout, sys.stdout), (captured.stderr, sys.stderr)):
+        if output:
+            print(output, end="" if output.endswith("\n") else "\n", file=stream, flush=True)
+    text = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", captured.stdout + "\n" + captured.stderr)
+    swift_testing = re.findall(r"Test run with (\d+) tests?(?: in \d+ suites?)? (?:passed|failed)", text)
+    xctest = re.findall(r"Test Suite '(?:All|Selected) tests'[^\n]*\n\s*Executed (\d+) tests?", text)
+    counts = {"swift_testing_functions": int(swift_testing[-1]) if swift_testing else None,
+              "xctest_methods": int(xctest[-1]) if xctest else None,
+              "exit_code": captured.returncode}
+    print("Swift test execution counts: " + json.dumps(counts, sort_keys=True), flush=True)
+    return captured.returncode
+
+
 def run_group(
     suites: list[TestSelection], timeout: int, swift_command: list[str], *, attempt: str = "first",
 ) -> int:
@@ -893,7 +925,7 @@ def run_group(
     try:
         command = [*swift_command, "test", "--skip-build", "--no-parallel", "--filter", pattern]
         if _campaign is None:
-            result = run_command(command, timeout=timeout)
+            result = run_test_command(command, timeout=timeout)
         else:
             directory = _campaign.begin_attempt(attempt)
             attempt_id = _campaign.attempt_id
@@ -950,13 +982,14 @@ def retry_selections_individually(
 def run_suites() -> int:
     total_started = time.monotonic()
     args = parse_args()
+    print(f"Swift test profile: {test_profiles.selected_profile()}", file=sys.stderr, flush=True)
     if _campaign is not None:
         _campaign.validate_invocation(args)
     if args.command is not None:
         if not args.command:
             print("--command requires an executable", file=sys.stderr)
             return 2
-        if args.list_only or args.limit_groups is not None or args.shard_index is not None or args.shard_count is not None:
+        if args.parallel or args.list_only or args.limit_groups is not None or args.shard_index is not None or args.shard_count is not None:
             print("--command cannot be combined with discovery or shard selection", file=sys.stderr)
             return 2
         # Aggregate commands retain their enclosing job's deadline and original test selection.
@@ -976,12 +1009,22 @@ def run_suites() -> int:
     try:
         if _campaign is not None:
             check_native_evidence_support(swift_command)
-        discovery_started = time.monotonic()
-        try:
-            suites = prioritized_suites(filtered_suites_for_environment(swift_test_list(swift_command, stats)))
-        finally:
-            stats.discovery_seconds = time.monotonic() - discovery_started
+        if args.parallel and (args.list_only or args.limit_groups is not None or args.shard_index is not None
+                              or args.shard_count is not None or _campaign is not None):
+            print("--parallel cannot be combined with discovery-only, shards, limits or a macOS campaign", file=sys.stderr)
+            return 2
+        discovered = swift_test_list(swift_command, stats)
+        suites = discovered if args.parallel else prioritized_suites(filtered_suites_for_environment(discovered))
         stats.discovered_selections = len(suites)
+        if args.parallel:
+            stats.selected_selections = len(suites)
+            stats.selected_groups = 1
+            stats.selected_manifest_sha256 = manifest_digest(suite.name for suite in suites)
+            execution_started = time.monotonic()
+            result = run_test_command([*swift_command, "test", "--skip-build", "--parallel"])
+            stats.first_pass_successful_groups = int(result == 0)
+            stats.first_pass_failed_groups = int(result != 0)
+            return result
 
         suite_groups = list(chunks(suites, args.group_size))
         try:

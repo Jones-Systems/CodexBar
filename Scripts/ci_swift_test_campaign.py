@@ -23,6 +23,8 @@ import urllib.parse
 import urllib.request
 import uuid
 
+from test_profiles import manifest_digest, selected_profile
+
 
 ENV_KEY = "CODEXBAR_TEST_EVIDENCE_DIR"
 SCHEMA = "codexbar.swift-test-campaign/v1"
@@ -36,7 +38,8 @@ LINUX_SCAN_SECONDS = 10
 LINUX_METADATA_BYTES = 256 * 1024
 FIXTURE_PREFIXES = (".test-fixtures-", ".swift-test-evidence-", ".test-sharding.", ".test-campaign-",
                     ".test-storage-", ".test-linux-cache-")
-LINUX_INPUT_ROOTS = ("Package.swift", "Package.resolved", "Sources", "Tests", "TestsLinux", "TestsPlugin")
+LINUX_INPUT_ROOTS = ("Package.swift", "Package.resolved", "Scripts/test_profiles.json",
+                     "Sources", "Tests", "TestsLinux", "TestsPlugin")
 LINUX_INPUT_PATHS = 8192
 LINUX_INPUT_BYTES = 64 * 1024 ** 2
 LINUX_INPUT_METADATA_BYTES = 4 * 1024 ** 2
@@ -120,6 +123,7 @@ def prepare(environment, checkout_sha):
     require(shutil.disk_usage(workspace).free >= RESERVE_BYTES + MAX_BYTES,
             "insufficient storage for bounded campaign evidence")
     context = {
+        "test_profile": selected_profile(environment), "test_profile_manifest_sha256": manifest_digest(),
         "schema": SCHEMA, "source_revision": checkout_sha, "group_size": int(environment["CAMPAIGN_GROUP_SIZE"]),
         "shard_count": len(matrix), "shard_index": index, "timeout_seconds": 120,
         "retry_non_timeout_failures": False, "cache_mode": mode,
@@ -145,6 +149,9 @@ def prepare(environment, checkout_sha):
 
 def validate_context(context):
     require(context["schema"] == SCHEMA, "unsupported campaign context")
+    require(context["test_profile"] in ("normal", "full")
+            and re.fullmatch("[0-9a-f]{64}", context["test_profile_manifest_sha256"]),
+            "invalid test profile identity")
     require(re.fullmatch("[0-9a-f]{40}", context["source_revision"]), "invalid source revision")
     require(context["group_size"] in (4, 12) and context["shard_count"] in (1, 2, 3)
             and 0 <= context["shard_index"] < context["shard_count"], "invalid campaign partition")
@@ -159,7 +166,10 @@ def validate_context(context):
     for key in ("cache_key", "toolchain_id", "image_version", "image_os", "run_id", "run_attempt", "github_ref"):
         require(isinstance(context[key], str) and context[key] and "\n" not in context[key], f"missing {key}")
     require(context["cache_key"].endswith("-" + context["source_revision"])
-            and context["toolchain_id"] in context["cache_key"], "cache key is not source/toolchain bound")
+            and context["toolchain_id"] in context["cache_key"]
+            and "-" + context["test_profile"] + "-" in context["cache_key"]
+            and context["test_profile_manifest_sha256"] in context["cache_key"],
+            "cache key is not source/toolchain/profile bound")
 
 
 def cleanup(root, environment):
@@ -187,6 +197,8 @@ class Capture:
         workspace = Path(self.context["workspace"])
         require(self.root.parent == workspace.resolve(strict=True), "evidence root must belong to the workspace")
         require(self.context["source_revision"] == os.environ.get("GITHUB_SHA"), "campaign source changed")
+        require(self.context["test_profile"] == selected_profile()
+                and self.context["test_profile_manifest_sha256"] == manifest_digest(), "campaign test profile changed")
         self.records = (self.root / "runner.jsonl").open("x")
         self.attempt_number = 0
         self.process_number = 0
@@ -220,6 +232,7 @@ class Capture:
     def process_environment(self):
         keys = (*ISOLATION, "CODEXBAR_TEST_WORKSPACE_ROOT", "CODEXBAR_TEST_SCRATCH_PARENT", "TMPDIR")
         return {**{key: os.environ.get(key) for key in keys},
+                "CODEXBAR_TEST_PROFILE": selected_profile(),
                 "live_or_fixture_grant": bool(os.environ.get("CODEXBAR_ALLOW_TEST_KEYCHAIN_ACCESS")
                                               or os.environ.get("CODEXBAR_TEST_CODEX_FILE_FIXTURES"))}
 
@@ -468,6 +481,7 @@ def verify(root):
             environment = item["environment"]
             require(all(environment.get(key) == value for key, value in ISOLATION.items())
                     and environment["live_or_fixture_grant"] is False
+                    and environment["CODEXBAR_TEST_PROFILE"] == context["test_profile"]
                     and environment["CODEXBAR_TEST_WORKSPACE_ROOT"] == context["workspace"]
                     and environment["CODEXBAR_TEST_SCRATCH_PARENT"] == str(fixture)
                     and environment["TMPDIR"] == str(fixture), "process fixture/isolation environment changed")
@@ -520,8 +534,8 @@ def arm(receipts):
     count = context["shard_count"]
     require(sorted(item["context"]["shard_index"] for item in receipts) == list(range(count)),
             "arm does not contain every shard exactly once")
-    binding = ("source_revision", "group_size", "shard_count", "cache_mode", "cache_hit", "cache_key",
-               "toolchain_id", "runner_os", "runner_arch", "image_version", "image_os")
+    binding = ("test_profile", "test_profile_manifest_sha256", "source_revision", "group_size", "shard_count",
+               "cache_mode", "cache_hit", "cache_key", "toolchain_id", "runner_os", "runner_arch", "image_version", "image_os")
     for receipt in receipts:
         validate_context(receipt["context"])
         require(receipt["schema"] == SCHEMA and receipt["complete_identity"], "native parameter identity is unproved")
@@ -535,8 +549,8 @@ def arm(receipts):
 
 def compare(baseline, candidate):
     left, right = arm(baseline), arm(candidate)
-    for key in ("source_revision", "cache_mode", "cache_hit", "cache_key", "toolchain_id",
-                "runner_os", "runner_arch", "image_version", "image_os"):
+    for key in ("test_profile", "test_profile_manifest_sha256", "source_revision", "cache_mode", "cache_hit",
+                "cache_key", "toolchain_id", "runner_os", "runner_arch", "image_version", "image_os"):
         require(baseline[0]["context"][key] == candidate[0]["context"][key], f"incomparable {key}")
     require(baseline[0]["discovery"] == candidate[0]["discovery"], "raw discovery inventory changed")
     require(left == right, "native identity/outcome multiset changed")
@@ -555,6 +569,7 @@ def linux_cache_source(environment, checkout_sha):
                      environment.get("CAMPAIGN_CACHE_MODE", ""), mode, timestamps)
         require(checkout_sha == environment.get("GITHUB_SHA"), "manual Linux checkout differs from event SHA")
     return {
+        "test_profile": selected_profile(environment), "test_profile_manifest_sha256": manifest_digest(),
         "schema": "codexbar.linux-build-cache/v1", "phase": "source", "actual_sha": checkout_sha,
         "event_sha": environment.get("GITHUB_SHA", ""), "expected_sha": expected,
         "event": environment.get("GITHUB_EVENT_NAME", ""), "run_id": environment.get("GITHUB_RUN_ID", ""),
@@ -693,8 +708,11 @@ def linux_cache_plan(context, environment, version_reader=None):
         dependencies = linux_dependencies(workspace)
         hashes = {name: hashlib.sha256(encode(value).encode()).hexdigest()
                   for name, value in (("image", image), ("toolchain", versions), ("dependencies", dependencies))}
+        require(context["test_profile"] == selected_profile(environment)
+                and context["test_profile_manifest_sha256"] == manifest_digest(), "cache test profile changed")
         family = "campaign" if context["event"] == "workflow_dispatch" else "build"
-        prefix = f"codexbar-linux-glibc-{family}-v1-{image['RUNNER_ARCH']}-" + "-".join(hashes.values()) + "-"
+        prefix = (f"codexbar-linux-glibc-{family}-v2-{image['RUNNER_ARCH']}-{context['test_profile']}-"
+                  + context["test_profile_manifest_sha256"] + "-" + "-".join(hashes.values()) + "-")
         context.update(workspace=str(workspace), staging=str(staging), image=image, toolchain=versions,
                        dependencies=dependencies, identity_hashes=hashes, restore_prefix=prefix,
                        requested_key=prefix + context["actual_sha"],
@@ -1066,7 +1084,8 @@ def linux_input_manifest(workspace, value=None):
 
 
 def linux_input_binding(context):
-    return {key: context[key] for key in ("actual_sha", "requested_key", "identity_hashes")}
+    return {key: context[key] for key in ("actual_sha", "test_profile", "test_profile_manifest_sha256",
+                                        "requested_key", "identity_hashes")}
 
 
 def linux_input_validate_manifest(manifest, context, state):
@@ -1226,7 +1245,9 @@ def linux_cache_command(args, environment):
                 and context["event_sha"] == environment["GITHUB_SHA"]
                 and context["run_id"] == environment["GITHUB_RUN_ID"]
                 and context["run_attempt"] == environment["GITHUB_RUN_ATTEMPT"]
-                and context["ref"] == environment["GITHUB_REF"], "cache receipt owner changed")
+                and context["ref"] == environment["GITHUB_REF"]
+                and context["test_profile"] == selected_profile(environment)
+                and context["test_profile_manifest_sha256"] == manifest_digest(), "cache receipt owner/profile changed")
         handlers = {"plan": linux_cache_plan, "approve-restore": linux_approve_restore,
                     "after-restore": linux_after_restore, "input-timestamps": linux_input_timestamps,
                     "before-save": linux_before_save,
@@ -1330,6 +1351,9 @@ def main():
     try:
         if args.command == "plan":
             env = os.environ
+            profile = selected_profile(env)
+            require(env["GITHUB_EVENT_NAME"] == "workflow_dispatch" or profile == "normal",
+                    "ordinary CI requires the normal test profile")
             matrix = resolve_plan(env["GITHUB_EVENT_NAME"], env.get("CAMPAIGN_GROUP_SIZE", ""),
                                   env.get("CAMPAIGN_SHARD_COUNT", ""), env.get("CAMPAIGN_EXPECTED_SHA", ""),
                                   env["GITHUB_SHA"], env.get("CAMPAIGN_CACHE_MODE", ""),

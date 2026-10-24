@@ -8,6 +8,7 @@ import Testing
 struct AntigravityLocalPublicationTests {
     private typealias Fixture = AntigravityLocalFixture
 
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test(
         arguments: ["absent", "corrupt", "empty", "out-of-window", "partial", "over-budget"],
         ["none", "history", "confirmed-empty"])
@@ -80,6 +81,7 @@ struct AntigravityLocalPublicationTests {
         store._test_tokenUsageSnapshotLoaderOverride = nil
         await store.widgetSnapshotPersistTask?.value
     }
+    #endif
 
     @Test(arguments: [UsageProvider.claude, .codex, .cursor])
     func `regular unavailable handling preserves failure gating and Codex catchup retention`(
@@ -104,6 +106,7 @@ struct AntigravityLocalPublicationTests {
         store._test_tokenUsageSnapshotLoaderOverride = nil
     }
 
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `accepted two and three day totals remain unknown through fetcher dashboard menu widget and CLI`()
         async throws
@@ -153,6 +156,7 @@ struct AntigravityLocalPublicationTests {
             #expect(group.tokenMix.outputTokens == 0)
         }
     }
+    #endif
 
     @Test(arguments: [UsageProvider.claude, .codex, .cursor])
     func `shared overflow repair preserves missing buckets and other providers`(provider: UsageProvider) {

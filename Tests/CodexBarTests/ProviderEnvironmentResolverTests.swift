@@ -3,6 +3,7 @@ import Foundation
 import Testing
 
 struct ProviderEnvironmentResolverTests {
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `selected API account overrides saved and ambient credentials`() {
         let account = Self.account(token: "account-token")
@@ -45,6 +46,7 @@ struct ProviderEnvironmentResolverTests {
         #expect(environment[OpenAIAPISettingsReader.adminAPIKeyEnvironmentKey] == "sk-admin-account")
         #expect(environment[OpenAIAPISettingsReader.projectIDEnvironmentKey] == nil)
     }
+    #endif
 
     @Test
     func `Claude session account removes API and OAuth credentials`() {

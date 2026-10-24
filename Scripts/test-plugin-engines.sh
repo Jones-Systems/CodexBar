@@ -4,12 +4,14 @@ set -eu
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$ROOT_DIR"
 
+export CODEXBAR_TEST_PROFILE=full
+
 FILTER='ProviderPluginRuntimeTests|ProviderPluginParityTests|ProviderPluginDetailsParityTests|ProviderPluginExtensionParityTests|Sub2APIPluginGoldenTests|UserProviderPluginPortableTests'
 
 if [ "$#" -eq 1 ] && [ "$1" = --jsc-only ]; then
   echo "plugin engine rollback: JavaScriptCore (default engine covered by full suite)"
   exec ./Scripts/test.sh --command /bin/sh -eu -c '
-    CODEXBAR_PLUGIN_ENGINE=jsc exec python3 Scripts/build_jobs.py -- swift test --skip-build --filter "$1"
+    CODEXBAR_PLUGIN_ENGINE=jsc exec python3 Scripts/build_jobs.py -- swift test --filter "$1"
   ' plugin-engine-tests "$FILTER"
 fi
 

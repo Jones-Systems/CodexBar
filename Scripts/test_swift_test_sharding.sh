@@ -22,6 +22,13 @@ IFS= read -r -d '' FAKE_SWIFT_SCRIPT <<'EOF' || true
 set -euo pipefail
 
 printf '%s\n' "$*" >> "${FAKE_SWIFT_LOG}"
+if [[ "$*" == "build --build-tests" ]]; then
+  if [[ "${FAKE_SWIFT_MODE:-success}" == "build_fail" ]]; then
+    echo "build failure marker" >&2
+    exit 43
+  fi
+  exit 0
+fi
 if [[ "$*" == "build --show-bin-path" ]]; then
   printf '%s\n' "${FAKE_SWIFT_BIN_PATH:?}"
   exit 0
@@ -177,7 +184,7 @@ grep -Fq "CodexBarTests\\.Alpha" "${FAKE_SWIFT_LOG}"
 grep -Fq "CodexBarTests\\.Beta" "${FAKE_SWIFT_LOG}"
 grep -Fq "CodexBarTests\\..*top\\ level\\ works" "${FAKE_SWIFT_LOG}"
 grep -Fq "CodexBarTests\\..*top/level\\ slash\\ works" "${FAKE_SWIFT_LOG}"
-[[ "$(wc -l < "${FAKE_SWIFT_LOG}")" -eq 5 ]]
+[[ "$(wc -l < "${FAKE_SWIFT_LOG}")" -eq 6 ]]
 
 reset_case strict
 export FAKE_SWIFT_MODE=group_fail_once
@@ -198,7 +205,7 @@ set -e
 grep -Fq '| First-pass failed groups | `1` |' "${GITHUB_STEP_SUMMARY}"
 grep -Fq '| Full-group retries | `0` |' "${GITHUB_STEP_SUMMARY}"
 grep -Fq '| Isolated selection retries | `0` |' "${GITHUB_STEP_SUMMARY}"
-[[ "$(wc -l < "${FAKE_SWIFT_LOG}")" -eq 2 ]]
+[[ "$(wc -l < "${FAKE_SWIFT_LOG}")" -eq 3 ]]
 
 reset_case shard-0
 export FAKE_SWIFT_MODE=success
@@ -292,7 +299,7 @@ set -e
 [[ "${list_failure_status}" -ne 0 ]]
 grep -Fq "test-list stdout marker" "${TEMP_DIR}/list-failure.log"
 grep -Fq "test-list stderr marker" "${TEMP_DIR}/list-failure.log"
-[[ "$(wc -l < "${FAKE_SWIFT_LOG}")" -eq 1 ]]
+[[ "$(wc -l < "${FAKE_SWIFT_LOG}")" -eq 2 ]]
 grep -Eq -- '- Discovery seconds: 0\.[1-9]' "${TEMP_DIR}/list-failure.log"
 grep -Fq '| Discovered selections | `0` |' "${GITHUB_STEP_SUMMARY}"
 
@@ -307,8 +314,8 @@ touch "${FAKE_SWIFT_BIN_PATH}/Sparkle.framework/Versions/B/Sparkle"
 ln -s ../Wrong.framework "${FAKE_SWIFT_BIN_PATH}/PackageFrameworks/Sparkle.framework"
 run_harness --group-size 1 --limit-groups 1 --timeout 10 > "${TEMP_DIR}/sparkle-recovery.log" 2> "${TEMP_DIR}/sparkle-recovery.stderr"
 [[ "$(readlink "${FAKE_SWIFT_BIN_PATH}/PackageFrameworks/Sparkle.framework")" == "../Sparkle.framework" ]]
-[[ "$(grep -c '^test list$' "${FAKE_SWIFT_LOG}")" -eq 1 ]]
-[[ "$(grep -c '^test list --skip-build$' "${FAKE_SWIFT_LOG}")" -eq 1 ]]
+[[ "$(grep -c '^build --build-tests$' "${FAKE_SWIFT_LOG}")" -eq 1 ]]
+[[ "$(grep -c '^test list --skip-build$' "${FAKE_SWIFT_LOG}")" -eq 2 ]]
 [[ "$(grep -c '^build --show-bin-path$' "${FAKE_SWIFT_LOG}")" -eq 1 ]]
 grep -Fq "Recovered SwiftPM Sparkle test runtime; retrying discovery once." \
   "${TEMP_DIR}/sparkle-recovery.stderr"
@@ -340,3 +347,14 @@ print("Sharding scratch success, failure, and cancellation cleanup passed.")
 PY
 
 echo "Swift test sharding tests passed."
+
+reset_case build_failure
+export FAKE_SWIFT_MODE=build_fail
+set +e
+run_harness --group-size 4 --timeout 10 > "${TEMP_DIR}/build-failure.log" 2>&1
+build_status=$?
+set -e
+[[ "$build_status" -eq 43 ]]
+grep -Fq 'build failure marker' "${TEMP_DIR}/build-failure.log"
+[[ "$(wc -l < "${FAKE_SWIFT_LOG}")" -eq 1 ]]
+grep -Fxq 'build --build-tests' "${FAKE_SWIFT_LOG}"

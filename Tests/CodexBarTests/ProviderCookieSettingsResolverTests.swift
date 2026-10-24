@@ -3,6 +3,7 @@ import Foundation
 import Testing
 
 struct ProviderCookieSettingsResolverTests {
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `shared cookie settings preserve Alibaba token plan defaults`() {
         let settings = ProviderSettingsSnapshot.AlibabaTokenPlanProviderSettings()
@@ -10,6 +11,7 @@ struct ProviderCookieSettingsResolverTests {
         #expect(settings.cookieSource == .auto)
         #expect(settings.manualCookieHeader == nil)
     }
+    #endif
 
     @Test
     func `provider cookie settings remain distinct nominal types`() {

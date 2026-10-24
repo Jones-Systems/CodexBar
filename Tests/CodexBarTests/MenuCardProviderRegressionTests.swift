@@ -22,6 +22,7 @@ struct MenuCardProviderRegressionTests {
         #expect(metric.percentLabel == "<1% used")
     }
 
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `elevenlabs progress color stays visible in light menus`() {
         #expect(UsageMenuCardView.Model.progressColor(for: .elevenlabs) == Color(nsColor: .labelColor))
@@ -81,6 +82,7 @@ struct MenuCardProviderRegressionTests {
         #expect(apiKeyRows.first { $0.label == "Today" }?.value == "$0.12")
         #expect(apiKeyRows.first { $0.label == "This week" }?.value == "$0.74")
     }
+    #endif
 
     private static func contrastRatio(_ color: ProviderColor, againstLuminance background: Double) -> Double {
         let components = [color.red, color.green, color.blue].map { component in
@@ -92,6 +94,7 @@ struct MenuCardProviderRegressionTests {
         return (max(foreground, background) + 0.05) / (min(foreground, background) + 0.05)
     }
 
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `ollama api key model explains browser session quota requirement`() throws {
         let now = Date()
@@ -217,4 +220,5 @@ struct MenuCardProviderRegressionTests {
         #expect(metric.percentLabel == "0% left")
         #expect(metric.detailLeftText == "115% used")
     }
+    #endif
 }

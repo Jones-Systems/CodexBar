@@ -66,6 +66,7 @@ struct ProviderSettingsDescriptorTests {
         }
     }
 
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `kiro reauthentication waits for the explicit settings action`() async throws {
         let fixture = try self.makeSettingsFixture(suite: "ProviderSettingsDescriptorTests-kiro-login")
@@ -87,6 +88,7 @@ struct ProviderSettingsDescriptorTests {
 
         #expect(loginCount == 1)
     }
+    #endif
 
     @Test
     func `codex reauthentication remains account scoped`() throws {
@@ -96,6 +98,7 @@ struct ProviderSettingsDescriptorTests {
         #expect(CodexProviderImplementation().settingsActions(context: context).isEmpty)
     }
 
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `openai exposes project id setting`() throws {
         let fixture = try self.makeSettingsFixture(suite: "ProviderSettingsDescriptorTests-openai-project")
@@ -347,6 +350,7 @@ struct ProviderSettingsDescriptorTests {
             syntheticTokenStore: NoopSyntheticTokenStore())
         #expect(reopenedAfterDisabling.antigravityPrioritizeExhaustedQuotas == false)
     }
+    #endif
 
     @Test
     func `codex exposes open AI web extras toggle as default off opt in`() throws {
@@ -505,6 +509,7 @@ struct ProviderSettingsDescriptorTests {
         #expect(settings.claudeWebExtrasEnabled == false)
     }
 
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `kilo exposes usage source picker and api field only`() throws {
         let fixture = try self.makeSettingsFixture(suite: "ProviderSettingsDescriptorTests-kilo")
@@ -625,9 +630,11 @@ struct ProviderSettingsDescriptorTests {
 
         #expect(detailLine == fixture.store.sourceLabel(for: .alibaba))
     }
+    #endif
 }
 
 extension ProviderSettingsDescriptorTests {
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `zoommate presentation surfaces web rather than an undetected version`() throws {
         let fixture = try self.makeSettingsFixture(suite: "ProviderSettingsDescriptorTests-zoommate-presentation")
@@ -655,9 +662,11 @@ extension ProviderSettingsDescriptorTests {
 
         #expect(detailLine == "web")
     }
+    #endif
 }
 
 extension ProviderSettingsDescriptorTests {
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `alibaba token plan settings expose cookie controls`() throws {
         let fixture = try self.makeSettingsFixture(suite: "ProviderSettingsDescriptorTests-alibaba-token-plan-settings")
@@ -1184,6 +1193,7 @@ extension ProviderSettingsDescriptorTests {
             settings: fixture.settings,
             override: TokenAccountOverride(provider: .deepseek, account: active)))
     }
+    #endif
 
     @Test
     func `provider settings labels an empty transition as refreshing`() {
@@ -1197,6 +1207,7 @@ extension ProviderSettingsDescriptorTests {
             modelPlaceholder: nil) == "No usage yet")
     }
 
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `deepseek hides profile picker when only one validated profile remains`() throws {
         let fixture = try self.makeSettingsFixture(suite: "ProviderSettingsDescriptorTests-deepseek-single-profile")
@@ -1211,6 +1222,7 @@ extension ProviderSettingsDescriptorTests {
 
         #expect(DeepSeekProviderImplementation().settingsPickers(context: context).isEmpty)
     }
+    #endif
 }
 
 extension ProviderSettingsDescriptorTests {

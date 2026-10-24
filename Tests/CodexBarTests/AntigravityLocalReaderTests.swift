@@ -10,6 +10,7 @@ import CSQLite3
 struct AntigravityLocalReaderTests {
     private typealias Fixture = AntigravityLocalFixture
 
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `literal synthetic schema example has independently calculated counts and time`() async throws {
         // Handwritten bytes, not a round-trip through the fixture encoder.
@@ -48,6 +49,7 @@ struct AntigravityLocalReaderTests {
         let malformed = Fixture.message(1, [0x22, 0x80])
         #expect(try AntigravityProtoReader.parseTurn(malformed + Fixture.blob()) == nil)
     }
+    #endif
 
     @Test
     func `shared token mix overflow cannot revive on a third day`() throws {
@@ -67,6 +69,7 @@ struct AntigravityLocalReaderTests {
         #expect(absent.inputTokens == 8)
     }
 
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `production discovery report and fetcher retain independent token counts without pricing`() async throws {
         let fixture = try Fixture()
@@ -298,6 +301,7 @@ struct AntigravityLocalReaderTests {
         #expect(try fixture.report().coverage == .partial)
         #expect(try await !fixture.snapshot().historyCoverageIsEstablished)
     }
+    #endif
 
     private static var malformedBlobs: [[UInt8]] {
         let valid = Fixture.blob()
@@ -320,6 +324,7 @@ struct AntigravityLocalReaderTests {
         ]
     }
 
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `present invalid JSONL optional counter makes coverage incomplete`() async throws {
         for key in ["cacheRead", "cacheWrite", "reasoning"] {
@@ -766,4 +771,5 @@ struct AntigravityLocalReaderTests {
         #expect(!snapshot.historyCoverageIsEstablished)
         #expect(snapshot.last30DaysTokens == nil)
     }
+    #endif
 }
