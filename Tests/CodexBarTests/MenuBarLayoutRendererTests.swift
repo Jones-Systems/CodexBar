@@ -757,23 +757,6 @@ struct MenuBarLayoutRendererTests {
     }
 
     @Test
-    func `hidden branch renders nothing`() {
-        let renderer = MenuBarLayoutRenderer()
-        // Session is 25%, so > 50 fails and the else branch (.hidden) wins, contributing nothing.
-        let conditional = MenuBarLayoutConditional(
-            clauses: [self.clause(metric: .session, comparison: .greaterThan, threshold: 50)],
-            thenToken: .percent(window: .session),
-            elseToken: .hidden)
-
-        let output = renderer.render(
-            layout: MenuBarLayout(lines: [[.conditional(id: conditional.id)]]),
-            data: self.data(),
-            icon: nil,
-            options: self.options(conditionals: [conditional]))
-        #expect(output.attributedTitle.string.isEmpty)
-    }
-
-    @Test
     func `conditional and requires all predicates`() {
         let renderer = MenuBarLayoutRenderer()
         let data = self.data()

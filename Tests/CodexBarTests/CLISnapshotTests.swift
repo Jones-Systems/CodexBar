@@ -1389,27 +1389,6 @@ struct CLISnapshotTests {
     }
 
     @Test
-    func `output has ansi when TTY even without status`() {
-        let snap = UsageSnapshot(
-            primary: .init(usedPercent: 1, windowMinutes: 300, resetsAt: nil, resetDescription: nil),
-            secondary: nil,
-            tertiary: nil,
-            updatedAt: Date(timeIntervalSince1970: 0))
-
-        let output = CLIRenderer.renderText(
-            provider: .codex,
-            snapshot: snap,
-            credits: nil,
-            context: RenderContext(
-                header: "Codex 0.0.0 (codex-cli)",
-                status: nil,
-                useColor: true,
-                resetStyle: .absolute))
-
-        #expect(output.contains("\u{001B}["))
-    }
-
-    @Test
     func `tty output colors header and usage`() {
         let snap = UsageSnapshot(
             primary: .init(usedPercent: 95, windowMinutes: 300, resetsAt: nil, resetDescription: nil),

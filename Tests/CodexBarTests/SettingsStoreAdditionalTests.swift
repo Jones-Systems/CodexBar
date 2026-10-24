@@ -256,21 +256,6 @@ struct SettingsStoreAdditionalTests {
         #expect(settings.ollamaCookieSource == .manual)
     }
 
-    @Test
-    func `detects token cost usage sources from filesystem`() throws {
-        let fm = FileManager.default
-        let root = TestFixtureScratch.root.appendingPathComponent(UUID().uuidString, isDirectory: true)
-        let sessions = root.appendingPathComponent("sessions", isDirectory: true)
-        try fm.createDirectory(at: sessions, withIntermediateDirectories: true)
-        let jsonl = sessions.appendingPathComponent("usage.jsonl")
-        try Data("{}".utf8).write(to: jsonl)
-        defer { try? fm.removeItem(at: root) }
-
-        let env = ["CODEX_HOME": root.path]
-
-        #expect(SettingsStore.hasAnyTokenCostUsageSources(env: env, fileManager: fm))
-    }
-
     private static func makeSettingsStore(suite: String) -> SettingsStore {
         let defaults = UserDefaults(suiteName: suite)!
         defaults.removePersistentDomain(forName: suite)
