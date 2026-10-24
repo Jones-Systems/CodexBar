@@ -1,7 +1,7 @@
 {
   "schema": "codexbar-product-removal-comparison/v1",
   "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
-  "candidateSourceRevision": "f1bae83de761ee383e5845111993671f1ed308cb",
+  "candidateSourceRevision": "b0e2069e515ffecd72de920f0aca96547750ab55",
   "pullRequest": "https://github.com/Jones-Systems/CodexBar/pull/41",
   "baseBranch": "work/test-value-bar-pass2-20261024",
   "method": "Exact committed Git blobs; files include Swift source under Sources and tests under Tests, TestsLinux, TestsPlugin; line count uses bytes.splitlines; lexical Swift Testing @Test declaration counts exclude comments/strings and do not represent parameterized/runtime cases.",
@@ -36,8 +36,8 @@
       },
       "testSwift": {
         "files": 734,
-        "lines": 252293,
-        "bytes": 10935733
+        "lines": 252221,
+        "bytes": 10933181
       }
     }
   },
@@ -47,7 +47,7 @@
       "filesWithTestAttributes": 1006
     },
     "after": {
-      "swiftTestingDeclarations": 6546,
+      "swiftTestingDeclarations": 6544,
       "filesWithTestAttributes": 692
     }
   },
@@ -365,18 +365,19 @@
       "status": "unavailable",
       "exitCode": 2,
       "reason": "plutil absent",
-      "latestAttemptRevision": "f1bae83de761ee383e5845111993671f1ed308cb"
+      "latestAttemptRevision": "b0e2069e515ffecd72de920f0aca96547750ab55"
     },
     "makeTest": {
       "status": "unavailable",
       "exitCode": 2,
       "reason": "Swift absent; no test executable ran",
-      "latestAttemptRevision": "f1bae83de761ee383e5845111993671f1ed308cb"
+      "latestAttemptRevision": "b0e2069e515ffecd72de920f0aca96547750ab55"
     },
     "normalAndFullProfileManifests": "pass",
     "documentationLinks": {
       "status": "pass",
-      "localLinks": 179
+      "localLinks": 178,
+      "latestAttemptRevision": "b0e2069e515ffecd72de920f0aca96547750ab55"
     },
     "llmsIndex": "pass",
     "whitespace": "pass",
@@ -405,13 +406,58 @@
       "pathGate": "pass",
       "changedShellSyntaxFiles": 9,
       "patchConsumptionRevision": "f1bae83de761ee383e5845111993671f1ed308cb"
+    },
+    "siteLocales": {
+      "status": "pass",
+      "locales": 23,
+      "messageKeysPerLocale": 138,
+      "activeProviderIDs": [
+        "codex",
+        "claude"
+      ],
+      "checks": "Existing locale/token/key/asset checks retained; README/visible HTML/social IDs must equal UsageProvider",
+      "negativeAndPositiveFixtureCases": 13,
+      "fixtureCases": [
+        "current_product",
+        "historical_notes_and_credits",
+        "missing_readme_id",
+        "extra_readme_id",
+        "missing_site_id",
+        "stale_visible_card",
+        "missing_explicit_card_id",
+        "duplicate_visible_card",
+        "stale_social_tile",
+        "missing_social_tile",
+        "stale_localized_count",
+        "localized_token_drift",
+        "missing_provider_asset"
+      ],
+      "meaningfulFixtureMethod": "Execute actual checker in contained copies of source/docs; two valid cases and eleven failures for inventory/locale/assets; owned scratch removed",
+      "repairRevision": "b0e2069e515ffecd72de920f0aca96547750ab55"
     }
   },
   "hostedEvidence": {
     "status": "pending root integration/qualification",
     "firstRunURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40121196414",
     "firstHeadLint": "failure: stale parser hash, repaired by e0575c44592208fa16d0ac71d7b14044c0b49418; product-dependent patch01 contracts now applied and portable checks pass; native qualification pending",
-    "currentHeadChecksMustBeReadFromGitHub": true
+    "currentHeadChecksMustBeReadFromGitHub": true,
+    "linuxCompile": {
+      "status": "pass",
+      "revision": "3e93ca222b70c5ce6c438375ba3ca5b7f3413ca2",
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40123429893",
+      "jobs": {
+        "x64": 120959755819,
+        "arm64": 120959755774
+      },
+      "qualification": "Both architectures compiled successfully then failed three CLICardsRendererTests with four issues; current repair requires new-head CI. Product Swift bytes unchanged.",
+      "source": "Root exact-head CI observation"
+    },
+    "siteLintFailure": {
+      "revision": "3e93ca222b70c5ce6c438375ba3ca5b7f3413ca2",
+      "job": 120959693184,
+      "cause": "README banner literal and stale 69-provider locale/site copy; repaired with truthful two-provider copy plus explicit ID inventories",
+      "repairRevision": "b0e2069e515ffecd72de920f0aca96547750ab55"
+    }
   },
   "appSizeAndBuildComparison": {
     "status": "unavailable",
@@ -515,5 +561,26 @@
     "patch02Applied": false,
     "fullWorkflowQualified": false,
     "remainingGate": "Root integrates qualified PR40 compile-once descendant, rechecks patch02, and integrates the separate 05:00 America/New_York nightly before combined native qualification."
+  },
+  "cliFixtureRepair": {
+    "footerExpectations": "Keep shared footer/card assertions with Claude instead of retired Cursor/Grok labels",
+    "widthFixture": "Replace Alibaba title with equally long Claude Team Budget; all width assertions retained",
+    "removedTests": [
+      {
+        "path": "Tests/CodexBarTests/CLICardsRendererTests.swift",
+        "method": "detail backed quota descriptions are not rendered as resets",
+        "linesRemoved": 36,
+        "reason": "Original .kilo descriptor at base91bd set menu.primaryDescriptionIsDetail to true; neither retained descriptor enables it. Remove deleted-provider integration, preserve shared reset-style/width/footer tests."
+      },
+      {
+        "path": "TestsLinux/CLICardsRendererTests.swift",
+        "method": "detail backed quota descriptions are not rendered as resets",
+        "linesRemoved": 36,
+        "reason": "Original .kilo descriptor at base91bd set menu.primaryDescriptionIsDetail to true; neither retained descriptor enables it. Remove deleted-provider integration, preserve shared reset-style/width/footer tests."
+      }
+    ],
+    "productSwiftChanges": false,
+    "newNativeValidation": "pending",
+    "repairRevision": "b0e2069e515ffecd72de920f0aca96547750ab55"
   }
 }

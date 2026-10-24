@@ -176,14 +176,50 @@ plutil and `make test` exits 2 for absent Swift. Every test start used fresh adm
 below 85% CPU and the nonblocking benchmark lock; owned fixture scratch was removed
 and absence verified. No install, live probe or extra review agent ran.
 
+Hosted follow-up at `3e93ca222b70c5ce6c438375ba3ca5b7f3413ca2`,
+[run 40123429893](https://github.com/Jones-Systems/CodexBar/actions/runs/40123429893):
+both Linux architectures compile, then fail three CLI renderer tests with four
+issues. The footer fixtures had stale Cursor/Grok expected names after their
+inputs were ported to Claude; only expected provider names change. The original
+credit-description integration selected Kilo, whose removed descriptor at the
+base explicitly set `primaryDescriptionIsDetail: { _ in true }` (line 88).
+Neither retained descriptor enables that policy. Remove only that deleted-feature
+case from both native and Linux mirrors (36 lines each), preserving shared footer,
+reset-style and terminal-width assertions. The width fixture now uses an equally
+long Claude account title. No product formatter or source behavior changes.
+
+The same run's actual lint failure is job 120959693184: the site checker required
+a legacy universal-provider banner literal in README while site copy still
+advertised 69. Root transferred `Scripts/check-site-locales.mjs` at 3:06:30 PM EDT
+for a truthful count and explicit provider-ID inventory contract. All 23 localized
+product descriptions, headings and hero titles now name Codex/Claude; 35 obsolete
+provider/authoring cards and 28 social tiles are removed. README and visible site
+and social inventories must exactly match UsageProvider IDs, including uniqueness;
+all independent locale/token/key/asset checks remain. Historical restoration notes,
+author attribution and original assets remain. The outdated social banner is no
+longer embedded, and social metadata uses the existing 512-pixel app icon. No site
+was published. Exact locale checking passes (23 locales, 138 message keys), plus
+13 contained actual-checker fixture cases: valid product and historical notes;
+missing/extra README IDs; missing/stale/unmarked/duplicate visible cards;
+missing/stale social tiles; stale locale count, token drift and missing asset.
+The cases prove rejection behavior without a duplicate regex implementation.
+Repair commit `b0e2069e515ffecd72de920f0aca96547750ab55` passes the exact node
+checker and both changed JavaScript syntax checks, all 178 current local document
+links and the generated llms check. Required local commands were reattempted under
+fresh admission and the shared lock: `make check` exits 2 for missing plutil;
+`make test` exits 2 for missing Swift. Owned fixture/check scratch is removed after
+process drain and absence is verified. No manual hosted rerun is dispatched.
+This follow-up does not change product source/build-size metrics. It removes two
+lexical test declarations; hosted native qualification remains pending.
+
 Exact committed-blob [comparison](../engineering-specs/slim-codex-claude-comparison.json):
 
 | Inventory | Base | Product candidate |
 | --- | ---: | ---: |
 | Product Swift files / lines | 1,201 / 307,271 | 651 / 193,239 |
 | Product C/header files / lines | 21 / 79,719 | 1 / 1 |
-| Test Swift files / lines | 1,059 / 368,064 | 734 / 252,293 |
-| Lexical Swift Testing declarations | 10,575 | 6,546 |
+| Test Swift files / lines | 1,059 / 368,064 | 734 / 252,221 |
+| Lexical Swift Testing declarations | 10,575 | 6,544 |
 
 330 test paths were removed and 5 added, including shared-suite renames; these are
 not runtime case counts. Package targets `CQuickJS` and `CodexBarPluginTests`, core
