@@ -590,17 +590,61 @@ profile separation. These synthetic assertions do not qualify actual persistent 
 
 ### CI Aggregate Contract
 
-The `lint-build-test` check in `.github/workflows/ci.yml` keeps its existing name and requires successful lint,
-change detection, and the full `build-linux-cli` glibc matrix (x86_64 and ARM64 build, tests, and smoke checks).
-Glibc Linux has no path or draft skip: failure, cancellation, skipped, empty, missing, or unknown matrix results
-fail verification. macOS tests and the musl build may skip only when their path gates allow it; required macOS
-tests deferred for a draft still leave the aggregate incomplete. Whole-workflow cancellation retains the existing
-`always() && !cancelled()` condition, so the verifier does not run in that case.
+The `lint-build-test` check in `.github/workflows/ci.yml` keeps its existing name and requires successful
+`changes` and `lint`, plus every platform selected by `Scripts/ci_path_gate.sh`. Its three entrypoints expose
+explicit macOS, Linux glibc and Linux musl flags. A selected job must succeed; an unselected job must report
+`skipped`. Failure, cancellation, empty, missing or unknown evidence fails verification. Required macOS tests
+may defer for a draft, but that still leaves the aggregate incomplete. Whole-workflow cancellation retains
+`always() && !cancelled()`, so the verifier does not run in that case.
 
-`Scripts/test_ci_path_gate.sh` checks these result combinations and the workflow's Linux dependency and eighth
-verifier argument. `CodexBarLinuxTests` includes the portable `AntigravityLocalhostSessionLifetimeTests` suite on
-both macOS and Linux. It checks session reuse and concurrent synthetic loopback failures without credentials;
-this coverage does not establish or fix the cause of Linux dispatch crashes.
+| Pull-request changed paths | Required compiler/test coverage |
+| --- | --- |
+| macOS app, widget, native-only executables/resources, native tests (except shared plugin sources below) | Both complete macOS shards |
+| Shared core/CLI/other source, C modules, `Package.swift`, `Package.resolved` | macOS, both glibc architectures, musl |
+| `TestsLinux`, `TestsPlugin` (including its symlinked sources), adaptive replay test directories | macOS and both glibc architectures |
+| Documentation/site assets and explicitly listed portable scripts/workflows | Portable lint |
+| Unknown paths, global build/test harnesses or policy changes | All platforms |
+
+The classifier's explicit portable allowlist is the source of truth. It processes deletions and both sides of
+renames/copies, unions overlapping requirements, rejects malformed evidence and selects all platforms for an
+empty diff. Manual runs and unavailable PR/push bases also select all platforms. Main pushes use the same
+platform gates against the previous main head, running the full suite of each selected platform. Source resources are
+classified before Markdown suffixes. Changes to the classifier, aggregate verifier and primary CI workflow
+select all platforms. This partition retains every test in each selected scope; it does not remove tests.
+
+The selected checks retain their names: `swift-test-macos (0, 2)`, `swift-test-macos (1, 2)`,
+`build-linux-cli (linux-x64, ubuntu-24.04)`, `build-linux-cli (linux-arm64, ubuntu-24.04-arm)` and
+`build-linux-musl-cli`. Both glibc architectures run the complete portable suite and CLI smoke assertions.
+Ordinary PRs build and smoke-test the debug CLI, sharing compilation with debug tests. Main and manual runs
+retain the release CLI with static Swift standard-library linking; selected musl builds retain release/static
+SDK coverage. Existing Linux campaign step IDs retain their historical `release` label; consult the recorded
+CLI build configuration when comparing PR measurements with older runs. macOS retains two complete shards
+and groups of four. JavaScript checks run in portable lint, and the separate macOS plugin step runs
+JavaScriptCore goldens while the full suite supplies QuickJS coverage.
+
+`Scripts/test_ci_path_gate.sh` checks platform partitions, malformed changes, rename/deletion behavior,
+result combinations and the workflow's explicit glibc gate/result arguments. `CodexBarLinuxTests` includes
+`AntigravityLocalhostSessionLifetimeTests` on both macOS and Linux. It checks session reuse and concurrent
+synthetic loopback failures without credentials; this coverage does not establish or fix Linux dispatch crashes.
+
+### Native and packaging tier
+
+Native UI, end-to-end and packaging checks are advisory and opt-in. Jones app candidates run by manual dispatch
+or the `codexbar-package` PR label; menu candidates run by manual dispatch or `codexbar-menu-candidate`.
+PR candidates require a same-repository, non-draft PR and the workflow's existing path filter. Labels remain
+active on subsequent source synchronization. Neither workflow runs automatically on main pushes. Candidate
+jobs share a packaging concurrency group. A newer eligible PR event cancels that PR's superseded run;
+skipped events use unique cancellation groups and cannot cancel an active candidate. Different PRs and
+manual candidates do not cancel one another while active. GitHub may replace an older pending candidate
+when another candidate queues.
+
+Keep native end-to-end coverage focused on three to five critical user journeys; use parser, state/model and
+portable fixtures for the remaining behavior. The existing resource smoke and signed-update fixtures remain
+available in the app candidate; the menu candidate retains synthetic menu capture. Resource/package validation
+proves bundle identity and entrypoints, not visible native UI behavior. `StatusMenuProviderNativeProofTests`
+and `CodexWorkspacesNativeProofTests` remain opt-in and need their separately qualified driver and consent
+boundaries described in [Native workflow proofs](#native-workflow-proofs). Advisory failures still need a fix
+or tracked issue; they do not silently become required merge checks.
 
 ### Coding Conventions and Tests
 

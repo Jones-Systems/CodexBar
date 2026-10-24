@@ -230,7 +230,6 @@ case "$cmd" in
   lint-macos)
     check_app_locales
     check_cli_installer
-    run_javascript_checks
     run_swiftformat_lint
     ;;
   format)

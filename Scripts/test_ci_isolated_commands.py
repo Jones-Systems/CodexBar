@@ -102,6 +102,8 @@ sys.exit(int(os.environ.get("CI_COMMAND_EXIT", "0")))
         helper.write_text(helper.read_text().replace('PLATFORM = "linux"', 'PLATFORM = "darwin"') +
                           '\nlock_directory = lambda: Path(' + repr(str(self.root / "lock")) + ')\n' +
                           'sample_window = lambda deadline: (Fraction(1, 5), Fraction(1, 5), 30)\n' +
+                          'os.statvfs = lambda path: type("Storage", (), {"f_bavail": 20 * 1024**2, '
+                          '"f_frsize": 4096})()\n' +
                           'os.cpu_count = lambda: 12\n')
         status = self.invoke([str(self.workspace / "Scripts/test.sh"), "--command", "swift", "test",
                               "--filter", "FocusedTests", "-j12"])
@@ -128,6 +130,26 @@ sys.exit(int(os.environ.get("CI_COMMAND_EXIT", "0")))
         records = self.records()
         self.assertEqual(len(records), 1)
         self.assert_owned_cleanup(records)
+
+    def test_ci_plugin_rollback_reuses_build_and_preserves_result(self):
+        for result in (0, 37):
+            with self.subTest(result=result):
+                self.record = self.root / f"jsc-{result}.jsonl"
+                self.env["CI_COMMAND_RECORD"] = str(self.record)
+                self.env["CI_COMMAND_EXIT"] = str(result)
+                status = self.invoke([str(self.workspace / "Scripts/test-plugin-engines.sh"), "--jsc-only"])
+                self.assertEqual(status, result, self.output)
+                records = self.records()
+                self.assertEqual([item["engine"] for item in records], ["jsc"])
+                self.assertEqual([item["args"] for item in records], [
+                    ["test", "--skip-build", "--filter", FILTER],
+                ])
+                self.assert_owned_cleanup(records)
+
+    def test_plugin_unknown_option_starts_no_command(self):
+        status = self.invoke([str(self.workspace / "Scripts/test-plugin-engines.sh"), "--unknown"])
+        self.assertEqual(status, 2, self.output)
+        self.assertFalse(self.record.exists())
 
     def test_borrowed_parent_is_retained_on_command_failure(self):
         parent = self.workspace / "borrowed"
