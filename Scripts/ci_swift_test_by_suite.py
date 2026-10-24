@@ -1076,11 +1076,23 @@ def run_suites() -> int:
                               or args.shard_count is not None or _campaign is not None):
             print("--parallel cannot be combined with discovery-only, shards, limits or a macOS campaign", file=sys.stderr)
             return 2
+        if args.export_build is not None:
+            preflight = build_artifact.native_precheck(Path.cwd(), run_captured_command, swift_command)
+            if preflight is not None:
+                tool_runtime, tool_seconds = build_artifact.native_finish(
+                    preflight, Path.cwd() / ".build", include_build=False)
+                emit_evidence("native-tool-preflight", status=tool_runtime["status"],
+                              reason=tool_runtime.get("reason"), host_seconds=preflight["host_seconds"],
+                              closure_seconds=tool_seconds, diagnostic=tool_runtime.get("diagnostic"))
+                # Early evidence cannot replace the complete post-build proof or
+                # change its original exact-image fallback when unavailable.
         discovered = swift_test_list(swift_command, stats, skip_build=args.use_build is not None)
         if restored is not None:
             build_artifact.require(stats.test_ids == restored["test_ids"],
                                    "worker discovery differs from compiled build manifest")
         if args.export_build is not None:
+            # Recollect after compilation: the bounded native budget never spans
+            # the build, and the final manifest binds fresh host/runtime evidence.
             native_state = build_artifact.native_precheck(Path.cwd(), run_captured_command, swift_command)
             native_runtime = None
             if native_state is not None:

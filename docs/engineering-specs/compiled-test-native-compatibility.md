@@ -3,7 +3,7 @@
 Status: implemented and activated after coordinator source review of exact local
 checkpoint `5f6469e2cc6b314902b9b9b86495cd14e7dc484c`. Hosted host prechecks now
 complete; full closure and both-shard qualification remain pending after the
-universal-layout repair described below. Diagnostic checkpoint `0862c61d9` first retained strict image equality.
+universal-layout and launch-context resolver repairs described below. Diagnostic checkpoint `0862c61d9` first retained strict image equality.
 The CI/harness lane owns this spec and the bounded helper/tests; root owns hosted
 CI watching and integration. Complete native closure and two-shard success are not yet proved.
 
@@ -35,6 +35,16 @@ dSYM images; every transferred loadable image passed the prior parser. The exact
 external rejected file was not logged. This identifies an external dependency as
 the failure source, without establishing its filename or subtype. Both workers
 correctly rejected image rollout through the strict fallback; no tests ran.
+
+Run `40128626857` at `c358e0ffc73c8bf9619200249d4e974e54fea86c` passes the
+ARM64 universal parser and native host checks, but producer closure reports
+`ambiguous-runtime-dependency` without candidates. Both workers reject strict
+image fallback before tests. The exact artifact `12574008330` was verified and
+streamed again: 23 loadable images and five dSYMs, with ordered per-file rpaths.
+This evidence does not identify the conflicting external file. Source inspection
+does establish that combining all executables' rpaths and applying test overrides
+to ordinary tools creates artificial candidate conflicts. The repair replaces
+that model; it does not declare the old ambiguity a proved real loader conflict.
 
 Keep repository, source, run/attempt, workflow, profile/manifest, package/lock,
 workspace, toolchain, runner OS/architecture and image OS exact. Image versions
@@ -82,10 +92,24 @@ or escaping dependencies make the proof incomplete. Inspect no provider state.
 Handle bounded fat32/fat64 ARM64 slices, weak/reexport/upward/lazy library loads,
 dylinker commands, loader/executable-relative paths and recursive cycles. Reject
 unsupported width/byte order, malformed or unknown required commands, legacy
-loader commands, and embedded loader environment commands. Resolve a conservative
-union of permitted rpaths to a fixed point: multiple candidates with different
-fingerprints are unsupported. This deliberately sacrifices availability rather
-than guessing which library wins.
+loader commands, and embedded loader environment commands.
+
+Apple's [Loader.cpp](https://github.com/apple-oss-distributions/dyld/blob/main/dyld/Loader.cpp)
+resolves @rpath through the requestor and its actual ancestor chain, preserving
+each image's load-command order. Its
+[path overrides](https://github.com/apple-oss-distributions/dyld/blob/main/dyld/DyldProcessConfig.cpp)
+precede raw paths. Select the first supported existing candidate in that proven
+order; never combine unrelated executable paths. Preserve every ARM64 variant's
+ordered commands. Audit each transferred executable separately in plain and
+inherited test environments, and the XCTest bundle under both selected launchers.
+Audit remaining loadable libraries without inventing parents. Every recursively
+selected external image receives its canonical path, whole-file SHA256 and slice
+identity; cache members remain bound to the native cache UUID. Record launch,
+mode and ancestor subtype chain on dependency edges. A conflicting @rpath binding
+within one launch is `runtime-binding-order-unproven`, with both candidate
+identities, rather than an arbitrary choice. Unsupported required roots, absent
+strong loads and unsupported loader shapes remain incomplete. Unvisited later
+rpaths are neither probed nor used as roots.
 
 Apple's [universal loader](https://github.com/apple-oss-distributions/dyld/blob/main/mach_o/Universal.cpp),
 [architecture definitions](https://github.com/apple-oss-distributions/dyld/blob/main/mach_o/Architecture.cpp)
@@ -93,8 +117,8 @@ and [grading rules](https://github.com/apple-oss-distributions/dyld/blob/main/ma
 allow distinct ARM64 variants and different launch/load preferences. Cover the
 union of every supported generic, v8, old ARM64e and versioned user-space ARM64e
 slice, preserving full subtype ABI bits and the whole-file SHA256. Never guess a
-selected slice. Follow all variant dependencies/rpaths, with strong linkage
-winning over weak linkage for a shared install name. A missing alternate-variant
+selected slice. Follow each variant's dependencies and rpaths in their own order.
+A missing alternate-variant
 strong dependency remains incomplete. Reject future/kernel ABI variants,
 duplicate normalized architectures, mismatched table/header identities, overlaps,
 invalid alignment/bounds, reserved fat64 data, and mixed payload classes. Apple's
@@ -105,17 +129,25 @@ unsupported rather than silently excluded. Command budgets apply across all
 ARM64 variants of one file.
 
 [SwiftPM's test environment](https://github.com/swiftlang/swift-package-manager/blob/swift-6.2-RELEASE/Sources/Commands/Utilities/TestingSupport.swift)
-adds selected macOS platform library/framework paths and uses its XCTest helper.
-Account for those paths and load-command rpaths. Do not assume XCTest is provided
-only by the system or that a version string proves runtime-library bytes.
+uses its XCTest helper and adds overrides only for test subprocesses. Reproduce
+the [platform paths](https://github.com/swiftlang/swift-package-manager/blob/swift-6.2-RELEASE/Sources/PackageModel/SwiftSDKs/SwiftSDK.swift)
+in order: Developer/Library/Frameworks, Developer/Library/PrivateFrameworks, and
+Developer/usr/lib for libraries. Verify the platform path through fixed xcrun
+output against the selected SDK. Preserve the optional toolchain testing path
+before platform paths using UserToolchain's fixed derivation and extension test.
+Match Apple's framework-leaf rule; a nested framework Libraries child uses library
+overrides. The dylinker is not a library-path override. Do not assume XCTest is
+provided only by the system or that a version string proves runtime-library bytes.
 The [selected toolchain implementation](https://github.com/swiftlang/swift-package-manager/blob/swift-6.2-RELEASE/Sources/PackageModel/UserToolchain.swift)
 also identifies compiler/library overrides. Nonempty DYLD variables, custom
 Swift/SDK/toolchain/library overrides, or a different Swift entrypoint are rejected
-requests, rather than incomplete evidence eligible for fallback.
+requests, rather than incomplete evidence eligible for fallback. Reject nonempty
+`SWIFTPM_PLATFORM_PATH_*` overrides too.
 
 Cap collection at 90 seconds, 50,000 scanned entries, 512 images, 4,096 cached-path
-queries, 4,096 commands and 1 MiB command bytes per image, 512 MiB per hashed file,
-and 2 GiB total hashed bytes. Native command subprocesses have at most 30 seconds
+queries, 4,096 launch/ancestor contexts, 32-image chains, 16,384 edges, 128 search
+candidates per dependency, 4,096 commands and 1 MiB command bytes per image,
+512 MiB per hashed file, and 2 GiB total hashed bytes. Native command subprocesses have at most 30 seconds
 and consume the remaining collection budget. File hashes are cached by canonical
 path, inode, size and timestamps, with a second metadata check after reading.
 Read regular files only with canonical containment checks. No shell, dlopen of
@@ -125,9 +157,13 @@ host changes, provisioning, installation or full-system hash is part of collecti
 ## Activation and affected checks
 
 `ENABLE_NATIVE_COMPATIBILITY=True` activates the reviewed contract. A v2 manifest
-carries the complete fingerprint or a bounded unavailability reason. An unsupported
-file also records only its inspected path (512 characters), size, header/table
-SHA256 and at most 33 bounded slice descriptors. These closed-schema diagnostics
+carries the complete fingerprint or a bounded unavailability reason. All resolver
+failures, including file access and budget failures, carry closed diagnostics:
+logical loader/install name, launch/mode, subtype chain, tried rpaths and candidate
+canonical paths/kinds/hashes. Lists stop at 64 entries and strings at 512 escaped
+characters, with explicit truncation. Build/Xcode roots use logical tokens;
+outside-root paths are redacted to SHA256 markers. Unsupported Mach-O files also
+retain size, header/table SHA256 and at most 33 bounded slice descriptors. These closed-schema diagnostics
 are log/provenance data: they never select a file, command or compatibility rule.
 A v1 manifest retains the exact original identity gate. Portable fixtures exercise malformed/fat Mach-O,
 recursive dependencies, allowed paths, weak/missing dependencies, hash changes,
@@ -145,6 +181,15 @@ and `complete-fingerprint` versus `exact-image-fallback`. Complete fingerprint
 inequality fails even on equal images. Incomplete evidence can pass only the
 original full identity check. Identical image versions are provenance and the
 legacy fallback boundary; they do not prove that every installed image tool matches.
+
+Before producer compilation, run this same bounded collector over selected tools
+and their external dependencies without scanning `.build` or executing any native
+artifact. Emit `native-tool-preflight` host/closure timing and actionable unsupported
+evidence early. Unavailability retains the existing same-image fallback policy;
+preflight never substitutes for the full product proof. Recollect a fresh host
+and full closure after compilation so the native time budget cannot span the
+build. Workers retain host admission before extraction and staged full closure
+before installation/discovery. No extra campaign or workflow job is introduced.
 
 The proof covers declared Mach-O dependencies and the known SwiftPM test/manifest
 runtime, not arbitrary future dynamic loaders or general binary relocation. A new

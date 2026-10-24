@@ -250,7 +250,7 @@ def native_precheck(workspace, capture, swift_command=None):
     return state
 
 
-def native_finish(state, build):
+def native_finish(state, build, *, include_build=True):
     import ci_swift_test_native as native
     if state["host"] is None:
         payload = {"status": "unavailable", "reason": state["reason"]}
@@ -260,7 +260,8 @@ def native_finish(state, build):
     state["host"].build = build
     started = time.monotonic()
     try:
-        payload = {"status": "complete", "fingerprint": state["host"].closure()}
+        fingerprint = state["host"].closure() if include_build else state["host"].closure(include_build=False)
+        payload = {"status": "complete", "fingerprint": fingerprint}
     except native.UnsupportedRuntime as error:
         payload = {"status": "unavailable", "reason": str(error)}
         if getattr(error, "diagnostic", None) is not None:

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import ctypes
 import hashlib
+import json
 from pathlib import Path, PurePosixPath
 import platform
 import posixpath
@@ -28,6 +29,11 @@ MAX_IMAGES = 512
 MAX_QUERIES = 4096
 MAX_COMMAND_BYTES = 1024 ** 2
 MAX_COMMANDS = 4096
+MAX_CONTEXTS = 4096
+MAX_CHAIN = 32
+MAX_EDGES = 16384
+MAX_CANDIDATES = 128
+MAX_DIAGNOSTIC_ITEMS = 64
 ARM64 = 0x100000C
 # Apple Architecture.cpp: generic, v8, old arm64e, versioned user-space arm64e.
 # Unknown/future/kernel ABI flags do not qualify a complete proof.
@@ -86,13 +92,17 @@ class Budget:
 def safe_absolute(raw):
     need(isinstance(raw, str) and 0 < len(raw) < 4096
          and not any(c in raw for c in "\\\0\r\n"), "invalid-native-path")
+    try:
+        raw.encode("utf-8", errors="strict")
+    except UnicodeEncodeError as error:
+        raise UnsupportedRuntime("invalid-native-path-encoding") from error
     path = PurePosixPath(raw)
     need(path.is_absolute() and str(path) == raw and ".." not in path.parts, "invalid-native-path")
     return Path(raw)
 
 
 def validate_environment(environment):
-    if any(key.startswith("DYLD_") or key in {
+    if any(key.startswith(("DYLD_", "SWIFTPM_PLATFORM_PATH_")) or key in {
         "TOOLCHAINS", "SDKROOT", "SWIFT_EXEC", "SWIFT_EXEC_MANIFEST", "SWIFT_DRIVER_SWIFT_FRONTEND_EXEC",
         "SWIFTPM_CUSTOM_BIN_DIR", "SWIFTPM_CUSTOM_BINDIR", "SWIFTPM_CUSTOM_LIBS_DIR", "SWIFTPM_PD_LIBS",
         "SWIFT_TESTING_PATH", "SWIFTPM_TESTS_MODULECACHE", "CC", "CXX", "LIBTOOL", "AR",
@@ -103,6 +113,40 @@ def validate_environment(environment):
 
 def validate_diagnostic(value):
     """Closed, bounded data only. A manifest diagnostic never selects a file or command."""
+    def text(value, nullable=False):
+        return (nullable and value is None) or (isinstance(value, str) and 0 < len(value) <= 512
+            and not any(ord(character) < 32 for character in value))
+
+    def digest(value):
+        return value is None or (isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value))
+
+    if isinstance(value, dict) and value.get("type") == "resolver":
+        fields = {"type", "loader", "install_name", "executable", "mode", "chain", "rpaths", "candidates", "truncated"}
+        need(set(value) == fields | ({"file"} if "file" in value else set())
+             and text(value["loader"]) and text(value["install_name"], True) and text(value["executable"], True)
+             and isinstance(value["mode"], str) and value["mode"] in {"plain", "swiftpm-test", "audit"}
+             and type(value["truncated"]) is bool,
+             "invalid-native-diagnostic")
+        for field in ("chain", "rpaths", "candidates"):
+            need(isinstance(value[field], list) and len(value[field]) <= MAX_DIAGNOSTIC_ITEMS,
+                 "invalid-native-diagnostic")
+        for item in value["chain"]:
+            need(isinstance(item, dict) and set(item) == {"path", "subtype"} and text(item["path"])
+                 and type(item["subtype"]) is int and 0 <= item["subtype"] <= 0xFFFFFFFF,
+                 "invalid-native-diagnostic")
+        for item in value["rpaths"]:
+            need(isinstance(item, dict) and set(item) == {"loader", "raw", "expanded"}
+                 and all(text(item[key], key == "expanded") for key in item), "invalid-native-diagnostic")
+        for item in value["candidates"]:
+            need(isinstance(item, dict) and set(item) == {"path", "canonical", "kind", "sha256"}
+                 and text(item["path"]) and text(item["canonical"], True) and digest(item["sha256"])
+                 and isinstance(item["kind"], str)
+                 and item["kind"] in {"uninspected", "missing", "bundled", "xcode", "system-file",
+                                     "system-cache", "system-swift-shim"}, "invalid-native-diagnostic")
+        if "file" in value:
+            need(isinstance(value["file"], dict) and "type" not in value["file"], "invalid-native-diagnostic")
+            validate_diagnostic(value["file"])
+        return value
     need(isinstance(value, dict) and set(value) == {"path", "file_bytes", "header_sha256", "fat_slices"},
          "invalid-native-diagnostic")
     need(isinstance(value["path"], str) and 0 < len(value["path"]) <= 512
@@ -232,7 +276,8 @@ def _macho(path, diagnostic):
             dependencies[raw] = dependencies.get(raw, True) and dependency["weak"]
     return {"kind":images[0]["kind"], "subtypes":sorted(image["subtype"] for image in images),
             "dependencies":[{"path":raw, "weak":weak} for raw, weak in sorted(dependencies.items())],
-            "rpaths":sorted({raw for image in images for raw in image["rpaths"]})}
+            "rpaths":sorted({raw for image in images for raw in image["rpaths"]}),
+            "variants":sorted(images, key=lambda image: image["subtype"])}
 
 
 def load_commands(data, count):
@@ -262,7 +307,8 @@ def load_commands(data, count):
             if command == 0x8000001C:
                 rpaths.append(value)
             else:
-                dependencies.append({"path": value, "weak": command == WEAK})
+                dependencies.append({"path": value, "weak": command == WEAK,
+                                     **({"dylinker": True} if command == 0xE else {})})
         cursor += length
     need(cursor == len(data), "load-command-count-differs")
     return {"dependencies": dependencies, "rpaths": rpaths}
@@ -356,13 +402,29 @@ class Host:
         settings = sdk / "SDKSettings.json"
         need(settings.resolve(strict=True).is_relative_to(sdk), "native-sdk-settings-outside-sdk")
         platform_developer = sdk.parent.parent
-        self.search_roots = (
-            platform_developer / "Library/Frameworks", platform_developer / "Library/PrivateFrameworks",
-            platform_developer / "usr/lib", toolchain_usr / "lib/swift/macosx",
-            toolchain_usr / "lib/swift/host", toolchain_usr / "lib/swift/pm", toolchain_usr / "lib",
-            self.xcode / "SharedFrameworks", self.xcode / "Frameworks",
-        )
-        self.override_roots = (platform_developer / "Library/Frameworks", platform_developer / "usr/lib")
+        platform_path = safe_absolute(output(["/usr/bin/xcrun", "--sdk", "macosx", "--show-sdk-platform-path"]))
+        need(platform_path.resolve(strict=True) == platform_developer.parent,
+             "native-sdk-platform-layout-unavailable")
+        # SwiftPM 6.2 TestingSupport + SwiftSDK.sdkPlatformPaths order. These
+        # overrides belong only to test subprocesses, never the ordinary tools.
+        self.test_framework_roots = (platform_developer / "Library/Frameworks",
+                                     platform_developer / "Library/PrivateFrameworks")
+        self.test_library_roots = (platform_developer / "usr/lib",)
+        testing_frameworks = toolchain_usr.parent / "Library/Developer/Frameworks"
+        testing_libraries = toolchain_usr / "lib/swift/macosx/testing"
+        if (testing_frameworks / "Testing.framework").exists():
+            testing_path = testing_frameworks
+        else:
+            testing_path = testing_libraries if testing_libraries.exists() else None
+        if testing_path is not None:
+            need(testing_path.resolve(strict=True).is_relative_to(self.xcode),
+                 "native-testing-path-outside-selected-xcode")
+            # Match SwiftPM's extension test exactly, including a directory
+            # named Frameworks being a library-path override rather than .framework.
+            if testing_path.suffix == ".framework":
+                self.test_framework_roots = (testing_path, *self.test_framework_roots)
+            else:
+                self.test_library_roots = (testing_path, *self.test_library_roots)
         self.context = {
             "schema": SCHEMA, "arch": "arm64", "os_version": output(["/usr/bin/sw_vers", "-productVersion"]),
             "os_build": output(["/usr/bin/sw_vers", "-buildVersion"]), "developer_dir": str(self.developer),
@@ -371,6 +433,8 @@ class Host:
             "sdk_build": output(["/usr/bin/xcrun", "--sdk", "macosx", "--show-sdk-build-version"]),
             "sdk_settings_sha256": self.budget.digest(settings), "system_cache_uuid": self.system.uuid,
             "swiftpm_config_sha256": configuration_sha256,
+            "test_framework_roots": [str(path) for path in self.test_framework_roots],
+            "test_library_roots": [str(path) for path in self.test_library_roots],
             "tools": {name: {"path": str(path), "sha256": self.budget.digest(path)}
                       for name, path in sorted(self.tools.items())},
         }
@@ -415,6 +479,7 @@ class Host:
         while pending:
             directory = pending.pop()
             for path in sorted(directory.iterdir()):
+                self.inspected_path = self.logical_build / path.relative_to(self.build)
                 self.budget.tick()
                 self.budget.scan_entries += 1
                 need(self.budget.scan_entries <= MAX_SCAN_ENTRIES, "native-scan-entry-budget")
@@ -434,113 +499,248 @@ class Host:
              "native-test-image-unavailable")
         return found
 
-    def closure(self):
-        pending = self.images() + [(path, macho(path)) for path in sorted(set(self.tools.values()))]
-        images, entries, edges = {}, {}, {}
-        roots = set(self.search_roots)
-        executables = [path for path, image in pending if image is not None and image["kind"] in (2, 7)]
+    def closure(self, *, include_build=True):
+        return RuntimeClosure(self).collect(include_build=include_build)
 
-        def expanded(raw, loader, executable=None):
-            if raw.startswith("@loader_path/"):
-                value = posixpath.normpath(str(loader.parent) + raw[len("@loader_path"):])
-            elif raw == "@loader_path":
-                value = str(loader.parent)
-            elif raw.startswith("@executable_path/") or raw == "@executable_path":
-                need(executable is not None, "runtime-executable-context-unavailable")
-                value = posixpath.normpath(str(executable.parent) + raw[len("@executable_path"):])
-            elif raw.startswith("/"):
-                value = posixpath.normpath(raw)
+
+class RuntimeClosure:
+    """Declared native dependency graph; ordered per launch, never a global rpath union.
+
+    Loader.cpp's requestor-to-ancestor stack and DyldProcessConfig.cpp's test
+    override order are the supported subset. Unknown fallback/load-order choices
+    remain incomplete evidence. See the native compatibility engineering spec.
+    """
+    def __init__(self, host):
+        self.host = host
+        self.images, self.entries, self.edges = {}, {}, {}
+        self.visited, self.covered = set(), set()
+        self.edge_count = 0
+        self.diagnostic = {"type":"resolver", "loader":"<inventory>", "install_name":None,
+                           "executable":None, "mode":"audit", "chain":[], "rpaths":[],
+                           "candidates":[], "truncated":False}
+
+    def label(self, value):
+        if value is None:
+            return None
+        raw = str(value)
+        if raw.startswith("/"):
+            path = Path(posixpath.normpath(raw))
+            for root, token in ((self.host.logical_build, "<build>"), (self.host.build, "<build>"),
+                                (self.host.xcode, "<xcode>")):
+                if path.is_relative_to(root):
+                    raw = token + "/" + str(path.relative_to(root))
+                    break
             else:
-                raise UnsupportedRuntime("unsupported-runtime-path-token")
-            return safe_absolute(value)
+                if not (any(path.is_relative_to(root) for root in SYSTEM_ROOTS)
+                        or path == Path("/usr/bin/swift")):
+                    raw = "<outside-approved-roots:" + hashlib.sha256(raw.encode("utf-8", "surrogatepass")).hexdigest() + ">"
+        elif not raw.startswith(("@rpath/", "@loader_path", "@executable_path", "<")):
+            raw = "<unsupported-path:" + hashlib.sha256(raw.encode("utf-8", "surrogatepass")).hexdigest() + ">"
+        return raw.encode("unicode_escape").decode("ascii")[:512]
 
-        def expansions(raw, loader, image):
-            contexts = ([loader] if image["kind"] in (2, 7) else executables) if raw.startswith(
-                "@executable_path") else [None]
-            return [expanded(raw, loader, executable) for executable in contexts]
+    def note(self, field, value):
+        if len(self.diagnostic[field]) < MAX_DIAGNOSTIC_ITEMS:
+            self.diagnostic[field].append(value)
+        else:
+            self.diagnostic["truncated"] = True
 
-        def permitted(path):
-            return path.is_relative_to(self.logical_build) or path.is_relative_to(self.xcode) or any(
-                path.is_relative_to(root) for root in SYSTEM_ROOTS) or path == getattr(self, "entrypoint", None)
+    def state(self, key, executable=None, mode="audit", chain=(), raw=None):
+        self.diagnostic = {"type":"resolver", "loader":self.label(key), "install_name":self.label(raw),
+                           "executable":self.label(executable), "mode":mode,
+                           "chain":[{"path":self.label(path), "subtype":variant["subtype"]}
+                                    for path, variant in chain[:MAX_DIAGNOSTIC_ITEMS]],
+                           "rpaths":[], "candidates":[], "truncated":len(chain) > MAX_DIAGNOSTIC_ITEMS}
 
-        def add(logical, image=None):
-            self.budget.tick()
-            if self.cached(logical):
-                key = str(logical)
-                entries[key] = {"kind": "system-cache"}
-                return key
-            physical, key, kind = self.location(logical)
-            if key in entries:
-                return key
-            need(len(images) < MAX_IMAGES, "native-image-budget")
-            image = image if image is not None else macho(physical)
-            need(image is not None, "runtime-dependency-is-not-supported-macho")
-            entries[key] = {"kind": kind, "sha256": self.budget.digest(physical), "subtypes":image["subtypes"]}
-            images[key] = image
-            for raw in image["rpaths"]:
-                # Old unused rpaths on transferred tools do not select a library. Never probe them.
-                try:
-                    for path in expansions(raw, Path(key), image):
-                        if permitted(path):
-                            roots.add(path)
-                except UnsupportedRuntime:
-                    pass
+    def permitted(self, path):
+        return (path.is_relative_to(self.host.logical_build) or path.is_relative_to(self.host.xcode)
+                or any(path.is_relative_to(root) for root in SYSTEM_ROOTS)
+                or path == getattr(self.host, "entrypoint", None))
+
+    def add(self, logical, image=None, candidate=None):
+        if candidate is None:
+            candidate = {"path":self.label(logical), "canonical":None, "kind":"uninspected", "sha256":None}
+            self.note("candidates", candidate)
+        self.host.budget.tick()
+        need(self.permitted(logical), "runtime-path-outside-approved-roots")
+        if self.host.cached(logical):
+            key = str(logical)
+            self.entries[key] = {"kind":"system-cache"}
+            candidate.update(canonical=self.label(key), kind="system-cache")
             return key
+        physical, key, kind = self.host.location(logical)
+        candidate.update(canonical=self.label(key), kind=kind)
+        if key in self.entries:
+            candidate["sha256"] = self.entries[key].get("sha256")
+            return key
+        need(len(self.images) < MAX_IMAGES, "native-image-budget")
+        digest = self.host.budget.digest(physical)
+        candidate["sha256"] = digest
+        image = image if image is not None else macho(physical)
+        need(image is not None, "runtime-dependency-is-not-supported-macho")
+        self.entries[key] = {"kind":kind, "sha256":digest, "subtypes":image["subtypes"]}
+        self.images[key] = image
+        return key
 
-        for logical, image in pending:
-            need(image is not None, "native-launcher-is-not-supported-macho")
-            add(logical, image)
-        need(images, "native-runtime-images-unavailable")
-        # A fixed point includes inherited rpaths and each recursively discovered image.
-        # An ambiguous resolution with different bytes is unsupported, never guessed.
-        while True:
-            self.budget.tick()
-            prior = (len(images), len(roots))
-            unresolved = []
-            edges = {}
-            for key, image in list(sorted(images.items())):
-                selected = []
-                for dependency in image["dependencies"]:
-                    raw = dependency["path"]
-                    if raw.startswith("@rpath/"):
-                        suffix = raw[len("@rpath/"):]
-                        need(suffix and not suffix.startswith("/") and str(PurePosixPath(suffix)) == suffix
-                             and ".." not in PurePosixPath(suffix).parts, "unsafe-rpath-dependency")
-                        for rpath in image["rpaths"]:
-                            need(all(permitted(path) for path in expansions(rpath, Path(key), image)),
-                                 "unsupported-required-rpath")
-                        candidates = [root / suffix for root in sorted(roots)]
-                    else:
-                        candidates = expansions(raw, Path(key), image)
-                        # SwiftPM injects the selected platform's library/framework paths.
-                        # Include any concrete override, rather than silently assuming the
-                        # shared-cache version wins. Different candidate bytes are unsupported.
-                        if raw.startswith("/"):
-                            framework = re.search(r"([^/]+\.framework/.*)$", raw)
-                            suffix = framework.group(1) if framework else Path(raw).name
-                            candidates += [root / suffix for root in self.override_roots]
-                    matches = []
-                    for candidate in candidates:
-                        need(permitted(candidate), "runtime-path-outside-approved-roots")
-                        try:
-                            matches.append(add(candidate))
-                        except FileNotFoundError:
-                            continue
-                    matches = sorted(set(matches))
-                    if not matches:
-                        unresolved.append((key, raw, dependency["weak"]))
-                        continue
-                    fingerprints = {entries[name].get("sha256", "system-cache") for name in matches}
-                    need(len(fingerprints) == 1, "ambiguous-runtime-dependency")
-                    selected.append({"install_name": raw, "weak": dependency["weak"], "targets": matches})
-                edges[key] = selected
-            if prior == (len(images), len(roots)):
-                for key, raw, weak in unresolved:
-                    need(weak, "unresolved-runtime-dependency")
-                    edges[key].append({"install_name": raw, "weak": True, "targets": []})
-                break
-        return {"schema": SCHEMA, "context": self.context, "entries": dict(sorted(entries.items())),
-                "edges": dict(sorted(edges.items()))}
+    def expanded(self, raw, loader, executable):
+        if raw == "@loader_path" or raw.startswith("@loader_path/"):
+            value = str(Path(loader).parent) + raw[len("@loader_path"):]
+        elif raw == "@executable_path" or raw.startswith("@executable_path/"):
+            need(executable is not None, "runtime-executable-context-unavailable")
+            value = str(Path(executable).parent) + raw[len("@executable_path"):]
+        elif raw.startswith("/"):
+            value = raw
+        else:
+            raise UnsupportedRuntime("unsupported-runtime-path-token")
+        return safe_absolute(posixpath.normpath(value))
+
+    def candidates(self, dependency, chain, executable, mode):
+        raw = dependency["path"]
+        if raw.startswith("@rpath/"):
+            suffix = raw[len("@rpath/"):]
+            need(suffix and not suffix.startswith("/") and str(PurePosixPath(suffix)) == suffix
+                 and ".." not in PurePosixPath(suffix).parts, "unsafe-rpath-dependency")
+        else:
+            # Validate even if a test override could otherwise satisfy the leaf.
+            self.expanded(raw, chain[0][0], executable)
+        # Apple only treats the last .framework component as a framework when
+        # its name equals the leaf; nested Libraries/foo.dylib uses library paths.
+        partial = None
+        at = raw.rfind(".framework/")
+        if at >= 0:
+            start = raw.rfind("/", 0, at) + 1
+            if raw[start:at] == raw.rsplit("/", 1)[-1]:
+                partial = raw[start:]
+        if mode == "swiftpm-test" and not dependency.get("dylinker"):
+            roots = self.host.test_framework_roots if partial else self.host.test_library_roots
+            suffix = partial or raw.rsplit("/", 1)[-1]
+            need(suffix and suffix not in {".", ".."}, "unsafe-runtime-override-suffix")
+            for root in roots:
+                yield root / suffix
+        if raw.startswith("@rpath/"):
+            suffix = raw[len("@rpath/"):]
+            # This generator stops at the first chosen candidate. Unused later
+            # rpaths (including old compiler paths) never cause filesystem probes.
+            for loader, variant in chain:
+                for rpath in variant["rpaths"]:
+                    item = {"loader":self.label(loader), "raw":self.label(rpath), "expanded":None}
+                    self.note("rpaths", item)
+                    root = self.expanded(rpath, loader, executable)
+                    item["expanded"] = self.label(root)
+                    need(self.permitted(root), "unsupported-required-rpath")
+                    yield root / suffix
+        else:
+            yield self.expanded(raw, chain[0][0], executable)
+
+    def resolve(self, dependency, chain, executable, mode, bindings):
+        key = chain[0][0]
+        raw = dependency["path"]
+        self.state(key, executable, mode, chain, raw)
+        selected = None
+        for index, logical in enumerate(self.candidates(dependency, chain, executable, mode)):
+            need(index < MAX_CANDIDATES, "native-resolution-candidate-budget")
+            candidate = {"path":self.label(logical), "canonical":None, "kind":"uninspected", "sha256":None}
+            self.note("candidates", candidate)
+            try:
+                selected = self.add(logical, candidate=candidate)
+            except FileNotFoundError:
+                candidate["kind"] = "missing"
+                continue
+            break
+        need(selected is not None or dependency["weak"], "unresolved-runtime-dependency")
+        # Already-loaded @rpath names can bind before a new search. Rather than
+        # guess cross-chain load order, require every search in this launch to
+        # agree on the canonical image. Separate launches never share bindings.
+        if raw.startswith("@rpath/") and raw in bindings and bindings[raw]["target"] != selected:
+            prior = bindings[raw]
+            previous = prior["target"]
+            self.diagnostic["truncated"] |= prior["truncated"]
+            for item in prior["rpaths"]:
+                self.note("rpaths", item)
+            if previous is not None:
+                entry = self.entries[previous]
+                self.note("candidates", {"path":self.label(previous), "canonical":self.label(previous),
+                                         "kind":entry["kind"], "sha256":entry.get("sha256")})
+            raise UnsupportedRuntime("runtime-binding-order-unproven")
+        if raw.startswith("@rpath/"):
+            bindings[raw] = {"target":selected, "rpaths":list(self.diagnostic["rpaths"]),
+                             "truncated":self.diagnostic["truncated"]}
+        return selected
+
+    def walk(self, key, ancestors, executable, mode, bindings, variant=None):
+        if key not in self.images:
+            return  # The matching cache UUID covers the system cache's internal closure.
+        for current in [variant] if variant is not None else self.images[key]["variants"]:
+            self.state(key, executable, mode, ancestors)
+            if any(path == key and prior["subtype"] == current["subtype"] for path, prior in ancestors):
+                continue
+            chain = ((key, current), *ancestors)
+            self.state(key, executable, mode, chain)
+            need(len(chain) <= MAX_CHAIN, "native-loader-chain-budget")
+            identity = (executable, mode, tuple((path, item["subtype"]) for path, item in chain))
+            if identity in self.visited:
+                continue
+            need(len(self.visited) < MAX_CONTEXTS, "native-loader-context-budget")
+            self.visited.add(identity)
+            self.covered.add(key)
+            for dependency in current["dependencies"]:
+                target = self.resolve(dependency, chain, executable, mode, bindings)
+                edge = {"install_name":dependency["path"], "weak":dependency["weak"],
+                        "targets":[] if target is None else [target],
+                        "context":{"executable":executable, "mode":mode,
+                                   "chain":[[path, item["subtype"]] for path, item in chain]}}
+                self.edges.setdefault(key, []).append(edge)
+                self.edge_count += 1
+                need(self.edge_count <= MAX_EDGES, "native-runtime-edge-budget")
+                if target is not None:
+                    self.walk(target, chain, executable, mode, bindings)
+
+    def collect(self, *, include_build):
+        try:
+            pending = self.host.images() if include_build else []
+            bundled = set()
+            for logical, image in pending:
+                self.state(logical)
+                bundled.add(self.add(logical, image))
+            tools = {}
+            for name, path in sorted(self.host.tools.items()):
+                self.state(path)
+                tools[name] = self.add(path)
+            need(self.images, "native-runtime-images-unavailable")
+            tests = sorted(key for key in bundled if self.images[key]["kind"] == 8
+                           and ".xctest/" in key and Path(key).name.endswith("Tests"))
+            test_launchers = {tools[name] for name in ("xctest", "swiftpm-xctest-helper") if name in tools}
+            need(not tests or len(test_launchers) == 2, "native-test-launch-context-unavailable")
+            roots = sorted(key for key, image in self.images.items() if image["kind"] in (2, 7))
+            for key in roots:
+                modes = ("plain", "swiftpm-test") if key in bundled or key in test_launchers else ("plain",)
+                for mode in modes:
+                    for variant in self.images[key]["variants"]:
+                        bindings = {}
+                        self.walk(key, (), key, mode, bindings, variant)
+                        if key in test_launchers and mode == "swiftpm-test":
+                            for test in tests:
+                                # SwiftPM starts a separate process for each bundle.
+                                self.walk(test, ((key, variant),), key, mode, dict(bindings))
+            # Audit every remaining loadable image too, including unreferenced
+            # dependency SDK tools/libraries. No invented parent search paths.
+            for key in sorted(self.images):
+                if key not in self.covered:
+                    self.walk(key, (), None, "audit", {})
+            return {"schema":SCHEMA, "context":self.host.context, "entries":dict(sorted(self.entries.items())),
+                    "edges":{key:sorted(values, key=lambda item: json.dumps(item, sort_keys=True))
+                             for key, values in sorted(self.edges.items())}}
+        except (UnsupportedRuntime, OSError) as error:
+            if self.diagnostic["loader"] == "<inventory>" and hasattr(self.host, "inspected_path"):
+                self.state(self.host.inspected_path)
+            if isinstance(error, OSError):
+                failure = UnsupportedRuntime("native-runtime-file-unavailable")
+            else:
+                failure = error
+            file_diagnostic = getattr(error, "diagnostic", None)
+            if file_diagnostic is not None and "type" not in file_diagnostic:
+                self.diagnostic["file"] = {**file_diagnostic, "path":self.label(file_diagnostic["path"])}
+            failure.diagnostic = validate_diagnostic(self.diagnostic)
+            raise failure from (error if failure is not error else None)
 
 
 def same_native_fingerprint(producer, worker):

@@ -296,7 +296,7 @@ class BuildArtifactTests(unittest.TestCase):
                       "header_sha256":"b" * 64, "fat_slices":[]}
         failure = native.UnsupportedRuntime("unsupported-arm64-subtype-abi")
         failure.diagnostic = diagnostic
-        def unavailable():
+        def unavailable(**_kwargs):
             raise failure
         state = {"host":SimpleNamespace(closure=unavailable), "reason":None, "host_seconds":0.1}
         payload, seconds = artifact.native_finish(state, self.workspace / ".build")
@@ -318,6 +318,32 @@ class BuildArtifactTests(unittest.TestCase):
         self.assertEqual(produced[0]["status"], "unavailable")
         self.assertEqual(json.loads((self.root / artifact.MANIFEST).read_text())["native_runtime"], payload)
         execute.assert_not_called()
+
+    def test_resolver_diagnostics_round_trip_as_bounded_data_with_strict_fallback(self):
+        diagnostic = {"type":"resolver", "loader":"<xcode>/Developer/usr/bin/swift-package",
+                      "executable":"<xcode>/Developer/usr/bin/swift-package", "mode":"plain",
+                      "install_name":"@rpath/Absent.dylib", "chain":[{
+                          "path":"<xcode>/Developer/usr/bin/swift-package", "subtype":0}],
+                      "rpaths":[{"loader":"<xcode>/Developer/usr/bin/swift-package",
+                                 "raw":"@loader_path", "expanded":"<xcode>/Developer/usr/bin"}],
+                      "candidates":[{"path":"<xcode>/Developer/usr/bin/Absent.dylib", "canonical":None,
+                                     "kind":"missing", "sha256":None}], "truncated":False}
+        _, digest, _ = self.native_export(complete=False, diagnostic=diagnostic)
+        state = {"host":None, "reason":"native-cache-api-unavailable", "host_seconds":0.1}
+        observed = []
+        with patch.object(artifact, "ENABLE_NATIVE_COMPATIBILITY", True):
+            with patch.object(artifact, "extract_build") as extract, self.assertRaisesRegex(ValueError, "identity differs"):
+                artifact.restore_build(self.workspace, self.root, digest,
+                                       {**self.current, "image_version":"different"}, state)
+            extract.assert_not_called()
+            artifact.restore_build(self.workspace, self.root, digest, self.current, state,
+                                   lambda **fields: observed.append(fields))
+        self.assertEqual(observed[0]["diagnostic"], diagnostic)
+        self.assertEqual(observed[0]["mode"], "exact-image-fallback")
+        for field in ("mode", "loader", "candidates", "truncated"):
+            invalid = {**diagnostic, field:{"command":"untrusted"}}
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                artifact.native_payload({"status":"unavailable", "reason":"unsupported-runtime", "diagnostic":invalid})
 
     def test_complete_native_proof_never_relaxes_other_identity_or_integrity_boundaries(self):
         _, digest, fingerprint = self.native_export()
@@ -527,6 +553,36 @@ class BuildArtifactTests(unittest.TestCase):
             ])
             execute.assert_not_called()
         self.assertTrue((self.root / artifact.MANIFEST).is_file())
+
+    def test_tool_preflight_precedes_build_and_never_substitutes_for_fresh_product_closure(self):
+        self.runtime()
+        order = []
+        def precheck(*_args):
+            order.append("host")
+            def closure(**kwargs):
+                order.append("tools" if kwargs == {"include_build":False} else "products")
+                raise artifact_native.UnsupportedRuntime("unresolved-runtime-dependency")
+            return {"host":SimpleNamespace(closure=closure), "reason":None, "host_seconds":0.1}
+        import ci_swift_test_native as artifact_native
+        with self.harness(["--export-build", str(self.root)]) as (captured, execute), \
+                patch.object(artifact, "native_precheck", side_effect=precheck), \
+                patch.object(runner, "emit_evidence") as evidence:
+            result = captured.return_value
+            def capture(command, **_kwargs):
+                order.append("build" if "build" in command else "discovery")
+                return result
+            captured.side_effect = capture
+            self.assertEqual(runner.run_suites(), 0)
+        self.assertEqual(order, ["host", "tools", "build", "discovery", "host", "products"])
+        self.assertEqual([call.args[0] for call in captured.call_args_list], [
+            ["swift", "build", "--build-tests"], ["swift", "test", "list", "--skip-build"]])
+        execute.assert_not_called()
+        preflight = [call.kwargs for call in evidence.call_args_list if call.args == ("native-tool-preflight",)]
+        self.assertEqual(preflight[0]["status"], "unavailable")
+        self.assertEqual(preflight[0]["reason"], "unresolved-runtime-dependency")
+        self.assertGreaterEqual(preflight[0]["closure_seconds"], 0)
+        self.assertEqual(json.loads((self.root / artifact.MANIFEST).read_text())["native_runtime"], {
+            "status":"unavailable", "reason":"unresolved-runtime-dependency"})
 
     def test_full_profile_jsc_uses_shared_build_before_cleanup(self):
         self.current["profile"] = "full"
