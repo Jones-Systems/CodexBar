@@ -45,8 +45,6 @@ final class MenuLayoutScreenshotRenderTests: XCTestCase {
                             defaults.set(AppGroupSupport.migrationVersion, forKey: AppGroupSupport.migrationVersionKey)
                             defaults.set(true, forKey: "debugDisableKeychainAccess")
                         })
-                    let state = CloudSyncState()
-                    state.availability = .noICloudAccount
                     let store = UsageStore(
                         fetcher: UsageFetcher(environment: [:]),
                         browserDetection: BrowserDetection(
@@ -67,12 +65,8 @@ final class MenuLayoutScreenshotRenderTests: XCTestCase {
                     // Offscreen Forms do not expose their children through the accessibility traversal.
                     let views: [(String, AnyView, [String])] = [
                         ("sidebar", AnyView(SettingsSidebarView(
-                            settings: settings, store: store, selection: .constant(.plugins))
+                            settings: settings, store: store, selection: .constant(.general))
                             .frame(width: SettingsPane.sidebarMinWidth, height: 620)), []),
-                        ("icloud", AnyView(ICloudSyncPane(settings: settings, state: state)
-                                .frame(width: 560, height: 600)), []),
-                        ("hooks", AnyView(HooksPane(settings: settings)
-                                .frame(width: 560, height: 350)), []),
                         ("layout", AnyView(MenuBarLayoutEditor(settings: settings, store: store)
                                 .frame(width: 560).padding(16)), ["menu_bar_layout_drag_remove"]),
                         ("spend", AnyView(SpendDashboardCurrencySection(group: group, requestedDays: 30)
@@ -107,109 +101,6 @@ final class MenuLayoutScreenshotRenderTests: XCTestCase {
                         }
                     }
                     XCTAssertTrue(store.snapshots.isEmpty)
-                    XCTAssertFalse(settings.iCloudSyncEnabled)
-                    XCTAssertFalse(settings.hooksEnabled)
-                }
-            }
-        }
-    }
-
-    func test_renderCursorOverviewCoverageProof() throws {
-        guard let dir = ProcessInfo.processInfo.environment["CODEXBAR_CURSOR_OVERVIEW_SCREENSHOT_DIR"] else {
-            throw XCTSkip("Set CODEXBAR_CURSOR_OVERVIEW_SCREENSHOT_DIR to render the Cursor Overview proof.")
-        }
-        // This override changes assertions only; the fixture and production renderer are identical.
-        let expectedDays = ProcessInfo.processInfo.environment["CODEXBAR_CURSOR_OVERVIEW_EXPECTED_DAYS"] ?? "30"
-        let directory = URL(fileURLWithPath: dir, isDirectory: true)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        try CodexBarLocalizationOverride.$appLanguage.withValue("en") {
-            let fixture = try CursorOverviewProofFixture.make()
-            XCTAssertEqual(fixture.model.groups.count, 1)
-            XCTAssertEqual(fixture.model.groups.first?.coveredDayCount, 30)
-            XCTAssertEqual(fixture.model.groups.first?.totalCost, 12)
-            XCTAssertEqual(fixture.model.groups.first?.totalTokens, 1000)
-            XCTAssertEqual(fixture.counts.total, 2)
-            XCTAssertEqual(fixture.counts.cost, 1)
-            XCTAssertEqual(fixture.counts.tokens, 1)
-            XCTAssertTrue(fixture.summary.isPartial)
-            try CursorOverviewProofFixture.eventJSON.write(
-                to: directory.appendingPathComponent("input.json"), atomically: true, encoding: .utf8)
-            for dark in [false, true] {
-                let view = AnyView(OverviewSpendSummaryCardView(summary: fixture.summary, days: 30, width: 310)
-                    .environment(\.locale, Locale(identifier: "en_US_POSIX"))
-                    .environment(\.colorScheme, dark ? .dark : .light)
-                    .environment(\.displayScale, 2)
-                    .environment(\.accessibilityEnabled, true)
-                    .background(Color(nsColor: .windowBackgroundColor)))
-                let hosting = NSHostingView(rootView: view)
-                hosting.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
-                let name = "cursor-overview-\(dark ? "dark" : "light")"
-                let png = try XCTUnwrap(Self.pngData(hosting: hosting))
-                XCTAssertEqual(hosting.frame.width, 310)
-                XCTAssertFalse(png.isEmpty)
-                try png.write(to: directory.appendingPathComponent("\(name).png"))
-                let accessibility = Self.accessibilityText(hosting)
-                try accessibility.write(
-                    to: directory.appendingPathComponent("\(name)-accessibility.txt"),
-                    atomically: true,
-                    encoding: .utf8)
-                for text in [
-                    "Coverage: \(expectedDays) / 30", "~$12.00", "1 of 2 subscriptions have spend", "~1K tokens",
-                    "Priced 1 · Unpriced 0 · Unmetered 0 · Estimated 0", "List-price equivalent",
-                ] {
-                    XCTAssertTrue(accessibility.contains(text), accessibility)
-                }
-            }
-        }
-    }
-
-    func test_renderOpenRouterLimitClarityProof() async throws {
-        guard let dir = ProcessInfo.processInfo.environment["CODEXBAR_OPENROUTER_CLARITY_SCREENSHOT_DIR"] else {
-            throw XCTSkip("Set CODEXBAR_OPENROUTER_CLARITY_SCREENSHOT_DIR to render the OpenRouter proof.")
-        }
-        let snapshot = try await OpenRouterLimitTestSupport.snapshot()
-        let directory = URL(fileURLWithPath: dir, isDirectory: true)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        for language in ["en", "de"] {
-            try CodexBarLocalizationOverride.$appLanguage.withValue(language) {
-                for showUsed in [false, true] {
-                    let model = try OpenRouterLimitTestSupport.model(snapshot, showUsed: showUsed)
-                    for dark in [false, true] {
-                        for sectioned in [false, true] {
-                            let content = sectioned
-                                ? AnyView(UsageMenuCardHeaderAndUsageSectionView(
-                                    model: model,
-                                    layoutModel: model,
-                                    bottomPadding: UsageMenuCardLayout.sectionBottomPadding,
-                                    width: 310))
-                                : AnyView(UsageMenuCardView(model: model, width: 310))
-                            let view = AnyView(content
-                                .environment(\.locale, Locale(identifier: language == "en" ? "en_US_POSIX" : "de_DE"))
-                                .environment(\.colorScheme, dark ? .dark : .light)
-                                .environment(\.displayScale, 2)
-                                .environment(\.accessibilityEnabled, true)
-                                .background(Color(nsColor: .windowBackgroundColor)))
-                            let hosting = NSHostingView(rootView: view)
-                            hosting.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
-                            let name = "openrouter-\(language)-\(dark ? "dark" : "light")"
-                                + "-\(sectioned ? "sectioned" : "card")-\(showUsed ? "used" : "remaining")"
-                            let png = try XCTUnwrap(Self.pngData(hosting: hosting))
-                            XCTAssertEqual(hosting.frame.width, 310)
-                            try png.write(to: directory.appendingPathComponent("\(name).png"))
-                            // Inspect hosted accessibility children independently of pixels and model text.
-                            let accessibility = Self.accessibilityText(hosting)
-                            try accessibility.write(
-                                to: directory.appendingPathComponent("\(name)-accessibility.txt"),
-                                atomically: true,
-                                encoding: .utf8)
-                            XCTAssertTrue(accessibility.contains("$1.90"), accessibility)
-                            XCTAssertTrue(accessibility.contains("$30.00"), accessibility)
-                            XCTAssertTrue(accessibility.contains(L("API key limit")), accessibility)
-                            XCTAssertTrue(accessibility.contains(L(showUsed ? "Usage used" : "Usage remaining")))
-                            XCTAssertTrue(accessibility.contains(L("%d percent", showUsed ? 0 : 100)))
-                            XCTAssertTrue(accessibility.contains(L("Spending cap, not balance")), accessibility)
-                        }
-                    }
                 }
             }
         }
@@ -255,7 +146,7 @@ final class MenuLayoutScreenshotRenderTests: XCTestCase {
         try CodexCredentialFileAccess.withFixtureScope(.init()) {
             try OpenAIDashboardCacheStore.$cacheURLOverride.withValue(root.appendingPathComponent("dashboard.json")) {
                 try CodexBarLocalizationOverride.$appLanguage.withValue("en") {
-                    let order: [UsageProvider] = [.claude, .cursor]
+                    let order: [UsageProvider] = [.claude, .claude]
                     let config =
                         CodexBarConfig(providers: (order + UsageProvider.allCases.filter { !order.contains($0) })
                             .map { ProviderConfig(id: $0.instanceID, enabled: order.contains($0)) })
@@ -365,77 +256,6 @@ final class MenuLayoutScreenshotRenderTests: XCTestCase {
         }
     }
 
-    func test_renderAntigravitySemanticLayoutProof() throws {
-        guard let dir = ProcessInfo.processInfo.environment["CODEXBAR_ANTIGRAVITY_LAYOUT_SCREENSHOT_DIR"] else {
-            throw XCTSkip("Set CODEXBAR_ANTIGRAVITY_LAYOUT_SCREENSHOT_DIR to render the Antigravity layout proof.")
-        }
-
-        let json = antigravityQuotaSummaryJSON(
-            geminiSession: 0.86,
-            geminiWeekly: 0.55,
-            claudeSession: 1,
-            claudeWeekly: 1)
-        let snapshot = try AntigravityStatusProbe.parseQuotaSummaryResponse(Data(json.utf8)).toUsageSnapshot()
-        let windows = MenuBarLayoutSemanticWindowResolver.windows(provider: .antigravity, snapshot: snapshot)
-        let data = MenuBarLayoutRenderData(
-            provider: .antigravity,
-            iconKey: "antigravity",
-            providerName: nil,
-            accountLabel: nil,
-            laneLabels: MenuBarLayoutLaneLabels(provider: .antigravity, snapshot: snapshot),
-            primary: MenuBarLayoutRenderWindow(snapshot.primary),
-            secondary: MenuBarLayoutRenderWindow(snapshot.secondary),
-            tertiary: MenuBarLayoutRenderWindow(snapshot.tertiary),
-            session: MenuBarLayoutRenderWindow(windows.session),
-            weekly: MenuBarLayoutRenderWindow(windows.weekly),
-            scopedWeekly: nil,
-            scopedWeeklyTitle: nil,
-            automatic: nil,
-            automaticText: nil,
-            sessionPace: nil,
-            weeklyPace: nil,
-            automaticPace: nil,
-            runsOut: nil,
-            balance: nil,
-            costToday: nil,
-            cost30d: nil,
-            metrics: .unavailable)
-        let rendered = MenuBarLayoutRenderer().render(
-            layout: MenuBarLayout(lines: [[.percent(window: .session), .separatorDot, .percent(window: .weekly)]]),
-            data: data,
-            icon: nil,
-            options: MenuBarLayoutRenderOptions(
-                size: .regular,
-                highContrast: false,
-                showUsed: false,
-                conditionals: [],
-                appearanceName: "antigravity-proof",
-                isDebugApp: false,
-                now: Self.now))
-        let view = AnyView(VStack(alignment: .leading, spacing: 12) {
-            Text("Antigravity · synthetic quota data")
-                .font(.headline)
-            Text("Remaining quota · session / weekly")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            MenuBarLayoutPreviewText(rendered: rendered)
-                .frame(height: 30)
-        }
-        .padding(16)
-        .frame(width: Self.width)
-        .environment(\.locale, Locale(identifier: "en_US_POSIX"))
-        .environment(\.colorScheme, .dark)
-        .background(Color(nsColor: .windowBackgroundColor)))
-
-        let directory = URL(fileURLWithPath: dir, isDirectory: true)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let png = try XCTUnwrap(Self.pngData(for: view), "Antigravity layout proof render failed")
-        let url = directory.appendingPathComponent("antigravity-semantic-layout.png")
-        try png.write(to: url, options: .atomic)
-        print("Rendered: \(rendered.attributedTitle.string); accessibility: \(rendered.accessibilityLabel)")
-        print("Wrote \(url.path)")
-    }
-
     func test_renderMultiAccountLayoutScreenshots() throws {
         guard let dir = ProcessInfo.processInfo.environment["CODEXBAR_SCREENSHOT_DIR"] else {
             throw XCTSkip("Set CODEXBAR_SCREENSHOT_DIR to render menu layout screenshots.")
@@ -485,88 +305,6 @@ final class MenuLayoutScreenshotRenderTests: XCTestCase {
         }
     }
 
-    func test_renderDeepSeekMenuBarLayoutProof() throws {
-        guard let dir = ProcessInfo.processInfo.environment["CODEXBAR_DEEPSEEK_LAYOUT_SCREENSHOT_DIR"] else {
-            throw XCTSkip("Set CODEXBAR_DEEPSEEK_LAYOUT_SCREENSHOT_DIR to render the DeepSeek layout proof.")
-        }
-        let directory = URL(fileURLWithPath: dir, isDirectory: true)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-
-        let settings = testSettingsStore(suiteName: "MenuLayoutScreenshotRenderTests-deepseek")
-        settings.statusChecksEnabled = false
-        settings.refreshFrequency = .manual
-        settings.mergeIcons = true
-        settings.selectedMenuProvider = UsageProvider.deepseek.instanceID
-        if let metadata = ProviderRegistry.shared.metadata[.deepseek] {
-            settings.setProviderEnabled(provider: .deepseek, metadata: metadata, enabled: true)
-        }
-        let layout = MenuBarLayout(lines: [[.resetCountdown, .separatorDot, .resetAbsolute]])
-        settings.setMenuBarLayout(layout, for: nil)
-        let fetcher = UsageFetcher()
-        let store = UsageStore(
-            fetcher: fetcher,
-            browserDetection: BrowserDetection(cacheTTL: 0),
-            settings: settings)
-        let controller = StatusItemController(
-            store: store,
-            settings: settings,
-            account: AccountInfo(email: nil, plan: nil),
-            updater: DisabledUpdaterController(),
-            preferencesSelection: PreferencesSelection(),
-            statusBar: testStatusBar())
-        defer { controller.releaseStatusItemsForTesting() }
-        let snapshot = UsageSnapshot(
-            primary: RateWindow(
-                usedPercent: 0,
-                windowMinutes: nil,
-                resetsAt: nil,
-                resetDescription: "¥2.23 (Paid: ¥2.23 / Granted: ¥0.00)"),
-            secondary: nil,
-            updatedAt: Self.now)
-        store._setSnapshotForTesting(snapshot, provider: .deepseek)
-        store._setErrorForTesting(nil, provider: .deepseek)
-
-        let statusData = controller.menuBarLayoutRenderData(
-            provider: .deepseek,
-            snapshot: snapshot,
-            warningFlash: false,
-            now: Self.now)
-        let statusRendered = MenuBarLayoutRenderer().render(
-            layout: layout,
-            data: statusData,
-            icon: nil,
-            options: MenuBarLayoutRenderOptions(
-                size: .regular,
-                highContrast: false,
-                showUsed: true,
-                conditionals: [],
-                appearanceName: "proof",
-                isDebugApp: false,
-                now: Self.now))
-        let view = AnyView(VStack(alignment: .leading, spacing: 14) {
-            Text("Synthetic DeepSeek custom layout")
-                .font(.headline)
-            Self.proofRow(title: "Live editor preview") {
-                MenuBarLayoutPreview(
-                    layout: layout,
-                    provider: .deepseek,
-                    settings: settings,
-                    store: store)
-            }
-            Self.proofRow(title: "Saved menu-bar render") {
-                MenuBarLayoutPreviewText(rendered: statusRendered)
-            }
-        }
-        .padding(18)
-        .frame(width: 390)
-        .background(Color(nsColor: .windowBackgroundColor)))
-
-        let data = try XCTUnwrap(Self.pngData(for: view), "DeepSeek layout proof render failed")
-        let url = directory.appendingPathComponent("deepseek-custom-layout-preview-status-proof.png")
-        try data.write(to: url, options: .atomic)
-        print("Wrote \(url.path)")
-    }
-
     func test_renderEarlyWeeklyPaceTokenProof() throws {
         guard let dir = ProcessInfo.processInfo.environment["CODEXBAR_PACE_SCREENSHOT_DIR"] else {
             throw XCTSkip("Set CODEXBAR_PACE_SCREENSHOT_DIR to render the early-window pace token proof.")
@@ -578,9 +316,9 @@ final class MenuLayoutScreenshotRenderTests: XCTestCase {
         settings.statusChecksEnabled = false
         settings.refreshFrequency = .manual
         settings.mergeIcons = true
-        settings.selectedMenuProvider = UsageProvider.zai.instanceID
-        if let metadata = ProviderRegistry.shared.metadata[.zai] {
-            settings.setProviderEnabled(provider: .zai, metadata: metadata, enabled: true)
+        settings.selectedMenuProvider = UsageProvider.claude.instanceID
+        if let metadata = ProviderRegistry.shared.metadata[.claude] {
+            settings.setProviderEnabled(provider: .claude, metadata: metadata, enabled: true)
         }
         let fetcher = UsageFetcher()
         let store = UsageStore(
@@ -611,8 +349,8 @@ final class MenuLayoutScreenshotRenderTests: XCTestCase {
                 resetsAt: now.addingTimeInterval(7 * 24 * 60 * 60 - 4 * 60 * 60),
                 resetDescription: nil),
             updatedAt: now)
-        store._setSnapshotForTesting(snapshot, provider: .zai)
-        store._setErrorForTesting(nil, provider: .zai)
+        store._setSnapshotForTesting(snapshot, provider: .claude)
+        store._setErrorForTesting(nil, provider: .claude)
 
         func renderedRow(window: PercentWindow) -> MenuBarLayoutRenderedTitle {
             let layout = MenuBarLayout(lines: [[
@@ -621,7 +359,7 @@ final class MenuLayoutScreenshotRenderTests: XCTestCase {
                 .pace(window: window),
             ]])
             let data = controller.menuBarLayoutRenderData(
-                provider: .zai,
+                provider: .claude,
                 snapshot: snapshot,
                 warningFlash: false,
                 now: now)
@@ -737,7 +475,6 @@ final class MenuLayoutScreenshotRenderTests: XCTestCase {
             planText: nil,
             metrics: [],
             usageNotes: [],
-            openAIAPIUsage: nil,
             inlineUsageDashboard: nil,
             creditsText: nil,
             creditsRemaining: nil,
@@ -892,88 +629,6 @@ extension MenuLayoutScreenshotRenderTests {
                     atomically: true,
                     encoding: .utf8)
             }
-        }
-    }
-
-    func test_renderOllamaMonthlyCompatibilityProof() throws {
-        guard let dir = ProcessInfo.processInfo.environment["CODEXBAR_OLLAMA_MONTHLY_SCREENSHOT_DIR"] else {
-            throw XCTSkip("Set CODEXBAR_OLLAMA_MONTHLY_SCREENSHOT_DIR to render the Ollama compatibility proof.")
-        }
-        UsageFormatter.setLocalizationProvider { $0 }
-        defer { UsageFormatter.clearLocalizationProvider() }
-        let now = Date(timeIntervalSince1970: 1_789_473_600)
-        let html = """
-        <h2><span>Included usage</span><span>pro</span
-        ></h2>
-        <div>
-          <span>Monthly usage</span><span>$7.50 of $60 used</span>
-          <div style="width: 12.5%;"></div>
-          <div data-time="2026-09-30T15:14:29Z">Resets in 2 weeks.</div>
-        </div>
-        """
-        var snapshot: UsageSnapshot?
-        var failure: String?
-        do {
-            snapshot = try OllamaUsageParser.parse(html: html, now: now).toUsageSnapshot()
-        } catch {
-            failure = OllamaUIErrorMapper.userFacingMessage(error.localizedDescription)
-        }
-        let model = try UsageMenuCardView.Model.make(.init(
-            provider: .ollama,
-            metadata: XCTUnwrap(ProviderDefaults.metadata[.ollama]),
-            snapshot: snapshot,
-            credits: nil,
-            creditsError: nil,
-            dashboard: nil,
-            dashboardError: nil,
-            tokenSnapshot: nil,
-            tokenError: nil,
-            account: AccountInfo(email: nil, plan: nil),
-            isRefreshing: false,
-            lastError: failure,
-            usageBarsShowUsed: true,
-            resetTimeDisplayStyle: .absolute,
-            tokenCostUsageEnabled: false,
-            showOptionalCreditsAndExtraUsage: false,
-            hidePersonalInfo: true,
-            paceVisible: false,
-            usesLiveSubtitle: false,
-            now: now))
-        // Only the assertions change for a baseline capture; input and production rendering stay identical.
-        let expectsMissing = ProcessInfo.processInfo.environment["CODEXBAR_OLLAMA_MONTHLY_EXPECT_MISSING"] == "1"
-        if expectsMissing {
-            XCTAssertNil(snapshot)
-            XCTAssertTrue(failure?.contains("Missing Ollama usage data") == true)
-            XCTAssertTrue(model.metrics.isEmpty)
-        } else {
-            XCTAssertNil(failure)
-            XCTAssertEqual(snapshot?.primary?.usedPercent, 12.5)
-            XCTAssertEqual(model.metrics.map(\.title), ["Monthly"])
-            XCTAssertEqual(model.metrics.first?.percent, 12.5)
-        }
-        let directory = URL(fileURLWithPath: dir, isDirectory: true)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        for dark in [false, true] {
-            let view = try AnyView(UsageMenuCardView(model: model, width: Self.width)
-                .environment(\.locale, Locale(identifier: "en_US_POSIX"))
-                .environment(\.timeZone, XCTUnwrap(TimeZone(secondsFromGMT: 0)))
-                .environment(\.colorScheme, dark ? .dark : .light)
-                .environment(\.displayScale, 2)
-                .environment(\.accessibilityEnabled, true)
-                .background(Color(nsColor: .windowBackgroundColor)))
-            let hosting = NSHostingView(rootView: view)
-            hosting.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
-            let stem = "ollama-monthly-\(dark ? "dark" : "light")"
-            let png = try XCTUnwrap(Self.pngData(hosting: hosting))
-            try png.write(to: directory.appendingPathComponent("\(stem).png"))
-            let accessibility = Self.accessibilityText(hosting)
-            XCTAssertTrue(
-                accessibility.contains(expectsMissing ? "Missing Ollama usage data" : "Monthly"),
-                accessibility)
-            try accessibility.write(
-                to: directory.appendingPathComponent("\(stem)-accessibility.txt"),
-                atomically: true,
-                encoding: .utf8)
         }
     }
 }

@@ -37,7 +37,6 @@ enum MenuBarConditionalMetric: String, CaseIterable, Codable, Hashable, Sendable
     case weeklyPace
     case automaticPace
     case runsOutIn
-    case balance
     case costToday
     case cost30d
 
@@ -50,18 +49,18 @@ enum MenuBarConditionalMetric: String, CaseIterable, Codable, Hashable, Sendable
             .signedPercent
         case .sessionResetsIn, .weeklyResetsIn, .scopedWeeklyResetsIn, .automaticResetsIn, .runsOutIn:
             .hours
-        case .balance, .costToday, .cost30d:
+        case .costToday, .cost30d:
             .currencyUSD
         }
     }
 
     /// Whether a used/remaining select applies. Percent windows and lanes expose both readings of the
-    /// same window; balance exposes spend against remaining credit. Pace is already signed, and a reset
+    /// same window. Pace is already signed, and a reset
     /// countdown or a cost total has no complement.
     var supportsDirection: Bool {
         switch self {
         case .session, .weekly, .scopedWeekly, .automatic,
-             .primaryLane, .secondaryLane, .tertiaryLane, .balance:
+             .primaryLane, .secondaryLane, .tertiaryLane:
             true
         default:
             false
@@ -454,7 +453,6 @@ enum MenuBarLayoutToken: Codable, Hashable, Sendable {
     case resetAbsolute
     case runsOut
     case runsOutCompact
-    case balance
     case costToday
     case cost30d
     case separatorDot
@@ -482,8 +480,7 @@ enum MenuBarLayoutToken: Codable, Hashable, Sendable {
     }
 
     /// Maps `lanePercent` onto tokens a 0.53.x decoder already understands so a downgrade keeps a
-    /// layout instead of dropping the whole blob. Direct lanes follow the provider's semantic
-    /// windows: Kimi's primary is weekly, so a Kimi override does not swap 7-day and 5-hour.
+    /// layout instead of dropping the whole blob. Direct lanes follow the provider's semantic windows.
     func legacyCompatible(for provider: UsageProvider? = nil) -> MenuBarLayoutToken {
         switch self {
         case let .lanePercent(lane):
@@ -520,39 +517,6 @@ enum MenuBarLayoutSemanticWindowResolver {
         return (snapshot.extraRateWindows ?? [])
             .filter { $0.id.hasPrefix("claude-weekly-scoped-") && !$0.window.isSyntheticPlaceholder }
             .max { $0.window.usedPercent < $1.window.usedPercent }
-    }
-}
-
-enum MenuBarLayoutBalanceResolver {
-    static func balance(
-        provider: UsageProvider,
-        snapshot: UsageSnapshot?)
-        -> String?
-    {
-        // Provider-specific by design: only OpenRouter exposes its credit balance as the "Remaining" detail row.
-        guard provider == .openrouter else { return nil }
-        return snapshot?.detailRow(label: "Remaining")?.value
-    }
-
-    /// Numeric USD amounts behind OpenRouter's "Credits" detail rows. The plugin formats both rows as
-    /// `$` + `toFixed(2)` (`Sources/CodexBarCore/Resources/Plugins/openrouter.js`), so the amounts are
-    /// USD with no grouping separators; the plugin never populates `providerCost`, so there is nothing
-    /// structured to read instead.
-    static func balanceAmountsUSD(
-        provider: UsageProvider,
-        snapshot: UsageSnapshot?)
-        -> (remaining: Double?, used: Double?)
-    {
-        // Provider-specific by design: only OpenRouter reports credit amounts in its "Credits" detail rows.
-        guard provider == .openrouter else { return (nil, nil) }
-        return (
-            self.amount(snapshot?.detailRow(label: "Remaining")?.value),
-            self.amount(snapshot?.detailRow(label: "Used")?.value))
-    }
-
-    private static func amount(_ text: String?) -> Double? {
-        guard let text else { return nil }
-        return Double(text.filter { $0.isNumber || $0 == "." || $0 == "-" })
     }
 }
 
@@ -742,10 +706,7 @@ extension MenuBarLayout {
     {
         _ = iconStyle // Critters and bars keep rendering through their unchanged legacy path.
         let icon: MenuBarLayoutToken = .icon
-        // Provider-specific by design: OpenRouter Automatic historically renders remaining credit balance.
-        if provider == .openrouter, metricPreference == .automatic {
-            return MenuBarLayout(lines: [[icon, .balance]])
-        }
+
         switch displayMode {
         case .percent:
             if metricPreference == .primaryAndSecondary {
@@ -789,7 +750,7 @@ extension MenuBarLayout {
         case .secondary:
             self.percentWindow(
                 ProviderDescriptorRegistry.descriptor(for: provider ?? .codex).presentation.secondarySemanticWindow)
-        case .automatic, .primaryAndSecondary, .tertiary, .extraUsage, .average, .monthlyPlan:
+        case .automatic, .primaryAndSecondary, .extraUsage:
             .automatic
         }
     }

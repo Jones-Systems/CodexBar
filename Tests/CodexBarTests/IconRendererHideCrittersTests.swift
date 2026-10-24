@@ -23,10 +23,6 @@ struct IconRendererHideCrittersTests {
     @Test(arguments: [
         IconStyle.codex,
         .claude,
-        .gemini,
-        .antigravity,
-        .factory,
-        .warp,
     ])
     func `hiding critters removes every decorated style twist`(style: IconStyle) throws {
         let decorated = self.icon(style: style, hideCritters: false)
@@ -38,24 +34,12 @@ struct IconRendererHideCrittersTests {
     @Test(arguments: [
         IconStyle.codex,
         .claude,
-        .gemini,
-        .antigravity,
-        .factory,
-        .warp,
     ])
     func `hidden decorated styles match plain capsule bars`(style: IconStyle) throws {
         let hidden = self.icon(style: style, hideCritters: true)
-        let reference = self.icon(style: .cursor, hideCritters: true)
+        let reference = self.icon(style: .combined, hideCritters: true)
 
         #expect(try self.pixels(hidden) == self.pixels(reference))
-    }
-
-    @Test
-    func `hiding critters removes warp eyes without weekly quota`() throws {
-        let decorated = self.icon(style: .warp, weeklyRemaining: nil, hideCritters: false)
-        let plain = self.icon(style: .warp, weeklyRemaining: nil, hideCritters: true)
-
-        #expect(try self.pixels(decorated) != self.pixels(plain))
     }
 
     @Test
@@ -114,7 +98,6 @@ struct IconRendererHideCrittersTests {
 
         let compact = IconRenderer.QuotaLayoutPolicy.provider(.codex)
         let reserved = IconRenderer.QuotaLayoutPolicy.provider(.claude)
-        let warp = IconRenderer.QuotaLayoutPolicy.provider(.warp)
 
         #expect(try self.pixels(image(primary: 46, weekly: 46, policy: compact))
             == self.pixels(image(primary: 46, weekly: 46, policy: reserved)))
@@ -122,8 +105,6 @@ struct IconRendererHideCrittersTests {
             == self.pixels(image(primary: 46, weekly: 0, policy: reserved)))
         #expect(try self.pixels(image(primary: nil, weekly: nil, credits: 460, policy: compact))
             == self.pixels(image(primary: nil, weekly: nil, credits: 460, policy: reserved)))
-        #expect(try self.pixels(image(primary: 46, weekly: nil, policy: warp))
-            == self.pixels(image(primary: 46, weekly: 0, policy: warp)))
 
         let unknown = image(primary: nil, weekly: nil, policy: compact)
         #expect(try self.pixels(unknown).isEmpty == false)
@@ -131,9 +112,9 @@ struct IconRendererHideCrittersTests {
 
     @Test
     func `hiding critters is a no-op for an undecorated style`() throws {
-        // Cursor has no critter twist, so the flag must not alter its bars.
-        let withFlag = self.icon(style: .cursor, hideCritters: true)
-        let withoutFlag = self.icon(style: .cursor, hideCritters: false)
+        // The combined style has no critter, so the flag must not alter its bars.
+        let withFlag = self.icon(style: .combined, hideCritters: true)
+        let withoutFlag = self.icon(style: .combined, hideCritters: false)
 
         #expect(try self.pixels(withFlag) == self.pixels(withoutFlag))
     }

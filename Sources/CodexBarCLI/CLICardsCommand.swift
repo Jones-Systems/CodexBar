@@ -55,12 +55,6 @@ struct CardsOptions: CommanderParsable {
     @Flag(name: .long("web-debug-dump-html"), help: "Dump HTML snapshots to /tmp when Codex dashboard data is missing")
     var webDebugDumpHtml: Bool = false
 
-    @Flag(name: .long("antigravity-plan-debug"), help: "Emit Antigravity planInfo fields (debug)")
-    var antigravityPlanDebug: Bool = false
-
-    @Flag(name: .long("augment-debug"), help: "Emit Augment API responses (debug)")
-    var augmentDebug: Bool = false
-
     @Flag(name: .long("brief"), help: "Compact table layout instead of the card grid")
     var brief: Bool = false
 }
@@ -82,8 +76,6 @@ extension CodexBarCLI {
                 output: output,
                 kind: .args)
         }
-        let antigravityPlanDebug = values.flags.contains("antigravityPlanDebug")
-        let augmentDebug = values.flags.contains("augmentDebug")
         let webDebugDumpHTML = values.flags.contains("webDebugDumpHtml")
         let webTimeout: TimeInterval
         do {
@@ -158,8 +150,6 @@ extension CodexBarCLI {
             format: .text,
             includeCredits: includeCredits,
             sourceModeOverride: parsedSourceMode,
-            antigravityPlanDebug: antigravityPlanDebug,
-            augmentDebug: augmentDebug,
             webDebugDumpHTML: webDebugDumpHTML,
             webTimeout: webTimeout,
             verbose: verbose,

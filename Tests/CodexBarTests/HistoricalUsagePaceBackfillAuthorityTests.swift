@@ -293,19 +293,8 @@ extension HistoricalUsagePaceTests {
         let settings = SettingsStore(
             userDefaults: defaults,
             configStore: testConfigStore(suiteName: suite),
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore(),
             codexCookieStore: InMemoryCookieHeaderStore(),
             claudeCookieStore: InMemoryCookieHeaderStore(),
-            cursorCookieStore: InMemoryCookieHeaderStore(),
-            opencodeCookieStore: InMemoryCookieHeaderStore(),
-            factoryCookieStore: InMemoryCookieHeaderStore(),
-            minimaxCookieStore: InMemoryMiniMaxCookieStore(),
-            minimaxAPITokenStore: InMemoryMiniMaxAPITokenStore(),
-            kimiTokenStore: InMemoryKimiTokenStore(),
-            augmentCookieStore: InMemoryCookieHeaderStore(),
-            ampCookieStore: InMemoryCookieHeaderStore(),
-            copilotTokenStore: InMemoryCopilotTokenStore(),
             tokenAccountStore: InMemoryTokenAccountStore())
         settings.historicalTrackingEnabled = true
         settings.weeklyProgressWorkDays = nil
@@ -475,7 +464,7 @@ extension HistoricalUsagePaceTests {
             resetsAt: now.addingTimeInterval(4 * 24 * 60 * 60),
             resetDescription: nil)
 
-        let pace = store.weeklyPace(provider: .zai, window: window, dataConfidence: .unknown, now: now)
+        let pace = store.weeklyPace(provider: .claude, window: window, dataConfidence: .unknown, now: now)
 
         #expect(pace != nil)
         #expect(abs((pace?.deltaPercent ?? 0) - (40 - (3.0 / 7.0 * 100.0))) < 0.001)
@@ -509,12 +498,12 @@ extension HistoricalUsagePaceTests {
             resetDescription: nil)
 
         #expect(store
-            .menuBarLayoutPaceText(provider: .zai, window: deficit, dataConfidence: .unknown, now: now) == "+17%")
+            .menuBarLayoutPaceText(provider: .claude, window: deficit, dataConfidence: .unknown, now: now) == "+17%")
         #expect(store
-            .menuBarLayoutPaceText(provider: .zai, window: reserve, dataConfidence: .unknown, now: now) == "-13%")
+            .menuBarLayoutPaceText(provider: .claude, window: reserve, dataConfidence: .unknown, now: now) == "-13%")
         #expect(store
-            .menuBarLayoutPaceText(provider: .zai, window: tooEarly, dataConfidence: .unknown, now: now) == nil)
-        #expect(store.menuBarLayoutPaceText(provider: .zai, window: nil, dataConfidence: .unknown, now: now) == nil)
+            .menuBarLayoutPaceText(provider: .claude, window: tooEarly, dataConfidence: .unknown, now: now) == nil)
+        #expect(store.menuBarLayoutPaceText(provider: .claude, window: nil, dataConfidence: .unknown, now: now) == nil)
     }
 
     @MainActor
@@ -535,14 +524,14 @@ extension HistoricalUsagePaceTests {
             resetDescription: nil)
 
         #expect(store.menuBarLayoutPaceText(
-            provider: .zai,
+            provider: .claude,
             window: barelyIntoWindow,
             dataConfidence: .unknown,
             now: now) == nil)
-        #expect(store.weeklyPace(provider: .zai, window: barelyIntoWindow, dataConfidence: .unknown, now: now) == nil)
+        #expect(store.weeklyPace(provider: .claude, window: barelyIntoWindow, dataConfidence: .unknown, now: now) == nil)
         #expect(
             store.menuBarLayoutPaceText(
-                provider: .zai,
+                provider: .claude,
                 window: barelyIntoWindow,
                 dataConfidence: .unknown,
                 now: now,
@@ -550,7 +539,7 @@ extension HistoricalUsagePaceTests {
                 == "+3%")
         let pace = try #require(
             store.weeklyPace(
-                provider: .zai,
+                provider: .claude,
                 window: barelyIntoWindow,
                 dataConfidence: .unknown,
                 now: now,
@@ -606,44 +595,7 @@ extension HistoricalUsagePaceTests {
     }
 
     @MainActor
-    @Test
-    func `weekly menu token uses the resolved calendar month for elapsed progress`() throws {
-        let store = try Self.makeUsageStoreForBackfillTests(
-            suite: "HistoricalUsagePaceTests-calendar-month-elapsed-\(UUID().uuidString)",
-            historyFileURL: Self.makeTempURL())
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
-        let now = try #require(calendar.date(from: DateComponents(
-            calendar: calendar,
-            timeZone: calendar.timeZone,
-            year: 2026,
-            month: 2,
-            day: 1,
-            hour: 7)))
-        let resetsAt = try #require(calendar.date(from: DateComponents(
-            calendar: calendar,
-            timeZone: calendar.timeZone,
-            year: 2026,
-            month: 3,
-            day: 1)))
-        let window = RateWindow(
-            usedPercent: 5,
-            windowMinutes: 30 * 24 * 60,
-            resetsAt: resetsAt,
-            resetDescription: nil)
-
-        let pace = try #require(
-            store.weeklyPace(
-                provider: .amp,
-                window: window,
-                dataConfidence: .unknown,
-                now: now,
-                minimumElapsedPercent: 1))
-        #expect(pace.expectedUsedPercent > 1)
-    }
-
-    @MainActor
-    @Test
+@Test
     func `menu bar layout pace opens weekly early but floors session and automatic at three percent`() throws {
         let (store, controller) = try Self.makeStoreAndControllerForMenuBarPaceTests(
             suite: "HistoricalUsagePaceTests-menu-bar-early-window-floors-\(UUID().uuidString)")
@@ -664,11 +616,11 @@ extension HistoricalUsagePaceTests {
                 resetDescription: nil),
             updatedAt: now)
 
-        store._setSnapshotForTesting(snapshot, provider: .zai)
-        store._setErrorForTesting(nil, provider: .zai)
+        store._setSnapshotForTesting(snapshot, provider: .claude)
+        store._setErrorForTesting(nil, provider: .claude)
 
         let data = controller.menuBarLayoutRenderData(
-            provider: .zai,
+            provider: .claude,
             snapshot: snapshot,
             warningFlash: false,
             now: now)
@@ -708,7 +660,7 @@ extension HistoricalUsagePaceTests {
             resetsAt: resetsAt,
             resetDescription: nil)
 
-        let pace = try #require(store.weeklyPace(provider: .zai, window: window, dataConfidence: .unknown, now: now))
+        let pace = try #require(store.weeklyPace(provider: .claude, window: window, dataConfidence: .unknown, now: now))
 
         #expect(abs(pace.expectedUsedPercent - 60) < 0.001)
         #expect(abs(pace.deltaPercent) < 0.001)
@@ -729,7 +681,7 @@ extension HistoricalUsagePaceTests {
             resetsAt: now.addingTimeInterval(4 * 24 * 60 * 60),
             resetDescription: nil)
 
-        let pace = store.weeklyPace(provider: .factory, window: window, dataConfidence: .unknown, now: now)
+        let pace = store.weeklyPace(provider: .claude, window: window, dataConfidence: .unknown, now: now)
 
         #expect(pace == nil)
     }

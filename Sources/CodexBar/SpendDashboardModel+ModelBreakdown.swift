@@ -212,13 +212,13 @@ extension SpendDashboardModel {
         }
     }
 
-    /// Provider-specific by design: Cursor usage events can omit totalCents without voiding priced rows.
+    /// Missing prices keep Codex ledger rows visible while marking cost totals incomplete.
     static func hasExplicitlyUnpriceableLedgerCost(
         _ provider: UsageProvider,
         _ entry: CostUsageDailyReport.Entry) -> Bool
     {
         switch provider {
-        case .codex, .cursor:
+        case .codex:
             self.hasExplicitlyUnpriceableCodexCost(entry)
         default:
             false

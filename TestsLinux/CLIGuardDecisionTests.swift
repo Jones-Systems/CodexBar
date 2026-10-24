@@ -4,6 +4,13 @@ import Testing
 @testable import CodexBarCLI
 
 struct CLIGuardDecisionTests {
+
+    @Test
+    func `synthetic placeholder window is treated as unknown`() {
+        let remaining = CodexBarCLI.guardRemainingHeadroom(for: self.window(usedPercent: 0, synthetic: true))
+        #expect(remaining == nil)
+    }
+
     @Test
     func `ample headroom is ok and exits zero`() {
         let result = CodexBarCLI.evaluateGuard(
@@ -111,12 +118,6 @@ struct CLIGuardDecisionTests {
     func `real window reports remaining headroom`() {
         let remaining = CodexBarCLI.guardRemainingHeadroom(for: self.window(usedPercent: 30, synthetic: false))
         #expect(remaining == 70)
-    }
-
-    @Test
-    func `synthetic placeholder window is treated as unknown`() {
-        let remaining = CodexBarCLI.guardRemainingHeadroom(for: self.window(usedPercent: 0, synthetic: true))
-        #expect(remaining == nil)
     }
 
     @Test

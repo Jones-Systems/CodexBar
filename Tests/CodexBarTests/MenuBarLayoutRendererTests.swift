@@ -30,7 +30,6 @@ struct MenuBarLayoutRendererTests {
             (.resetCountdown, "in 2h"),
             (.runsOut, "Runs out in 1d 16h"),
             (.runsOutCompact, "1d 16h"),
-            (.balance, "$12.34"),
             (.costToday, "$1.25"),
             (.cost30d, "$20.00"),
             (.separatorDot, "·"),
@@ -60,70 +59,6 @@ struct MenuBarLayoutRendererTests {
             icon: icon,
             options: self.options())
         #expect(absoluteOutput.attributedTitle.string != "–")
-    }
-
-    @Test
-    func `Notion secondary percentage renders and announces monthly cadence`() {
-        let renderer = MenuBarLayoutRenderer()
-        let output = renderer.render(
-            layout: MenuBarLayout(lines: [[.percent(window: .weekly)]]),
-            data: self.data(provider: .notion),
-            icon: nil,
-            options: self.options())
-
-        #expect(output.attributedTitle.string == "M 60%")
-        #expect(output.accessibilityLabel == L("%@ %@", L("Monthly"), "60%"))
-    }
-
-    @Test
-    func `Cursor lane percentages render independently`() {
-        let renderer = MenuBarLayoutRenderer()
-        let output = renderer.render(
-            layout: MenuBarLayout(lines: [[
-                .lanePercent(lane: .primary),
-                .lanePercent(lane: .secondary),
-                .lanePercent(lane: .tertiary),
-            ]]),
-            data: self.data(provider: .cursor),
-            icon: nil,
-            options: self.options())
-
-        #expect(output.attributedTitle.string == "10%\u{2009}9%\u{2009}17%")
-        #expect(output.accessibilityLabel == "Total 10%, Cursor 9%, Third Party 17%")
-    }
-
-    @Test
-    func `Amp lane percentages announce snapshot presentation labels`() {
-        let renderer = MenuBarLayoutRenderer()
-        let snapshot = UsageSnapshot(
-            primary: RateWindow(usedPercent: 10, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-            secondary: RateWindow(usedPercent: 9, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-            updatedAt: Date())
-        let output = renderer.render(
-            layout: MenuBarLayout(lines: [[
-                .lanePercent(lane: .primary),
-                .lanePercent(lane: .secondary),
-            ]]),
-            data: self.data(
-                provider: .amp,
-                laneLabels: MenuBarLayoutLaneLabels(provider: .amp, snapshot: snapshot)),
-            icon: nil,
-            options: self.options())
-
-        #expect(output.accessibilityLabel == "Other usage 10%, Orb usage 9%")
-    }
-
-    @Test
-    func `Notion secondary pace announces monthly cadence`() {
-        let renderer = MenuBarLayoutRenderer()
-        let output = renderer.render(
-            layout: MenuBarLayout(lines: [[.pace(window: .weekly)]]),
-            data: self.data(provider: .notion),
-            icon: nil,
-            options: self.options())
-
-        #expect(output.attributedTitle.string == "+11%")
-        #expect(output.accessibilityLabel == L("%@ %@ %@", L("Monthly"), L("display_mode_pace").lowercased(), "+11%"))
     }
 
     @Test
@@ -226,7 +161,6 @@ struct MenuBarLayoutRendererTests {
             weeklyPace: nil,
             automaticPace: nil,
             runsOut: nil,
-            balance: nil,
             costToday: nil,
             cost30d: nil,
             metrics: .unavailable)
@@ -249,7 +183,6 @@ struct MenuBarLayoutRendererTests {
             .resetAbsolute,
             .runsOut,
             .runsOutCompact,
-            .balance,
             .costToday,
             .cost30d,
         ]])
@@ -318,7 +251,6 @@ struct MenuBarLayoutRendererTests {
             weeklyPace: nil,
             automaticPace: nil,
             runsOut: nil,
-            balance: nil,
             costToday: nil,
             cost30d: nil,
             metrics: .unavailable)
@@ -628,7 +560,6 @@ struct MenuBarLayoutRendererTests {
             weeklyPace: nil,
             automaticPace: nil,
             runsOut: nil,
-            balance: nil,
             costToday: nil,
             cost30d: nil,
             metrics: .unavailable)
@@ -858,7 +789,6 @@ struct MenuBarLayoutRendererTests {
             weeklyPace: nil,
             automaticPace: nil,
             runsOut: nil,
-            balance: nil,
             costToday: nil,
             cost30d: nil,
             metrics: .unavailable)
@@ -1226,20 +1156,6 @@ struct MenuBarLayoutRendererTests {
     }
 
     @Test
-    func `balance direction selects used or remaining amount`() {
-        #expect(self.branchText(self.clause(
-            metric: .balance,
-            comparison: .greaterThan,
-            threshold: 10,
-            direction: .remaining)) == "5h 25%")
-        #expect(self.branchText(self.clause(
-            metric: .balance,
-            comparison: .greaterThan,
-            threshold: 10,
-            direction: .used)) == "in 2h")
-    }
-
-    @Test
     func `pace run-out and cost predicates read numeric metrics`() {
         #expect(self.branchText(self.clause(
             metric: .weeklyPace,
@@ -1426,7 +1342,6 @@ struct MenuBarLayoutRendererTests {
             weeklyPace: "+11%",
             automaticPace: "0%",
             runsOut: "Runs out in 1d 16h",
-            balance: "$12.34",
             costToday: "$1.25",
             cost30d: "$20.00",
             // Numeric twins of the strings above, so conditional predicates and rendered text agree.
@@ -1435,8 +1350,6 @@ struct MenuBarLayoutRendererTests {
                 weeklyPaceDelta: 11,
                 automaticPaceDelta: 0,
                 runsOutMinutes: 2400,
-                balanceRemainingUSD: 12.34,
-                balanceUsedUSD: 7.66,
                 costTodayUSD: 1.25,
                 cost30dUSD: 20))
     }

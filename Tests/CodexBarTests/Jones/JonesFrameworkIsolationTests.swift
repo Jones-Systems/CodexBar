@@ -5,6 +5,17 @@ import Testing
 
 /// Identifier-only fixtures: no WebKit store, file, network, or packaged-identity lookup.
 struct JonesFrameworkIsolationTests {
+
+    @Test
+    func `fork cache keys remain bounded with long synthetic inputs`() throws {
+        let key = try #require(JonesFrameworkIsolation.openAIDashboardStorageKey(
+            forAccountEmail: String(repeating: "x", count: 16384) + "@example.com",
+            scope: .profileHome("/fixture/" + String(repeating: "y", count: 16384)),
+            identity: Self.fixtureIdentity()))
+        #expect(key.utf8.count == 90)
+        #expect(JonesFrameworkIsolation.websiteDataStoreIdentifier(forStorageKey: key).uuidString.count == 36)
+    }
+
     @Test
     func `stock email keeps its exact cache key and UUID`() throws {
         let key = try #require(JonesFrameworkIsolation.openAIDashboardStorageKey(
@@ -150,16 +161,6 @@ struct JonesFrameworkIsolationTests {
             scope: nil,
             identity: Self.fixtureIdentity(bundleID: "fixture", groupID: "a:b")))
         #expect(first != second)
-    }
-
-    @Test
-    func `fork cache keys remain bounded with long synthetic inputs`() throws {
-        let key = try #require(JonesFrameworkIsolation.openAIDashboardStorageKey(
-            forAccountEmail: String(repeating: "x", count: 16384) + "@example.com",
-            scope: .profileHome("/fixture/" + String(repeating: "y", count: 16384)),
-            identity: Self.fixtureIdentity()))
-        #expect(key.utf8.count == 90)
-        #expect(JonesFrameworkIsolation.websiteDataStoreIdentifier(forStorageKey: key).uuidString.count == 36)
     }
 
     private static func fixtureIdentity(

@@ -751,24 +751,9 @@ extension StatusItemController {
             return false
         }
 
-        // Provider-specific by design: Kilo organization scopes render as stacked account-like cards.
-        if context.currentProvider == .kilo, self.store.kiloScopeSnapshots.count > 1 {
-            let cards = self.store.kiloScopeSnapshots.compactMap { scope in
-                self.menuCardModel(
-                    for: .kilo,
-                    snapshotOverride: scope.snapshot,
-                    errorOverride: scope.errorMessage,
-                    forceOverrideCard: scope.snapshot == nil)
-            }
-            self.addStackedMenuCards(cards, to: menu, context: context)
-            self.addFleetAccountMenuCards(fleetProjection.additionalAccounts, to: menu, context: context)
-            return false
-        }
-
         guard let model = self.menuCardModel(for: context.selectedProvider) else { return false }
         let renderedModel = self.menuCardRefreshMonitor.model(for: model.provider, fallback: model)
-        if context.openAIContext.hasOpenAIWebMenuItems ||
-            self.requiresSectionedMenuForProviderDerivedCost(provider: context.currentProvider)
+        if context.openAIContext.hasOpenAIWebMenuItems
         {
             let webItems = OpenAIWebMenuItems(
                 hasUsageBreakdown: context.openAIContext.hasUsageBreakdown,
@@ -855,7 +840,6 @@ extension StatusItemController {
                 addedOpenAIWebItems: addedOpenAIWebItems)
             self.addUsageHistoryClusterIfNeeded(to: menu, context: context)
         }
-        self.addUserPluginMenuCards(to: menu, width: context.menuWidth)
     }
 
     func addActionableSections(
@@ -1386,7 +1370,6 @@ extension StatusItemController {
         }
         if hasExtraUsage {
             addSectionSeparator()
-            let extraUsageSubmenu = self.makeOpenAIAPIUsageSubmenu(provider: provider, width: width)
             let extraUsageView = UsageMenuCardExtraUsageSectionView(
                 model: model,
                 topPadding: sectionSpacing,
@@ -1398,7 +1381,7 @@ extension StatusItemController {
                 width: width,
                 heightCacheScope: provider.rawValue,
                 heightCacheFingerprint: layoutModel.heightFingerprint(section: "extraUsage"),
-                submenu: extraUsageSubmenu))
+                submenu: nil))
         }
         if hasCost {
             addSectionSeparator()
@@ -1433,7 +1416,6 @@ extension StatusItemController {
                 snapshot: $0,
                 style: style,
                 showUsed: showUsed,
-                secondaryOverrideWindowID: self.settings.copilotIconSecondaryWindowOverrideID(snapshot: $0),
                 now: now)
         }
         let primary = resolved?.primary
@@ -1524,16 +1506,10 @@ extension StatusItemController {
         if webItems.hasUsageBreakdown {
             return self.makeUsageBreakdownSubmenu(width: width)
         }
-        // Provider-specific by design: OpenAI and Mistral attach cost history to their provider usage row.
-        if provider == .openai, self.settings.costSummaryShowsSubmenu(for: provider) {
-            return self.makeOpenAIAPIUsageSubmenu(provider: provider, width: width)
-        }
-        // Mistral's top usage pane has no rate-limit bars of its own, so its cost history hangs off this row
-        // when the Cost Summary style permits it. Other inline cost dashboards follow the same submenu policy;
+
+        // Inline cost dashboards expose history when the Cost Summary style permits it;
         // Both still keeps the dedicated Cost row.
-        if provider == .mistral, self.settings.costSummaryShowsSubmenu(for: provider) {
-            return self.makeCostHistorySubmenu(provider: provider, width: width)
-        }
+
         if hasInlineCostDashboard, self.settings.costSummaryShowsSubmenu(for: provider) {
             return self.makeCostHistorySubmenu(provider: provider, width: width)
         }
@@ -1571,35 +1547,7 @@ extension StatusItemController {
     }
 
     func tokenSnapshotForCostHistorySubmenu(provider: UsageProvider) -> CostUsageTokenSnapshot? {
-        let projected = self.store.tokenSnapshot(
-            fromProviderSnapshot: self.store.snapshot(for: provider.instanceID),
-            provider: provider)
-        if UsageStore.tokenCostRequiresProviderSnapshot(provider) {
-            return projected
-        }
-        return projected ?? self.store.tokenSnapshot(for: provider)
-    }
-
-    func makeOpenAIAPIUsageSubmenu(provider: UsageProvider, width: CGFloat? = nil) -> NSMenu? {
-        guard self.hasOpenAIAPIUsageSubmenu(provider: provider) else { return nil }
-        return self.makeCostHistorySubmenu(provider: provider, width: width)
-    }
-
-    private func hasOpenAIAPIUsageSubmenu(provider: UsageProvider) -> Bool {
-        // Provider-specific by design: OpenAI Admin API daily data gates its native usage submenu.
-        provider == .openai && self.tokenSnapshotForCostHistorySubmenu(provider: provider)?.daily.isEmpty == false
-    }
-
-    /// Unlike `makeUsageSubmenu`'s and `tokenCostMenuSectionEnabled`'s provider checks, this one
-    /// intentionally reuses `tokenCostRequiresProviderSnapshot`: any provider whose cost is
-    /// sourced by projecting a snapshot field (rather than the CostUsageFetcher pipeline) can only
-    /// render that cost through `addMenuCardSections`'s sectioned layout, so the two concepts are
-    /// genuinely coupled here, not coincidentally aliased. The name is deliberately broader than
-    /// "top-pane submenu" — opencodego satisfies this via its collapsible "Cost" row, not a
-    /// provider-native top-pane submenu like openai/mistral.
-    private func requiresSectionedMenuForProviderDerivedCost(provider: UsageProvider) -> Bool {
-        UsageStore.tokenCostRequiresProviderSnapshot(provider) &&
-            self.tokenSnapshotForCostHistorySubmenu(provider: provider)?.daily.isEmpty == false
+        self.store.tokenSnapshot(for: provider)
     }
 
     func makeStorageBreakdownSubmenu(provider: UsageProvider, width: CGFloat? = nil) -> NSMenu? {
@@ -1617,7 +1565,7 @@ extension StatusItemController {
     /// keeps the plain "Status Page" link that opens the website. Kept deliberately small: these
     /// are the statuspage.io/incident.io feeds we actively curate and trust to render well.
     /// Provider-specific by design: these four curated status feeds expose component trees rendered by the app.
-    static let statusComponentsSubmenuProviders: Set<UsageProvider> = [.claude, .codex, .augment, .zoommate]
+    static let statusComponentsSubmenuProviders: Set<UsageProvider> = [.claude, .codex]
 
     /// Filters `components` down to a provider's descriptor-owned named allowlist, if configured;
     /// returns `components` unchanged when the provider has no allowlist. Matching is by exact

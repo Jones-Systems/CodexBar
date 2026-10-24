@@ -10,9 +10,7 @@ struct ProviderPresentationPolicyCharacterizationTests {
 
     @Test
     func `automatic exhaustion priority is pinned for every provider`() {
-        let optOut: Set<UsageProvider> = [
-            .antigravity, .perplexity, .zai, .copilot, .cursor, .minimax, .claude, .codex,
-        ]
+        let optOut: Set<UsageProvider> = [.codex, .claude]
 
         for provider in UsageProvider.allCases {
             #expect(
@@ -36,63 +34,26 @@ struct ProviderPresentationPolicyCharacterizationTests {
             resetsAt: nil,
             resetDescription: "tertiary")
 
-        let fixtures: [(UsageProvider, MenuBarMetricPreference, UsageSnapshot, String?)] = [
-            (.zai, .tertiary, self.snapshot(primary: primary, secondary: secondary, tertiary: tertiary), "primary"),
-            (.cursor, .tertiary, self.snapshot(primary: primary, secondary: secondary, tertiary: tertiary), "tertiary"),
-            (
-                .perplexity,
-                .tertiary,
-                self.snapshot(primary: primary, secondary: secondary, tertiary: tertiary),
-                "tertiary"),
-            (
-                .antigravity,
-                .tertiary,
-                self.snapshot(primary: primary, secondary: secondary, tertiary: tertiary),
-                "tertiary"),
-            (.zai, .primary, self.snapshot(primary: nil, secondary: secondary, tertiary: tertiary), "secondary"),
-            (.perplexity, .primary, self.snapshot(primary: nil, secondary: secondary, tertiary: tertiary), "secondary"),
-            (.antigravity, .primary, self.snapshot(primary: nil, secondary: nil, tertiary: tertiary), "tertiary"),
-            (.zai, .secondary, self.snapshot(primary: primary, secondary: nil, tertiary: tertiary), "primary"),
-            (.perplexity, .secondary, self.snapshot(primary: primary, secondary: nil, tertiary: tertiary), "tertiary"),
-            (.antigravity, .secondary, self.snapshot(primary: primary, secondary: nil, tertiary: tertiary), "primary"),
+        let fixtures: [(MenuBarMetricPreference, UsageSnapshot, String?)] = [
+            (.primary, self.snapshot(primary: primary, secondary: secondary, tertiary: tertiary), "primary"),
+            (.primary, self.snapshot(primary: nil, secondary: secondary, tertiary: tertiary), "secondary"),
+            (.secondary, self.snapshot(primary: primary, secondary: nil, tertiary: tertiary), "primary"),
+            (.secondary, self.snapshot(primary: primary, secondary: secondary), "secondary"),
+            (.primary, self.snapshot(primary: nil, secondary: nil, tertiary: tertiary), nil),
         ]
 
-        for (provider, preference, snapshot, expected) in fixtures {
-            let selected = MenuBarMetricWindowResolver.rateWindow(
-                preference: preference,
-                provider: provider,
-                snapshot: snapshot,
-                supportsAverage: false,
-                now: self.now)
-            #expect(selected?.resetDescription == expected, "Unexpected \(preference) lane for \(provider.rawValue)")
+        for provider in UsageProvider.allCases {
+            for (preference, snapshot, expected) in fixtures {
+                let selected = MenuBarMetricWindowResolver.rateWindow(
+                    preference: preference,
+                    provider: provider,
+                    snapshot: snapshot,
+                    now: self.now)
+                #expect(
+                    selected?.resetDescription == expected,
+                    "Unexpected \(preference) lane for \(provider.rawValue)")
+            }
         }
-    }
-
-    @Test
-    func `semantic windows and legacy percent migration preserve Kimi lane inversion`() {
-        let primary = RateWindow(usedPercent: 25, windowMinutes: nil, resetsAt: nil, resetDescription: "weekly")
-        let secondary = RateWindow(usedPercent: 50, windowMinutes: 180, resetsAt: nil, resetDescription: "session")
-        let snapshot = self.snapshot(primary: primary, secondary: secondary)
-
-        let kimi = MenuBarLayoutSemanticWindowResolver.windows(provider: .kimi, snapshot: snapshot)
-        let generic = MenuBarLayoutSemanticWindowResolver.windows(provider: .zai, snapshot: snapshot)
-
-        #expect(kimi.session == secondary)
-        #expect(kimi.weekly == primary)
-        #expect(generic.session == secondary)
-        #expect(generic.weekly == nil)
-        #expect(MenuBarLayout.migrated(
-            iconStyle: .bars,
-            displayMode: .percent,
-            metricPreference: .primary,
-            resetTimeDisplayStyle: .countdown,
-            provider: .kimi).lines == [[.icon, .percent(window: .weekly)]])
-        #expect(MenuBarLayout.migrated(
-            iconStyle: .bars,
-            displayMode: .percent,
-            metricPreference: .secondary,
-            resetTimeDisplayStyle: .countdown,
-            provider: .kimi).lines == [[.icon, .percent(window: .session)]])
     }
 
     @Test
@@ -104,18 +65,8 @@ struct ProviderPresentationPolicyCharacterizationTests {
             (.codex, 10080, false),
             (.codex, 43200, false),
             (.claude, nil, true),
-            (.ollama, nil, false),
-            (.ollama, 300, true),
-            (.antigravity, nil, true),
-            (.antigravity, 300, true),
-            (.antigravity, 301, false),
-            (.kimi, 180, false),
-            (.kimi, 300, true),
-            (.notion, nil, false),
-            (.notion, 360, true),
-            (.notion, 361, false),
-            (.zai, 300, true),
-            (.zai, 301, false),
+            (.claude, 300, true),
+            (.claude, 10080, true),
         ]
 
         for (provider, minutes, expected) in fixtures {
@@ -132,11 +83,8 @@ struct ProviderPresentationPolicyCharacterizationTests {
 
     @Test
     func `binding quota lanes are pinned for every provider`() {
-        let weekly: Set<UsageProvider> = [
-            .alibaba, .alibabatokenplan, .chutes, .claude, .clinepass, .commandcode,
-            .doubao, .qwencloud, .stepfun, .zai, .zenmux,
-        ]
-        let monthly: Set<UsageProvider> = [.alibaba, .clinepass, .doubao]
+        let weekly: Set<UsageProvider> = [.claude]
+        let monthly: Set<UsageProvider> = []
 
         for provider in UsageProvider.allCases {
             var expected: Set<ProviderUsageLane> = []
@@ -151,7 +99,7 @@ struct ProviderPresentationPolicyCharacterizationTests {
     @Test
     @MainActor
     func `decorated icon style membership is pinned`() throws {
-        let decoratedStyles: Set<IconStyle> = [.codex, .claude, .gemini, .antigravity, .factory, .warp]
+        let decoratedStyles: Set<IconStyle> = [.codex, .claude]
         for style in IconStyle.allCases {
             let decorated = IconRenderer.makeIcon(
                 primaryRemaining: 60,
@@ -186,8 +134,7 @@ struct ProviderPresentationPolicyCharacterizationTests {
     @Test
     func `credit visibility exceptions are pinned`() {
         let codex = ProviderDescriptorRegistry.descriptor(for: .codex).metadata
-        let amp = ProviderDescriptorRegistry.descriptor(for: .amp).metadata
-        let openRouter = ProviderDescriptorRegistry.descriptor(for: .openrouter).metadata
+        let claude = ProviderDescriptorRegistry.descriptor(for: .claude).metadata
         let snapshot = self.snapshot(primary: RateWindow(
             usedPercent: 20,
             windowMinutes: nil,
@@ -200,15 +147,10 @@ struct ProviderPresentationPolicyCharacterizationTests {
             credits: nil,
             error: nil) == nil)
         #expect(UsageMenuCardView.Model.creditsLine(
-            metadata: amp,
+            metadata: claude,
             snapshot: snapshot,
             credits: nil,
             error: nil) == nil)
-        #expect(UsageMenuCardView.Model.creditsLine(
-            metadata: openRouter,
-            snapshot: snapshot,
-            credits: nil,
-            error: nil) == openRouter.creditsHint)
     }
 
     @Test
@@ -232,11 +174,6 @@ struct ProviderPresentationPolicyCharacterizationTests {
                 .claude,
                 self.snapshot(primary: session, secondary: weekly, tertiary: weekly),
                 ["session:300", "weekly:10080", "opus:10080"]),
-            (
-                .opencodego,
-                self.snapshot(primary: session, secondary: weekly, tertiary: monthly),
-                ["session:300", "weekly:10080", "monthly:43200"]),
-            (.zai, self.snapshot(primary: session, secondary: weekly, tertiary: monthly), ["weekly:10080"]),
         ]
 
         for (provider, snapshot, expected) in fixtures {
@@ -250,17 +187,9 @@ struct ProviderPresentationPolicyCharacterizationTests {
 
     @Test
     func `widget row caps and burn down global cap providers are pinned`() throws {
-        let antigravityRows = [
-            WidgetSnapshot.WidgetUsageRowSnapshot(
-                id: "antigravity-quota-summary-gemini-session",
-                title: "Gemini",
-                percentLeft: 80),
-        ]
         let rowFixtures: [(UsageProvider, [WidgetSnapshot.WidgetUsageRowSnapshot]?, Int?, Int?)] = [
-            (.kimi, nil, 3, 3),
-            (.antigravity, antigravityRows, 2, 3),
-            (.antigravity, nil, nil, nil),
             (.codex, nil, nil, nil),
+            (.claude, nil, nil, nil),
         ]
         for (provider, rows, small, medium) in rowFixtures {
             let entry = self.widgetEntry(provider: provider, usageRows: rows)

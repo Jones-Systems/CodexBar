@@ -94,10 +94,10 @@ provider-isolation contracts.
 
 Normal test execution uses the owner-scoped Codex/Claude profile in
 `Scripts/test_profiles.json`; see [test profiles](docs/testing-profiles.md).
-Unused-provider, hook, plugin and iCloud test source stays available through
-`CODEXBAR_TEST_PROFILE=full` and the manual CI full input, with no automatic
-nightly. Preserve shared account, persistence, resource, privacy/security and
-relevant regression coverage. CLI-dependent coverage remains normal until its
+Unused-provider, hook, plugin and iCloud product/test source is removed.
+`CODEXBAR_TEST_PROFILE=full` remains a compatible selector for the same retained
+source. Restoration requires the documented Git revision and new qualification.
+Preserve shared account, persistence, privacy/security and relevant regression coverage. CLI-dependent coverage remains normal until its
 usage boundary is confirmed. Product/compiler checks retain their required
 status above; profile selection does not change job identity or aggregation.
 

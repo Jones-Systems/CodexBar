@@ -28,22 +28,9 @@ struct OverviewFleetAccountsTests {
         let settings = SettingsStore(
             userDefaults: InMemoryUserDefaults(),
             configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore(),
             codexCookieStore: InMemoryCookieHeaderStore(),
             claudeCookieStore: InMemoryCookieHeaderStore(),
-            cursorCookieStore: InMemoryCookieHeaderStore(),
-            opencodeCookieStore: InMemoryCookieHeaderStore(),
-            factoryCookieStore: InMemoryCookieHeaderStore(),
-            minimaxCookieStore: InMemoryMiniMaxCookieStore(),
-            minimaxAPITokenStore: InMemoryMiniMaxAPITokenStore(),
-            kimiTokenStore: InMemoryKimiTokenStore(),
-            augmentCookieStore: InMemoryCookieHeaderStore(),
-            ampCookieStore: InMemoryCookieHeaderStore(),
-            copilotTokenStore: InMemoryCopilotTokenStore(),
             tokenAccountStore: InMemoryTokenAccountStore(fileURL: root.appendingPathComponent("accounts.json")),
-            antigravityOAuthCredentialsStore: AntigravityOAuthCredentialsStore(
-                fileURL: root.appendingPathComponent("antigravity.json")),
             keychainAccessPolicy: SettingsStoreKeychainAccessPolicy(
                 setDisabled: { _ in }, isExplicitlyDisabled: { true }),
             performInitialProviderDetection: false)
@@ -366,19 +353,19 @@ struct OverviewFleetAccountsTests {
 
     @Test
     func `single codex account and other providers add no overview account rows`() throws {
-        try self.withFixture(providers: [.codex, .gemini]) { controller in
+        try self.withFixture(providers: [.codex, .claude]) { controller in
             try self.seedCodex(1, controller: controller)
-            controller.store.snapshots[.gemini] = Self.snapshot(provider: .gemini)
+            controller.store.snapshots[.claude] = Self.snapshot(provider: .claude)
             let overviewMenu = controller.makeMenu()
             controller.refreshMenuForOpenIfNeeded(overviewMenu, provider: nil)
             let ids = self.identifiers(in: overviewMenu)
             #expect(ids.contains("overviewRow-codex"))
-            #expect(ids.contains("overviewRow-gemini"))
+            #expect(ids.contains("overviewRow-claude"))
             #expect(!ids.contains { $0.hasPrefix("overviewAccount-") })
             let menu = NSMenu()
             let existing = NSMenuItem(title: "Existing", action: nil, keyEquivalent: "")
             menu.addItem(existing)
-            controller.addOverviewFleetAccountRows(for: .gemini, to: menu, captureMenu: menu, width: 320)
+            controller.addOverviewFleetAccountRows(for: .claude, to: menu, captureMenu: menu, width: 320)
             #expect(menu.items.count == 1)
             #expect(menu.items.first === existing)
         }
@@ -733,14 +720,14 @@ struct OverviewFleetAccountsTests {
     }
 
     @Test
-    func `overview account rows respect selected provider scopes and provider limit`() throws {
-        let providers: [UsageProvider] = [.codex, .claude, .gemini, .cursor, .copilot, .zai, .augment]
+    func `overview account rows respect selected provider scopes`() throws {
+        let providers: [UsageProvider] = [.codex, .claude]
         try self.withFixture(providers: providers) { controller in
             try self.seedCodex(6, controller: controller)
             for provider in providers where provider != .codex {
                 controller.store.snapshots[provider.instanceID] = Self.snapshot(provider: provider)
             }
-            #expect(controller.overviewProviderScopes(enabledProviders: providers).visible.count == 6)
+            #expect(controller.overviewProviderScopes(enabledProviders: providers).visible.count == 2)
             _ = controller.settings.setMergedOverviewProviderSelection(
                 provider: .codex, isSelected: false, activeProviders: providers)
             let menu = controller.makeMenu()
@@ -854,8 +841,8 @@ extension OverviewFleetAccountsTests {
         reversed: Bool,
         managedActive: Bool) throws
     {
-        try self.withFixture(providers: [.codex, .gemini]) { controller in
-            controller.store.snapshots[.gemini] = Self.snapshot(provider: .gemini)
+        try self.withFixture(providers: [.codex, .claude]) { controller in
+            controller.store.snapshots[.claude] = Self.snapshot(provider: .claude)
             let activeSource: CodexActiveSource = managedActive
                 ? .managedAccount(id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!) : .liveSystem
             controller.settings.codexActiveSource = activeSource
@@ -898,7 +885,7 @@ extension OverviewFleetAccountsTests {
                         hasOpenAIWebMenuItems: false))
                 let menu = NSMenu()
                 controller.addPrimaryMenuContent(to: menu, context: context, switcherSelection: .overview)
-                #expect(self.identifiers(in: menu).contains("overviewRow-gemini"))
+                #expect(self.identifiers(in: menu).contains("overviewRow-claude"))
                 #expect(!self.identifiers(in: menu).contains("overviewRow-codex"))
                 #expect(self.identifiers(in: menu).count { $0.hasPrefix("overviewAccount-codex-") } == 5)
             }

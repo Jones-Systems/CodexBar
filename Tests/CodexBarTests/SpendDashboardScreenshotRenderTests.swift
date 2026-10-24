@@ -89,8 +89,8 @@ final class SpendDashboardScreenshotRenderTests: XCTestCase {
                 ],
                 historyDays: SpendDashboardSource.scanDays,
                 now: now))
-        let cursor = SpendDashboardModel.ProviderInput(
-            provider: .cursor,
+        let claude = SpendDashboardModel.ProviderInput(
+            provider: .claude,
             displayName: "Cursor",
             snapshot: Self.snapshot(
                 entries: [
@@ -100,12 +100,12 @@ final class SpendDashboardScreenshotRenderTests: XCTestCase {
                 now: now))
 
         let thirty = SpendDashboardModel.build(
-            inputs: [claude, cursor],
+            inputs: [claude, claude],
             requestedDays: 30,
             now: now,
             calendar: calendar)
         let allTime = SpendDashboardModel.build(
-            inputs: [claude, cursor],
+            inputs: [claude, claude],
             requestedDays: SpendDashboardSource.scanDays,
             now: now,
             calendar: calendar)

@@ -1,7 +1,6 @@
 public enum LogCategories {
     public static func providerInstance(_ instanceID: ProviderInstanceID, scope: String? = nil) -> String {
-        // Provider-specific by design: preserve OpenCode Go's established hyphenated log category.
-        let base = instanceID.firstPartyProvider == .opencodego ? "opencode-go" : instanceID.rawValue
+        let base = instanceID.rawValue
         return scope.map { "\(base)-\($0)" } ?? base
     }
 
@@ -11,7 +10,6 @@ public enum LogCategories {
 
     public static let adaptiveRefresh = "adaptive-refresh"
     public static let app = "app"
-    public static let auggieCLI = "auggie-cli"
     public static let browserCookieGate = "browser-cookie-gate"
     public static let configMigration = "config-migration"
     public static let configStore = "config-store"
@@ -19,7 +17,6 @@ public enum LogCategories {
     public static let cookieCache = "cookie-cache"
     public static let cookieHeaderStore = "cookie-header-store"
     public static let creditsPurchase = "creditsPurchase"
-    public static let hooks = "hooks"
     public static let keychainCache = "keychain-cache"
     public static let keychainMigration = "keychain-migration"
     public static let keychainPreflight = "keychain-preflight"

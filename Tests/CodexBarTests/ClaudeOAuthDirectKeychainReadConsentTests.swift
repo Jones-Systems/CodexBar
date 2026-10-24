@@ -181,9 +181,7 @@ struct ClaudeOAuthDirectKeychainReadConsentTests {
         defer { defaults.removePersistentDomain(forName: suite) }
         let settings = SettingsStore(
             userDefaults: defaults,
-            configStore: testConfigStore(suiteName: suite),
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: testConfigStore(suiteName: suite))
 
         let memory = ClaudeOAuthCredentialsStore.MemoryCacheStore()
         ClaudeOAuthCredentialsStore.$taskMemoryCacheStoreOverride.withValue(memory) {
@@ -227,9 +225,7 @@ struct ClaudeOAuthDirectKeychainReadConsentTests {
         defer { defaults.removePersistentDomain(forName: suite) }
         let settings = SettingsStore(
             userDefaults: defaults,
-            configStore: testConfigStore(suiteName: suite),
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: testConfigStore(suiteName: suite))
         let service = "com.steipete.codexbar.cache.consent-tests.\(UUID().uuidString)"
         let pendingStore = ClaudeOAuthCredentialsStore.PendingCacheClearMemoryStore()
         let revocationStore = ClaudeOAuthCredentialsStore.DirectKeychainReadConsentRevocationMarkerStore()

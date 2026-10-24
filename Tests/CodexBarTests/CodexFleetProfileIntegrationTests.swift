@@ -424,9 +424,7 @@ struct CodexFleetProfileIntegrationTests {
         defaults.set(true, forKey: "providerDetectionCompleted")
         let settings = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
         settings._test_codexReconciliationEnvironment = [
             "CODEX_HOME": CodexCredentialFixtures.root.appendingPathComponent("ambient").path,
         ]

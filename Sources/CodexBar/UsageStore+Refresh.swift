@@ -95,29 +95,6 @@ extension UsageStore {
             oauthHistoryOwnerIdentifier: result.claudeOAuthHistoryOwnerIdentifier)
     }
 
-    static func commandCodeSnapshotResolvingDepletionOnEnrichmentFailure(
-        current: UsageSnapshot,
-        previous: UsageSnapshot?) -> UsageSnapshot
-    {
-        let previousProvesPaidDepletion = previous?.commandCodeHasSubscriptionPlan == true ||
-            (previous?.commandCodeSubscriptionEnrichmentUnavailable == true &&
-                previous?.commandCodeMonthlyGrantDepleted == true &&
-                previous?.tertiary?.usedPercent == 100)
-        guard current.commandCodeSubscriptionEnrichmentUnavailable,
-              current.commandCodeMonthlyGrantDepleted,
-              previousProvesPaidDepletion,
-              let previousMonthly = previous?.tertiary
-        else {
-            return current
-        }
-        let depleted = RateWindow(
-            usedPercent: 100,
-            windowMinutes: previousMonthly.windowMinutes,
-            resetsAt: previousMonthly.resetsAt,
-            resetDescription: previousMonthly.resetDescription)
-        return current.with(tertiary: depleted)
-    }
-
     func refreshForSettingsChange() async {
         await self.runRefresh(
             startupConnectivityRetryAttempt: nil,
@@ -129,11 +106,6 @@ extension UsageStore {
         // Provider-specific by design: Codex active-source correction reconciles managed profile filesystem state.
         guard provider == nil || provider == .codex else { return }
         _ = self.settings.persistResolvedCodexActiveSourceCorrectionIfNeeded()
-    }
-
-    /// Force refresh Augment session (called from UI button)
-    func forceRefreshAugmentSession() async {
-        await self.performRuntimeAction(.forceSessionRefresh, for: .augment)
     }
 
     private func providerRefreshSpec(_ provider: UsageProvider) async -> ProviderSpec? {
@@ -171,9 +143,7 @@ extension UsageStore {
             generation: request.generation,
             enablementRevision: self.settings.providerEnablementRevision(for: provider),
             configRevision: self.settings.providerConfigRevision(for: provider),
-            tokenCostScopeSignature: Self.tokenCostRequiresProviderSnapshot(provider)
-                ? self.tokenSnapshotScopeSignature(for: provider)
-                : nil,
+            tokenCostScopeSignature: nil,
             allowDisabled: allowDisabled)
         let task = Task { @MainActor [weak self] in
             guard let self else { return }
@@ -192,9 +162,7 @@ extension UsageStore {
                     generation: request.generation,
                     enablementRevision: self.settings.providerEnablementRevision(for: provider),
                     configRevision: self.settings.providerConfigRevision(for: provider),
-                    tokenCostScopeSignature: Self.tokenCostRequiresProviderSnapshot(provider)
-                        ? self.tokenSnapshotScopeSignature(for: provider)
-                        : nil,
+                    tokenCostScopeSignature: nil,
                     allowDisabled: allowDisabled)
                 snapshotUpdatedAtBeforeRefresh = self.snapshot(for: provider.instanceID)?.updatedAt
                 didStartRefresh = true
@@ -337,16 +305,6 @@ extension UsageStore {
         if provider == .codex, self.shouldFetchAllCodexVisibleAccounts() {
             await self.refreshCodexVisibleAccountsForMenu(generation: generation)
             return nil
-        }
-
-        if provider == .kilo, self.shouldFanOutKiloScopes() {
-            await self.refreshKiloScopes(generation: generation)
-            guard self.isCurrentProviderRefreshGeneration(provider, generation: generation) else { return nil }
-            // Continue to also fetch the personal snapshot through the regular path
-            // so the existing single-card render keeps working when only personal is shown.
-            // The presence of multi-element kiloScopeSnapshots triggers stacked rendering.
-        } else if provider == .kilo {
-            await MainActor.run { self.kiloScopeSnapshots = [] }
         }
 
         if provider == .claude {
@@ -712,11 +670,7 @@ extension UsageStore {
             } else {
                 self.lastKnownResetSnapshots[provider.instanceID]
             }
-            let profileStable = self.preservingDeepSeekProfileCatalog(in: accountScoped, provider: provider)
-            let stabilized = Self.commandCodeSnapshotResolvingDepletionOnEnrichmentFailure(
-                current: profileStable,
-                previous: self.snapshots[provider.instanceID])
-            let backfilled = stabilized.backfillingResetTimes(from: resetBackfillSource)
+            let backfilled = accountScoped.backfillingResetTimes(from: resetBackfillSource)
             let warningAccountDiscriminator = Self.warningAccountDiscriminator(
                 provider: provider,
                 tokenAccount: currentTokenAccount,
@@ -744,22 +698,7 @@ extension UsageStore {
                 (self.providerRuntimes[.claude] as? ClaudeProviderRuntime)?.nativeProfileUsagePublished()
             }
             self.widgetUsagePreservationBlockedProviders.remove(provider.instanceID)
-            if provider == .deepseek {
-                self.clearDeepSeekProfileTransition()
-            }
-            if let tokenSnapshot = self.tokenSnapshot(fromProviderSnapshot: backfilled, provider: provider) {
-                self.publishTokenSnapshot(tokenSnapshot, for: provider)
-                self.tokenErrors[provider.instanceID] = nil
-                self.tokenFailureGates[provider.instanceID]?.recordSuccess()
-            } else if provider == .xai, XAICostUsageMapping.isAnalyticsUnavailable(backfilled) {
-                // Provider-specific by design: prepaid balance without usage history is unavailable,
-                // not a confirmed-empty $0 spend row.
-                self.clearTokenSnapshot(for: provider)
-                self.tokenErrors[provider.instanceID] = nil
-            } else if Self.tokenCostRequiresProviderSnapshot(provider) {
-                self.publishConfirmedEmptyTokenSnapshot(for: provider)
-                self.tokenErrors[provider.instanceID] = nil
-            }
+
             self.lastSourceLabels[provider.instanceID] = result.sourceLabel
             self.recordProviderFetchSuccessErrorState(provider: provider)
             self.diagnostics[provider.instanceID] = result.diagnostic
@@ -770,9 +709,7 @@ extension UsageStore {
                     snapshot: backfilled,
                     sourceLabel: result.sourceLabel)
             }
-            if provider == .gemini {
-                self.clearGeminiConsumerTierDeprecationObservation()
-            }
+
             self.knownLimitsAvailabilityByProvider.removeValue(forKey: provider.instanceID)
             self.failureGates[provider.instanceID]?.recordSuccess()
             self.recordCodexRefreshSuccessPublication(
@@ -850,17 +787,11 @@ extension UsageStore {
         }
         // Credential-change cleanup already ran above; cancellation is now safe to suppress.
         if Self.errorIsCancellation(error) {
-            if provider == .deepseek,
-               self.isCurrentProviderRefreshGeneration(provider, generation: context.generation)
-            {
-                self.markDeepSeekProfileTransitionUnavailable()
-            }
+
             return
         }
         guard self.isCurrentProviderRefreshGeneration(provider, generation: context.generation) else { return }
-        if provider == .deepseek {
-            self.markDeepSeekProfileTransitionUnavailable()
-        }
+
         if provider == .codex, let expectedGuard = context.codexExpectedGuard {
             self.updateSelectedCodexCachedFailure(error, expectedGuard: expectedGuard)
         }
@@ -874,14 +805,6 @@ extension UsageStore {
             error: error,
             attempts: attempts,
             context: context)
-    }
-
-    private func preservingDeepSeekProfileCatalog(
-        in snapshot: UsageSnapshot,
-        provider: UsageProvider) -> UsageSnapshot
-    {
-        guard provider == .deepseek else { return snapshot }
-        return snapshot.preservingDeepSeekPlatformProfiles(from: self.presentationSnapshot(for: .deepseek))
     }
 
     private func bindCodexFailurePublicationOwner(
@@ -1355,11 +1278,7 @@ extension UsageStore {
         context: ProviderRefreshOutcomeContext) async
     {
         // Provider-specific by design: Grok's local fallback scans off the main thread when remote billing fails.
-        let grokLocalFallback: CostUsageTokenSnapshot? = if provider == .grok {
-            try? await self.loadGrokLocalTokenSnapshot(historyDays: SpendDashboardSource.scanDays)
-        } else {
-            nil
-        }
+        let grokLocalFallback: CostUsageTokenSnapshot? = nil
         guard !Task.isCancelled else { return }
         let shouldNotifyPermissionPrompt = Self.isPermissionPromptWaiting(error)
         await MainActor.run {
@@ -1369,18 +1288,7 @@ extension UsageStore {
                 provider: provider,
                 usesConsumerAutoPipeline: context.claudeUsesConsumerAutoPipeline,
                 accountStateWasStable: context.claudeOAuthActiveAccountObservation != .changed)
-            if provider == .gemini, Self.isGeminiConsumerTierDeprecationError(error) {
-                // This is a durable provider migration signal, not a transient fetch failure.
-                // Surface it immediately so a cached snapshot cannot hide the required handoff.
-                self.observeGeminiConsumerTierDeprecation(from: error)
-                self.errors[provider.instanceID] = error.localizedDescription
-                self.snapshots.removeValue(forKey: provider.instanceID)
-                self.lastKnownResetSnapshots.removeValue(forKey: provider.instanceID)
-                self.knownLimitsAvailabilityByProvider.removeValue(forKey: provider.instanceID)
-                self.lastSourceLabels.removeValue(forKey: provider.instanceID)
-                self.failureGates[provider.instanceID]?.reset()
-                return
-            }
+
             if provider == .claude,
                ClaudeUsageError.isClaudeOAuthUsageRateLimit(error)
             {
@@ -1480,22 +1388,7 @@ extension UsageStore {
                 self.errors[provider.instanceID] = error.localizedDescription
                 if !preservesPriorData, !preservesClaudeWebSessionFailure {
                     self.snapshots.removeValue(forKey: provider.instanceID)
-                    // Provider-specific by design: local ~/.grok/sessions tokens remain readable
-                    // when the remote billing probe fails.
-                    if provider == .grok {
-                        if let local = grokLocalFallback {
-                            self.publishTokenSnapshot(local, for: provider)
-                        } else {
-                            self.clearTokenSnapshot(for: provider)
-                        }
-                    } else if Self.tokenCostRequiresProviderSnapshot(provider) {
-                        self.clearTokenSnapshot(for: provider)
-                    }
                 }
-                self.emitHook(
-                    .refreshFailed,
-                    provider: provider,
-                    status: Self.refreshFailureHookStatus(error))
             } else {
                 self.errors[provider.instanceID] = nil
             }

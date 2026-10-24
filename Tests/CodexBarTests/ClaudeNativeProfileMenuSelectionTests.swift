@@ -7,6 +7,70 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ClaudeNativeProfileMenuSelectionTests {
+
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["CODEXBAR_CLAUDE_PROFILE_MENU_CAPTURE"] == "1"))
+    func `capture actual SwiftUI profile menu rows with synthetic enrollment`() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        try #require(environment["CODEXBAR_SUPPRESS_TEST_KEYCHAIN_ACCESS"] == "1")
+        try #require(environment["CODEXBAR_TEST_CODEX_FILE_ISOLATION"] == "1")
+        try #require(environment["CODEXBAR_TEST_SESSION_FILE_ISOLATION"] == "1")
+        try #require(environment["CODEXBAR_ALLOW_TEST_KEYCHAIN_ACCESS"] != "1")
+        let workspace = try #require(environment["CODEXBAR_TEST_WORKSPACE_ROOT"])
+        let directory = URL(fileURLWithPath: workspace, isDirectory: true)
+            .appendingPathComponent(".t3/pr-media/claude-profile-menu", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try await ClaudeNativeProfileAccountsFixture.run { settings, store, _ in
+            let content = MenuContent(
+                store: store,
+                settings: settings,
+                account: AccountInfo(email: nil, plan: nil),
+                updater: DisabledUpdaterController(),
+                provider: .claude,
+                actions: MenuActions(
+                    installUpdate: {},
+                    refresh: {},
+                    refreshAugmentSession: {},
+                    openDashboard: {},
+                    openStatusPage: {},
+                    openChangelog: {},
+                    addCodexAccount: {},
+                    switchAccount: { _ in },
+                    openTerminal: { _ in },
+                    openSettings: {},
+                    openProviderSettings: { _ in },
+                    openAbout: {},
+                    quit: {},
+                    copyError: { _ in }))
+            let previous = try #require(ClaudeProviderImplementation().loginMenuAction(
+                context: ProviderMenuLoginContext(
+                    provider: .claude,
+                    store: store,
+                    settings: settings,
+                    account: AccountInfo(email: nil, plan: nil),
+                    hasAccount: true)))
+            // Reconstruct the prior action with the current consumer; this is not a prior-binary capture.
+            try Self.capture(
+                content.row(for: .action(previous.label, previous.action)),
+                to: directory.appendingPathComponent("baseline-action-reconstruction.png"))
+            for alias in ["default", "jace", "removed"] {
+                settings.claudeNativeProfileAlias = alias
+                let descriptor = MenuDescriptor.build(
+                    provider: .claude,
+                    store: store,
+                    settings: settings,
+                    account: AccountInfo(email: nil, plan: nil),
+                    updateReady: false)
+                let entry = try #require(descriptor.sections.flatMap(\.entries).first {
+                    if case .submenu("Claude profile", _, _) = $0 { return true }
+                    return false
+                })
+                try Self.capture(
+                    content.row(for: entry),
+                    to: directory.appendingPathComponent("profile-\(alias).png"))
+            }
+        }
+    }
+
     @Test
     func `choices retain discovery order distinguish duplicate labels and check saved alias`() throws {
         let items = try ClaudeNativeProfileMenuSelection.items(
@@ -148,69 +212,6 @@ struct ClaudeNativeProfileMenuSelectionTests {
                 #expect(settings.claudeNativeProfileAlias == "jace")
                 content.perform(.providerSettings(.claude))
                 #expect(openedProvider == .claude)
-            }
-        }
-    }
-
-    @Test(.enabled(if: ProcessInfo.processInfo.environment["CODEXBAR_CLAUDE_PROFILE_MENU_CAPTURE"] == "1"))
-    func `capture actual SwiftUI profile menu rows with synthetic enrollment`() async throws {
-        let environment = ProcessInfo.processInfo.environment
-        try #require(environment["CODEXBAR_SUPPRESS_TEST_KEYCHAIN_ACCESS"] == "1")
-        try #require(environment["CODEXBAR_TEST_CODEX_FILE_ISOLATION"] == "1")
-        try #require(environment["CODEXBAR_TEST_SESSION_FILE_ISOLATION"] == "1")
-        try #require(environment["CODEXBAR_ALLOW_TEST_KEYCHAIN_ACCESS"] != "1")
-        let workspace = try #require(environment["CODEXBAR_TEST_WORKSPACE_ROOT"])
-        let directory = URL(fileURLWithPath: workspace, isDirectory: true)
-            .appendingPathComponent(".t3/pr-media/claude-profile-menu", isDirectory: true)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        try await ClaudeNativeProfileAccountsFixture.run { settings, store, _ in
-            let content = MenuContent(
-                store: store,
-                settings: settings,
-                account: AccountInfo(email: nil, plan: nil),
-                updater: DisabledUpdaterController(),
-                provider: .claude,
-                actions: MenuActions(
-                    installUpdate: {},
-                    refresh: {},
-                    refreshAugmentSession: {},
-                    openDashboard: {},
-                    openStatusPage: {},
-                    openChangelog: {},
-                    addCodexAccount: {},
-                    switchAccount: { _ in },
-                    openTerminal: { _ in },
-                    openSettings: {},
-                    openProviderSettings: { _ in },
-                    openAbout: {},
-                    quit: {},
-                    copyError: { _ in }))
-            let previous = try #require(ClaudeProviderImplementation().loginMenuAction(
-                context: ProviderMenuLoginContext(
-                    provider: .claude,
-                    store: store,
-                    settings: settings,
-                    account: AccountInfo(email: nil, plan: nil),
-                    hasAccount: true)))
-            // Reconstruct the prior action with the current consumer; this is not a prior-binary capture.
-            try Self.capture(
-                content.row(for: .action(previous.label, previous.action)),
-                to: directory.appendingPathComponent("baseline-action-reconstruction.png"))
-            for alias in ["default", "jace", "removed"] {
-                settings.claudeNativeProfileAlias = alias
-                let descriptor = MenuDescriptor.build(
-                    provider: .claude,
-                    store: store,
-                    settings: settings,
-                    account: AccountInfo(email: nil, plan: nil),
-                    updateReady: false)
-                let entry = try #require(descriptor.sections.flatMap(\.entries).first {
-                    if case .submenu("Claude profile", _, _) = $0 { return true }
-                    return false
-                })
-                try Self.capture(
-                    content.row(for: entry),
-                    to: directory.appendingPathComponent("profile-\(alias).png"))
             }
         }
     }

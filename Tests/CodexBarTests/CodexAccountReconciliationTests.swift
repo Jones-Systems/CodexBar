@@ -12,9 +12,7 @@ struct CodexAccountReconciliationTests {
         defaults.set(true, forKey: "providerDetectionCompleted")
         let settings = SettingsStore(
             userDefaults: defaults,
-            configStore: testConfigStore(suiteName: suite),
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: testConfigStore(suiteName: suite))
         settings.providerDetectionCompleted = true
         return settings
     }
@@ -48,6 +46,37 @@ struct CodexAccountReconciliationTests {
 }
 
 extension CodexAccountReconciliationTests {
+
+    @Test
+    @MainActor
+    func `settings store reconciliation environment override drives live observation with synthetic store`() throws {
+        let suite = "CodexAccountReconciliationTests-environment-only"
+        let settings = try Self.makeSettings(suite: suite)
+        let ambientHome = CodexCredentialFixtures.root.appendingPathComponent(
+            UUID().uuidString,
+            isDirectory: true)
+        try Self.writeCodexAuthFile(homeURL: ambientHome, email: "ambient@example.com", plan: "pro")
+        settings._test_codexReconciliationEnvironment = ["CODEX_HOME": ambientHome.path]
+        defer {
+            settings._test_codexReconciliationEnvironment = nil
+            try? FileManager.default.removeItem(at: ambientHome)
+        }
+
+        let snapshot = settings.codexAccountReconciliationSnapshot
+        let projection = settings.codexVisibleAccountProjection
+
+        #expect(settings.codexActiveSource == .liveSystem)
+        #expect(snapshot.storedAccounts.isEmpty)
+        #expect(snapshot.activeStoredAccount == nil)
+        #expect(snapshot.liveSystemAccount?.email == "ambient@example.com")
+        #expect(snapshot.liveSystemAccount?.codexHomePath == ambientHome.path)
+        #expect(snapshot.matchingStoredAccountForLiveSystemAccount == nil)
+        #expect(snapshot.activeSource == .liveSystem)
+        #expect(projection.visibleAccounts.map(\.email) == ["ambient@example.com"])
+        #expect(projection.activeVisibleAccountID == "ambient@example.com")
+        #expect(projection.liveVisibleAccountID == "ambient@example.com")
+    }
+
     @Test
     @MainActor
     func `settings store exposes codex reconciliation accessors using managed and live overrides`() throws {
@@ -121,36 +150,6 @@ extension CodexAccountReconciliationTests {
         #expect(projection.visibleAccounts.map(\.email) == ["managed@example.com"])
         #expect(projection.activeVisibleAccountID == "managed@example.com")
         #expect(projection.liveVisibleAccountID == nil)
-    }
-
-    @Test
-    @MainActor
-    func `settings store reconciliation environment override drives live observation with synthetic store`() throws {
-        let suite = "CodexAccountReconciliationTests-environment-only"
-        let settings = try Self.makeSettings(suite: suite)
-        let ambientHome = CodexCredentialFixtures.root.appendingPathComponent(
-            UUID().uuidString,
-            isDirectory: true)
-        try Self.writeCodexAuthFile(homeURL: ambientHome, email: "ambient@example.com", plan: "pro")
-        settings._test_codexReconciliationEnvironment = ["CODEX_HOME": ambientHome.path]
-        defer {
-            settings._test_codexReconciliationEnvironment = nil
-            try? FileManager.default.removeItem(at: ambientHome)
-        }
-
-        let snapshot = settings.codexAccountReconciliationSnapshot
-        let projection = settings.codexVisibleAccountProjection
-
-        #expect(settings.codexActiveSource == .liveSystem)
-        #expect(snapshot.storedAccounts.isEmpty)
-        #expect(snapshot.activeStoredAccount == nil)
-        #expect(snapshot.liveSystemAccount?.email == "ambient@example.com")
-        #expect(snapshot.liveSystemAccount?.codexHomePath == ambientHome.path)
-        #expect(snapshot.matchingStoredAccountForLiveSystemAccount == nil)
-        #expect(snapshot.activeSource == .liveSystem)
-        #expect(projection.visibleAccounts.map(\.email) == ["ambient@example.com"])
-        #expect(projection.activeVisibleAccountID == "ambient@example.com")
-        #expect(projection.liveVisibleAccountID == "ambient@example.com")
     }
 
     @Test

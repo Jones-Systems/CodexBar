@@ -4,62 +4,13 @@ import Testing
 @testable import CodexBarCLI
 
 struct DashboardSnapshotBuilderTests {
-    @Test
-    func `dashboard cost collection does not fetch Cursor when cookie source is off`() async {
-        let recorder = DashboardCostFetchRecorder()
-        let config = CodexBarConfig(providers: [
-            ProviderConfig(id: .cursor, enabled: true, cookieSource: .off),
-        ])
-
-        let payload = await CodexBarCLI.collectConfiguredCostPayloads(
-            providers: [.cursor],
-            config: config,
-            context: self.costCollectionContext())
-        { provider, header in
-            await recorder.record(provider: provider, cursorCookieHeaderOverride: header)
-            return CodexBarCLI.makeCostPayload(provider: provider, snapshot: nil, error: nil)
-        }
-
-        #expect(await recorder.calls().isEmpty)
-        #expect(payload.count == 1)
-        #expect(payload[0].provider == "cursor")
-        #expect(payload[0].error?.message.contains("cookie source is set to Off") == true)
-    }
-
-    @Test
-    func `dashboard cost collection forwards configured Cursor manual cookie`() async {
-        let recorder = DashboardCostFetchRecorder()
-        let config = CodexBarConfig(providers: [
-            ProviderConfig(
-                id: .cursor,
-                enabled: true,
-                cookieHeader: "  session=manual  ",
-                cookieSource: .manual),
-        ])
-
-        let payload = await CodexBarCLI.collectConfiguredCostPayloads(
-            providers: [.cursor],
-            config: config,
-            context: self.costCollectionContext())
-        { provider, header in
-            await recorder.record(provider: provider, cursorCookieHeaderOverride: header)
-            return CodexBarCLI.makeCostPayload(provider: provider, snapshot: nil, error: nil)
-        }
-
-        let calls = await recorder.calls()
-        #expect(calls.count == 1)
-        #expect(calls[0].provider == .cursor)
-        #expect(calls[0].cursorCookieHeaderOverride == "session=manual")
-        #expect(payload.count == 1)
-        #expect(payload[0].error == nil)
-    }
 
     @Test
     func `dashboard producer forwards its config to cost collection`() async throws {
         let recorder = DashboardCostConfigRecorder()
         let config = CodexBarConfig(providers: [
             ProviderConfig(
-                id: .cursor,
+                id: .claude,
                 enabled: true,
                 cookieHeader: "session=manual",
                 cookieSource: .manual),
@@ -78,7 +29,7 @@ struct DashboardSnapshotBuilderTests {
             codexBarVersion: "9.8.7")
 
         let call = try #require(await recorder.call())
-        #expect(call.providers == [.cursor])
+        #expect(call.providers == [.claude])
         #expect(call.cookieSource == .manual)
         #expect(call.cookieHeader == "session=manual")
     }
@@ -95,7 +46,6 @@ struct DashboardSnapshotBuilderTests {
             status: nil,
             usage: nil,
             credits: nil,
-            antigravityPlanInfo: nil,
             openaiDashboard: nil,
             error: ProviderErrorPayload(code: 1, message: "temporary failure", kind: .provider))
         let rows: [UsageProvider: ProviderPayload] = [.claude: healthy, .codex: failed]
@@ -132,7 +82,7 @@ struct DashboardSnapshotBuilderTests {
         #expect(object["generatedAt"] as? String == "2027-01-15T08:00:00Z")
     }
 
-    @Test(arguments: [UsageProvider.codex, .antigravity])
+    @Test(arguments: [UsageProvider.codex, .claude])
     func `producer provider filter collects and returns exactly one row`(provider: UsageProvider) async throws {
         let recorder = DashboardProviderSelectionRecorder()
         let producer = DashboardSnapshotProducer(
@@ -148,7 +98,6 @@ struct DashboardSnapshotBuilderTests {
                         status: nil,
                         usage: nil,
                         credits: nil,
-                        antigravityPlanInfo: nil,
                         openaiDashboard: nil,
                         error: nil)
                 }
@@ -182,7 +131,6 @@ struct DashboardSnapshotBuilderTests {
         let config = CodexBarConfig(providers: [
             ProviderConfig(id: .claude, enabled: true),
             ProviderConfig(id: .codex, enabled: true),
-            ProviderConfig(id: .gemini, enabled: false),
         ])
         let snapshot = DashboardSnapshotBuilder.makeShellSnapshot(
             config: config,
@@ -246,7 +194,6 @@ struct DashboardSnapshotBuilderTests {
                 url: "https://status.example.com"),
             usage: usage,
             credits: CreditsSnapshot(remaining: 112.4, events: [], updatedAt: updatedAt),
-            antigravityPlanInfo: nil,
             openaiDashboard: nil,
             error: nil)
         let cost = CostPayload(
@@ -348,7 +295,6 @@ struct DashboardSnapshotBuilderTests {
             status: nil,
             usage: usage,
             credits: nil,
-            antigravityPlanInfo: nil,
             openaiDashboard: nil,
             error: nil)
 
@@ -367,50 +313,6 @@ struct DashboardSnapshotBuilderTests {
         #expect(provider["status"] is NSNull)
         #expect(provider["credits"] is NSNull)
         #expect(provider["cost"] is NSNull)
-    }
-
-    @Test
-    func `dashboard labels amp subscription pools as provider specific windows`() throws {
-        let now = Date(timeIntervalSince1970: 1_700_000_000)
-        let usage = AmpUsageSnapshot(
-            freeQuota: nil,
-            freeUsed: nil,
-            hourlyReplenishment: nil,
-            windowHours: nil,
-            updatedAt: now,
-            subscription: AmpSubscriptionUsage(
-                plan: "Megawatt",
-                otherUsedPercent: 3,
-                orbUsedPercent: 0,
-                resetsAt: now.addingTimeInterval(29 * 24 * 60 * 60),
-                resetDescription: "renews in 29 days"))
-            .toUsageSnapshot(now: now)
-        let payload = ProviderPayload(
-            provider: .amp,
-            account: nil,
-            version: nil,
-            source: "cli",
-            status: nil,
-            usage: usage,
-            credits: nil,
-            antigravityPlanInfo: nil,
-            openaiDashboard: nil,
-            error: nil)
-
-        let snapshot = DashboardSnapshotBuilder.makeSnapshot(
-            usagePayloads: [payload],
-            costPayloads: [],
-            config: CodexBarConfig(providers: [ProviderConfig(id: .amp, enabled: true)]),
-            identityMode: .redacted,
-            generatedAt: now,
-            refreshInterval: 60,
-            codexBarVersion: nil)
-        let object = try self.jsonObject(snapshot)
-        let provider = try #require((object["providers"] as? [[String: Any]])?.first)
-        let windows = try #require(provider["windows"] as? [[String: Any]])
-
-        #expect(windows.map { $0["kind"] as? String } == ["other", "orb"])
-        #expect(windows.map { $0["label"] as? String } == ["Other usage", "Orb usage"])
     }
 
     @Test
@@ -507,7 +409,6 @@ struct DashboardSnapshotBuilderTests {
             status: nil,
             usage: nil,
             credits: nil,
-            antigravityPlanInfo: nil,
             openaiDashboard: nil,
             error: ProviderErrorPayload(code: 1, message: "temporary failure", kind: .provider))
 
@@ -575,7 +476,6 @@ struct DashboardSnapshotBuilderTests {
                 url: "https://status.anthropic.com"),
             usage: nil,
             credits: nil,
-            antigravityPlanInfo: nil,
             openaiDashboard: nil,
             error: nil)
 
@@ -667,7 +567,6 @@ struct DashboardSnapshotBuilderTests {
                     accountOrganization: nil,
                     loginMethod: "pro")),
             credits: nil,
-            antigravityPlanInfo: nil,
             openaiDashboard: nil,
             error: nil)
     }
@@ -729,25 +628,6 @@ struct DashboardSnapshotBuilderTests {
     }
 }
 
-private actor DashboardCostFetchRecorder {
-    struct Call: Sendable {
-        let provider: UsageProvider
-        let cursorCookieHeaderOverride: String?
-    }
-
-    private var recordedCalls: [Call] = []
-
-    func record(provider: UsageProvider, cursorCookieHeaderOverride: String?) {
-        self.recordedCalls.append(Call(
-            provider: provider,
-            cursorCookieHeaderOverride: cursorCookieHeaderOverride))
-    }
-
-    func calls() -> [Call] {
-        self.recordedCalls
-    }
-}
-
 private actor DashboardCostConfigRecorder {
     struct Call: Sendable {
         let providers: [UsageProvider]
@@ -758,11 +638,11 @@ private actor DashboardCostConfigRecorder {
     private var recordedCall: Call?
 
     func record(providers: [UsageProvider], config: CodexBarConfig) {
-        let cursor = config.providerConfig(for: .cursor)
+        let claude = config.providerConfig(for: .claude)
         self.recordedCall = Call(
             providers: providers,
-            cookieSource: cursor?.cookieSource,
-            cookieHeader: cursor?.cookieHeader)
+            cookieSource: claude?.cookieSource,
+            cookieHeader: claude?.cookieHeader)
     }
 
     func call() -> Call? {

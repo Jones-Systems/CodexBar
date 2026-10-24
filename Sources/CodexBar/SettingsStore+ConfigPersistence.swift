@@ -4,7 +4,7 @@ import Foundation
 enum ConfigChangeOrigin: Equatable {
     case localUser
     case localFile
-    case externalSync
+    case external
 }
 
 private struct ConfigChangeContext {
@@ -17,7 +17,7 @@ private struct ConfigChangeContext {
     }
 
     static func external(
-        origin: ConfigChangeOrigin = .externalSync,
+        origin: ConfigChangeOrigin = .external,
         reason: String,
         affectsBackgroundWork: Bool) -> Self
     {
@@ -26,10 +26,6 @@ private struct ConfigChangeContext {
 
     var shouldBroadcast: Bool {
         self.origin == .localUser
-    }
-
-    var shouldNotifyCloudSync: Bool {
-        self.origin == .localFile
     }
 }
 
@@ -81,17 +77,6 @@ extension SettingsStore {
                 mutate(&entry)
                 config.providers.append(entry)
             }
-        }
-    }
-
-    func updateHooks(_ mutate: (inout HooksConfig) -> Void) {
-        // Hooks never affect provider fetching, so mark the change as not affecting
-        // background work: the config persists and the pane re-renders (via
-        // configRevision), but no provider refresh is triggered.
-        self.updateConfig(reason: "hooks", affectsBackgroundWork: false) { config in
-            var hooks = config.hooks ?? HooksConfig()
-            mutate(&hooks)
-            config.hooks = (hooks.enabled || !hooks.events.isEmpty) ? hooks : nil
         }
     }
 
@@ -167,7 +152,7 @@ extension SettingsStore {
     func reloadConfig(
         reason: String,
         affectsBackgroundWork: Bool? = nil,
-        origin: ConfigChangeOrigin = .externalSync)
+        origin: ConfigChangeOrigin = .external)
     {
         guard !self.configLoading else { return }
         do {
@@ -186,7 +171,7 @@ extension SettingsStore {
         _ config: CodexBarConfig,
         reason: String,
         affectsBackgroundWork: Bool? = nil,
-        origin: ConfigChangeOrigin = .externalSync)
+        origin: ConfigChangeOrigin = .external)
     {
         guard !self.configLoading else { return }
         let normalized = config.normalized()
@@ -237,12 +222,7 @@ extension SettingsStore {
             .debug(
                 "Config revision bumped (\(context.reason)) -> \(self.configRevision)",
                 metadata: ["backgroundWork": context.affectsBackgroundWork ? "1" : "0"])
-        if context.shouldNotifyCloudSync {
-            NotificationCenter.default.post(
-                name: .codexbarLocalConfigFileDidChange,
-                object: self,
-                userInfo: ["reason": context.reason])
-        }
+
         guard context.shouldBroadcast else { return }
         NotificationCenter.default.post(
             name: .codexbarProviderConfigDidChange,

@@ -288,7 +288,7 @@ struct JonesGroupedCompactAccountPresentationTests {
     @Test
     func `ungrouped rendering retains the exact existing rows for every provider`() {
         let accounts = StatusItemController.projectedCodexAccounts(display: self.display(count: 8))
-        for provider in [UsageProvider.codex, .copilot] {
+        for provider in [UsageProvider.codex, .claude] {
             let plan = JonesCompactAccountPresentation.plan(for: provider, accounts: accounts)
             let sections = JonesCompactAccountPresentation.menuSections(plan: plan)
             #expect(sections.count == 1)

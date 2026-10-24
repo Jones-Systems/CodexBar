@@ -10,7 +10,7 @@ struct StatusMenuCodexSwitcherPresentationTests {
     @Test
     func `compact Codex detail map preserves account identity and excludes other providers`() throws {
         let now = Date(timeIntervalSince1970: 1_781_726_400)
-        let accounts = [UsageProvider.codex, .claude, .copilot].map { provider in
+        let accounts = [UsageProvider.codex, .claude].map { provider in
             ProviderAccountUsageSnapshot(
                 id: ProviderAccountIdentity(source: "synthetic", opaqueID: provider.rawValue),
                 provider: provider,
@@ -48,9 +48,7 @@ struct StatusMenuCodexSwitcherPresentationTests {
         defaults.removePersistentDomain(forName: suite)
         return SettingsStore(
             userDefaults: defaults,
-            configStore: testConfigStore(suiteName: suite),
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: testConfigStore(suiteName: suite))
     }
 
     private func makeManagedAccountStoreURL(accounts: [ManagedCodexAccount]) throws -> URL {

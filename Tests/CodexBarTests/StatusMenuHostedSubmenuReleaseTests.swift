@@ -92,7 +92,7 @@ struct StatusMenuHostedSubmenuReleaseTests {
             let native = controller.makeHostedSubviewPlaceholderMenu(
                 chartID: StatusItemController.statusComponentsID, provider: .claude)
             let unavailable = controller.makeHostedSubviewPlaceholderMenu(
-                chartID: StatusItemController.costHistoryChartID, provider: .openai)
+                chartID: StatusItemController.costHistoryChartID, provider: .claude)
             for submenu in [native, unavailable] {
                 let item = NSMenuItem(title: "Fixture", action: nil, keyEquivalent: "")
                 item.submenu = submenu
@@ -147,22 +147,9 @@ struct StatusMenuHostedSubmenuReleaseTests {
         let settings = SettingsStore(
             userDefaults: InMemoryUserDefaults(),
             configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore(),
             codexCookieStore: InMemoryCookieHeaderStore(),
             claudeCookieStore: InMemoryCookieHeaderStore(),
-            cursorCookieStore: InMemoryCookieHeaderStore(),
-            opencodeCookieStore: InMemoryCookieHeaderStore(),
-            factoryCookieStore: InMemoryCookieHeaderStore(),
-            minimaxCookieStore: InMemoryMiniMaxCookieStore(),
-            minimaxAPITokenStore: InMemoryMiniMaxAPITokenStore(),
-            kimiTokenStore: InMemoryKimiTokenStore(),
-            augmentCookieStore: InMemoryCookieHeaderStore(),
-            ampCookieStore: InMemoryCookieHeaderStore(),
-            copilotTokenStore: InMemoryCopilotTokenStore(),
             tokenAccountStore: InMemoryTokenAccountStore(fileURL: root.appendingPathComponent("accounts.json")),
-            antigravityOAuthCredentialsStore: AntigravityOAuthCredentialsStore(
-                fileURL: root.appendingPathComponent("antigravity.json")),
             keychainAccessPolicy: SettingsStoreKeychainAccessPolicy(
                 setDisabled: { _ in }, isExplicitlyDisabled: { true }),
             performInitialProviderDetection: false)

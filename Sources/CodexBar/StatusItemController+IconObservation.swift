@@ -54,9 +54,6 @@ extension StatusItemController {
         let layoutPaceSignature = showBrandPercent
             ? self.storedMenuBarLayoutPaceSignature(for: provider, snapshot: snapshot)
             : nil
-        let layoutBalanceSignature = showBrandPercent
-            ? self.storedMenuBarLayoutBalanceSignature(for: provider, snapshot: snapshot)
-            : nil
         let layoutLaneSignature = showBrandPercent
             ? self.storedMenuBarLayoutLaneSignature(for: provider, snapshot: snapshot)
             : nil
@@ -80,7 +77,6 @@ extension StatusItemController {
             "layoutCost=\(layoutCostSignature ?? "nil")",
             "layoutAccount=\(layoutAccountSignature ?? "nil")",
             "layoutPace=\(layoutPaceSignature ?? "nil")",
-            "layoutBalance=\(layoutBalanceSignature ?? "nil")",
             "layoutLanes=\(layoutLaneSignature ?? "nil")",
             "layoutCondWindows=\(layoutConditionalWindowSignature ?? "nil")",
         ].joined(separator: "|")
@@ -121,28 +117,6 @@ extension StatusItemController {
             // threshold while both format to the same cent, so a conditional also signs the numbers.
             "todayUSD=\(metrics.contains(.costToday) ? Self.exactSignatureValue(costs.todayUSD) : "unused")",
             "last30DaysUSD=\(metrics.contains(.cost30d) ? Self.exactSignatureValue(costs.last30DaysUSD) : "unused")",
-        ].joined(separator: ",")
-    }
-
-    private func storedMenuBarLayoutBalanceSignature(
-        for provider: UsageProvider,
-        snapshot: UsageSnapshot?)
-        -> String?
-    {
-        let resolution = self.settings.menuBarLayoutResolution(for: provider)
-        guard !resolution.usesLegacyRendering else { return nil }
-        let showsBalance = resolution.layout
-            .flattenedTokens(conditionals: self.settings.menuBarLayoutConditionals)
-            .contains(.balance)
-            || self.referencedConditionalMetrics(resolution: resolution).contains(.balance)
-        guard showsBalance else { return nil }
-        // The rendered text only carries the remaining row. A `balance used` predicate reads the "Used"
-        // row instead, which no display token surfaces, so sign both amounts exactly.
-        let amounts = MenuBarLayoutBalanceResolver.balanceAmountsUSD(provider: provider, snapshot: snapshot)
-        return [
-            "text=\(MenuBarLayoutBalanceResolver.balance(provider: provider, snapshot: snapshot) ?? "nil")",
-            "remaining=\(Self.exactSignatureValue(amounts.remaining))",
-            "used=\(Self.exactSignatureValue(amounts.used))",
         ].joined(separator: ",")
     }
 

@@ -8,7 +8,7 @@ struct StatusMenuSwitcherLayoutTests {
     @Test
     func `overview switcher segment matches provider segment height when quota bars are present`() throws {
         let view = ProviderSwitcherView(
-            providers: [.claude, .grok, .cursor],
+            providers: [.claude, .codex],
             selected: .overview,
             includesOverview: true,
             width: 300,
@@ -35,14 +35,14 @@ struct StatusMenuSwitcherLayoutTests {
     @Test
     func `quota bars do not offset inline switcher content`() throws {
         let view = ProviderSwitcherView(
-            providers: [.codex, .devin],
+            providers: [.codex, .claude],
             selected: .provider(.codex),
             includesOverview: true,
             width: 300,
             showsIcons: true,
             iconProvider: { _ in NSImage(size: NSSize(width: 16, height: 16)) },
             weeklyRemainingProvider: { provider in
-                provider == .devin ? 50 : nil
+                provider == .claude ? 50 : nil
             },
             onSelect: { _ in })
         view.updateConstraintsForSubtreeIfNeeded()
@@ -74,13 +74,13 @@ struct StatusMenuSwitcherLayoutTests {
     @Test
     func `integrated quota indicator selects its provider`() {
         let view = ProviderSwitcherView(
-            providers: [.codex, .devin],
+            providers: [.codex, .claude],
             selected: .provider(.codex),
             includesOverview: true,
             width: 300,
             showsIcons: true,
             iconProvider: { _ in NSImage(size: NSSize(width: 16, height: 16)) },
-            weeklyRemainingProvider: { $0 == .devin ? 50 : nil },
+            weeklyRemainingProvider: { $0 == .claude ? 50 : nil },
             onSelect: { _ in })
 
         #expect(view._test_simulateRuntimeClickOnQuotaIndicator(buttonTag: 2))
@@ -91,7 +91,7 @@ struct StatusMenuSwitcherLayoutTests {
         try CodexBarLocalizationOverride.$appLanguage.withValue("tr") {
             for width in stride(from: CGFloat(280), through: CGFloat(330), by: 1) {
                 let view = ProviderSwitcherView(
-                    providers: [.codex, .devin],
+                    providers: [.codex, .claude],
                     selected: .overview,
                     includesOverview: true,
                     width: width,

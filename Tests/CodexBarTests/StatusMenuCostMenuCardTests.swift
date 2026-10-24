@@ -166,7 +166,6 @@ struct StatusMenuCostMenuCardTests {
     func `cost menu title stays consistent across providers`() {
         #expect(StatusItemController.costMenuTitleForProvider(.codex) == "Cost")
         #expect(StatusItemController.costMenuTitleForProvider(.claude) == "Cost")
-        #expect(StatusItemController.costMenuTitleForProvider(.mistral) == "Cost")
     }
 
     private func makeSettings() -> SettingsStore {
@@ -175,9 +174,7 @@ struct StatusMenuCostMenuCardTests {
         defaults.removePersistentDomain(forName: suite)
         return SettingsStore(
             userDefaults: defaults,
-            configStore: testConfigStore(suiteName: suite),
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: testConfigStore(suiteName: suite))
     }
 
     private func makeModel(
@@ -192,7 +189,6 @@ struct StatusMenuCostMenuCardTests {
             planText: "Pro",
             metrics: [],
             usageNotes: [],
-            openAIAPIUsage: nil,
             inlineUsageDashboard: nil,
             creditsText: nil,
             creditsRemaining: nil,

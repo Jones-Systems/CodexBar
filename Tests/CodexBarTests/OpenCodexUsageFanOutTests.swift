@@ -29,7 +29,7 @@ struct OpenCodexUsageFanOutTests {
         #expect(snapshots[.codex]?.last30DaysTokens == 150)
     }
 
-    @Test func `snapshotsBySubscription routes opencode go spend into open code go`() throws {
+    @Test func `snapshotsBySubscription excludes retired subscription routes`() throws {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
         let now = Date(timeIntervalSince1970: 1_784_179_200)
@@ -50,8 +50,7 @@ struct OpenCodexUsageFanOutTests {
             historyDays: 7,
             calendar: calendar)
 
-        #expect(snapshots.keys.contains(.opencodego))
-        #expect(snapshots[.opencodego]?.last30DaysTokens == 100)
+        #expect(snapshots.isEmpty)
     }
 
     @Test func `snapshotsBySubscription skips token only providers`() throws {
@@ -99,7 +98,7 @@ struct OpenCodexUsageFanOutTests {
             historyDays: 7,
             calendar: calendar)
 
-        #expect(snapshots.keys.contains(.opencodego))
+        #expect(snapshots.isEmpty)
         #expect(snapshots[.codex] == nil)
     }
 

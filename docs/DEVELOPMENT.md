@@ -26,7 +26,7 @@ swift build
 # Run the isolated, sharded normal profile (Codex/Claude and shared app coverage)
 make test
 
-# Explicitly restore all offline provider/plugin/hook/iCloud tests
+# Compatibility profile name; the same retained Codex/Claude/shared source
 CODEXBAR_TEST_PROFILE=full make test
 
 # Required after code changes
@@ -602,9 +602,9 @@ may defer for a draft, but that still leaves the aggregate incomplete. Whole-wor
 
 | Pull-request changed paths | Required compiler/test coverage |
 | --- | --- |
-| macOS app, widget, native-only executables/resources, native tests (except shared plugin sources below) | Both complete macOS shards |
+| macOS app, widget, native-only executables/resources, native tests | Both complete macOS shards |
 | Shared core/CLI/other source, C modules, `Package.swift`, `Package.resolved` | macOS, both glibc architectures, musl |
-| `TestsLinux`, `TestsPlugin` (including its symlinked sources), adaptive replay test directories | macOS and both glibc architectures |
+| `TestsLinux` and adaptive replay test directories | macOS and both glibc architectures |
 | Documentation/site assets and explicitly listed portable scripts/workflows | Portable lint |
 | Unknown paths, global build/test harnesses or policy changes | All platforms |
 
@@ -614,7 +614,7 @@ empty diff. Manual runs and unavailable PR/push bases also select all platforms.
 platform gates against the previous main head, running the normal profile on each selected platform. Source resources are
 classified before Markdown suffixes. Changes to the classifier, aggregate verifier and primary CI workflow
 select all platforms. The path partition selects platforms; the [test profile](testing-profiles.md) selects
-normal or explicit-full feature coverage without deleting test source.
+normal or full compatibility names for the same retained source.
 
 The selected checks retain their names: `swift-test-macos (0, 2)`, `swift-test-macos (1, 2)`,
 `build-linux-cli (linux-x64, ubuntu-24.04)`, `build-linux-cli (linux-arm64, ubuntu-24.04-arm)` and
@@ -625,13 +625,10 @@ configuration with the same pinned compiler, static SDK, target triple and stati
 builds retain release configuration. Both configurations reject dynamic-loader or library dependencies.
 Release-only branches and optimizer/link behavior are therefore checked on main/manual runs. Existing Linux campaign step IDs retain their historical `release` label; consult the recorded
 CLI build configuration when comparing PR measurements with older runs. macOS retains two complete shards of the selected profile
-and groups of four. JavaScript product-integrity checks run in portable lint. The explicit full profile
-also runs plugin JavaScriptCore goldens and QuickJS coverage; normal excludes unused plugin behavior.
+and groups of four. Portable source/script integrity checks run in lint. Provider plugins, JavaScriptCore integration and QuickJS were removed.
 
 `Scripts/test_ci_path_gate.sh` checks platform partitions, malformed changes, rename/deletion behavior,
-result combinations and the workflow's explicit glibc gate/result arguments. `CodexBarLinuxTests` includes
-`AntigravityLocalhostSessionLifetimeTests` on both macOS and Linux in the explicit full profile. It checks session reuse and concurrent
-synthetic loopback failures without credentials; this coverage does not establish or fix Linux dispatch crashes.
+result combinations and the workflow's explicit glibc gate/result arguments.
 
 ### Native and packaging tier
 

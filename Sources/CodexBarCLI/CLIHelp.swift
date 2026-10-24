@@ -2,21 +2,6 @@ import CodexBarCore
 import Foundation
 
 extension CodexBarCLI {
-    static func pluginsHelp(version: String) -> String {
-        """
-        CodexBar \(version)
-
-        Usage:
-          codexbar plugins list
-          codexbar plugins fetch <id> [--json] [--pretty]
-
-        Description:
-          Discover local .js and .ts provider plugins. Fetch requires a recorded approval binding.
-          An interactive terminal can create the approval after showing exact origins, capabilities,
-          secret names, and cookie domains. Headless use fails closed. Browser-cookie plugins are
-          app-only and fail closed in the CLI.
-        """
-    }
 
     static func cardsHelp(version: String) -> String {
         """
@@ -27,7 +12,7 @@ extension CodexBarCLI {
                         [--provider \(ProviderHelp.list)]
                         [--account <label>] [--account-index <index>] [--all-accounts]
                         [--no-credits] [--no-color] [--status] [--source <auto|web|cli|oauth|api>]
-                        [--web-timeout <seconds>] [--web-debug-dump-html] [--antigravity-plan-debug] [--augment-debug]
+                        [--web-timeout <seconds>] [--web-debug-dump-html]
                         [--brief]
 
         Description:
@@ -69,7 +54,7 @@ extension CodexBarCLI {
                        [--provider \(ProviderHelp.list)]
                        [--account <label>] [--account-index <index>] [--all-accounts]
                        [--no-credits] [--no-color] [--pretty] [--status] [--source <auto|web|cli|oauth|api>]
-                       [--web-timeout <seconds>] [--web-debug-dump-html] [--antigravity-plan-debug] [--augment-debug]
+                       [--web-timeout <seconds>] [--web-debug-dump-html]
 
         Description:
           Print usage from enabled providers as text (default), JSON, or TOON. Honors your in-app toggles.
@@ -81,8 +66,6 @@ extension CodexBarCLI {
             Auto falls back to Codex CLI only when cookies are missing.
           - Claude: claude.ai API.
             Auto falls back to Claude CLI only when cookies are missing.
-          - Kilo: app.kilo.ai API.
-            Auto falls back to Kilo CLI when API credentials are missing or unauthorized.
           Token accounts are loaded from the resolved CodexBar config file.
           Use --account or --account-index to select a specific token account.
           Use --all-accounts to fetch every token account, or every visible Codex account for Codex.
@@ -99,7 +82,7 @@ extension CodexBarCLI {
         Examples:
           codexbar usage
           codexbar usage --provider claude
-          codexbar usage --provider gemini
+          codexbar usage --provider claude
           codexbar usage --format json --provider all --pretty
           codexbar usage --provider all --json
           codexbar usage --status
@@ -123,8 +106,7 @@ extension CodexBarCLI {
 
         Description:
           Print local token cost usage from Claude/Codex native logs plus supported pi and OMP sessions.
-          Antigravity token history is also read locally, with dollar costs left unknown.
-          Local readers need no web or provider CLI access; Cursor uses its authenticated dashboard API.
+          Local readers need no web or provider CLI access.
           Use --refresh to bypass cached scan results.
           Experimental: use --provider-native-only to exclude pi and OMP session mirrors.
 
@@ -133,7 +115,6 @@ extension CodexBarCLI {
           codexbar cost --provider codex --group-by project
           codexbar cost --provider codex --group-by session
           codexbar cost --provider claude --format json --pretty
-          codexbar cost --provider antigravity --format json
         """
     }
 
@@ -267,8 +248,6 @@ extension CodexBarCLI {
           codexbar config enable --provider <name> [--format text|json] [--json] [--json-only] [--pretty]
           codexbar config disable --provider <name> [--format text|json] [--json] [--json-only] [--pretty]
           codexbar config set-api-key --provider <name> (--api-key <key>|--stdin)
-                                    [--label <label>] [--usage-scope team]
-                                    [--organization-id <org>] [--workspace-id <project>]
                                     [--no-enable]
                                     [--format text|json] [--json] [--json-only] [--pretty]
 
@@ -279,7 +258,6 @@ extension CodexBarCLI {
           providers lists persistent provider enablement.
           enable/disable updates the same provider toggle used by Settings.
           set-api-key stores a provider API key in the resolved config file and enables that provider by default.
-          For z.ai team usage, add --usage-scope team with BigModel organization and project IDs; this stores
           the key as a token account instead of a provider-level personal key.
 
         Examples:
@@ -287,9 +265,8 @@ extension CodexBarCLI {
           codexbar config dump --pretty
           codexbar config providers
           codexbar config enable --provider grok
-          codexbar config disable --provider cursor
+          codexbar config disable --provider claude
           printf '%s' "$ELEVENLABS_API_KEY" | codexbar config set-api-key --provider elevenlabs --stdin
-          printf '%s' "$Z_AI_API_KEY" | codexbar config set-api-key --provider zai --stdin \\
             --label Team --usage-scope team --organization-id org_... --workspace-id proj_...
         """
     }
@@ -319,42 +296,6 @@ extension CodexBarCLI {
           codexbar cache clear --cost
           codexbar cache clear --all
           codexbar cache clear --all --format json --pretty
-        """
-    }
-
-    static func hooksHelp(version: String) -> String {
-        """
-        CodexBar \(version)
-
-        Usage:
-          codexbar hooks list [--format text|json] [--pretty]
-          codexbar hooks enable
-          codexbar hooks disable
-          codexbar hooks test <event> --provider <name>
-          codexbar hooks watch [--interval <seconds>] [--provider <name>]
-
-        Description:
-          Run external commands when quota/provider events occur. Rules are stored in the
-          shared config file and are disabled by default. Events:
-          quota_low, quota_reached, quota_reset, provider_unavailable, provider_recovered,
-          refresh_failed.
-
-          Commands run directly (no shell), receive event metadata via CODEXBAR_* environment
-          variables and a JSON payload on stdin, and are timed out. Only configure commands you trust.
-
-          `watch` polls the selected providers and fires rules on real transitions, so hooks
-          work without the macOS app. Events are edge-triggered against the previous poll, so a
-          persisting condition does not re-fire. Baselines are in-memory: the first poll of a
-          lane establishes state without firing. Keep one continuous process running so transition
-          baselines and event rate limits survive between polls. Default interval 300s, minimum 60s.
-
-        Examples:
-          codexbar hooks list
-          codexbar hooks enable
-          codexbar hooks test quota_reached --provider codex
-          codexbar hooks test quota_low --provider claude
-          codexbar hooks watch --interval 600
-          codexbar hooks watch --provider codex
         """
     }
 
@@ -457,7 +398,7 @@ extension CodexBarCLI {
                   [--provider \(ProviderHelp.list)]
                   [--account <label>] [--account-index <index>] [--all-accounts]
                   [--no-credits] [--no-color] [--pretty] [--status] [--source <auto|web|cli|oauth|api>]
-                  [--web-timeout <seconds>] [--web-debug-dump-html] [--antigravity-plan-debug] [--augment-debug]
+                  [--web-timeout <seconds>] [--web-debug-dump-html]
           codexbar cards [--provider \(ProviderHelp.list)] [--brief] [--no-color] [--status]
           codexbar cost [--format text|json]
                        [--json]
@@ -482,11 +423,7 @@ extension CodexBarCLI {
           codexbar config enable --provider <name>
           codexbar config disable --provider <name>
           codexbar config set-api-key --provider <name> (--api-key <key>|--stdin)
-          codexbar config set-api-key --provider zai --stdin --usage-scope team
                                    --organization-id <org> --workspace-id <project>
-          codexbar hooks <list|enable|disable> [--format text|json] [--pretty]
-          codexbar hooks test <event> --provider <name>
-          codexbar plugins <list|fetch <id>> [--json] [--pretty]
           codexbar cache clear <--cookies|--cost|--all> [--provider <name>]
           codexbar cookie refresh <--provider <name>|--all> [--allow-keychain-prompt]
           codexbar diagnose --provider <name|all> --format json [--redact] [--output <path>] [--pretty]
@@ -505,7 +442,7 @@ extension CodexBarCLI {
           codexbar --format json --provider all --pretty
           codexbar --format toon --provider claude
           codexbar --provider all --json
-          codexbar --provider gemini
+          codexbar --provider claude
           codexbar cards --provider all --status
           codexbar cards --brief
           codexbar cost --provider claude --format json --pretty
@@ -515,8 +452,6 @@ extension CodexBarCLI {
           codexbar config validate --format json --pretty
           codexbar config enable --provider grok
           codexbar config set-api-key --provider elevenlabs --stdin
-          codexbar hooks test quota_reached --provider codex
-          codexbar plugins list
           codexbar cache clear --cookies
           codexbar cookie refresh --provider opencodego --allow-keychain-prompt
           codexbar diagnose --provider minimax --format json --redact --output diagnostic.json

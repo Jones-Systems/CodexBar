@@ -50,18 +50,14 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let storeA = SettingsStore(
             userDefaults: defaultsA,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         storeA.refreshFrequency = .fifteenMinutes
 
         let defaultsB = try #require(UserDefaults(suiteName: suite))
         let storeB = SettingsStore(
             userDefaults: defaultsB,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeB.refreshFrequency == .fifteenMinutes)
         #expect(storeB.refreshFrequency.seconds == 900)
@@ -77,9 +73,7 @@ struct SettingsStoreTests {
 
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(store.refreshFrequency == .fiveMinutes)
         #expect(store.refreshFrequency.seconds == 300)
@@ -93,18 +87,14 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(store.refreshAllProvidersOnMenuOpen == false)
         store.refreshAllProvidersOnMenuOpen = true
 
         let reloaded = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
         #expect(reloaded.refreshAllProvidersOnMenuOpen == true)
     }
 
@@ -116,18 +106,14 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(store.menuBarShowsResetTimeWhenExhausted == false)
         store.menuBarShowsResetTimeWhenExhausted = true
 
         let reloaded = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
         #expect(reloaded.menuBarShowsResetTimeWhenExhausted == true)
     }
 
@@ -139,9 +125,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let storeA = SettingsStore(
             userDefaults: defaultsA,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeA.confettiOnWeeklyLimitResetsEnabled == false)
         storeA.confettiOnWeeklyLimitResetsEnabled = true
@@ -149,9 +133,7 @@ struct SettingsStoreTests {
         let defaultsB = try #require(UserDefaults(suiteName: suite))
         let storeB = SettingsStore(
             userDefaults: defaultsB,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeB.confettiOnWeeklyLimitResetsEnabled == true)
     }
@@ -164,9 +146,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let storeA = SettingsStore(
             userDefaults: defaultsA,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeA.confettiOnSessionLimitResetsEnabled == false)
         storeA.confettiOnSessionLimitResetsEnabled = true
@@ -174,9 +154,7 @@ struct SettingsStoreTests {
         let defaultsB = try #require(UserDefaults(suiteName: suite))
         let storeB = SettingsStore(
             userDefaults: defaultsB,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeB.confettiOnSessionLimitResetsEnabled == true)
     }
@@ -189,9 +167,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let storeA = SettingsStore(
             userDefaults: defaultsA,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeA.providerStorageFootprintsEnabled == false)
         #expect(defaultsA.bool(forKey: "providerStorageFootprintsEnabled") == false)
@@ -200,9 +176,7 @@ struct SettingsStoreTests {
         let defaultsB = try #require(UserDefaults(suiteName: suite))
         let storeB = SettingsStore(
             userDefaults: defaultsB,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeB.providerStorageFootprintsEnabled == true)
     }
@@ -215,9 +189,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let storeA = SettingsStore(
             userDefaults: defaultsA,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeA.providersSortedAlphabetically == false)
         storeA.providersSortedAlphabetically = true
@@ -225,9 +197,7 @@ struct SettingsStoreTests {
         let defaultsB = try #require(UserDefaults(suiteName: suite))
         let storeB = SettingsStore(
             userDefaults: defaultsB,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeB.providersSortedAlphabetically == true)
     }
@@ -235,7 +205,7 @@ struct SettingsStoreTests {
     @Test
     func `alphabetical provider order puts enabled first then sorts by name`() {
         let metadata = ProviderDescriptorRegistry.metadata
-        let enabled: Set<UsageProvider> = [.cursor, .claude, .codex]
+        let enabled: Set<UsageProvider> = [.claude]
         let ordered = CodexBarConfig.alphabeticalProviderOrder(
             enablement: { enabled.contains($0) })
 
@@ -264,9 +234,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let storeA = SettingsStore(
             userDefaults: defaultsA,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeA.providerChangelogLinksEnabled == false)
         #expect(defaultsA.bool(forKey: "providerChangelogLinksEnabled") == false)
@@ -275,9 +243,7 @@ struct SettingsStoreTests {
         let defaultsB = try #require(UserDefaults(suiteName: suite))
         let storeB = SettingsStore(
             userDefaults: defaultsB,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeB.providerChangelogLinksEnabled == true)
     }
@@ -290,9 +256,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let storeA = SettingsStore(
             userDefaults: defaultsA,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeA.menuBarHidesCritters == false)
         #expect(defaultsA.bool(forKey: "menuBarHidesCritters") == false)
@@ -301,9 +265,7 @@ struct SettingsStoreTests {
         let defaultsB = try #require(UserDefaults(suiteName: suite))
         let storeB = SettingsStore(
             userDefaults: defaultsB,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeB.menuBarHidesCritters == true)
     }
@@ -316,9 +278,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let storeA = SettingsStore(
             userDefaults: defaultsA,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeA.menuBarHighContrastOnInactiveDisplays == false)
         #expect(defaultsA.bool(forKey: "menuBarHighContrastOnInactiveDisplays") == false)
@@ -327,9 +287,7 @@ struct SettingsStoreTests {
         let defaultsB = try #require(UserDefaults(suiteName: suite))
         let storeB = SettingsStore(
             userDefaults: defaultsB,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeB.menuBarHighContrastOnInactiveDisplays == true)
     }
@@ -342,18 +300,14 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let storeA = SettingsStore(
             userDefaults: defaultsA,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         storeA.selectedMenuProvider = .claude
 
         let defaultsB = try #require(UserDefaults(suiteName: suite))
         let storeB = SettingsStore(
             userDefaults: defaultsB,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeB.selectedMenuProvider == .claude)
     }
@@ -366,18 +320,14 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let storeA = SettingsStore(
             userDefaults: defaultsA,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         storeA.mergedMenuLastSelectedWasOverview = true
 
         let defaultsB = try #require(UserDefaults(suiteName: suite))
         let storeB = SettingsStore(
             userDefaults: defaultsB,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeB.mergedMenuLastSelectedWasOverview == true)
     }
@@ -390,29 +340,16 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let storeA = SettingsStore(
             userDefaults: defaultsA,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
-        storeA.mergedOverviewSelectedProviders = [
-            .opencode,
-            .codex,
-            .opencode,
-            .claude,
-            .cursor,
-            .warp,
-            .gemini,
-            .grok,
-        ]
-        let expectedProviders: [UsageProvider] = [.opencode, .codex, .claude, .cursor, .warp, .gemini]
+        storeA.mergedOverviewSelectedProviders = [.claude, .codex, .claude]
+        let expectedProviders: [UsageProvider] = [.claude, .codex]
         #expect(storeA.mergedOverviewSelectedProviders == expectedProviders)
 
         let defaultsB = try #require(UserDefaults(suiteName: suite))
         let storeB = SettingsStore(
             userDefaults: defaultsB,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeB.mergedOverviewSelectedProviders == expectedProviders)
     }
@@ -422,33 +359,29 @@ struct SettingsStoreTests {
         let suite = "SettingsStoreTests-merged-overview-invalid-raw"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defaults.removePersistentDomain(forName: suite)
-        defaults.set(["codex", "unknown-provider", "claude", "codex"], forKey: "mergedOverviewSelectedProviders")
+        defaults.set(["codex", "cursor", "unknown-provider", "claude", "codex"], forKey: "mergedOverviewSelectedProviders")
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(store.mergedOverviewSelectedProviders == [.codex, .claude])
     }
 
     @Test
-    func `resolved merged overview providers defaults to first six when selection empty`() throws {
-        let suite = "SettingsStoreTests-merged-overview-default-first-six"
+    func `resolved merged overview providers defaults to retained providers when selection empty`() throws {
+        let suite = "SettingsStoreTests-merged-overview-default-retained"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defaults.removePersistentDomain(forName: suite)
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
-        let activeProviders: [UsageProvider] = [.codex, .claude, .cursor, .opencode, .warp, .gemini, .grok]
+        let activeProviders: [UsageProvider] = [.codex, .claude]
         let resolved = store.resolvedMergedOverviewProviders(activeProviders: activeProviders)
 
-        #expect(resolved == [.codex, .claude, .cursor, .opencode, .warp, .gemini])
+        #expect(resolved == [.codex, .claude])
     }
 
     @Test
@@ -459,12 +392,10 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         store.mergedOverviewSelectedProviders = []
-        let activeProviders: [UsageProvider] = [.codex, .claude, .cursor, .opencode, .warp, .gemini, .grok]
+        let activeProviders: [UsageProvider] = [.codex, .claude]
         let resolved = store.resolvedMergedOverviewProviders(activeProviders: activeProviders)
 
         #expect(resolved == [])
@@ -478,36 +409,13 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
-        store.mergedOverviewSelectedProviders = [.opencode, .codex, .cursor]
-        let activeProviders: [UsageProvider] = [.codex, .claude, .cursor, .opencode, .warp, .gemini, .grok]
+        store.mergedOverviewSelectedProviders = [.claude, .codex]
+        let activeProviders: [UsageProvider] = [.codex, .claude]
         let resolved = store.resolvedMergedOverviewProviders(activeProviders: activeProviders)
 
-        #expect(resolved == [.codex, .cursor, .opencode])
-    }
-
-    @Test
-    func `reconcile merged overview selection removes unavailable without auto fill`() throws {
-        let suite = "SettingsStoreTests-merged-overview-reconcile"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defaults.removePersistentDomain(forName: suite)
-        let configStore = testConfigStore(suiteName: suite)
-        let store = SettingsStore(
-            userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
-
-        store.mergedOverviewSelectedProviders = [.codex, .claude, .opencode]
-        let activeProviders: [UsageProvider] = [.codex, .cursor, .gemini, .opencode, .warp, .grok, .amp]
-
-        let resolved = store.reconcileMergedOverviewSelectedProviders(activeProviders: activeProviders)
-
-        #expect(resolved == [.codex, .opencode])
-        #expect(store.mergedOverviewSelectedProviders == [.codex, .opencode])
+        #expect(resolved == [.codex, .claude])
     }
 
     @Test
@@ -518,17 +426,15 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
-        store.mergedOverviewSelectedProviders = [.codex, .claude, .cursor]
-        let activeProviders: [UsageProvider] = [.codex, .claude]
+        store.mergedOverviewSelectedProviders = [.codex, .claude]
+        let activeProviders: [UsageProvider] = [.codex]
 
         let resolved = store.reconcileMergedOverviewSelectedProviders(activeProviders: activeProviders)
 
-        #expect(resolved == [.codex, .claude])
-        #expect(store.mergedOverviewSelectedProviders == [.codex, .claude, .cursor])
+        #expect(resolved == [.codex])
+        #expect(store.mergedOverviewSelectedProviders == [.codex, .claude])
     }
 
     @Test
@@ -541,16 +447,14 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         store.mergedOverviewSelectedProviders = [.codex]
-        let activeProviders: [UsageProvider] = [.codex, .claude, .cursor]
+        let activeProviders: [UsageProvider] = [.codex, .claude]
 
         let resolved = store.reconcileMergedOverviewSelectedProviders(activeProviders: activeProviders)
 
-        #expect(resolved == [.codex, .claude, .cursor])
+        #expect(resolved == [.codex, .claude])
         #expect(store.mergedOverviewSelectedProviders == [.codex])
     }
 
@@ -562,11 +466,9 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
-        let activeProviders: [UsageProvider] = [.codex, .claude, .cursor]
+        let activeProviders: [UsageProvider] = [.codex, .claude]
         #expect(store.resolvedMergedOverviewProviders(activeProviders: activeProviders) == activeProviders)
 
         _ = store.setMergedOverviewProviderSelection(
@@ -574,8 +476,8 @@ struct SettingsStoreTests {
             isSelected: false,
             activeProviders: activeProviders)
 
-        #expect(store.mergedOverviewSelectedProviders == [.codex, .cursor])
-        #expect(store.resolvedMergedOverviewProviders(activeProviders: activeProviders) == [.codex, .cursor])
+        #expect(store.mergedOverviewSelectedProviders == [.codex])
+        #expect(store.resolvedMergedOverviewProviders(activeProviders: activeProviders) == [.codex])
     }
 
     @Test
@@ -586,79 +488,18 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
-        let initialActiveProviders: [UsageProvider] = [.codex, .claude, .cursor]
+        let initialActiveProviders: [UsageProvider] = [.codex, .claude]
         _ = store.setMergedOverviewProviderSelection(
             provider: .claude,
             isSelected: false,
             activeProviders: initialActiveProviders)
 
-        let reorderedActiveProviders: [UsageProvider] = [.cursor, .codex, .claude]
+        let reorderedActiveProviders: [UsageProvider] = [.claude, .codex]
         let resolved = store.resolvedMergedOverviewProviders(activeProviders: reorderedActiveProviders)
 
-        #expect(resolved == [.cursor, .codex])
-    }
-
-    @Test
-    func `merged overview selection allows deselecting providers when more than six active`() throws {
-        let suite = "SettingsStoreTests-merged-overview-deselect-subset"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defaults.removePersistentDomain(forName: suite)
-        let configStore = testConfigStore(suiteName: suite)
-        let store = SettingsStore(
-            userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
-
-        store.mergedOverviewSelectedProviders = [.codex, .claude, .cursor]
-        let activeProviders: [UsageProvider] = [.codex, .claude, .cursor, .opencode, .warp, .gemini, .grok]
-
-        _ = store.setMergedOverviewProviderSelection(
-            provider: .cursor,
-            isSelected: false,
-            activeProviders: activeProviders)
-
-        #expect(store.mergedOverviewSelectedProviders == [.codex, .claude])
-        #expect(store.resolvedMergedOverviewProviders(activeProviders: activeProviders) == [.codex, .claude])
-    }
-
-    @Test
-    func `reconcile merged overview selection preserves stored subset when active drops to six or fewer`() throws {
-        let suite = "SettingsStoreTests-merged-overview-preserve-subset-across-drop"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defaults.removePersistentDomain(forName: suite)
-        let configStore = testConfigStore(suiteName: suite)
-        let store = SettingsStore(
-            userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
-
-        let activeProviders: [UsageProvider] = [.codex, .claude, .cursor, .opencode, .warp, .gemini, .grok]
-        _ = store.setMergedOverviewProviderSelection(
-            provider: .claude,
-            isSelected: false,
-            activeProviders: activeProviders)
-        _ = store.setMergedOverviewProviderSelection(
-            provider: .grok,
-            isSelected: true,
-            activeProviders: activeProviders)
-        let expectedSelection: [UsageProvider] = [.codex, .cursor, .opencode, .warp, .gemini, .grok]
-        #expect(store.mergedOverviewSelectedProviders == expectedSelection)
-
-        let reducedActiveProviders: [UsageProvider] = [.codex, .claude, .cursor]
-        let resolvedWhenReduced = store.reconcileMergedOverviewSelectedProviders(
-            activeProviders: reducedActiveProviders)
-
-        #expect(resolvedWhenReduced == [.codex, .claude, .cursor])
-        #expect(store.mergedOverviewSelectedProviders == expectedSelection)
-
-        let resolvedWhenRestored = store.resolvedMergedOverviewProviders(activeProviders: activeProviders)
-        #expect(resolvedWhenRestored == expectedSelection)
+        #expect(resolved == [.codex])
     }
 
     @Test
@@ -669,50 +510,22 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
-        let activeProviders: [UsageProvider] = [.codex, .claude, .cursor, .opencode, .warp, .gemini, .grok]
+        let activeProviders: [UsageProvider] = [.codex, .claude]
         _ = store.setMergedOverviewProviderSelection(
             provider: .codex,
             isSelected: false,
             activeProviders: activeProviders)
         #expect(store.resolvedMergedOverviewProviders(activeProviders: activeProviders) == [
             .claude,
-            .cursor,
-            .opencode,
-            .warp,
-            .gemini,
         ])
 
         let resolvedWhenEmpty = store.reconcileMergedOverviewSelectedProviders(activeProviders: [])
         #expect(resolvedWhenEmpty == [])
 
         let resolvedAfterReenable = store.resolvedMergedOverviewProviders(activeProviders: activeProviders)
-        #expect(resolvedAfterReenable == [.codex, .claude, .cursor, .opencode, .warp, .gemini])
-    }
-
-    @Test
-    func `persists open code workspace ID across instances`() throws {
-        let suite = "SettingsStoreTests-opencode-workspace"
-        let defaultsA = try #require(UserDefaults(suiteName: suite))
-        defaultsA.removePersistentDomain(forName: suite)
-        let configStore = testConfigStore(suiteName: suite)
-        let storeA = SettingsStore(
-            userDefaults: defaultsA,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore())
-
-        storeA.opencodeWorkspaceID = "wrk_01KEJ50SHK9YR41HSRSJ6QTFCM"
-
-        let defaultsB = try #require(UserDefaults(suiteName: suite))
-        let storeB = SettingsStore(
-            userDefaults: defaultsB,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore())
-
-        #expect(storeB.opencodeWorkspaceID == "wrk_01KEJ50SHK9YR41HSRSJ6QTFCM")
+        #expect(resolvedAfterReenable == [.codex, .claude])
     }
 
     @Test
@@ -724,9 +537,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
         #expect(store.sessionQuotaNotificationsEnabled == true)
         #expect(defaults.bool(forKey: key) == true)
     }
@@ -739,9 +550,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(store.quotaWarningNotificationsEnabled == false)
         #expect(store.quotaWarningThresholds == [50, 20])
@@ -766,17 +575,13 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         store.quotaWarningOnScreenAlertEnabled = true
 
         let reloaded = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
         #expect(reloaded.quotaWarningOnScreenAlertEnabled == true)
     }
 
@@ -788,9 +593,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         store.setQuotaWarningWindowEnabled(.weekly, enabled: false)
 
@@ -808,9 +611,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(store.quotaWarningThresholds == [99, 50, 20, 0])
         #expect(defaults.array(forKey: "quotaWarningThresholds") as? [Int] == [99, 50, 20, 0])
@@ -832,9 +633,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
         store.quotaWarningThresholds = [50, 20]
 
         #expect(store.resolvedQuotaWarningThresholds(provider: .codex, window: .session) == [50, 20])
@@ -857,9 +656,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
         store.quotaWarningThresholds = [50, 20]
         store.setQuotaWarningOverride(provider: .codex, window: .session, thresholds: [70, 30], enabled: true)
         let staleEditorThresholds = store.resolvedQuotaWarningThresholds(provider: .codex, window: .session)
@@ -882,9 +679,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
         store.quotaWarningThresholds = [50, 20]
         store.setQuotaWarningOverride(provider: .codex, window: .session, thresholds: nil, enabled: true)
 
@@ -910,9 +705,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         store.setQuotaWarningThresholds(.session, thresholds: [25])
         store.setQuotaWarningThresholds(.weekly, thresholds: [75, 10])
@@ -931,9 +724,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         store.setQuotaWarningWindowEnabled(.weekly, enabled: false)
         #expect(store.quotaWarningEnabled(provider: .codex, window: .weekly) == false)
@@ -958,9 +749,7 @@ struct SettingsStoreTests {
 
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(store.claudeUsageDataSource == .auto)
     }
@@ -974,73 +763,9 @@ struct SettingsStoreTests {
 
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(store.codexUsageDataSource == .auto)
-    }
-
-    @Test
-    func `defaults kilo usage source to auto`() throws {
-        let suite = "SettingsStoreTests-kilo-source"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defaults.removePersistentDomain(forName: suite)
-        let configStore = testConfigStore(suiteName: suite)
-
-        let store = SettingsStore(
-            userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
-
-        #expect(store.kiloUsageDataSource == .auto)
-    }
-
-    @Test
-    func `persists kilo usage source across instances`() throws {
-        let suite = "SettingsStoreTests-kilo-source-persist"
-        let defaultsA = try #require(UserDefaults(suiteName: suite))
-        defaultsA.removePersistentDomain(forName: suite)
-        let configStore = testConfigStore(suiteName: suite)
-        let storeA = SettingsStore(
-            userDefaults: defaultsA,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
-
-        storeA.kiloUsageDataSource = .cli
-
-        let defaultsB = try #require(UserDefaults(suiteName: suite))
-        let storeB = SettingsStore(
-            userDefaults: defaultsB,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
-
-        #expect(storeB.kiloUsageDataSource == .cli)
-    }
-
-    @Test
-    func `kilo extras only apply in auto mode`() throws {
-        let suite = "SettingsStoreTests-kilo-extras"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defaults.removePersistentDomain(forName: suite)
-        let configStore = testConfigStore(suiteName: suite)
-        let store = SettingsStore(
-            userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
-
-        store.kiloExtrasEnabled = true
-        #expect(store.kiloExtrasEnabled)
-
-        store.kiloUsageDataSource = .api
-        #expect(!store.kiloExtrasEnabled)
-
-        store.kiloUsageDataSource = .auto
-        #expect(store.kiloExtrasEnabled)
     }
 
     @Test
@@ -1052,9 +777,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         final class NotificationCounter: @unchecked Sendable {
             private let lock = NSLock()
@@ -1095,9 +818,7 @@ struct SettingsStoreTests {
         defaults.removePersistentDomain(forName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: testConfigStore(suiteName: suite),
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: testConfigStore(suiteName: suite))
         let impacts = BoolRecorder()
         let token = NotificationCenter.default.addObserver(
             forName: .codexbarProviderConfigDidChange,
@@ -1121,9 +842,7 @@ struct SettingsStoreTests {
         defaults.removePersistentDomain(forName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: testConfigStore(suiteName: suite),
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: testConfigStore(suiteName: suite))
 
         let initialConfigRevision = store.configRevision
         let initialBackgroundRevision = store.backgroundWorkSettingsRevision
@@ -1144,28 +863,6 @@ struct SettingsStoreTests {
     }
 
     @Test
-    func `persists zai API region across instances`() throws {
-        let suite = "SettingsStoreTests-zai-region"
-        let defaultsA = try #require(UserDefaults(suiteName: suite))
-        defaultsA.removePersistentDomain(forName: suite)
-        let configStore = testConfigStore(suiteName: suite)
-        let storeA = SettingsStore(
-            userDefaults: defaultsA,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore())
-
-        storeA.zaiAPIRegion = .bigmodelCN
-
-        let defaultsB = try #require(UserDefaults(suiteName: suite))
-        let storeB = SettingsStore(
-            userDefaults: defaultsB,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore())
-
-        #expect(storeB.zaiAPIRegion == .bigmodelCN)
-    }
-
-    @Test
     func `persists mini max API region across instances`() throws {
         let suite = "SettingsStoreTests-minimax-region"
         let defaultsA = try #require(UserDefaults(suiteName: suite))
@@ -1173,16 +870,14 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let storeA = SettingsStore(
             userDefaults: defaultsA,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore())
+            configStore: configStore)
 
         storeA.minimaxAPIRegion = .chinaMainland
 
         let defaultsB = try #require(UserDefaults(suiteName: suite))
         let storeB = SettingsStore(
             userDefaults: defaultsB,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore())
+            configStore: configStore)
 
         #expect(storeB.minimaxAPIRegion == .chinaMainland)
     }
@@ -1197,9 +892,7 @@ struct SettingsStoreTests {
 
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(store.openAIWebAccessEnabled == false)
         #expect(defaults.bool(forKey: "openAIWebAccessEnabled") == false)
@@ -1222,9 +915,7 @@ struct SettingsStoreTests {
 
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(store.openAIWebAccessEnabled == true)
         #expect(defaults.bool(forKey: "openAIWebAccessEnabled") == true)
@@ -1248,9 +939,7 @@ struct SettingsStoreTests {
 
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(store.openAIWebAccessEnabled == false)
         #expect(defaults.bool(forKey: "openAIWebAccessEnabled") == false)
@@ -1270,9 +959,7 @@ struct SettingsStoreTests {
 
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(store.openAIWebAccessEnabled == true)
         #expect(defaults.bool(forKey: "openAIWebAccessEnabled") == true)
@@ -1291,9 +978,7 @@ struct SettingsStoreTests {
 
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         store.codexCookieSource = .auto
         #expect(store.codexCookieSource == .auto)
@@ -1317,9 +1002,7 @@ struct SettingsStoreTests {
 
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(store.openAIWebBatterySaverEnabled == false)
 
@@ -1338,9 +1021,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(store.codexSparkUsageVisible)
         let backgroundRevision = store.backgroundWorkSettingsRevision
@@ -1357,9 +1038,7 @@ struct SettingsStoreTests {
 
         let reloaded = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
         #expect(reloaded.codexSparkUsageVisible == false)
     }
 
@@ -1372,9 +1051,7 @@ struct SettingsStoreTests {
 
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         let didChange = ObservationFlag()
 
@@ -1399,9 +1076,7 @@ struct SettingsStoreTests {
 
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         let didChange = ObservationFlag()
 
@@ -1426,9 +1101,7 @@ struct SettingsStoreTests {
 
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         let didChange = ObservationFlag()
 
@@ -1454,9 +1127,7 @@ struct SettingsStoreTests {
 
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         func expectObservation(
             for window: QuotaWarningWindow,
@@ -1488,9 +1159,7 @@ struct SettingsStoreTests {
 
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
         store.setQuotaWarningThresholds(.session, thresholds: [70, 30])
 
         let didChange = ObservationFlag()
@@ -1515,9 +1184,7 @@ struct SettingsStoreTests {
 
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         func expectObservation(_ update: () -> Void) async {
             let didChange = ObservationFlag()
@@ -1544,9 +1211,7 @@ struct SettingsStoreTests {
 
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         let didChange = ObservationFlag()
 
@@ -1571,9 +1236,7 @@ struct SettingsStoreTests {
 
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         let didChange = ObservationFlag()
 
@@ -1598,9 +1261,7 @@ struct SettingsStoreTests {
 
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(store.orderedProviders() == UsageProvider.allCases.map(\.instanceID))
     }
@@ -1614,76 +1275,28 @@ struct SettingsStoreTests {
 
         // Partial list to mimic "older version" missing providers.
         let config = CodexBarConfig(providers: [
-            ProviderConfig(id: .gemini),
             ProviderConfig(id: .codex),
         ])
         try configStore.save(config)
 
         let storeA = SettingsStore(
             userDefaults: defaultsA,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
-        let legacyOrder: [UsageProvider] = [.gemini, .codex]
+        let legacyOrder: [UsageProvider] = [.codex]
         let appendedProviders = UsageProvider.allCases.filter { !legacyOrder.contains($0) }
         #expect(storeA.orderedProviders() == (legacyOrder + appendedProviders).map(\.instanceID))
 
         // Move one provider; ensure it's persisted across instances.
-        let antigravityIndex = try #require(storeA.orderedProviders().firstIndex(of: .antigravity))
-        storeA.moveProvider(fromOffsets: IndexSet(integer: antigravityIndex), toOffset: 0)
+        let claudeIndex = try #require(storeA.orderedProviders().firstIndex(of: .claude))
+        storeA.moveProvider(fromOffsets: IndexSet(integer: claudeIndex), toOffset: 0)
 
         let defaultsB = try #require(UserDefaults(suiteName: suite))
         let storeB = SettingsStore(
             userDefaults: defaultsB,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
-        #expect(storeB.orderedProviders().first == .antigravity)
-    }
-
-    @Test
-    func `setting alibaba API key enables provider`() throws {
-        let suite = "SettingsStoreTests-alibaba-enable-on-token"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defaults.removePersistentDomain(forName: suite)
-        let configStore = testConfigStore(suiteName: suite)
-
-        let store = SettingsStore(
-            userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
-
-        let metadata = try #require(ProviderDescriptorRegistry.metadata[.alibaba])
-        store.setProviderEnabled(provider: .alibaba, metadata: metadata, enabled: false)
-
-        store.alibabaCodingPlanAPIToken = "cpk-test-token"
-
-        #expect(store.isProviderEnabled(provider: .alibaba, metadata: metadata))
-    }
-
-    @Test
-    func `alibaba provider auto enables on startup when token exists`() throws {
-        let suite = "SettingsStoreTests-alibaba-auto-enable-startup"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defaults.removePersistentDomain(forName: suite)
-        let configStore = testConfigStore(suiteName: suite)
-
-        let config = CodexBarConfig(providers: [
-            ProviderConfig(id: .alibaba, enabled: false, apiKey: "cpk-startup-token"),
-        ])
-        try configStore.save(config)
-
-        let store = SettingsStore(
-            userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
-
-        let metadata = try #require(ProviderDescriptorRegistry.metadata[.alibaba])
-        #expect(store.isProviderEnabled(provider: .alibaba, metadata: metadata))
+        #expect(storeB.orderedProviders().first == .claude)
     }
 
     @Test
@@ -1694,18 +1307,14 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let storeA = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(!storeA.costComparisonPeriodsEnabled)
         storeA.costComparisonPeriodsEnabled = true
 
         let storeB = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
         #expect(storeB.costComparisonPeriodsEnabled)
     }
 
@@ -1717,9 +1326,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let storeA = SettingsStore(
             userDefaults: defaultsA,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeA.costSummaryDisplayStyle == .both)
 
@@ -1728,9 +1335,7 @@ struct SettingsStoreTests {
         let defaultsB = try #require(UserDefaults(suiteName: suite))
         let storeB = SettingsStore(
             userDefaults: defaultsB,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeB.costSummaryDisplayStyle == .costSubmenu)
 
@@ -1749,9 +1354,7 @@ struct SettingsStoreTests {
 
         let store = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(store.costSummaryDisplayStyle == .both)
         #expect(defaults.string(forKey: "costSummaryDisplayStyle") == CostSummaryDisplayStyle.both.rawValue)
@@ -1765,9 +1368,7 @@ struct SettingsStoreTests {
         let configStore = testConfigStore(suiteName: suite)
         let storeA = SettingsStore(
             userDefaults: defaultsA,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeA.costSummaryDisplayStyle == .both)
         #expect(defaultsA.string(forKey: "costSummaryDisplayStyle") == nil)
@@ -1780,9 +1381,7 @@ struct SettingsStoreTests {
         let defaultsB = try #require(UserDefaults(suiteName: suite))
         let storeB = SettingsStore(
             userDefaults: defaultsB,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
 
         #expect(storeB.costSummaryDisplayStyle == .both)
     }

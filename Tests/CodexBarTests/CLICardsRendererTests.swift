@@ -120,7 +120,7 @@ struct CLICardsRendererTests {
     @Test
     func `renders failure footer without cards`() {
         let failures = [
-            CLICardFailure(provider: .cursor, accountLabel: nil, message: "not configured"),
+            CLICardFailure(provider: .claude, accountLabel: nil, message: "not configured"),
         ]
         let output = CLICardsRenderer.render(cards: [], failures: failures, terminalWidth: 80, useColor: false)
 
@@ -141,7 +141,7 @@ struct CLICardsRendererTests {
             extraLines: [],
             statusLine: nil)
         let failures = [
-            CLICardFailure(provider: .grok, accountLabel: nil, message: "timeout"),
+            CLICardFailure(provider: .claude, accountLabel: nil, message: "timeout"),
         ]
 
         let output = CLICardsRenderer.render(cards: [card], failures: failures, terminalWidth: 80, useColor: false)
@@ -186,43 +186,10 @@ struct CLICardsRendererTests {
     }
 
     @Test
-    func `synthetic quota lanes do not replace real brief usage`() {
-        let snapshot = UsageSnapshot(
-            primary: .init(
-                usedPercent: 0,
-                windowMinutes: 300,
-                resetsAt: nil,
-                resetDescription: nil,
-                isSyntheticPlaceholder: true),
-            secondary: .init(
-                usedPercent: 20,
-                windowMinutes: 10080,
-                resetsAt: nil,
-                resetDescription: nil),
-            tertiary: nil,
-            updatedAt: Date(timeIntervalSince1970: 0))
-        let card = CLICardsRenderer.makeCard(CLICardBuildInput(
-            provider: .claude,
-            snapshot: snapshot,
-            credits: nil,
-            source: "oauth",
-            status: nil,
-            notes: [],
-            useColor: false,
-            resetStyle: .countdown,
-            weeklyWorkDays: nil,
-            now: Date(timeIntervalSince1970: 0)))
-        let rows = CLICardsBriefRenderer.makeRows(cards: [card])
-
-        #expect(card.metrics.map(\.label) == ["Weekly"])
-        #expect(rows.first?.usedPercent == 20)
-    }
-
-    @Test
     func `brief reset summary wraps to terminal width`() {
         let now = Date(timeIntervalSince1970: 1_700_000_000)
         let card = CLICardModel(
-            provider: .alibabatokenplan,
+            provider: .claude,
             title: "Alibaba Token Plan",
             sourceLabel: "web",
             planBadge: "International",
@@ -260,7 +227,7 @@ struct CLICardsRendererTests {
             tertiary: nil,
             updatedAt: Date(timeIntervalSince1970: 0))
         let card = CLICardsRenderer.makeCard(CLICardBuildInput(
-            provider: .kilo,
+            provider: .claude,
             snapshot: snapshot,
             credits: nil,
             source: "api",
@@ -327,7 +294,7 @@ struct CLICardsRendererTests {
     @Test
     func `long detail rows stay within card width`() {
         let card = CLICardModel(
-            provider: .clawrouter,
+            provider: .claude,
             title: "ClawRouter",
             sourceLabel: "api",
             planBadge: nil,
@@ -344,7 +311,7 @@ struct CLICardsRendererTests {
     @Test
     func `brief warnings name the actual quota metric`() {
         let card = CLICardModel(
-            provider: .openrouter,
+            provider: .claude,
             title: "OpenRouter",
             sourceLabel: "api",
             planBadge: nil,
@@ -405,7 +372,7 @@ struct CLICardsRendererTests {
     func `brief warnings wrap to terminal width`() {
         let cards = ["OpenRouter", "Antigravity", "CommandCode"].map { title in
             CLICardModel(
-                provider: .openrouter,
+                provider: .claude,
                 title: title,
                 sourceLabel: "api",
                 planBadge: nil,
@@ -435,7 +402,7 @@ struct CLICardsRendererTests {
         let now = Date(timeIntervalSince1970: 1_700_000_000)
         let rows = CLICardsBriefRenderer.makeRows(cards: [
             CLICardModel(
-                provider: .kilo,
+                provider: .claude,
                 title: "Kilo",
                 sourceLabel: "api",
                 planBadge: nil,
@@ -487,7 +454,7 @@ struct CLICardsRendererTests {
                 extraLines: [],
                 statusLine: nil),
             CLICardModel(
-                provider: .openrouter,
+                provider: .claude,
                 title: "Exhausted",
                 sourceLabel: "api",
                 planBadge: nil,
@@ -528,7 +495,7 @@ struct CLICardsRendererTests {
                 extraLines: [],
                 statusLine: nil),
             CLICardModel(
-                provider: .openrouter,
+                provider: .claude,
                 title: "Exhausted",
                 sourceLabel: "api",
                 planBadge: nil,
@@ -558,7 +525,7 @@ struct CLICardsRendererTests {
     @Test
     func `standard card grid shows empty remaining bar at exhaustion`() {
         let card = CLICardModel(
-            provider: .openrouter,
+            provider: .claude,
             title: "Exhausted",
             sourceLabel: "api",
             planBadge: nil,
@@ -575,7 +542,7 @@ struct CLICardsRendererTests {
     @Test
     func `enhanced card grid shows empty remaining bar at exhaustion`() {
         let card = CLICardModel(
-            provider: .openrouter,
+            provider: .claude,
             title: "Exhausted",
             sourceLabel: "api",
             planBadge: nil,

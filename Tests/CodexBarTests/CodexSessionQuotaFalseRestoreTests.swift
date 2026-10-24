@@ -1045,9 +1045,7 @@ extension CodexSessionQuotaFalseRestoreTests {
         defaults.removePersistentDomain(forName: suiteName)
         let settings = SettingsStore(
             userDefaults: defaults,
-            configStore: testConfigStore(suiteName: suiteName),
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: testConfigStore(suiteName: suiteName))
         settings.refreshFrequency = .manual
         settings.statusChecksEnabled = false
         settings.sessionQuotaNotificationsEnabled = true

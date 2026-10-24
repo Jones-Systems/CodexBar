@@ -8,9 +8,9 @@ struct OverviewSpendSummaryTests {
     func `publication separates available history from unavailable subscription pricing`(
         historyDays: Int, established: Bool) throws
     {
-        let fixture = try CursorOverviewProofFixture.make(historyDays: historyDays, established: established)
+        let fixture = try SharedOverviewSpendFixture.make(historyDays: historyDays, established: established)
         #expect(fixture.model.groups.count == 1)
-        #expect(fixture.model.groups.first?.providers.map(\.provider) == [.cursor])
+        #expect(fixture.model.groups.first?.providers.map(\.provider) == [.codex])
         #expect(fixture.model.groups.first?.coveredDayCount == (established ? historyDays : 0))
         #expect(fixture.counts.total == 2)
         #expect(fixture.counts.cost == (established ? 1 : 0))
@@ -28,8 +28,8 @@ struct OverviewSpendSummaryTests {
             providers: [
                 self.provider(.codex, tokens: 4_800_000, cost: 412.64),
                 self.provider(.claude, tokens: nil, cost: nil),
-                self.provider(.openrouter, tokens: 9_640_000, cost: 282.74),
-                self.provider(.cursor, tokens: 1_250_000, cost: 64.18),
+                self.provider(.claude, tokens: 9_640_000, cost: 282.74),
+                self.provider(.codex, tokens: 1_250_000, cost: 64.18),
             ],
             totalTokens: 15_690_000,
             totalCost: 759.56,
@@ -120,7 +120,7 @@ struct OverviewSpendSummaryTests {
         let group = self.group(
             providers: [
                 self.provider(.claude, tokens: 2_000_000, cost: 35.09),
-                self.provider(.openrouter, tokens: nil, cost: 39.79),
+                self.provider(.claude, tokens: nil, cost: 39.79),
             ],
             totalTokens: 2_000_000,
             totalCost: 35.09 + 39.79,

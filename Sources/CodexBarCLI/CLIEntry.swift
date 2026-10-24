@@ -18,15 +18,6 @@ import FoundationNetworking
 @main
 enum CodexBarCLI {
     static func main() async {
-        if CodexBarCoreResourceSmoke.isRequested() {
-            #if canImport(Darwin)
-            Darwin.exit(CodexBarCoreResourceSmoke.run())
-            #elseif canImport(Glibc)
-            Glibc.exit(CodexBarCoreResourceSmoke.run())
-            #elseif canImport(Musl)
-            Musl.exit(CodexBarCoreResourceSmoke.run())
-            #endif
-        }
         self.configureLinuxTimeZoneIfNeeded()
 
         let rawArgv = Array(CommandLine.arguments.dropFirst())
@@ -63,8 +54,6 @@ enum CodexBarCLI {
                 await self.runServe(invocation.parsedValues)
             case let path where path.first == "config":
                 self.runConfig(path: path, values: invocation.parsedValues)
-            case let path where path.first == "hooks":
-                await self.runHooks(path: path, values: invocation.parsedValues)
             case ["cache", "clear"]:
                 self.runCacheClear(invocation.parsedValues)
             case ["cookie", "refresh"]:
@@ -77,8 +66,6 @@ enum CodexBarCLI {
                 await self.runDiagnose(invocation.parsedValues)
             case ["guard"]:
                 await self.runGuard(invocation.parsedValues)
-            case let path where path.first == "plugins":
-                await self.runPlugins(path: path, values: invocation.parsedValues)
             default:
                 Self.exit(
                     code: .failure,
@@ -117,46 +104,6 @@ enum CodexBarCLI {
         }
         defer { signalMonitor.cancel() }
         await self.runCookieRefresh(values)
-    }
-
-    private static func hooksCommandDescriptor() -> CommandDescriptor {
-        let hooksSignature = CommandSignature.describe(HooksOptions())
-        let hooksTestSignature = CommandSignature.describe(HooksTestOptions())
-        let hooksWatchSignature = CommandSignature.describe(HooksWatchOptions())
-
-        return CommandDescriptor(
-            name: "hooks",
-            abstract: "Run external commands on quota/provider events",
-            discussion: nil,
-            signature: CommandSignature(),
-            subcommands: [
-                CommandDescriptor(
-                    name: "list",
-                    abstract: "List configured hooks",
-                    discussion: nil,
-                    signature: hooksSignature),
-                CommandDescriptor(
-                    name: "enable",
-                    abstract: "Enable hooks",
-                    discussion: nil,
-                    signature: hooksSignature),
-                CommandDescriptor(
-                    name: "disable",
-                    abstract: "Disable hooks",
-                    discussion: nil,
-                    signature: hooksSignature),
-                CommandDescriptor(
-                    name: "test",
-                    abstract: "Fire matching hooks for an event",
-                    discussion: nil,
-                    signature: hooksTestSignature),
-                CommandDescriptor(
-                    name: "watch",
-                    abstract: "Poll providers and fire hooks on quota/status changes",
-                    discussion: nil,
-                    signature: hooksWatchSignature),
-            ],
-            defaultSubcommandName: "list")
     }
 
     static func commandDescriptors() -> [CommandDescriptor] {
@@ -257,7 +204,6 @@ enum CodexBarCLI {
                         signature: configSetAPIKeySignature),
                 ],
                 defaultSubcommandName: "validate"),
-            Self.hooksCommandDescriptor(),
             CommandDescriptor(
                 name: "cache",
                 abstract: "Cache management",
@@ -278,29 +224,7 @@ enum CodexBarCLI {
                 discussion: nil,
                 signature: diagnoseSignature),
         ]
-        descriptors.append(Self.pluginsCommandDescriptor())
         return descriptors
-    }
-
-    private static func pluginsCommandDescriptor() -> CommandDescriptor {
-        CommandDescriptor(
-            name: "plugins",
-            abstract: "List or fetch user-installed provider plugins",
-            discussion: nil,
-            signature: CommandSignature(),
-            subcommands: [
-                CommandDescriptor(
-                    name: "list",
-                    abstract: "List discovered local plugins",
-                    discussion: nil,
-                    signature: CommandSignature()),
-                CommandDescriptor(
-                    name: "fetch",
-                    abstract: "Fetch one plugin, interactively approving network access when needed",
-                    discussion: nil,
-                    signature: CommandSignature.describe(PluginFetchOptions())),
-            ],
-            defaultSubcommandName: "list")
     }
 
     private static func dashboardCommandDescriptor() -> CommandDescriptor {

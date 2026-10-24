@@ -55,16 +55,7 @@ public struct ProviderPlanRowPresentation: Sendable, Equatable {
 public enum ProviderCostMenuCardStyle: Sendable, Equatable {
     case generic
     case hidden
-    case extraUsageBalance
-    case zenBalance
-    case pointsBalance
-    case prepaidCredits
-    case payAsYouGoBalance
-    /// Monthly spend without a configured limit, with the remaining prepaid balance alongside it.
-    case payAsYouGoSpend
     case claude
-    case apiSpend
-    case clawRouter
 }
 
 public struct ProviderCostPresentation: Sendable, Equatable {
@@ -151,10 +142,6 @@ public struct ProviderIconDecorations: OptionSet, Sendable {
 
     public static let face = Self(rawValue: 1 << 0)
     public static let notches = Self(rawValue: 1 << 1)
-    public static let gemini = Self(rawValue: 1 << 2)
-    public static let antigravity = Self(rawValue: 1 << 3)
-    public static let factory = Self(rawValue: 1 << 4)
-    public static let warp = Self(rawValue: 1 << 5)
 }
 
 public struct ProviderIconWindowContext: Sendable {
@@ -172,21 +159,15 @@ public struct ProviderIconWindowContext: Sendable {
 public struct ProviderMenuBarWindowContext: Sendable {
     public let metric: ProviderMenuBarMetric
     public let snapshot: UsageSnapshot
-    public let supportsAverage: Bool
-    public let prioritizesExhaustedQuotas: Bool
     public let now: Date
 
     public init(
         metric: ProviderMenuBarMetric,
         snapshot: UsageSnapshot,
-        supportsAverage: Bool,
-        prioritizesExhaustedQuotas: Bool,
         now: Date)
     {
         self.metric = metric
         self.snapshot = snapshot
-        self.supportsAverage = supportsAverage
-        self.prioritizesExhaustedQuotas = prioritizesExhaustedQuotas
         self.now = now
     }
 }
@@ -229,7 +210,6 @@ public struct ProviderUsageNotesContext: Sendable {
 
 public enum ProviderUsageNotesResolution: Sendable {
     case unhandled
-    case openAIAPI(OpenAIAPIUsageSnapshot)
     case localized([String])
 }
 
@@ -258,13 +238,6 @@ public enum ProviderPrimaryDescriptionPlacement: Sendable {
     case detailBySecondaryPresence
 }
 
-public enum ProviderPrimaryDetailKind: Sendable {
-    case none
-    case poeBalance
-    case kiroCredits
-    case requestQuota
-}
-
 public struct ProviderMenuCardPresentation: Sendable {
     public typealias UsageNotesResolver = @Sendable (ProviderUsageNotesContext) -> ProviderUsageNotesResolution
     public typealias CostVisibilityResolver = @Sendable (ProviderCostVisibilityContext) -> Bool
@@ -287,9 +260,6 @@ public struct ProviderMenuCardPresentation: Sendable {
     public let hidesPrimaryResetWithoutDate: Bool
     public let hidesPrimaryResetWithoutSecondary: Bool
     public let clearsPrimaryReset: Bool
-    public let primaryDetailKind: ProviderPrimaryDetailKind
-    public let usesAbacusPace: Bool
-    public let usesSyntheticRollingRegen: Bool
     public let usesRawPrimaryResetDescription: Bool
     public let resetWindowUsesWeeklyPace: Bool
 
@@ -308,9 +278,6 @@ public struct ProviderMenuCardPresentation: Sendable {
         hidesPrimaryResetWithoutSecondary: Bool = false,
         clearsPrimaryReset: Bool = false,
         movePrimaryDetailToStatus: @escaping SnapshotPredicate = { _ in false },
-        primaryDetailKind: ProviderPrimaryDetailKind = .none,
-        usesAbacusPace: Bool = false,
-        usesSyntheticRollingRegen: Bool = false,
         usesRawPrimaryResetDescription: Bool = false,
         resetWindowUsesWeeklyPace: Bool = false)
     {
@@ -328,9 +295,6 @@ public struct ProviderMenuCardPresentation: Sendable {
         self.hidesPrimaryResetWithoutSecondary = hidesPrimaryResetWithoutSecondary
         self.clearsPrimaryReset = clearsPrimaryReset
         self.movePrimaryDetailToStatus = movePrimaryDetailToStatus
-        self.primaryDetailKind = primaryDetailKind
-        self.usesAbacusPace = usesAbacusPace
-        self.usesSyntheticRollingRegen = usesSyntheticRollingRegen
         self.usesRawPrimaryResetDescription = usesRawPrimaryResetDescription
         self.resetWindowUsesWeeklyPace = resetWindowUsesWeeklyPace
     }
@@ -425,7 +389,6 @@ public struct ProviderUsagePresentation: Sendable {
     private let planUtilizationSeriesNormalizer: PlanUtilizationSeriesNormalizer
     private let widgetRowLimitResolver: WidgetRowLimitResolver
     public let iconDecorations: ProviderIconDecorations
-    public let treatsExhaustedSecondaryIconWindowAsMissing: Bool
     public let reservesMissingSecondaryIconLane: Bool
     public let primarySemanticWindow: ProviderSemanticWindow
     public let secondarySemanticWindow: ProviderSemanticWindow
@@ -451,7 +414,6 @@ public struct ProviderUsagePresentation: Sendable {
             ProviderUsageWindowPair(primary: context.snapshot.primary, secondary: context.snapshot.secondary)
         },
         iconDecorations: ProviderIconDecorations = [],
-        treatsExhaustedSecondaryIconWindowAsMissing: Bool = false,
         reservesMissingSecondaryIconLane: Bool = false,
         semanticWindowResolver: @escaping SemanticWindowResolver = Self.standardSemanticWindows,
         primarySemanticWindow: ProviderSemanticWindow = .session,
@@ -477,7 +439,6 @@ public struct ProviderUsagePresentation: Sendable {
         self.creditResolver = creditResolver
         self.iconWindowResolver = iconWindowResolver
         self.iconDecorations = iconDecorations
-        self.treatsExhaustedSecondaryIconWindowAsMissing = treatsExhaustedSecondaryIconWindowAsMissing
         self.reservesMissingSecondaryIconLane = reservesMissingSecondaryIconLane
         self.semanticWindowResolver = semanticWindowResolver
         self.primarySemanticWindow = primarySemanticWindow

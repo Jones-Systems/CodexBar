@@ -65,10 +65,7 @@ enum MenuBarMetricPreference: String, CaseIterable, Identifiable {
     case primary
     case secondary
     case primaryAndSecondary
-    case tertiary
     case extraUsage
-    case average
-    case monthlyPlan
 
     var id: String {
         self.rawValue
@@ -80,40 +77,7 @@ enum MenuBarMetricPreference: String, CaseIterable, Identifiable {
         case .primary: L("metric_pref_primary")
         case .secondary: L("metric_pref_secondary")
         case .primaryAndSecondary: "\(L("metric_pref_primary")) + \(L("metric_pref_secondary"))"
-        case .tertiary: L("metric_pref_tertiary")
         case .extraUsage: L("metric_pref_extra_usage")
-        case .average: L("metric_pref_average")
-        case .monthlyPlan: L("metric_mistral_monthly_plan")
-        }
-    }
-}
-
-enum KiroMenuBarDisplayMode: String, CaseIterable, Identifiable {
-    case automatic
-    case hidden
-    case creditsLeft
-    case percentLeft
-    case creditsAndPercent
-    case usedAndTotal
-    case overageCreditsWhenExhausted
-    case overageCostWhenExhausted
-    case overageCreditsAndCostWhenExhausted
-
-    var id: String {
-        self.rawValue
-    }
-
-    var label: String {
-        switch self {
-        case .automatic: L("Automatic")
-        case .hidden: L("Hidden")
-        case .creditsLeft: L("Credits left")
-        case .percentLeft: L("Percent left")
-        case .creditsAndPercent: L("Credits + percent")
-        case .usedAndTotal: L("Used / total")
-        case .overageCreditsWhenExhausted: L("Overage credits at zero")
-        case .overageCostWhenExhausted: L("Overage cost at zero")
-        case .overageCreditsAndCostWhenExhausted: L("Overage credits + cost at zero")
         }
     }
 }
@@ -252,7 +216,6 @@ final class SettingsStore {
 
     @ObservationIgnored let userDefaults: UserDefaults
     @ObservationIgnored let configStore: CodexBarConfigStore
-    @ObservationIgnored let antigravityOAuthCredentialsStore: AntigravityOAuthCredentialsStore
     @ObservationIgnored let keychainAccessPolicy: SettingsStoreKeychainAccessPolicy
     @ObservationIgnored var config: CodexBarConfig
     @ObservationIgnored var configPersistTask: Task<Void, Never>?
@@ -306,43 +269,18 @@ final class SettingsStore {
     init(
         userDefaults: UserDefaults = .standard,
         configStore: CodexBarConfigStore = CodexBarConfigStore(),
-        zaiTokenStore: any ZaiTokenStoring = KeychainZaiTokenStore(),
-        syntheticTokenStore: any SyntheticTokenStoring = KeychainSyntheticTokenStore(),
         codexCookieStore: any CookieHeaderStoring = KeychainCookieHeaderStore(
             account: "codex-cookie",
             promptKind: .codexCookie),
         claudeCookieStore: any CookieHeaderStoring = KeychainCookieHeaderStore(
             account: "claude-cookie",
             promptKind: .claudeCookie),
-        cursorCookieStore: any CookieHeaderStoring = KeychainCookieHeaderStore(
-            account: "cursor-cookie",
-            promptKind: .cursorCookie),
-        opencodeCookieStore: any CookieHeaderStoring = KeychainCookieHeaderStore(
-            account: "opencode-cookie",
-            promptKind: .opencodeCookie),
-        factoryCookieStore: any CookieHeaderStoring = KeychainCookieHeaderStore(
-            account: "factory-cookie",
-            promptKind: .factoryCookie),
-        minimaxCookieStore: any MiniMaxCookieStoring = KeychainMiniMaxCookieStore(),
-        minimaxAPITokenStore: any MiniMaxAPITokenStoring = KeychainMiniMaxAPITokenStore(),
-        kimiTokenStore: any KimiTokenStoring = KeychainKimiTokenStore(),
-        augmentCookieStore: any CookieHeaderStoring = KeychainCookieHeaderStore(
-            account: "augment-cookie",
-            promptKind: .augmentCookie),
-        ampCookieStore: any CookieHeaderStoring = KeychainCookieHeaderStore(
-            account: "amp-cookie",
-            promptKind: .ampCookie),
-        copilotTokenStore: any CopilotTokenStoring = KeychainCopilotTokenStore(),
         tokenAccountStore: any ProviderTokenAccountStoring = FileTokenAccountStore(),
-        antigravityOAuthCredentialsStore: AntigravityOAuthCredentialsStore = AntigravityOAuthCredentialsStore(),
         keychainAccessPolicy: SettingsStoreKeychainAccessPolicy = .live,
         performInitialProviderDetection: Bool = !SettingsStore.isRunningTests)
     {
         // Legacy credential migration must see the saved policy, including shared-defaults fallback.
         keychainAccessPolicy.setDisabled(Self.loadDebugDisableKeychainAccess(userDefaults: userDefaults))
-        if !Self.isRunningTests {
-            _ = UserProviderPluginRegistry.refresh()
-        }
         // Capture this before app-group/config migrations can create prior-installation state.
         let hadExistingConfig = (try? configStore.load()) != nil
         let hadPreviousInstallationState = hadExistingConfig || Self.hadPreviousAppLaunch(userDefaults: userDefaults)
@@ -370,19 +308,8 @@ final class SettingsStore {
         }
         let hasStoredOpenAIWebAccessPreference = userDefaults.object(forKey: "openAIWebAccessEnabled") != nil
         let legacyStores = CodexBarConfigMigrator.LegacyStores(
-            zaiTokenStore: zaiTokenStore,
-            syntheticTokenStore: syntheticTokenStore,
             codexCookieStore: codexCookieStore,
             claudeCookieStore: claudeCookieStore,
-            cursorCookieStore: cursorCookieStore,
-            opencodeCookieStore: opencodeCookieStore,
-            factoryCookieStore: factoryCookieStore,
-            minimaxCookieStore: minimaxCookieStore,
-            minimaxAPITokenStore: minimaxAPITokenStore,
-            kimiTokenStore: kimiTokenStore,
-            augmentCookieStore: augmentCookieStore,
-            ampCookieStore: ampCookieStore,
-            copilotTokenStore: copilotTokenStore,
             tokenAccountStore: tokenAccountStore)
         let config = CodexBarConfigMigrator.loadOrMigrate(
             configStore: configStore,
@@ -391,7 +318,6 @@ final class SettingsStore {
             stores: legacyStores)
         self.userDefaults = userDefaults
         self.configStore = configStore
-        self.antigravityOAuthCredentialsStore = antigravityOAuthCredentialsStore
         self.keychainAccessPolicy = keychainAccessPolicy
         self.config = config
         self.configLoading = true
@@ -545,8 +471,6 @@ extension SettingsStore {
             ?? MenuBarDisplayMode.percent.rawValue
         let menuBarShowsResetTimeWhenExhausted = userDefaults.object(
             forKey: "menuBarShowsResetTimeWhenExhausted") as? Bool ?? false
-        let kiroMenuBarDisplayModeRaw = userDefaults.string(forKey: "kiroMenuBarDisplayMode")
-            ?? KiroMenuBarDisplayMode.automatic.rawValue
         let historicalTrackingEnabled = userDefaults.object(forKey: "historicalTrackingEnabled") as? Bool ?? false
         let multiAccountMenuLayoutRaw = Self.loadMultiAccountMenuLayoutRaw(userDefaults: userDefaults)
         let resolvedPreferences = Self.loadMenuBarMetricPreferences(userDefaults: userDefaults)
@@ -559,8 +483,6 @@ extension SettingsStore {
             ?? MenuBarLayoutGap.regular.rawValue
         let rawVerticalAdjustment = userDefaults.object(forKey: "menuBarLayoutVerticalAdjustment") as? Int
         let menuBarLayoutVerticalAdjustment = max(-20, min(20, rawVerticalAdjustment ?? 0))
-        let copilotBudgetExtrasEnabled = userDefaults.object(forKey: "copilotBudgetExtrasEnabled") as? Bool ?? false
-        let copilotIconSecondaryWindowIDRaw = Self.loadCopilotIconSecondaryWindowIDRaw(userDefaults: userDefaults)
         let costUsageEnabled = userDefaults.object(forKey: "tokenCostUsageEnabled") as? Bool ?? false
         let codexLocalSessionCostLedgerEnabled = userDefaults.object(
             forKey: "codexLocalSessionCostLedgerEnabled") as? Bool ?? false
@@ -632,7 +554,6 @@ extension SettingsStore {
         if Self.isRunningTests, providerStorageFootprintsDefault == nil {
             userDefaults.set(false, forKey: "providerStorageFootprintsEnabled")
         }
-        let jetbrainsIDEBasePath = userDefaults.string(forKey: "jetbrainsIDEBasePath") ?? ""
         let mergeIcons = userDefaults.object(forKey: "mergeIcons") as? Bool ?? true
         let switcherShowsIcons = userDefaults.object(forKey: "switcherShowsIcons") as? Bool ?? true
         let mergedMenuLastSelectedWasOverview = userDefaults.object(
@@ -649,13 +570,11 @@ extension SettingsStore {
             ?? AgentSessionLabelStyle.project.rawValue
         let agentSessionsManualHosts = userDefaults.string(forKey: "agentSessionsManualHosts") ?? ""
         let preferredCurrencyCode = userDefaults.string(forKey: "preferredCurrencyCode") ?? "USD"
-        let iCloudSyncEnabled = userDefaults.object(forKey: "iCloudSyncEnabled") as? Bool ?? false
-        let iCloudSyncIncludeSecrets = userDefaults.object(forKey: "iCloudSyncIncludeSecrets") as? Bool ?? true
-        let iCloudSyncSnapshotsEnabled = userDefaults.object(forKey: "iCloudSyncSnapshotsEnabled") as? Bool ?? true
-        let iCloudSyncShowFleetAccounts = userDefaults.object(forKey: "iCloudSyncShowFleetAccounts") as? Bool ?? true
-        let iCloudSyncDeviceID = userDefaults.string(forKey: "iCloudSyncDeviceID") ?? UUID().uuidString.lowercased()
-        if userDefaults.string(forKey: "iCloudSyncDeviceID") == nil {
-            userDefaults.set(iCloudSyncDeviceID, forKey: "iCloudSyncDeviceID")
+        let localDeviceID = userDefaults.string(forKey: "localDeviceID")
+            ?? userDefaults.string(forKey: "iCloudSyncDeviceID")
+            ?? UUID().uuidString.lowercased()
+        if userDefaults.string(forKey: "localDeviceID") == nil {
+            userDefaults.set(localDeviceID, forKey: "localDeviceID")
         }
         return SettingsDefaultsState(
             refreshFrequency: refreshFrequency,
@@ -691,7 +610,6 @@ extension SettingsStore {
             menuBarHighContrastOnInactiveDisplays: menuBarHighContrastOnInactiveDisplays,
             menuBarDisplayModeRaw: menuBarDisplayModeRaw,
             menuBarShowsResetTimeWhenExhausted: menuBarShowsResetTimeWhenExhausted,
-            kiroMenuBarDisplayModeRaw: kiroMenuBarDisplayModeRaw,
             historicalTrackingEnabled: historicalTrackingEnabled,
             multiAccountMenuLayoutRaw: multiAccountMenuLayoutRaw,
             menuBarMetricPreferencesRaw: resolvedPreferences,
@@ -701,8 +619,6 @@ extension SettingsStore {
             menuBarLayoutSizeRaw: menuBarLayoutSizeRaw,
             menuBarLayoutGapRaw: menuBarLayoutGapRaw,
             menuBarLayoutVerticalAdjustment: menuBarLayoutVerticalAdjustment,
-            copilotBudgetExtrasEnabled: copilotBudgetExtrasEnabled,
-            copilotIconSecondaryWindowIDRaw: copilotIconSecondaryWindowIDRaw,
             costUsageEnabled: costUsageEnabled,
             codexLocalSessionCostLedgerEnabled: codexLocalSessionCostLedgerEnabled,
             costUsageHistoryDays: costUsageHistoryDays,
@@ -730,7 +646,6 @@ extension SettingsStore {
             openAIWebBatterySaverEnabled: openAIWebBatterySaverEnabled,
             backgroundWorkLowPowerModePreference: backgroundWorkLowPowerModePreference,
             providerStorageFootprintsEnabled: providerStorageFootprintsEnabled,
-            jetbrainsIDEBasePath: jetbrainsIDEBasePath,
             mergeIcons: mergeIcons,
             switcherShowsIcons: switcherShowsIcons,
             mergedMenuLastSelectedWasOverview: mergedMenuLastSelectedWasOverview,
@@ -744,11 +659,7 @@ extension SettingsStore {
             agentSessionLabelStyleRaw: agentSessionLabelStyleRaw,
             agentSessionsManualHosts: agentSessionsManualHosts,
             preferredCurrencyCode: preferredCurrencyCode,
-            iCloudSyncEnabled: iCloudSyncEnabled,
-            iCloudSyncIncludeSecrets: iCloudSyncIncludeSecrets,
-            iCloudSyncSnapshotsEnabled: iCloudSyncSnapshotsEnabled,
-            iCloudSyncShowFleetAccounts: iCloudSyncShowFleetAccounts,
-            iCloudSyncDeviceID: iCloudSyncDeviceID)
+            localDeviceID: localDeviceID)
     }
 
     private static func hadPreviousAppLaunch(userDefaults: UserDefaults) -> Bool {
@@ -859,26 +770,7 @@ extension SettingsStore {
             [:]
         }
 
-        let migrationKey = "antigravityTwoPoolMetricPreferenceMigrated"
-        guard !userDefaults.bool(forKey: migrationKey) else { return preferences }
-
-        // Tagged builds through v0.35 used primary=Claude, secondary=Gemini Pro,
-        // and tertiary=Gemini Flash. Remap those meanings once to the two-pool schema.
-        // Provider-specific by design: this one-time migration rewrites Antigravity's historical persisted lanes.
-        var migrated = preferences
-        switch MenuBarMetricPreference(rawValue: migrated[UsageProvider.antigravity.rawValue] ?? "") {
-        case .primary:
-            migrated[UsageProvider.antigravity.rawValue] = MenuBarMetricPreference.secondary.rawValue
-        case .secondary:
-            migrated[UsageProvider.antigravity.rawValue] = MenuBarMetricPreference.primary.rawValue
-        case .tertiary:
-            migrated[UsageProvider.antigravity.rawValue] = MenuBarMetricPreference.primary.rawValue
-        case .automatic, .primaryAndSecondary, .extraUsage, .average, .monthlyPlan, .none:
-            break
-        }
-        userDefaults.set(migrated, forKey: "menuBarMetricPreferences")
-        userDefaults.set(true, forKey: migrationKey)
-        return migrated
+        return preferences.filter { UsageProvider(rawValue: $0.key) != nil }
     }
 
     private static func loadMenuBarLayout(userDefaults: UserDefaults) -> MenuBarLayout? {
@@ -933,10 +825,6 @@ extension SettingsStore {
         }
         let legacyShowAll = userDefaults.object(forKey: "showAllTokenAccountsInMenu") as? Bool ?? true
         return legacyShowAll ? MultiAccountMenuLayout.stacked.rawValue : MultiAccountMenuLayout.segmented.rawValue
-    }
-
-    private static func loadCopilotIconSecondaryWindowIDRaw(userDefaults: UserDefaults) -> String {
-        userDefaults.string(forKey: "copilotIconSecondaryWindowID") ?? CopilotIconSecondaryWindowSelection.chat
     }
 
     static func loadDebugDisableKeychainAccess(userDefaults: UserDefaults) -> Bool {
@@ -1058,23 +946,9 @@ extension SettingsStore {
             self.providerConfigFingerprints[instanceID] = fingerprint
             enablement[instanceID] = isEnabled
         }
-        for plugin in UserProviderPluginRegistry.all {
-            let instanceID = plugin.manifest.id
-            let providerConfig = config.providerConfig(for: instanceID) ?? ProviderConfig(id: instanceID)
-            let isEnabled = providerConfig.enabled ?? true
-            if let previous = self.providerEnablement[instanceID], previous != isEnabled {
-                self.providerEnablementRevisions[instanceID, default: 0] &+= 1
-            }
-            let fingerprint = Self.providerConfigFingerprint(providerConfig)
-            if let previous = self.providerConfigFingerprints[instanceID], previous != fingerprint {
-                self.providerConfigRevisions[instanceID, default: 0] &+= 1
-            }
-            self.providerConfigFingerprints[instanceID] = fingerprint
-            enablement[instanceID] = isEnabled
-        }
         self.providerEnablement = enablement
         // Every config path crosses this method, so the accent palette refreshes from a settings edit,
-        // an external edit to the config file, and an inbound iCloud sync alike.
+        // and external edits to the config file.
         if ProviderAccentPalette.apply(config: config) {
             #if canImport(WidgetKit)
             WidgetCenter.shared.reloadAllTimelines()
@@ -1147,33 +1021,6 @@ extension SettingsStore {
         }
     }
 
-    func isPluginEnabled(_ instanceID: ProviderInstanceID) -> Bool {
-        self.providerEnablement[instanceID] ?? false
-    }
-
-    func setPluginEnabled(_ instanceID: ProviderInstanceID, enabled: Bool) {
-        self.updatePluginConfig(instanceID: instanceID) { $0.enabled = enabled }
-        if !enabled, self.selectedMenuProvider == instanceID {
-            self.selectedMenuProvider = nil
-        }
-    }
-
-    func pluginConfig(_ instanceID: ProviderInstanceID) -> ProviderConfig? {
-        self.configSnapshot.providerConfig(for: instanceID)
-    }
-
-    func updatePluginConfig(instanceID: ProviderInstanceID, mutate: (inout ProviderConfig) -> Void) {
-        self.updateConfig(reason: "plugin-\(instanceID.rawValue)", affectsBackgroundWork: true) { config in
-            if let index = config.providers.firstIndex(where: { $0.id == instanceID }) {
-                mutate(&config.providers[index])
-            } else {
-                var entry = ProviderConfig(id: instanceID, enabled: true)
-                mutate(&entry)
-                config.providers.append(entry)
-            }
-        }
-    }
-
     func rerunProviderDetection() {
         self.runInitialProviderDetectionIfNeeded(force: true)
     }
@@ -1186,7 +1033,7 @@ extension SettingsStore {
 
         for rawValue in raw {
             guard let instanceID = ProviderInstanceID(rawValue: rawValue),
-                  instanceID.firstPartyProvider != nil || UserProviderPluginRegistry.plugin(for: instanceID) != nil
+                  instanceID.firstPartyProvider != nil
             else {
                 continue
             }
@@ -1200,24 +1047,8 @@ extension SettingsStore {
             seen = Set(ordered)
         }
 
-        if !seen.contains(.factory), let zaiIndex = ordered.firstIndex(of: .zai) {
-            ordered.insert(.factory, at: zaiIndex)
-            seen.insert(.factory)
-        }
-
-        if !seen.contains(.minimax), let zaiIndex = ordered.firstIndex(of: .zai) {
-            let insertIndex = ordered.index(after: zaiIndex)
-            ordered.insert(.minimax, at: insertIndex)
-            seen.insert(.minimax)
-        }
-
         for provider in UsageProvider.allCases where !seen.contains(provider.instanceID) {
             ordered.append(provider.instanceID)
-        }
-
-        for plugin in UserProviderPluginRegistry.all where !seen.contains(plugin.manifest.id) {
-            ordered.append(plugin.manifest.id)
-            seen.insert(plugin.manifest.id)
         }
 
         return ordered
