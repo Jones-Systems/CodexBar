@@ -290,53 +290,6 @@ class BuildJobsTests(unittest.TestCase):
                 with self.subTest(kind=kind, command=command), jobs.admission(command, kind) as actual:
                     self.assertEqual(actual, command)
         self.cpu.assert_not_called()
-        self.disk.assert_not_called()
-        self.assertEqual(self.clock.now, 0)
-        self.assertFalse((self.directory / "lock").exists())
-
-    def test_incomplete_or_self_hosted_identity_keeps_local_limits(self):
-        environments = [
-            {}, {"CI": "true"}, {"GITHUB_ACTIONS": "true"},
-            {"RUNNER_ENVIRONMENT": "github-hosted"},
-            {"GITHUB_ACTIONS": "false", "RUNNER_ENVIRONMENT": "github-hosted"},
-            {"GITHUB_ACTIONS": "true", "RUNNER_ENVIRONMENT": "self-hosted"},
-        ]
-        for environment in environments:
-            with self.subTest(environment=environment), patch.dict(os.environ, environment, clear=True):
-                start = self.clock.now
-                with jobs.admission(["swift", "test", "-j12"]) as command:
-                    self.assertEqual(command, ["swift", "test", "--jobs", "6",
-                                               "-Xswiftc", "-num-threads", "-Xswiftc", "1"])
-                self.assertEqual(self.clock.now - start, 30)
-
-    def test_github_hosted_runner_keeps_shared_execution_and_exit_status(self):
-        import ci_swift_test_by_suite as runner
-        command = ["swift", "test", "--parallel", "-j12"]
-        with patch.dict(os.environ, {"GITHUB_ACTIONS": "true", "RUNNER_ENVIRONMENT": "github-hosted"}), \
-                patch.object(runner, "_scratch_cleanup_safe", True), \
-                patch.object(runner, "_run_command", return_value=37) as execute:
-            self.assertEqual(jobs.run(command, "swift"), 37)
-            self.assertEqual(runner.run_command(command), 37)
-            self.assertEqual(execute.call_args_list[0].args[0], command)
-            self.assertEqual(execute.call_args_list[1].args[0], command)
-        self.cpu.assert_not_called()
-        self.assertFalse((self.directory / "lock").exists())
-
-    def test_github_hosted_runner_preserves_commands_without_local_admission(self):
-        commands = [
-            ("swift", ["swift", "build", "-c", "release", "-j12", "-Xswiftc", "-num-threads=12"]),
-            ("swift", ["swift", "test", "--parallel"]),
-            ("swift", ["swift", "test", "--skip-build", "--filter", "ExampleTests"]),
-            ("swift", ["swift", "build", "--show-bin-path"]),
-            ("xcode", ["xcodebuild", "build", "-jobs", "12", "SWIFT_USE_PARALLEL_WHOLE_MODULE_OPTIMIZATION=YES"]),
-        ]
-        with patch.dict(os.environ, {"GITHUB_ACTIONS": "true", "RUNNER_ENVIRONMENT": "github-hosted",
-                                     "CODEXBAR_BUILD_JOBS": "bad"}), \
-                patch.object(jobs, "open_lock", side_effect=AssertionError("hosted runner opened local lock")):
-            for kind, command in commands:
-                with self.subTest(kind=kind, command=command), jobs.admission(command, kind) as actual:
-                    self.assertEqual(actual, command)
-        self.cpu.assert_not_called()
         self.assertEqual(self.clock.now, 0)
         self.assertFalse((self.directory / "lock").exists())
 

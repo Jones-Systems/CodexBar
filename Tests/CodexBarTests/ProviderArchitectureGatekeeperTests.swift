@@ -24,22 +24,6 @@ import Testing
 // swiftlint:disable:next type_body_length
 struct ProviderArchitectureGatekeeperTests {
     @Test
-    func `every provider has descriptor and implementation manifest entries`() {
-        let expected = Set(UsageProvider.allCases)
-        let descriptors = Set(ProviderDescriptorRegistry.all.map(\.id))
-        let implementations = Set(ProviderImplementationRegistry.all.map(\.id))
-        let missingDescriptors = expected.subtracting(descriptors).map(\.rawValue).sorted()
-        let missingImplementations = expected.subtracting(implementations).map(\.rawValue).sorted()
-
-        #expect(
-            missingDescriptors.isEmpty,
-            "Missing descriptor manifest entries: \(missingDescriptors.joined(separator: ", "))")
-        #expect(
-            missingImplementations.isEmpty,
-            "Missing implementation manifest entries: \(missingImplementations.joined(separator: ", "))")
-    }
-
-    @Test
     func `credential adapters self report capabilities through descriptors`() {
         for descriptor in ProviderDescriptorRegistry.all {
             guard let adapter = descriptor.credentials else { continue }

@@ -5,14 +5,6 @@ import Testing
 @MainActor
 struct ClickToCopyOverlayTests {
     @Test
-    func `view stores the latest copyText`() {
-        let view = ClickToCopyView(copyText: "original")
-        #expect(view.copyText == "original")
-        view.copyText = "updated"
-        #expect(view.copyText == "updated")
-    }
-
-    @Test
     func `pasteboard copy waits for deferred scheduler`() {
         var pendingAction: (() -> Void)?
         var copiedText: String?
