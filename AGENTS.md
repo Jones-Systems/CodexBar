@@ -69,7 +69,9 @@ and `build-linux-musl-cli` are required when their checked-in path gates select
 them. An explicit matching gate may permit a skipped platform job; a missing,
 failed, cancelled, or unexplained skipped job never satisfies the aggregate.
 The aggregate must validate all selected jobs on the current head. Keep the
-GitHub Actions app and workflow identity requirements above.
+GitHub Actions app and workflow identity requirements above. Selected musl PRs
+compile debug with the pinned static SDK; main/manual runs compile release.
+Both must verify static linkage. Release-only compilation is a main/manual check.
 
 Every other check is advisory, including Jones app/menu candidates, native
 workflow proofs, release artifacts, and manual performance campaigns. An

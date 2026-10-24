@@ -121,6 +121,25 @@ Contributors:
   (native IDs unavailable): Astra/high bounded test-value audits.
 - `/root/ci_implementation` (native ID unavailable): Astra/high CI implementation.
 
+## Musl configuration trial
+
+Astra/high confirmed that musl must retain its required compiler/static SDK/
+SQLite linking signal: glibc's static Swift standard library is not a substitute.
+A bounded follow-up recommends trialling debug musl on PRs while keeping release
+musl on main/manual runs. This deliberately moves release-only source branches
+and optimizer/link behavior; it does not establish debug/release equivalence.
+The same pinned compiler, SDK, target triple and SQLite preparation remain.
+Both configurations reject dynamic-loader and dynamic-library dependencies.
+
+The isolated trial worktree is `work/right-size-musl-pr-build-20261024`;
+`/root` remains its sole Git owner. Six synthetic command cases prove debug/
+release arguments, static-link success, dynamic-loader/library rejection and
+build/readelf failure propagation, with exact fixture cleanup. YAML parses and
+whitespace checks pass. Local `make test`/`make check` remain unavailable due to
+missing Swift/macOS `plutil`. Hosted debug and release builds of the same source,
+plus total/setup/build timings, are still required before adopting the trial.
+No 390-second result or performance saving is claimed from synthetic checks.
+
 ## Remaining work
 
 Qualify CI changes, land separate removal batches, apply the final bulk review,

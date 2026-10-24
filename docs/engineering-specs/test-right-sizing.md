@@ -65,8 +65,11 @@ signing/bootstrap helpers, tests and branch are outside the edit scope.
 - The aggregate accepts success for selected jobs and skips only when the
   corresponding gate explicitly allows them. Missing/failed/cancelled results
   fail. Supported macOS and Linux architectures remain covered.
-- Ordinary PRs can reuse debug CLI compilation for tests and smoke checks.
-  Release/static checks retain their main/manual execution routes.
+- Ordinary glibc PRs reuse debug CLI compilation for tests and smoke checks.
+  Musl PRs retain their distinct compiler/static SDK/SQLite linkage check in
+  debug configuration; main/manual musl builds retain release configuration.
+  Both musl configurations verify static linkage. Release-only source branches
+  and optimizer/link behavior move to main/manual qualification.
 - App candidate provenance currently accepts push, PR and manual dispatch.
   Label/manual placement avoids introducing unsupported scheduled provenance.
   Packaging never counts as unit or visible native UI proof.

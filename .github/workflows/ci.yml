@@ -584,11 +584,25 @@ jobs:
 
           echo "CODEXBAR_SQLITE3_LIB_DIR=$sqlite_out/lib" >> "$GITHUB_ENV"
 
-      - name: Build CodexBarCLI (release, Linux musl x86_64)
-        run: >-
-          swift build -c release --product CodexBarCLI
-          --swift-sdk "$SWIFT_STATIC_LINUX_SDK"
-          --triple "$SWIFT_STATIC_LINUX_SDK_TRIPLE"
+      - name: Build CodexBarCLI (PR debug; main/manual release, Linux musl x86_64)
+        env:
+          MUSL_BUILD_CONFIGURATION: ${{ github.event_name == 'pull_request' && 'debug' || 'release' }}
+        run: |
+          set -euo pipefail
+          swift build -c "$MUSL_BUILD_CONFIGURATION" --product CodexBarCLI \
+            --swift-sdk "$SWIFT_STATIC_LINUX_SDK" \
+            --triple "$SWIFT_STATIC_LINUX_SDK_TRIPLE"
+          bin_path="$(swift build -c "$MUSL_BUILD_CONFIGURATION" --show-bin-path \
+            --swift-sdk "$SWIFT_STATIC_LINUX_SDK" \
+            --triple "$SWIFT_STATIC_LINUX_SDK_TRIPLE")"
+          program_headers="$(readelf --program-headers "$bin_path/CodexBarCLI")"
+          dynamic_section="$(readelf --dynamic "$bin_path/CodexBarCLI")"
+          if grep -Eq '(^|[[:space:]])INTERP([[:space:]]|$)' <<< "$program_headers" || \
+            grep -Fq '(NEEDED)' <<< "$dynamic_section"; then
+            echo "Musl CLI unexpectedly requires a dynamic loader or library." >&2
+            exit 1
+          fi
+          printf 'Musl CLI configuration: %s; static linkage verified\n' "$MUSL_BUILD_CONFIGURATION"
 
   build-linux-cli:
     needs: changes
