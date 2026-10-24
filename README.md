@@ -1,6 +1,6 @@
 # CodexBar 🎚️ — May your tokens never run out.
 
-> Every AI coding limit, in your menu bar.
+> Codex and Claude usage, in your menu bar.
 
 This is the [Jones Systems source fork](https://github.com/Jones-Systems/CodexBar) of
 [steipete/CodexBar](https://github.com/steipete/CodexBar), a menu bar app for monitoring
@@ -17,8 +17,6 @@ or the [fork guide](docs/FORK_QUICK_START.md). Coding agents start at [AGENTS.md
 [![AUR](https://img.shields.io/aur/version/codexbar-cli?style=flat-square&color=1793d1)](https://aur.archlinux.org/packages/codexbar-cli)
 [![License: MIT](https://img.shields.io/badge/license-MIT-6e5aff?style=flat-square)](LICENSE)
 [![Site](https://img.shields.io/badge/site-codexbar.app-16d3b4?style=flat-square)](https://codexbar.app)
-
-<a href="https://codexbar.app"><img src="docs/social.png" alt="CodexBar — Codex and Claude usage in your menu bar." width="100%" /></a>
 
 Tiny macOS 14+ menu bar app that keeps **Codex and Claude limits visible** and shows when each window resets. One status item per provider, or Merge Icons mode with a provider switcher. No Dock icon, minimal UI, dynamic bar icons.
 
@@ -105,6 +103,8 @@ printf '%s' "$ANTHROPIC_ADMIN_KEY" | codexbar config set-api-key --provider clau
 See [CLI configuration](docs/cli-configuration.md) for the full flow.
 
 ## Providers
+
+This product supports 2 providers: Codex and Claude.
 
 - [Codex](docs/codex.md) — OAuth API or local Codex CLI, plus optional OpenAI web dashboard extras.
 - [Claude](docs/claude.md) — OAuth API, browser cookies or CLI fallback; session/weekly quotas and local spend history.

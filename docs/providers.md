@@ -8,6 +8,9 @@ read_when:
 
 # Providers
 
+CodexBar currently registers 2 provider IDs.
+The supported IDs are `codex` and `claude`.
+
 This Jones Systems product compiles only Codex and Claude. Other providers,
 provider plugins, hooks and iCloud synchronization are removed. Historical
 provider guides describe the pre-removal implementation; restore from Git

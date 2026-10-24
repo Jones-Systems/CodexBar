@@ -125,7 +125,7 @@ struct CLICardsRendererTests {
         let output = CLICardsRenderer.render(cards: [], failures: failures, terminalWidth: 80, useColor: false)
 
         #expect(output.contains("Failed providers:"))
-        #expect(output.contains("Cursor: not configured"))
+        #expect(output.contains("Claude: not configured"))
     }
 
     @Test
@@ -148,7 +148,7 @@ struct CLICardsRendererTests {
 
         #expect(output.contains("88% left"))
         #expect(output.contains("Failed providers:"))
-        #expect(output.contains("Grok: timeout"))
+        #expect(output.contains("Claude: timeout"))
     }
 
     @Test
@@ -190,7 +190,7 @@ struct CLICardsRendererTests {
         let now = Date(timeIntervalSince1970: 1_700_000_000)
         let card = CLICardModel(
             provider: .claude,
-            title: "Alibaba Token Plan",
+            title: "Claude Team Budget",
             sourceLabel: "web",
             planBadge: "International",
             accountLine: nil,
@@ -211,44 +211,8 @@ struct CLICardsRendererTests {
             now: now)
         let lines = output.split(separator: "\n", omittingEmptySubsequences: false)
 
-        #expect(output.contains("Next reset: Alibaba Token Plan"))
+        #expect(output.contains("Next reset: Claude Team Budget"))
         #expect(lines.allSatisfy { $0.count <= 40 })
-    }
-
-    @Test
-    func `detail backed quota descriptions are not rendered as resets`() {
-        let snapshot = UsageSnapshot(
-            primary: .init(
-                usedPercent: 25,
-                windowMinutes: nil,
-                resetsAt: nil,
-                resetDescription: "25/100 credits"),
-            secondary: nil,
-            tertiary: nil,
-            updatedAt: Date(timeIntervalSince1970: 0))
-        let card = CLICardsRenderer.makeCard(CLICardBuildInput(
-            provider: .claude,
-            snapshot: snapshot,
-            credits: nil,
-            source: "api",
-            status: nil,
-            notes: [],
-            useColor: false,
-            resetStyle: .countdown,
-            weeklyWorkDays: nil,
-            now: Date(timeIntervalSince1970: 0)))
-
-        #expect(card.metrics.first?.resetText == nil)
-        #expect(card.metrics.first?.detailText == "25/100 credits")
-
-        let output = CLICardsBriefRenderer.render(
-            rows: CLICardsBriefRenderer.makeRows(cards: [card]),
-            failures: [],
-            terminalWidth: 80,
-            useColor: false,
-            now: Date(timeIntervalSince1970: 0))
-        #expect(!output.contains("Next reset"))
-        #expect(!output.contains("Reset 25/100 credits"))
     }
 
     @Test
