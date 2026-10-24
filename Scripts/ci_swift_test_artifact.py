@@ -23,8 +23,8 @@ from test_profiles import manifest_digest, selected_profile
 
 SCHEMA = "codexbar.swift-test-build/v1"
 NATIVE_SCHEMA = "codexbar.swift-test-build/v2"
-# Root reviews the complete native proof before this is activated/published.
-ENABLE_NATIVE_COMPATIBILITY = False
+# Coordinator-reviewed contract; native availability and cost require hosted proof.
+ENABLE_NATIVE_COMPATIBILITY = True
 MANIFEST = "manifest.json"
 ARCHIVE = "build.tar.gz"
 MAX_ENTRIES = 200000

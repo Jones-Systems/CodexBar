@@ -2,11 +2,11 @@
 
 The CI/harness lane owns this source change in
 `work/mac-build-once-test-shards-20261024`, based on local diagnostic checkpoint
-`0862c61d967dfaab2d995567d6a0b1ab572d038b`. PR #40 remains at
-`19749e9e59c41d5a345cfcd8256add571755dbff`. The coordinator accepted the bounded
-design, with source/check review required before activation or push. The native
-compatibility flag remains false in this checkpoint. No independent hosted run,
-Mac execution, installation, signing or provider access occurred.
+`0862c61d967dfaab2d995567d6a0b1ab572d038b`. The coordinator reviewed exact inactive
+checkpoint `5f6469e2cc6b314902b9b9b86495cd14e7dc484c` and approved activation and
+normal publication to PR #40. The native compatibility flag is now true. Native
+behavior remains hosted-unverified. No independent campaign, local Mac execution,
+installation, signing or provider access occurred.
 
 ## Intent and affected checks
 
@@ -47,5 +47,13 @@ claim follows from it. Native host/closure durations and verified/rejected modes
 are emitted separately for the next coordinator-authorized hosted candidate.
 
 Transferred product cleanup paths and durable patch bytes remain untouched by
-this checkpoint. The separately assigned normal-profile nightly schedule will be
-a subsequent commit using exact source `0110a56430470106ad7ffed6c96707d3eb5cc636`.
+this checkpoint. The separately recorded normal-profile nightly schedule uses
+exact source `0110a56430470106ad7ffed6c96707d3eb5cc636`.
+
+After source review approved activation, the combined activation/schedule
+candidate passed 116 portable tests in 13.061 seconds, existing path-gate and
+aggregate fixtures, and 302 local documentation links. The first combined run
+identified an outdated exact concurrency assertion, which was updated to retain
+manual uniqueness and require the separate nightly branch. Final scratch cleanup
+was proved. Native availability, full closure and collection cost remain pending
+the coordinator's hosted run observation.

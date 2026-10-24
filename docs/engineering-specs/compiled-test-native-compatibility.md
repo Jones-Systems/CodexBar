@@ -1,9 +1,10 @@
 # Engineering Spec — Native compatibility across hosted image rollout
 
-Status: implemented locally, inactive pending coordinator review. PR #40 remote
-remains `19749e9e59c41d5a345cfcd8256add571755dbff`. Local diagnostic checkpoint
-`0862c61d9` retains strict image equality. The CI/harness lane owns this spec and
-the bounded helper/tests; root owns activation review, CI watching and integration.
+Status: implemented and activated after coordinator source review of exact local
+checkpoint `5f6469e2cc6b314902b9b9b86495cd14e7dc484c`; hosted native evidence is
+pending. Diagnostic checkpoint `0862c61d9` first retained strict image equality.
+The CI/harness lane owns this spec and the bounded helper/tests; root owns hosted
+CI watching and integration. This does not claim native API or two-shard success.
 
 ## Evidence and required boundary
 
@@ -96,10 +97,9 @@ host changes, provisioning, installation or full-system hash is part of collecti
 
 ## Activation and affected checks
 
-`ENABLE_NATIVE_COMPATIBILITY=False` keeps live workflow/artifact equality unchanged
-until root reviews the exact contract and its limits. A v2 manifest carries the
-complete fingerprint or a bounded unavailability reason. A v1 manifest retains
-the exact original identity gate. Before activation, exercise malformed/fat Mach-O,
+`ENABLE_NATIVE_COMPATIBILITY=True` activates the reviewed contract. A v2 manifest
+carries the complete fingerprint or a bounded unavailability reason. A v1 manifest
+retains the exact original identity gate. Preactivation fixtures exercise malformed/fat Mach-O,
 recursive dependencies, allowed paths, weak/missing dependencies, hash changes,
 native context changes, cache UUID changes, override refusal and budgets. The
 collector is unsupported on this Linux host; native APIs/SDK/loader behavior need
@@ -122,7 +122,8 @@ runtime root or unsupported loader shape requires an updated contract. Native AP
 availability, actual Xcode layouts, collection cost and both hosted shards remain
 unverified locally; fixture mocks cannot supply that evidence.
 
-Separately integrate exact nightly `0110a56430470106ad7ffed6c96707d3eb5cc636` after
-the product patch 01 transfer receipt: daily 05:00 America/New_York, separate
-nightly concurrency, normal scheduled profile and retained normal/full manual
-choice. Do not mutate the frozen product handoff patches or owner worktrees.
+The separate schedule commit integrates exact nightly intent from
+`0110a56430470106ad7ffed6c96707d3eb5cc636` after the product patch 01 transfer
+receipt: daily 05:00 America/New_York (EST/EDT), separate nightly concurrency,
+normal scheduled profile and retained normal/full manual choice. Frozen product
+handoff patches and owner worktrees remain untouched.
