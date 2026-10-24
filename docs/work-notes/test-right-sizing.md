@@ -82,7 +82,7 @@ Raw baseline queries/logs and audit reports are task-owned ignored evidence in
 No shared temporary directory is used. The coordinator owns its disposition;
 GitHub logs/artifacts retain their existing repository/workflow lifetimes.
 
-## Current state and evidence
+## Verification and delivery evidence
 
 The root owns Git in the dedicated `work/right-size-tests-20261024` worktree.
 Initial identity, canonical remote, branch, head and clean source were verified.
@@ -92,7 +92,7 @@ is `388934113`. Legacy upstream is never a publication target.
 Local baseline `make test` is unavailable: no Swift executable. Its owned
 fixture root was removed and absence verified. `make check` is unavailable:
 the app-locales check cannot find macOS `plutil`. Neither result is a pass.
-Focused portable checks and current-head hosted qualification remain required.
+Focused portable checks passed; applicable current-head hosted checks qualified each merged PR. Local tool absence is not a pass.
 
 The CI placement change passes the platform/aggregate gate regression group,
 all 70 campaign/evidence tests, and all eight isolated-command tests. Workflow
@@ -136,13 +136,140 @@ The isolated trial worktree is `work/right-size-musl-pr-build-20261024`;
 release arguments, static-link success, dynamic-loader/library rejection and
 build/readelf failure propagation, with exact fixture cleanup. YAML parses and
 whitespace checks pass. Local `make test`/`make check` remain unavailable due to
-missing Swift/macOS `plutil`. Hosted debug and release builds of the same source,
-plus total/setup/build timings, are still required before adopting the trial.
-No 390-second result or performance saving is claimed from synthetic checks.
+missing Swift/macOS `plutil`. Hosted qualification is recorded below. No performance saving is inferred from synthetic checks.
 
-## Remaining work
+## Test-value results and coverage
 
-Qualify CI changes, land separate removal batches, apply the final bulk review,
-and report observed after measurements. Build-once test artifacts and larger
-groups remain measurement-gated candidates. The 390-second job and 10/20-minute
-required-green budgets remain unmet until measured evidence demonstrates them.
+The full pass screened all 1,059 Swift source entries, representing 1,054 unique
+files after resolving five symlinks, and the script/inline/manual/skill checks.
+Candidate bodies and retained behavior/source received focused reads. This was
+not a line-by-line review of every assertion. The three task-owned audit records
+contain per-file or grouped one-line keep/remove/move reasons.
+
+| Count | Before | After removals |
+| --- | ---: | ---: |
+| Unique-source static Swift declarations | 10,800 | 10,777 |
+| Hosted native discovered identities | 10,729 | 10,707 |
+| Effective methods in `BuildJobsTests` | 46 | 46 |
+
+The static scan is lexical and resolves source symlinks; it is not a count of
+expanded runtime cases. The 23 removed Swift declarations include one excluded
+non-macOS placeholder, hence 22 fewer native identities. The native baseline is
+PR #31, before removals; the final discovery is PR #34, with zero failed groups.
+Three removed Python definitions were already overwritten by later same-name
+methods; all 46 effective method ASTs were unchanged. The CI seam separately
+adds two isolated command checks, and ten existing synthetic skill checks now
+participate in portable lint. These are distinct from the removal counts.
+
+| Removal category | Swift declarations | Examples |
+| --- | ---: | --- |
+| Exact or weaker overlap | 13 | Dashboard cache, stale refresh error, parser assertions, provider registry, Warp resolver, copy dispatch |
+| Trivial compiler/library/test-local behavior | 7 | Gemini local calculations, synthesized Kilo equality, terminal enum synthesis, JSONEncoder wrapper, always-true placeholder |
+| Over-granular checks | 2 | Future-age duplicate, 1,000 repeated cached lookups with no timing bound |
+| Superseded constructor smoke | 1 | Recorder constructed by three stronger behavior tests |
+| Obsolete shadowed Python definitions | 3 definitions, zero effective tests | Three overwritten build-admission methods |
+
+Reasons and named retained coverage are in the separate removal-only PRs:
+[#32](https://github.com/Jones-Systems/CodexBar/pull/32) (11 provider/parser declarations),
+[#33](https://github.com/Jones-Systems/CodexBar/pull/33) (eight UI/policy declarations),
+and [#34](https://github.com/Jones-Systems/CodexBar/pull/34) (four Swift declarations
+and three shadowed Python definitions). Retained test bodies and production
+code were unchanged by those PRs. No failing test was deleted, skipped or
+weakened to obtain green.
+
+Keep decisions preserve provider-specific units/aliases/error shapes, credential
+precedence and siloing, cache invalidation/concurrency, process cancellation and
+cleanup, migration/defaults isolation, finite numeric/cost parsing, persisted
+wire values, shipped menu/scheduler bugs, bundled resources, Linux boundaries,
+and scanner positive/negative controls. Performance and real-timer cases without
+measured redundant signal remain.
+
+One final Astra/xhigh bulk review accepted all 17 groups at combined revision
+`89fec66a9fa58ea893360da42dc931c0e3cb5c84`. **Restore list: empty.** No additional
+gap was supported. The [archived review](test-right-sizing-bulk-review.md)
+records exact inputs and per-group retained evidence. Its original artifact
+SHA-256 is `4d57962d3ee6df0eed8819d83c431dc5a6fc1556edca4df4bb96033ab5cf598a`.
+
+The three pre-existing gaps were repaired separately in merged
+[#35](https://github.com/Jones-Systems/CodexBar/pull/35): the timeout marker oracle
+runs inside fixture lifetime; the active hosted-runner method asserts disk
+admission was bypassed; the ten existing synthetic skill checks run in portable
+lint. A contained negative control showed the old timeout oracle missed a
+written marker while the corrected oracle detects it. Ten synthetic skill tests
+and the focused hosted-runner case passed locally. No live provider/Keychain
+probe or native app session was used.
+
+## Observed CI after changes
+
+[#31](https://github.com/Jones-Systems/CodexBar/pull/31) adds conservative PR and
+push path gates, enforces selected-job results in the aggregate, cancels
+superseded runs, and makes packaging opt-in by label/manual dispatch. Native
+proof is four grouped critical journeys, advisory and opt-in. The ordinary
+candidate job was skipped in each measured PR. A direct nightly candidate route
+remains outside this change because its provenance helper overlaps PR #26.
+
+Repeated default-engine plugin goldens and duplicate JavaScript lint work were
+removed from platform steps. Ordinary glibc PRs share debug compilation between
+CLI, portable tests and smoke checks; main/manual runs retain release/static
+standard-library builds. macOS retains two full shards. Their duplicated full
+build/discovery is a recorded remaining cost, not a claimed solved item.
+Required and advisory checks are declared in [AGENTS.md](../../AGENTS.md) and
+[the development guide](../DEVELOPMENT.md#ci-aggregate-contract).
+No GitHub ruleset or branch protection was changed.
+
+| Successful PR run | Required-green proxy | Runner minutes | macOS shard minutes |
+| --- | ---: | ---: | --- |
+| [#31 / 40066991296](https://github.com/Jones-Systems/CodexBar/actions/runs/40066991296) | 39.35 | 92.77 | 38.82 / 33.03 |
+| [#32 / 40069794039](https://github.com/Jones-Systems/CodexBar/actions/runs/40069794039) | 47.35 | 73.47 | 35.90 / 35.28 |
+| [#33 / 40073011928](https://github.com/Jones-Systems/CodexBar/actions/runs/40073011928) | 42.97 | 87.00 | 35.35 / 42.55 |
+| [#34 / 40075983000](https://github.com/Jones-Systems/CodexBar/actions/runs/40075983000) | 40.95 | 92.98 | 40.53 / 34.75 |
+| [#35 / 40078859261](https://github.com/Jones-Systems/CodexBar/actions/runs/40078859261) | 41.65 | 97.02 | 41.27 / 36.72 |
+
+For these five successful workstream PRs, median runner time is 92.77 minutes;
+run-created-to-required-green median is 41.65 minutes and nearest-rank p90 is
+47.35 minutes. The baseline successful-PR sample (n=10) was 109.78 runner-minutes,
+113.05 minutes median and 195.68 minutes p90 to green. This is a purposeful,
+unpaired sample with different selected platforms, cache conditions and queues;
+it does not establish a causal improvement or a population service level.
+Run creation is the queue-inclusive proxy, not an exact push timestamp. Advisory
+packaging is excluded from these required-workflow totals. A new two-week macOS
+billable-hours figure is not yet available.
+
+The measured exception is substantial: in PR #34, shard 0 spent 1,082.4 seconds
+in discovery/build and 1,154.5 seconds in execution (2,236.9 seconds total), with
+10,707 discovered identities and zero first-pass failed groups. PR #31's two
+shards independently spent 894.7/1,064.1 seconds in discovery and 986.4/1,077.9
+seconds in execution. Either phase already exceeds 390 seconds. PR #32's macOS
+start delays were 594/680 seconds, illustrating shared-runner queue effects.
+Deleting 22 runtime identities does not solve compiler or repeated process
+startup cost. The 390-second required-job budget and 10/20-minute green targets
+remain unmet; compiler/unit coverage remains required.
+
+## Musl hosted qualification
+
+Pending PR #36 debug/static-link result and resulting main release/static-link
+result. No measured saving or completed adoption is claimed before those runs.
+
+## Follow-up record: required CI budget
+
+Status: open, measured exception. Continuity owner: CodexBar maintainers.
+Repository issues are disabled; the read-only issue-list request returned that
+state, so this checked-in record is the tracker. No repository setting was changed.
+
+Resume with the completed run IDs above and a bounded performance campaign,
+without launching an org-wide matrix. First distinguish rebuild/discovery from
+SwiftPM process startup, group execution, cache reuse and runner queue time.
+Evaluate a single-build artifact shared by shards, then larger process groups
+against identical discovery manifests and outcome evidence. Record transfer and
+setup cost, memory, isolation, timeout/cleanup and first-pass failures before
+changing placement or concurrency. Preserve all supported compiler/platform and
+provider-isolation contracts; do not reclassify unit/compiler coverage advisory.
+
+Acceptance: every required job/shard at most 390 seconds, queue-inclusive
+PR-to-required-green median at most ten minutes and p90 at most twenty minutes,
+with sample size, selection, cache conditions and exact timestamp semantics
+stated. Include a representative docs-only/path-gated run and native/core change
+runs. If the shared hosted queue alone exceeds the target, record its measured
+contribution separately from compute. Native nightly provenance, historical flaky
+case ranking and a fresh two-week cost comparison remain later measurement work.
+No further removal is justified without unique-signal and cost evidence.

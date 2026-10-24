@@ -116,3 +116,18 @@ No ruleset, credential, signing, release, installation, sudo or other-thread
 operation is needed for this source/test/CI work. An unexpected prior effect,
 scope collision or native denial stops only its dependent edge.
 Source rollback is an ordinary revert of the relevant separate commit/PR.
+
+## Delivery result and measured exception
+
+CI placement and check declarations landed in PR #31; three separate removal-only
+PRs (#32–#34) removed 23 Swift declarations and three already-shadowed Python
+definitions. One Astra/xhigh bulk review accepted all 17 groups with an empty
+restore list. The three pre-existing coverage gaps were repaired separately in
+PR #35. The [work note](../work-notes/test-right-sizing.md) records exact counts,
+retained coverage, run IDs and before/after measurement limits.
+
+The macOS shards still exceed 390 seconds in both discovery/build and execution.
+The 10/20-minute PR-green targets remain unmet. The work note owns the concrete
+follow-up because repository issues are disabled. Shared-build artifacts and
+larger groups require measured manifest/outcome equivalence before adoption.
+No unit/compiler coverage was demoted to advisory to claim a target.
