@@ -154,7 +154,7 @@ class Run:
             emit("cleanup", path=str(self.root), absent=True)
 
 
-def validate_app(app, commit):
+def validate_app(app, commit, resources_required=True):
     # Inspect only the explicitly supplied build; never discover installed apps.
     if app == Path("/Applications") or Path("/Applications") in app.parents:
         raise Failure("Supply a disposable qualified build, not an installed app", 2)
@@ -173,11 +173,34 @@ def validate_app(app, commit):
         path = app / relative
         if not path.is_file() or not os.access(path, os.X_OK):
             raise Failure("Missing executable: " + str(path), 2)
-    for relative in ("Contents/Resources/CodexBar_CodexBarCore.bundle",
-                     "Contents/Helpers/CodexBar_CodexBarCore.bundle"):
-        if not (app / relative).is_dir():
-            raise Failure("Missing packaged resource bundle: " + relative, 2)
+    if resources_required:
+        for relative in ("Contents/Resources/CodexBar_CodexBarCore.bundle",
+                         "Contents/Helpers/CodexBar_CodexBarCore.bundle"):
+            if not (app / relative).is_dir():
+                raise Failure("Missing packaged resource bundle: " + relative, 2)
     return info
+
+
+def source_has_core_resources(checkout, commit):
+    # Inspect the exact reviewed source, not leftover products or executable metadata.
+    def git(*arguments):
+        try:
+            result = subprocess.run(
+                ["/usr/bin/git", "-C", str(checkout), "-c", "core.fsmonitor=false", *arguments],
+                stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                text=True, timeout=10, check=False)
+        except (OSError, subprocess.TimeoutExpired) as error:
+            raise Failure("Qualified source inspection unavailable: " + str(error), 2) from error
+        if result.returncode != 0:
+            raise Failure("Qualified source inspection failed; require a clean tracked checkout", 2)
+        return result.stdout
+
+    if git("rev-parse", "--show-toplevel").strip() != str(checkout):
+        raise Failure("Checkout must be the exact qualified repository root", 2)
+    if git("rev-parse", "HEAD").strip() != commit:
+        raise Failure("Checkout HEAD does not match the qualified source commit", 2)
+    git("diff", "--quiet", "HEAD", "--")
+    return bool(git("ls-files", "--", "Sources/CodexBarCore/Resources/").strip())
 
 
 def relocation(run, args):
@@ -187,9 +210,23 @@ def relocation(run, args):
         raise Failure("Scratch parent must be outside the denied checkout", 2)
     if run.parent == app or app in run.parent.parents:
         raise Failure("Scratch parent must be outside the supplied bundle", 2)
-    if not args.resource_entrypoints_reviewed:
+    if args.mode == "resources" and not args.resource_entrypoints_reviewed:
         raise Failure("Exact build source must be reviewed before resource entrypoints may execute", 2)
-    info = validate_app(app, args.qualified_source_commit)
+    if args.mode == "cli-relocation" and not args.cli_entrypoints_reviewed:
+        raise Failure("Exact build source and CLI --help initialization must be reviewed before execution", 2)
+    if ((args.mode == "resources" and args.cli_entrypoints_reviewed)
+            or (args.mode == "cli-relocation" and args.resource_entrypoints_reviewed)):
+        raise Failure("Entrypoint review must match the explicit proof mode", 2)
+    resource_mode = args.mode == "resources"
+    info = validate_app(app, args.qualified_source_commit, resources_required=False)
+    has_resources = source_has_core_resources(checkout, args.qualified_source_commit)
+    if resource_mode and not has_resources:
+        raise Failure("App resource proof unavailable: qualified source removed Core resource entrypoints; "
+                      "use separately reviewed --mode cli-relocation for CLI --help only", 2)
+    if not resource_mode and has_resources:
+        raise Failure("Qualified source retains Core resources; use the reviewed resource proof mode", 2)
+    if resource_mode:
+        validate_app(app, args.qualified_source_commit)
     run.allocate()
     copied = run.root / "CodexBar.app"
     shutil.copytree(app, copied, symlinks=True)
@@ -201,12 +238,15 @@ def relocation(run, args):
          embedded_source_commit=info.get("CodexGitCommit"),
          source_bundle=str(app), copied_bundle=str(copied), checkout=str(checkout),
          app_sha256=digest(binary), cli_sha256=digest(cli), os=platform.platform(),
-         architecture=platform.machine(), proof="resources-only; no ordinary app/UI startup")
+         architecture=platform.machine(), mode=args.mode,
+         proof=("resources-only; no ordinary app/UI startup" if resource_mode else
+                "CLI --help relocation only; app resource proof unavailable; no ordinary app/UI startup"))
     home = run.root / "home"
     home.mkdir()
     environment = {"PATH": "/usr/bin:/bin", "HOME": str(home), "CFFIXED_USER_HOME": str(home),
-                   "TMPDIR": str(run.root), "LANG": "en_US.UTF-8", "TZ": "America/New_York",
-                   "CODEXBAR_RESOURCE_SMOKE": "1", "CODEXBAR_PLUGIN_ENGINE": "quickjs"}
+                   "TMPDIR": str(run.root), "LANG": "en_US.UTF-8", "TZ": "America/New_York"}
+    if resource_mode:
+        environment.update(CODEXBAR_RESOURCE_SMOKE="1", CODEXBAR_PLUGIN_ENGINE="quickjs")
     profile = sandbox_profile(run.root, checkout)
 
     def probe(name, executable):
@@ -226,6 +266,16 @@ def relocation(run, args):
                                                    "/bin/cat", str(sentinel)], environment)
     if status != 1 or not any(message in output for message in ("Operation not permitted", "Permission denied")):
         raise Failure("Checkout denial was not proved")
+    if not resource_mode:
+        for name, executable in (("helper-help", cli), ("symlink-help", link)):
+            status, _ = run.command(name, ["/usr/bin/sandbox-exec", "-p", profile,
+                                          str(executable), "--help"], environment)
+            if status != 0:
+                raise Failure(name + " CLI relocation failed", status if 0 < status < 126 else 1)
+        emit("cli-relocation", result="passed", app_resource_proof="unavailable", app_lifetime="not-tested",
+             seconds=round(time.monotonic() - run.started, 3))
+        return
+
     for name, executable in (("helper", cli), ("symlink", link), ("app-resource", binary)):
         status, output = probe(name, executable)
         if status != 0 or MARKER not in output.splitlines():
@@ -279,13 +329,15 @@ def ax_trust_probe():
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Resource-only packaged relocation proof; never normal startup")
+    parser = argparse.ArgumentParser(description="Reviewed packaged relocation proofs; never normal app startup")
     parser.add_argument("--ax-trust-probe", action="store_true")
     parser.add_argument("--app")
     parser.add_argument("--checkout")
     parser.add_argument("--scratch-parent")
     parser.add_argument("--qualified-source-commit")
+    parser.add_argument("--mode", choices=("resources", "cli-relocation"), default="resources")
     parser.add_argument("--resource-entrypoints-reviewed", action="store_true")
+    parser.add_argument("--cli-entrypoints-reviewed", action="store_true")
     args = parser.parse_args(argv)
     run = None
     status = 0
@@ -297,7 +349,8 @@ def main(argv=None):
             raise Failure("Unavailable: this proof requires macOS", 2)
         if args.ax_trust_probe:
             if any((args.app, args.checkout, args.scratch_parent, args.qualified_source_commit,
-                    args.resource_entrypoints_reviewed)):
+                    args.resource_entrypoints_reviewed, args.cli_entrypoints_reviewed,
+                    args.mode != "resources")):
                 raise Failure("AX probe is a separate mode; omit relocation arguments", 2)
             return ax_trust_probe()
         if not all((args.app, args.checkout, args.scratch_parent, args.qualified_source_commit)):

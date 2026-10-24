@@ -2,7 +2,7 @@
 import CodexBarCore
 import Foundation
 
-/// Closed first-party bootstrap list for the supported providers.
+/// Closed first-party bootstrap list.
 enum ProviderImplementationManifest {
     static let makeImplementations: [@Sendable () -> any ProviderImplementation] = [
         { CodexProviderImplementation() },

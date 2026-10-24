@@ -380,10 +380,12 @@ shared_sources = next(ast.literal_eval(node.value) for node in ast.parse(classif
                       if isinstance(node, ast.Assign)
                       and any(isinstance(target, ast.Name) and target.id == "portable_source_paths"
                               for target in node.targets))
+plugin_tests = root / "TestsPlugin"
 symlink_sources = {str((path.parent / os.readlink(path)).resolve().relative_to(root))
-                   for path in (root / "TestsPlugin").iterdir() if path.is_symlink()}
-if shared_sources != symlink_sources:
-    sys.exit("shared plugin source path gate must match TestsPlugin symlink targets")
+                   for path in (plugin_tests.iterdir() if plugin_tests.is_dir() else ())
+                   if path.is_symlink()}
+if shared_sources or symlink_sources:
+    sys.exit("removed plugin test target must have no shared source paths or symlinks")
 
 PY
 

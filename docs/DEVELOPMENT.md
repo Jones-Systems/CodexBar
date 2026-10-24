@@ -97,20 +97,26 @@ processes, access live accounts or credentials, sign, or publish.
 
 ### Native workflow proofs
 
-`Scripts/verify_packaged_relocation.sh` exercises only the packaged **resource**
-entrypoints (CB-N6): copied helper, symlinked helper, and app resource smoke, followed
-by all three missing-bundle negative controls. Every invocation sets
-`CODEXBAR_RESOURCE_SMOKE=1`. It never executes ordinary app startup or the survival
-phase in `verify_packaged_app_launch.sh`. Resource success is not menu, window,
-provider, installed-app, or full native UI proof. This resource-only check needs no
-Aqua session; a future ordinary-app/UI proof would need one and an independently
-qualified synthetic startup boundary.
+`Scripts/verify_packaged_relocation.sh` has two explicit source-qualified modes.
+The default `resources` mode applies to builds retaining tracked Core resources.
+It exercises the packaged resource entrypoints (CB-N6): copied helper, symlinked
+helper, and app resource smoke, followed by all three missing-bundle negative
+controls. These probes set `CODEXBAR_RESOURCE_SMOKE=1` and force Core plugin loads.
+The `cli-relocation` mode applies only when the qualified source has removed Core
+resources. It runs only copied and symlinked helper `--help`, without the deleted
+smoke flag or ordinary app startup, and reports app resource proof unavailable.
+Wrong mode/source combinations fail before execution. Neither mode executes the
+survival phase in `verify_packaged_app_launch.sh`, needs Aqua, or proves menu,
+window, provider, installed-app, or full native UI behavior.
 
 Before running, qualify the exact disposable build against its source and review
-both smoke entrypoints plus their transitive initialization. The review flag below
-records that prerequisite; it cannot prove provenance by itself. The script checks
-the bundle's embedded commit prefix against the full supplied SHA and records copied
-executable hashes. Build qualification, architecture/signature checks, and any build
+the selected entrypoints plus their transitive initialization. Resource mode requires
+`--resource-entrypoints-reviewed`; CLI mode separately requires
+`--cli-entrypoints-reviewed`, including review of `--help` initialization. A review
+flag records that prerequisite; it cannot prove provenance by itself. The script
+requires the exact checkout root, clean tracked source, and HEAD matching the supplied
+full SHA, checks the bundle's embedded commit prefix, and records copied executable
+hashes. Build qualification, architecture/signature checks, and any build
 commands belong to the caller. Do not supply an installed app or build via an
 automatic launch wrapper. When packaging is authorized separately, use the existing
 `CODEXBAR_SKIP_LAUNCH_SMOKE=1` option to suppress its ordinary launch smoke.
@@ -123,6 +129,27 @@ bash Scripts/verify_packaged_relocation.sh \
   --qualified-source-commit FULL_40_CHARACTER_SOURCE_SHA \
   --resource-entrypoints-reviewed
 ```
+
+For a qualified slim build with Core resource inputs removed, use the separate mode:
+
+```bash
+bash Scripts/verify_packaged_relocation.sh \
+  --app /absolute/path/to/qualified/CodexBar.app \
+  --checkout /absolute/path/to/source-checkout \
+  --scratch-parent /absolute/path/to/existing-owned-proof-parent \
+  --qualified-source-commit FULL_40_CHARACTER_SOURCE_SHA \
+  --mode cli-relocation --cli-entrypoints-reviewed
+```
+
+This proves CLI help relocation only. App resource-load proof is unavailable and
+application lifetime is not tested. `verify_packaged_app_launch.sh` separately
+retains bounded normal app liveness. Its `CODEXBAR_LAUNCH_SMOKE_RESOURCE_ONLY=1`
+mode runs only the selected resource probes or slim CLI help probes and explicitly
+does not test application lifetime. Ordinary liveness does not force lazy resource
+loads. Core smoke never forced KeyboardShortcuts or app-icon loads; their existing
+strict package presence checks remain, without a claim of deterministic runtime
+consumption. App/CLI packaging selects Core bundle membership from tracked source
+inputs and excludes stale Core bundles when those inputs have been removed.
 
 Use an existing canonical, disk-backed scratch parent outside the denied checkout
 and bundle. The caller owns that parent. The verifier allocates one private child,
@@ -138,10 +165,11 @@ The sandbox denies by default, allowing system-library reads and owned scratch w
 explicitly denying checkout reads. It allows reading the literal root directory for
 dyld startup; that grant does not allow reading descendant file contents. It grants no network, preference/Keychain Mach
 service access, or child forks. A readable control and a denied checkout read must
-both succeed before any smoke entrypoint runs. This is needed even for the resource
-smoke: plugin engine selection currently consults `UserDefaults.standard`. Synthetic
-`HOME` alone does not isolate defaults. If the restricted smoke cannot initialize,
-report failure and investigate; do not weaken it to access live defaults or providers.
+both succeed before either mode's entrypoints run. Legacy resource builds selected
+plugin engines through `UserDefaults.standard`; slim CLI initialization also needs
+its own reviewed boundary. Synthetic `HOME` alone does not isolate defaults. If a
+restricted probe cannot initialize, report failure and investigate; do not weaken
+it to access live defaults or providers.
 Only exit 1 with the exact missing-bundle diagnostic counts as a negative control;
 timeouts, crashes, signing failures and other startup errors do not.
 
@@ -151,7 +179,7 @@ failure and cleanup readback. A final status of zero is required; an intermediat
 resource pass followed by cleanup failure is a failed run. Missing macOS or
 `sandbox-exec` is unavailable (exit 2), never a skipped pass. Synthetic lifecycle
 regressions are run separately with
-`bash Scripts/test_verify_packaged_relocation.sh`; they use fake resource responses
+`bash Scripts/test_verify_packaged_relocation.sh`; they use fake resource/help responses
 and owned Python children, not a real bundle, TCC, live stores, or providers.
 
 G-CB1 is a separate, bounded no-prompt query:
@@ -297,10 +325,9 @@ For an aggregate command that must keep its original selection and parallelism, 
 `./Scripts/test.sh --command swift test --parallel`. This mode runs the command once,
 without discovery, sharding, or retries, inside the same fixture-parent and process-drain
 lifecycle. It keeps the enclosing CI job's deadline rather than the per-shard timeout.
-It rejects discovery/shard selectors. The plugin engine A/B script uses this mode around
-both existing engine passes, sharing one invocation parent and retaining `--skip-build`
-for the second pass. Both CI entry points inherit the same file/Keychain isolation as
-the ordinary test runner; neither depends on environment left by a previous CI step.
+It rejects discovery/shard selectors. This command mode inherits the same file/Keychain
+isolation as the ordinary test runner and does not depend on environment left by a
+previous CI step. Removed plugin-engine scripts are not a supported product route.
 
 Direct `swift test` commands require both variables naming existing canonical directories: workspace
 root and a strict workspace-descendant fixture parent. Prepare that parent through the invoking
