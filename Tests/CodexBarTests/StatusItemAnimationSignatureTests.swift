@@ -624,12 +624,9 @@ struct StatusItemAnimationSignatureTests {
         settings.selectedMenuProvider = .codex
         settings.mergedMenuLastSelectedWasOverview = true
         settings.menuBarShowsBrandIconWithPercent = false
-        settings.setProviderOrder([.claude, .codex, .claude])
+        settings.setProviderOrder([.claude, .codex])
 
         let registry = ProviderRegistry.shared
-        if let cursorMeta = registry.metadata[.claude] {
-            settings.setProviderEnabled(provider: .claude, metadata: cursorMeta, enabled: true)
-        }
         if let codexMeta = registry.metadata[.codex] {
             settings.setProviderEnabled(provider: .codex, metadata: codexMeta, enabled: true)
         }
@@ -653,20 +650,19 @@ struct StatusItemAnimationSignatureTests {
             secondary: nil,
             updatedAt: Date())
         store._setSnapshotForTesting(snapshot, provider: .codex)
-        store._setSnapshotForTesting(snapshot, provider: .claude)
+        #expect(store.snapshot(for: .claude) == nil)
 
-        #expect(store.enabledProvidersForDisplay().prefix(3) == [.claude, .codex, .claude])
+        #expect(store.enabledFirstPartyProvidersForDisplay() == [.claude, .codex])
         let expectedProviders: [UsageProvider] = [
             .claude,
             .codex,
-            .claude,
         ]
         #expect(settings.resolvedMergedOverviewProviders(
             activeProviders: store.enabledFirstPartyProvidersForDisplay()) == expectedProviders)
 
         controller.applyIcon(phase: nil)
 
-        #expect(controller.lastAppliedMergedIconRenderSignature?.contains("provider=cursor") == true)
+        #expect(controller.lastAppliedMergedIconRenderSignature?.contains("provider=claude") == true)
     }
 
     @Test

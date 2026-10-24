@@ -394,6 +394,12 @@ enum DashboardSnapshotBuilder {
         return windows
     }
 
+    private struct RateWindowLabels {
+        let primary: String
+        let secondary: String
+        let tertiary: String
+    }
+
     private static func rateWindowLabels(
         provider: UsageProvider?,
         metadata: ProviderMetadata?,

@@ -54,7 +54,7 @@ struct SpendDashboardPartialCostTests {
     }
 
     @Test
-    func `established Claude history keeps priced days when another day omits cost`() throws {
+    func `established Codex history keeps priced days when another day omits cost`() throws {
         let snapshot = Self.snapshot(
             entries: [
                 Self.entry(day: "2026-07-15", cost: 1, tokens: 5, model: "claude-4.5-sonnet"),
@@ -63,7 +63,7 @@ struct SpendDashboardPartialCostTests {
             last30DaysTokens: 12,
             last30DaysCostUSD: 1)
         let group = try Self.group(inputs: [
-            .init(provider: .claude, displayName: "Claude", snapshot: snapshot),
+            .init(provider: .codex, displayName: "Codex", snapshot: snapshot),
         ])
 
         #expect(snapshot.historyCoverageIsEstablished)
@@ -73,7 +73,7 @@ struct SpendDashboardPartialCostTests {
     }
 
     @Test
-    func `unestablished Claude history with an unresolved day keeps spend unavailable`() throws {
+    func `unestablished Codex history with an unresolved day keeps spend unavailable`() throws {
         let snapshot = Self.snapshot(
             entries: [
                 Self.entry(day: "2026-07-15", cost: 1, tokens: 5, model: "claude-4.5-sonnet"),
@@ -83,7 +83,7 @@ struct SpendDashboardPartialCostTests {
             last30DaysTokens: 12,
             last30DaysCostUSD: 1)
         let group = try Self.group(inputs: [
-            .init(provider: .claude, displayName: "Claude", snapshot: snapshot),
+            .init(provider: .codex, displayName: "Codex", snapshot: snapshot),
         ])
 
         #expect(!snapshot.historyCoverageIsEstablished)
@@ -92,7 +92,7 @@ struct SpendDashboardPartialCostTests {
     }
 
     @Test
-    func `established Claude history retains priced days when some events omit total cents`() throws {
+    func `established Codex history retains a known subtotal when some model rows lack prices`() throws {
         let snapshot = Self.snapshot(
             entries: [
                 Self.entry(day: "2026-07-15", cost: 3, tokens: 30, model: "claude-4.5-sonnet"),
@@ -101,7 +101,7 @@ struct SpendDashboardPartialCostTests {
             last30DaysTokens: 70,
             last30DaysCostUSD: 3)
         let group = try Self.group(inputs: [
-            .init(provider: .claude, displayName: "Claude", snapshot: snapshot),
+            .init(provider: .codex, displayName: "Codex", snapshot: snapshot),
         ])
 
         #expect(group.totalCost == 3)

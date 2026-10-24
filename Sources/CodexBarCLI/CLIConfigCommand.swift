@@ -176,8 +176,7 @@ extension CodexBarCLI {
         case .text:
             let name = ProviderDescriptorRegistry.descriptor(for: provider).metadata.displayName
             let suffix = result.enabled ? " and enabled" : ""
-            let action = accountOptions == nil ? "stored API key" : "stored team token account"
-            print("Config: \(action) for \(name)\(suffix)")
+            print("Config: stored API key for \(name)\(suffix)")
         case .json:
             Self.printJSON(result, pretty: output.pretty)
         }

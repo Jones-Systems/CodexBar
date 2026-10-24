@@ -19,6 +19,7 @@ enum ProviderTokenAccountSelection {
         return settings.effectiveSelectedTokenAccount(for: provider)
     }
 
+    @MainActor
     static func shouldIncludeOptionalUsage(
         provider: UsageProvider,
         settings: SettingsStore,

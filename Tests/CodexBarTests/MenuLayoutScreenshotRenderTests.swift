@@ -146,7 +146,7 @@ final class MenuLayoutScreenshotRenderTests: XCTestCase {
         try CodexCredentialFileAccess.withFixtureScope(.init()) {
             try OpenAIDashboardCacheStore.$cacheURLOverride.withValue(root.appendingPathComponent("dashboard.json")) {
                 try CodexBarLocalizationOverride.$appLanguage.withValue("en") {
-                    let order: [UsageProvider] = [.claude, .claude]
+                    let order: [UsageProvider] = [.codex, .claude]
                     let config =
                         CodexBarConfig(providers: (order + UsageProvider.allCases.filter { !order.contains($0) })
                             .map { ProviderConfig(id: $0.instanceID, enabled: order.contains($0)) })
@@ -179,7 +179,7 @@ final class MenuLayoutScreenshotRenderTests: XCTestCase {
                         widgetSnapshotURL: root.appendingPathComponent("widget.json"))
                     XCTAssertEqual(store.enabledFirstPartyProvidersForDisplay(), order)
                     XCTAssertTrue(store.snapshots.isEmpty)
-                    XCTAssertEqual(settings.menuBarLayoutForGlobalEditing(representativeProvider: .claude), global)
+                    XCTAssertEqual(settings.menuBarLayoutForGlobalEditing(representativeProvider: .codex), global)
                     XCTAssertEqual(settings.menuBarLayout(for: .claude), override)
 
                     let view = AnyView(MenuBarLayoutEditor(settings: settings, store: store)
