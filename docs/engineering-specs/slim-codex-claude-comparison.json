@@ -1,7 +1,7 @@
 {
   "schema": "codexbar-product-removal-comparison/v1",
   "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
-  "candidateSourceRevision": "e0575c44592208fa16d0ac71d7b14044c0b49418",
+  "candidateSourceRevision": "f1bae83de761ee383e5845111993671f1ed308cb",
   "pullRequest": "https://github.com/Jones-Systems/CodexBar/pull/41",
   "baseBranch": "work/test-value-bar-pass2-20261024",
   "method": "Exact committed Git blobs; files include Swift source under Sources and tests under Tests, TestsLinux, TestsPlugin; line count uses bytes.splitlines; lexical Swift Testing @Test declaration counts exclude comments/strings and do not represent parameterized/runtime cases.",
@@ -26,8 +26,8 @@
     "after": {
       "productSwift": {
         "files": 651,
-        "lines": 193233,
-        "bytes": 7944129
+        "lines": 193239,
+        "bytes": 7944157
       },
       "productCHeaders": {
         "files": 1,
@@ -36,8 +36,8 @@
       },
       "testSwift": {
         "files": 734,
-        "lines": 252333,
-        "bytes": 10937473
+        "lines": 252293,
+        "bytes": 10935733
       }
     }
   },
@@ -47,7 +47,7 @@
       "filesWithTestAttributes": 1006
     },
     "after": {
-      "swiftTestingDeclarations": 6547,
+      "swiftTestingDeclarations": 6546,
       "filesWithTestAttributes": 692
     }
   },
@@ -84,9 +84,252 @@
       "inventorySHA256": "dbc9da66f8757bcde7ed48800276fdc65b47140de3d4792dacbd3c351da8748d"
     },
     "costRegressionSuites": {
-      "files": 61,
+      "files": 60,
       "gitBlobIdentical": true,
-      "inventorySHA256": "c56b9499bc1720f960d92388703c2d4889a67b0603eca12d1c21de87e1875f9c"
+      "inventorySHA256": "924a6bfa3711f0d16af150449153f2c1cee96fb72e8e505f6c155925577577b1",
+      "inventoryDigestFormat": "SHA256 of compact JSON sorted list of {path,blob} objects with sorted keys",
+      "inventory": [
+        {
+          "path": "Tests/CodexBarTests/CostUsageBoundedProgressTests.swift",
+          "blob": "82ad438bf3c56cffa9d3220c08edfcd861a91a49"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageCacheWideMigrationTests.swift",
+          "blob": "3b88e4b887d9b210403fe3fe3ac7ee1a04db9c65"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageCachedTokenDetailTests.swift",
+          "blob": "88363006c0172a07306f725cae7403b1a6ce8bb8"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageCalendarTests.swift",
+          "blob": "f6154e2815476528398e60041d757bf96b6e0efe"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageCancellationTests.swift",
+          "blob": "1bb7ce776d9440f2a09db244436e70a0ebc8d65a"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageCatchUpCompletionTests.swift",
+          "blob": "5a99b8f6a7cdcb2eb3b0cb3865e47fc0eeffbb62"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageCatchUpProgressTests.swift",
+          "blob": "5e090bb28a611183aacb6b0bb9dddffe53300c34"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageClaudeKimiAliasTests.swift",
+          "blob": "0f8e993e65a27df4038fd80c1fe8dedafda0bda8"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageClaudeMetadataParsingTests.swift",
+          "blob": "40751b99dfe25c78e3a2d15c8fc44e19884ff228"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageClaudeResolverTests+Parser.swift",
+          "blob": "2ac823562b926d5afa87160d87384f5cca364c6f"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageClaudeResolverTests.swift",
+          "blob": "a5288e6158d6ca7a928522667fcfb0d336554430"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageClaudeVertexClassifierTests.swift",
+          "blob": "8660c0b8e09a254341400c8916cb7174c30490ab"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageCompletedSnapshotTests.swift",
+          "blob": "b607686a6f4f76c0541e2ae53a50ac85a79ab598"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageCoverageAggregationTests.swift",
+          "blob": "a18b505213df13b643736e8716b1af9f031f6f4e"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageCoverageCompatibilityTests.swift",
+          "blob": "1a35f266052d7644923c5d8a084ef934226862cb"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageCustomPricingTests.swift",
+          "blob": "43a853e03b2dd235b66e8f5765d03cbd464d9976"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageDailyReportMergeTests.swift",
+          "blob": "318da0e780f17ae0df5bda8cf5ddc2693336f345"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageDecodingTests.swift",
+          "blob": "acf4f65ea07ac9d4a34ec96bd135c5eb4ebf2dd1"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageDiscoveryRecoveryTests.swift",
+          "blob": "606d83e31b886abe84b4b71241a94de79e84aff3"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageEmptyFragmentTests.swift",
+          "blob": "0070ac70043370361a5b1d8776240b38594b70d9"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageFairSchedulingTests.swift",
+          "blob": "352afdd2dfe61d4dd0d92d291929b7a2d2916db8"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageFetcherCacheSnapshotTests.swift",
+          "blob": "03fb3bc5e276fa35752a0949f7ee0cc4c5fe29ee"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageFetcherTests.swift",
+          "blob": "8acbe43282747f144876c3e5f766dceac9836ba8"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageFetcherUnknownModelPricingTests.swift",
+          "blob": "7f0e20fea58279e5c274e4832235263b2788e81f"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageFixtureSeedTests.swift",
+          "blob": "78535a268f61205bc1486460ca57f113316e450a"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageJsonlPerformanceTests.swift",
+          "blob": "db23faaecf2f430404878145e6785858c93d5a7e"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageJsonlScannerTests.swift",
+          "blob": "e06edbc9ce1398e408a00355b57371518eee0c01"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageJsonlShapeBenchmarkTests.swift",
+          "blob": "7a0caf0d46024862abad0aae9221170fb4f90009"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsagePerformanceGateTests.swift",
+          "blob": "b2055859151f0cf6dc323b0dab6d02b705d1f6d9"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsagePricingRaceTests.swift",
+          "blob": "b62da76a112e32fbfd7c7c6c378f3c9d920c9294"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsagePricingTests.swift",
+          "blob": "da0b911a04139afb27e3de391be8505c388d10c1"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageScanExecutorTests.swift",
+          "blob": "8ea5a03b4443acc6b71fad1cee15172e2b72dbcd"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageScannerBreakdownTests.swift",
+          "blob": "7fba070778c164618b7d899f6eb5dd05383f5081"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageScannerClaudeDesktopTests.swift",
+          "blob": "e2508a64587d16cb534d70d02d3812492e1f165d"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageScannerClaudeFableTests.swift",
+          "blob": "74bde498ae363e1b95513656290c8fd4a1c9c3c9"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageScannerClaudeMemoTests.swift",
+          "blob": "7c90f7e9d21d3e415b01d7dee2d34940be670563"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageScannerClaudePricingMemoTests.swift",
+          "blob": "79361b63c1ec8a16c235bea43ad6d81e4d898f41"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageScannerClaudeRegressionTests.swift",
+          "blob": "30b14f5ebca4603f89d8979f105a72400315b3f9"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageScannerCodexPricingMemoTests.swift",
+          "blob": "83ae56f1cedd9feaf804d2a6e50f743de853d44a"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageScannerCodexPriorityCursorTests.swift",
+          "blob": "77c75bcf05a410dae37b503bbf740c33703c7d84"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageScannerCodexPriorityTests.swift",
+          "blob": "db2ebe7f7c14a768a011ad42e66b97302dc176bd"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageScannerForkSplitPricingEvidenceTests.swift",
+          "blob": "6a09298e84740d1680b24f2f3846d5f86c227921"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageScannerForkSplitTests.swift",
+          "blob": "47c7a60dbcecc5835ba06b31b248413711428b1e"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageScannerPriorityTests.swift",
+          "blob": "f95da684ecdf83f1479cbfb8eaba9031ec3a1b07"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageScannerTests.swift",
+          "blob": "30165ea2e1a916ad84d49049d8b2bde156c24bd9"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageStoreCrashSafetyTests.swift",
+          "blob": "282bf695a8935684038d955d96f02e06ceaf879c"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageStoreCutoverTests.swift",
+          "blob": "3976dbcdd1fa033c23671b43ffdc54791c1066b0"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageStoreExecutorIsolationTests.swift",
+          "blob": "7753bd1a57396573de13c90716b44f36ddeb4926"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageStoreFailureInjectionTests.swift",
+          "blob": "ac30e25868bad270a226c8eb09c17e1f522e4bdd"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageStoreOpenLockTests.swift",
+          "blob": "76d492a264571f042017e5b5344bed63ada17525"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageStoreReadViewTests.swift",
+          "blob": "8a98bf8e772fd97f235c07e4c86fcad3ccbfa13a"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageStoreReadWorkTests+Aggregates.swift",
+          "blob": "f5d4ba54cdc0e895fb93234d895b93f2945ab733"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageStoreReadWorkTests+Baseline.swift",
+          "blob": "025df9471ff1f5013f14849621fb8e6c2e56c255"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageStoreReadWorkTests+Reconciliation.swift",
+          "blob": "5c2c7e5a19056ddc71b0f9d130de6ad74551cf95"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageStoreReadWorkTests.swift",
+          "blob": "7bc57368f69bc7b8927781d060698184f7e74ce3"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageStoreScaleProofTests.swift",
+          "blob": "a22fe08b50e2507beb1d3ce0744f963b155bc70a"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageStoreTests.swift",
+          "blob": "cabc50cb4e0c47eea5c9c83c5154dd472ab4d6fb"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageTimestampOrderTests.swift",
+          "blob": "184b7971270a7786551890907e97645c8ec0bbfa"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageTimestampTests.swift",
+          "blob": "d6f1e66ea1ede1b16d49a51959ecd79ae6f96f97"
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageWindowSummaryTests.swift",
+          "blob": "e7b150ec9b65c42485df8b14a54e1da140c2811c"
+        }
+      ]
     },
     "localHistoryRegressionSuites": {
       "files": 4,
@@ -97,6 +340,15 @@
       "files": 19,
       "gitBlobIdentical": true,
       "inventorySHA256": "060d486bb821586b3f6067134ca31d6164a6ddd81122e8eb914fccbad7fbe22f"
+    },
+    "changedCostSuite": {
+      "path": "Tests/CodexBarTests/CostUsageTokenSnapshotDaySelectionTests.swift",
+      "removedOnly": "Cursor remote-adapter cursorWindowStart test; helper has no retained consumer",
+      "retainedTestDeclarations": 12,
+      "remainingSourceByteIdentical": true,
+      "beforeBlob": "8263556927480a2a3b73530a9452676307934814",
+      "afterBlob": "d4d55666916d45286f28b38536ae2185b952515d",
+      "highLimitOrPersistenceTestsChanged": false
     }
   },
   "staticAudits": {
@@ -112,12 +364,14 @@
     "makeCheck": {
       "status": "unavailable",
       "exitCode": 2,
-      "reason": "plutil absent"
+      "reason": "plutil absent",
+      "latestAttemptRevision": "f1bae83de761ee383e5845111993671f1ed308cb"
     },
     "makeTest": {
       "status": "unavailable",
       "exitCode": 2,
-      "reason": "Swift absent; no test executable ran"
+      "reason": "Swift absent; no test executable ran",
+      "latestAttemptRevision": "f1bae83de761ee383e5845111993671f1ed308cb"
     },
     "normalAndFullProfileManifests": "pass",
     "documentationLinks": {
@@ -127,20 +381,36 @@
     "llmsIndex": "pass",
     "whitespace": "pass",
     "providerManifestGeneration": {
-      "status": "fail",
-      "reason": "Two generator doccomment templates still describe runtime/plugin registrations; pending CI sibling cleanup"
+      "status": "pass",
+      "method": "Existing generator --write followed by --check; only one generated Swift doccomment differed; two retained providers",
+      "revision": "f1bae83de761ee383e5845111993671f1ed308cb"
     },
     "codexParserHash": {
       "status": "pass",
       "method": "Existing generator --write followed by --check",
       "value": "56738678d8c0245c",
       "generatedOnlyRepairRevision": "e0575c44592208fa16d0ac71d7b14044c0b49418"
+    },
+    "portableHarnessFixtures": {
+      "profileTests": 4,
+      "launchTests": 17,
+      "relocationTests": 18,
+      "status": "pass",
+      "scope": "synthetic owned executables/stubbed signing; no native app or Mac sandbox proof",
+      "packagePaths": "pass",
+      "strip": "pass",
+      "signingFixtures": "pass",
+      "infoPlist": "pass",
+      "releaseChecksum": "pass",
+      "pathGate": "pass",
+      "changedShellSyntaxFiles": 9,
+      "patchConsumptionRevision": "f1bae83de761ee383e5845111993671f1ed308cb"
     }
   },
   "hostedEvidence": {
     "status": "pending root integration/qualification",
     "firstRunURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40121196414",
-    "firstHeadLint": "failure: stale Codex parser hash; repaired by generated-only commit e0575c44592208fa16d0ac71d7b14044c0b49418; later product-dependent harness/packaging/comment checks await CI sibling integration",
+    "firstHeadLint": "failure: stale parser hash, repaired by e0575c44592208fa16d0ac71d7b14044c0b49418; product-dependent patch01 contracts now applied and portable checks pass; native qualification pending",
     "currentHeadChecksMustBeReadFromGitHub": true
   },
   "appSizeAndBuildComparison": {
@@ -155,12 +425,56 @@
   },
   "restorationRevision": "91bd5fb4af704da9181212bea636d527a058e615",
   "bulkReview": {
-    "status": "in progress",
+    "status": "completed; seven findings addressed in source, native validation pending",
     "implementationRevision": "39ebae79e3f0dd31e4afc9d2bb2f4dba5a4ac808",
     "generatedOnlyDelta": "e0575c44592208fa16d0ac71d7b14044c0b49418",
+    "repairRevision": "43b9ae226e05f6850da3a0f5bb866135fe8a5a00",
     "model": "gpt-6.1-sol",
     "reasoningEffort": "max",
-    "serviceTier": "default"
+    "serviceTier": "default",
+    "findings": [
+      {
+        "severity": "P1",
+        "path": "Sources/CodexBar/Providers/Shared/ProviderTokenAccountSelection.swift",
+        "resolution": "Restore @MainActor on optional usage helper"
+      },
+      {
+        "severity": "P1",
+        "path": "Sources/CodexBarCLI/CLIConfigCommand.swift",
+        "resolution": "Use retained API-key success text; remove deleted accountOptions reference"
+      },
+      {
+        "severity": "P1",
+        "path": "Sources/CodexBarCLI/DashboardSnapshotBuilder.swift",
+        "resolution": "Restore shared three-field RateWindowLabels type"
+      },
+      {
+        "severity": "P1",
+        "path": "Tests/CodexBarTests/CostUsageTokenSnapshotDaySelectionTests.swift",
+        "resolution": "Remove only deleted Cursor remote-helper test; retain other twelve shared tests byte-identically"
+      },
+      {
+        "severity": "P2",
+        "path": "Tests/CodexBarTests/WidgetProviderChoiceTests.swift",
+        "resolution": "Pin literal titles for Codex and Claude"
+      },
+      {
+        "severity": "P2",
+        "path": "Tests/CodexBarTests/StatusItemAnimationSignatureTests.swift",
+        "resolution": "Distinct two-provider fixtures in status, animation and screenshot tests; first Claude provider has no snapshot"
+      },
+      {
+        "severity": "P2",
+        "path": "Tests/CodexBarTests/SpendDashboardPartialCostTests.swift",
+        "resolution": "Preserve partial-ledger assertions under retained Codex provider contract"
+      }
+    ],
+    "postRepairDelta": {
+      "revision": "f1bae83de761ee383e5845111993671f1ed308cb",
+      "productSwiftChange": "Generated implementation manifest doccomment only; line count unchanged",
+      "harnessChange": "Root-transferred patch01 plus exact stale symlink-inventory fixture repair; portable checks pass; no additional agent review",
+      "nativeValidation": "pending"
+    }
   },
   "testProfiles": {
     "normalAndFullAccepted": true,
@@ -169,5 +483,37 @@
     "retainedRepositoryTestSwiftPaths": 734,
     "manifestSHA256": "136f44cb5604cf4364709c429e2e7ff8d275c0065d26bfb4896e1899008865d8",
     "platformTargetSelectionUnchanged": true
+  },
+  "harnessHandoff": {
+    "patch": "01-product-independent.patch",
+    "sha256": "8ffcef255af71270e4d555692e5e5407867c7bd8f20d8955356947c0141a649b",
+    "recordedBaseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+    "appliedRevision": "f1bae83de761ee383e5845111993671f1ed308cb",
+    "rootTransferMessage": "codexbar-patch01-application-ownership-20261024-v1",
+    "paths": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/release-cli.yml",
+      "Scripts/ci_path_gate.sh",
+      "Scripts/install_lint_tools.sh",
+      "Scripts/lint.sh",
+      "Scripts/package_app.sh",
+      "Scripts/regenerate-plugin-js.sh",
+      "Scripts/regenerate-provider-manifests.sh",
+      "Scripts/regenerate-sucrase-bundle.sh",
+      "Scripts/test_test_profiles.py",
+      "Scripts/test_verify_packaged_app_launch.py",
+      "Scripts/test_verify_packaged_relocation.sh",
+      "Scripts/transpile-plugin-ts.mjs",
+      "Scripts/verify_packaged_app_launch.sh",
+      "Scripts/verify_packaged_relocation.sh",
+      "docs/DEVELOPMENT.md",
+      "tsconfig.plugins.json"
+    ],
+    "additionalTransferredPath": "Scripts/test_ci_path_gate.sh",
+    "currentSharedPluginTestInventory": 0,
+    "historicalDeletedPathTriggersRetained": true,
+    "patch02Applied": false,
+    "fullWorkflowQualified": false,
+    "remainingGate": "Root integrates qualified PR40 compile-once descendant, rechecks patch02, and integrates the separate 05:00 America/New_York nightly before combined native qualification."
   }
 }

@@ -42,7 +42,9 @@ Remove CloudKit sync transport/coordinator and its app lifecycle wiring. Retain 
 relocate shared account/menu/fleet identity models that happen to live in `Sync`.
 Source-level architecture changes affect app, core, CLI and widget consumers, so
 all applicable platform compiler jobs remain required. The CI sibling owns
-compile-once sharding and all workflow/harness changes.
+compile-once sharding. Root transferred application of its frozen 17-path product
+harness cleanup to this coordinator; the Work Note records the exact boundary.
+Compile-once and nightly integration stay with root.
 <!-- codex-section:end spec.slim-codex-claude-product#architecture -->
 
 <!-- codex-section:begin spec.slim-codex-claude-product#verification -->

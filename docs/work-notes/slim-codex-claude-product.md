@@ -54,8 +54,10 @@ Native goal ownership stays with root rather than creating a competing child goa
   and resource-smoke lifecycle hunks in CodexbarApp. Only coordinator stages,
   commits or publishes. Global test transformations finished before transferring
   the exact core/app test scopes; no coordinator writes those scopes while leaves own them.
-- Nobody in this worktree changes `.github/**`, CI sharding/campaign scripts,
-  build_jobs.py, shared harness/artifact scripts or signing/bootstrap work.
+- Initial exclusions cover `.github/**`, CI sharding/campaign scripts,
+  build_jobs.py, shared harness/artifact scripts and signing/bootstrap work. Root
+  transferred the 17 patch01 application paths below to this coordinator; every
+  other CI exclusion remains. No signing/bootstrap contract is changed.
 
 Both implementation leaves completed their source/test cones and returned ownership
 to the coordinator. They shared this worktree with disjoint scopes, launched no
@@ -104,14 +106,33 @@ Normal/full profile manifest validation, documentation links and llms index
 checks pass. A lexical delimiter audit found no new mismatch in the current
 changed/new Swift files; it is not compiler evidence.
 
-CI sibling owns these product-dependent contracts: plugin lint/TypeScript and
-profile harness assumptions; `Scripts/package_app.sh`,
-`Scripts/verify_packaged_app_launch.sh`, `.github/workflows/release-cli.yml`
-obsolete core-resource bundle requirements; and the two obsolete runtime/plugin
-comment templates in `Scripts/regenerate-provider-manifests.sh`. The latter
-currently causes generated-manifest checking to fail only on comments. Packaging
-has not been verified. Root will integrate the exact sibling cleanup before
-hosted qualification. No duplicated PR38 matched campaign was started. Live publication preflight rechecked
+Root transferred the frozen sibling patch01 application scope at 2:41:56 PM EDT
+on October 24, 2026 (message `codexbar-patch01-application-ownership-20261024-v1`),
+confirmed the sibling freeze, and reiterated authorization at 2:52:28 PM EDT.
+Coordinator verified SHA256
+`8ffcef255af71270e4d555692e5e5407867c7bd8f20d8955356947c0141a649b`, the exact
+17-path manifest, current branch/HEAD and a clean `git apply --check`, then applied
+only patch01. The transferred paths are `.github/workflows/{ci,release-cli}.yml`,
+`Scripts/{ci_path_gate.sh,install_lint_tools.sh,lint.sh,package_app.sh,regenerate-plugin-js.sh,regenerate-provider-manifests.sh,regenerate-sucrase-bundle.sh,test_test_profiles.py,test_verify_packaged_app_launch.py,test_verify_packaged_relocation.sh,transpile-plugin-ts.mjs,verify_packaged_app_launch.sh,verify_packaged_relocation.sh}`,
+`docs/DEVELOPMENT.md` and `tsconfig.plugins.json`. Four obsolete plugin-tool files
+are deleted. The CI workflow hunk only removes TypeScript lint installation;
+packaging and relocation distinguish removed Core resources from legacy builds.
+Signing/bootstrap functions, entitlements and widget provisioning remain intact.
+Root additionally transferred `Scripts/test_ci_path_gate.sh` at 2:58:02 PM EDT
+for the stale plugin inventory contract. The active shared-source set is empty,
+and its fixture requires no remaining symlink inventory, including a fresh checkout
+without a TestsPlugin directory. The five removed shared suites are
+`ProviderPluginDetailsParityTests`, `ProviderPluginExtensionParityTests`,
+`ProviderPluginParityTests`, `ProviderPluginRuntimeTests` and
+`Sub2APIPluginGoldenTests` under `Tests/CodexBarTests` (each `.swift`). Their paths
+remain in an explicitly historical gate set so modified/deleted/renamed old inputs
+still select macOS and Linux. Every existing historical-trigger assertion and
+aggregate/unknown-path gate remains; required job selection is unchanged.
+Patch02 is held until root integrates the qualified compile-once descendant;
+patch01 alone leaves the old manual full-JSC workflow consumer obsolete. Neither
+full-route qualification nor real packaged-app proof is claimed. Root retains
+nightly and compile-once integration. No duplicated PR38 matched campaign was
+started. Live publication preflight rechecked
 PR39 at the expected head with no reviews/comments, PR26 unchanged at the cleared
 head, the canonical repository ID, and absence of an existing product branch/PR.
 
@@ -136,30 +157,48 @@ The first hosted lint job caught a stale parser hash before reaching the pending
 CI-sibling contracts. Existing `Scripts/regenerate-codex-parser-hash.sh --write`
 and `--check` produced and verified `56738678d8c0245c`; generated-only repair
 commit `e0575c44592208fa16d0ac71d7b14044c0b49418` changes no generator semantics.
-The final authorized Sol Max reviewer is checking the source commit with that
-explicit generated-only disposition. No further reviewers are authorized here.
+The final authorized Sol Max review completed against the source commit with that
+explicit generated-only disposition. Seven findings were addressed in source commit
+`43b9ae226e05f6850da3a0f5bb866135fe8a5a00`: actor isolation, two dangling CLI
+declarations, one obsolete Cursor-helper test and three invalid fixture/oracle ports.
+No further reviewers ran; native validation of the fixes remains pending.
+
+The transferred cleanup and gate repair are committed as
+`f1bae83de761ee383e5845111993671f1ed308cb`. Existing provider manifest regeneration
+changed only one generated Swift doccomment; its line count and implementation
+are unchanged. Final generator and path-gate checks pass, along with four profile,
+17 launch and 18 relocation fixtures; package path/strip/stub-signing/plist/checksum
+checks pass. Nine changed shell scripts pass syntax checks, all 179 local document
+links and the llms index pass. These fixtures execute only owned synthetic children;
+they prove no real app, signing identity or native macOS sandbox behavior. Required
+local commands were reattempted after integration: `make check` exits 2 for absent
+plutil and `make test` exits 2 for absent Swift. Every test start used fresh admission
+below 85% CPU and the nonblocking benchmark lock; owned fixture scratch was removed
+and absence verified. No install, live probe or extra review agent ran.
 
 Exact committed-blob [comparison](../engineering-specs/slim-codex-claude-comparison.json):
 
 | Inventory | Base | Product candidate |
 | --- | ---: | ---: |
-| Product Swift files / lines | 1,201 / 307,271 | 651 / 193,233 |
+| Product Swift files / lines | 1,201 / 307,271 | 651 / 193,239 |
 | Product C/header files / lines | 21 / 79,719 | 1 / 1 |
-| Test Swift files / lines | 1,059 / 368,064 | 734 / 252,333 |
-| Lexical Swift Testing declarations | 10,575 | 6,547 |
+| Test Swift files / lines | 1,059 / 368,064 | 734 / 252,293 |
+| Lexical Swift Testing declarations | 10,575 | 6,546 |
 
 330 test paths were removed and 5 added, including shared-suite renames; these are
 not runtime case counts. Package targets `CQuickJS` and `CodexBarPluginTests`, core
 JavaScript resources and JavaScriptCore linkage are gone; no external package was
-removed. Provider enum cases go from 69 to 2. Git-blob checks preserve 61 cost
+removed. Provider enum cases go from 69 to 2. Git-blob checks preserve 60 cost
 regression suites, 7 shared process files, 4 critical history/identity/catch-up
-suites and 19 shared fixtures exactly. The lexical removal sweep covers 1,144
+suites and 19 shared fixtures exactly. In the remaining cost suite, only the
+Cursor remote-adapter day-boundary helper test was removed; all other 12 shared
+day/currency tests are byte-identical. No scanner limit or persistence-scale proof changed. The lexical removal sweep covers 1,144
 retired top-level declaration names with zero remaining product/test references.
 Architecture scanner code is unchanged; 312 catalog entries match 651 shipped
 Swift files with zero source-inspection findings. None of these replace compilation.
 
 Comparable executable/bundle sizes and cold-build times are unavailable. Root's
-next gate is product-contract integration followed by exact comparable hosted
+next gate is qualified compile-once/patch02 integration followed by exact comparable hosted
 macOS builds with the same toolchain, architecture, configuration and dependency/cache
 conditions, then required macOS/Linux coverage for the final source. Source counts
 are not build-time or binary-size estimates. Draft state prevents a readiness claim;
