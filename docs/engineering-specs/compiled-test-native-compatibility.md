@@ -57,6 +57,18 @@ not two-shard qualification. Existing artifacts contain no external CoreDevice
 headers, so further imports cannot be established from those archives. No
 speculative sibling frameworks are admitted.
 
+Run `40137926192` at `4a9391a4028c18152a8d807f010a7f034285b53e` proves
+the early gate stops before compilation: host evidence completes in 10.972s,
+tool closure fails in 11.976s, and no shard runs. Its CoreDevice ARM64e import
+has install-name SHA256
+`973e5c84a39179f721aa6c147de99567c903fbf222419dec01fe26107a17722e`,
+matching exactly
+`/Library/Developer/PrivateFrameworks/CoreDeviceUtilities.framework/Versions/A/CoreDeviceUtilities`.
+Both source-defined Xcode override candidates were missing. This establishes
+the second reviewed framework root, not its complete recursive runtime proof.
+Lint/Linux checks passed; the required aggregate rejected producer failure and
+skipped shards. No independent product/test failure was observed.
+
 Keep repository, source, run/attempt, workflow, profile/manifest, package/lock,
 workspace, toolchain, runner OS/architecture and image OS exact. Image versions
 remain recorded provenance. A different version can pass only with a complete,
@@ -100,10 +112,11 @@ Audit every regular loadable file below the complete `.build`, including
 framework/helper children and dependency tools, plus the selected native launchers. Follow declared
 dependencies recursively. Bundled dependencies stay below .build and are also
 covered by archive integrity; external dependencies must resolve inside the
-selected Xcode, system-library roots or the explicitly reviewed CoreDevice
-framework root and receive SHA256 identities. The sole additional root is
-`/Library/Developer/PrivateFrameworks/CoreDevice.framework`; require the root
-itself canonical and each reached runtime file canonically contained. Include
+selected Xcode, system-library roots or the two explicitly reviewed developer
+framework roots and receive SHA256 identities. The additional roots are
+`/Library/Developer/PrivateFrameworks/CoreDevice.framework` and
+`/Library/Developer/PrivateFrameworks/CoreDeviceUtilities.framework`; require each
+root itself canonical and each reached runtime file canonically contained. Include
 only declared dependencies and their nested framework/dylib closure, with full
 hashes and existing file/byte/time limits. Do not enumerate the framework or its
 parent, admit sibling frameworks, follow symlink escapes, or accept host roots
@@ -196,6 +209,20 @@ characters, with explicit truncation. Build/Xcode roots use logical tokens;
 outside-root paths are redacted to SHA256 markers. Unsupported Mach-O files also
 retain size, header/table SHA256 and at most 33 bounded slice descriptors. These closed-schema diagnostics
 are log/provenance data: they never select a file, command or compatibility rule.
+
+On failure, optional `unapproved_declarations` batches absolute install-name
+declarations outside approved roots from already parsed and whole-file-hashed
+admitted images. Prioritize the current loader and reached developer frameworks,
+then other admitted images. Each closed record binds logical loader/SHA256,
+ARM64 subtype, redacted install name, weak flag and dylinker flag. Inspect at most
+4,096 declarations, retain at most 64 records and stop at the existing shared time
+budget, setting the diagnostic's truncation flag. The inventory performs no new
+file read/hash/stat, directory enumeration, symlink resolution or cache query.
+These declarations may still be satisfied by overrides; they neither prove a
+missing runtime nor admit a target. Unread rejected subtrees remain unknown.
+The actual resolver failure and early gate remain authoritative; the inventory
+never creates a fingerprint or relaxes qualification.
+
 A v1 manifest retains the exact original identity gate. Portable fixtures exercise malformed/fat Mach-O,
 recursive dependencies, allowed paths, weak/missing dependencies, hash changes,
 native context changes, cache UUID changes, override refusal and budgets. The

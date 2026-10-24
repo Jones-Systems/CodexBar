@@ -456,48 +456,65 @@ class NativeTests(unittest.TestCase):
                           for edge in fingerprint["edges"][str(host.tools["swift-package"])]}, {"plain"})
         self.assertNotIn(raw, fingerprint["entries"])
 
-    def test_coredevice_closure_hashes_only_reached_nested_runtime_and_rejects_changes(self):
+    def test_developer_framework_closure_hashes_only_reached_nested_runtime_and_rejects_changes(self):
         self.products()
-        host = self.host()
-        root = self.root / "Library/Developer/PrivateFrameworks/CoreDevice.framework"
-        nested = self.write(str((root / "Versions/A/Frameworks/Nested.framework/Versions/A/Nested").relative_to(self.root)),
-                            image(kind=6, dependencies=[(0xC, "/usr/lib/libSystem.B.dylib")]))
-        core = self.write(str((root / "Versions/A/CoreDevice").relative_to(self.root)), image(kind=6,
-            dependencies=[(0xC, "@loader_path/Frameworks/Nested.framework/Versions/A/Nested")]))
-        unused = self.write(str((root / "unused.dylib").relative_to(self.root)), b"not a runtime image")
-        host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(core))]))
-        with patch.object(native, "APPLE_RUNTIME_FRAMEWORKS", (root,)):
-            original = host.closure()
-            self.assertEqual(original["entries"][str(core)]["kind"], "developer-framework")
-            self.assertEqual(original["entries"][str(nested)]["sha256"], hashlib.sha256(nested.read_bytes()).hexdigest())
-            self.assertNotIn(str(unused), original["entries"])
-            nested.write_bytes(nested.read_bytes() + b"changed nested runtime")
-            changed = host.closure()
-            self.assertEqual(original["entries"][str(core)], changed["entries"][str(core)])
-            self.assertNotEqual(original["entries"][str(nested)], changed["entries"][str(nested)])
-            with self.assertRaisesRegex(native.UnsupportedRuntime, "differs"):
-                native.same_native_fingerprint(original, changed)
-            sibling = root.with_name("Unreviewed.framework") / "Versions/A/Unreviewed"
-            host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(sibling))]))
-            with patch.object(host, "location", wraps=host.location) as location, \
-                    self.assertRaisesRegex(native.UnsupportedRuntime, "outside-approved-roots"):
-                host.closure(include_build=False)
-            self.assertFalse(any(call.args[0] == sibling for call in location.call_args_list))
+        for public in native.APPLE_RUNTIME_FRAMEWORKS:
+            with self.subTest(root=public.name):
+                host = self.host()
+                root = self.root / public.relative_to("/")
+                nested = self.write(str((root / "Versions/A/Frameworks/Nested.framework/Versions/A/Nested").relative_to(self.root)),
+                                    image(kind=6, dependencies=[(0xC, "/usr/lib/libSystem.B.dylib")]))
+                core = self.write(str((root / "Versions/A" / public.stem).relative_to(self.root)), image(kind=6,
+                    dependencies=[(0xC, "@loader_path/Frameworks/Nested.framework/Versions/A/Nested")]))
+                unused = self.write(str((root / "unused.dylib").relative_to(self.root)), b"not a runtime image")
+                host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(core))]))
+                with patch.object(native, "APPLE_RUNTIME_FRAMEWORKS", (root,)):
+                    original = host.closure()
+                    self.assertEqual(original["entries"][str(core)]["kind"], "developer-framework")
+                    self.assertEqual(original["entries"][str(nested)]["sha256"], hashlib.sha256(nested.read_bytes()).hexdigest())
+                    self.assertNotIn(str(unused), original["entries"])
+                    nested.write_bytes(nested.read_bytes() + b"changed nested runtime")
+                    changed = host.closure()
+                    self.assertEqual(original["entries"][str(core)], changed["entries"][str(core)])
+                    self.assertNotEqual(original["entries"][str(nested)], changed["entries"][str(nested)])
+                    with self.assertRaisesRegex(native.UnsupportedRuntime, "differs"):
+                        native.same_native_fingerprint(original, changed)
+                    sibling = root.with_name("Unreviewed.framework") / "Versions/A/Unreviewed"
+                    host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(sibling))]))
+                    with patch.object(host, "location", wraps=host.location) as location, \
+                            self.assertRaisesRegex(native.UnsupportedRuntime, "outside-approved-roots"):
+                        host.closure(include_build=False)
+                    self.assertFalse(any(call.args[0] == sibling for call in location.call_args_list))
 
-    def test_coredevice_root_and_nested_symlink_escapes_are_rejected_before_hashing(self):
+    def test_developer_framework_root_and_nested_symlink_escapes_are_rejected_before_hashing(self):
         host = self.host()
-        root = self.root / "Library/Developer/PrivateFrameworks/CoreDevice.framework"
         real = self.write("Library/Developer/PrivateFrameworks/Real.framework/Versions/A/CoreDevice", image(kind=6))
-        root.symlink_to(real.parents[2], target_is_directory=True)
-        with patch.object(native, "APPLE_RUNTIME_FRAMEWORKS", (root,)), \
-                self.assertRaisesRegex(native.UnsupportedRuntime, "noncanonical-developer-framework-root"):
-            host.location(root / "Versions/A/CoreDevice")
-        root.unlink()
-        root.mkdir()
-        (root / "Escape.dylib").symlink_to(real)
-        with patch.object(native, "APPLE_RUNTIME_FRAMEWORKS", (root,)), \
-                self.assertRaisesRegex(native.UnsupportedRuntime, "runtime-symlink-escapes-root"):
-            host.location(root / "Escape.dylib")
+        for public in native.APPLE_RUNTIME_FRAMEWORKS:
+            with self.subTest(root=public.name):
+                root = self.root / public.relative_to("/")
+                root.symlink_to(real.parents[2], target_is_directory=True)
+                with patch.object(native, "APPLE_RUNTIME_FRAMEWORKS", (root,)), \
+                        self.assertRaisesRegex(native.UnsupportedRuntime, "noncanonical-developer-framework-root"):
+                    host.location(root / "Versions/A/CoreDevice")
+                root.unlink()
+                root.mkdir()
+                (root / "Escape.dylib").symlink_to(real)
+                with patch.object(native, "APPLE_RUNTIME_FRAMEWORKS", (root,)), \
+                        self.assertRaisesRegex(native.UnsupportedRuntime, "runtime-symlink-escapes-root"):
+                    host.location(root / "Escape.dylib")
+
+    def test_coredevice_utilities_edge_preserves_arm64e_and_requires_explicit_second_root(self):
+        host = self.host()
+        fixture_roots = tuple(self.root / path.relative_to("/") for path in native.APPLE_RUNTIME_FRAMEWORKS)
+        utility = self.write("Library/Developer/PrivateFrameworks/CoreDeviceUtilities.framework/Versions/A/CoreDeviceUtilities",
+                             image(kind=6, subtype=0x80000002))
+        core = self.write("Library/Developer/PrivateFrameworks/CoreDevice.framework/Versions/A/CoreDevice", image(
+            kind=6, subtype=0x80000002, dependencies=[(0xC, str(utility))]))
+        host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(core))]))
+        with patch.object(native, "APPLE_RUNTIME_FRAMEWORKS", fixture_roots):
+            fingerprint = host.closure(include_build=False)
+        self.assertEqual(fingerprint["entries"][str(utility)]["subtypes"], [0x80000002])
+        self.assertEqual({tuple(edge["targets"]) for edge in fingerprint["edges"][str(core)]}, {(str(utility),)})
 
     def test_swift_testing_helper_selection_matches_first_executable_and_refuses_escape_or_absence(self):
         usr = self.xcode / "Developer/Toolchains/Selected.xctoolchain/usr"
@@ -660,6 +677,69 @@ class NativeTests(unittest.TestCase):
         self.assertEqual(diagnostic["loader"], "<xcode>/Developer/usr/bin/swift-package")
         self.assertEqual(diagnostic["candidates"], [{"path":"<xcode>/Developer/usr/bin/Missing.dylib",
                                                     "canonical":None, "kind":"missing", "sha256":None}])
+
+    def test_unapproved_declaration_inventory_batches_only_parsed_headers_without_target_io(self):
+        host = self.host()
+        declarations = ["/Users/private-person/First.dylib", "/Users/private-person/Second.dylib",
+                        "/Users/private-person/OtherLoader"]
+        tool = host.tools["swift-package"]
+        tool.write_bytes(image(dependencies=list(zip((0xC, native.WEAK, 0xE), declarations))))
+        digest = hashlib.sha256(tool.read_bytes()).hexdigest()
+        collector = native.RuntimeClosure(host)
+        with patch.object(host, "location", wraps=host.location) as location, \
+                self.assertRaisesRegex(native.UnsupportedRuntime, "outside-approved-roots") as error:
+            collector.collect(include_build=False)
+        self.assertFalse(any(str(call.args[0]) in declarations for call in location.call_args_list))
+        diagnostic = error.exception.diagnostic
+        items = diagnostic["unapproved_declarations"]
+        self.assertEqual(len(items), 3)
+        self.assertEqual([item["install_name"] for item in items], [
+            "<outside-approved-roots:" + hashlib.sha256(path.encode()).hexdigest() + ">" for path in declarations])
+        self.assertTrue(all(item["loader_sha256"] == digest and item["subtype"] == 0 for item in items))
+        self.assertEqual([(item["weak"], item["dylinker"]) for item in items],
+                         [(False, False), (True, False), (False, True)])
+        self.assertNotIn("private-person", json.dumps(diagnostic))
+        with patch.object(host, "location", side_effect=AssertionError("no location lookup")), \
+                patch.object(host, "cached", side_effect=AssertionError("no cache query")), \
+                patch.object(host.budget, "digest", side_effect=AssertionError("no new hash")), \
+                patch.object(native, "macho", side_effect=AssertionError("no new parser read")), \
+                patch.object(Path, "open", side_effect=AssertionError("no file read")), \
+                patch.object(Path, "stat", side_effect=AssertionError("no stat")), \
+                patch.object(Path, "resolve", side_effect=AssertionError("no symlink resolution")), \
+                patch.object(Path, "iterdir", side_effect=AssertionError("no directory scan")):
+            self.assertEqual(collector.unapproved_declarations(), items)
+        self.assertIs(native.validate_diagnostic(diagnostic), diagnostic)
+        for key, value in (("loader_sha256", None), ("subtype", True), ("install_name", "x" * 513),
+                           ("weak", 1), ("dylinker", "yes"), ("command", "untrusted")):
+            invalid = json.loads(json.dumps(diagnostic))
+            invalid["unapproved_declarations"][0][key] = value
+            with self.subTest(key=key), self.assertRaisesRegex(native.UnsupportedRuntime, "invalid-native-diagnostic"):
+                native.validate_diagnostic(invalid)
+
+    def test_unapproved_declaration_inventory_respects_record_inspection_and_shared_time_caps(self):
+        host = self.host()
+        tool = host.tools["swift-package"]
+        tool.write_bytes(image(dependencies=[(0xC, f"/Unapproved/Library{number}.dylib")
+                                            for number in range(native.MAX_DIAGNOSTIC_ITEMS + 1)]))
+        collector = native.RuntimeClosure(host)
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "outside-approved-roots") as error:
+            collector.collect(include_build=False)
+        diagnostic = error.exception.diagnostic
+        self.assertEqual(len(diagnostic["unapproved_declarations"]), native.MAX_DIAGNOSTIC_ITEMS)
+        self.assertTrue(diagnostic["truncated"])
+        invalid = json.loads(json.dumps(diagnostic))
+        invalid["unapproved_declarations"].append(invalid["unapproved_declarations"][0])
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "invalid-native-diagnostic"):
+            native.validate_diagnostic(invalid)
+        collector.diagnostic["truncated"] = False
+        with patch.object(native, "MAX_DECLARATION_INSPECTIONS", 1):
+            self.assertEqual(len(collector.unapproved_declarations()), 1)
+        self.assertTrue(collector.diagnostic["truncated"])
+        collector.diagnostic["truncated"] = False
+        host.budget.started = time.monotonic() - native.MAX_SECONDS
+        self.assertEqual(collector.unapproved_declarations(), [])
+        self.assertTrue(collector.diagnostic["truncated"])
+        self.assertEqual(str(error.exception), "runtime-path-outside-approved-roots")
 
     def test_resolver_diagnostic_caps_and_escapes_without_using_untrusted_fields(self):
         self.products()

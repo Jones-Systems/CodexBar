@@ -246,3 +246,66 @@ hosted gaps owned by the coordinator's existing watch.
 The workflow, daily 05:00 America/New_York schedule, required aggregate, product
 sources and frozen handoff bytes are unchanged. Nine known packaging/doc residuals
 remain outside this six-file repair. No extra campaign or native execution ran.
+
+## CoreDeviceUtilities repair intent
+
+Resume at `4a9391a4028c18152a8d807f010a7f034285b53e`. Run `40137926192`
+stopped before compilation, correctly reporting complete host evidence and
+unsupported selected-tool closure. CoreDevice's ARM64e subtype `2147483650`
+requires an install name whose SHA256 is
+`973e5c84a39179f721aa6c147de99567c903fbf222419dec01fe26107a17722e`.
+It matches exactly
+`/Library/Developer/PrivateFrameworks/CoreDeviceUtilities.framework/Versions/A/CoreDeviceUtilities`,
+after both source-defined Xcode framework candidates were missing. The owner
+conditionally approved that exact framework root; the verified match satisfies
+the condition. Apply the same canonical-root, contained declared nested closure,
+full-file hash/equality, byte/time budgets and sibling/symlink refusal as CoreDevice.
+
+For bounded diagnostic batching, snapshot unapproved absolute install-name
+declarations from already parsed and hashed permitted images on failure. Prioritize
+the current loader and reached approved developer frameworks. Cap records at 64,
+inspected declarations at 4,096 and elapsed work by the existing collection budget.
+Record logical loader/hash, ARM64 subtype, redacted declaration and weak/dylinker
+flags in a closed optional diagnostic field. This reads no new target or directory,
+does not resolve candidates or admit roots, and can never produce compatibility
+success. It can expose several candidate imports together, but cannot inspect an
+unread rejected subtree or prove an environment override would not satisfy a
+declaration. Preserve the actual resolver's failure and exact-image/early-gate
+policy. No speculative Mercury or parent-directory boundary is authorized.
+
+Affected checks cover both framework roots' nested-byte changes, sibling and
+canonical-root/leaf symlink refusal, unchanged early compiler sentinel/fallback,
+and inventory batches/redaction/schema/byte and time caps without further I/O.
+The coordinator retains hosted watching; workflow/schedule and frozen product
+handoff scopes remain untouched.
+
+## CoreDeviceUtilities repair checks
+
+The unchanged contained ARM64e edge fixture fails against exact `4a9391a` with
+`runtime-path-outside-approved-roots` and passes with the second explicit root.
+Durable regression evidence binds the prior collector SHA256
+`8f67385258f6ce3b9ba8c7baa72964021e2805c315aa65ff8084c369cd3dee40`,
+candidate collector SHA256
+`2a895f7ffc8daf14866a71035f1688fd3d3c9cde501f7fa28bbe4b4f62f11d58`,
+and unchanged regression script SHA256
+`65c61a210a27e4dd7e76964dc9dc5ab65fef95cde4b569eb2026d2ae2de87b46`.
+The mapped public roots preserve each revision's exact policy. This is synthetic
+parser/contract evidence, not native API or Apple framework execution.
+
+The deduplicated artifact/native/evidence/isolated-command union passes 150 checks
+in 13.366s with zero skips. It includes both roots' changed nested bytes and
+sibling/root/leaf symlink refusal, closed diagnostic metadata, all three launchers
+and the existing early compiler sentinel/unavailable-host fallback. Inventory
+fixtures prove 64-record, 4,096-inspection and shared-time caps, private-path
+redaction and no additional location/cache/hash/parser/file/stat/symlink/directory
+queries. Existing path-gate/aggregate fixtures and 302 local documentation links
+pass. Fresh admission measured CPU 14.73% and 48.86 GiB available RAM; execution
+held the nonblocking portfolio lock with one serial process. Owned scratch was
+removed and its absence verified.
+
+Required `make test` and `make check` each exit 2: Swift and `plutil`, respectively,
+are unavailable locally. No tools were installed. Real native completeness,
+further recursive imports, both-shard qualification and measured savings remain
+unproved, with hosted watching retained by the coordinator. The five-file repair
+preserves daily 05:00 America/New_York, nine known packaging/doc residuals and
+both frozen handoff patches; no extra campaign or native execution ran.

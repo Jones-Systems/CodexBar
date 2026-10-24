@@ -326,6 +326,10 @@ class BuildArtifactTests(unittest.TestCase):
                       "executable":"<xcode>/Developer/usr/bin/swift-package", "mode":"plain",
                       "install_name":"@rpath/Absent.dylib", "chain":[{
                           "path":"<xcode>/Developer/usr/bin/swift-package", "subtype":0}],
+                      "unapproved_declarations":[{
+                          "loader":"<xcode>/Developer/usr/bin/swift-package", "loader_sha256":"b" * 64,
+                          "subtype":0, "install_name":"<outside-approved-roots:" + "c" * 64 + ">",
+                          "weak":False, "dylinker":False}],
                       "rpaths":[{"loader":"<xcode>/Developer/usr/bin/swift-package",
                                  "raw":"@loader_path", "expanded":"<xcode>/Developer/usr/bin"}],
                       "candidates":[{"path":"<xcode>/Developer/usr/bin/Absent.dylib", "canonical":None,

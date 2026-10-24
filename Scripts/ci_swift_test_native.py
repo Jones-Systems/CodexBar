@@ -35,6 +35,7 @@ MAX_CHAIN = 32
 MAX_EDGES = 16384
 MAX_CANDIDATES = 128
 MAX_DIAGNOSTIC_ITEMS = 64
+MAX_DECLARATION_INSPECTIONS = 4096
 ARM64 = 0x100000C
 # Apple Architecture.cpp: generic, v8, old arm64e, versioned user-space arm64e.
 # Unknown/future/kernel ABI flags do not qualify a complete proof.
@@ -45,9 +46,10 @@ LOADS = {0xC, 0x80000018, 0x8000001F, 0x80000023, 0x20}
 WEAK = 0x80000018
 SYSTEM_ROOTS = (Path("/usr/lib"), Path("/System/Library/Frameworks"),
                 Path("/System/Library/PrivateFrameworks"))
-# An observed XCUIAutomation dependency installed outside the Xcode bundle.
+# Observed dependencies installed outside the Xcode bundle.
 # Traverse declared dependencies only; never enumerate this root or its parent.
-APPLE_RUNTIME_FRAMEWORKS = (Path("/Library/Developer/PrivateFrameworks/CoreDevice.framework"),)
+APPLE_RUNTIME_FRAMEWORKS = (Path("/Library/Developer/PrivateFrameworks/CoreDevice.framework"),
+                            Path("/Library/Developer/PrivateFrameworks/CoreDeviceUtilities.framework"))
 TEST_LAUNCHERS = ("xctest", "swiftpm-xctest-helper", "swiftpm-testing-helper")
 
 
@@ -127,7 +129,8 @@ def validate_diagnostic(value):
 
     if isinstance(value, dict) and value.get("type") == "resolver":
         fields = {"type", "loader", "install_name", "executable", "mode", "chain", "rpaths", "candidates", "truncated"}
-        need(set(value) == fields | ({"file"} if "file" in value else set())
+        optional = {key for key in ("file", "unapproved_declarations") if key in value}
+        need(set(value) == fields | optional
              and text(value["loader"]) and text(value["install_name"], True) and text(value["executable"], True)
              and isinstance(value["mode"], str) and value["mode"] in {"plain", "swiftpm-test", "audit"}
              and type(value["truncated"]) is bool,
@@ -149,6 +152,17 @@ def validate_diagnostic(value):
                  and item["kind"] in {"uninspected", "missing", "bundled", "xcode", "system-file",
                                      "system-cache", "system-swift-shim", "developer-framework"},
                  "invalid-native-diagnostic")
+        if "unapproved_declarations" in value:
+            items = value["unapproved_declarations"]
+            need(isinstance(items, list) and len(items) <= MAX_DIAGNOSTIC_ITEMS, "invalid-native-diagnostic")
+            for item in items:
+                need(isinstance(item, dict) and set(item) == {
+                    "loader", "loader_sha256", "subtype", "install_name", "weak", "dylinker"}
+                    and text(item["loader"]) and text(item["install_name"])
+                    and isinstance(item["loader_sha256"], str) and digest(item["loader_sha256"])
+                    and type(item["subtype"]) is int and 0 <= item["subtype"] <= 0xFFFFFFFF
+                    and type(item["weak"]) is bool and type(item["dylinker"]) is bool,
+                    "invalid-native-diagnostic")
         if "file" in value:
             need(isinstance(value["file"], dict) and "type" not in value["file"], "invalid-native-diagnostic")
             validate_diagnostic(value["file"])
@@ -542,6 +556,7 @@ class RuntimeClosure:
         self.images, self.entries, self.edges = {}, {}, {}
         self.visited, self.covered = set(), set()
         self.edge_count = 0
+        self.loader_key = None
         self.diagnostic = {"type":"resolver", "loader":"<inventory>", "install_name":None,
                            "executable":None, "mode":"audit", "chain":[], "rpaths":[],
                            "candidates":[], "truncated":False}
@@ -572,11 +587,53 @@ class RuntimeClosure:
             self.diagnostic["truncated"] = True
 
     def state(self, key, executable=None, mode="audit", chain=(), raw=None):
+        self.loader_key = key
         self.diagnostic = {"type":"resolver", "loader":self.label(key), "install_name":self.label(raw),
                            "executable":self.label(executable), "mode":mode,
                            "chain":[{"path":self.label(path), "subtype":variant["subtype"]}
                                     for path, variant in chain[:MAX_DIAGNOSTIC_ITEMS]],
                            "rpaths":[], "candidates":[], "truncated":len(chain) > MAX_DIAGNOSTIC_ITEMS}
+
+    def unapproved_declarations(self):
+        """Data-only inventory of already parsed/hashed images; no target resolution or I/O.
+
+        These literal imports may be satisfied by overrides. They are neither
+        missing-dependency proof nor authority to inspect an unapproved target.
+        """
+        items, seen = [], set()
+        inspected = 0
+        recent = list(reversed(self.images))
+        framework_keys = [key for key in recent if any(
+            Path(key).is_relative_to(root) for root in APPLE_RUNTIME_FRAMEWORKS)]
+        try:
+            for key in dict.fromkeys([self.loader_key, *framework_keys, *recent]):
+                if key not in self.images:
+                    continue
+                for variant in self.images[key]["variants"]:
+                    for dependency in variant["dependencies"]:
+                        self.host.budget.tick()
+                        inspected += 1
+                        if inspected > MAX_DECLARATION_INSPECTIONS:
+                            self.diagnostic["truncated"] = True
+                            return items
+                        raw = dependency["path"]
+                        if not raw.startswith("/") or self.permitted(Path(posixpath.normpath(raw))):
+                            continue
+                        identity = (key, variant["subtype"], raw, dependency["weak"],
+                                    dependency.get("dylinker", False))
+                        if identity in seen:
+                            continue
+                        if len(items) == MAX_DIAGNOSTIC_ITEMS:
+                            self.diagnostic["truncated"] = True
+                            return items
+                        seen.add(identity)
+                        items.append({"loader":self.label(key), "loader_sha256":self.entries[key]["sha256"],
+                                      "subtype":variant["subtype"], "install_name":self.label(raw),
+                                      "weak":dependency["weak"], "dylinker":dependency.get("dylinker", False)})
+        except UnsupportedRuntime:
+            # A depleted shared time budget cannot replace the actual failure.
+            self.diagnostic["truncated"] = True
+        return items
 
     def permitted(self, path):
         return (path.is_relative_to(self.host.logical_build) or path.is_relative_to(self.host.xcode)
@@ -769,6 +826,7 @@ class RuntimeClosure:
             file_diagnostic = getattr(error, "diagnostic", None)
             if file_diagnostic is not None and "type" not in file_diagnostic:
                 self.diagnostic["file"] = {**file_diagnostic, "path":self.label(file_diagnostic["path"])}
+            self.diagnostic["unapproved_declarations"] = self.unapproved_declarations()
             failure.diagnostic = validate_diagnostic(self.diagnostic)
             raise failure from (error if failure is not error else None)
 
