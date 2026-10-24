@@ -18,7 +18,7 @@ from unittest.mock import patch
 import ci_swift_test_artifact as artifact
 import ci_swift_test_by_suite as runner
 # The existing portable artifact-suite entrypoint owns these affected contract checks.
-from test_swift_test_native import NativeTests
+from test_swift_test_native import NativeTests, image
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -641,6 +641,34 @@ class BuildArtifactTests(unittest.TestCase):
         self.assertEqual(preflight["closure_seconds"], 0)
         self.assertEqual(json.loads((self.root / artifact.MANIFEST).read_text())["native_runtime"], {
             "status":"unavailable", "reason":"native-cache-api-unavailable"})
+
+    def test_invalid_actual_mobiledevice_alias_stops_before_compiler_or_discovery(self):
+        import ci_swift_test_native as artifact_native
+        fixtures = NativeTests()
+        fixtures.setUp()
+        self.addCleanup(fixtures.doCleanups)
+        layout = fixtures.mobiledevice_layout()
+        with fixtures.mobiledevice_policy(layout):
+            host = fixtures.host()
+            host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(layout["logical"]))]))
+            layout["source"].unlink()
+            layout["source"].symlink_to(layout["target"], target_is_directory=True)
+            state = {"host":host, "reason":None, "host_seconds":0.1}
+            with self.harness(["--export-build", str(self.root)]) as (captured, execute), \
+                    patch.object(artifact, "native_precheck", return_value=state), \
+                    patch.object(runner, "emit_evidence") as evidence:
+                captured.side_effect = AssertionError("compiler/discovery sentinel must not run")
+                with self.assertRaisesRegex(ValueError, "incomplete before compilation: runtime-framework-alias-target-differs"):
+                    runner.run_suites()
+            captured.assert_not_called()
+            execute.assert_not_called()
+            self.assertFalse((self.root / artifact.MANIFEST).exists())
+            preflight = next(call.kwargs for call in evidence.call_args_list if call.args == ("native-tool-preflight",))
+            self.assertFalse(preflight["build_allowed"])
+            self.assertEqual(preflight["host_status"], "complete")
+            self.assertEqual(preflight["reason"], "runtime-framework-alias-target-differs")
+            self.assertEqual(preflight["diagnostic"]["install_name"], str(layout["logical"]))
+            artifact_native.validate_diagnostic(preflight["diagnostic"])
 
     def test_full_profile_jsc_uses_shared_build_before_cleanup(self):
         self.current["profile"] = "full"

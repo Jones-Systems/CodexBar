@@ -51,8 +51,18 @@ SYSTEM_ROOTS = (Path("/usr/lib"), Path("/System/Library/Frameworks"),
 # Traverse declared dependencies only; never enumerate these roots or their parents.
 APPLE_RUNTIME_FRAMEWORKS = (Path("/Library/Developer/PrivateFrameworks/CoreDevice.framework"),
                             Path("/Library/Developer/PrivateFrameworks/CoreDeviceUtilities.framework"),
-                            Path("/Library/Apple/System/Library/PrivateFrameworks/Mercury.framework"))
+                            Path("/Library/Apple/System/Library/PrivateFrameworks/Mercury.framework"),
+                            Path("/Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework"))
+# Exact first-link metadata from hosted run 40141076460. No generic escape exception.
+APPLE_FRAMEWORK_ALIASES = ((Path("/System/Library/PrivateFrameworks/MobileDevice.framework"),
+                            "../../../Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework",
+                            Path("/Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework")),)
 TEST_LAUNCHERS = ("xctest", "swiftpm-xctest-helper", "swiftpm-testing-helper")
+
+
+def framework_alias_record(source, raw_target, target):
+    return {"source":str(source), "target":str(target),
+            "raw_target_sha256":hashlib.sha256(os.fsencode(raw_target)).hexdigest()}
 
 
 class UnsupportedRuntime(ValueError):
@@ -489,17 +499,35 @@ class Host:
             "test_framework_roots": [str(path) for path in self.test_framework_roots],
             "test_library_roots": [str(path) for path in self.test_library_roots],
             "developer_framework_roots": [str(path) for path in APPLE_RUNTIME_FRAMEWORKS],
+            "framework_aliases": [framework_alias_record(*mapping) for mapping in APPLE_FRAMEWORK_ALIASES],
             "tools": {name: {"path": str(path), "sha256": self.budget.digest(path)}
                       for name, path in sorted(self.tools.items())},
         }
 
     def location(self, logical):
         logical = safe_absolute(str(logical))
+        alias_record = None
+        mapping = next((item for item in APPLE_FRAMEWORK_ALIASES if logical.is_relative_to(item[0])), None)
         if logical.is_relative_to(self.logical_build):
             physical = self.build / logical.relative_to(self.logical_build)
             root, kind = self.build, "bundled"
         elif logical.is_relative_to(self.xcode):
             physical, root, kind = logical, self.xcode, "xcode"
+        elif mapping is not None:
+            source, expected_raw, root = mapping
+            self.budget.tick()
+            need(source.parent.resolve(strict=True) == source.parent, "runtime-framework-alias-parent-noncanonical")
+            need(stat.S_ISLNK(source.lstat().st_mode), "runtime-framework-alias-not-symlink")
+            raw = os.readlink(source)
+            need(len(os.fsencode(raw)) < 4096 and os.fsencode(raw) == os.fsencode(expected_raw),
+                 "runtime-framework-alias-target-differs")
+            need(posixpath.normpath(posixpath.join(str(source.parent), raw)) == str(root),
+                 "runtime-framework-alias-target-differs")
+            self.budget.tick()
+            need(root in APPLE_RUNTIME_FRAMEWORKS and root.resolve(strict=True) == root,
+                 "noncanonical-developer-framework-root")
+            physical, kind = root / logical.relative_to(source), "developer-framework"
+            alias_record = framework_alias_record(source, raw, root)
         elif any(logical.is_relative_to(root) for root in APPLE_RUNTIME_FRAMEWORKS):
             root = next(root for root in APPLE_RUNTIME_FRAMEWORKS if logical.is_relative_to(root))
             need(root.resolve(strict=True) == root, "noncanonical-developer-framework-root")
@@ -510,7 +538,7 @@ class Host:
             roots = [root for root in SYSTEM_ROOTS if logical.is_relative_to(root)]
             need(roots, "runtime-path-outside-approved-roots")
             physical, root, kind = logical, roots[0], "system-file"
-        # Do not inspect the destination of an external/escaping symlink.
+        # Only the validated fixed alias may cross its source root. Other escapes reject.
         resolved = physical.resolve(strict=True)
         canonical_root = root.resolve(strict=True)
         if not resolved.is_relative_to(canonical_root):
@@ -520,7 +548,7 @@ class Host:
         need(stat.S_ISREG(resolved.stat().st_mode), "runtime-path-is-not-regular")
         canonical = (self.logical_build / resolved.relative_to(self.build.resolve(strict=True))
                      if kind == "bundled" else resolved)
-        return physical, str(canonical), kind
+        return physical, str(canonical), kind, alias_record
 
     def alias_metadata(self, logical, physical, root, resolved, canonical_root):
         """Failure data only: stop at the first source symlink, never inspect its target."""
@@ -554,6 +582,9 @@ class Host:
         return result
 
     def cached(self, logical):
+        # A cache answer must never bypass the fixed alias or its full-file identity.
+        if any(logical.is_relative_to(source) for source, _, _ in APPLE_FRAMEWORK_ALIASES):
+            return False
         if not any(logical.is_relative_to(root) for root in SYSTEM_ROOTS):
             return False
         if str(logical) in self.cache_membership:
@@ -704,22 +735,26 @@ class RuntimeClosure:
             candidate.update(canonical=self.label(key), kind="system-cache")
             return key
         try:
-            physical, key, kind = self.host.location(logical)
+            physical, key, kind, alias = self.host.location(logical)
         except UnsupportedRuntime as error:
             if hasattr(error, "location"):
                 candidate["canonical"] = self.label(error.location["canonical"])
             raise
         candidate.update(canonical=self.label(key), kind=kind)
-        if key in self.entries:
-            candidate["sha256"] = self.entries[key].get("sha256")
-            return key
-        need(len(self.images) < MAX_IMAGES, "native-image-budget")
-        digest = self.host.budget.digest(physical)
-        candidate["sha256"] = digest
-        image = image if image is not None else macho(physical)
-        need(image is not None, "runtime-dependency-is-not-supported-macho")
-        self.entries[key] = {"kind":kind, "sha256":digest, "subtypes":image["subtypes"]}
-        self.images[key] = image
+        if key not in self.entries:
+            need(len(self.images) < MAX_IMAGES, "native-image-budget")
+            digest = self.host.budget.digest(physical)
+            candidate["sha256"] = digest
+            image = image if image is not None else macho(physical)
+            need(image is not None, "runtime-dependency-is-not-supported-macho")
+            self.entries[key] = {"kind":kind, "sha256":digest, "subtypes":image["subtypes"]}
+            self.images[key] = image
+        candidate["sha256"] = self.entries[key].get("sha256")
+        if alias is not None:
+            aliases = self.entries[key].setdefault("aliases", [])
+            if alias not in aliases:
+                aliases.append(alias)
+                aliases.sort(key=lambda item: item["source"])
         return key
 
     def expanded(self, raw, loader, executable):

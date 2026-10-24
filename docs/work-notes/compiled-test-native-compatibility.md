@@ -450,3 +450,86 @@ controls. This checkpoint preserves the known precompile failure and adds the
 evidence needed for that decision. Both-shard qualification and savings remain
 unproved; root alone watches CI. The five-file repair preserves the workflow,
 schedule, frozen patches and nine known packaging/doc residuals.
+
+## MobileDevice fixed alias activation intent
+
+Root approved this exact source compatibility boundary at 19:11:46 EDT on
+October 24, 2026, after run `40141076460`, producer `121012806567`, supplied
+actual first-link and complete canonical path metadata. Resume at
+`05519fd74561d16156f81de7b19ea9cad8f3485d`. The exact source is
+`/System/Library/PrivateFrameworks/MobileDevice.framework`, its raw relative link
+bytes are `../../../Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework`,
+and its canonical target root is
+`/Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework`.
+The raw-link SHA256 is
+`07f8a0bffc980890bdef20b697b173e9cc32e5a01ca0b8d855b25c6003506769`,
+normalized target path SHA256 is
+`ac888c17d1c5d8148858ac86815997ebd61e036f7c934678bb5574abf8cf8d39`,
+and canonical binary path `Versions/A/MobileDevice` SHA256 is
+`4f608c6a4ce73221c54703c8537fa301d34df138169be8b329de19d6033cbc16`.
+All three match locally reconstructed public strings. The last is a path-string
+hash, not a binary-content hash; no escaped target binary was read or hashed.
+
+Implement one fixed alias and that canonical framework root, requiring canonical
+source parent, exact symlink/raw bytes/normalized target, canonical target root
+and regular contained reached leaves. Retain contained version/nested links,
+full recursive native dependency hashes and equality, and all existing budgets.
+Exclude aliases from the system-cache shortcut. Keep static mapping policy in
+host context and actual independently validated alias records in canonical image
+entries, without late host-context mutation. Generic escape rejection, siblings,
+alternate roots/spellings, root/leaf escapes and unsupported dependencies remain
+closed. No host/runtime mutation or installed-app access is authorized.
+
+Affected checks before publication: one unchanged exact observed-layout fixture
+against 05519fd and the candidate; canonical containment, changed nested bytes,
+cache-bypass, actual alias binding, closed static policy, no target I/O before
+mapping validation, and real-collector fail-before-compiler sentinels. Reuse the
+existing deduplicated native/artifact/evidence/isolated-command union,
+path-gate/aggregate and documentation checks under fresh CPU/RAM admission and
+the nonblocking portfolio lock. Preserve producer early gate, strict incomplete
+fallback, pre-extraction host identity, staged closure, schedule, frozen patches
+and nine residuals. Real native closure and both shards remain hosted-unverified;
+root alone watches the next automatic source candidate.
+
+## MobileDevice alias activation checks and limits
+
+The unchanged observed-layout fixture rejects exact 05519fd with
+`runtime-symlink-escapes-root` and passes the repair. It uses the actual relative
+link bytes under contained synthetic roots, hashes both canonical and nested
+native images, binds the actual alias even when the canonical image was loaded
+first, and proves host context stays unchanged. Prior collector SHA256 is
+`2aa767372dff97d55e4d8e780bb809bed8897e0f92d177ddaaaa3cbb174f3e12`,
+candidate collector SHA256 is
+`1ed713ce0ff52643a46b7d2bc754dfddbe6f00ad4a2481bb743095a55a09a87e`,
+fixture module SHA256 is
+`48ba7e33e7056e607ead7a9f0db665f854436cf4a68603108b25fcc9cc3970df`,
+and the unchanged regression script SHA256 is
+`e0836cd1255968cd0d56b31e95469154e7d8bbd556b7e7ad49f1cd8b56effd6e`.
+These are source/fixture identities, not actual Mac runtime binary hashes.
+
+Seven focused MobileDevice checks pass in 0.277s. The final deduplicated affected
+union passes 161 tests in 14.800s with zero skips, plus existing path-gate/aggregate
+fixtures and 302 local documentation links. Negative controls cover forged cache
+answers, changed alias bytes and equivalent absolute/relative spellings,
+noncanonical source parent, source that is not a symlink, target-root and leaf
+escapes, missing alias/target, changed nested bytes, alias-record inequality and
+unapproved siblings. A real collector drives the compiler/discovery sentinel:
+complete host evidence plus invalid alias stops before either command. Existing
+unavailable-host and worker fallback/integrity controls still pass.
+
+An interrupted verification logged all assertions passing but lost the outer
+process handle before cleanup. After proving that exact invocation absent and
+acquiring the portfolio lock without waiting, removed only its empty canonical
+owned scratch directory with `rmdir`; retain the interrupted log and recovery
+receipt. The subsequent final union returns zero and verifies automatic owned
+scratch removal. Fresh final admission measures CPU 17.39%, 48.95 GiB available
+RAM and one serial process; one fully used core is 6.25% of this host. No new
+hosted campaign was requested.
+
+Required `make test` and `make check` each exit 2 at missing local Swift and
+`plutil`. No tools were installed and no native APIs/apps executed. This exact
+alias/root implementation remains hosted-unverified: the metadata path hashes
+establish layout, not content compatibility, further dependency completeness or
+two-shard success. Root alone watches the ordinary source push. Workflow, daily
+05:00 America/New_York (EST/EDT) schedule, early gate, fallback/identity/integrity
+rules, frozen patches and nine known packaging/doc residuals stay unchanged.

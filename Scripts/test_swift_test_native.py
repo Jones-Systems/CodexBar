@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Parser/contract fixtures only; these do not prove native Mac API availability."""
 
+import contextlib
 import ctypes
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
 import struct
@@ -99,8 +101,34 @@ class NativeTests(unittest.TestCase):
             host.tools[name] = self.write("Xcode.app/Contents/Developer/usr/bin/" + name,
                                          image(dependencies=[(0xC, "/usr/lib/libSystem.B.dylib")]))
         host.context = {"schema":native.SCHEMA, "os_build":"25G83", "arch":"arm64",
-                        "system_cache_uuid":"a" * 32, "sdk_build":"17C529", "tools":{}}
+                        "system_cache_uuid":"a" * 32, "sdk_build":"17C529", "tools":{},
+                        "framework_aliases":[{"source":str(source), "target":str(target),
+                            "raw_target_sha256":hashlib.sha256(os.fsencode(raw)).hexdigest()}
+                            for source, raw, target in getattr(native, "APPLE_FRAMEWORK_ALIASES", ())]}
         return host
+
+    def mobiledevice_layout(self):
+        source = self.root / "System/Library/PrivateFrameworks/MobileDevice.framework"
+        target = self.root / "Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework"
+        raw = "../../../Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework"
+        source.parent.mkdir(parents=True)
+        nested = self.write(str((target / "Versions/A/Frameworks/Nested.framework/Versions/A/Nested").relative_to(self.root)),
+                            image(kind=6, dependencies=[(0xC, "/usr/lib/libSystem.B.dylib")]))
+        binary = self.write(str((target / "Versions/A/MobileDevice").relative_to(self.root)), image(
+            kind=6, subtype=0x80000002,
+            dependencies=[(0xC, "@loader_path/Frameworks/Nested.framework/Versions/A/Nested")]))
+        source.symlink_to(raw, target_is_directory=True)
+        return {"source":source, "target":target, "raw":raw, "binary":binary, "nested":nested,
+                "logical":source / "Versions/A/MobileDevice"}
+
+    @contextlib.contextmanager
+    def mobiledevice_policy(self, layout):
+        # Preserve the observed relative bytes under one contained synthetic root.
+        with patch.object(native, "SYSTEM_ROOTS", (*native.SYSTEM_ROOTS, layout["source"].parent)), \
+                patch.object(native, "APPLE_RUNTIME_FRAMEWORKS", (*native.APPLE_RUNTIME_FRAMEWORKS, layout["target"])), \
+                patch.object(native, "APPLE_FRAMEWORK_ALIASES",
+                             ((layout["source"], layout["raw"], layout["target"]),), create=True):
+            yield
 
     def products(self):
         self.write("workspace/.build/ExampleTests.xctest/Contents/MacOS/ExampleTests", image(
@@ -855,6 +883,149 @@ class NativeTests(unittest.TestCase):
             invalid["location"]["first_symlink"][field] = value
             with self.subTest(field=field), self.assertRaisesRegex(native.UnsupportedRuntime, "invalid-native-diagnostic"):
                 native.validate_diagnostic(invalid)
+
+    def test_observed_mobiledevice_alias_has_complete_recursive_fingerprint_without_context_mutation(self):
+        layout = self.mobiledevice_layout()
+        with self.mobiledevice_policy(layout):
+            host = self.host()
+            # Canonical first, then alias: reuse must still bind the observed alias.
+            host.tools["swift-package"].write_bytes(image(dependencies=[(0xC, str(layout["binary"]))]))
+            host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(layout["logical"]))]))
+            context = json.loads(json.dumps(host.context))
+            with patch.object(Path, "iterdir", side_effect=AssertionError("no framework or parent scan")):
+                fingerprint = host.closure(include_build=False)
+                native.same_native_fingerprint(fingerprint, host.closure(include_build=False))
+            self.assertEqual(host.context, context)
+            expected_alias = {"source":str(layout["source"]), "target":str(layout["target"]),
+                "raw_target_sha256":"07f8a0bffc980890bdef20b697b173e9cc32e5a01ca0b8d855b25c6003506769"}
+            self.assertEqual(context["framework_aliases"], [expected_alias])
+            self.assertEqual(fingerprint["entries"][str(layout["binary"])], {
+                "kind":"developer-framework", "sha256":hashlib.sha256(layout["binary"].read_bytes()).hexdigest(),
+                "subtypes":[0x80000002], "aliases":[expected_alias]})
+            self.assertEqual(fingerprint["entries"][str(layout["nested"])]["sha256"],
+                             hashlib.sha256(layout["nested"].read_bytes()).hexdigest())
+            self.assertNotIn(str(layout["logical"]), fingerprint["entries"])
+            changed = json.loads(json.dumps(fingerprint))
+            del changed["entries"][str(layout["binary"])]["aliases"]
+            with self.assertRaisesRegex(native.UnsupportedRuntime, "differs"):
+                native.same_native_fingerprint(changed, host.closure(include_build=False))
+            layout["nested"].write_bytes(layout["nested"].read_bytes() + b"changed nested bytes")
+            with self.assertRaisesRegex(native.UnsupportedRuntime, "differs"):
+                native.same_native_fingerprint(fingerprint, host.closure(include_build=False))
+            self.assertEqual(host.context, context)
+
+    def test_fixed_mobiledevice_policy_matches_all_three_observed_path_hashes(self):
+        source, raw, target = native.APPLE_FRAMEWORK_ALIASES[0]
+        self.assertEqual(len(native.APPLE_FRAMEWORK_ALIASES), 1)
+        self.assertEqual(str(source), "/System/Library/PrivateFrameworks/MobileDevice.framework")
+        self.assertEqual(raw, "../../../Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework")
+        self.assertEqual(str(target), "/Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework")
+        for text, expected in (
+                (raw, "07f8a0bffc980890bdef20b697b173e9cc32e5a01ca0b8d855b25c6003506769"),
+                (str(target), "ac888c17d1c5d8148858ac86815997ebd61e036f7c934678bb5574abf8cf8d39"),
+                (str(target / "Versions/A/MobileDevice"), "4f608c6a4ce73221c54703c8537fa301d34df138169be8b329de19d6033cbc16")):
+            self.assertEqual(hashlib.sha256(text.encode()).hexdigest(), expected)
+        self.assertIn(target, native.APPLE_RUNTIME_FRAMEWORKS)
+        self.assertNotIn(target.parent, native.APPLE_RUNTIME_FRAMEWORKS)
+        self.assertNotIn(Path("/Library/Developer/PrivateFrameworks/MobileDevice.framework"), native.APPLE_RUNTIME_FRAMEWORKS)
+
+    def test_mobiledevice_cache_answer_cannot_bypass_alias_validation_or_full_hash(self):
+        layout = self.mobiledevice_layout()
+        with self.mobiledevice_policy(layout):
+            host = self.host()
+            host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(layout["logical"]))]))
+            host.cache_membership[str(layout["logical"])] = True
+            host.cache_membership[str(layout["binary"])] = True
+            def contains(path):
+                self.assertFalse(path.is_relative_to(layout["source"]))
+                return True
+            host.system.contains = contains
+            fingerprint = host.closure(include_build=False)
+            self.assertEqual(fingerprint["entries"][str(layout["binary"])]["sha256"],
+                             hashlib.sha256(layout["binary"].read_bytes()).hexdigest())
+            layout["source"].unlink()
+            layout["source"].symlink_to(layout["target"], target_is_directory=True)
+            with self.assertRaisesRegex(native.UnsupportedRuntime, "alias-target-differs"):
+                host.closure(include_build=False)
+
+    def test_mobiledevice_wrong_raw_target_fails_before_any_destination_io(self):
+        layout = self.mobiledevice_layout()
+        original_resolve = Path.resolve
+        original_stat = Path.stat
+        with self.mobiledevice_policy(layout):
+            host = self.host()
+            def source_resolve(path, *args, **kwargs):
+                self.assertEqual(path, layout["source"].parent)
+                return original_resolve(path, *args, **kwargs)
+            def source_stat(path, *args, **kwargs):
+                self.assertEqual(path, layout["source"])
+                self.assertIs(kwargs.get("follow_symlinks"), False)
+                return original_stat(path, *args, **kwargs)
+            variants = [str(layout["target"]), layout["raw"].replace("/MobileDevice.framework", "/./MobileDevice.framework"),
+                        layout["raw"].replace("MobileDevice.framework", "Sibling.framework")]
+            for raw in variants:
+                layout["source"].unlink()
+                layout["source"].symlink_to(raw, target_is_directory=True)
+                with self.subTest(raw=raw), \
+                        patch.object(Path, "resolve", autospec=True, side_effect=source_resolve), \
+                        patch.object(Path, "stat", autospec=True, side_effect=source_stat), \
+                        patch.object(Path, "open", side_effect=AssertionError("no target read")), \
+                        patch.object(Path, "iterdir", side_effect=AssertionError("no scan")), \
+                        patch.object(host.budget, "digest", side_effect=AssertionError("no target hash")), \
+                        patch.object(native, "macho", side_effect=AssertionError("no target parser")), \
+                        self.assertRaisesRegex(native.UnsupportedRuntime, "alias-target-differs"):
+                    host.location(layout["logical"])
+
+    def test_mobiledevice_source_parent_link_and_canonical_target_root_are_required(self):
+        layout = self.mobiledevice_layout()
+        with self.mobiledevice_policy(layout):
+            host = self.host()
+            parent = layout["source"].parent
+            actual_parent = parent.with_name("ActualPrivateFrameworks")
+            parent.rename(actual_parent)
+            parent.symlink_to(actual_parent, target_is_directory=True)
+            with self.assertRaisesRegex(native.UnsupportedRuntime, "alias-parent-noncanonical"):
+                host.location(layout["logical"])
+            parent.unlink()
+            actual_parent.rename(parent)
+            layout["source"].unlink()
+            layout["source"].mkdir()
+            with patch.object(native.os, "readlink", side_effect=AssertionError("source is not a link")), \
+                    self.assertRaisesRegex(native.UnsupportedRuntime, "alias-not-symlink"):
+                host.location(layout["logical"])
+            layout["source"].rmdir()
+            layout["source"].symlink_to(layout["raw"], target_is_directory=True)
+            actual_target = layout["target"].with_name("Other.framework")
+            layout["target"].rename(actual_target)
+            layout["target"].symlink_to(actual_target, target_is_directory=True)
+            with patch.object(host.budget, "digest", side_effect=AssertionError("no escaped target hash")), \
+                    self.assertRaisesRegex(native.UnsupportedRuntime, "noncanonical-developer-framework-root"):
+                native.RuntimeClosure(host).add(layout["logical"])
+
+    def test_mobiledevice_contained_version_links_work_but_leaf_escape_and_missing_target_reject(self):
+        layout = self.mobiledevice_layout()
+        original_binary = layout["binary"].read_bytes()
+        with self.mobiledevice_policy(layout):
+            host = self.host()
+            (layout["target"] / "Versions/Current").symlink_to("A", target_is_directory=True)
+            logical = layout["source"] / "Versions/Current/MobileDevice"
+            host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(logical))]))
+            fingerprint = host.closure(include_build=False)
+            self.assertIn("aliases", fingerprint["entries"][str(layout["binary"])])
+            outside = self.write("private-person/outside", b"must never read or hash")
+            layout["binary"].unlink()
+            layout["binary"].symlink_to(outside)
+            with patch.object(host.budget, "digest", side_effect=AssertionError("no escaped target hash")), \
+                    patch.object(native, "macho", side_effect=AssertionError("no escaped parser")), \
+                    self.assertRaisesRegex(native.UnsupportedRuntime, "runtime-symlink-escapes-root"):
+                native.RuntimeClosure(host).add(logical)
+            layout["binary"].unlink()
+            with self.assertRaisesRegex(native.UnsupportedRuntime, "unresolved-runtime-dependency"):
+                host.closure(include_build=False)
+            layout["binary"].write_bytes(original_binary)
+            layout["source"].unlink()
+            with self.assertRaisesRegex(native.UnsupportedRuntime, "unresolved-runtime-dependency"):
+                host.closure(include_build=False)
 
     def test_alias_metadata_stops_at_first_absolute_or_relative_link_without_target_queries(self):
         host = self.host()

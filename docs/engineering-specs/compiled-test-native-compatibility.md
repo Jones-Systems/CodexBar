@@ -133,11 +133,12 @@ Audit every regular loadable file below the complete `.build`, including
 framework/helper children and dependency tools, plus the selected native launchers. Follow declared
 dependencies recursively. Bundled dependencies stay below .build and are also
 covered by archive integrity; external dependencies must resolve inside the
-selected Xcode, system-library roots or the three explicitly reviewed Apple
+selected Xcode, system-library roots or the four explicitly reviewed Apple
 framework roots and receive SHA256 identities. The additional roots are
 `/Library/Developer/PrivateFrameworks/CoreDevice.framework`,
-`/Library/Developer/PrivateFrameworks/CoreDeviceUtilities.framework` and
-`/Library/Apple/System/Library/PrivateFrameworks/Mercury.framework`; require each
+`/Library/Developer/PrivateFrameworks/CoreDeviceUtilities.framework`,
+`/Library/Apple/System/Library/PrivateFrameworks/Mercury.framework` and
+`/Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework`; require each
 root itself canonical and each reached runtime file canonically contained. Include
 only declared dependencies and their nested framework/dylib closure, with full
 hashes and existing file/byte/time limits. Do not enumerate the framework or its
@@ -145,6 +146,23 @@ parent, admit sibling frameworks, follow symlink escapes, or accept host roots
 from metadata. Missing or unsupported further dependencies stay incomplete. Preserve
 weak-link absence as explicit evidence; unresolved strong, ambiguous, unsupported
 or escaping dependencies make the proof incomplete. Inspect no provider state.
+
+Run `40141076460` provides bounded actual MobileDevice alias metadata. Admit
+exactly `/System/Library/PrivateFrameworks/MobileDevice.framework` with raw relative
+link bytes `../../../Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework`
+to the fixed canonical MobileDevice framework root above. Require a canonical
+source parent, that exact source symlink and raw bytes, its exact normalized
+target, a canonical nonescaping target root, and regular canonically contained
+reached leaves before file reads/hashes/parsing. Contained version/nested links
+retain normal containment checks. No equivalent absolute spelling, alternate
+framework, parent, sibling or generic system-root escape is admitted. Bypass no
+alias validation or full-file hash via system-cache membership. Recurse only
+declared native dependencies under the same existing budgets. Keep static mapping
+policy in host context and independently validated alias records in canonical
+image entries; recompute on both hosts and require complete fingerprint equality.
+Observed canonical-path SHA256 identifies the public path string, not binary
+contents. This approved implementation still requires real hosted closure proof.
+
 Handle bounded fat32/fat64 ARM64 slices, weak/reexport/upward/lazy library loads,
 dylinker commands, loader/executable-relative paths and recursive cycles. Reject
 unsupported width/byte order, malformed or unknown required commands, legacy
@@ -259,8 +277,9 @@ open/hash/parse/execute escaped bytes, or stat the escaped destination. Redact a
 cap all path fields by the same rules as other diagnostics. Metadata failure or
 budget exhaustion preserves the original escape rejection; mark capped work as
 truncated. This data cannot admit a root or alias and is excluded from fingerprints.
-Actual source/destination metadata and a reviewed exact mapping are required
-before any future alias exception; generic symlink escape rejection stays intact.
+The sole MobileDevice mapping above uses actual source/destination metadata and
+an explicitly reviewed source rule. Diagnostics admit no further alias exception;
+generic symlink escape rejection stays intact.
 
 A v1 manifest retains the exact original identity gate. Portable fixtures exercise malformed/fat Mach-O,
 recursive dependencies, allowed paths, weak/missing dependencies, hash changes,
