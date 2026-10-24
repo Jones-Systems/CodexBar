@@ -120,6 +120,8 @@ Contributors:
 - `/root/audit_a_c`, `/root/audit_d_o`, `/root/audit_p_z_scripts`
   (native IDs unavailable): Astra/high bounded test-value audits.
 - `/root/ci_implementation` (native ID unavailable): Astra/high CI implementation.
+- `/root/musl_placement_question` (native ID unavailable): Astra/high coverage-placement assessment.
+- `/root/bulk_removal_review` (native ID unavailable): Astra/xhigh final bulk review.
 
 ## Musl configuration trial
 
@@ -136,7 +138,8 @@ The isolated trial worktree is `work/right-size-musl-pr-build-20261024`;
 release arguments, static-link success, dynamic-loader/library rejection and
 build/readelf failure propagation, with exact fixture cleanup. YAML parses and
 whitespace checks pass. Local `make test`/`make check` remain unavailable due to
-missing Swift/macOS `plutil`. Hosted qualification is recorded below. No performance saving is inferred from synthetic checks.
+missing Swift/macOS `plutil`. Hosted qualification is recorded below. No performance saving is inferred
+from synthetic checks.
 
 ## Test-value results and coverage
 
@@ -155,13 +158,14 @@ contain per-file or grouped one-line keep/remove/move reasons.
 The static scan is lexical and resolves source symlinks; it is not a count of
 expanded runtime cases. The 23 removed Swift declarations include one excluded
 non-macOS placeholder, hence 22 fewer native identities. The native baseline is
-PR #31, before removals; the final discovery is PR #34, with zero failed groups.
+PR #31, before removals; PRs #34 and #36 both discover 10,707 identities,
+with zero failed groups.
 Three removed Python definitions were already overwritten by later same-name
 methods; all 46 effective method ASTs were unchanged. The CI seam separately
 adds two isolated command checks, and ten existing synthetic skill checks now
 participate in portable lint. These are distinct from the removal counts.
 
-| Removal category | Swift declarations | Examples |
+| Removal category | Count | Examples |
 | --- | ---: | --- |
 | Exact or weaker overlap | 13 | Dashboard cache, stale refresh error, parser assertions, provider registry, Warp resolver, copy dispatch |
 | Trivial compiler/library/test-local behavior | 7 | Gemini local calculations, synthesized Kilo equality, terminal enum synthesis, JSONEncoder wrapper, always-true placeholder |
@@ -204,8 +208,9 @@ probe or native app session was used.
 [#31](https://github.com/Jones-Systems/CodexBar/pull/31) adds conservative PR and
 push path gates, enforces selected-job results in the aggregate, cancels
 superseded runs, and makes packaging opt-in by label/manual dispatch. Native
-proof is four grouped critical journeys, advisory and opt-in. The ordinary
-candidate job was skipped in each measured PR. A direct nightly candidate route
+proof is four grouped critical journeys, advisory and opt-in. No ordinary
+packaging job executed in the measured PRs; the candidate was skipped where its
+workflow triggered. A direct nightly candidate route
 remains outside this change because its provenance helper overlaps PR #26.
 
 Repeated default-engine plugin goldens and duplicate JavaScript lint work were
@@ -217,16 +222,17 @@ Required and advisory checks are declared in [AGENTS.md](https://github.com/Jone
 [the development guide](../DEVELOPMENT.md#ci-aggregate-contract).
 No GitHub ruleset or branch protection was changed.
 
-| Successful PR run | Required-green proxy | Runner minutes | macOS shard minutes |
+| Successful PR run | Required-green proxy (min) | Runner minutes | macOS shard minutes |
 | --- | ---: | ---: | --- |
 | [#31 / 40066991296](https://github.com/Jones-Systems/CodexBar/actions/runs/40066991296) | 39.35 | 92.77 | 38.82 / 33.03 |
 | [#32 / 40069794039](https://github.com/Jones-Systems/CodexBar/actions/runs/40069794039) | 47.35 | 73.47 | 35.90 / 35.28 |
 | [#33 / 40073011928](https://github.com/Jones-Systems/CodexBar/actions/runs/40073011928) | 42.97 | 87.00 | 35.35 / 42.55 |
 | [#34 / 40075983000](https://github.com/Jones-Systems/CodexBar/actions/runs/40075983000) | 40.95 | 92.98 | 40.53 / 34.75 |
 | [#35 / 40078859261](https://github.com/Jones-Systems/CodexBar/actions/runs/40078859261) | 41.65 | 97.02 | 41.27 / 36.72 |
+| [#36 / 40081882902](https://github.com/Jones-Systems/CodexBar/actions/runs/40081882902) | 34.37 | 75.40 | 34.02 / 28.37 |
 
-For these five successful workstream PRs, median runner time is 92.77 minutes;
-run-created-to-required-green median is 41.65 minutes and nearest-rank p90 is
+For these six successful workstream PRs, median runner time is 89.88 minutes;
+run-created-to-required-green median is 41.30 minutes and nearest-rank p90 is
 47.35 minutes. The baseline successful-PR sample (n=10) was 109.78 runner-minutes,
 113.05 minutes median and 195.68 minutes p90 to green. This is a purposeful,
 unpaired sample with different selected platforms, cache conditions and queues;
@@ -247,8 +253,27 @@ remain unmet; compiler/unit coverage remains required.
 
 ## Musl hosted qualification
 
-Pending PR #36 debug/static-link result and resulting main release/static-link
-result. No measured saving or completed adoption is claimed before those runs.
+Merged [#36](https://github.com/Jones-Systems/CodexBar/pull/36) retains the
+required static-SDK/SQLite compatibility signal on PRs in debug configuration;
+main/manual runs retain release. The PR's
+[debug job](https://github.com/Jones-Systems/CodexBar/actions/runs/40081882902/job/120836991820)
+passed with explicit static-link verification in 291 seconds (4m51s): 199 seconds
+for compilation/linkage verification and about 92 seconds for setup/SQLite and
+other steps. This required job is within 390 seconds. Earlier release PR jobs
+were 540–697 seconds, but different configurations and runner conditions make
+that an observed placement result, not an equivalent-work speedup.
+
+Production `Sources`, `Package.swift` and `Package.resolved` identities are
+identical between PR debug head `0bc0720542dabbff3fc58e279321e417882ec51b` and
+main merge `7478fbde01d9b6962f2df291f8a65e3ede385971`. The resulting
+[main run](https://github.com/Jones-Systems/CodexBar/actions/runs/40084329210)
+passed the [release job](https://github.com/Jones-Systems/CodexBar/actions/runs/40084329210/job/120844077134)
+with explicit static-link verification in 532 seconds (8m52s), including 440
+seconds for compilation/linkage verification and about 92 seconds for setup and
+other steps. Debug and release both qualify on the same production source.
+Release-only branches and optimizer/link behavior remain exercised on main/manual
+runs. The whole main workflow was still running when this job was qualified;
+this records release-job success, not a claim that all main jobs had finished.
 
 ## Follow-up record: required CI budget
 
@@ -273,3 +298,19 @@ runs. If the shared hosted queue alone exceeds the target, record its measured
 contribution separately from compute. Native nightly provenance, historical flaky
 case ranking and a fresh two-week cost comparison remain later measurement work.
 No further removal is justified without unique-signal and cost evidence.
+
+## Completion and evidence custody
+
+PRs #31–#36 were merged using merge commits with the exact qualified head guard.
+Each readback verified the expected second parent and inclusion in canonical
+`origin/main`; no branch was deleted. Required-check identity remained GitHub
+Actions app `15368`, CI workflow `388934113`, repository ID `1425008735`.
+The final documentation PR carries this report and the archived review only.
+
+All audit/review children have returned; the coordinator is the sole Git owner
+of the task worktrees. The three audit reports and bounded baseline/after JSON
+remain task-owned ignored evidence in the original `.build/right-sizing/`,
+about 1.3 MiB, for preservation until owner-directed cleanup. No shared temporary
+artifact or background observer remains. Worktrees and branches are preserved;
+readiness marking is metadata only and grants no deletion authority. No
+production app source changed, so no installed app replacement is needed.

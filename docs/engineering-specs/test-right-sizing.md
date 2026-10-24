@@ -32,11 +32,11 @@ and Codex V3's test-value, CI-budget, and native-tier rules at
 The accompanying [work note](../work-notes/test-right-sizing.md) holds measurements.
 Graphify's older snapshot helps navigation only; current files decide behavior.
 
-Current macOS shards independently build the full graph before partitioning.
-Linux jobs compile release CLI and debug tests. Both platform lint jobs repeat
-JavaScript checks. The plugin A/B step repeats the default-engine golden tests
-already discovered by the suite. These are optimization candidates, separate
-from decisions to remove tests.
+At baseline, macOS shards independently built the full graph before partitioning.
+Linux jobs compiled release CLI and debug tests. Both platform lint jobs repeated
+JavaScript checks. The plugin A/B step repeated default-engine golden tests
+already discovered by the suite. CI optimization is separate from decisions
+to remove tests.
 
 Keep two macOS shards initially. A build-once artifact or larger process groups
 needs measured build/transfer cost and identical discovery/outcome evidence
@@ -123,7 +123,9 @@ CI placement and check declarations landed in PR #31; three separate removal-onl
 PRs (#32–#34) removed 23 Swift declarations and three already-shadowed Python
 definitions. One Astra/xhigh bulk review accepted all 17 groups with an empty
 restore list. The three pre-existing coverage gaps were repaired separately in
-PR #35. The [work note](../work-notes/test-right-sizing.md) records exact counts,
+PR #35. PR #36 qualified required debug musl on PRs and release musl on main,
+with static linkage verified in both configurations on identical production source.
+The [work note](../work-notes/test-right-sizing.md) records exact counts,
 retained coverage, run IDs and before/after measurement limits.
 
 The macOS shards still exceed 390 seconds in both discovery/build and execution.
