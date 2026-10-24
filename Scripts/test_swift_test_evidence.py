@@ -208,13 +208,14 @@ class CampaignPlanTests(unittest.TestCase):
         swift_step = job.split("- name: Swift Test\n", 1)[1].split("      - name:", 1)[0]
         self.assertIn("CODEXBAR_TEST_EVIDENCE_DIR:", swift_step)
         self.assertEqual(job.count("CODEXBAR_TEST_EVIDENCE_DIR:"), 1)
-        for required in ("Check app locales and Swift formatting", "Provider plugin engine A/B goldens",
+        for required in ("Check app locales and Swift formatting", "Provider plugin JavaScriptCore goldens",
                          "Collect crash reports on failure", "Summarize macOS shard"):
             self.assertIn(required, job)
         self.assertLess(job.index("Summarize macOS shard"), job.index("Validate campaign evidence"))
         self.assertIn("retention-days: 7", job)
         self.assertIn("steps.campaign-upload.outcome == 'success'", job)
         self.assertIn("./Scripts/test.sh --command swift test --parallel", workflow)
+        self.assertIn("run: ./Scripts/test-plugin-engines.sh --jsc-only", job)
         self.assertNotIn("GITHUB_ENV", (ROOT / "Scripts/ci_swift_test_campaign.py").read_text())
 
     def test_prepare_refuses_unproved_warm_cold_and_storage(self):
@@ -707,7 +708,7 @@ class LinuxStorageObservationTests(unittest.TestCase):
     def test_workflow_measurements_surround_existing_builds(self):
         workflow = (ROOT / ".github/workflows/ci.yml").read_text()
         linux = workflow.split("  build-linux-cli:\n", 1)[1]
-        steps = ("measure-linux --phase before-release", "swift build -c release --product CodexBarCLI --static-swift-stdlib",
+        steps = ("measure-linux --phase before-release", 'swift build "${build_args[@]}"',
                  "measure-linux --phase after-release", "./Scripts/test.sh --command swift test --parallel",
                  "measure-linux --phase after-tests", "- name: Smoke test CodexBarCLI")
         positions = [linux.index(step) for step in steps]
@@ -1002,12 +1003,16 @@ class LinuxCacheTests(unittest.TestCase):
             self.assertIn("SEGMENT_DOWNLOAD_TIMEOUT_MINS: '1'", step)
             self.assertIn("path: .build", step)
             self.assertIn("@55cc8345863c7cc4c66a329aec7e433d2d1c52a9", step)
-        for name in ("Build CodexBarCLI (release, static Swift stdlib)", "Swift Test (Linux only)",
+        for name in ("Build CodexBarCLI (PR debug; main/manual release with static Swift stdlib)", "Swift Test (Linux only)",
                      "Smoke test CodexBarCLI"):
             step = linux.split("- name: " + name + "\n", 1)[1].split("      - name:", 1)[0]
             self.assertNotIn("if:", step)
             self.assertNotIn("cache-hit", step)
-        self.assertIn("run: swift build -c release --product CodexBarCLI --static-swift-stdlib", linux)
+        self.assertIn("LINUX_BUILD_CONFIGURATION: ${{ github.event_name == 'pull_request' && 'debug' || 'release' }}", linux)
+        self.assertIn('build_args=(-c "$LINUX_BUILD_CONFIGURATION" --product CodexBarCLI)', linux)
+        self.assertIn('if [[ "$LINUX_BUILD_CONFIGURATION" == release ]]; then', linux)
+        self.assertIn('build_args+=(--static-swift-stdlib)', linux)
+        self.assertIn('swift build "${build_args[@]}"', linux)
         self.assertIn("run: ./Scripts/test.sh --command swift test --parallel", linux)
         self.assertIn("steps.linux-cache-restore.outcome", linux)
         self.assertIn("linux-cache after-save", linux)
@@ -1414,9 +1419,9 @@ class LinuxTimestampTests(unittest.TestCase):
         linux = workflow.split("  build-linux-cli:\n", 1)[1]
         self.assertIn("github.event_name == 'workflow_dispatch' && inputs.linux_timestamp_mode || 'off'", linux)
         self.assertLess(linux.index("linux-cache after-restore"), linux.index("linux-cache input-timestamps"))
-        self.assertLess(linux.index("linux-cache input-timestamps"), linux.index("run: swift build"))
+        self.assertLess(linux.index("linux-cache input-timestamps"), linux.index('swift build "${build_args[@]}"'))
         self.assertIn("steps.linux-input-timestamps.outputs.context ||", linux)
-        for name in ("Build CodexBarCLI (release, static Swift stdlib)", "Swift Test (Linux only)",
+        for name in ("Build CodexBarCLI (PR debug; main/manual release with static Swift stdlib)", "Swift Test (Linux only)",
                      "Smoke test CodexBarCLI"):
             step = linux.split("- name: " + name + "\n", 1)[1].split("      - name:", 1)[0]
             self.assertNotIn("if:", step)

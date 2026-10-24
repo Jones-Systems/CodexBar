@@ -10,6 +10,7 @@ macos_tests_deferred="${5:-}"
 linux_musl_build_required="${6:-}"
 linux_musl_build_result="${7:-}"
 linux_build_result="${8-<missing>}"
+linux_tests_required="${9-<missing>}"
 
 if [[ "$lint_result" != "success" ]]; then
   printf 'lint job finished with %s\n' "${lint_result:-<empty>}" >&2
@@ -18,11 +19,6 @@ fi
 
 if [[ "$changes_result" != "success" ]]; then
   printf 'changes job finished with %s\n' "${changes_result:-<empty>}" >&2
-  exit 1
-fi
-
-if [[ "$linux_build_result" != "success" ]]; then
-  printf 'build-linux-cli matrix finished with %s; expected success\n' "${linux_build_result:-<empty>}" >&2
   exit 1
 fi
 
@@ -45,7 +41,19 @@ case "${macos_tests_required}:${macos_tests_deferred}:${macos_test_result}" in
     ;;
 esac
 
-printf 'Linux glibc CLI matrix passed.\n'
+case "${linux_tests_required}:${linux_build_result}" in
+  true:success)
+    printf 'Linux glibc CLI matrix passed.\n'
+    ;;
+  false:skipped)
+    printf 'Linux glibc CLI matrix skipped by its path gate.\n'
+    ;;
+  *)
+    printf 'Linux glibc gate/result mismatch: required=%s result=%s\n' \
+      "${linux_tests_required:-<empty>}" "${linux_build_result:-<empty>}" >&2
+    exit 1
+    ;;
+esac
 
 case "${linux_musl_build_required}:${linux_musl_build_result}" in
   true:success)

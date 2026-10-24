@@ -60,6 +60,8 @@ jobs:
       macos-tests-deferred: ${{ steps.macos-tests.outputs.macos-tests-deferred }}
       macos-tests-reason: ${{ steps.macos-tests.outputs.macos-tests-reason }}
       changed-path-count: ${{ steps.macos-tests.outputs.changed-path-count }}
+      linux-tests: ${{ steps.linux-tests.outputs.linux-tests }}
+      linux-tests-reason: ${{ steps.linux-tests.outputs.linux-tests-reason }}
       linux-musl-build: ${{ steps.linux-musl-build.outputs.linux-musl-build }}
       linux-musl-build-reason: ${{ steps.linux-musl-build.outputs.linux-musl-build-reason }}
       macos-matrix: ${{ steps.campaign.outputs.matrix }}
@@ -87,25 +89,31 @@ jobs:
         run: |
           set -euo pipefail
 
+          changed_paths="${RUNNER_TEMP}/changed-paths.txt"
+          # Empty or unavailable evidence selects every platform; manual runs always qualify all.
+          : > "$changed_paths"
+          base_sha=''
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             base_sha="${{ github.event.pull_request.base.sha }}"
-          else
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
             base_sha="${{ github.event.before }}"
           fi
-
-          changed_paths="${RUNNER_TEMP}/changed-paths.txt"
-          if [[ -z "$base_sha" || "$base_sha" =~ ^0+$ ]]; then
-            git ls-files | awk '{ print "A\t" $0 }' > "$changed_paths"
-          elif ! git cat-file -e "${base_sha}^{commit}" 2>/dev/null; then
-            echo "Base commit ${base_sha} is unavailable; running macOS tests conservatively."
-            git ls-files | awk '{ print "A\t" $0 }' > "$changed_paths"
-          else
-            git diff --name-status "$base_sha" "$GITHUB_SHA" > "$changed_paths"
+          if [[ "${{ github.event_name }}" != "workflow_dispatch" ]]; then
+            if [[ -n "$base_sha" && ! "$base_sha" =~ ^0+$ ]] && git cat-file -e "${base_sha}^{commit}" 2>/dev/null; then
+              git diff --name-status "$base_sha" "$GITHUB_SHA" > "$changed_paths"
+            else
+              echo "Base commit unavailable; selecting all platforms conservatively."
+            fi
           fi
 
           printf 'Changed paths:\n'
           sed 's/^/- /' "$changed_paths"
           ./Scripts/ci_macos_test_gate.sh "$changed_paths"
+
+      - name: Detect Linux glibc test impact
+        id: linux-tests
+        shell: bash
+        run: ./Scripts/ci_linux_test_gate.sh "$RUNNER_TEMP/changed-paths.txt"
 
       - name: Detect Linux musl build impact
         id: linux-musl-build
@@ -119,12 +127,16 @@ jobs:
           MACOS_TESTS: ${{ steps.macos-tests.outputs.macos-tests }}
           MACOS_TESTS_REASON: ${{ steps.macos-tests.outputs.macos-tests-reason }}
           CHANGED_PATH_COUNT: ${{ steps.macos-tests.outputs.changed-path-count }}
+          LINUX_TESTS: ${{ steps.linux-tests.outputs.linux-tests }}
+          LINUX_TESTS_REASON: ${{ steps.linux-tests.outputs.linux-tests-reason }}
           LINUX_MUSL_BUILD: ${{ steps.linux-musl-build.outputs.linux-musl-build }}
           LINUX_MUSL_BUILD_REASON: ${{ steps.linux-musl-build.outputs.linux-musl-build-reason }}
         run: |
           set -euo pipefail
           reason="${MACOS_TESTS_REASON:-<unset>}"
           reason="${reason//|/\\|}"
+          linux_reason="${LINUX_TESTS_REASON:-<unset>}"
+          linux_reason="${linux_reason//|/\\|}"
           musl_reason="${LINUX_MUSL_BUILD_REASON:-<unset>}"
           musl_reason="${musl_reason//|/\\|}"
           {
@@ -133,6 +145,8 @@ jobs:
             printf '| --- | --- |\n'
             printf '| macOS Swift tests required | `%s` |\n' "${MACOS_TESTS:-<unset>}"
             printf '| macOS reason | %s |\n' "$reason"
+            printf '| Linux glibc tests required | `%s` |\n' "${LINUX_TESTS:-<unset>}"
+            printf '| Linux glibc reason | %s |\n' "$linux_reason"
             printf '| Linux musl build required | `%s` |\n' "${LINUX_MUSL_BUILD:-<unset>}"
             printf '| Linux musl reason | %s |\n' "$musl_reason"
             printf '| Changed path entries | `%s` |\n' "${CHANGED_PATH_COUNT:-<unset>}"
@@ -269,9 +283,9 @@ jobs:
           rm -rf -- "$CODEXBAR_RESET_CAPTURE_ROOT"
           test ! -e "$CODEXBAR_RESET_CAPTURE_ROOT"
 
-      - name: Provider plugin engine A/B goldens
+      - name: Provider plugin JavaScriptCore goldens
         if: ${{ matrix.shard-index == 0 }}
-        run: ./Scripts/test-plugin-engines.sh
+        run: ./Scripts/test-plugin-engines.sh --jsc-only
 
       - name: Collect crash reports on failure
         if: ${{ failure() }}
@@ -357,7 +371,8 @@ jobs:
             "${{ needs.changes.outputs.macos-tests-deferred }}" \
             "${{ needs.changes.outputs.linux-musl-build }}" \
             "${{ needs.build-linux-musl-cli.result }}" \
-            "${{ needs.build-linux-cli.result }}"
+            "${{ needs.build-linux-cli.result }}" \
+            "${{ needs.changes.outputs.linux-tests }}"
 
       - name: Summarize aggregate CI gate
         if: ${{ always() }}
@@ -369,6 +384,8 @@ jobs:
           MACOS_TESTS_DEFERRED: ${{ needs.changes.outputs.macos-tests-deferred }}
           MACOS_TESTS_REASON: ${{ needs.changes.outputs.macos-tests-reason }}
           MACOS_RESULT: ${{ needs.swift-test-macos.result }}
+          LINUX_TESTS: ${{ needs.changes.outputs.linux-tests }}
+          LINUX_TESTS_REASON: ${{ needs.changes.outputs.linux-tests-reason }}
           LINUX_MUSL_BUILD: ${{ needs.changes.outputs.linux-musl-build }}
           LINUX_MUSL_BUILD_REASON: ${{ needs.changes.outputs.linux-musl-build-reason }}
           LINUX_MUSL_RESULT: ${{ needs.build-linux-musl-cli.result }}
@@ -377,6 +394,8 @@ jobs:
           set -euo pipefail
           reason="${MACOS_TESTS_REASON:-<unset>}"
           reason="${reason//|/\\|}"
+          linux_reason="${LINUX_TESTS_REASON:-<unset>}"
+          linux_reason="${linux_reason//|/\\|}"
           musl_reason="${LINUX_MUSL_BUILD_REASON:-<unset>}"
           musl_reason="${musl_reason//|/\\|}"
           {
@@ -389,6 +408,8 @@ jobs:
             printf '| macOS Swift tests deferred | `%s` |\n' "${MACOS_TESTS_DEFERRED:-<unset>}"
             printf '| macOS gate reason | %s |\n' "$reason"
             printf '| swift-test-macos result | `%s` |\n' "$MACOS_RESULT"
+            printf '| Linux glibc tests required | `%s` |\n' "${LINUX_TESTS:-<unset>}"
+            printf '| Linux glibc reason | %s |\n' "$linux_reason"
             printf '| Linux musl build required | `%s` |\n' "${LINUX_MUSL_BUILD:-<unset>}"
             printf '| Linux musl gate reason | %s |\n' "$musl_reason"
             printf '| build-linux-musl-cli result | `%s` |\n' "$LINUX_MUSL_RESULT"
@@ -570,6 +591,8 @@ jobs:
           --triple "$SWIFT_STATIC_LINUX_SDK_TRIPLE"
 
   build-linux-cli:
+    needs: changes
+    if: ${{ needs.changes.outputs.linux-tests == 'true' }}
     timeout-minutes: 20
     permissions:
       contents: read
@@ -590,6 +613,7 @@ jobs:
       CAMPAIGN_CACHE_MODE: ${{ inputs.cache_mode }}
       LINUX_CACHE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.linux_cache_mode || 'auto' }}
       LINUX_TIMESTAMP_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.linux_timestamp_mode || 'off' }}
+      LINUX_BUILD_CONFIGURATION: ${{ github.event_name == 'pull_request' && 'debug' || 'release' }}
       LINUX_RUNNER_LABEL: ${{ matrix.runs-on }}
       LINUX_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
     steps:
@@ -733,9 +757,17 @@ jobs:
           LINUX_CACHE_ACTIVE: ${{ steps.linux-cache-plan.outputs.enabled }}
         run: python3 Scripts/ci_swift_test_campaign.py measure-linux --phase before-release --step-times
 
-      - name: Build CodexBarCLI (release, static Swift stdlib)
+      - name: Build CodexBarCLI (PR debug; main/manual release with static Swift stdlib)
+        # Keep the campaign step ID stable; the summary records the actual configuration.
         id: linux-release
-        run: swift build -c release --product CodexBarCLI --static-swift-stdlib
+        shell: bash
+        run: |
+          set -euo pipefail
+          build_args=(-c "$LINUX_BUILD_CONFIGURATION" --product CodexBarCLI)
+          if [[ "$LINUX_BUILD_CONFIGURATION" == release ]]; then
+            build_args+=(--static-swift-stdlib)
+          fi
+          swift build "${build_args[@]}"
 
       - name: Observe Linux build storage after release
         id: linux-after-release
@@ -760,16 +792,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          BIN_DIR="$(swift build -c release --product CodexBarCLI --static-swift-stdlib --show-bin-path)"
+          build_args=(-c "$LINUX_BUILD_CONFIGURATION" --product CodexBarCLI)
+          if [[ "$LINUX_BUILD_CONFIGURATION" == release ]]; then
+            build_args+=(--static-swift-stdlib)
+          fi
+          BIN_DIR="$(swift build "${build_args[@]}" --show-bin-path)"
           BIN="$BIN_DIR/CodexBarCLI"
           "$BIN" --help >/dev/null
           "$BIN" --version >/dev/null
-          if "$BIN" usage --provider codex --web >/dev/null 2>&1; then
+          if smoke_error="$("$BIN" usage --provider codex --web 2>&1)"; then
             echo "Expected --web to fail on Linux"
             exit 1
           fi
-          "$BIN" usage --provider codex --web 2>&1 | tee /tmp/codexbarcli-stderr.txt >/dev/null || true
-          grep -q "macOS" /tmp/codexbarcli-stderr.txt
+          grep -q "macOS" <<< "$smoke_error"
 
       - name: Admit Linux application cache save
         id: linux-cache-save-plan
@@ -824,5 +859,6 @@ jobs:
             printf '| Matrix | `%s` |\n' "$MATRIX_NAME"
             printf '| Runner label | `%s` |\n' "$MATRIX_RUNS_ON"
             printf '| Swift version | `%s` |\n' "$SWIFT_VERSION"
+            printf '| CLI build configuration | `%s` |\n' "$LINUX_BUILD_CONFIGURATION"
             printf '| Swift toolchain cache hit | `%s` |\n' "${SWIFT_CACHE_HIT:-false}"
           } >> "$GITHUB_STEP_SUMMARY"

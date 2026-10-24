@@ -1,8 +1,10 @@
 name: Jones menu candidate
 
 on:
+  workflow_dispatch:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
     paths:
       - .github/workflows/jones-menu-candidate.yml
       - Sources/CodexBar/CodexbarApp.swift
@@ -18,13 +20,30 @@ on:
 permissions:
   contents: read
 
+# Only eligible PR events share a cancellation group; skipped events have unique groups.
 concurrency:
-  group: jones-menu-candidate-${{ github.event.pull_request.number }}
+  group: >-
+    ${{ github.workflow }}-${{
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(github.event.pull_request.labels.*.name, 'codexbar-menu-candidate') &&
+      (github.event.action != 'labeled' || github.event.label.name == 'codexbar-menu-candidate') &&
+      format('pr-{0}', github.event.pull_request.number) || format('event-{0}', github.run_id) }}
   cancel-in-progress: true
 
 jobs:
   package-jones-menu:
-    if: ${{ !github.event.pull_request.draft && github.event.pull_request.head.repo.full_name == github.repository }}
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' ||
+          (github.event_name == 'pull_request' &&
+           github.event.pull_request.draft == false &&
+           github.event.pull_request.head.repo.full_name == github.repository &&
+           contains(github.event.pull_request.labels.*.name, 'codexbar-menu-candidate') &&
+           (github.event.action != 'labeled' || github.event.label.name == 'codexbar-menu-candidate')) }}
+    concurrency:
+      group: codexbar-candidate-packaging
+      cancel-in-progress: false
     runs-on: macos-26
     timeout-minutes: 70
     env:
@@ -35,7 +54,7 @@ jobs:
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -85,7 +104,7 @@ jobs:
       - name: Verify and archive candidate
         shell: bash
         env:
-          CANDIDATE_HEAD: ${{ github.event.pull_request.head.sha }}
+          CANDIDATE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
           codesign --verify --deep --strict CodexBar.app
@@ -122,7 +141,7 @@ jobs:
       - name: Upload verified candidate
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: jones-menu-${{ github.event.pull_request.head.sha }}
+          name: jones-menu-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             CodexBar-Jones-candidate.zip
             CodexBar-Jones-candidate.zip.sha256

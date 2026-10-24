@@ -3,22 +3,7 @@ name: Jones app candidate
 on:
   pull_request:
     branches: [main]
-    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
-    paths:
-      - '.github/workflows/jones-app-candidate.yml'
-      - '.gitignore'
-      - '.mac-release.jones.env.example'
-      - 'Package.swift'
-      - 'Package.resolved'
-      - 'version.env'
-      - 'Sources/**'
-      - 'Tests/**'
-      - 'Scripts/**'
-      - 'WidgetExtension/**'
-      - 'Icon.icon/**'
-      - 'Icon.icns'
-  push:
-    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
     paths:
       - '.github/workflows/jones-app-candidate.yml'
       - '.gitignore'
@@ -38,13 +23,30 @@ on:
 permissions:
   contents: read
 
+# Only eligible PR events share a cancellation group; skipped events have unique groups.
 concurrency:
-  group: jones-app-candidate-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  group: >-
+    ${{ github.workflow }}-${{
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(github.event.pull_request.labels.*.name, 'codexbar-package') &&
+      (github.event.action != 'labeled' || github.event.label.name == 'codexbar-package') &&
+      format('pr-{0}', github.event.pull_request.number) || format('event-{0}', github.run_id) }}
   cancel-in-progress: true
 
 jobs:
   candidate:
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' ||
+          (github.event_name == 'pull_request' &&
+           github.event.pull_request.draft == false &&
+           github.event.pull_request.head.repo.full_name == github.repository &&
+           contains(github.event.pull_request.labels.*.name, 'codexbar-package') &&
+           (github.event.action != 'labeled' || github.event.label.name == 'codexbar-package')) }}
+    concurrency:
+      group: codexbar-candidate-packaging
+      cancel-in-progress: false
     runs-on: macos-26-intel
     # Same-run cold architecture builds reached 36.6 minutes; reserve two plus
     # 20% margin for the widget, then retain time for both app slices and native proof.
