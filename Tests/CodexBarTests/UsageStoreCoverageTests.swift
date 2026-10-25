@@ -31,6 +31,12 @@ struct UsageStoreCoverageTests {
 
         try settings.setProviderEnabled(provider: .codex, metadata: #require(metadata[.codex]), enabled: true)
         try settings.setProviderEnabled(provider: .claude, metadata: #require(metadata[.claude]), enabled: true)
+        settings.setMenuBarMetricPreference(.primaryAndSecondary, for: .claude)
+
+        let expectedProviders: Set<ProviderInstanceID> = [.codex, .claude]
+        #expect(Set(store.enabledProvidersForDisplay()) == expectedProviders)
+        #expect(Set(store.enabledProvidersForBackgroundWork()) == expectedProviders)
+        #expect(settings.menuBarMetricPreference(for: .claude) == .primaryAndSecondary)
 
         let now = Date()
         store._setSnapshotForTesting(

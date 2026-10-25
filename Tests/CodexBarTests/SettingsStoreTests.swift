@@ -396,10 +396,16 @@ struct SettingsStoreTests {
             userDefaults: defaults,
             configStore: configStore)
 
-        store.mergedOverviewSelectedProviders = []
         let activeProviders: [UsageProvider] = [.codex, .claude]
+        for provider in activeProviders {
+            store.setMergedOverviewProviderSelection(
+                provider: provider,
+                isSelected: false,
+                activeProviders: activeProviders)
+        }
         let resolved = store.resolvedMergedOverviewProviders(activeProviders: activeProviders)
 
+        #expect(store.mergedOverviewSelectedProviders.isEmpty)
         #expect(resolved == [])
     }
 

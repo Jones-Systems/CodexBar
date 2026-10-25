@@ -815,4 +815,62 @@ All 56 exact cost files, four adapted files/29 methods, four critical history
 suites and 12 shared day-selection methods keep their prior proofs. The final
 publication adds only comparison/note evidence; native qualification is pending.
 
+Late settings/usage runtime closure begins at clean, bound PR41 head
+`a1f5b3588cfb45148f54623a9b14ba665c2bd508`, base `91bd5fb4`. Root run
+`40166212553` has a successful producer and verified complete-fingerprint workers;
+they stop after 66/85 and 78/85 successful groups with no timeouts. Saved issue
+lines show one explicit-empty settings issue and two highest-usage issues. Prior
+dispatch/history groups progressed; this is partial execution, not qualification
+or a savings measurement.
+
+Before editing, traced the retained settings block from raw defaults through
+normalization, active-set edit signature, resolution and preference clearing.
+It is byte-identical to the base. The original empty fixture had seven active
+providers (above the six-provider limit); the two-provider port needs actual
+selection edits to record its active-set signature. Preserve the empty result
+assertion and construct genuine user deselection through the public setter.
+The ranking fixture ported Factory's secondary-first automatic presentation to
+Claude, whose automatic presentation uses the primary lane. Explicitly select
+Claude's supported combined metric to preserve the intended 70% ranking and
+later fully-exhausted exclusion without changing product defaults or assertions.
+
+Exact write scope: SettingsStoreTests.swift and UsageStoreCoverageTests.swift,
+plus this note, the existing spec and comparison. Related selection/ranking test
+callers are read-only audit scope; any additional required write will be named
+before mutation. Scratch `.build/slim-product-work/settings-usage-a1f5` owns the
+before blobs, scoped caller inventory and check evidence, and is removed after
+publication and owned-process drain. No production, native/harness, schedule,
+frozen-consumption, accounting/auth/TTY/fallback or limit changes; root retains
+CI watching. No new agents, reviews, manual campaigns, installations or merge.
+
+The bounded audit covers 13 changed selection/ranking caller files; 11 remain
+byte-identical. The sole raw empty assignment was the failing settings case.
+Other raw assignments intentionally test decoding/persistence, provider order
+with the whole active set, or stale unstamped preferences; the SPEND fixture
+selects both active providers. Existing empty/subset menu fixtures already use
+public edits. Other ranking fixtures use primary-lane inputs or explicitly
+combined metrics, with distinct Codex/Claude identities. No further writes are
+needed and no shared helper changes.
+
+The two repaired files keep all 85 test declarations and all 267 original
+assertions byte-for-byte; four setup assertions make 271. They verify stored
+empty selection, distinct display/background-enabled instances and the supported
+Claude combined metric. All ranking snapshots/numeric values, Claude 70% winner,
+subsequent Claude-100%-excluded/Codex-50% result, combined/single icon and stale
+assertions stay exact. The later Claude snapshot replacement is intentional
+and occurs after the first ranking, with no earlier identity collision.
+
+Eight retained source blocks match the base: the complete selection preference
+block, metric getter/setter, automatic and combined window resolution, maximum
+lane helper, Claude spend-only override and enabled-candidate ranking. Initial
+two scratch audit ranges also included the already-deleted average helper/case;
+their failed byte-comparison is retained and corrected to the actual retained
+boundaries. No source behavior or test assertion was changed to satisfy the
+auditor. Final scoped preservation, 181 documentation links and whitespace pass.
+`make check` passes the normal-profile contract, then exits 2 at missing plutil;
+`make test` exits 2 at missing Swift before building/discovery/execution. Its
+owned `.test-fixtures-pkq9_t1q` parent is removed and absence verified. No native
+formatter/compiler/runtime success is claimed; root's automatic exact-head CI
+remains the next gate, with full-suite qualification/timing still pending.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->

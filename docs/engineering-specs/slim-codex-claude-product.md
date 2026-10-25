@@ -91,6 +91,9 @@ Overview summary activation preserves account expansion for both retained
 providers; use the provider switcher for navigation proofs and verify native
 action delivery. Preserve generic unknown-window policy separately from retained
 provider whitelists, plus saved-history fallback without a current snapshot.
+Highest-usage fixtures must select a supported retained-provider metric explicitly
+when replacing a retired provider's lane policy; retain ranking and exhaustion
+assertions without changing Codex/Claude defaults or enabled-instance isolation.
 
 Run `make check` and `make test`; report missing local Swift/formatter tools as
 unavailable. Use the shared nonblocking benchmark lock and fresh CPU/RAM admission
