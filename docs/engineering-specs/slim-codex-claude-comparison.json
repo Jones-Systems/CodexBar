@@ -1,7 +1,7 @@
 {
   "schema": "codexbar-product-removal-comparison/v1",
   "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
-  "candidateSourceRevision": "66d8c2387597d2ba1ae7d87f821e3c6c60ea1a08",
+  "candidateSourceRevision": "f92aa420b526db64f2ca6b2213496a19d3b249c0",
   "pullRequest": "https://github.com/Jones-Systems/CodexBar/pull/41",
   "baseBranch": "work/test-value-bar-pass2-20261024",
   "method": "Exact committed Git blobs; files include Swift source under Sources and tests under Tests, TestsLinux, TestsPlugin; line count uses bytes.splitlines; lexical Swift Testing @Test declaration counts exclude comments/strings and do not represent parameterized/runtime cases.",
@@ -36,8 +36,8 @@
       },
       "testSwift": {
         "files": 733,
-        "lines": 252424,
-        "bytes": 10943106
+        "lines": 252448,
+        "bytes": 10944789
       }
     }
   },
@@ -989,10 +989,10 @@
       "qualification": "No new-head compile or execution pass inferred."
     },
     "latestNativeRuntimeAttempt": {
-      "runID": 40171535655,
-      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40171535655",
-      "prHeadRevision": "7c294a614db77df3177e408fcdf4b2cb927fe601",
-      "mergeCheckout": "d2ac6e015ca6e8710c1be0535a3f54d59afc8a98",
+      "runID": 40173875411,
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40173875411",
+      "prHeadRevision": "25a69714c9af61e4e094bdd82d232bff6b5c2aa3",
+      "mergeCheckout": "c8148368b2ce23548d76118c15f3fc34b6bc51fd",
       "changes": "success",
       "lint": "success",
       "linuxX64": "success",
@@ -1001,30 +1001,45 @@
       "producer": "success",
       "workers": [
         {
-          "jobID": 121106055371,
+          "jobID": 121113822849,
           "status": "failure",
           "nativeCompatibility": "verified complete-fingerprint",
+          "successfulGroupsBeforeFailure": 71,
+          "selectedGroups": 85,
+          "testBuilds": 0,
+          "fullGroupRetries": 0,
           "timeouts": 0,
           "issues": [
-            "\u2718 Test \"priced subscription keeps group spend when peers lack prices\" recorded an issue at SpendDashboardPartialCostTests.swift:189:9: Expectation failed: (group.models.map(\\.modelName) \u2192 [\"gpt-5.4-mini\", \"deepseek-v4-flash\"]) == [\"gpt-5.4-mini\", \"deepseek-v4-flash\", \"deepseek-v4-flash\"]",
-            "\u2718 Test \"priced subscription keeps group spend when peers lack prices\" recorded an issue at SpendDashboardPartialCostTests.swift:190:9: Expectation failed: (group.models.map(\\.totalCost) \u2192 [Optional(4.0), nil]) == ([4, nil, nil] \u2192 [Optional(4.0), nil, nil])",
-            "\u2718 Test \"all unpriced subscriptions keep group spend unavailable\" recorded an issue at SpendDashboardPartialCostTests.swift:216:9: Expectation failed: (group.models.map(\\.modelName) \u2192 [\"deepseek-v4-flash\"]) == [\"deepseek-v4-flash\", \"deepseek-v4-flash\"]",
-            "\u2718 Test \"all unpriced subscriptions keep group spend unavailable\" recorded an issue at SpendDashboardPartialCostTests.swift:217:9: Expectation failed: (group.models.map(\\.totalCost) \u2192 [nil]) == [nil, nil]"
+            "\u2718 Test \"menu bar extra usage preference uses percent in combined mode\" recorded an issue at StatusItemExtraUsageMetricTests.swift:32:9: Expectation failed: (displayText \u2192 \"$56.00\") == \"56%\"",
+            "\u2718 Test \"menu bar extra usage preference falls back to existing percent text when provider cost is unavailable\" recorded an issue at StatusItemExtraUsageMetricTests.swift:79:9: Expectation failed: (displayText \u2192 \"10%\") == \"72%\""
           ],
           "discovery": {
             "count": 6675,
             "sha256": "6c51148beb994a908f631c7ff49e2270ef9259ac8c07add31904f86fbbac3ccd",
-            "sourceRevision": "d2ac6e015ca6e8710c1be0535a3f54d59afc8a98"
+            "sourceRevision": "c8148368b2ce23548d76118c15f3fc34b6bc51fd"
           }
         },
         {
-          "jobID": 121106055365,
+          "jobID": 121113822747,
           "status": "success",
-          "source": "Root completed shard fan-in"
+          "source": "Root completed fan-in 2026-10-25 04:14:05 EDT"
         }
       ],
-      "aggregate": "Still pending at root bounded snapshot; any ordinary producer-success/shards-failure gate mismatch is consequential, not an independent established defect.",
-      "qualification": "Prior-head one successful shard and one failed shard; not full qualification of the candidate and not savings/build-size evidence."
+      "aggregate": {
+        "jobID": 121115733911,
+        "status": "failure",
+        "required": true,
+        "deferred": false,
+        "producer": "success",
+        "shards": "failure",
+        "independentDefect": false,
+        "diagnostic": "macOS test gate/result mismatch: required=true deferred=false producer=success shards=failure"
+      },
+      "publicationHold": {
+        "initiallyHeld": true,
+        "releasedByCompletedRootFanIn": "2026-10-25 04:14:05 EDT"
+      },
+      "qualification": "Prior-head shard1 success and shard0 failure; no exact-new-head full qualification or timing/size savings."
     }
   },
   "appSizeAndBuildComparison": {
@@ -1441,7 +1456,7 @@
     ],
     "deferredReason": "Three fresh below-threshold admissions, separated by ready source/evidence work, each found shared benchmark.lock busy. No test command or queued wait started. Existing local tool absences also prevent native make check/test. Prior exact-revision check results are retained as historical evidence, not new-head passes."
   },
-  "countMethodLatest": "Complete committed Git blob inventory at 66d8c2387597d2ba1ae7d87f821e3c6c60ea1a08: product unchanged, test source +6 lines/+427 bytes, 13 suite declarations retained and no additions/removals/renames. All 73 prior suite expectations remain byte-identical and six source/model/token assertions are added. Independent Test line-pattern count remains 6570 across 691 files. Prior-head hosted discovery has 6675 IDs; runtime counts and savings for the repair are not inferred.",
+  "countMethodLatest": "Complete committed Git blob inventory at f92aa420b526db64f2ca6b2213496a19d3b249c0: product unchanged; test source +24 lines/+1683 bytes. All four edited-suite declarations and original expectations remain, one method renamed, 11 assertions added. Independent Test line-pattern count remains 6570 across 691 files. Prior-head discovery 6675 IDs is revision-bound; runtime/timing/size savings not inferred.",
   "swiftFormatRepair": {
     "baseRevision": "1d9787f8b4075068f3282cb723e42170a6e702c3",
     "repairRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
@@ -10316,6 +10331,487 @@
           "normalized_load_one_minute": 0.2125,
           "sampled_steal_percent": 0.313,
           "cpu_psi_some_avg10_percent": 1.02
+        }
+      }
+    ]
+  },
+  "extraUsageRuntimeRepair": {
+    "priorRevision": "25a69714c9af61e4e094bdd82d232bff6b5c2aa3",
+    "repairRevision": "f92aa420b526db64f2ca6b2213496a19d3b249c0",
+    "hostedFailingBefore": {
+      "runID": 40173875411,
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40173875411",
+      "prHeadRevision": "25a69714c9af61e4e094bdd82d232bff6b5c2aa3",
+      "mergeCheckout": "c8148368b2ce23548d76118c15f3fc34b6bc51fd",
+      "changes": "success",
+      "lint": "success",
+      "linuxX64": "success",
+      "linuxARM64": "success",
+      "linuxMusl": "success",
+      "producer": "success",
+      "workers": [
+        {
+          "jobID": 121113822849,
+          "status": "failure",
+          "nativeCompatibility": "verified complete-fingerprint",
+          "successfulGroupsBeforeFailure": 71,
+          "selectedGroups": 85,
+          "testBuilds": 0,
+          "fullGroupRetries": 0,
+          "timeouts": 0,
+          "issues": [
+            "\u2718 Test \"menu bar extra usage preference uses percent in combined mode\" recorded an issue at StatusItemExtraUsageMetricTests.swift:32:9: Expectation failed: (displayText \u2192 \"$56.00\") == \"56%\"",
+            "\u2718 Test \"menu bar extra usage preference falls back to existing percent text when provider cost is unavailable\" recorded an issue at StatusItemExtraUsageMetricTests.swift:79:9: Expectation failed: (displayText \u2192 \"10%\") == \"72%\""
+          ],
+          "discovery": {
+            "count": 6675,
+            "sha256": "6c51148beb994a908f631c7ff49e2270ef9259ac8c07add31904f86fbbac3ccd",
+            "sourceRevision": "c8148368b2ce23548d76118c15f3fc34b6bc51fd"
+          }
+        },
+        {
+          "jobID": 121113822747,
+          "status": "success",
+          "source": "Root completed fan-in 2026-10-25 04:14:05 EDT"
+        }
+      ],
+      "aggregate": {
+        "jobID": 121115733911,
+        "status": "failure",
+        "required": true,
+        "deferred": false,
+        "producer": "success",
+        "shards": "failure",
+        "independentDefect": false,
+        "diagnostic": "macOS test gate/result mismatch: required=true deferred=false producer=success shards=failure"
+      },
+      "publicationHold": {
+        "initiallyHeld": true,
+        "releasedByCompletedRootFanIn": "2026-10-25 04:14:05 EDT"
+      },
+      "qualification": "Prior-head shard1 success and shard0 failure; no exact-new-head full qualification or timing/size savings."
+    },
+    "diagnosis": {
+      "combined": "Original Cursor excluded the currency shortcut in percent/both modes. Claude never had that exception; its valid extraUsage selection returns currency. The removed condition was always true for both retained providers.",
+      "fallback": "Original Cursor automatic selected a more-used subquota; Claude automatic keeps primary then secondary. Missing provider cost makes extraUsage effective automatic while keeping the stored preference.",
+      "productionPolicyChanged": false
+    },
+    "repairDisposition": [
+      {
+        "methodBefore": "menu bar extra usage preference uses percent in combined mode",
+        "methodAfter": "extra usage window keeps combined percent formatting and claude spend preference",
+        "preserved": "Original snapshot 10 + cost 56/100 and original 56% expectation. Actual extraUsage rate window now feeds unchanged executable shared .both formatter; original Cursor-only controller exception is not restored.",
+        "added": "Assert effective extraUsage, controller Claude $56.00, rate window 56, then explicit primary preference and controller 10% with provider cost still present."
+      },
+      {
+        "method": "menu bar extra usage preference falls back to existing percent text when provider cost is unavailable",
+        "preserved": "Original snapshot primary 10/secondary 72/no cost and original 72% expectation; no value accepted as a replacement.",
+        "added": "Assert stored extraUsage/effective automatic, primary-window selection and 10% for original state; then remove primary in a second snapshot reusing exact secondary window, assert automatic and secondary selection before original 72% assertion."
+      }
+    ],
+    "sourcePreservationProof": {
+      "priorRevision": "25a69714c9af61e4e094bdd82d232bff6b5c2aa3",
+      "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+      "path": "Tests/CodexBarTests/StatusItemExtraUsageMetricTests.swift",
+      "beforeSHA256": "780b0b7e32f9ebb68e1e2534ae5d21aa2d7a045c38a87ea332fefd3dada78fc5",
+      "afterSHA256": "b935ff78a39b5b88142619f4d9c6bcc0c22b599ebfbc70800b2ab83a58a8c882",
+      "testDeclarationsBefore": 4,
+      "testDeclarationsAfter": 4,
+      "existingExpectationsByteIdentical": 4,
+      "newExpectations": 11,
+      "lineDelta": 24,
+      "byteDelta": 1683,
+      "methods": [
+        {
+          "beforeName": "menu bar extra usage preference uses percent in combined mode",
+          "afterName": "extra usage window keeps combined percent formatting and claude spend preference",
+          "beforeSHA256": "f5d3821c4b1489ef5ce415c980b6f4d4bbe0bbf9412c3a26eb656ae088859245",
+          "afterSHA256": "8c446801e6b560d90b16629486fe31ecce1a74ef3ffc9233c241aabeb57be6b1",
+          "existingExpectationsExact": 1,
+          "newExpectations": 5,
+          "snapshotFixtureBytesExact": true
+        },
+        {
+          "beforeName": "menu bar extra usage preference falls back to existing percent text when provider cost is unavailable",
+          "afterName": "menu bar extra usage preference falls back to existing percent text when provider cost is unavailable",
+          "beforeSHA256": "4f4140034cefe45dc4aa22cd290cb312362704aad0099125eae0927ecf9e722e",
+          "afterSHA256": "e7aa4624d08dac12d6f4a631435064bfdb7f2ed2ebee1081d0dce1acff4bc2ff",
+          "existingExpectationsExact": 1,
+          "newExpectations": 6,
+          "snapshotFixtureBytesExact": true
+        }
+      ],
+      "otherMethodsAndHelpersExact": 2,
+      "readOnlyAuditFiles": [
+        {
+          "path": "Tests/CodexBarTests/MenuBarMetricWindowResolverTests.swift",
+          "SHA256": "661a40ce4e07571b3a59281e02341c1a9e3ad4019366a372d281b398717bd805"
+        },
+        {
+          "path": "Tests/CodexBarTests/SettingsStoreAdditionalTests.swift",
+          "SHA256": "b870233f92e1911013ffce3672daa6f85569cf2dbdb5e26e46e18574f8ff3a3e"
+        },
+        {
+          "path": "Tests/CodexBarTests/ProviderPresentationPolicyCharacterizationTests.swift",
+          "SHA256": "7f09a2b51cb452b8a8f18b264608a7bc9aec9544a976796d0e49d488a3111289"
+        },
+        {
+          "path": "Tests/CodexBarTests/MenuBarPaceTextTests.swift",
+          "SHA256": "009ca81b97a9d9a9d427afc29dff61ea5e8ad46a56a090a4eb465d261ca80017"
+        }
+      ],
+      "baseExactSourceBlocks": [
+        {
+          "path": "Sources/CodexBar/StatusItemController+Animation.swift",
+          "block": "nonisolated static func extraUsageSpendDisplayText(",
+          "SHA256": "c25dbde78e72f75f13be7291eebb0acf5c4d4bccc6666f143702c56f1fa7fc6e"
+        },
+        {
+          "path": "Sources/CodexBar/MenuBarMetricWindowResolver.swift",
+          "block": "private static func extraUsageWindow(",
+          "SHA256": "0ab75d082f943ff9e96a88f6f6516a08f43d95b0807c75091388d3bf184c82f4"
+        },
+        {
+          "path": "Sources/CodexBar/MenuBarMetricWindowResolver.swift",
+          "block": "private static func automaticWindow(",
+          "SHA256": "54c21cd9e684fb9f5f5847b28f7c5a4ac4b14f572604e50ede07fc18197bbc8d"
+        },
+        {
+          "path": "Sources/CodexBar/SettingsStore+MenuPreferences.swift",
+          "block": "func menuBarMetricPreference(for provider: UsageProvider) ->",
+          "SHA256": "890699ba45396afbadbdd234741e05412241438e637d0f45f7632f9f839b2b36"
+        },
+        {
+          "path": "Sources/CodexBar/SettingsStore+MenuPreferences.swift",
+          "block": "func setMenuBarMetricPreference(",
+          "SHA256": "239ff3084eef492c7410e7f83f8b6a8a75e1eb73ddee30e1c88e52c84fce07b8"
+        },
+        {
+          "path": "Sources/CodexBar/SettingsStore+MenuPreferences.swift",
+          "block": "func menuBarMetricSupportsExtraUsage(for provider: UsageProvider, snapshot:",
+          "SHA256": "e6ecf08451d80f0d06cdecbfb4bf165198b408a6e594926d36424508b35bdba7"
+        },
+        {
+          "path": "Sources/CodexBarCore/Providers/Claude/ClaudeProviderDescriptor.swift",
+          "block": "private static func menuBarWindow(",
+          "SHA256": "3014928e7e9b9c20d534baa70d8144b355f1feece3f397d02ed655700f04bd9d"
+        },
+        {
+          "path": "Sources/CodexBar/MenuBarResetCreditCountdown.swift",
+          "block": "func menuBarDisplayText(",
+          "SHA256": "2b5485f0fc29d75e8a15c5dbc7b192137cf6234a7110f90e5d5ba973d8c2fa4b"
+        }
+      ],
+      "formatterCommentOnlyDelta": {
+        "path": "Sources/CodexBar/MenuBarDisplayText.swift",
+        "baseSHA256": "6f056ea4f1a9175886c5a4d4368602e5db47b54a727fba4c32e70f33b24ce840",
+        "currentSHA256": "283506aaf4870010e6db35fd1f8dc00652c5ef72beb5112cd8857ac8f64499a6",
+        "onlyDelta": "Removed retired Copilot example from comment; all executable text/literals byte-identical."
+      },
+      "currencyClauseProvenance": {
+        "path": "Sources/CodexBar/StatusItemController+Animation.swift",
+        "baseSHA256": "0c0d4becd0a4daff84f37ac587921987444aa55909e390b40152f2a0a53b119d",
+        "currentSHA256": "749972e84225d4b0c305b003371dd6af2f6742a170be01f247ea43b9b0da6e24",
+        "onlyRemovedCondition": "provider != .cursor || mode == .pace",
+        "retainedProviderConditionWasAlwaysTrue": true
+      },
+      "extraUsageMissingCostFallbackClause": {
+        "path": "Sources/CodexBar/SettingsStore+MenuPreferences.swift",
+        "SHA256": "9a96264e117c7307a3ac48a6d1a063072f4911e66872a200ed86d94e1039c546",
+        "baseExact": true
+      }
+    },
+    "boundedAuditAndCallTrace": {
+      "scope": "Five named metric/settings/presentation/formatter suites; no whole-repository claim",
+      "files": [
+        {
+          "path": "Tests/CodexBarTests/StatusItemExtraUsageMetricTests.swift",
+          "priorSHA256": "780b0b7e32f9ebb68e1e2534ae5d21aa2d7a045c38a87ea332fefd3dada78fc5"
+        },
+        {
+          "path": "Tests/CodexBarTests/MenuBarMetricWindowResolverTests.swift",
+          "priorSHA256": "661a40ce4e07571b3a59281e02341c1a9e3ad4019366a372d281b398717bd805"
+        },
+        {
+          "path": "Tests/CodexBarTests/SettingsStoreAdditionalTests.swift",
+          "priorSHA256": "b870233f92e1911013ffce3672daa6f85569cf2dbdb5e26e46e18574f8ff3a3e"
+        },
+        {
+          "path": "Tests/CodexBarTests/ProviderPresentationPolicyCharacterizationTests.swift",
+          "priorSHA256": "7f09a2b51cb452b8a8f18b264608a7bc9aec9544a976796d0e49d488a3111289"
+        },
+        {
+          "path": "Tests/CodexBarTests/MenuBarPaceTextTests.swift",
+          "priorSHA256": "009ca81b97a9d9a9d427afc29dff61ea5e8ad46a56a090a4eb465d261ca80017"
+        }
+      ],
+      "dispositions": [
+        {
+          "path": "Tests/CodexBarTests/StatusItemExtraUsageMetricTests.swift",
+          "reason": "Two Cursor integration policies were ported to Claude incorrectly; preserve original56/72 assertions through retained formatting and fallback branches, with actual Claude currency/primary-preference assertions. Original currency/reset methods and shared helper stay exact."
+        },
+        {
+          "path": "Tests/CodexBarTests/MenuBarMetricWindowResolverTests.swift",
+          "reason": "Original Cursor->Claude conversion is valid for the shared rateWindow extraUsage mapper: unchanged 37.5/150 ->25 assertion exercises the same generic mapper, without controller currency or automatic-lane policy. Enterprise/placeholder and optional-cost quota cases explicitly select Claude; no additional repair indicated."
+        },
+        {
+          "path": "Tests/CodexBarTests/SettingsStoreAdditionalTests.swift",
+          "reason": "Capability-membership matrix uses explicit Codex/Claude allowed sets; Claude supports extraUsage and both retain explicit primary. No migrated per-Cursor fallback assumption."
+        },
+        {
+          "path": "Tests/CodexBarTests/ProviderPresentationPolicyCharacterizationTests.swift",
+          "reason": "Exhaustion policy explicitly names both retained providers; requested lane fallback orders are tested for each supported provider. No extraUsage display exception asserted."
+        },
+        {
+          "path": "Tests/CodexBarTests/MenuBarPaceTextTests.swift",
+          "reason": "Shared pace formatting cases carry no provider conversion. Retain both methods unchanged; combined formatter behavior is traced in unchanged product displayText."
+        }
+      ],
+      "callTrace": [
+        "MenuBarResetCreditCountdown.menuBarDisplayText delegates to menuBarQuotaDisplayText (no reset credit for these snapshots)",
+        "menuBarQuotaDisplayText resolves snapshot-aware preference; Claude valid extraUsage returns currency before percent/pace formatting",
+        "menuBarMetricWindow delegates Claude to MenuBarMetricWindowResolver",
+        "rateWindow extraUsage maps providerCost; cost absent resolves settings preference to automatic",
+        "Claude automatic resolver only handles spend-limit-only snapshots; cost absent returns unhandled; automaticWindow chooses primary then secondary",
+        "MenuBarDisplayText.displayText .both uses percent when pace is unavailable; explicit primary preference keeps quota10 while cost56 remains"
+      ],
+      "formatterAndPaceProvenance": {
+        "path": "Sources/CodexBar/UsageStore+HistoricalPace.swift",
+        "reason": "Claude weeklyPace requires non-nil windowMinutes. The unchanged primary10 snapshot omits cadence, so explicit-primary combined mode has no pace and renders10%.",
+        "line": 50
+      }
+    },
+    "testDisposition": {
+      "declarationsBefore": 4,
+      "declarationsAfter": 4,
+      "methodsAdded": 0,
+      "methodsRemoved": 0,
+      "methodsRenamed": 1,
+      "existingExpectationsByteIdentical": 4,
+      "newExpectations": 11,
+      "originalSnapshotLiteralsExact": true,
+      "otherMethodsAndHelpersExact": 2
+    },
+    "checkAdmissionDeferrals": {
+      "nonblockingLockBusyAttempts": 2,
+      "startedCheckProcess": false,
+      "queuedWaiterCreated": false,
+      "response": "Continued ready source/evidence work; later admitted commands ran serially."
+    },
+    "localChecks": [
+      {
+        "name": "preservation",
+        "command": [
+          "python3",
+          ".build/slim-product-work/extra-usage-25a69714/check_preservation.py"
+        ],
+        "exitCode": 1,
+        "elapsedSeconds": 0.045,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T08:21:49Z",
+          "ram_available_gib": 47.39,
+          "cpu_used_percent": 16.82,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.175,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 0.44
+        },
+        "classification": "verification assumption failed: base formatter comment differed; exact comment-only disposition now preserved and corrected check passes"
+      },
+      {
+        "name": "preservation-corrected",
+        "command": [
+          "python3",
+          ".build/slim-product-work/extra-usage-25a69714/check_preservation.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.078,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T08:22:20Z",
+          "ram_available_gib": 47.15,
+          "cpu_used_percent": 17.35,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1956,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 0.91
+        },
+        "classification": "pass"
+      },
+      {
+        "name": "make-check",
+        "command": [
+          "make",
+          "check"
+        ],
+        "exitCode": 2,
+        "elapsedSeconds": 0.094,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T08:22:27Z",
+          "ram_available_gib": 47.4,
+          "cpu_used_percent": 14.06,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2,
+          "sampled_steal_percent": 0.312,
+          "cpu_psi_some_avg10_percent": 0.77
+        },
+        "classification": "unavailable: absent local native tool before native execution"
+      },
+      {
+        "name": "make-test",
+        "command": [
+          "make",
+          "test"
+        ],
+        "exitCode": 2,
+        "elapsedSeconds": 0.109,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [
+          {
+            "name": ".test-fixtures-isaknbrb",
+            "absentAfterCommand": true
+          }
+        ],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T08:22:28Z",
+          "ram_available_gib": 47.43,
+          "cpu_used_percent": 14.87,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 0.77
+        },
+        "classification": "unavailable: absent local native tool before native execution"
+      },
+      {
+        "name": "documentation-links",
+        "command": [
+          "node",
+          "Scripts/check-documentation-links.mjs"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.123,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T08:22:28Z",
+          "ram_available_gib": 47.4,
+          "cpu_used_percent": 15.77,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 0.81
+        },
+        "classification": "pass"
+      },
+      {
+        "name": "inventory",
+        "command": [
+          "python3",
+          ".build/slim-product-work/extra-usage-25a69714/recount.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.49,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T08:23:11Z",
+          "ram_available_gib": 47.46,
+          "cpu_used_percent": 12.85,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 0.33
+        },
+        "classification": "pass"
+      }
+    ],
+    "normalProfileManifestSHA256": "136f44cb5604cf4364709c429e2e7ff8d275c0065d26bfb4896e1899008865d8",
+    "completeGitInventory": {
+      "sourceRevision": "f92aa420b526db64f2ca6b2213496a19d3b249c0",
+      "method": "Complete committed Git blob file/line/byte count and independent Test line-pattern count; runtime cases not inferred.",
+      "counts": {
+        "productSwift": {
+          "files": 651,
+          "lines": 193218,
+          "bytes": 7944079
+        },
+        "productCHeaders": {
+          "files": 1,
+          "lines": 1,
+          "bytes": 21
+        },
+        "testSwift": {
+          "files": 733,
+          "lines": 252448,
+          "bytes": 10944789
+        }
+      },
+      "swiftTestingDeclarations": {
+        "swiftTestingDeclarations": 6570,
+        "filesWithTestAttributes": 691
+      }
+    },
+    "sourceInventoryDelta": {
+      "productSourceBytes": 0,
+      "testSwiftFiles": 0,
+      "testSwiftLines": 24,
+      "testSwiftBytes": 1683,
+      "swiftTestingDeclarations": 0
+    },
+    "priorAccountingAndBoundaryProofs": "56 exact Cost suites, four adapted Cost files/29 methods, four critical history suites, separate 12 shared day-selection methods, all product/catalog/generator/native/harness/workflow/05:00 schedule/frozen handoff bytes untouched by this repair.",
+    "sourceIdentity": "Checks cover the test blob committed at f92aa420b526db64f2ca6b2213496a19d3b249c0. Subsequent publication changes comparison/note evidence only.",
+    "limitations": [
+      "Swift/plutil/SwiftFormat/SwiftLint unavailable locally; make check/test exit2 before native format/compilation/runtime.",
+      "The first admitted preservation script failed an overstrict base formatter byte comparison; source inspection proves the sole comment delta, and the corrected check records it explicitly.",
+      "Direct source/preservation evidence does not establish native runtime success. Prior-head shard1 success is revision-bound; full qualification and comparable app-size/cold-build evidence remain pending."
+    ],
+    "nextGate": "Root-owned normal automatic exact-publication-head producer/shards/aggregate; no child watch/poll/manual campaign.",
+    "evidenceReadbackChecks": [
+      {
+        "name": "evidence-coherence",
+        "command": [
+          "python3",
+          ".build/slim-product-work/extra-usage-25a69714/check_evidence.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.216,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T08:24:46Z",
+          "ram_available_gib": 47.41,
+          "cpu_used_percent": 17.03,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2275,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 1.54
         }
       }
     ]

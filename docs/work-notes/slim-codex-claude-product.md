@@ -1157,4 +1157,26 @@ remain unavailable locally; no tools installed and no live probes. Existing
 Cost/history/scale/account/auth/TTY and native/harness/workflow/schedule/frozen
 handoff boundaries are untouched. Root owns exact-publication-head qualification.
 
+Source commit `f92aa420b526db64f2ca6b2213496a19d3b249c0` contains the bounded test/spec/note
+repair. Complete committed inventory confirms product 651 Swift files / 193218
+lines unchanged; tests 733 / 252448 lines / 10944789 bytes and 6570 declarations
+across 691 files. This adds 24 test lines / 1683 bytes, without test additions or
+removals. One method name now describes its shared-formatting/retained-policy
+proof. Prior run discovery has 6675 IDs at the supplied merge revision; no new
+runtime count or savings is inferred. First six admitted commands observe CPU
+12.85–17.35% and 47.15–47.46 GiB available, with one serial process and the
+nonblocking lock. One fully used core is 6.25% of host capacity. The initial
+failed preservation assumption, corrected pass, unavailable native commands and
+successful inventory/docs checks are individually recorded in the comparison.
+All prior accounting/scale/protected source proofs remain unchanged. Following
+publication commit adds evidence only; app-size/cold-build comparisons and native
+qualification remain pending root's automatic exact-head workflow.
+
+Final evidence coherence passes on committed test blobs and exact scope: all
+counts/method hashes, four read-only audit files, eight base-exact policy blocks,
+formatter comment-only delta and all 56 exact Cost-suite blobs agree. Earlier
+failed byte assumption is recorded with the corrected pass. Git whitespace and
+fixture-parent absence pass. Admission: CPU 17.03%, 47.41 GiB available, one
+serial process and acquired nonblocking lock. Native qualification remains pending.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->
