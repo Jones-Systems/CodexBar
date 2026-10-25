@@ -123,6 +123,11 @@ Derived percentage guards allow only a justified binary64 rounding bound;
 keep exact user-facing text expectations and fail closed for missing/nonfinite
 values. Do not round production accounting/quota values to satisfy a setup guard.
 
+Hosted submenu release fixtures must distinguish populated chart providers from
+providers with no scoped cost data. Preserve native link/unavailable row identity
+across full close while releasing only actual hosted views; do not turn seeded
+chart data into an unavailable expectation when retiring a provider fixture.
+
 Run `make check` and `make test`; report missing local Swift/formatter tools as
 unavailable. Use the shared nonblocking benchmark lock and fresh CPU/RAM admission
 before local test starts. Hosted macOS/Linux compilation and isolated tests must

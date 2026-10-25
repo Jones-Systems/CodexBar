@@ -1228,4 +1228,54 @@ Final evidence readback passes: exact one-assertion replacement, all other test
 bytes/protected proofs, counts/scope, whitespace and fixture-parent absence.
 Native Swift/format/runtime qualification remains root-owned and pending.
 
+Root hosted-submenu continuation on exact `612e86ac4569391aa10dd768cb8426538fa82fa7`,
+run `40178882812` / merge `36e74a836405bc9498ad7570c9fe2303b595080d`:
+changes/lint/Linux x64/ARM64/musl/producer and shard 1 (`121129085811`) pass.
+Shard 0 (`121129085816`) verifies complete native fingerprints across older
+producer/newer worker images, passes 73/85 groups, and reports only two issues
+in `full close preserves native status links and unavailable rows`: the supposed
+unavailable row has a hosted cost chart, then full close replaces it. No worker
+build/retry/timeout. Aggregate `121131228188` is consequential to that shard,
+with no independent defect. Completed fan-in permits publication. Existing sole
+Git owner/worktree and explicit Sol Max/default pin remain. Write only the
+release fixture plus this existing spec/note/comparison; related source/refresh
+fixtures are read-only. No new agents, campaigns, merge, installs or host effects.
+
+The base fixture used unseeded OpenAI for unavailable cost history and seeded
+Claude for actual charts. Its migration changed only that unavailable provider
+to Claude, which the unchanged shared fixture seeds with a nonempty daily cost
+snapshot. `menuWillOpen` hydrates through `appendCostHistoryChartItem`, whose
+snapshot/daily guards pass; full close intentionally replaces view-bearing items
+with placeholders. Thus both observed failures follow the mistaken fixture state.
+The entire HostedSubmenus source and menu-close dispatch are byte-identical to
+base; neither native-only link nor unavailable-item release behavior regressed.
+Use unseeded retained Codex for the unavailable row, assert its scoped cost
+snapshot is nil, and preserve native Claude link and unavailable row title/identity
+expectations. Add no-view/provider guards. Codex lookup reads only its own
+publication/cache, with no Claude fallback. The adjacent refresh suite already
+starts its unavailable case without data and seeds Claude only when proving
+arrival; no same mismatch or further edits indicated. All other release tests,
+shared fixture literals and product/accounting/native/harness/schedule/frozen
+boundaries remain unchanged. Native execution remains required after publication.
+
+Focused preservation/source readback passes: all three test names/declarations,
+all 30 original expectations (including the failing method's five), both other
+methods and all shared fixture/helper bytes remain exact. Three assertions add
+an explicit missing-Codex-snapshot precondition, absent hosted view and correct
+Codex tooltip; the only other changes are that provider correction and its
+comment. Test delta is four lines / 306 bytes. Six read-only source/refresh paths
+and all 56 exact Cost suite blobs remain unchanged. Base-exact proof covers the
+entire hosted submenu implementation, menu-close dispatch and Codex scoped lookup.
+No production, architecture-catalog, parser-generator, harness or workflow edits.
+
+`make check` passes the normal-profile contract, then exits 2 at missing plutil;
+`make test` exits 2 at missing Swift before build/discovery/runtime. Owned
+`.test-fixtures-9o70u458` is removed and absence verified. Documentation links
+pass (181). Each check uses fresh telemetry, the acquired nonblocking benchmark
+lock and one serial process; observed CPU is 27.80–49.84% with 45.30–45.76 GiB
+available (one fully used core is 6.25% of host capacity). Native formatter,
+compiler and runtime remain unavailable locally. Root owns exact-head automatic
+qualification; partial failed prior runs prove no complete-suite or size/speed
+savings. All retained accounting/scale/history/auth/TTY/fallback proofs stay.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->
