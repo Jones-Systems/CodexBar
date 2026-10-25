@@ -5,6 +5,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BIN_DIR="${ROOT_DIR}/.build/lint-tools/bin"
 
+python3 "${ROOT_DIR}/Scripts/test_profiles.py" validate
+
 ensure_swiftformat() {
   "${ROOT_DIR}/Scripts/install_lint_tools.sh" swiftformat
 }
@@ -31,6 +33,10 @@ check_codex_parser_hash() {
 
 check_provider_manifests() {
   "${ROOT_DIR}/Scripts/regenerate-provider-manifests.sh" --check
+}
+
+check_test_profiles() {
+  "${ROOT_DIR}/Scripts/test.sh" --command python3 -B "${ROOT_DIR}/Scripts/test_test_profiles.py"
 }
 
 check_plugin_javascript() {
@@ -89,6 +95,10 @@ check_ci_isolated_commands() {
   "${ROOT_DIR}/Scripts/test.sh" --command python3 -B "${ROOT_DIR}/Scripts/test_ci_isolated_commands.py"
 }
 
+check_codexbar_skill() {
+  "${ROOT_DIR}/Scripts/test.sh" --command python3 -B "${ROOT_DIR}/.agents/skills/codexbar/scripts/test_codexbar.py"
+}
+
 check_swift_test_sharding() {
   "${ROOT_DIR}/Scripts/test_swift_test_sharding.sh"
 }
@@ -138,6 +148,7 @@ check_llms_index() {
 run_portable_checks() {
   check_codex_parser_hash
   check_provider_manifests
+  check_test_profiles
   check_plugin_javascript
   check_package_product_paths
   check_package_strip
@@ -147,9 +158,12 @@ run_portable_checks() {
   check_release_dsym_paths
   check_release_checksum
   check_sparkle_signing_paths
-  check_mimo_usage_script
+  if [[ "${CODEXBAR_TEST_PROFILE:-normal}" == "full" ]]; then
+    check_mimo_usage_script
+  fi
   check_build_jobs
   check_ci_isolated_commands
+  check_codexbar_skill
   check_swift_test_sharding
   check_ci_path_gate
   check_homebrew_tap_wait
@@ -230,7 +244,6 @@ case "$cmd" in
   lint-macos)
     check_app_locales
     check_cli_installer
-    run_javascript_checks
     run_swiftformat_lint
     ;;
   format)

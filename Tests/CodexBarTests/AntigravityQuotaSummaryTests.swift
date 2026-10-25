@@ -22,6 +22,7 @@ private final class AntigravityQuotaSummaryPathRecorder: @unchecked Sendable {
 }
 
 struct AntigravityQuotaSummaryTests {
+    #if CODEXBAR_FULL_TEST_PROFILE
     @MainActor
     @Test
     func `semantic cadences resolve parsed quotas independently of family representatives`() throws {
@@ -430,6 +431,7 @@ struct AntigravityQuotaSummaryTests {
         ])
         #expect(usage.primary?.remainingPercent.rounded() == 90)
     }
+    #endif
 }
 
 func antigravityQuotaSummaryJSON(

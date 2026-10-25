@@ -60,11 +60,12 @@ struct MenuBarResetCreditCountdown: Hashable {
             .withSymbolConfiguration(.init(pointSize: font.pointSize, weight: .regular))?
             .withSymbolConfiguration(.init(paletteColors: [color]))
         let imageSize = attachment.image?.size ?? NSSize(width: font.pointSize, height: font.pointSize)
+        let attachmentSize = NSSize(width: imageSize.width * 0.8, height: imageSize.height * 0.8)
         attachment.bounds = NSRect(
             x: 0,
-            y: ((font.capHeight - imageSize.height) / 2).rounded(),
-            width: imageSize.width,
-            height: imageSize.height)
+            y: ((font.capHeight - attachmentSize.height) / 2).rounded(),
+            width: attachmentSize.width,
+            height: attachmentSize.height)
         result.addAttribute(.attachment, value: attachment, range: NSRange(location: NSMaxRange(range) - 1, length: 1))
         return result
     }

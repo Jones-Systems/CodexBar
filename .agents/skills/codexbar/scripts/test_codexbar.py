@@ -222,9 +222,9 @@ class CodexBarSkillTests(unittest.TestCase):
             env["FAKE_MARKER"] = str(marker)
             result = helper("usage", env=env)
             time.sleep(2.2)
+            self.assertFalse(marker.exists())
         self.assertEqual(result.returncode, 124)
         self.assertEqual(json.loads(result.stdout)["error"]["kind"], "timeout")
-        self.assertFalse(marker.exists())
 
 
 if __name__ == "__main__":

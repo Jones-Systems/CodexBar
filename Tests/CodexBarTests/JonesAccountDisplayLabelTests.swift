@@ -16,6 +16,10 @@ struct JonesAccountDisplayLabelTests {
         #expect(JonesAccountDisplayLabel.resolve(
             provider: .codex, profileIdentity: "profile:one", verifiedAlias: "north", override: "  ") == "North")
         #expect(JonesAccountDisplayLabel.resolve(
+            provider: .codex, profileIdentity: "profile:umich", verifiedAlias: "umich") == "UMICH")
+        #expect(JonesAccountDisplayLabel.resolve(
+            provider: .codex, profileIdentity: "profile:umich", verifiedAlias: "umich", override: "Campus") == "Campus")
+        #expect(JonesAccountDisplayLabel.resolve(
             provider: .claude, profileIdentity: "native:default", verifiedAlias: "default") == "default")
         #expect(JonesAccountDisplayLabel.resolve(
             provider: .claude,

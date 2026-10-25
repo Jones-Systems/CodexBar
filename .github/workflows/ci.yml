@@ -5,12 +5,55 @@ on:
     branches: [main]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
+  workflow_dispatch:
+    inputs:
+      test_profile:
+        description: Test coverage profile; full includes unused-feature coverage
+        required: true
+        type: choice
+        options: [normal, full]
+        default: normal
+      group_size:
+        description: Selections per fresh SwiftPM process
+        required: true
+        type: choice
+        options: ['4', '12']
+        default: '4'
+      shard_count:
+        description: Complete macOS shard count
+        required: true
+        type: choice
+        options: ['1', '2', '3']
+        default: '2'
+      expected_sha:
+        description: Exact lowercase commit SHA of the selected ref
+        required: true
+        type: string
+      cache_mode:
+        description: macOS cache only; seed permits a miss, warm requires an exact hit, cold bypasses cache
+        required: true
+        type: choice
+        options: [seed, warm, cold]
+        default: seed
+      linux_cache_mode:
+        description: Linux application cache only; off bypasses, seed permits a miss, warm requires an exact hit
+        required: true
+        type: choice
+        options: ['off', seed, warm]
+        default: 'off'
+      linux_timestamp_mode:
+        description: Experimental Linux inputs; record with seed, replay with exact warm, off leaves timestamps alone
+        required: true
+        type: choice
+        options: ['off', record, replay]
+        default: 'off'
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.event_name == 'workflow_dispatch' && format('ci-manual-{0}-{1}-{2}-{3}', github.workflow, github.ref, github.run_id, github.run_attempt) || format('ci-{0}-{1}', github.workflow, github.ref) }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 env:
+  CODEXBAR_TEST_PROFILE: ${{ github.event_name == 'workflow_dispatch' && inputs.test_profile || 'normal' }}
   SWIFT_VERSION: 6.3.3
   SWIFTLY_VERSION: 1.1.3
   SWIFTLY_SIGNING_FINGERPRINT: E813C892820A6FA13755B268F167DF1ACF9CE069
@@ -24,12 +67,26 @@ jobs:
       macos-tests-deferred: ${{ steps.macos-tests.outputs.macos-tests-deferred }}
       macos-tests-reason: ${{ steps.macos-tests.outputs.macos-tests-reason }}
       changed-path-count: ${{ steps.macos-tests.outputs.changed-path-count }}
+      linux-tests: ${{ steps.linux-tests.outputs.linux-tests }}
+      linux-tests-reason: ${{ steps.linux-tests.outputs.linux-tests-reason }}
       linux-musl-build: ${{ steps.linux-musl-build.outputs.linux-musl-build }}
       linux-musl-build-reason: ${{ steps.linux-musl-build.outputs.linux-musl-build-reason }}
+      macos-matrix: ${{ steps.campaign.outputs.matrix }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
+
+      - name: Validate campaign controls
+        id: campaign
+        env:
+          CAMPAIGN_GROUP_SIZE: ${{ inputs.group_size }}
+          CAMPAIGN_SHARD_COUNT: ${{ inputs.shard_count }}
+          CAMPAIGN_EXPECTED_SHA: ${{ inputs.expected_sha }}
+          CAMPAIGN_CACHE_MODE: ${{ inputs.cache_mode }}
+          LINUX_CACHE_MODE: ${{ inputs.linux_cache_mode || 'off' }}
+          LINUX_TIMESTAMP_MODE: ${{ inputs.linux_timestamp_mode || 'off' }}
+        run: python3 Scripts/ci_swift_test_campaign.py plan
 
       - name: Detect macOS test impact
         id: macos-tests
@@ -39,25 +96,31 @@ jobs:
         run: |
           set -euo pipefail
 
+          changed_paths="${RUNNER_TEMP}/changed-paths.txt"
+          # Empty or unavailable evidence selects every platform; manual runs always qualify all.
+          : > "$changed_paths"
+          base_sha=''
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             base_sha="${{ github.event.pull_request.base.sha }}"
-          else
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
             base_sha="${{ github.event.before }}"
           fi
-
-          changed_paths="${RUNNER_TEMP}/changed-paths.txt"
-          if [[ -z "$base_sha" || "$base_sha" =~ ^0+$ ]]; then
-            git ls-files | awk '{ print "A\t" $0 }' > "$changed_paths"
-          elif ! git cat-file -e "${base_sha}^{commit}" 2>/dev/null; then
-            echo "Base commit ${base_sha} is unavailable; running macOS tests conservatively."
-            git ls-files | awk '{ print "A\t" $0 }' > "$changed_paths"
-          else
-            git diff --name-status "$base_sha" "$GITHUB_SHA" > "$changed_paths"
+          if [[ "${{ github.event_name }}" != "workflow_dispatch" ]]; then
+            if [[ -n "$base_sha" && ! "$base_sha" =~ ^0+$ ]] && git cat-file -e "${base_sha}^{commit}" 2>/dev/null; then
+              git diff --name-status "$base_sha" "$GITHUB_SHA" > "$changed_paths"
+            else
+              echo "Base commit unavailable; selecting all platforms conservatively."
+            fi
           fi
 
           printf 'Changed paths:\n'
           sed 's/^/- /' "$changed_paths"
           ./Scripts/ci_macos_test_gate.sh "$changed_paths"
+
+      - name: Detect Linux glibc test impact
+        id: linux-tests
+        shell: bash
+        run: ./Scripts/ci_linux_test_gate.sh "$RUNNER_TEMP/changed-paths.txt"
 
       - name: Detect Linux musl build impact
         id: linux-musl-build
@@ -71,12 +134,16 @@ jobs:
           MACOS_TESTS: ${{ steps.macos-tests.outputs.macos-tests }}
           MACOS_TESTS_REASON: ${{ steps.macos-tests.outputs.macos-tests-reason }}
           CHANGED_PATH_COUNT: ${{ steps.macos-tests.outputs.changed-path-count }}
+          LINUX_TESTS: ${{ steps.linux-tests.outputs.linux-tests }}
+          LINUX_TESTS_REASON: ${{ steps.linux-tests.outputs.linux-tests-reason }}
           LINUX_MUSL_BUILD: ${{ steps.linux-musl-build.outputs.linux-musl-build }}
           LINUX_MUSL_BUILD_REASON: ${{ steps.linux-musl-build.outputs.linux-musl-build-reason }}
         run: |
           set -euo pipefail
           reason="${MACOS_TESTS_REASON:-<unset>}"
           reason="${reason//|/\\|}"
+          linux_reason="${LINUX_TESTS_REASON:-<unset>}"
+          linux_reason="${linux_reason//|/\\|}"
           musl_reason="${LINUX_MUSL_BUILD_REASON:-<unset>}"
           musl_reason="${musl_reason//|/\\|}"
           {
@@ -85,6 +152,8 @@ jobs:
             printf '| --- | --- |\n'
             printf '| macOS Swift tests required | `%s` |\n' "${MACOS_TESTS:-<unset>}"
             printf '| macOS reason | %s |\n' "$reason"
+            printf '| Linux glibc tests required | `%s` |\n' "${LINUX_TESTS:-<unset>}"
+            printf '| Linux glibc reason | %s |\n' "$linux_reason"
             printf '| Linux musl build required | `%s` |\n' "${LINUX_MUSL_BUILD:-<unset>}"
             printf '| Linux musl reason | %s |\n' "$musl_reason"
             printf '| Changed path entries | `%s` |\n' "${CHANGED_PATH_COUNT:-<unset>}"
@@ -103,6 +172,7 @@ jobs:
         run: ./Scripts/lint.sh lint-linux
 
   swift-test-macos:
+    name: swift-test-macos (${{ matrix.shard-index }}, ${{ matrix.shard-count }})
     needs: changes
     if: ${{ needs.changes.outputs.macos-tests == 'true' && needs.changes.outputs.macos-tests-deferred != 'true' }}
     # Apple-Silicon runners: ~2-4x faster Swift builds than the retired-path
@@ -111,11 +181,8 @@ jobs:
     timeout-minutes: 80
     strategy:
       fail-fast: false
-      matrix:
-        # Two shards amortize SwiftPM's per-shard discovery/cold build.
-        # Load-aware admission and cold builds share the bounded test-step budget.
-        shard-index: [0, 1]
-        shard-count: [2]
+      # Ordinary CI remains group four / two shards. Only validated manual arms vary.
+      matrix: ${{ fromJSON(needs.changes.outputs.macos-matrix) }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
@@ -133,43 +200,101 @@ jobs:
           [[ "$(/usr/bin/xcodebuild -version)" == Xcode\ 26.* ]]
           /usr/bin/xcodebuild -version
 
+      - name: Swift toolchain version
+        id: swift-toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcode_version="$(/usr/bin/xcodebuild -version)"
+          swift_version="$(swift --version)"
+          swiftpm_version="$(swift package --version)"
+          toolchain_info="$(printf '%s\n' "$xcode_version" "$swift_version" "$swiftpm_version")"
+          printf '%s\n' "$toolchain_info"
+          cache_id="$(printf '%s\n' "$toolchain_info" | shasum -a 256 | awk '{print $1}')"
+          printf 'cache-id=%s\n' "$cache_id" >> "$GITHUB_OUTPUT"
+          profile_manifest_sha256="$(python3 -c 'import sys; sys.path.insert(0, "Scripts"); from test_profiles import manifest_digest; print(manifest_digest())')"
+          printf 'profile-manifest-sha256=%s\n' "$profile_manifest_sha256" >> "$GITHUB_OUTPUT"
+
       - name: Restore SwiftPM build cache
+        id: swift-cache
+        if: ${{ matrix.cache-mode != 'cold' }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             .build
             ~/Library/Caches/org.swift.swiftpm
-          # Keyed on dependency state: saves once per Package.resolved change,
-          # and partial hits (restore-keys) still carry the dependency builds,
-          # which dominate the cold-build time.
-          key: swiftpm-macos26-arm64-${{ hashFiles('Package.resolved', 'Package.swift') }}
+          # Save source builds after a revision changes; an exact dependency-only
+          # hit never refreshed them. SwiftPM still validates every restored build.
+          key: swiftpm-macos26-v3-${{ runner.arch }}-${{ steps.swift-toolchain.outputs.cache-id }}-${{ env.CODEXBAR_TEST_PROFILE }}-${{ steps.swift-toolchain.outputs.profile-manifest-sha256 }}-${{ hashFiles('Package.resolved', 'Package.swift') }}-${{ github.sha }}
           restore-keys: |
-            swiftpm-macos26-arm64-
+            swiftpm-macos26-v3-${{ runner.arch }}-${{ steps.swift-toolchain.outputs.cache-id }}-${{ env.CODEXBAR_TEST_PROFILE }}-${{ steps.swift-toolchain.outputs.profile-manifest-sha256 }}-${{ hashFiles('Package.resolved', 'Package.swift') }}-
 
-      - name: Swift toolchain version
-        run: |
-          set -euo pipefail
-          swift --version
-          swift package --version
+      - name: Prepare campaign evidence
+        id: campaign-evidence
+        if: ${{ matrix.campaign }}
+        env:
+          CAMPAIGN_GROUP_SIZE: ${{ matrix.group-size }}
+          CAMPAIGN_SHARD_COUNT: ${{ matrix.shard-count }}
+          CAMPAIGN_SHARD_INDEX: ${{ matrix.shard-index }}
+          CAMPAIGN_EXPECTED_SHA: ${{ inputs.expected_sha }}
+          CAMPAIGN_CACHE_MODE: ${{ matrix.cache-mode }}
+          CAMPAIGN_CACHE_HIT: ${{ steps.swift-cache.outputs.cache-hit }}
+          CAMPAIGN_CACHE_KEY: swiftpm-macos26-v3-${{ runner.arch }}-${{ steps.swift-toolchain.outputs.cache-id }}-${{ env.CODEXBAR_TEST_PROFILE }}-${{ steps.swift-toolchain.outputs.profile-manifest-sha256 }}-${{ hashFiles('Package.resolved', 'Package.swift') }}-${{ github.sha }}
+          CAMPAIGN_TOOLCHAIN_ID: ${{ steps.swift-toolchain.outputs.cache-id }}
+        run: python3 Scripts/ci_swift_test_campaign.py prepare --checkout-sha "$(git rev-parse HEAD)"
 
       - name: Check app locales and Swift formatting
         if: ${{ matrix.shard-index == 0 }}
         run: ./Scripts/lint.sh lint-macos
 
+      - name: Prepare synthetic reset timing captures
+        shell: bash
+        run: |
+          set -euo pipefail
+          capture_root="$(mktemp -d "$RUNNER_TEMP/reset-captures.XXXXXX")"
+          trap 'rm -rf -- "$capture_root"' ERR
+          mkdir "$capture_root/expanded" "$capture_root/credit" "$capture_root/orange"
+          {
+            printf 'CODEXBAR_RESET_CAPTURE_ROOT=%s\n' "$capture_root"
+            printf 'CODEXBAR_CLOCK_RESET_CAPTURE_DIR=%s/expanded\n' "$capture_root"
+            printf 'CODEXBAR_RESET_DISPLAY_CAPTURE_DIR=%s/credit\n' "$capture_root"
+            printf 'CODEXBAR_RESET_DISPLAY_ORANGE_CAPTURE_DIR=%s/orange\n' "$capture_root"
+          } >> "$GITHUB_ENV"
+          git rev-parse HEAD > "$capture_root/source-commit.txt"
+
       - name: Swift Test
         # Keep small batches to reduce SwiftPM process overhead without returning to one aggregate run.
         timeout-minutes: 70
+        env:
+          CODEXBAR_TEST_EVIDENCE_DIR: ${{ steps.campaign-evidence.outputs.root }}
         run: |
-          CODEXBAR_TEST_GROUP_SIZE=4 \
+          CODEXBAR_TEST_GROUP_SIZE=${{ matrix.group-size }} \
             CODEXBAR_TEST_SUITE_TIMEOUT=120 \
             CODEXBAR_TEST_RETRY_NON_TIMEOUT_FAILURES=0 \
             CODEXBAR_TEST_SHARD_INDEX=${{ matrix.shard-index }} \
             CODEXBAR_TEST_SHARD_COUNT=${{ matrix.shard-count }} \
             ./Scripts/test.sh
 
-      - name: Provider plugin engine A/B goldens
-        if: ${{ matrix.shard-index == 0 }}
-        run: ./Scripts/test-plugin-engines.sh
+      - name: Upload synthetic reset timing captures
+        if: ${{ always() && env.CODEXBAR_RESET_CAPTURE_ROOT != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: reset-timing-${{ github.sha }}-${{ matrix.shard-index }}
+          path: ${{ env.CODEXBAR_RESET_CAPTURE_ROOT }}
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Remove runner-local reset timing captures
+        if: ${{ always() && env.CODEXBAR_RESET_CAPTURE_ROOT != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf -- "$CODEXBAR_RESET_CAPTURE_ROOT"
+          test ! -e "$CODEXBAR_RESET_CAPTURE_ROOT"
+
+      - name: Provider plugin JavaScriptCore goldens
+        if: ${{ env.CODEXBAR_TEST_PROFILE == 'full' && matrix.shard-index == 0 }}
+        run: ./Scripts/test-plugin-engines.sh --jsc-only
 
       - name: Collect crash reports on failure
         if: ${{ failure() }}
@@ -209,6 +334,29 @@ jobs:
             printf '| Runs lint-macos | `%s` |\n' "$RUNS_LINT_MACOS"
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Validate campaign evidence
+        if: ${{ always() && steps.campaign-evidence.outputs.root != '' }}
+        env:
+          CAMPAIGN_ROOT: ${{ steps.campaign-evidence.outputs.root }}
+        run: python3 Scripts/ci_swift_test_campaign.py verify "$CAMPAIGN_ROOT"
+
+      - name: Upload campaign evidence
+        id: campaign-upload
+        if: ${{ always() && steps.campaign-evidence.outputs.root != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: swift-campaign-${{ github.sha }}-g${{ matrix.group-size }}-n${{ matrix.shard-count }}-s${{ matrix.shard-index }}-${{ matrix.cache-mode }}-${{ github.run_attempt }}
+          path: ${{ steps.campaign-evidence.outputs.root }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Remove uploaded campaign evidence
+        if: ${{ always() && steps.campaign-upload.outcome == 'success' }}
+        env:
+          CAMPAIGN_ROOT: ${{ steps.campaign-evidence.outputs.root }}
+        run: python3 Scripts/ci_swift_test_campaign.py cleanup "$CAMPAIGN_ROOT"
+
   lint-build-test:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -232,7 +380,8 @@ jobs:
             "${{ needs.changes.outputs.macos-tests-deferred }}" \
             "${{ needs.changes.outputs.linux-musl-build }}" \
             "${{ needs.build-linux-musl-cli.result }}" \
-            "${{ needs.build-linux-cli.result }}"
+            "${{ needs.build-linux-cli.result }}" \
+            "${{ needs.changes.outputs.linux-tests }}"
 
       - name: Summarize aggregate CI gate
         if: ${{ always() }}
@@ -244,6 +393,8 @@ jobs:
           MACOS_TESTS_DEFERRED: ${{ needs.changes.outputs.macos-tests-deferred }}
           MACOS_TESTS_REASON: ${{ needs.changes.outputs.macos-tests-reason }}
           MACOS_RESULT: ${{ needs.swift-test-macos.result }}
+          LINUX_TESTS: ${{ needs.changes.outputs.linux-tests }}
+          LINUX_TESTS_REASON: ${{ needs.changes.outputs.linux-tests-reason }}
           LINUX_MUSL_BUILD: ${{ needs.changes.outputs.linux-musl-build }}
           LINUX_MUSL_BUILD_REASON: ${{ needs.changes.outputs.linux-musl-build-reason }}
           LINUX_MUSL_RESULT: ${{ needs.build-linux-musl-cli.result }}
@@ -252,6 +403,8 @@ jobs:
           set -euo pipefail
           reason="${MACOS_TESTS_REASON:-<unset>}"
           reason="${reason//|/\\|}"
+          linux_reason="${LINUX_TESTS_REASON:-<unset>}"
+          linux_reason="${linux_reason//|/\\|}"
           musl_reason="${LINUX_MUSL_BUILD_REASON:-<unset>}"
           musl_reason="${musl_reason//|/\\|}"
           {
@@ -264,6 +417,8 @@ jobs:
             printf '| macOS Swift tests deferred | `%s` |\n' "${MACOS_TESTS_DEFERRED:-<unset>}"
             printf '| macOS gate reason | %s |\n' "$reason"
             printf '| swift-test-macos result | `%s` |\n' "$MACOS_RESULT"
+            printf '| Linux glibc tests required | `%s` |\n' "${LINUX_TESTS:-<unset>}"
+            printf '| Linux glibc reason | %s |\n' "$linux_reason"
             printf '| Linux musl build required | `%s` |\n' "${LINUX_MUSL_BUILD:-<unset>}"
             printf '| Linux musl gate reason | %s |\n' "$musl_reason"
             printf '| build-linux-musl-cli result | `%s` |\n' "$LINUX_MUSL_RESULT"
@@ -438,14 +593,33 @@ jobs:
 
           echo "CODEXBAR_SQLITE3_LIB_DIR=$sqlite_out/lib" >> "$GITHUB_ENV"
 
-      - name: Build CodexBarCLI (release, Linux musl x86_64)
-        run: >-
-          swift build -c release --product CodexBarCLI
-          --swift-sdk "$SWIFT_STATIC_LINUX_SDK"
-          --triple "$SWIFT_STATIC_LINUX_SDK_TRIPLE"
+      - name: Build CodexBarCLI (PR debug; main/manual release, Linux musl x86_64)
+        env:
+          MUSL_BUILD_CONFIGURATION: ${{ github.event_name == 'pull_request' && 'debug' || 'release' }}
+        run: |
+          set -euo pipefail
+          swift build -c "$MUSL_BUILD_CONFIGURATION" --product CodexBarCLI \
+            --swift-sdk "$SWIFT_STATIC_LINUX_SDK" \
+            --triple "$SWIFT_STATIC_LINUX_SDK_TRIPLE"
+          bin_path="$(swift build -c "$MUSL_BUILD_CONFIGURATION" --show-bin-path \
+            --swift-sdk "$SWIFT_STATIC_LINUX_SDK" \
+            --triple "$SWIFT_STATIC_LINUX_SDK_TRIPLE")"
+          program_headers="$(readelf --program-headers "$bin_path/CodexBarCLI")"
+          dynamic_section="$(readelf --dynamic "$bin_path/CodexBarCLI")"
+          if grep -Eq '(^|[[:space:]])INTERP([[:space:]]|$)' <<< "$program_headers" || \
+            grep -Fq '(NEEDED)' <<< "$dynamic_section"; then
+            echo "Musl CLI unexpectedly requires a dynamic loader or library." >&2
+            exit 1
+          fi
+          printf 'Musl CLI configuration: %s; static linkage verified\n' "$MUSL_BUILD_CONFIGURATION"
 
   build-linux-cli:
+    needs: changes
+    if: ${{ needs.changes.outputs.linux-tests == 'true' }}
     timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
     strategy:
       fail-fast: false
       matrix:
@@ -455,8 +629,22 @@ jobs:
           - name: linux-arm64
             runs-on: ubuntu-24.04-arm
     runs-on: ${{ matrix.runs-on }}
+    env:
+      CAMPAIGN_EXPECTED_SHA: ${{ inputs.expected_sha }}
+      CAMPAIGN_GROUP_SIZE: ${{ inputs.group_size }}
+      CAMPAIGN_SHARD_COUNT: ${{ inputs.shard_count }}
+      CAMPAIGN_CACHE_MODE: ${{ inputs.cache_mode }}
+      LINUX_CACHE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.linux_cache_mode || 'auto' }}
+      LINUX_TIMESTAMP_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.linux_timestamp_mode || 'off' }}
+      LINUX_BUILD_CONFIGURATION: ${{ github.event_name == 'pull_request' && 'debug' || 'release' }}
+      LINUX_RUNNER_LABEL: ${{ matrix.runs-on }}
+      LINUX_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Validate Linux campaign source
+        id: linux-cache-source
+        run: python3 Scripts/ci_swift_test_campaign.py linux-cache source --checkout-sha "$(git rev-parse HEAD)"
 
       - name: Runner info
         run: |
@@ -524,26 +712,159 @@ jobs:
           hash -r
           swift --version
 
-      - name: Build CodexBarCLI (release, static Swift stdlib)
-        run: swift build -c release --product CodexBarCLI --static-swift-stdlib
+      - name: Plan Linux application cache
+        id: linux-cache-plan
+        timeout-minutes: 1
+        env:
+          LINUX_CACHE_CONTEXT: ${{ steps.linux-cache-source.outputs.context }}
+        run: python3 Scripts/ci_swift_test_campaign.py linux-cache plan
 
-      - name: Swift Test (Linux only)
-        run: ./Scripts/test.sh --command swift test --parallel
+      - name: Look up Linux application cache
+        id: linux-cache-lookup
+        if: ${{ steps.linux-cache-plan.outputs.enabled == 'true' }}
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build
+          key: ${{ steps.linux-cache-plan.outputs.key }}
+          restore-keys: ${{ steps.linux-cache-plan.outputs.restore-prefix }}
+          lookup-only: true
 
-      - name: Smoke test CodexBarCLI
+      - name: Approve Linux cache metadata and storage
+        id: linux-cache-approve
+        if: ${{ steps.linux-cache-plan.outputs.enabled == 'true' }}
+        timeout-minutes: 1
+        env:
+          LINUX_CACHE_CONTEXT: ${{ steps.linux-cache-plan.outputs.context }}
+          LINUX_LOOKUP_OUTCOME: ${{ steps.linux-cache-lookup.outcome }}
+          LINUX_MATCHED_KEY: ${{ steps.linux-cache-lookup.outputs.cache-matched-key }}
+          GH_TOKEN: ${{ github.token }}
+        run: python3 Scripts/ci_swift_test_campaign.py linux-cache approve-restore
+
+      - name: Restore approved Linux application cache
+        id: linux-cache-restore
+        if: ${{ steps.linux-cache-approve.outputs.restore == 'true' }}
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: '1'
+        with:
+          path: .build
+          key: ${{ steps.linux-cache-approve.outputs.approved-key }}
+          fail-on-cache-miss: true
+
+      - name: Verify restored Linux application cache
+        id: linux-cache-restored
+        if: ${{ always() && steps.linux-cache-approve.outputs.restore == 'true' }}
+        timeout-minutes: 1
+        env:
+          LINUX_CACHE_CONTEXT: ${{ steps.linux-cache-approve.outputs.context }}
+          LINUX_RESTORE_OUTCOME: ${{ steps.linux-cache-restore.outcome }}
+          LINUX_RESTORED_KEY: ${{ steps.linux-cache-restore.outputs.cache-matched-key }}
+          GH_TOKEN: ${{ github.token }}
+        run: python3 Scripts/ci_swift_test_campaign.py linux-cache after-restore
+
+      - name: Prepare experimental Linux input timestamps
+        id: linux-input-timestamps
+        if: ${{ env.LINUX_TIMESTAMP_MODE != 'off' }}
+        timeout-minutes: 1
+        env:
+          LINUX_CACHE_CONTEXT: ${{ steps.linux-cache-restored.outputs.context || steps.linux-cache-approve.outputs.context || steps.linux-cache-plan.outputs.context }}
+        run: python3 Scripts/ci_swift_test_campaign.py linux-cache input-timestamps
+
+      - name: Observe Linux build storage before release
+        id: linux-before-release
+        env:
+          LINUX_CACHE_ACTIVE: ${{ steps.linux-cache-plan.outputs.enabled }}
+        run: python3 Scripts/ci_swift_test_campaign.py measure-linux --phase before-release --step-times
+
+      - name: Build CodexBarCLI (PR debug; main/manual release with static Swift stdlib)
+        # Keep the campaign step ID stable; the summary records the actual configuration.
+        id: linux-release
         shell: bash
         run: |
           set -euo pipefail
-          BIN_DIR="$(swift build -c release --product CodexBarCLI --static-swift-stdlib --show-bin-path)"
+          build_args=(-c "$LINUX_BUILD_CONFIGURATION" --product CodexBarCLI)
+          if [[ "$LINUX_BUILD_CONFIGURATION" == release ]]; then
+            build_args+=(--static-swift-stdlib)
+          fi
+          swift build "${build_args[@]}"
+
+      - name: Observe Linux build storage after release
+        id: linux-after-release
+        if: ${{ always() }}
+        env:
+          LINUX_CACHE_ACTIVE: ${{ steps.linux-cache-plan.outputs.enabled }}
+        run: python3 Scripts/ci_swift_test_campaign.py measure-linux --phase after-release --step-times
+
+      - name: Swift Test (Linux only)
+        id: linux-tests
+        run: ./Scripts/test.sh --parallel
+
+      - name: Observe Linux build storage after tests
+        id: linux-after-tests
+        if: ${{ always() }}
+        env:
+          LINUX_CACHE_ACTIVE: ${{ steps.linux-cache-plan.outputs.enabled }}
+        run: python3 Scripts/ci_swift_test_campaign.py measure-linux --phase after-tests --step-times
+
+      - name: Smoke test CodexBarCLI
+        id: linux-smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          build_args=(-c "$LINUX_BUILD_CONFIGURATION" --product CodexBarCLI)
+          if [[ "$LINUX_BUILD_CONFIGURATION" == release ]]; then
+            build_args+=(--static-swift-stdlib)
+          fi
+          BIN_DIR="$(swift build "${build_args[@]}" --show-bin-path)"
           BIN="$BIN_DIR/CodexBarCLI"
           "$BIN" --help >/dev/null
           "$BIN" --version >/dev/null
-          if "$BIN" usage --provider codex --web >/dev/null 2>&1; then
+          if smoke_error="$("$BIN" usage --provider codex --web 2>&1)"; then
             echo "Expected --web to fail on Linux"
             exit 1
           fi
-          "$BIN" usage --provider codex --web 2>&1 | tee /tmp/codexbarcli-stderr.txt >/dev/null || true
-          grep -q "macOS" /tmp/codexbarcli-stderr.txt
+          grep -q "macOS" <<< "$smoke_error"
+
+      - name: Admit Linux application cache save
+        id: linux-cache-save-plan
+        if: ${{ always() && steps.linux-cache-source.outputs.context != '' }}
+        timeout-minutes: 1
+        env:
+          LINUX_CACHE_CONTEXT: ${{ steps.linux-input-timestamps.outputs.context || steps.linux-cache-restored.outputs.context || steps.linux-cache-approve.outputs.context || steps.linux-cache-plan.outputs.context || steps.linux-cache-source.outputs.context }}
+          LINUX_RELEASE_OUTCOME: ${{ steps.linux-release.outcome }}
+          LINUX_TESTS_OUTCOME: ${{ steps.linux-tests.outcome }}
+          LINUX_SMOKE_OUTCOME: ${{ steps.linux-smoke.outcome }}
+          LINUX_BEFORE_RELEASE_END: ${{ steps.linux-before-release.outputs.finished-at }}
+          LINUX_AFTER_RELEASE_START: ${{ steps.linux-after-release.outputs.started-at }}
+          LINUX_AFTER_RELEASE_END: ${{ steps.linux-after-release.outputs.finished-at }}
+          LINUX_AFTER_TESTS_START: ${{ steps.linux-after-tests.outputs.started-at }}
+          LINUX_AFTER_TESTS_END: ${{ steps.linux-after-tests.outputs.finished-at }}
+        run: python3 Scripts/ci_swift_test_campaign.py linux-cache before-save
+
+      - name: Save admitted Linux application cache
+        id: linux-cache-save
+        if: ${{ steps.linux-cache-save-plan.outputs.save == 'true' }}
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: '1'
+        with:
+          path: .build
+          key: ${{ steps.linux-cache-save-plan.outputs.key }}
+
+      - name: Record Linux cache publication availability
+        if: ${{ always() && steps.linux-cache-save-plan.outputs.context != '' }}
+        timeout-minutes: 1
+        env:
+          LINUX_CACHE_CONTEXT: ${{ steps.linux-cache-save-plan.outputs.context }}
+          LINUX_SAVE_OUTCOME: ${{ steps.linux-cache-save.outcome }}
+          GH_TOKEN: ${{ github.token }}
+        run: python3 Scripts/ci_swift_test_campaign.py linux-cache after-save
 
       - name: Summarize Linux CLI build
         if: ${{ always() }}
@@ -561,5 +882,6 @@ jobs:
             printf '| Matrix | `%s` |\n' "$MATRIX_NAME"
             printf '| Runner label | `%s` |\n' "$MATRIX_RUNS_ON"
             printf '| Swift version | `%s` |\n' "$SWIFT_VERSION"
+            printf '| CLI build configuration | `%s` |\n' "$LINUX_BUILD_CONFIGURATION"
             printf '| Swift toolchain cache hit | `%s` |\n' "${SWIFT_CACHE_HIT:-false}"
           } >> "$GITHUB_STEP_SUMMARY"

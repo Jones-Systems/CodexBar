@@ -5,9 +5,13 @@ from __future__ import annotations
 
 import argparse
 import build_jobs
+import ci_swift_test_campaign as campaign
+import test_profiles
 import ctypes
 import errno
 import fcntl
+import hashlib
+import json
 import os
 from pathlib import Path
 import re
@@ -24,6 +28,7 @@ from dataclasses import dataclass
 SCRATCH_PARENT_KEY = "CODEXBAR_TEST_SCRATCH_PARENT"
 WORKSPACE_ROOT_KEY = "CODEXBAR_TEST_WORKSPACE_ROOT"
 _scratch_cleanup_safe = True
+_campaign: campaign.Capture | None = None
 CANCELLATION_SIGNALS = (signal.SIGHUP, signal.SIGINT, signal.SIGTERM)
 
 
@@ -68,6 +73,10 @@ class FixtureScratchParent:
             os.environ[SCRATCH_PARENT_KEY] = str(self.path)
         os.environ["TMPDIR"] = str(self.path)
         print(f"Fixture scratch parent ({'owned' if self.owned else 'borrowed'}): {self.path}", file=sys.stderr, flush=True)
+        if _campaign is not None:
+            _campaign.check_fixture(self.path)
+            info = self.path.stat()
+            emit_evidence("fixture-prepared", path=str(self.path), identity=[info.st_dev, info.st_ino], owned=self.owned)
 
     def cleanup(self) -> None:
         try:
@@ -86,6 +95,8 @@ class FixtureScratchParent:
             if os.path.lexists(self.path):
                 raise RuntimeError(f"Fixture scratch parent cleanup failed: {self.path}")
             print(f"Fixture scratch parent removed and absence verified: {self.path}", file=sys.stderr, flush=True)
+            if _campaign is not None:
+                emit_evidence("fixture-removed", path=str(self.path), identity=list(self.identity))
         finally:
             for key, value in self.previous.items():
                 if value is None:
@@ -113,12 +124,16 @@ class TestSelection:
 
 @dataclass
 class RunStats:
+    discovered_tests: int = 0
+    discovery_manifest_sha256: str = ""
+    selected_manifest_sha256: str = ""
     discovered_selections: int = 0
     selected_selections: int = 0
     selected_groups: int = 0
     group_size: int = 0
     shard_index: int | None = None
     shard_count: int | None = None
+    build_seconds: float = 0
     discovery_seconds: float = 0
     execution_seconds: float = 0
     total_seconds: float = 0
@@ -136,6 +151,9 @@ class RunStats:
         return [
             ("Shard", shard),
             ("Group size", str(self.group_size)),
+            ("Discovered test identities", str(self.discovered_tests)),
+            ("Discovery manifest SHA256", self.discovery_manifest_sha256),
+            ("Selected manifest SHA256", self.selected_manifest_sha256),
             ("Discovered selections", str(self.discovered_selections)),
             ("Selected selections", str(self.selected_selections)),
             ("Selected groups", str(self.selected_groups)),
@@ -145,6 +163,7 @@ class RunStats:
             ("Recovered groups", str(self.recovered_groups)),
             ("Timed out groups", str(self.timed_out_groups)),
             ("Isolated selection retries", str(self.isolated_selection_retries)),
+            ("Test build seconds", f"{self.build_seconds:.1f}"),
             ("Discovery seconds", f"{self.discovery_seconds:.1f}"),
             ("Execution seconds", f"{self.execution_seconds:.1f}"),
             ("Total seconds", f"{self.total_seconds:.1f}"),
@@ -165,6 +184,7 @@ def parse_args() -> argparse.Namespace:
         help="fail immediately when a group exits without timing out",
     )
     parser.add_argument("--list-only", action="store_true")
+    parser.add_argument("--parallel", action="store_true", help="run one measured Linux-style aggregate after build/discovery")
     parser.add_argument("--swift-command", default="swift")
     parser.add_argument("--swift-command-arg", action="append", default=[])
     parser.add_argument(
@@ -544,6 +564,7 @@ def _run_command(command: list[str], timeout: int | None = None, *, stdout=None,
     ownership = None
     process = None
     result_code = None
+    launch_id = None
     launching = True
     deferred_signals = []
 
@@ -568,8 +589,15 @@ def _run_command(command: list[str], timeout: int | None = None, *, stdout=None,
         # Popen established this session even if getsid now races with the command's exit.
         root = TestProcess(root.pid, root.parent, process.pid, root.birth, root.zombie)
         ownership = TestProcessOwnership(root, process)
+        if _campaign is not None:
+            launch_id = _campaign.next_process()
+            emit_evidence("process-start", launch_id=launch_id, attempt_id=_campaign.attempt_id,
+                          pid=root.pid, birth=list(root.birth), session=root.session, command=command,
+                          environment=_campaign.process_environment())
         next_diagnostic = started + 30
         while True:
+            if _campaign is not None:
+                _campaign.check_budget()
             owned = ownership.refresh(observing=True)
             result = unreaped_exit_code(process)
             if result is not None:
@@ -599,8 +627,15 @@ def _run_command(command: list[str], timeout: int | None = None, *, stdout=None,
                 stop_unreaped_child(process)
             else:
                 ownership.drain(process)
+                if _campaign is not None and launch_id is not None:
+                    emit_evidence("process-drained", launch_id=launch_id, pid=root.pid, birth=list(root.birth))
         except BaseException as error:
             _scratch_cleanup_safe = False
+            if _campaign is not None:
+                try:
+                    emit_evidence("process-drain-failed", launch_id=launch_id, error=type(error).__name__)
+                except Exception as evidence_error:
+                    print(f"Drain evidence also failed: {evidence_error}", file=sys.stderr, flush=True)
             if not propagating_error:
                 raise CommandDrainError(str(error), result_code or 1) from error
             print(f"Cleanup also failed: {type(error).__name__}: {error}", file=sys.stderr, flush=True)
@@ -609,7 +644,7 @@ def _run_command(command: list[str], timeout: int | None = None, *, stdout=None,
                 signal.signal(sig, handler)
 
 
-def run_captured_command(command: list[str]) -> subprocess.CompletedProcess[str]:
+def run_captured_command(command: list[str], timeout: int | None = None) -> subprocess.CompletedProcess[str]:
     parent = fixture_scratch_parent(dict(os.environ))
     # Regular files cannot deadlock on a full pipe or a descendant-held output descriptor.
     outputs = []
@@ -618,7 +653,7 @@ def run_captured_command(command: list[str]) -> subprocess.CompletedProcess[str]
         for _ in range(2):
             outputs.append(tempfile.NamedTemporaryFile(mode="w+t", prefix=".command-output-", dir=parent, delete=False))
         stdout, stderr = outputs
-        result = run_command(command, stdout=stdout, stderr=stderr)
+        result = run_command(command, timeout=timeout, stdout=stdout, stderr=stderr)
         stdout.seek(0)
         stderr.seek(0)
         return subprocess.CompletedProcess(command, result, stdout.read(), stderr.read())
@@ -701,13 +736,55 @@ def repair_sparkle_test_runtime(swift_command: list[str]) -> bool:
         return sparkle_runtime_matches_source(destination, source)
 
 
-def swift_test_list(swift_command: list[str]) -> list[TestSelection]:
-    command = [*swift_command, "test", "list"]
+def manifest_digest(names: Iterable[str]) -> str:
+    return hashlib.sha256(("\n".join(sorted(names)) + "\n").encode("utf-8")).hexdigest()
+
+
+def emit_evidence(event: str, **fields) -> None:
+    record = {
+        "schema": "codexbar.swift-test-evidence/v1",
+        "event": event,
+        "source_revision": os.environ.get("GITHUB_SHA"),
+        **fields,
+    }
+    print(f"Swift test evidence: {json.dumps(record, sort_keys=True)}", file=sys.stderr, flush=True)
+    if _campaign is not None:
+        _campaign.record(record)
+
+
+def check_native_evidence_support(swift_command: list[str]) -> None:
+    result = run_captured_command([*swift_command, "test", "--skip-build", "--help-hidden"])
+    help_text = result.stdout + "\n" + result.stderr
+    (_campaign.root / "native-help.txt").write_text(help_text)
+    supported = result.returncode == 0 and all(
+        flag in help_text for flag in ("--event-stream-version", "--event-stream-output-path")
+    )
+    emit_evidence("native-support", advertised_options=supported, event_stream_version=0,
+                  exit_code=result.returncode, parameter_identity="native fields required; v0 does not require case IDs")
+    campaign.require(supported, "native toolchain does not advertise the required event stream options")
+    _campaign.native_support = True
+
+
+def swift_test_list(swift_command: list[str], stats: RunStats | None = None) -> list[TestSelection]:
+    build_started = time.monotonic()
+    build = run_captured_command([*swift_command, "build", "--build-tests"])
+    if stats is not None:
+        stats.build_seconds = time.monotonic() - build_started
+    for output in (build.stdout, build.stderr):
+        if output:
+            print(output, end="" if output.endswith("\n") else "\n", file=sys.stderr, flush=True)
+    build.check_returncode()
+    discovery_started = time.monotonic()
+    command = [*swift_command, "test", "list", "--skip-build"]
     result = run_captured_command(command)
     if result.returncode != 0 and is_missing_sparkle_runtime_failure(result):
         if repair_sparkle_test_runtime(swift_command):
             print("Recovered SwiftPM Sparkle test runtime; retrying discovery once.", file=sys.stderr, flush=True)
+            # The missing-library diagnostic proves discovery reached the built executable.
+            # Repeat discovery without another build or compiler CPU-sampling window.
             result = run_captured_command(command)
+    if stats is not None:
+        stats.discovery_seconds = time.monotonic() - discovery_started
     if result.returncode != 0:
         print(f"+ {swift_command[0]} test list", file=sys.stderr, flush=True)
         if result.stdout:
@@ -715,6 +792,8 @@ def swift_test_list(swift_command: list[str]) -> list[TestSelection]:
         if result.stderr:
             print(result.stderr, end="" if result.stderr.endswith("\n") else "\n", file=sys.stderr, flush=True)
         result.check_returncode()
+    if stats is not None:
+        stats.discovery_seconds = time.monotonic() - discovery_started
     selections: set[TestSelection] = set()
     unknown: list[str] = []
     for line in result.stdout.splitlines():
@@ -749,6 +828,12 @@ def swift_test_list(swift_command: list[str]) -> list[TestSelection]:
     if unknown:
         rendered = "\n".join(f"- {line}" for line in unknown)
         raise RuntimeError(f"Unrecognized `swift test list` output:\n{rendered}")
+    test_ids = sorted(result.stdout.splitlines())
+    digest = manifest_digest(test_ids)
+    if stats is not None:
+        stats.discovered_tests = len(test_ids)
+        stats.discovery_manifest_sha256 = digest
+    emit_evidence("discovery", test_ids=test_ids, sha256=digest)
     return sorted(selections, key=lambda selection: selection.name)
 
 
@@ -814,11 +899,68 @@ def filter_for(suites: list[TestSelection]) -> str:
     return rf"({'|'.join(suite.filter_pattern for suite in suites)})"
 
 
-def run_group(suites: list[TestSelection], timeout: int, swift_command: list[str]) -> int:
-    return run_command(
-        [*swift_command, "test", "--skip-build", "--no-parallel", "--filter", filter_for(suites)],
-        timeout=timeout,
-    )
+def run_test_command(command: list[str], timeout: int | None = None) -> int:
+    captured = run_captured_command(command, timeout=timeout)
+    for output, stream in ((captured.stdout, sys.stdout), (captured.stderr, sys.stderr)):
+        if output:
+            print(output, end="" if output.endswith("\n") else "\n", file=stream, flush=True)
+    text = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", captured.stdout + "\n" + captured.stderr)
+    swift_testing = re.findall(r"Test run with (\d+) tests?(?: in \d+ suites?)? (?:passed|failed)", text)
+    xctest = re.findall(r"Test Suite '(?:All|Selected) tests'[^\n]*\n\s*Executed (\d+) tests?", text)
+    counts = {"swift_testing_functions": int(swift_testing[-1]) if swift_testing else None,
+              "xctest_methods": int(xctest[-1]) if xctest else None,
+              "exit_code": captured.returncode}
+    print("Swift test execution counts: " + json.dumps(counts, sort_keys=True), flush=True)
+    return captured.returncode
+
+
+def run_group(
+    suites: list[TestSelection], timeout: int, swift_command: list[str], *, attempt: str = "first",
+) -> int:
+    started = time.monotonic()
+    result = None
+    pattern = filter_for(suites)
+    directory = None
+    attempt_id = None
+    try:
+        command = [*swift_command, "test", "--skip-build", "--no-parallel", "--filter", pattern]
+        if _campaign is None:
+            result = run_test_command(command, timeout=timeout)
+        else:
+            directory = _campaign.begin_attempt(attempt)
+            attempt_id = _campaign.attempt_id
+            command.extend(["--event-stream-version", "0", "--event-stream-output-path",
+                            str(directory / "swift-testing.jsonl")])
+            # Regular files retain both native consoles without pipe backpressure.
+            # The command owner still drains every descendant before these handles close.
+            with (directory / "stdout.txt").open("x") as stdout, (directory / "stderr.txt").open("x") as stderr:
+                result = run_command(command, timeout=timeout, stdout=stdout, stderr=stderr)
+        return result
+    finally:
+        error = sys.exc_info()[0]
+        elapsed = time.monotonic() - started
+        fields = {"attempt_id": attempt_id} if _campaign is not None else {}
+        try:
+            emit_evidence(
+                "attempt", attempt=attempt, selections=[suite.name for suite in suites],
+                filter_pattern=pattern, exit_code=result, error=error.__name__ if error else None,
+                elapsed_seconds=round(elapsed, 6), timeout_seconds=timeout, **fields,
+            )
+            if directory is not None:
+                for name, output in (("stdout.txt", sys.stdout), ("stderr.txt", sys.stderr)):
+                    if (directory / name).exists():
+                        with (directory / name).open() as captured:
+                            shutil.copyfileobj(captured, output)
+                        output.flush()
+                _campaign.end_attempt(directory)
+                campaign.bounded_root(str(_campaign.root))
+        except Exception as evidence_error:
+            if error is None and not result:
+                raise
+            print(f"Campaign attempt evidence also failed: {evidence_error}", file=sys.stderr, flush=True)
+        finally:
+            if _campaign is not None:
+                _campaign.attempt_id = None
 
 
 def retry_selections_individually(
@@ -830,7 +972,7 @@ def retry_selections_individually(
     for suite in suites:
         stats.isolated_selection_retries += 1
         print(f"::group::Swift test retry {suite.name}", flush=True)
-        retry_result = run_group([suite], timeout, swift_command)
+        retry_result = run_group([suite], timeout, swift_command, attempt="selection-retry")
         print("::endgroup::", flush=True)
         if retry_result != 0:
             return retry_result
@@ -840,11 +982,14 @@ def retry_selections_individually(
 def run_suites() -> int:
     total_started = time.monotonic()
     args = parse_args()
+    print(f"Swift test profile: {test_profiles.selected_profile()}", file=sys.stderr, flush=True)
+    if _campaign is not None:
+        _campaign.validate_invocation(args)
     if args.command is not None:
         if not args.command:
             print("--command requires an executable", file=sys.stderr)
             return 2
-        if args.list_only or args.limit_groups is not None or args.shard_index is not None or args.shard_count is not None:
+        if args.parallel or args.list_only or args.limit_groups is not None or args.shard_index is not None or args.shard_count is not None:
             print("--command cannot be combined with discovery or shard selection", file=sys.stderr)
             return 2
         # Aggregate commands retain their enclosing job's deadline and original test selection.
@@ -862,12 +1007,24 @@ def run_suites() -> int:
     swift_command = [args.swift_command, *args.swift_command_arg]
     result = 0
     try:
-        discovery_started = time.monotonic()
-        try:
-            suites = prioritized_suites(filtered_suites_for_environment(swift_test_list(swift_command)))
-        finally:
-            stats.discovery_seconds = time.monotonic() - discovery_started
+        if _campaign is not None:
+            check_native_evidence_support(swift_command)
+        if args.parallel and (args.list_only or args.limit_groups is not None or args.shard_index is not None
+                              or args.shard_count is not None or _campaign is not None):
+            print("--parallel cannot be combined with discovery-only, shards, limits or a macOS campaign", file=sys.stderr)
+            return 2
+        discovered = swift_test_list(swift_command, stats)
+        suites = discovered if args.parallel else prioritized_suites(filtered_suites_for_environment(discovered))
         stats.discovered_selections = len(suites)
+        if args.parallel:
+            stats.selected_selections = len(suites)
+            stats.selected_groups = 1
+            stats.selected_manifest_sha256 = manifest_digest(suite.name for suite in suites)
+            execution_started = time.monotonic()
+            result = run_test_command([*swift_command, "test", "--skip-build", "--parallel"])
+            stats.first_pass_successful_groups = int(result == 0)
+            stats.first_pass_failed_groups = int(result != 0)
+            return result
 
         suite_groups = list(chunks(suites, args.group_size))
         try:
@@ -880,6 +1037,11 @@ def run_suites() -> int:
             suite_groups = suite_groups[: args.limit_groups]
         stats.selected_selections = sum(len(group) for group in suite_groups)
         stats.selected_groups = len(suite_groups)
+        stats.selected_manifest_sha256 = manifest_digest(suite.name for group in suite_groups for suite in group)
+        emit_evidence(
+            "selection", groups=[[suite.name for suite in group] for group in suite_groups],
+            sha256=stats.selected_manifest_sha256, shard_index=args.shard_index, shard_count=args.shard_count,
+        )
 
         shard_suffix = ""
         if args.shard_index is not None and args.shard_count is not None:
@@ -928,7 +1090,7 @@ def run_suites() -> int:
 
                 stats.full_group_retries += 1
                 print(f"Group {group_index} failed with exit code {group_result}; retrying group once", flush=True)
-                retry_result = run_group(group, args.timeout, swift_command)
+                retry_result = run_group(group, args.timeout, swift_command, attempt="group-retry")
                 if retry_result == 0:
                     stats.recovered_groups += 1
                     continue
@@ -957,8 +1119,9 @@ def run_suites() -> int:
 
 
 def main() -> int:
-    global _scratch_cleanup_safe
+    global _scratch_cleanup_safe, _campaign
     _scratch_cleanup_safe = True
+    _campaign = None
     scratch = FixtureScratchParent()
     preparing = True
     deferred_signals = []
@@ -972,6 +1135,7 @@ def main() -> int:
     previous_handlers = {sig: signal.signal(sig, cancellation) for sig in CANCELLATION_SIGNALS}
     result = 1
     try:
+        _campaign = campaign.Capture.from_environment()
         scratch.prepare()
         preparing = False
         if deferred_signals:
@@ -993,6 +1157,15 @@ def main() -> int:
             print(f"Fixture cleanup failed: {error}", file=sys.stderr, flush=True)
             result = result or 1
         finally:
+            if _campaign is not None:
+                try:
+                    cleanup_proved = _scratch_cleanup_safe and scratch.owned and not os.path.lexists(scratch.path)
+                    _campaign.finish(result, cleanup_proved)
+                except Exception as error:
+                    print(f"Campaign evidence finalization failed: {error}", file=sys.stderr, flush=True)
+                    result = result or 1
+                finally:
+                    _campaign = None
             for sig, handler in previous_handlers.items():
                 signal.signal(sig, handler)
     return result if result >= 0 else 128 - result

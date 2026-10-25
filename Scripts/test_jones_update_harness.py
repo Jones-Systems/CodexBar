@@ -2,13 +2,15 @@
 """Small portable harness fixtures; every native command is replaced by a fake."""
 
 import base64
-from contextlib import redirect_stderr
+from contextlib import nullcontext, redirect_stderr, redirect_stdout
+import errno
 import io
 import json
 import os
 from pathlib import Path
 import plistlib
 import signal
+import socket
 import subprocess
 import tempfile
 import unittest
@@ -221,6 +223,209 @@ class HarnessTests(unittest.TestCase):
                 server.server_close()
                 worker.join(timeout=3)
             self.assertFalse(worker.is_alive())
+
+    def closed_feed_response(self, address):
+        # Let the server close first, retaining its TIME_WAIT state after this client closes.
+        with socket.create_connection(address, timeout=2) as client:
+            client.sendall(b"GET /appcast.xml HTTP/1.0\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n")
+            response = bytearray()
+            while chunk := client.recv(4096):
+                response.extend(chunk)
+                self.assertLessEqual(len(response), 32768)
+        return bytes(response).partition(b"\r\n\r\n")[2]
+
+    def test_all_scenarios_rebind_the_same_port_after_server_closed_connections(self):
+        manifest = {"port": 0}
+        feeds = {scenario: f"<rss>{scenario}</rss>" for scenario in harness.SCENARIOS}
+        for scenario in harness.SCENARIOS:
+            with self.subTest(scenario=scenario), harness.serving(manifest, feeds, scenario, self.root) as server:
+                manifest["port"] = server.server_address[1]
+                self.assertEqual(self.closed_feed_response(server.server_address), feeds[scenario].encode())
+            self.assertEqual(server.socket.fileno(), -1)
+            self.assertFalse(any(thread.name == "jones-fixture-http" for thread in harness.threading.enumerate()))
+
+    def test_active_listener_is_exclusive_and_binding_failure_identifies_errno(self):
+        feeds = {"quit": "<rss>owned listener</rss>"}
+        with harness.serving({"port": 0}, feeds, "quit", self.root) as server:
+            with self.assertRaises(harness.candidate.CandidateError) as caught:
+                with harness.serving({"port": server.server_address[1]}, feeds, "quit", self.root):
+                    self.fail("A second listener acquired the active fixture port")
+            self.assertEqual(caught.exception.code, "fixture-listener")
+            self.assertIn(f"errno={errno.EADDRINUSE}", str(caught.exception))
+            self.assertEqual(self.closed_feed_response(server.server_address), feeds["quit"].encode())
+
+    def test_server_releases_listener_after_case_failure(self):
+        feeds = {"quit": "<rss>owned listener</rss>"}
+        port = None
+        with self.assertRaisesRegex(RuntimeError, "synthetic case failure"):
+            with harness.serving({"port": 0}, feeds, "quit", self.root) as server:
+                port = server.server_address[1]
+                self.closed_feed_response(server.server_address)
+                raise RuntimeError("synthetic case failure")
+        self.assertIsNotNone(port)
+        with harness.serving({"port": port}, feeds, "quit", self.root) as server:
+            self.assertEqual(self.closed_feed_response(server.server_address), feeds["quit"].encode())
+
+    def test_wait_timeout_identifies_its_native_phase(self):
+        with patch.object(harness.time, "monotonic", side_effect=[0, 1]), \
+                self.assertRaises(harness.candidate.CandidateError) as caught:
+            harness.wait_for(lambda: None, bool, timeout=1, phase="update-readiness")
+        self.assertEqual(caught.exception.code, "fixture-timeout")
+        self.assertIn("update-readiness", str(caught.exception))
+
+    def test_progress_report_omits_unrecognized_and_unbounded_fields(self):
+        value = {"build": harness.BUILD_A, "pid": 42, "canCheck": False, "registeredApplication": True,
+                 "state": "preparing", "failure": "",
+                 "requestID": FIXTURE_ID, "private": "must not be printed", "bundlePath": "/not/needed"}
+        self.assertEqual(harness.progress_report(value),
+                         {key: value[key] for key in
+                          ("build", "pid", "canCheck", "registeredApplication", "state", "failure", "requestID")})
+        self.assertEqual(harness.progress_report(None), None)
+        for key in ("build", "pid", "canCheck", "registeredApplication", "state", "failure", "requestID"):
+            with self.subTest(key=key):
+                summary = harness.progress_report({**value, key: "unbounded" * 10000})
+                self.assertNotIn(key, summary)
+                self.assertLess(len(json.dumps(summary)), 512)
+
+    def test_replacement_failure_keeps_last_report_and_phase_before_cleanup(self):
+        home = self.home()
+        manifest = {"fixture_id": FIXTURE_ID, "source_revision": REVISION, "trees": {"A": {}}}
+        process = Mock(pid=42)
+        process.poll.return_value = None
+        server = Mock(archive_requests=1)
+        first = {"build": harness.BUILD_A, "pid": 42, "canCheck": False, "state": "idle", "failure": ""}
+        ready = {**first, "state": "ready", "canCheck": False}
+        installing = {**ready, "state": "installing"}
+
+        def extract(arguments, **_):
+            directory = Path(arguments[-1])
+            contents = directory / "CodexBar.app/Contents"
+            contents.mkdir(parents=True)
+            (contents / "Info.plist").write_bytes(plistlib.dumps({"CFBundleVersion": harness.BUILD_A}))
+
+        def wait(read, accept, timeout=90, *, phase="postcondition"):
+            value = read()
+            if phase == "replacement":
+                raise harness.candidate.CandidateError("fixture-timeout", "Timeout during replacement")
+            self.assertTrue(accept(value))
+            return value
+
+        output, errors = io.StringIO(), io.StringIO()
+        with patch.object(harness.Path, "home", return_value=home), \
+                patch.object(harness.subprocess, "run", side_effect=self.defaults), \
+                patch.object(harness, "command", side_effect=extract), \
+                patch.object(harness, "inspect_harness", return_value={}), \
+                patch.object(harness, "serving", return_value=nullcontext(server)), \
+                patch.object(harness, "launch", return_value=process), \
+                patch.object(harness, "report", side_effect=[first, ready, installing]), \
+                patch.object(harness, "wait_for", side_effect=wait), \
+                patch.object(harness, "drain") as drain, \
+                redirect_stdout(output), redirect_stderr(errors), \
+                self.assertRaises(harness.candidate.CandidateError) as caught:
+            harness.run_case(self.root, self.root, manifest, {"quit": "fixture"}, "quit")
+        self.assertEqual(caught.exception.code, "fixture-timeout")
+        records = [json.loads(line) for line in errors.getvalue().splitlines()]
+        failure = next(record["fixture_failure"] for record in records if "fixture_failure" in record)
+        self.assertEqual(failure, {"scenario": "quit", "phase": "replacement", "last_report": installing,
+                                   "last_build": harness.BUILD_A, "archive_requests": 1,
+                                   "processes_before_drain": [{"pid": 42, "returncode": None}],
+                                   "builds_before_drain": {"CodexBar.app": harness.BUILD_A,
+                                                           "Jones Update Harness.app": "missing"}})
+        self.assertIn('"phase": "update-readiness"', output.getvalue())
+        drain.assert_called_once()
+        process.wait.assert_called_once_with(timeout=5)
+        self.assertEqual(list(self.root.glob("jones-update-native-*")), [])
+        self.assertEqual(list((home / "Library/Caches").iterdir()), [])
+
+    def test_automatic_cycle_reaches_each_action_without_requesting_another_check(self):
+        home = self.home()
+        manifest = {"fixture_id": FIXTURE_ID, "source_revision": REVISION, "trees": {"A": {}}}
+        process = Mock(pid=42)
+        process.poll.return_value = None
+
+        class ReachedAction(Exception):
+            pass
+
+        for scenario in harness.SCENARIOS[4:] + harness.SCENARIOS[:4]:
+            valid = scenario in ("quit", "immediate")
+            expected_action = "install" if scenario == "immediate" else "quit" if valid else "stop"
+            value = {"build": harness.BUILD_A, "pid": 42, "canCheck": not valid,
+                     "state": "ready" if valid else "failed",
+                     "failure": "archive-too-large" if scenario == "oversized" else ""}
+            server = Mock(archive_requests=int(valid or scenario == "tampered-archive"))
+
+            def write(_directory, _manifest, _build, action):
+                if action != "wait":
+                    self.assertEqual(action, expected_action)
+                    raise ReachedAction
+
+            def wait(read, accept, timeout=90, *, phase="postcondition"):
+                result = read()
+                self.assertTrue(accept(result), f"Automatic cycle stalled during {phase}")
+                return result
+
+            with self.subTest(scenario=scenario), \
+                    patch.object(harness.Path, "home", return_value=home), \
+                    patch.object(harness.subprocess, "run", side_effect=self.defaults), \
+                    patch.object(harness, "command"), \
+                    patch.object(harness, "inspect_harness", return_value={}), \
+                    patch.object(harness, "serving", return_value=nullcontext(server)), \
+                    patch.object(harness, "launch", return_value=process), \
+                    patch.object(harness, "report", return_value=value), \
+                    patch.object(harness, "wait_for", side_effect=wait), \
+                    patch.object(harness, "write_command", side_effect=write) as writes, \
+                    patch.object(harness, "drain") as drain, \
+                    redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()), \
+                    self.assertRaises(ReachedAction):
+                harness.run_case(self.root, self.root, manifest, {scenario: "fixture"}, scenario)
+            self.assertEqual([call.args[-1] for call in writes.call_args_list], ["wait", expected_action])
+            drain.assert_called_once()
+            self.assertEqual(list(self.root.glob("jones-update-native-*")), [])
+            self.assertEqual(list((home / "Library/Caches").iterdir()), [])
+
+    def test_automatic_cycle_rejects_outcome_from_another_process_or_build(self):
+        home = self.home()
+        manifest = {"fixture_id": FIXTURE_ID, "source_revision": REVISION, "trees": {"A": {}}}
+        process = Mock(pid=42)
+        process.poll.return_value = None
+        first = {"build": harness.BUILD_A, "pid": 42, "canCheck": False, "state": "idle", "failure": ""}
+
+        def wait(read, accept, timeout=90, *, phase="postcondition"):
+            value = read()
+            self.assertTrue(accept(value))
+            return value
+
+        for change in ({"pid": 43}, {"build": harness.BUILD_B}):
+            with self.subTest(change=change), \
+                    patch.object(harness.Path, "home", return_value=home), \
+                    patch.object(harness.subprocess, "run", side_effect=self.defaults), \
+                    patch.object(harness, "command"), \
+                    patch.object(harness, "inspect_harness", return_value={}), \
+                    patch.object(harness, "serving", return_value=nullcontext(Mock(archive_requests=1))), \
+                    patch.object(harness, "launch", return_value=process), \
+                    patch.object(harness, "report", side_effect=[first, {**first, "state": "ready", **change}]), \
+                    patch.object(harness, "wait_for", side_effect=wait), \
+                    patch.object(harness, "write_command") as writes, \
+                    patch.object(harness, "drain") as drain, \
+                    redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()), \
+                    self.assertRaises(harness.candidate.CandidateError) as caught:
+                harness.run_case(self.root, self.root, manifest, {"quit": "fixture"}, "quit")
+            self.assertEqual(caught.exception.code, "fixture-process")
+            self.assertEqual([call.args[-1] for call in writes.call_args_list], ["wait"])
+            drain.assert_called_once()
+            self.assertEqual(list(self.root.glob("jones-update-native-*")), [])
+            self.assertEqual(list((home / "Library/Caches").iterdir()), [])
+
+    def test_failure_builds_identifies_renamed_fixture_without_following_links(self):
+        contents = self.root / "Jones Update Harness.app/Contents"
+        contents.mkdir(parents=True)
+        (contents / "Info.plist").write_bytes(plistlib.dumps({"CFBundleVersion": harness.BUILD_B}))
+        self.assertEqual(harness.failure_builds(self.root), {"CodexBar.app": "missing",
+                                                           "Jones Update Harness.app": harness.BUILD_B})
+        (self.root / "CodexBar.app").symlink_to(self.root / "Jones Update Harness.app")
+        self.assertEqual(harness.failure_builds(self.root)["CodexBar.app"], "symlink")
+        (contents / "Info.plist").write_text("invalid fixture plist")
+        self.assertEqual(harness.failure_builds(self.root)["Jones Update Harness.app"], "unreadable")
 
     def home(self):
         home = self.root / "home"

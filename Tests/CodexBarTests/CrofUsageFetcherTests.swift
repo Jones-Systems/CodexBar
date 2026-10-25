@@ -4,6 +4,7 @@ import Testing
 @testable import CodexBarCore
 
 struct CrofPluginGoldenTests {
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `credits-only fixture matches the production golden`() async throws {
         let json = """
@@ -114,6 +115,7 @@ struct CrofPluginGoldenTests {
             config: config)
         #expect(overridden[key] == "env-token")
     }
+    #endif
 
     private static func fetch(
         _ body: String,

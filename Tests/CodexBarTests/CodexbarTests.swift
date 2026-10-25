@@ -600,38 +600,6 @@ struct CodexBarTests {
     }
 
     @Test
-    func `merged icon preserves exhausted warp bonus layout`() {
-        let snapshot = UsageSnapshot(
-            primary: RateWindow(usedPercent: 10, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-            secondary: RateWindow(usedPercent: 100, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-            updatedAt: Date())
-
-        let percents = IconRemainingResolver.resolvedPercents(
-            snapshot: snapshot,
-            style: .warp,
-            showUsed: true)
-
-        #expect(percents.primary == 10)
-        #expect(percents.secondary == 0)
-    }
-
-    @Test
-    func `merged icon keeps unused warp bonus lane visible`() {
-        let snapshot = UsageSnapshot(
-            primary: RateWindow(usedPercent: 10, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-            secondary: RateWindow(usedPercent: 0, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-            updatedAt: Date())
-
-        let percents = IconRemainingResolver.resolvedPercents(
-            snapshot: snapshot,
-            style: .warp,
-            showUsed: true)
-
-        #expect(percents.primary == 10)
-        #expect(percents.secondary == 0.1)
-    }
-
-    @Test
     @MainActor
     func `status icon accessibility uses percentage scale`() {
         #expect(

@@ -609,10 +609,10 @@ struct JonesAccountAggregateTests {
     }
 
     @Test(arguments: [
-        ("2026-07-01T16:00:00Z", "Wed 12:00 PM EDT"),
-        ("2026-01-01T17:00:00Z", "Thu 12:00 PM EST"),
+        ("2026-07-01T16:00:00Z", "Wed 12:00 PM"),
+        ("2026-01-01T17:00:00Z", "Thu 12:00 PM"),
     ])
-    func `compact forecast uses Eastern seasonal date labels`(input: String, expected: String) throws {
+    func `compact forecast uses Eastern time without a timezone suffix`(input: String, expected: String) throws {
         let date = try #require(ISO8601DateFormatter().date(from: input))
         let total = JonesAccountAggregate(
             selectedCount: 5,
@@ -623,10 +623,10 @@ struct JonesAccountAggregateTests {
     }
 
     @Test(arguments: [
-        ("2026-07-01T16:00:00Z", "Wed Jul 1 12:00 PM EDT"),
-        ("2026-01-01T17:00:00Z", "Thu Jan 1 12:00 PM EST"),
+        ("2026-07-01T16:00:00Z", "Wed Jul 1 12:00 PM"),
+        ("2026-01-01T17:00:00Z", "Thu Jan 1 12:00 PM"),
     ])
-    func `aggregate dates use Eastern seasonal abbreviations`(input: String, expected: String) throws {
+    func `aggregate dates use Eastern time without a timezone suffix`(input: String, expected: String) throws {
         let date = try #require(ISO8601DateFormatter().date(from: input))
         #expect(JonesAccountAggregate.easternDateLabel(date) == expected)
     }

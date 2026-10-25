@@ -161,13 +161,21 @@ private final class JonesUpdateHarnessDelegate: NSObject, NSApplicationDelegate 
             case .sparkle: failure = "sparkle"
             }
         }
+        let currentPID = ProcessInfo.processInfo.processIdentifier
+        let currentURL = Bundle.main.bundleURL.resolvingSymlinksInPath()
+        let applications = NSRunningApplication.runningApplications(
+            withBundleIdentifier: JonesUpdateTrustPolicy.harnessBundleID)
+        let registeredApplication = applications.contains { application in
+            application.processIdentifier == currentPID &&
+                application.bundleURL?.resolvingSymlinksInPath() == currentURL && !application.isTerminated
+        }
         let report: [String: Any] = [
             "schema": "jones-update-harness-report/v1", "fixtureID": self.fixtureID,
             "build": self.build, "sourceRevision": self.policy.sourceRevision,
-            "pid": ProcessInfo.processInfo.processIdentifier,
-            "bundlePath": Bundle.main.bundleURL.resolvingSymlinksInPath().path,
+            "pid": currentPID, "bundlePath": currentURL.path,
             "state": state, "failure": failure, "requestID": self.lastRequest,
             "canCheck": updater.detail.canCheckForUpdates,
+            "registeredApplication": registeredApplication,
         ]
         let data = try JSONSerialization.data(withJSONObject: report, options: [.sortedKeys])
         guard data != self.lastReport else { return }

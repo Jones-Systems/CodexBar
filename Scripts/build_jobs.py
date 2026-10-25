@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bound participating macOS compiler commands; see docs/compiler-resource-limits.md."""
+"""Bound local macOS compiler commands; see docs/compiler-resource-limits.md."""
 
 from __future__ import annotations
 
@@ -25,6 +25,18 @@ ADMISSION_SECONDS = 300
 WINDOW_SECONDS = 30
 INTERVAL_SECONDS = 5
 SIGNALS = (signal.SIGHUP, signal.SIGINT, signal.SIGTERM)
+RESERVE_BYTES = 30 * 1024 ** 3
+PEAK_BYTES = 10 * 1024 ** 3
+VALUE_OPTIONS = {
+    "--filter", "--skip", "--configuration", "-c", "--package-path", "--scratch-path",
+    "--cache-path", "--config-path", "--security-path", "--arch", "--triple", "--sdk",
+    "--toolchain", "--swift-sdk", "--destination", "--product", "--target",
+    "--test-product", "--xunit-output", "--parallel-worker-count",
+    "--event-stream-version", "--event-stream-output-path",
+    "-project", "-workspace", "-scheme", "-configuration", "-destination",
+    "-derivedDataPath", "-archivePath", "-sdk", "-toolchain", "-resultBundlePath",
+    "-resultStreamPath", "-clonedSourcePackagesDirPath", "-packageCachePath",
+}
 
 
 class AdmissionError(ValueError):
@@ -47,15 +59,7 @@ def normalize(arguments: list[str], kind: str, environment: dict[str, str]) -> t
         arg = arguments[index]
         if arg == "--":
             raise AdmissionError("opaque argument payload after -- is not supported")
-        value_options = {
-            "--filter", "--skip", "--configuration", "-c", "--package-path", "--scratch-path",
-            "--cache-path", "--config-path", "--security-path", "--arch", "--triple", "--sdk",
-            "--toolchain", "--swift-sdk", "--destination", "--product", "--target",
-            "--test-product", "--xunit-output", "--parallel-worker-count",
-            "-project", "-workspace", "-scheme", "-configuration", "-destination",
-            "-derivedDataPath", "-archivePath", "-sdk", "-toolchain",
-        }
-        if arg in value_options:
+        if arg in VALUE_OPTIONS:
             if index + 1 == len(arguments):
                 raise AdmissionError(f"missing value for {arg}")
             result.extend(arguments[index:index + 2])
@@ -94,6 +98,146 @@ def normalize(arguments: list[str], kind: str, environment: dict[str, str]) -> t
             result.append(arg)
         index += 1
     return result, limit
+
+
+def storage_budget(environment: dict[str, str]) -> tuple[int, int]:
+    values = []
+    for name, minimum in (("CODEXBAR_BUILD_RESERVE_BYTES", RESERVE_BYTES),
+                          ("CODEXBAR_BUILD_PEAK_BYTES", PEAK_BYTES)):
+        value = positive_integer(environment[name]) if name in environment else minimum
+        if value < minimum:
+            raise AdmissionError(f"{name} must be at least {minimum} bytes")
+        values.append(value)
+    return tuple(values)
+
+
+def output_destinations(arguments: list[str], kind: str, environment: dict[str, str]) -> list[Path]:
+    cwd = Path.cwd()
+    home = Path.home()
+    unsupported_environment = {
+        "SWIFTPM_BUILD_DIR", "SWIFTPM_MODULECACHE_OVERRIDE", "CLANG_MODULE_CACHE_PATH",
+        "SWIFT_MODULECACHE_PATH", "LLVM_PROFILE_FILE", "XCODE_XCCONFIG_FILE",
+        "SYMROOT", "OBJROOT", "DSTROOT", "CONFIGURATION_BUILD_DIR", "CONFIGURATION_TEMP_DIR",
+        "BUILD_DIR", "BUILD_ROOT", "PROJECT_TEMP_DIR", "SHARED_PRECOMPS_DIR",
+    }
+    for name in unsupported_environment:
+        if name in environment:
+            raise AdmissionError(f"unsupported output destination override: {name}")
+
+    def destination(raw: str) -> Path:
+        if not raw or "\x00" in raw or "$" in raw or raw.startswith("~"):
+            raise AdmissionError(f"unresolved output destination: {raw!r}")
+        return cwd / raw
+
+    swift_paths = {"--package-path", "--scratch-path", "--cache-path", "--config-path",
+                   "--security-path", "--xunit-output", "--event-stream-output-path"}
+    xcode_paths = {"-derivedDataPath", "-archivePath", "-resultBundlePath", "-resultStreamPath",
+                   "-clonedSourcePackagesDirPath", "-packageCachePath"}
+    paths = swift_paths if kind == "swift" else xcode_paths
+    selected = {}
+    project_paths = []
+    safe_settings = {"CODEXBAR_WIDGET_BUNDLE_ID", "CODEXBAR_TEAM_ID", "MARKETING_VERSION",
+                     "CURRENT_PROJECT_VERSION", "CODE_SIGNING_ALLOWED", "ARCHS", "ONLY_ACTIVE_ARCH"}
+    index = 0
+    while index < len(arguments):
+        arg = arguments[index]
+        key, equal, value = arg.partition("=")
+        if key in paths:
+            if not equal:
+                index += 1
+                if index == len(arguments):
+                    raise AdmissionError(f"missing value for {key}")
+                value = arguments[index]
+            if key in selected:
+                raise AdmissionError(f"duplicate output destination: {key}")
+            selected[key] = destination(value)
+        elif key in {"-C", "--toolset", "--multiroot-data-file"}:
+            raise AdmissionError(f"unsupported output destination override: {key}")
+        elif key in VALUE_OPTIONS:
+            if not equal:
+                index += 1
+                if index == len(arguments):
+                    raise AdmissionError(f"missing value for {key}")
+                value = arguments[index]
+            if kind == "xcode" and key in {"-project", "-workspace"}:
+                project_paths.append(destination(value))
+        elif key == "--show-bin-path" and kind == "swift":
+            pass
+        elif key == "-Xswiftc":
+            if not equal:
+                index += 1
+                value = arguments[index] if index < len(arguments) else ""
+            if value not in {"-warnings-as-errors", "-enable-testing"}:
+                raise AdmissionError("opaque compiler output overrides are not supported")
+        elif (arg.startswith(("-X", "@", "-C")) or
+              (arg.startswith("-") and any(word in key.lower() for word in ("path", "dir", "output", "cache"))) or
+              (kind == "xcode" and equal and key not in safe_settings)):
+            raise AdmissionError(f"unsupported output destination override: {key}")
+        index += 1
+    destinations = [Path("/tmp"), *project_paths]
+    for name in ("TMPDIR", "TMP", "TEMP"):
+        if name in environment:
+            destinations.append(destination(environment[name]))
+    if sys.platform == "darwin":
+        # Darwin's unistd.h constant is not named in Python's confstr_names.
+        native_temp = os.confstr(65537)
+        if not native_temp:
+            raise AdmissionError("native temporary output destination unavailable")
+        destinations.append(destination(native_temp))
+    if kind == "swift":
+        package = selected.pop("--package-path", cwd)
+        # SwiftPM searches upward for Package.swift even after --package-path.
+        for candidate in (package, *package.parents):
+            if (candidate / "Package.swift").is_file():
+                package = candidate
+                break
+        destinations.extend([
+            package,
+            selected.pop("--scratch-path", package / ".build"),
+            selected.pop("--cache-path", home / "Library/Caches/org.swift.swiftpm"),
+            selected.pop("--config-path", home / ".swiftpm/configuration"),
+            selected.pop("--security-path", home / ".swiftpm/security"),
+            home / "Library/org.swift.swiftpm",
+        ])
+    else:
+        destinations.extend([
+            selected.pop("-derivedDataPath", home / "Library/Developer/Xcode/DerivedData"),
+            selected.pop("-archivePath", home / "Library/Developer/Xcode/Archives"),
+            home / "Library/Caches/com.apple.dt.Xcode",
+            home / "Library/Caches/org.swift.swiftpm",
+        ])
+    return [*destinations, *selected.values()]
+
+
+def existing_output_ancestor(destination: Path) -> Path:
+    candidate = destination.resolve()
+    while True:
+        try:
+            candidate.stat()
+            return candidate
+        except FileNotFoundError:
+            if candidate == candidate.parent:
+                raise AdmissionError(f"no existing output ancestor: {destination}")
+            candidate = candidate.parent
+
+
+def admit_storage(arguments: list[str], kind: str, environment: dict[str, str]):
+    reserve, peak = storage_budget(environment)
+    for destination in output_destinations(arguments, kind, environment):
+        try:
+            ancestor = existing_output_ancestor(destination)
+            evidence = os.statvfs(ancestor)
+            if (type(evidence.f_bavail) is not int or evidence.f_bavail < 0 or
+                    type(evidence.f_frsize) is not int or evidence.f_frsize <= 0):
+                raise AdmissionError("invalid available-storage counters")
+            available = evidence.f_bavail * evidence.f_frsize
+        except (OSError, RuntimeError, ValueError) as error:
+            raise AdmissionError(f"storage evidence unavailable for {destination}: {error}") from error
+        detail = (f"destination={destination} ancestor={ancestor} available_bytes={available} "
+                  f"reserve_bytes={reserve} estimated_additional_peak_bytes={peak}")
+        if available < reserve + peak:
+            raise AdmissionError(f"insufficient storage: {detail}")
+        print(f"build storage: {detail}", file=sys.stderr, flush=True)
 
 
 def cpu_ticks() -> tuple[int, ...]:
@@ -193,7 +337,10 @@ def open_lock() -> int:
 
 @contextmanager
 def admission(command: list[str], kind: str = "swift", *, cleanup_proved=None):
-    if PLATFORM != "darwin":
+    if PLATFORM != "darwin" or (
+        os.environ.get("GITHUB_ACTIONS") == "true"
+        and os.environ.get("RUNNER_ENVIRONMENT") == "github-hosted"
+    ):
         yield command
         return
     arguments, limit = normalize(command[1:], kind, dict(os.environ))
@@ -214,7 +361,7 @@ def admission(command: list[str], kind: str = "swift", *, cleanup_proved=None):
         if os.read(fd, 4096):
             raise AdmissionError(f"unreconciled compiler execution in {lock_directory() / 'compiler.lock'}; "
                                  "manual reconciliation required")
-        # SwiftPM --skip-build executes already-built tests; retain serialization only.
+        # Already-built tests skip CPU sampling but still need serialized storage admission.
         if kind == "swift" and arguments[:1] == ["test"] and "--skip-build" in arguments:
             jobs = limit
         else:
@@ -228,6 +375,9 @@ def admission(command: list[str], kind: str = "swift", *, cleanup_proved=None):
                                 f"last5s={float(recent)*100:.1f}% jobs={jobs}")
                 if jobs:
                     break
+        if time.monotonic() >= deadline:
+            raise AdmissionError("admission deadline expired")
+        admit_storage(arguments, kind, dict(os.environ))
         if time.monotonic() >= deadline:
             raise AdmissionError("admission deadline expired")
         record = json.dumps({"state": "in-progress", "owner_pid": os.getpid(), "jobs": jobs}) + "\n"

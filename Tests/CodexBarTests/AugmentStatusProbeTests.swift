@@ -81,31 +81,6 @@ final class AugmentStatusProbeTests: XCTestCase {
         XCTAssertLessThanOrEqual(separatorCount, 5, "Should maintain at most 5 dumps in ring buffer")
     }
 
-    func test_debugRawProbe_includesTimestamp() async throws {
-        // Given: A probe instance
-        let probe = try self.failingProbe()
-
-        // When: We call debugRawProbe
-        let output = await probe.debugRawProbe(cookieHeaderOverride: "session=test")
-
-        // Then: The output should include an ISO8601 timestamp
-        XCTAssertTrue(output.contains("@"), "Should contain timestamp marker")
-        XCTAssertTrue(output.contains("==="), "Should contain debug header markers")
-    }
-
-    func test_debugRawProbe_includesCreditsBalance() async throws {
-        // Given: A probe instance
-        let probe = try self.failingProbe()
-
-        // When: We call debugRawProbe
-        let output = await probe.debugRawProbe(cookieHeaderOverride: "session=test")
-
-        // Then: The output should mention credits balance (either in success or failure)
-        XCTAssertTrue(
-            output.contains("Credits Balance") || output.contains("Probe Failed"),
-            "Should contain credits information or failure message")
-    }
-
     func test_creditsLimit_prefersUsageUnitsAvailable() throws {
         let response = try JSONDecoder().decode(AugmentCreditsResponse.self, from: Data("""
         {

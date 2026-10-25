@@ -279,7 +279,9 @@ def verify_fixture(root, expected_revision):
 
 
 class FixtureServer(http.server.HTTPServer):
-    allow_reuse_address = False
+    # Let sequential cases rebind while prior connections remain in TIME_WAIT.
+    allow_reuse_address = True
+    allow_reuse_port = False
 
     def __init__(self, port, content, archive, tamper):
         self.content, self.archive, self.tamper = content, archive, tamper
@@ -321,8 +323,12 @@ class FixtureHandler(http.server.BaseHTTPRequestHandler):
 
 @contextmanager
 def serving(manifest, feeds, scenario, root):
-    server = FixtureServer(manifest["port"], feeds[scenario].encode("utf-8"), root / "B.zip",
-                           scenario == "tampered-archive")
+    try:
+        server = FixtureServer(manifest["port"], feeds[scenario].encode("utf-8"), root / "B.zip",
+                               scenario == "tampered-archive")
+    except OSError as error:
+        raise candidate.CandidateError(
+            "fixture-listener", f"Cannot bind isolated loopback listener (errno={error.errno})") from error
     server.timeout = 5
     thread = threading.Thread(target=server.serve_forever, name="jones-fixture-http", daemon=True)
     thread.start()
@@ -346,14 +352,14 @@ def write_command(directory, manifest, build, action):
     pending.replace(path)
 
 
-def wait_for(read, accept, timeout=90):
+def wait_for(read, accept, timeout=90, *, phase="postcondition"):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         value = read()
         if accept(value):
             return value
         time.sleep(0.2)
-    raise candidate.CandidateError("fixture-timeout", "Native fixture did not reach its expected postcondition")
+    raise candidate.CandidateError("fixture-timeout", f"Native fixture timed out during {phase}")
 
 
 def report(directory, manifest):
@@ -369,6 +375,28 @@ def report(directory, manifest):
             type(value.get("pid")) is int and value["pid"] > 1,
             "fixture-report", "Report does not identify this fixture executable")
     return value
+
+
+def progress_report(value):
+    if value is None:
+        return None
+    allowed = {
+        "build": (BUILD_A, BUILD_B),
+        "state": ("disabled", "idle", "checking", "downloading", "preparing", "ready", "installing",
+                  "up-to-date", "cancelled", "skipped", "failed"),
+        "failure": ("", "trust", "archive-too-large", "admission", "sparkle"),
+    }
+    result = {key: value[key] for key, choices in allowed.items()
+              if type(value.get(key)) is str and value[key] in choices}
+    if type(value.get("pid")) is int and 1 < value["pid"] < 2 ** 31:
+        result["pid"] = value["pid"]
+    for key in ("canCheck", "registeredApplication"):
+        if type(value.get(key)) is bool:
+            result[key] = value[key]
+    request = value.get("requestID")
+    if type(request) is str and re.fullmatch(r"[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}", request):
+        result["requestID"] = request
+    return result
 
 
 def owned_pids(roots):
@@ -393,7 +421,7 @@ def drain(roots):
             os.kill(pid, signal.SIGTERM)
         except ProcessLookupError:
             pass
-    wait_for(lambda: owned_pids(roots), lambda value: not value, timeout=15)
+    wait_for(lambda: owned_pids(roots), lambda value: not value, timeout=15, phase="process-drain")
 
 
 def state_paths(home):
@@ -482,42 +510,98 @@ def current_build(bundle):
     return plistlib.loads(raw).get("CFBundleVersion")
 
 
+def failure_builds(directory):
+    result = {}
+    for name in ("CodexBar.app", "Jones Update Harness.app"):
+        bundle = directory / name
+        path = bundle / "Contents/Info.plist"
+        try:
+            if any(item.is_symlink() for item in (bundle, bundle / "Contents", path)):
+                result[name] = "symlink"
+            elif path.stat().st_size > 65536:
+                result[name] = "oversized"
+            else:
+                value = plistlib.loads(path.read_bytes()).get("CFBundleVersion")
+                result[name] = value if value in (BUILD_A, BUILD_B) else "unexpected"
+        except FileNotFoundError:
+            result[name] = "missing"
+        except (OSError, ValueError, AttributeError):
+            result[name] = "unreadable"
+    return result
+
+
 def run_case(root, scratch_parent, manifest, feeds, scenario):
     directory = Path(tempfile.mkdtemp(prefix="jones-update-native-", dir=scratch_parent)).resolve()
+    bundle = directory / "CodexBar.app"
     processes = []
     clean = False
+    phase = "native-state"
+    server = None
+    last_report = None
+    last_build = None
+    report_count = 0
+    processes_at_failure = []
+    builds_at_failure = {}
+
+    def read_report():
+        nonlocal last_report, report_count
+        value = report(directory, manifest)
+        summary = progress_report(value)
+        if summary != last_report:
+            last_report = summary
+            if report_count < 32:
+                print(json.dumps({"fixture_progress": {"scenario": scenario, "phase": phase,
+                                                        "report": summary}}, sort_keys=True), flush=True)
+                report_count += 1
+        return value
+
+    def read_build():
+        nonlocal last_build
+        value = current_build(bundle)
+        last_build = value if value in (BUILD_A, BUILD_B) else None
+        read_report()
+        return value
+
     try:
         with native_state(Path.home()) as lease:
             cache = lease.cache
             try:
+                phase = "extract-fixture"
                 command(["/usr/bin/ditto", "-x", "-k", "--noqtn", root / "A.zip", directory], timeout=300)
-                bundle = directory / "CodexBar.app"
                 require(inspect_harness(bundle, manifest, BUILD_A) == manifest["trees"]["A"],
                         "fixture-roundtrip", "Extracted A differs from the signed fixture")
                 write_command(directory, manifest, BUILD_A, "wait")
                 with (directory / "native.log").open("wb") as log, serving(manifest, feeds, scenario, root) as server:
+                    phase = "initial-report"
                     processes.append(launch(bundle, log))
-                    first = wait_for(lambda: report(directory, manifest),
-                                     lambda value: value and value["build"] == BUILD_A and value["canCheck"])
+                    first = wait_for(read_report,
+                                     lambda value: value and value["build"] == BUILD_A, phase=phase)
                     require(first["pid"] == processes[0].pid, "fixture-process", "Unexpected initial process")
-                    write_command(directory, manifest, BUILD_A, "check")
-                    outcome = wait_for(lambda: report(directory, manifest),
-                                       lambda value: value and value["state"] in ("ready", "failed"))
+                    phase = "update-readiness"
+                    # Fresh fixture state starts an automatic check. A prepared session can keep
+                    # canCheck false until installation; observe this cycle without requesting another.
+                    outcome = wait_for(read_report,
+                                       lambda value: value and value["state"] in ("ready", "failed"), phase=phase)
+                    require(outcome["build"] == BUILD_A and outcome["pid"] == first["pid"],
+                            "fixture-process", "Update outcome must come from the initial fixture process")
                     if scenario in ("quit", "immediate"):
                         require(outcome["state"] == "ready" and server.archive_requests > 0,
                                 "fixture-readiness", "The real installer never prepared an authenticated archive")
+                        phase = "replacement"
                         write_command(directory, manifest, BUILD_A, "install" if scenario == "immediate" else "quit")
-                        wait_for(lambda: current_build(bundle),
-                                 lambda value: value == BUILD_B)
+                        wait_for(read_build, lambda value: value == BUILD_B, phase=phase)
                         if scenario == "quit":
+                            phase = "quit-exit"
                             processes[0].wait(timeout=20)
                             # Normal quit installs without silently reopening the app.
                             time.sleep(2)
-                            require(report(directory, manifest)["build"] == BUILD_A,
+                            require(read_report()["build"] == BUILD_A,
                                     "fixture-quit", "Normal quit unexpectedly relaunched the fixture")
+                            phase = "quit-relaunch"
                             processes.append(launch(bundle, log))
-                        installed = wait_for(lambda: report(directory, manifest),
-                                             lambda value: value and value["build"] == BUILD_B)
+                        phase = "replacement-report"
+                        installed = wait_for(read_report,
+                                             lambda value: value and value["build"] == BUILD_B, phase=phase)
                         require(installed["pid"] != first["pid"] and installed["pid"] in owned_pids([directory]),
                                 "fixture-relaunch", "Replacement must run at the same path in a new process")
                         require(inspect_harness(bundle, manifest, BUILD_B) == manifest["trees"]["B"],
@@ -534,11 +618,20 @@ def run_case(root, scratch_parent, manifest, feeds, scenario):
                                 "fixture-rejection", "Rejected update changed the installed app")
                         write_command(directory, manifest, BUILD_A, "stop")
                         installed = None
-                    wait_for(lambda: owned_pids([directory, cache]), lambda value: not value, timeout=20)
+                    phase = "stop-owned-processes"
+                    wait_for(lambda: owned_pids([directory, cache]), lambda value: not value, timeout=20, phase=phase)
                     return {"scenario": scenario, "result": "passed", "initial": first, "outcome": outcome,
                             "installed": installed, "archive_requests": server.archive_requests}
             finally:
                 primary = sys.exc_info()[1]
+                if primary is not None:
+                    try:
+                        processes_at_failure = [{"pid": process.pid, "returncode": process.poll()}
+                                                for process in processes]
+                        builds_at_failure = failure_builds(directory)
+                    except Exception:
+                        # Diagnostic failures must not bypass drain or hide the original failure.
+                        pass
                 try:
                     drain([directory, cache])
                     for process in processes:
@@ -550,6 +643,15 @@ def run_case(root, scratch_parent, manifest, feeds, scenario):
                     if primary is None:
                         raise
     except BaseException:
+        try:
+            print(json.dumps({"fixture_failure": {"scenario": scenario, "phase": phase,
+                                                   "last_report": last_report, "last_build": last_build,
+                                                   "processes_before_drain": processes_at_failure,
+                                                   "builds_before_drain": builds_at_failure,
+                                                   "archive_requests": server.archive_requests if server else 0}},
+                             sort_keys=True), file=sys.stderr)
+        except OSError:
+            pass
         log_path = directory / "native.log"
         if log_path.is_file() and not log_path.is_symlink():
             with log_path.open("rb") as handle:

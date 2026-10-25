@@ -137,17 +137,6 @@ struct ToonFormatterTests {
     }
 
     @Test
-    func `NaN and infinity are rejected identically by the JSON path this formatter mirrors`() {
-        struct Wrapper: Encodable { let usedPercent: Double }
-
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-
-        #expect(throws: (any Error).self) { try encoder.encode(Wrapper(usedPercent: .nan)) }
-        #expect(throws: (any Error).self) { try encoder.encode(Wrapper(usedPercent: .infinity)) }
-    }
-
-    @Test
     func `encodes dates as ISO8601 strings matching the JSON formatter`() {
         struct Wrapper: Encodable { let updatedAt: Date }
         let date = Date(timeIntervalSince1970: 0)

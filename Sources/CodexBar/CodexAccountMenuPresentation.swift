@@ -180,12 +180,21 @@ extension [CodexVisibleAccount] {
 }
 
 extension CodexVisibleAccountProjection {
-    var menuAccounts: [CodexVisibleAccount] {
+    private var enrolledMenuPathsByAlias: [String: [String]] {
         let enrolledPaths = self.fleetProfileHomePaths.compactMap { CodexHomeScope.normalizedHomePath($0) }
-        let enrolledByAlias = Dictionary(grouping: enrolledPaths, by: {
+        return Dictionary(grouping: enrolledPaths, by: {
             URL(fileURLWithPath: $0).lastPathComponent
         })
-        guard JonesAccountAggregate.codexAliases.contains(where: { enrolledByAlias[$0] != nil }) else {
+    }
+
+    var hasNamedFleetRoster: Bool {
+        let enrolledByAlias = self.enrolledMenuPathsByAlias
+        return JonesAccountAggregate.codexAliases.contains(where: { enrolledByAlias[$0] != nil })
+    }
+
+    var menuAccounts: [CodexVisibleAccount] {
+        let enrolledByAlias = self.enrolledMenuPathsByAlias
+        guard self.hasNamedFleetRoster else {
             return self.visibleAccounts
                 .filter { $0.selectionSource != .liveSystem && $0.fleetProfileAlias != "default" }
         }
@@ -198,6 +207,21 @@ extension CodexVisibleAccountProjection {
             }
             return matches.count == 1 ? matches.first : nil
         }
+    }
+
+    var systemAccountMenuAccounts: [CodexVisibleAccount] {
+        self.hasNamedFleetRoster ? self.menuAccounts : self.visibleAccounts
+    }
+
+    var systemAccountMenuLiveAccount: CodexVisibleAccount? {
+        guard let live = self.visibleAccounts.first(where: { $0.id == self.liveVisibleAccountID }) else {
+            return nil
+        }
+        let accounts = self.systemAccountMenuAccounts
+        if let exact = accounts.first(where: { $0.id == live.id }) { return exact }
+        // Match the live identity only when one enrolled profile owns it; usage selection is independent.
+        let matches = accounts.filter { UsageStore.codexPriorSnapshotAccountMatches(live, account: $0) }
+        return matches.count == 1 ? matches.first : nil
     }
 
     var omitsSummary: Bool {

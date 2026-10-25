@@ -5,6 +5,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 assert_gate() {
   local expected="$1"
@@ -44,8 +46,8 @@ assert_gate() {
     exit 1
   fi
 
-  if [[ "$expected" == false && "$reason" != "docs/site-only changes covered by portable checks" ]]; then
-    printf '%s: expected docs/site skip reason, got %s\n' "$name" "$reason" >&2
+  if [[ "$expected" == false && "$reason" != "changes covered by portable checks or another platform" ]]; then
+    printf '%s: expected platform skip reason, got %s\n' "$name" "$reason" >&2
     exit 1
   fi
 }
@@ -102,10 +104,76 @@ assert_linux_musl_gate true nested-swift-source $'M\tSources/CodexBarCore/Host/P
 assert_linux_musl_gate true rename-from-swift $'R100\tSources/CodexBarCore/Old.swift\tdocs/Old.md'
 assert_linux_musl_gate true rename-to-swift $'R100\tdocs/New.md\tSources/CodexBarCore/New.swift'
 assert_linux_musl_gate false tests-only $'M\tTests/CodexBarTests/ProcessTests.swift'
-assert_linux_musl_gate false workflow-only $'M\t.github/workflows/ci.yml'
-assert_linux_musl_gate false script-only $'M\tScripts/ci_verify_test_jobs.sh'
-assert_linux_musl_gate false package-resolved $'M\tPackage.resolved'
+assert_linux_musl_gate true workflow-only $'M\t.github/workflows/ci.yml'
+assert_linux_musl_gate true script-only $'M\tScripts/ci_verify_test_jobs.sh'
+assert_linux_musl_gate true package-resolved $'M\tPackage.resolved'
 assert_linux_musl_gate true empty-diff
+
+# Native-only paths must not compile either Linux matrix, including deleted and renamed paths.
+assert_gate false portable-site-script $'M\tScripts/check-site-locales.mjs'
+assert_gate false candidate-workflow $'M\t.github/workflows/jones-app-candidate.yml'
+assert_gate true global-ci $'M\t.github/workflows/ci.yml'
+assert_gate true global-harness $'M\tScripts/test.sh'
+assert_gate true development-policy $'M\tdocs/DEVELOPMENT.md'
+assert_gate true agent-policy $'M\t.agents/skills/example/SKILL.md'
+assert_gate true shared-c $'M\tSources/CQuickJS/quickjs.c'
+assert_gate true dependencies $'M\tPackage.resolved'
+assert_gate true portable-tests $'M\tTestsLinux/UsageTests.swift'
+assert_gate true plugin-tests $'M\tTestsPlugin/PluginTests.swift'
+assert_gate true adaptive-tests $'M\tTests/AdaptiveReplayKitTests/ReplayTests.swift'
+assert_gate true native-source-markdown $'M\tSources/CodexBar/Resources/runtime.md'
+assert_linux_musl_gate false native-only $'M\tSources/CodexBar/App.swift'
+assert_linux_musl_gate false native-deletion $'D\tWidgetExtension/Widget.swift'
+assert_linux_musl_gate false native-rename $'R100\tSources/CodexBar/Old.swift\tSources/CodexBar/New.swift'
+assert_linux_musl_gate true shared-c $'M\tSources/CQuickJS/quickjs.c'
+assert_linux_musl_gate true module-map $'M\tSources/CSQLite3/module.modulemap'
+assert_linux_musl_gate true shared-to-native $'R100\tSources/CodexBarCore/A.swift\tSources/CodexBar/A.swift'
+assert_linux_musl_gate true deleted-shared $'D\tSources/CodexBarCore/A.swift'
+assert_linux_musl_gate false portable-tests $'M\tTestsLinux/UsageTests.swift'
+assert_linux_musl_gate true unknown $'M\tnew-build-input'
+
+assert_linux_gate() {
+  local expected="$1"
+  local name="$2"
+  local paths_file="${tmp_dir}/linux-${name}.paths"
+  local output_file="${tmp_dir}/linux-${name}.output"
+  shift 2
+  printf '%s\n' "$@" > "$paths_file"
+  GITHUB_OUTPUT="$output_file" "${ROOT_DIR}/Scripts/ci_linux_test_gate.sh" "$paths_file" >/dev/null
+  if [[ "$(sed -n 's/^linux-tests=//p' "$output_file")" != "$expected" ]] \
+    || [[ -z "$(sed -n 's/^linux-tests-reason=//p' "$output_file")" ]]; then
+    printf '%s: unexpected Linux glibc gate output\n' "$name" >&2
+    exit 1
+  fi
+}
+
+assert_linux_gate false docs $'M\tREADME.md'
+assert_linux_gate false native-source $'M\tSources/CodexBar/App.swift'
+assert_linux_gate false native-tests $'M\tTests/CodexBarTests/AppTests.swift'
+assert_linux_gate false native-deleted $'D\tWidgetExtension/Widget.swift'
+assert_linux_gate false portable-script $'M\tScripts/check-site-locales.mjs'
+assert_linux_gate false candidate-workflow $'M\t.github/workflows/jones-menu-candidate.yml'
+assert_linux_gate true shared-source $'M\tSources/CodexBarCore/Core.swift'
+assert_linux_gate true c-source $'M\tSources/CQuickJS/quickjs.c'
+assert_linux_gate true dependencies $'M\tPackage.resolved'
+assert_linux_gate true linux-tests $'M\tTestsLinux/Tests.swift'
+assert_linux_gate true plugin-tests $'M\tTestsPlugin/Tests.swift'
+assert_linux_gate true adaptive-tests $'M\tTests/AdaptiveReplayCLITests/Tests.swift'
+assert_linux_gate true global-ci $'M\t.github/workflows/ci.yml'
+assert_linux_gate true global-harness $'M\tScripts/test.sh'
+assert_linux_gate true unknown $'M\tnew-build-input'
+assert_linux_gate true empty
+assert_linux_gate true rename-from-shared $'R100\tSources/CodexBarCore/Core.swift\tdocs/Old.md'
+assert_linux_gate true rename-to-shared $'R100\tdocs/Old.md\tSources/CodexBarCore/Core.swift'
+assert_linux_gate true copy-from-shared $'C100\tSources/CodexBarCore/Core.swift\tdocs/Old.md'
+for name in ProviderPluginDetailsParityTests ProviderPluginExtensionParityTests ProviderPluginParityTests \
+  ProviderPluginRuntimeTests Sub2APIPluginGoldenTests; do
+  shared_path="Tests/CodexBarTests/${name}.swift"
+  assert_linux_gate true "${name}-modified" "$(printf 'M\t%s' "$shared_path")"
+  assert_linux_gate true "${name}-deleted" "$(printf 'D\t%s' "$shared_path")"
+  assert_linux_gate true "${name}-renamed" "$(printf 'R100\t%s\tdocs/old.md' "$shared_path")"
+  assert_gate true "${name}-native" "$(printf 'M\t%s' "$shared_path")"
+done
 
 draft_paths="${tmp_dir}/draft-source.paths"
 draft_output="${tmp_dir}/draft-source.output"
@@ -159,22 +227,26 @@ assert_gate_fails extra-modified-path $'M\tREADME.md\tdocs/configuration.md'
 assert_gate_fails missing-rename-score $'R\tREADME.md\tdocs/README.md'
 assert_gate_fails invalid-rename-score $'Rfoo\tREADME.md\tdocs/README.md'
 assert_gate_fails out-of-range-rename-score $'R101\tREADME.md\tdocs/README.md'
+assert_gate_fails empty-column $'M\t\tREADME.md'
+assert_gate_fails trailing-column $'M\tREADME.md\t'
 
 for malformed_case in missing-rename-target extra-modified-path missing-rename-score \
-  invalid-rename-score out-of-range-rename-score
+  invalid-rename-score out-of-range-rename-score empty-column trailing-column
 do
   paths_file="${tmp_dir}/${malformed_case}.paths"
-  output_file="${tmp_dir}/linux-musl-${malformed_case}.output"
-  if GITHUB_OUTPUT="$output_file" \
-    "${ROOT_DIR}/Scripts/ci_linux_musl_build_gate.sh" "$paths_file" >/dev/null 2>&1
-  then
-    printf '%s: malformed Linux musl gate input unexpectedly succeeded\n' "$malformed_case" >&2
-    exit 1
-  fi
-  if [[ -s "$output_file" ]]; then
-    printf '%s: malformed Linux musl gate input emitted an output\n' "$malformed_case" >&2
-    exit 1
-  fi
+  for platform_script in ci_linux_musl_build_gate.sh ci_linux_test_gate.sh; do
+    output_file="${tmp_dir}/${platform_script}-${malformed_case}.output"
+    if GITHUB_OUTPUT="$output_file" \
+      "${ROOT_DIR}/Scripts/$platform_script" "$paths_file" >/dev/null 2>&1
+    then
+      printf '%s: malformed %s input unexpectedly succeeded\n' "$malformed_case" "$platform_script" >&2
+      exit 1
+    fi
+    if [[ -s "$output_file" ]]; then
+      printf '%s: malformed gate input emitted an output\n' "$malformed_case" >&2
+      exit 1
+    fi
+  done
 done
 
 if CI_PULL_REQUEST_DRAFT=maybe GITHUB_OUTPUT="${tmp_dir}/invalid-draft.output" \
@@ -199,11 +271,6 @@ if [[ -s "$unterminated_output" ]]; then
 fi
 
 verify="${ROOT_DIR}/Scripts/ci_verify_test_jobs.sh"
-"$verify" success success true success false true success success >/dev/null
-"$verify" success success true success false false skipped success >/dev/null
-"$verify" success success false skipped false true success success >/dev/null
-"$verify" success success false skipped false false skipped success >/dev/null
-
 assert_verify_fails() {
   if "$verify" "$@" >/dev/null 2>&1; then
     printf 'unexpected aggregate success: %s\n' "$*" >&2
@@ -211,62 +278,50 @@ assert_verify_fails() {
   fi
 }
 
-assert_verify_fails success success true skipped false true success success
-assert_verify_fails success success true skipped true true success success
-assert_verify_fails success success false skipped true true success success
-assert_verify_fails success success true success true true success success
-assert_verify_fails success success false success false true success success
-assert_verify_fails success success "" skipped false true success success
-assert_verify_fails failure success true success false true success success
-assert_verify_fails success failure true success false true success success
-assert_verify_fails success success true success false true skipped success
-assert_verify_fails success success true success false false success success
-assert_verify_fails success success true success false "" skipped success
-
-assert_linux_verify_fails() {
-  local expected="$1"
-  local error_file="${tmp_dir}/linux-verify.error"
-  shift
-  if "$verify" "$@" >/dev/null 2>"$error_file"; then
-    printf 'unexpected Linux aggregate success: %s\n' "$*" >&2
-    exit 1
-  fi
-  if ! grep -Fxq "build-linux-cli matrix finished with ${expected}; expected success" "$error_file"; then
-    printf 'expected Linux matrix diagnostic for %s\n' "$expected" >&2
-    cat "$error_file" >&2
-    exit 1
-  fi
-}
-
+# Every selected scope requires success; only a known false gate permits skipped.
 for macos_required in true false; do
   macos_result=success
   [[ "$macos_required" == true ]] || macos_result=skipped
   for musl_required in true false; do
     musl_result=success
     [[ "$musl_required" == true ]] || musl_result=skipped
-    valid_args=(success success "$macos_required" "$macos_result" false "$musl_required" "$musl_result")
-    for linux_result in failure cancelled skipped '' unknown; do
-      assert_linux_verify_fails "${linux_result:-<empty>}" "${valid_args[@]}" "$linux_result"
-    done
-    assert_linux_verify_fails '<missing>' "${valid_args[@]}"
-
-    for failed_result in failure cancelled; do
-      assert_verify_fails "$failed_result" success "$macos_required" "$macos_result" \
-        false "$musl_required" "$musl_result" success
-      assert_verify_fails success "$failed_result" "$macos_required" "$macos_result" \
-        false "$musl_required" "$musl_result" success
-      if [[ "$macos_required" == true ]]; then
-        assert_verify_fails success success true "$failed_result" false "$musl_required" "$musl_result" success
-      fi
-      if [[ "$musl_required" == true ]]; then
-        assert_verify_fails success success "$macos_required" "$macos_result" false true "$failed_result" success
-      fi
+    for linux_required in true false; do
+      linux_result=success
+      [[ "$linux_required" == true ]] || linux_result=skipped
+      valid_args=(success success "$macos_required" "$macos_result" false \
+        "$musl_required" "$musl_result" "$linux_result" "$linux_required")
+      "$verify" "${valid_args[@]}" >/dev/null
+      for result_index in 0 1 3 6 7; do
+        for result in success failure cancelled skipped '' unknown; do
+          [[ "$result" == "${valid_args[$result_index]}" ]] && continue
+          invalid_args=("${valid_args[@]}")
+          invalid_args[$result_index]="$result"
+          assert_verify_fails "${invalid_args[@]}"
+        done
+      done
+      for gate_index in 2 5 8; do
+        for value in '' unknown; do
+          invalid_args=("${valid_args[@]}")
+          invalid_args[$gate_index]="$value"
+          assert_verify_fails "${invalid_args[@]}"
+        done
+      done
+      for deferred in true '' unknown; do
+        invalid_args=("${valid_args[@]}")
+        invalid_args[4]="$deferred"
+        assert_verify_fails "${invalid_args[@]}"
+      done
+      assert_verify_fails "${valid_args[@]:0:8}"
+      assert_verify_fails "${valid_args[@]:0:7}"
     done
   done
 done
+assert_verify_fails success success true skipped true false skipped skipped false
 
 # Check the actual aggregate dependency and shell argument, not summary text elsewhere in the workflow.
 python3 - "${ROOT_DIR}/.github/workflows/ci.yml" <<'PY'
+import ast
+import os
 import pathlib
 import re
 import shlex
@@ -284,8 +339,52 @@ command = re.search(r"(?m)^          \./Scripts/ci_verify_test_jobs\.sh(?:[^\n]*
 if command is None:
     sys.exit("missing aggregate verifier command")
 arguments = shlex.split(command.group(0).replace("\\\n", ""))
-if len(arguments) != 9 or arguments[8] != "${{ needs.build-linux-cli.result }}":
+if len(arguments) != 10 or arguments[8] != "${{ needs.build-linux-cli.result }}":
     sys.exit("aggregate verifier argument eight must be needs.build-linux-cli.result")
+if arguments[9] != "${{ needs.changes.outputs.linux-tests }}":
+    sys.exit("aggregate verifier argument nine must explicitly supply the Linux gate")
+linux = re.search(r"(?ms)^  build-linux-cli:\n(.*?)(?=^  [\w-]+:|\Z)", workflow).group(1)
+if "needs: changes" not in linux or "needs.changes.outputs.linux-tests == 'true'" not in linux:
+    sys.exit("Linux matrix must use the explicit path gate")
+if "LINUX_BUILD_CONFIGURATION: ${{ github.event_name == 'pull_request' && 'debug' || 'release' }}" not in linux:
+    sys.exit("Linux PR build must share debug compilation with tests")
+if 'build_args+=(--static-swift-stdlib)' not in linux or 'grep -q "macOS" <<< "$smoke_error"' not in linux:
+    sys.exit("Linux release/static and offline platform rejection checks must remain")
+
+for filename, label in (("jones-app-candidate.yml", "codexbar-package"),
+                        ("jones-menu-candidate.yml", "codexbar-menu-candidate")):
+    candidate = pathlib.Path(sys.argv[1]).with_name(filename).read_text()
+    if re.search(r"(?m)^  push:", candidate) or "  workflow_dispatch:" not in candidate:
+        sys.exit(f"{filename}: candidates must be opt-in, without automatic main pushes")
+    if not re.search(r"types: \[[^\]]*synchronize[^\]]*labeled", candidate):
+        sys.exit(f"{filename}: label and subsequent source changes must be supported")
+    for condition in ("github.event_name == 'workflow_dispatch'", "github.event_name == 'pull_request'",
+                      "github.event.pull_request.draft == false",
+                      "github.event.pull_request.head.repo.full_name == github.repository",
+                      f"contains(github.event.pull_request.labels.*.name, '{label}')",
+                      f"github.event.label.name == '{label}'"):
+        if condition not in candidate:
+            sys.exit(f"{filename}: missing opt-in condition: {condition}")
+    if "    paths:" not in candidate or "ref: ${{ github.event.pull_request.head.sha || github.sha }}" not in candidate:
+        sys.exit(f"{filename}: retain path filters and exact-head checkout")
+    if "    concurrency:" not in candidate or "  cancel-in-progress: true" not in candidate:
+        sys.exit(f"{filename}: selected PR updates must cancel superseded packaging")
+    if "format('pr-{0}', github.event.pull_request.number) || format('event-{0}', github.run_id)" not in candidate:
+        sys.exit(f"{filename}: skipped events need a separate cancellation group")
+    if "group: codexbar-candidate-packaging" not in candidate or "cancel-in-progress: false" not in candidate:
+        sys.exit(f"{filename}: serialize packaging without cancelling active candidates")
+
+root = pathlib.Path(sys.argv[1]).resolve().parents[2]
+classifier = (root / "Scripts/ci_path_gate.sh").read_text().split("<<'PY'\n", 1)[1].rsplit("\nPY", 1)[0]
+shared_sources = next(ast.literal_eval(node.value) for node in ast.parse(classifier).body
+                      if isinstance(node, ast.Assign)
+                      and any(isinstance(target, ast.Name) and target.id == "portable_source_paths"
+                              for target in node.targets))
+symlink_sources = {str((path.parent / os.readlink(path)).resolve().relative_to(root))
+                   for path in (root / "TestsPlugin").iterdir() if path.is_symlink()}
+if shared_sources != symlink_sources:
+    sys.exit("shared plugin source path gate must match TestsPlugin symlink targets")
+
 PY
 
 printf 'CI path gate tests passed.\n'

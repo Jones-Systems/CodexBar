@@ -61,6 +61,46 @@ through GitHub's expected-head guard, without bypass or branch deletion; verify
 the merged PR, merge parents and inclusion in canonical `main`. Preserve the
 legacy remote and use the verified canonical remote for local synchronization.
 
+### Required and advisory CI checks
+
+`changes`, `lint`, and `lint-build-test` are required on every non-draft PR.
+The two `swift-test-macos` shards, two `build-linux-cli` architecture jobs,
+and `build-linux-musl-cli` are required when their checked-in path gates select
+them. An explicit matching gate may permit a skipped platform job; a missing,
+failed, cancelled, or unexplained skipped job never satisfies the aggregate.
+The aggregate must validate all selected jobs on the current head. Keep the
+GitHub Actions app and workflow identity requirements above. Selected musl PRs
+compile debug with the pinned static SDK; main/manual runs compile release.
+Both must verify static linkage. Release-only compilation is a main/manual check.
+
+Every other check is advisory, including Jones app/menu candidates, native
+workflow proofs, release artifacts, and manual performance campaigns. An
+advisory failure needs repair or a tracking issue but does not hold a merge.
+These declarations do not change GitHub rulesets or branch protection.
+
+Aim for push-to-required-green median at most ten minutes and p90 at most
+twenty minutes, including queues, with each required job at most 390 seconds.
+Record measured exceptions and their causes; do not reclassify compiler or
+unit coverage as advisory merely to claim the target. Scope macOS PR/push jobs
+to the paths they prove, cancel superseded PR runs, and keep packaging opt-in.
+Keep the native tier to three to five critical journeys, advisory and opt-in
+by label or manual run until a suitable scheduled route is qualified.
+
+Right-size tests by behavior and retained coverage. Remove redundant,
+superseded, obsolete, trivial, or disproportionate cases in separate removal
+changes with reasons. Diagnose failures before changing a test; never delete,
+skip, retry, or weaken one to obtain green. Preserve supported-platform and
+provider-isolation contracts.
+
+Normal test execution uses the owner-scoped Codex/Claude profile in
+`Scripts/test_profiles.json`; see [test profiles](docs/testing-profiles.md).
+Unused-provider, hook, plugin and iCloud test source stays available through
+`CODEXBAR_TEST_PROFILE=full` and the manual CI full input, with no automatic
+nightly. Preserve shared account, persistence, resource, privacy/security and
+relevant regression coverage. CLI-dependent coverage remains normal until its
+usage boundary is confirmed. Product/compiler checks retain their required
+status above; profile selection does not change job identity or aggregation.
+
 For app changes, build the tested source with the existing local Jones identity
 (`com.jonessystems.codexbar`) and verify its bundle, architecture and signature.
 Replace only the identified installed Jones app after a normal graceful quit,

@@ -149,6 +149,7 @@ enum CodexAccountPromotionError: Error, Equatable {
     case fleetTargetAuthMissing
     case fleetTargetAuthUnreadable
     case fleetDestinationAmbiguous
+    case fleetLaunchHomeOverride
     case targetManagedAccountNotFound
     case targetManagedAccountAuthMissing
     case targetManagedAccountAuthUnreadable

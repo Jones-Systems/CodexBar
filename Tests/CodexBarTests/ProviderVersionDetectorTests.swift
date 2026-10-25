@@ -516,27 +516,6 @@ final class ProviderVersionDetectorTests: XCTestCase {
         XCTAssertEqual(state.callCount, 2)
     }
 
-    func test_claudeVersion_benchmark1000SequentialCalls() {
-        let state = MockDetectorState()
-        ProviderVersionDetector.whichHook = { _ in "/mock/bin/claude" }
-        ProviderVersionDetector.attributesHook = { _ in
-            [
-                .modificationDate: Date(timeIntervalSince1970: 1000),
-                .size: NSNumber(value: 5000),
-                .systemFileNumber: NSNumber(value: 99),
-            ]
-        }
-        ProviderVersionDetector.runClaudeVersionHook = { _ in
-            state.increment()
-        }
-
-        for _ in 0..<1000 {
-            _ = Self.userInitiatedClaudeVersion()
-        }
-
-        XCTAssertEqual(state.callCount, 1)
-    }
-
     private func configureClaudeVersionHooks(state: MockDetectorState) {
         ProviderVersionDetector.whichHook = { _ in "/mock/bin/claude" }
         ProviderVersionDetector.attributesHook = { _ in

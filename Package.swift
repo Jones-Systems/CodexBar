@@ -18,6 +18,45 @@ let sqlite3LinkerSettings: [LinkerSetting] = if let sqlite3LibDir, !sqlite3LibDi
     []
 }
 
+// Test membership only: product targets and fixtures are identical in both profiles.
+// An explicit full run restores unused-feature coverage; see docs/testing-profiles.md.
+struct TestProfileManifest: Decodable {
+    struct Group: Decodable {
+        let files: [String]
+    }
+
+    let version: Int
+    let full_only_groups: [Group]
+}
+
+let testProfile = ProcessInfo.processInfo.environment["CODEXBAR_TEST_PROFILE"] ?? "normal"
+precondition(["normal", "full"].contains(testProfile), "CODEXBAR_TEST_PROFILE must be normal or full")
+let testProfileURL = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+    .appendingPathComponent("Scripts/test_profiles.json")
+let testProfileManifest = try JSONDecoder().decode(
+    TestProfileManifest.self, from: Data(contentsOf: testProfileURL))
+precondition(testProfileManifest.version == 1, "Unsupported test profile manifest")
+let fullOnlyTestFiles = testProfileManifest.full_only_groups.flatMap(\.files)
+precondition(Set(fullOnlyTestFiles).count == fullOnlyTestFiles.count, "Duplicate test profile paths")
+for path in fullOnlyTestFiles {
+    precondition(
+        ["Tests/", "TestsLinux/", "TestsPlugin/"].contains(where: path.hasPrefix)
+            && !path.split(separator: "/").contains("..") && path.hasSuffix(".swift"),
+        "Invalid test profile path: \(path)")
+    precondition(
+        FileManager.default.fileExists(atPath: testProfileURL.deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent(path).path),
+        "Missing test profile source: \(path)")
+}
+
+func testProfileExclusions(under directory: String) -> [String] {
+    guard testProfile == "normal" else { return [] }
+    let prefix = directory + "/"
+    return fullOnlyTestFiles.filter { $0.hasPrefix(prefix) }.map { String($0.dropFirst(prefix.count)) }
+}
+
+let testProfileSettings: [SwiftSetting] = testProfile == "full" ? [.define("CODEXBAR_FULL_TEST_PROFILE")] : []
+
 let package = Package(
     name: "CodexBar",
     defaultLocalization: "en",
@@ -142,26 +181,29 @@ let package = Package(
                 name: "AdaptiveReplayCLITests",
                 dependencies: ["AdaptiveReplayCLI", "AdaptiveReplayKit"],
                 path: "Tests/AdaptiveReplayCLITests",
+                exclude: testProfileExclusions(under: "Tests/AdaptiveReplayCLITests"),
                 swiftSettings: [
                     .enableUpcomingFeature("StrictConcurrency"),
                     .enableExperimentalFeature("SwiftTesting"),
-                ]),
+                ] + testProfileSettings),
             .testTarget(
                 name: "AdaptiveReplayKitTests",
                 dependencies: ["AdaptiveRefreshCore", "AdaptiveReplayKit"],
                 path: "Tests/AdaptiveReplayKitTests",
+                exclude: testProfileExclusions(under: "Tests/AdaptiveReplayKitTests"),
                 swiftSettings: [
                     .enableUpcomingFeature("StrictConcurrency"),
                     .enableExperimentalFeature("SwiftTesting"),
-                ]),
+                ] + testProfileSettings),
             .testTarget(
                 name: "CodexBarPluginTests",
                 dependencies: ["CodexBarCore"],
                 path: "TestsPlugin",
+                exclude: testProfileExclusions(under: "TestsPlugin"),
                 swiftSettings: [
                     .enableUpcomingFeature("StrictConcurrency"),
                     .enableExperimentalFeature("SwiftTesting"),
-                ]),
+                ] + testProfileSettings),
             .testTarget(
                 name: "CodexBarLinuxTests",
                 dependencies: [
@@ -170,10 +212,11 @@ let package = Package(
                     .target(name: "CSQLite3", condition: .when(platforms: [.linux])),
                 ],
                 path: "TestsLinux",
+                exclude: testProfileExclusions(under: "TestsLinux"),
                 swiftSettings: [
                     .enableUpcomingFeature("StrictConcurrency"),
                     .enableExperimentalFeature("SwiftTesting"),
-                ]),
+                ] + testProfileSettings),
         ]
 
         #if os(macOS)
@@ -223,7 +266,7 @@ let package = Package(
             name: "CodexBarTests",
             dependencies: ["CodexBar", "CodexBarCore", "CodexBarCLI", "CodexBarCostStoreCrashProbe", "CodexBarWidget"],
             path: "Tests",
-            exclude: [
+            exclude: Array(Set([
                 "AdaptiveReplayCLITests",
                 "AdaptiveReplayKitTests",
                 "CodexBarTests/ProviderPluginDetailsParityTests.swift",
@@ -231,14 +274,14 @@ let package = Package(
                 "CodexBarTests/ProviderPluginParityTests.swift",
                 "CodexBarTests/ProviderPluginRuntimeTests.swift",
                 "CodexBarTests/Sub2APIPluginGoldenTests.swift",
-            ],
+            ] + testProfileExclusions(under: "Tests"))).sorted(),
             resources: [
                 .copy("CodexBarTests/Fixtures"),
             ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency"),
                 .enableExperimentalFeature("SwiftTesting"),
-            ]))
+            ] + testProfileSettings))
         #endif
 
         return targets

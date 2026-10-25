@@ -6,6 +6,7 @@ import Testing
 
 @MainActor
 struct OpenCodeGoEstimatedPaceTests {
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test(arguments: [UsageDataConfidence.estimated, .unknown, .exact])
     func `CLI quota and disclosure survive while only authoritative windows get pace`(
         confidence: UsageDataConfidence)
@@ -126,6 +127,7 @@ struct OpenCodeGoEstimatedPaceTests {
         #expect(store.weeklyPace(
             provider: .zai, window: window, dataConfidence: .estimated, now: OpenCodeGoPaceTestSupport.now) != nil)
     }
+    #endif
 
     @Test
     func `only OpenCode Go opts out of estimated pace`() {
@@ -137,6 +139,7 @@ struct OpenCodeGoEstimatedPaceTests {
         }
     }
 
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test(arguments: [UsageDataConfidence.estimated, .unknown, .exact])
     func `legacy menu omits estimate forecasts without hiding quota rows`(confidence: UsageDataConfidence) {
         let settings = testSettingsStore(
@@ -165,6 +168,7 @@ struct OpenCodeGoEstimatedPaceTests {
         #expect(texts.contains { $0.contains("Monthly") })
         #expect(texts.contains { $0.contains("Pace:") } == (confidence != .estimated))
     }
+    #endif
 }
 
 enum OpenCodeGoPaceTestSupport {

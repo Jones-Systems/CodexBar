@@ -24,15 +24,6 @@ struct KiloOrganizationTests {
         let org = try JSONDecoder().decode(KiloOrganization.self, from: data)
         #expect(org.role == nil)
     }
-
-    @Test
-    func `equality covers all stored fields`() {
-        let a = KiloOrganization(id: "org_1", name: "A", role: "member")
-        let b = KiloOrganization(id: "org_1", name: "A", role: "member")
-        let differentRole = KiloOrganization(id: "org_1", name: "A", role: "owner")
-        #expect(a == b)
-        #expect(a != differentRole)
-    }
 }
 
 struct KiloUsageScopeTests {

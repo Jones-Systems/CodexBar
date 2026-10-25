@@ -28,8 +28,13 @@ class IsolatedCICommandsTests(unittest.TestCase):
         self.workspace = self.root / "workspace"
         scripts = self.workspace / "Scripts"
         scripts.mkdir(parents=True)
-        for name in ("test.sh", "test-plugin-engines.sh", "ci_swift_test_by_suite.py", "build_jobs.py"):
+        for name in ("test.sh", "test-plugin-engines.sh", "ci_swift_test_by_suite.py",
+                     "ci_swift_test_campaign.py", "test_profiles.py", "build_jobs.py"):
             shutil.copy2(ROOT / "Scripts" / name, scripts / name)
+        (scripts / "test_profiles.json").write_text(json.dumps({
+            "version": 1, "normal_providers": ["codex", "claude"],
+            "full_only_groups": [], "mixed_full_only": [],
+        }))
         helper = scripts / "build_jobs.py"
         helper.write_text(helper.read_text().replace(
             'PLATFORM = sys.platform', 'PLATFORM = "linux"'))
@@ -48,7 +53,10 @@ assert "CODEXBAR_TEST_CODEX_FILE_FIXTURES" not in os.environ
 (parent / "synthetic-fixture").write_text("fixture")
 with open(os.environ["CI_COMMAND_RECORD"], "a") as output:
     output.write(json.dumps({"args": sys.argv[1:], "engine": os.environ.get("CODEXBAR_PLUGIN_ENGINE"),
+                             "profile": os.environ.get("CODEXBAR_TEST_PROFILE"),
                              "parent": str(parent)}) + "\\n")
+if sys.argv[1:] == ["test", "list", "--skip-build"]:
+    print("CodexBarTests.Synthetic/test_one()")
 sys.exit(int(os.environ.get("CI_COMMAND_EXIT", "0")))
 ''')
         swift.chmod(0o700)
@@ -87,13 +95,17 @@ sys.exit(int(os.environ.get("CI_COMMAND_EXIT", "0")))
         self.assertIn("removed and absence verified", self.output)
         self.assertEqual(list(self.workspace.glob(".test-fixtures-*")), [])
 
-    def test_linux_command_retains_parallel_selection_and_cleanup(self):
+    def test_linux_parallel_route_builds_lists_then_executes_and_cleans_up(self):
         workflow = (ROOT / ".github/workflows/ci.yml").read_text()
-        self.assertIn("run: ./Scripts/test.sh --command swift test --parallel", workflow)
-        status = self.invoke([str(self.workspace / "Scripts/test.sh"), "--command", "swift", "test", "--parallel"])
+        self.assertIn("run: ./Scripts/test.sh --parallel", workflow)
+        status = self.invoke([str(self.workspace / "Scripts/test.sh"), "--parallel"])
         self.assertEqual(status, 0, self.output)
         records = self.records()
-        self.assertEqual([item["args"] for item in records], [["test", "--parallel"]])
+        self.assertEqual([item["args"] for item in records], [
+            ["build", "--build-tests"],
+            ["test", "list", "--skip-build"],
+            ["test", "--skip-build", "--parallel"],
+        ])
         self.assert_owned_cleanup(records)
 
     def test_focused_command_caps_explicit_twelve_on_macos(self):
@@ -101,6 +113,8 @@ sys.exit(int(os.environ.get("CI_COMMAND_EXIT", "0")))
         helper.write_text(helper.read_text().replace('PLATFORM = "linux"', 'PLATFORM = "darwin"') +
                           '\nlock_directory = lambda: Path(' + repr(str(self.root / "lock")) + ')\n' +
                           'sample_window = lambda deadline: (Fraction(1, 5), Fraction(1, 5), 30)\n' +
+                          'os.statvfs = lambda path: type("Storage", (), {"f_bavail": 20 * 1024**2, '
+                          '"f_frsize": 4096})()\n' +
                           'os.cpu_count = lambda: 12\n')
         status = self.invoke([str(self.workspace / "Scripts/test.sh"), "--command", "swift", "test",
                               "--filter", "FocusedTests", "-j12"])
@@ -115,6 +129,7 @@ sys.exit(int(os.environ.get("CI_COMMAND_EXIT", "0")))
         self.assertEqual(status, 0, self.output)
         records = self.records()
         self.assertEqual([item["engine"] for item in records], [None, "jsc"])
+        self.assertEqual([item["profile"] for item in records], ["full", "full"])
         self.assertEqual([item["args"] for item in records], [
             ["test", "--filter", FILTER], ["test", "--skip-build", "--filter", FILTER],
         ])
@@ -127,6 +142,27 @@ sys.exit(int(os.environ.get("CI_COMMAND_EXIT", "0")))
         records = self.records()
         self.assertEqual(len(records), 1)
         self.assert_owned_cleanup(records)
+
+    def test_plugin_rollback_selects_full_build_and_preserves_result(self):
+        for result in (0, 37):
+            with self.subTest(result=result):
+                self.record = self.root / f"jsc-{result}.jsonl"
+                self.env["CI_COMMAND_RECORD"] = str(self.record)
+                self.env["CI_COMMAND_EXIT"] = str(result)
+                status = self.invoke([str(self.workspace / "Scripts/test-plugin-engines.sh"), "--jsc-only"])
+                self.assertEqual(status, result, self.output)
+                records = self.records()
+                self.assertEqual([item["engine"] for item in records], ["jsc"])
+                self.assertEqual([item["profile"] for item in records], ["full"])
+                self.assertEqual([item["args"] for item in records], [
+                    ["test", "--filter", FILTER],
+                ])
+                self.assert_owned_cleanup(records)
+
+    def test_plugin_unknown_option_starts_no_command(self):
+        status = self.invoke([str(self.workspace / "Scripts/test-plugin-engines.sh"), "--unknown"])
+        self.assertEqual(status, 2, self.output)
+        self.assertFalse(self.record.exists())
 
     def test_borrowed_parent_is_retained_on_command_failure(self):
         parent = self.workspace / "borrowed"

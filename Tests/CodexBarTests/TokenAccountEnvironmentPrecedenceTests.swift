@@ -30,6 +30,7 @@ struct AlibabaTokenPlanRegionSelectionTests {
         #expect(tokenContext.preferredSourceMode(for: .alibabatokenplan) == .auto)
     }
 
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test @MainActor
     func `fresh app settings default to International`() {
         let settings = testSettingsStore(suiteName: "AlibabaTokenPlanRegionSelectionTests-fresh")
@@ -58,6 +59,7 @@ struct AlibabaTokenPlanRegionSelectionTests {
 
         #expect(settings.alibabaTokenPlanAPIRegion == .international)
     }
+    #endif
 
     @Test
     func `CLI honors explicit region and keeps legacy config on China mainland`() throws {
@@ -183,6 +185,7 @@ struct TokenAccountEnvironmentPrecedenceTests {
         #expect(env[ZaiSettingsReader.apiTokenKey] != "config-token")
     }
 
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `deepseek token account injects environment in app environment builder`() {
         let settings = Self.makeSettingsStore(suite: "TokenAccountEnvironmentPrecedenceTests-deepseek-app")
@@ -197,6 +200,7 @@ struct TokenAccountEnvironmentPrecedenceTests {
         #expect(env["FOO"] == "bar")
         #expect(env[DeepSeekSettingsReader.apiKeyEnvironmentKey] == "account-token")
     }
+    #endif
 
     @Test
     func `token account environment overrides config API key in CLI environment builder`() throws {

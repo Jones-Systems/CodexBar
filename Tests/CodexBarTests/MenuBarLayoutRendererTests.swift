@@ -1608,8 +1608,9 @@ extension MenuBarLayoutRendererTests {
         #expect(resetFont == font)
         #expect(font.pointSize == NSFont.systemFontSize)
         #expect(MenuBarResetCreditCountdown.symbolName == MenuBarLayoutToken.runsOut.editorSystemImage)
-        #expect(attachment.bounds.size == image.size)
-        #expect(attachment.bounds.height > font.capHeight)
+        #expect(attachment.bounds.width == image.size.width * 0.8)
+        #expect(attachment.bounds.height == image.size.height * 0.8)
+        #expect(attachment.bounds.minY == ((font.capHeight - image.size.height * 0.8) / 2).rounded())
         #expect(red.accessibilityLabel.contains("Limit Reset Credits"))
         let expired = renderer.render(
             layout: layout,

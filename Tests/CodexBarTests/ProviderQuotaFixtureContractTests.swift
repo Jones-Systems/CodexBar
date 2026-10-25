@@ -4,6 +4,7 @@ import Testing
 @testable import CodexBarCore
 
 struct ProviderQuotaFixtureContractTests {
+    #if CODEXBAR_FULL_TEST_PROFILE
     @Test
     func `MiniMax fixture preserves quota windows and plan`() throws {
         let data = try Self.fixtureData(provider: "MiniMax", name: "token-plan-normal", fileExtension: "json")
@@ -39,6 +40,7 @@ struct ProviderQuotaFixtureContractTests {
         #expect(usage.secondary?.windowMinutes == 10080)
         #expect(usage.secondary?.resetsAt == nil)
     }
+    #endif
 
     @Test
     func `OpenAI fixture preserves quota windows and plan`() throws {

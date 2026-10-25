@@ -27,7 +27,7 @@ struct JonesCodexFleetPromotionAdmission {
         // liveSystem consumers use the process's ambient home. Refuse an overridden launch
         // rather than report success for a different home or mutate the launch environment.
         guard Self.sameHome(self.ambientHomeURL, self.defaultHomeURL) else {
-            throw CodexAccountPromotionError.fleetDestinationAmbiguous
+            throw CodexAccountPromotionError.fleetLaunchHomeOverride
         }
         return homes
     }
