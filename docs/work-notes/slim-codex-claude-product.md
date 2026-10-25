@@ -1278,4 +1278,19 @@ compiler and runtime remain unavailable locally. Root owns exact-head automatic
 qualification; partial failed prior runs prove no complete-suite or size/speed
 savings. All retained accounting/scale/history/auth/TTY/fallback proofs stay.
 
+Source commit `5c36fb289b1a35bdbddc6f8d5b3093422fbd4090` contains the bounded test/spec/note repair.
+Complete committed inventory confirms product 651 Swift files / 193218 lines
+unchanged; tests 733 / 252452 lines / 10945131 bytes and 6570 declarations
+across 691 files. Four test lines / 306 bytes add guards without removing or
+renaming tests. The following commit adds durable evidence only. All prior
+historical proof records retain their original revision bindings. Full native
+qualification and comparable app-size/cold-build measurements remain pending;
+no timing, runtime count or savings inference from this partial run or fixture edit.
+
+Final evidence coherence passes on the committed fixture, original assertions,
+base-exact cleanup/lookup blocks, six read-only paths, 56 exact Cost blobs,
+inventory, scope, whitespace and fixture-parent absence. Admission: CPU 14.81%,
+46.18 GiB available, one serial process and acquired nonblocking lock. Native
+exact-head qualification remains root-owned and pending.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->

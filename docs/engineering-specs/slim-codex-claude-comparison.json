@@ -1,7 +1,7 @@
 {
   "schema": "codexbar-product-removal-comparison/v1",
   "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
-  "candidateSourceRevision": "257e2282a286b0257c962460fa7cf63a0a9a7b08",
+  "candidateSourceRevision": "5c36fb289b1a35bdbddc6f8d5b3093422fbd4090",
   "pullRequest": "https://github.com/Jones-Systems/CodexBar/pull/41",
   "baseBranch": "work/test-value-bar-pass2-20261024",
   "method": "Exact committed Git blobs; files include Swift source under Sources and tests under Tests, TestsLinux, TestsPlugin; line count uses bytes.splitlines; lexical Swift Testing @Test declaration counts exclude comments/strings and do not represent parameterized/runtime cases.",
@@ -36,8 +36,8 @@
       },
       "testSwift": {
         "files": 733,
-        "lines": 252448,
-        "bytes": 10944825
+        "lines": 252452,
+        "bytes": 10945131
       }
     }
   },
@@ -989,10 +989,10 @@
       "qualification": "No new-head compile or execution pass inferred."
     },
     "latestNativeRuntimeAttempt": {
-      "runID": 40176584648,
-      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40176584648",
-      "prHeadRevision": "e54c39f353197e5e5fb7852272e67e676b46b473",
-      "mergeCheckout": "1288fd8858d664d1e9b3b1f2b35b337344106edd",
+      "runID": 40178882812,
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40178882812",
+      "prHeadRevision": "612e86ac4569391aa10dd768cb8426538fa82fa7",
+      "mergeCheckout": "36e74a836405bc9498ad7570c9fe2303b595080d",
       "changes": "success",
       "lint": "success",
       "linuxX64": "success",
@@ -1001,30 +1001,34 @@
       "producer": "success",
       "workers": [
         {
-          "jobID": 121121500881,
+          "jobID": 121129085816,
           "status": "failure",
-          "nativeCompatibility": "verified complete-fingerprint across newer producer/older worker",
-          "successfulGroupsBeforeFailure": 71,
+          "nativeCompatibility": "verified complete-fingerprint across older producer/newer worker",
+          "successfulGroupsBeforeFailure": 73,
           "selectedGroups": 85,
           "testBuilds": 0,
           "fullGroupRetries": 0,
           "timeouts": 0,
           "issues": [
-            "\u2718 Test \"extra usage window keeps combined percent formatting and claude spend preference\" recorded an issue at StatusItemExtraUsageMetricTests.swift:33:9: Expectation failed: (extraUsageWindow?.usedPercent \u2192 56.00000000000001) == (56 \u2192 56.0)"
+            "\u2718 Test \"full close preserves native status links and unavailable rows\" recorded an issue at StatusMenuHostedSubmenuReleaseTests.swift:107:13: Expectation failed: (unavailableItem.title \u2192 \"NSMenuItem\") == \"No data available\"",
+            "\u2718 Test \"full close preserves native status links and unavailable rows\" recorded an issue at StatusMenuHostedSubmenuReleaseTests.swift:110:13: Expectation failed: (unavailable.items.first \u2192 <NSMenuItem: 0x888ba9900 NSMenuItem>) === (unavailableItem \u2192 <NSMenuItem: 0x888baaf80 NSMenuItem, view: <_TtGC8CodexBar15MenuHostingViewVS_24CostHistoryChartMenuView_: 0x88626e800>>)"
           ],
-          "originalDisplayExpectationsInGroup": "all passed; only newly added setup scalar equality failed"
+          "failingGroup": {
+            "tests": 15,
+            "suites": 4
+          }
         },
         {
-          "jobID": 121121500880,
+          "jobID": 121129085811,
           "status": "success"
         }
       ],
       "aggregate": {
-        "jobID": 121123897388,
+        "jobID": 121131228188,
         "status": "failure consequential to shard0",
         "independentDefect": false
       },
-      "source": "Completed root fan-in and bounded supplied shard0 issue; child did not watch/poll.",
+      "source": "Completed root fan-in and bounded supplied shard0/aggregate issues; child did not watch/poll.",
       "qualification": "Prior-head one failed shard; not full qualification or app-size/build/savings proof."
     }
   },
@@ -1442,7 +1446,7 @@
     ],
     "deferredReason": "Three fresh below-threshold admissions, separated by ready source/evidence work, each found shared benchmark.lock busy. No test command or queued wait started. Existing local tool absences also prevent native make check/test. Prior exact-revision check results are retained as historical evidence, not new-head passes."
   },
-  "countMethodLatest": "Prior complete Git inventory plus exact single-line test-blob replacement at 257e2282a286b0257c962460fa7cf63a0a9a7b08: +36 test bytes, zero line/file/declaration delta. Product counts and all 6570 declarations remain. All other test bytes are unchanged from the prior published head; runtime cases/savings are not inferred.",
+  "countMethodLatest": "Complete committed Git inventory at 5c36fb289b1a35bdbddc6f8d5b3093422fbd4090: unchanged product counts; four test lines / 306 bytes added in one fixture, no file/declaration/name delta. All other test blobs remain unchanged from the prior published head; runtime cases/savings are not inferred.",
   "swiftFormatRepair": {
     "baseRevision": "1d9787f8b4075068f3282cb723e42170a6e702c3",
     "repairRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
@@ -11091,5 +11095,331 @@
         }
       }
     ]
+  },
+  "hostedSubmenuRuntimeRepair": {
+    "priorRevision": "612e86ac4569391aa10dd768cb8426538fa82fa7",
+    "repairRevision": "5c36fb289b1a35bdbddc6f8d5b3093422fbd4090",
+    "hostedFailingBefore": {
+      "runID": 40178882812,
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40178882812",
+      "prHeadRevision": "612e86ac4569391aa10dd768cb8426538fa82fa7",
+      "mergeCheckout": "36e74a836405bc9498ad7570c9fe2303b595080d",
+      "changes": "success",
+      "lint": "success",
+      "linuxX64": "success",
+      "linuxARM64": "success",
+      "linuxMusl": "success",
+      "producer": "success",
+      "workers": [
+        {
+          "jobID": 121129085816,
+          "status": "failure",
+          "nativeCompatibility": "verified complete-fingerprint across older producer/newer worker",
+          "successfulGroupsBeforeFailure": 73,
+          "selectedGroups": 85,
+          "testBuilds": 0,
+          "fullGroupRetries": 0,
+          "timeouts": 0,
+          "issues": [
+            "\u2718 Test \"full close preserves native status links and unavailable rows\" recorded an issue at StatusMenuHostedSubmenuReleaseTests.swift:107:13: Expectation failed: (unavailableItem.title \u2192 \"NSMenuItem\") == \"No data available\"",
+            "\u2718 Test \"full close preserves native status links and unavailable rows\" recorded an issue at StatusMenuHostedSubmenuReleaseTests.swift:110:13: Expectation failed: (unavailable.items.first \u2192 <NSMenuItem: 0x888ba9900 NSMenuItem>) === (unavailableItem \u2192 <NSMenuItem: 0x888baaf80 NSMenuItem, view: <_TtGC8CodexBar15MenuHostingViewVS_24CostHistoryChartMenuView_: 0x88626e800>>)"
+          ],
+          "failingGroup": {
+            "tests": 15,
+            "suites": 4
+          }
+        },
+        {
+          "jobID": 121129085811,
+          "status": "success"
+        }
+      ],
+      "aggregate": {
+        "jobID": 121131228188,
+        "status": "failure consequential to shard0",
+        "independentDefect": false
+      },
+      "source": "Completed root fan-in and bounded supplied shard0/aggregate issues; child did not watch/poll.",
+      "qualification": "Prior-head one failed shard; not full qualification or app-size/build/savings proof."
+    },
+    "reason": "The unavailable cost row was remapped from unseeded retired OpenAI to Claude, whose shared fixture supplies nonempty daily cost data. A real hosted chart is correctly released on full close. Use unseeded retained Codex to preserve actual unavailable row identity.",
+    "sourceTrace": [
+      {
+        "path": "Tests/CodexBarTests/StatusMenuHostedSubmenuReleaseTests.swift",
+        "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+        "evidence": "Base unavailable provider OpenAI had neither projected snapshot nor local cost data; Claude shared fixture has cost 1.23 and one daily row. Previous migration collapsed the unavailable role onto populated Claude."
+      },
+      {
+        "path": "Sources/CodexBar/StatusItemController+Menu.swift",
+        "evidence": "menuWillOpen -> hydrateHostedSubviewMenuIfNeeded; cost lookup uses store.tokenSnapshot(for:) with explicit provider. menuDidClose -> forgetClosedMenu -> releaseClosedHostedSubmenus only when full tracking ends."
+      },
+      {
+        "path": "Sources/CodexBar/StatusItemController+HostedSubmenus.swift",
+        "evidence": "appendCostHistoryChartItem succeeds only with scoped token snapshot and nonempty daily rows; failed hydration appends disabled native No data available row. Full-close release replaces only hosted menus containing views. Entire file is base-exact."
+      },
+      {
+        "path": "Sources/CodexBar/Providers/Codex/UsageStore+CodexAccountState.swift",
+        "evidence": "Codex accountScopedTokenSnapshot reads codex instance token cache or current-config scoped publication only; neither path falls back to Claude. Method is base-exact."
+      }
+    ],
+    "preservationProof": {
+      "priorRevision": "612e86ac4569391aa10dd768cb8426538fa82fa7",
+      "path": "Tests/CodexBarTests/StatusMenuHostedSubmenuReleaseTests.swift",
+      "beforeSHA256": "26a8765be95188df1ea06bda15b8e4b1696ef9ab5550c2b81de828d2a95ff06d",
+      "afterSHA256": "bb053fd48c3620dd373bd23bc72be7dc73623e7346fa5aa5fa75a57aa8d85602",
+      "onlyChanges": "Unseeded retained Codex replaces populated Claude for the unavailable row; three setup/view/provider assertions and one comment added. All other test bytes exact.",
+      "testNames": [
+        "cost view survives hover close and releases after parent closes",
+        "status view releases and rehydrates with its original provider",
+        "full close preserves native status links and unavailable rows"
+      ],
+      "testDeclarationsBefore": 3,
+      "testDeclarationsAfter": 3,
+      "expectationsBefore": 30,
+      "expectationsAfter": 33,
+      "originalFailingMethodAssertions": [
+        "#expect(link.view == nil)",
+        "#expect(link.identifier?.rawValue == UsageProvider.claude.rawValue)",
+        "#expect(unavailableItem.title == \"No data available\")",
+        "#expect(native.items.first === link)",
+        "#expect(unavailable.items.first === unavailableItem)"
+      ],
+      "allFiveOriginalAssertionsExact": true,
+      "unrelatedMethodAndHelperProof": [
+        {
+          "scope": "twoOtherMethods",
+          "sha256": "fa13bf245343491630218da47c3a6a0549a6f7a46f6e96df2e0c5cd592ba9ba7",
+          "exact": true
+        },
+        {
+          "scope": "allSharedHelpers",
+          "sha256": "a920f3098dd05bfb71a92a6235326ced5132e309693cf60060496320b0b11233",
+          "exact": true
+        }
+      ],
+      "readOnlyAudit": [
+        {
+          "path": "Sources/CodexBar/StatusItemController+HostedSubmenus.swift",
+          "blob": "9b24e261ed8922bd4b572141865482c9c5883de7",
+          "unchanged": true
+        },
+        {
+          "path": "Sources/CodexBar/StatusItemController+Menu.swift",
+          "blob": "2c85923c991e281b2d783ac797ccb30b1821aa66",
+          "unchanged": true
+        },
+        {
+          "path": "Sources/CodexBar/Providers/Codex/UsageStore+CodexAccountState.swift",
+          "blob": "747ac37721713746385973f79078950e2d90f9c0",
+          "unchanged": true
+        },
+        {
+          "path": "Sources/CodexBar/UsageStore+TokenCost.swift",
+          "blob": "2c75fea5eb7a161044792471b58f7bfd5e56f69c",
+          "unchanged": true
+        },
+        {
+          "path": "Sources/CodexBar/UsageStoreSupport.swift",
+          "blob": "97a2ccebe3dbc8036df56e409051568b2ef317e0",
+          "unchanged": true
+        },
+        {
+          "path": "Tests/CodexBarTests/StatusMenuHostedSubmenuRefreshTests.swift",
+          "blob": "924cb0de4eca8d886b4d2112d3283b145c0fdc88",
+          "unchanged": true
+        }
+      ],
+      "baseExactProduction": [
+        "entire StatusItemController+HostedSubmenus.swift",
+        "menuDidClose + forgetClosedMenu",
+        "accountScopedTokenSnapshot(for:)"
+      ],
+      "protectedCostSuitesExact": 56,
+      "lineDelta": 4,
+      "byteDelta": 306,
+      "gitWhitespace": "pass",
+      "nativeExecution": "unavailable locally; static preservation/source provenance only"
+    },
+    "boundedRelatedAudit": "Only hosted release suite plus adjacent hosted refresh suite and six exact source/refresh paths. Adjacent unavailable-to-data-arrival fixture begins without a snapshot and seeds Claude only for arrival; no other mismatches demonstrated.",
+    "localChecks": [
+      {
+        "name": "preservation",
+        "command": [
+          "python3",
+          ".build/slim-product-work/hosted-unavailable-612e86ac/verify.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.225,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T09:37:12Z",
+          "ram_available_gib": 45.76,
+          "cpu_used_percent": 49.84,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2469,
+          "sampled_steal_percent": 0.315,
+          "cpu_psi_some_avg10_percent": 0.78
+        },
+        "classification": "pass"
+      },
+      {
+        "name": "make-check",
+        "command": [
+          "make",
+          "check"
+        ],
+        "exitCode": 2,
+        "elapsedSeconds": 0.093,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T09:37:18Z",
+          "ram_available_gib": 45.58,
+          "cpu_used_percent": 29.38,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2519,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 0.7
+        },
+        "classification": "unavailable before native execution: missing local tool"
+      },
+      {
+        "name": "make-test",
+        "command": [
+          "make",
+          "test"
+        ],
+        "exitCode": 2,
+        "elapsedSeconds": 0.109,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [
+          {
+            "name": ".test-fixtures-9o70u458",
+            "absentAfterCommand": true
+          }
+        ],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T09:37:19Z",
+          "ram_available_gib": 45.46,
+          "cpu_used_percent": 27.8,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2519,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 0.7
+        },
+        "classification": "unavailable before native execution: missing local tool"
+      },
+      {
+        "name": "documentation-links",
+        "command": [
+          "node",
+          "Scripts/check-documentation-links.mjs"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.128,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T09:37:19Z",
+          "ram_available_gib": 45.3,
+          "cpu_used_percent": 28.62,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2519,
+          "sampled_steal_percent": 0.314,
+          "cpu_psi_some_avg10_percent": 0.75
+        },
+        "classification": "pass"
+      },
+      {
+        "name": "inventory",
+        "command": [
+          "python3",
+          ".build/slim-product-work/hosted-unavailable-612e86ac/inventory.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.228,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T09:38:23Z",
+          "ram_available_gib": 45.64,
+          "cpu_used_percent": 41.56,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.3225,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 3.51
+        },
+        "classification": "pass"
+      },
+      {
+        "name": "evidence-coherence",
+        "command": [
+          "python3",
+          ".build/slim-product-work/hosted-unavailable-612e86ac/coherence.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.283,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T09:39:25Z",
+          "ram_available_gib": 46.18,
+          "cpu_used_percent": 14.81,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.3337,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 0.87
+        },
+        "classification": "pass"
+      }
+    ],
+    "committedInventory": {
+      "sourceRevision": "5c36fb289b1a35bdbddc6f8d5b3093422fbd4090",
+      "method": "Complete committed Git blob inventory; bytes.splitlines; declarations unchanged by exact one-method replacement.",
+      "counts": {
+        "productSwift": {
+          "files": 651,
+          "lines": 193218,
+          "bytes": 7944079
+        },
+        "productCHeaders": {
+          "files": 1,
+          "lines": 1,
+          "bytes": 21
+        },
+        "testSwift": {
+          "files": 733,
+          "lines": 252452,
+          "bytes": 10945131
+        }
+      },
+      "swiftTestingDeclarations": {
+        "swiftTestingDeclarations": 6570,
+        "filesWithTestAttributes": 691
+      },
+      "declarationsBasis": "Only changed Swift blob has identical three @Test declarations/names, all remaining test blobs unchanged from prior complete inventory."
+    },
+    "boundaries": "Test fixture and existing spec/note/comparison only; production, catalog/generator, accounting/scale/history/auth/TTY/fallback, native/harness/workflow/05:00 America/New_York schedule and frozen handoffs unchanged. No test deletion, skips, expectation weakening or product policy change.",
+    "nextValidationGate": "Root-owned automatic exact published-head native formatter/compiler and both full shards; app-size/cold-build comparisons remain pending.",
+    "evidenceCoherence": "pass on exact committed repair and durable records; protected historical evidence unchanged"
   }
 }
