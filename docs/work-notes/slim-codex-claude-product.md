@@ -1419,4 +1419,19 @@ unavailable locally; no tools installed or real account/credential probes run.
 Root retains exact-head qualification. Accounting/scale/history/auth/TTY/fallback
 and native/harness/workflow/schedule/frozen proofs remain unchanged.
 
+Source commit `b9336921c18bfac9a4b71cd67c134ccafe2bdcd5` contains the bounded test/spec/note repair.
+Complete committed inventory confirms product 651 Swift files / 193218 lines
+unchanged; tests 733 / 252510 lines / 10948598 bytes and 6570 declarations
+across 691 files. Forty test lines / 2468 bytes add supported override/isolation
+proofs with no test addition/removal/rename. The following commit adds evidence
+only. Prior source/runtime evidence remains revision-bound; root owns complete
+native qualification. No runtime-case, size or build/speed savings inferred.
+
+Final evidence coherence passes: exact one-method boundary, all 26 test identities
+and 83 original assertions, 18 added precedence/isolation guards, 14 unchanged
+read-only paths, base-exact routing, 56 exact Cost blobs, counts/scope/check
+classifications, whitespace and fixture absence. Admission: CPU 25.87%,
+46.45 GiB available, one serial process and acquired nonblocking lock.
+Native exact-head qualification remains root-owned and pending.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->

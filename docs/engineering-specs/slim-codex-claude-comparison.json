@@ -1,7 +1,7 @@
 {
   "schema": "codexbar-product-removal-comparison/v1",
   "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
-  "candidateSourceRevision": "40c8c2287405a448f3aa8c1259901c8dc78801c5",
+  "candidateSourceRevision": "b9336921c18bfac9a4b71cd67c134ccafe2bdcd5",
   "pullRequest": "https://github.com/Jones-Systems/CodexBar/pull/41",
   "baseBranch": "work/test-value-bar-pass2-20261024",
   "method": "Exact committed Git blobs; files include Swift source under Sources and tests under Tests, TestsLinux, TestsPlugin; line count uses bytes.splitlines; lexical Swift Testing @Test declaration counts exclude comments/strings and do not represent parameterized/runtime cases.",
@@ -36,8 +36,8 @@
       },
       "testSwift": {
         "files": 733,
-        "lines": 252470,
-        "bytes": 10946130
+        "lines": 252510,
+        "bytes": 10948598
       }
     }
   },
@@ -989,10 +989,10 @@
       "qualification": "No new-head compile or execution pass inferred."
     },
     "latestNativeRuntimeAttempt": {
-      "runID": 40181633949,
-      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40181633949",
-      "prHeadRevision": "3001c20200c7e6bf5890a77aa5570fb0b8818c7b",
-      "mergeCheckout": "2f344b4d7ae6e61662c8b7cc4a105c11da2117c9",
+      "runID": 40183666633,
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40183666633",
+      "prHeadRevision": "0e7aa206e18cd84b8f4c9d351a13047ab1af9e75",
+      "mergeCheckout": "82ec5f567082ad918dde872cea4060b6c10645d4",
       "changes": "success",
       "lint": "success",
       "linuxX64": "success",
@@ -1001,34 +1001,33 @@
       "producer": "success",
       "workers": [
         {
-          "jobID": 121136555118,
+          "jobID": 121142590990,
           "status": "failure",
-          "nativeCompatibility": "verified complete-fingerprint",
-          "successfulGroupsBeforeFailure": 74,
+          "nativeCompatibility": "verified complete-fingerprint across older producer/newer worker",
+          "successfulGroupsBeforeFailure": 77,
           "selectedGroups": 85,
           "testBuilds": 0,
           "fullGroupRetries": 0,
           "timeouts": 0,
           "issues": [
-            "\u2718 Test \"overview switcher segment matches provider segment height when quota bars are present\" recorded an issue at StatusMenuSwitcherLayoutTests.swift:23:9: Expectation failed: (frames.count \u2192 3) == 4",
-            "\u2718 Test \"overview switcher segment matches provider segment height when quota bars are present\" recorded an issue at StatusMenuSwitcherLayoutTests.swift:32:9: Expectation failed: (view._test_rowHeight() \u2192 30.0) == (36 \u2192 36.0)"
+            "\u2718 Test \"app snapshot override resolves cookie account without mutating stored selection\" recorded an issue at TokenAccountEnvironmentPrecedenceTests.swift:65:9: Expectation failed: (claudeSettings.cookieSource \u2192 .auto) == .manual"
           ],
           "failingGroup": {
-            "tests": 23,
-            "suites": 3
+            "tests": 46,
+            "suites": 4
           }
         },
         {
-          "jobID": 121136555143,
+          "jobID": 121142590944,
           "status": "success"
         }
       ],
       "aggregate": {
-        "jobID": 121138347354,
+        "jobID": 121144940578,
         "status": "failure consequential to shard0",
         "independentDefect": false
       },
-      "source": "Completed root fan-in and bounded supplied shard0/aggregate issues; child did not watch/poll.",
+      "source": "Completed root fan-in and bounded supplied shard0/aggregate issue; child did not watch/poll.",
       "qualification": "Prior-head one failed shard; not full qualification or app-size/build/savings proof."
     }
   },
@@ -1446,7 +1445,7 @@
     ],
     "deferredReason": "Three fresh below-threshold admissions, separated by ready source/evidence work, each found shared benchmark.lock busy. No test command or queued wait started. Existing local tool absences also prevent native make check/test. Prior exact-revision check results are retained as historical evidence, not new-head passes."
   },
-  "countMethodLatest": "Complete committed Git inventory at 40c8c2287405a448f3aa8c1259901c8dc78801c5: product counts unchanged; 18 test lines / 999 bytes added in one fixture, no file/declaration/name delta. All other test blobs remain unchanged from the prior published head; runtime cases/savings are not inferred.",
+  "countMethodLatest": "Complete committed Git inventory at b9336921c18bfac9a4b71cd67c134ccafe2bdcd5: product counts unchanged; 40 test lines / 2468 bytes added in one synthetic fixture, no file/declaration/name delta. Other test blobs are unchanged from the prior published head; runtime cases/savings are not inferred.",
   "swiftFormatRepair": {
     "baseRevision": "1d9787f8b4075068f3282cb723e42170a6e702c3",
     "repairRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
@@ -11743,5 +11742,381 @@
     "boundaries": "Test fixture and existing spec/note/comparison only; production/catalog/generator, retained accounting/scale/history/auth/TTY/fallback, native/harness/workflow/05:00 America/New_York schedule and frozen handoffs unchanged. No deletion, skip, retry, tolerance loosening or production policy change.",
     "nextValidationGate": "Root-owned automatic exact published-head native formatter/compiler and both complete shards; comparable app-size/cold-build evidence remains pending.",
     "evidenceCoherence": "pass on exact committed repair and durable records; historical protected evidence unchanged"
+  },
+  "tokenAccountOverrideRuntimeRepair": {
+    "priorRevision": "0e7aa206e18cd84b8f4c9d351a13047ab1af9e75",
+    "repairRevision": "b9336921c18bfac9a4b71cd67c134ccafe2bdcd5",
+    "hostedFailingBefore": {
+      "runID": 40183666633,
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40183666633",
+      "prHeadRevision": "0e7aa206e18cd84b8f4c9d351a13047ab1af9e75",
+      "mergeCheckout": "82ec5f567082ad918dde872cea4060b6c10645d4",
+      "changes": "success",
+      "lint": "success",
+      "linuxX64": "success",
+      "linuxARM64": "success",
+      "linuxMusl": "success",
+      "producer": "success",
+      "workers": [
+        {
+          "jobID": 121142590990,
+          "status": "failure",
+          "nativeCompatibility": "verified complete-fingerprint across older producer/newer worker",
+          "successfulGroupsBeforeFailure": 77,
+          "selectedGroups": 85,
+          "testBuilds": 0,
+          "fullGroupRetries": 0,
+          "timeouts": 0,
+          "issues": [
+            "\u2718 Test \"app snapshot override resolves cookie account without mutating stored selection\" recorded an issue at TokenAccountEnvironmentPrecedenceTests.swift:65:9: Expectation failed: (claudeSettings.cookieSource \u2192 .auto) == .manual"
+          ],
+          "failingGroup": {
+            "tests": 46,
+            "suites": 4
+          }
+        },
+        {
+          "jobID": 121142590944,
+          "status": "success"
+        }
+      ],
+      "aggregate": {
+        "jobID": 121144940578,
+        "status": "failure consequential to shard0",
+        "independentDefect": false
+      },
+      "source": "Completed root fan-in and bounded supplied shard0/aggregate issue; child did not watch/poll.",
+      "qualification": "Prior-head one failed shard; not full qualification or app-size/build/savings proof."
+    },
+    "reason": "Retired Cursor used shared forced-manual resolution for any explicit cookie account. The unchanged Claude app snapshot keeps configured source when no accounts are saved. Use supported explicit-manual state for the empty-store override, then prove auto-to-manual snapshot routing with a distinct saved account while retaining override precedence and saved selection.",
+    "sourceTrace": {
+      "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+      "claudeSnapshotPath": "Sources/CodexBar/Providers/Claude/ClaudeSettingsStore.swift",
+      "claudeSnapshotBaseExact": true,
+      "overrideDispatch": "ProviderTokenAccountSelection returns the explicit account only for a matching provider ID; otherwise uses that provider effective saved selection. This dispatch remains base-exact.",
+      "credentialRouting": "Claude account token is resolved before configured header; a selected account suppresses configured fallback. Session header is normalized and source becomes web. Empty saved list keeps configured cookie source; nonempty saved list uses manual for cookie accounts.",
+      "startupDetection": "SettingsStore default is !isRunningTests; initial detection only mutates provider enablement and was not the cookie-source cause. The repaired fixture explicitly disables it.",
+      "isolation": "Dictionary-only defaults, injected memory cookie/account stores, synthetic workspace config, no-op disabled Keychain policy and watcher stop are local to this one method. Codex cookie source remains off and header distinct across Claude and foreign overrides.",
+      "scenarios": [
+        "Empty saved list + configured manual mode: override header wins, original manual/header/empty-list expectations stay exact.",
+        "One distinct saved Claude account + configured auto mode: explicit override wins, snapshot cookie source manual, saved ID/list/index and configured source/header unchanged.",
+        "Foreign Codex override: Claude retains its saved cookie; unsupported Codex account cannot enable off mode or replace configured Codex header."
+      ]
+    },
+    "preservationProof": {
+      "priorRevision": "0e7aa206e18cd84b8f4c9d351a13047ab1af9e75",
+      "path": "Tests/CodexBarTests/TokenAccountEnvironmentPrecedenceTests.swift",
+      "beforeSHA256": "bb18ae68be149dd3e96b1168a861c7932ef6c48ac86eced69a35b548e6983aca",
+      "afterSHA256": "f87b4ce9440cad8dc12a0fae0a3771bdac8f14d56929b30a871e88559da4bf05",
+      "testNames": [
+        "token account environment overrides config API key in app environment builder",
+        "token account environment overrides config API key in CLI environment builder",
+        "app snapshot override resolves cookie account without mutating stored selection",
+        "claude OAuth token account overrides environment in app environment builder",
+        "claude session account strips ambient admin api credentials in app environment builder",
+        "claude session key selection carries organization id in app settings snapshot",
+        "claude OAuth token selection forces OAuth in CLI settings snapshot",
+        "claude OAuth token selection injects environment override in CLI",
+        "claude session account strips ambient admin api credentials in CLI environment builder",
+        "claude OAuth token selection promotes auto source mode in CLI",
+        "claude OAuth token selection reroutes explicit CLI source to OAuth in CLI",
+        "claude session key selection reroutes explicit CLI source to Web in CLI",
+        "claude all accounts reroutes explicit CLI source per selected credential in CLI",
+        "codex all accounts selection exposes configured accounts and scopes CLI homes",
+        "codex CLI ignores relative profile homes",
+        "claude ambient explicit CLI source remains CLI in CLI",
+        "claude session key selection stays in manual cookie mode in CLI settings snapshot",
+        "claude session key selection carries organization id in CLI settings snapshot",
+        "claude token account organization id uses organizationId JSON key",
+        "claude config manual cookie uses shared route in CLI settings snapshot",
+        "claude config manual cookie does not promote auto source mode in CLI",
+        "apply account label in app preserves snapshot fields",
+        "apply account label in CLI preserves snapshot fields",
+        "codex known owners match between app and CLI for live system only",
+        "codex known owners match between app and CLI when managed and live identities are the same",
+        "codex known owners match between app and CLI when managed and live identities differ"
+      ],
+      "testDeclarationsBefore": 26,
+      "testDeclarationsAfter": 26,
+      "expectationsBefore": 83,
+      "expectationsAfter": 101,
+      "allOriginalAssertionsExact": true,
+      "originalFailingMethodAssertions": [
+        "#expect(claudeSettings.cookieSource == .manual)",
+        "#expect(claudeSettings.manualCookieHeader == \"sessionKey=account\")",
+        "#expect(settings.tokenAccounts(for: .claude).isEmpty)"
+      ],
+      "originalOverrideAccountInitializerExact": true,
+      "otherMethodsAndHelpersExact": true,
+      "prefixSHA256": "badb259881ef2f7ab00ad79a1b4857c387cb8ff06955e26ea37dcda117324561",
+      "suffixSHA256": "802ebcf6e9a2c393aa51ca27430ef771bd22c2c27839f86f4bb2349f9c78ca4f",
+      "fixtureInputDisposition": "Empty stored-account override uses explicit manual Claude source; original auto-source scenario is additionally proved with a distinct stored account, retaining manual output, override header and unchanged selection.",
+      "newAssertions": 18,
+      "isolation": "One fixture now injects dictionary-only defaults, memory stores, synthetic config, no-op disabled Keychain policy, explicit no startup detection and watcher stop. No live provider/store probes.",
+      "baseExactProduction": [
+        "Sources/CodexBar/Providers/Claude/ClaudeSettingsStore.swift",
+        "Sources/CodexBarCore/Providers/ProviderCookieSettingsResolver.swift",
+        "Sources/CodexBarCore/Providers/Claude/ClaudeCredentialRouting.swift",
+        "provider-matching selectedAccount override dispatch"
+      ],
+      "readOnlyAudit": [
+        {
+          "path": "Sources/CodexBar/Providers/Claude/ClaudeSettingsStore.swift",
+          "blob": "5f5a9c69116c328c8e05e0124d587301d48c3ca2",
+          "unchanged": true
+        },
+        {
+          "path": "Sources/CodexBar/Providers/Shared/ProviderTokenAccountSelection.swift",
+          "blob": "478b3132bb86235dcd188a8e8184a27c10db0f8d",
+          "unchanged": true
+        },
+        {
+          "path": "Sources/CodexBar/SettingsStore+TokenAccounts.swift",
+          "blob": "2233067160c53d7eb9997949d6294f4767ca34de",
+          "unchanged": true
+        },
+        {
+          "path": "Sources/CodexBar/ProviderRegistry.swift",
+          "blob": "8960d535d4e6e35b5baaa9dfa522b7fe82c0b6c1",
+          "unchanged": true
+        },
+        {
+          "path": "Sources/CodexBarCore/Providers/ProviderCookieSettingsResolver.swift",
+          "blob": "8f362ad1d29c22985c5cc6ee7c5e1119664858c1",
+          "unchanged": true
+        },
+        {
+          "path": "Sources/CodexBarCore/Providers/Claude/ClaudeCredentialRouting.swift",
+          "blob": "2472de27fa045d3d38e730146f74290c472c4669",
+          "unchanged": true
+        },
+        {
+          "path": "Sources/CodexBar/SettingsStore.swift",
+          "blob": "5fb24afee93f44accf45db62641392efe4b9f888",
+          "unchanged": true
+        },
+        {
+          "path": "Sources/CodexBar/SettingsStore+Config.swift",
+          "blob": "6d453834c75554eb6f320a9c074f8e4a372ccfd5",
+          "unchanged": true
+        },
+        {
+          "path": "Tests/CodexBarTests/TestStores.swift",
+          "blob": "8e1c717b456ea7f98df3c155c58cd286908165e4",
+          "unchanged": true
+        },
+        {
+          "path": "Tests/CodexBarTests/ProviderCookieSettingsResolverTests.swift",
+          "blob": "ffaa1ac825331d93743650bf0d8a1d04eaed53f6",
+          "unchanged": true
+        },
+        {
+          "path": "Tests/CodexBarTests/ClaudeTokenAccountRoutingTests.swift",
+          "blob": "a1a3d897e3116a64dfc2fbdeb580628d66b6a230",
+          "unchanged": true
+        },
+        {
+          "path": "Tests/CodexBarTests/ClaudeCredentialRoutingTests.swift",
+          "blob": "e711d03884c9b1b6fad575bd80aae5becd09bb35",
+          "unchanged": true
+        },
+        {
+          "path": "Sources/CodexBar/Providers/Codex/CodexSettingsStore.swift",
+          "blob": "0e591a3f91e80728d8783ccb50dae07c7be6e3d0",
+          "unchanged": true
+        },
+        {
+          "path": "Sources/CodexBarCore/Providers/Codex/CodexProviderSettingsBuilder.swift",
+          "blob": "515b3afe923f7f26a72daf4bdc8e9b86d15ad552",
+          "unchanged": true
+        }
+      ],
+      "protectedCostSuitesExact": 56,
+      "lineDelta": 40,
+      "byteDelta": 2468,
+      "gitWhitespace": "pass",
+      "nativeExecution": "unavailable locally; static preservation and source provenance only"
+    },
+    "boundedRelatedAudit": "Three adjacent generic cookie/Claude account/credential routing suites plus related app, CLI and account-label snapshot regions in this suite. Existing environment stripping, OAuth/manual modes, malformed selected-account fail-closed and field-preservation proofs stay unchanged. Fourteen exact read-only source/fixture path blobs recorded.",
+    "localChecks": [
+      {
+        "name": "preservation",
+        "command": [
+          "python3",
+          ".build/slim-product-work/token-override-0e7aa206/verify.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.232,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T10:44:01Z",
+          "ram_available_gib": 46.68,
+          "cpu_used_percent": 19.3,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1681,
+          "sampled_steal_percent": 0.316,
+          "cpu_psi_some_avg10_percent": 0.66
+        },
+        "classification": "pass"
+      },
+      {
+        "name": "make-check",
+        "command": [
+          "make",
+          "check"
+        ],
+        "exitCode": 2,
+        "elapsedSeconds": 0.092,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T10:44:24Z",
+          "ram_available_gib": 46.49,
+          "cpu_used_percent": 31.68,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1787,
+          "sampled_steal_percent": 0.311,
+          "cpu_psi_some_avg10_percent": 0.88
+        },
+        "classification": "unavailable before native execution: missing local tool"
+      },
+      {
+        "name": "make-test",
+        "command": [
+          "make",
+          "test"
+        ],
+        "exitCode": 2,
+        "elapsedSeconds": 0.121,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [
+          {
+            "name": ".test-fixtures-zxeebxk8",
+            "absentAfterCommand": true
+          }
+        ],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T10:44:24Z",
+          "ram_available_gib": 46.63,
+          "cpu_used_percent": 19.24,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1787,
+          "sampled_steal_percent": 0.315,
+          "cpu_psi_some_avg10_percent": 0.88
+        },
+        "classification": "unavailable before native execution: missing local tool"
+      },
+      {
+        "name": "documentation-links",
+        "command": [
+          "node",
+          "Scripts/check-documentation-links.mjs"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.166,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T10:44:25Z",
+          "ram_available_gib": 46.61,
+          "cpu_used_percent": 23.68,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1787,
+          "sampled_steal_percent": 0.312,
+          "cpu_psi_some_avg10_percent": 0.88
+        },
+        "classification": "pass"
+      },
+      {
+        "name": "inventory",
+        "command": [
+          "python3",
+          ".build/slim-product-work/token-override-0e7aa206/inventory.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.217,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T10:45:36Z",
+          "ram_available_gib": 46.6,
+          "cpu_used_percent": 22.5,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1875,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 0.36
+        },
+        "classification": "pass"
+      },
+      {
+        "name": "evidence-coherence",
+        "command": [
+          "python3",
+          ".build/slim-product-work/token-override-0e7aa206/coherence.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.297,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T10:46:30Z",
+          "ram_available_gib": 46.45,
+          "cpu_used_percent": 25.87,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1806,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 0.52
+        },
+        "classification": "pass"
+      }
+    ],
+    "committedInventory": {
+      "sourceRevision": "b9336921c18bfac9a4b71cd67c134ccafe2bdcd5",
+      "method": "Complete committed Git blob inventory; bytes.splitlines; declarations unchanged by exact one-method repair.",
+      "counts": {
+        "productSwift": {
+          "files": 651,
+          "lines": 193218,
+          "bytes": 7944079
+        },
+        "productCHeaders": {
+          "files": 1,
+          "lines": 1,
+          "bytes": 21
+        },
+        "testSwift": {
+          "files": 733,
+          "lines": 252510,
+          "bytes": 10948598
+        }
+      },
+      "swiftTestingDeclarations": {
+        "swiftTestingDeclarations": 6570,
+        "filesWithTestAttributes": 691
+      },
+      "declarationsBasis": "Only one Swift method changes, retaining all 26 @Test declarations/names and all other test blob bytes from the prior complete inventory."
+    },
+    "boundaries": "One test method and existing spec/note/comparison only; production/catalog/generator and retained accounting/scale/history/auth/TTY/fallback/native/harness/workflow/05:00 America/New_York schedule/frozen contracts unchanged. No test deletion/skip/renaming, assertion relaxation, live provider/store probes or product policy change.",
+    "nextValidationGate": "Root-owned automatic exact published-head native formatter/compiler and both complete shards; comparable app-size/cold-build evidence remains pending.",
+    "evidenceCoherence": "pass on exact committed one-method repair and durable records; historical protected evidence unchanged"
   }
 }
