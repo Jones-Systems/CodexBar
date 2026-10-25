@@ -777,19 +777,17 @@ class BuildArtifactTests(unittest.TestCase):
                 self.assertNotIn("private-user", json.dumps(diagnostic))
                 artifact_native.validate_diagnostic(diagnostic)
 
-    def test_full_profile_jsc_uses_shared_build_before_cleanup(self):
+    def test_full_profile_uses_same_skip_build_contract_before_cleanup(self):
         self.current["profile"] = "full"
         _, digest = self.export()
-        with self.harness(["--use-build", str(self.root), "--jsc-goldens"]) as (captured, execute), \
+        with self.harness(["--use-build", str(self.root)]) as (captured, execute), \
                 patch.dict(os.environ, {"CODEXBAR_TEST_BUILD_MANIFEST_SHA256": digest,
                                         "CODEXBAR_TEST_PROFILE": "full"}):
             self.assertEqual(runner.run_suites(), 0)
-            self.assertEqual(captured.call_count, 1)
-            commands = [call.args[0] for call in execute.call_args_list]
-            self.assertEqual(len(commands), 2)
-            self.assertIn("ProviderPluginRuntimeTests", commands[-1][-1])
-            self.assertTrue(all("--skip-build" in command for command in commands))
-            self.assertNotIn("CODEXBAR_PLUGIN_ENGINE", os.environ)
+            self.assertEqual([call.args[0] for call in captured.call_args_list],
+                             [["swift", "test", "list", "--skip-build"]])
+            self.assertEqual(execute.call_count, 1)
+            self.assertIn("--skip-build", execute.call_args.args[0])
         self.assert_no_restore()
 
     def test_failed_execution_status_survives_build_cleanup_failure(self):
