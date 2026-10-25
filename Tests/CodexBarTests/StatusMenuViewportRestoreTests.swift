@@ -1295,7 +1295,13 @@ extension StatusMenuViewportRestoreTests {
         settings.refreshFrequency = .manual
         settings.mergeIcons = true
         self.enableOnly([.claude, .codex], settings: settings)
-        settings.mergedOverviewSelectedProviders = []
+        for provider in [UsageProvider.claude, .codex] {
+            settings.setMergedOverviewProviderSelection(
+                provider: provider,
+                isSelected: false,
+                activeProviders: [.claude, .codex])
+        }
+        #expect(settings.resolvedMergedOverviewProviders(activeProviders: [.claude, .codex]).isEmpty)
         settings.selectedMenuProvider = .claude
         settings.mergedMenuLastSelectedWasOverview = false
 
@@ -1346,7 +1352,13 @@ extension StatusMenuViewportRestoreTests {
         settings.refreshFrequency = .manual
         settings.mergeIcons = true
         self.enableOnly([.claude, .codex], settings: settings)
-        settings.mergedOverviewSelectedProviders = []
+        for provider in [UsageProvider.claude, .codex] {
+            settings.setMergedOverviewProviderSelection(
+                provider: provider,
+                isSelected: false,
+                activeProviders: [.claude, .codex])
+        }
+        #expect(settings.resolvedMergedOverviewProviders(activeProviders: [.claude, .codex]).isEmpty)
         settings.selectedMenuProvider = .claude
         settings.mergedMenuLastSelectedWasOverview = false
 

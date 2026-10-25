@@ -189,7 +189,7 @@ struct MenuBarLayoutRendererTests {
 
         let output = renderer.render(layout: layout, data: missingData, icon: nil, options: self.options())
 
-        #expect(output.attributedTitle.string.count(where: { $0 == "–" }) == 21)
+        #expect(output.attributedTitle.string.count(where: { $0 == "–" }) == 20)
         #expect(output.accessibilityLabel.contains("unavailable"))
     }
 

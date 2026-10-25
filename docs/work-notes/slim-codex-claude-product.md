@@ -640,4 +640,84 @@ separate day-selection suite's 12 shared methods retain their prior proofs.
 The final evidence-only commit changes the existing note/comparison, and the
 coherent publication contains no further source, harness or fixture mutation.
 
+Menu runtime closure starts from verified clean sole-owned PR41 head
+`488adcad444ccc342e090de9734a1ae327fe8781`, still on PR39 base `91bd5fb4`.
+Root run `40160928065` passes formatter/lint, all three Linux jobs and the
+producer. Both workers verify complete native fingerprints and execute, then
+stop at later groups: 51/85 and 74/85 successful, no timeouts. Earlier cookie
+and spacing failures progress, without establishing complete-suite success.
+
+Before edits, source/base comparison identifies removed balance token/metric
+inventory and a Cursor tertiary-lane fixture incorrectly mapped to two-lane
+Codex. Keep retained placeholders, editor controls, lanes and all methods.
+Overview details originally belonged to Zai without generic history; retained
+Codex legitimately has Plan Usage. Replace that obsolete no-submenu assumption
+with the exact generic history chart contract while retaining declarative rows.
+The two deferred selection fixtures need supported first-refresh Claude rows
+without history submenus, so their existing menu-item action is provider
+selection rather than the native submenu no-op. Preserve selection, rebuild,
+next-open, card and tag assertions. The rendered-action fixture shares that
+condition and must assert the actual selection selector.
+
+The merged refresh case formerly required Claude plus Gemini while disabling
+Codex. Preserve automatic clearing when Codex is disabled, re-enable it without
+reselecting it, and order Claude first for a real two-provider merged refresh;
+keep all Codex-dashboard isolation assertions. The overview subset now has one
+of two providers; assert its exact row identity. Explicit empty selection must
+use both real UI deselection operations so the active-provider edit signature
+is recorded; raw empty storage alone intentionally defaults below the limit.
+No product behavior change or test removal is planned.
+
+Write scope: MenuBarLayoutRendererTests.swift, MenuBarLayoutTests.swift,
+StatusMenuOverviewSubmenuTests.swift and StatusMenuTests.swift, plus the existing
+spec/note/comparison. Bounded read-only audit covers all other changed
+StatusMenu/MenuBarLayout test files and shared menu fixture/capability/action
+source for duplicate IDs, stale indices/tags, raw-empty selection and submenu
+activation. Exact path inventory and captured before blobs live under owned
+`.build/slim-product-work/menu-488a`, removed after publication. Accounting,
+auth/TTY/fallback/limits, source/harness/fingerprints/schedule/frozen consumption
+remain unchanged; root alone watches CI, no new agents/reviews/manual runs.
+
+Bounded audit also found two raw-empty overview setups in
+StatusMenuViewportRestoreTests.swift (the ABA and queued-refresh methods).
+Extend test write ownership to those two fixture setups only: use explicit UI
+deselection with the same two providers and assert resolved-empty state. Keep
+all interaction-generation, stale-restore, queued-task assertions and budgets.
+Other 24 audit-only paths remain read-only. Both retained descriptors exclude
+`.tertiary` as a direct menu metric, unchanged from the base; retain the synthetic
+tertiary snapshot and explicitly verify it cannot advertise an unsupported
+lane for either provider. Semantic/scoped Claude quota fields stay covered.
+
+The menu closure changes five test files with all 168 test declarations
+retained. Six assertions receive specific obsolete-feature or stronger-contract
+dispositions (20 retained placeholders, 17 retained metrics, two supported
+lanes despite tertiary data, exact generic Plan Usage chart, exact Codex subset
+row and the actual selection selector); all other existing assertions are
+byte-identical. Eleven assertions are added, bringing 629 to 640. One declarative
+details test is renamed to state the retained generic-history behavior. No test
+is removed/skipped, and no tolerance, wait, retry or numeric navigation/viewport
+budget is changed. All deferred selection and viewport assertions remain exact.
+The remaining 24 bounded audit paths are byte-identical. Provider-array,
+raw-empty, high tag/index and row-action inspection found only the repaired
+patterns above; this is source inspection, not full runtime coverage.
+
+Source proof confirms the direct-lane resolver and both retained descriptor
+metric blocks are byte-identical to PR39, as are provider navigation and the
+retained generic overview-submenu/selection suffix. The submenu file's earlier
+prologue removed OpenAI API/Mistral branches, so the scratch inspector was
+corrected to compare the retained suffix instead of assuming the entire file
+was unchanged; its indentation delimiter was then corrected. No product or test
+bytes changed between those inspector retries. All product source, other tests,
+architecture anchors, accounting limits, native harness and schedule remain
+unchanged from `488adcad`.
+
+Fresh admission (CPU 14.15–46.95%, RAM 40.61–43.53 GiB; one core is 6.25% of host
+capacity) and the nonblocking benchmark lock allow one serial check at a time.
+Menu/method/assertion preservation, normal/full profile validation, parser and
+provider generator `--check`, 181 documentation links, llms index and whitespace
+checks pass. `make check` and `make test` exit 2 at missing plutil/Swift before
+native lint/compile/tests; no installation occurs, and the runner removes its
+exact fixture parent. Root's normal automatic exact-head CI is the next gate.
+There is no new-head runtime pass or comparable app-size/cold-build evidence.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->

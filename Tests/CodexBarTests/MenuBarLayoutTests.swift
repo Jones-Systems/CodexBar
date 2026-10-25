@@ -430,7 +430,7 @@ struct MenuBarLayoutTests {
     /// label beside the threshold field is `thresholdUnit`.
     @Test
     func `metric drives the editor row controls and units`() {
-        #expect(MenuBarConditionalMetric.allCases.count == 18)
+        #expect(MenuBarConditionalMetric.allCases.count == 17)
 
         let withDirection = MenuBarConditionalMetric.allCases.filter(\.supportsDirection)
         #expect(withDirection == [
@@ -662,11 +662,8 @@ struct MenuBarLayoutTests {
             secondary: nil,
             tertiary: RateWindow(usedPercent: 17, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
             updatedAt: Date())
-        #expect(MenuBarLayoutLane.available(for: .codex, snapshot: usageSnapshot) == [
-            .primary,
-            .secondary,
-            .tertiary,
-        ])
+        #expect(MenuBarLayoutLane.available(for: .codex, snapshot: usageSnapshot) == [.primary, .secondary])
+        #expect(MenuBarLayoutLane.available(for: .claude, snapshot: usageSnapshot) == [.primary, .secondary])
     }
 
     @Test

@@ -19,12 +19,14 @@ struct StatusMenuTests {
 
     func makeSettings() -> SettingsStore {
         let suite = "StatusMenuTests-\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: suite)!
-        defaults.removePersistentDomain(forName: suite)
+        let defaults = InMemoryUserDefaults()
         let configStore = testConfigStore(suiteName: suite)
         let settings = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore)
+            configStore: configStore,
+            codexCookieStore: InMemoryCookieHeaderStore(),
+            claudeCookieStore: InMemoryCookieHeaderStore(),
+            tokenAccountStore: InMemoryTokenAccountStore())
         settings.providerDetectionCompleted = true
         return settings
     }
@@ -304,6 +306,12 @@ struct StatusMenuTests {
         if let claudeMeta = registry.metadata[.claude] {
             settings.setProviderEnabled(provider: .claude, metadata: claudeMeta, enabled: true)
         }
+        #expect(settings.selectedMenuProvider == nil)
+        // Re-enable Codex without reselecting it, so the merged fallback can resolve Claude.
+        if let codexMeta = registry.metadata[.codex] {
+            settings.setProviderEnabled(provider: .codex, metadata: codexMeta, enabled: true)
+        }
+        settings.setProviderOrder([.claude, .codex])
 
         let fetcher = UsageFetcher()
         let store = UsageStore(fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
@@ -327,6 +335,7 @@ struct StatusMenuTests {
         defer { controller.releaseStatusItemsForTesting() }
 
         let expectedResolved = store.enabledProviders().first ?? .codex
+        #expect(expectedResolved == .claude)
         #expect(store.enabledProviders().count > 1)
         #expect(controller.shouldMergeIcons == true)
 
@@ -1386,7 +1395,7 @@ extension StatusMenuTests {
 
         let ids = self.representedIDs(in: menu)
         let overviewRows = ids.filter { $0.hasPrefix("overviewRow-") }
-        #expect(overviewRows.count == 2)
+        #expect(overviewRows == ["overviewRow-codex"])
         #expect(overviewRows.contains("overviewRow-codex"))
         #expect(overviewRows.contains("overviewRow-claude") == false)
         #expect(ids.contains("menuCard") == false)
@@ -1401,7 +1410,6 @@ extension StatusMenuTests {
         settings.mergeIcons = true
         settings.selectedMenuProvider = .codex
         settings.mergedMenuLastSelectedWasOverview = true
-        settings.mergedOverviewSelectedProviders = []
         let enabledProviders: Set<UsageProvider> = [.codex, .claude]
         let registry = ProviderRegistry.shared
         for provider in UsageProvider.allCases {
@@ -1411,6 +1419,14 @@ extension StatusMenuTests {
                 metadata: metadata,
                 enabled: enabledProviders.contains(provider))
         }
+
+        for provider in [UsageProvider.codex, .claude] {
+            settings.setMergedOverviewProviderSelection(
+                provider: provider,
+                isSelected: false,
+                activeProviders: [.codex, .claude])
+        }
+        #expect(settings.resolvedMergedOverviewProviders(activeProviders: [.codex, .claude]).isEmpty)
 
         let fetcher = UsageFetcher()
         let store = UsageStore(fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
@@ -1458,6 +1474,9 @@ extension StatusMenuTests {
 
         let fetcher = UsageFetcher()
         let store = UsageStore(fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
+        store._setSnapshotForTesting(nil, provider: .claude)
+        store.isRefreshing = true
+        store.refreshingProviders.insert(.claude)
         let controller = StatusItemController(
             store: store,
             settings: settings,
@@ -1472,7 +1491,8 @@ extension StatusMenuTests {
         let claudeRow = try #require(menu.items.first {
             ($0.representedObject as? String) == "overviewRow-claude"
         })
-        #expect(claudeRow.action != nil)
+        #expect(claudeRow.submenu == nil)
+        #expect(claudeRow.action == #selector(StatusItemController.selectOverviewProvider(_:)))
         #expect(claudeRow.target is StatusItemController)
     }
 }

@@ -83,6 +83,10 @@ filter/tuple predicate and expectation rather than changing the tested contract.
 Mixed-provider fixtures must retain distinct provider/scope keys after removal.
 Standalone menu fixtures must represent a supported state without the history
 cluster; keep both standalone separators and normal grouped-history assertions.
+Menu fixtures must distinguish plain first-refresh row activation from generic
+history submenus. Use public selection edits for explicit-empty overview state
+below the provider limit; preserve exact provider identities, navigation tags,
+deferred rebuilds and stale viewport-restore protections.
 
 Run `make check` and `make test`; report missing local Swift/formatter tools as
 unavailable. Use the shared nonblocking benchmark lock and fresh CPU/RAM admission

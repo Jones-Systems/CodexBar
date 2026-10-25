@@ -5,7 +5,7 @@ import Testing
 
 extension StatusMenuTests {
     @Test
-    func `overview row uses declarative details without bespoke submenu`() throws {
+    func `overview row keeps declarative details alongside generic plan usage`() throws {
         self.disableMenuCardsForTesting()
         let settings = self.makeSettings()
         settings.statusChecksEnabled = false
@@ -59,7 +59,9 @@ extension StatusMenuTests {
         let codexRow = try #require(menu.items.first {
             ($0.representedObject as? String) == "overviewRow-codex"
         })
-        #expect(codexRow.submenu == nil)
+        #expect(codexRow.submenu?.items.contains {
+            ($0.representedObject as? String) == StatusItemController.usageHistoryChartID
+        } == true)
         let details = try #require(store.snapshot(for: .codex)?.details.first)
         #expect(details.title == "Quota details")
         #expect(details.rows.contains { $0.label == "MCP quota" && $0.value == "50% used" })
@@ -99,6 +101,10 @@ extension StatusMenuTests {
 
         let fetcher = UsageFetcher()
         let store = UsageStore(fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
+        // A first quota refresh leaves this row without a Plan Usage submenu.
+        store._setSnapshotForTesting(nil, provider: .claude)
+        store.isRefreshing = true
+        store.refreshingProviders.insert(.claude)
         let controller = StatusItemController(
             store: store,
             settings: settings,
@@ -121,6 +127,8 @@ extension StatusMenuTests {
         }
         defer { controller._test_openMenuRebuildObserver = nil }
 
+        #expect(claudeRow.submenu == nil)
+        #expect(claudeRow.action == #selector(StatusItemController.selectOverviewProvider(_:)))
         let action = try #require(claudeRow.action)
         let target = try #require(claudeRow.target as? StatusItemController)
         _ = target.perform(action, with: claudeRow)
@@ -173,6 +181,10 @@ extension StatusMenuTests {
 
         let fetcher = UsageFetcher()
         let store = UsageStore(fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
+        // A first quota refresh leaves this row without a Plan Usage submenu.
+        store._setSnapshotForTesting(nil, provider: .claude)
+        store.isRefreshing = true
+        store.refreshingProviders.insert(.claude)
         let controller = StatusItemController(
             store: store,
             settings: settings,
@@ -194,6 +206,8 @@ extension StatusMenuTests {
         }
         defer { controller._test_openMenuRebuildObserver = nil }
 
+        #expect(claudeRow.submenu == nil)
+        #expect(claudeRow.action == #selector(StatusItemController.selectOverviewProvider(_:)))
         let action = try #require(claudeRow.action)
         let target = try #require(claudeRow.target as? StatusItemController)
         _ = target.perform(action, with: claudeRow)
