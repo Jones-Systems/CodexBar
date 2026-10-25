@@ -1,7 +1,7 @@
 {
   "schema": "codexbar-product-removal-comparison/v1",
   "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
-  "candidateSourceRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d",
+  "candidateSourceRevision": "7a8a3717827e6302defd1175269a72ec07499bf7",
   "pullRequest": "https://github.com/Jones-Systems/CodexBar/pull/41",
   "baseBranch": "work/test-value-bar-pass2-20261024",
   "method": "Exact committed Git blobs; files include Swift source under Sources and tests under Tests, TestsLinux, TestsPlugin; line count uses bytes.splitlines; lexical Swift Testing @Test declaration counts exclude comments/strings and do not represent parameterized/runtime cases.",
@@ -35,23 +35,23 @@
         "bytes": 21
       },
       "testSwift": {
-        "files": 734,
-        "lines": 252332,
-        "bytes": 10937435
+        "files": 733,
+        "lines": 252268,
+        "bytes": 10934612
       }
     }
   },
   "swiftTestingDeclarations": {
     "before": {
-      "swiftTestingDeclarations": 10575,
+      "swiftTestingDeclarations": 10616,
       "filesWithTestAttributes": 1006
     },
     "after": {
-      "swiftTestingDeclarations": 6545,
-      "filesWithTestAttributes": 692
+      "swiftTestingDeclarations": 6569,
+      "filesWithTestAttributes": 691
     }
   },
-  "testPathsRemoved": 330,
+  "testPathsRemoved": 331,
   "testPathsAddedIncludingRenames": 5,
   "providerCasesBefore": 69,
   "providerCasesAfter": [
@@ -84,9 +84,9 @@
       "inventorySHA256": "dbc9da66f8757bcde7ed48800276fdc65b47140de3d4792dacbd3c351da8748d"
     },
     "costRegressionSuites": {
-      "files": 60,
+      "files": 56,
       "gitBlobIdentical": true,
-      "inventorySHA256": "924a6bfa3711f0d16af150449153f2c1cee96fb72e8e505f6c155925577577b1",
+      "inventorySHA256": "4bf8afdec400eb1d80bd29fd021a912b15ed33b30afe9b06ed3308992a35b839",
       "inventoryDigestFormat": "SHA256 of compact JSON sorted list of {path,blob} objects with sorted keys",
       "inventory": [
         {
@@ -122,20 +122,8 @@
           "blob": "0f8e993e65a27df4038fd80c1fe8dedafda0bda8"
         },
         {
-          "path": "Tests/CodexBarTests/CostUsageClaudeMetadataParsingTests.swift",
-          "blob": "40751b99dfe25c78e3a2d15c8fc44e19884ff228"
-        },
-        {
-          "path": "Tests/CodexBarTests/CostUsageClaudeResolverTests+Parser.swift",
-          "blob": "2ac823562b926d5afa87160d87384f5cca364c6f"
-        },
-        {
           "path": "Tests/CodexBarTests/CostUsageClaudeResolverTests.swift",
           "blob": "a5288e6158d6ca7a928522667fcfb0d336554430"
-        },
-        {
-          "path": "Tests/CodexBarTests/CostUsageClaudeVertexClassifierTests.swift",
-          "blob": "8660c0b8e09a254341400c8916cb7174c30490ab"
         },
         {
           "path": "Tests/CodexBarTests/CostUsageCompletedSnapshotTests.swift",
@@ -266,10 +254,6 @@
           "blob": "f95da684ecdf83f1479cbfb8eaba9031ec3a1b07"
         },
         {
-          "path": "Tests/CodexBarTests/CostUsageScannerTests.swift",
-          "blob": "30165ea2e1a916ad84d49049d8b2bde156c24bd9"
-        },
-        {
           "path": "Tests/CodexBarTests/CostUsageStoreCrashSafetyTests.swift",
           "blob": "282bf695a8935684038d955d96f02e06ceaf879c"
         },
@@ -329,7 +313,13 @@
           "path": "Tests/CodexBarTests/CostUsageWindowSummaryTests.swift",
           "blob": "e7b150ec9b65c42485df8b14a54e1da140c2811c"
         }
-      ]
+      ],
+      "scope": "Current exact subset after adapting four of the former 60 exact suites. The other changed cost suite remains separately recorded.",
+      "previousExactReference": {
+        "revision": "7215b63bec5f50e4612da7bda647b4e0b90b0349",
+        "files": 60,
+        "inventorySHA256": "924a6bfa3711f0d16af150449153f2c1cee96fb72e8e505f6c155925577577b1"
+      }
     },
     "localHistoryRegressionSuites": {
       "files": 4,
@@ -349,6 +339,434 @@
       "beforeBlob": "8263556927480a2a3b73530a9452676307934814",
       "afterBlob": "d4d55666916d45286f28b38536ae2185b952515d",
       "highLimitOrPersistenceTestsChanged": false
+    },
+    "adaptedCostRegressionSuites": {
+      "files": 4,
+      "gitBlobIdentical": false,
+      "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+      "priorRevision": "7215b63bec5f50e4612da7bda647b4e0b90b0349",
+      "repairRevision": "7a8a3717827e6302defd1175269a72ec07499bf7",
+      "methodsBefore": 29,
+      "methodsAfter": 29,
+      "adaptedMethods": 5,
+      "unchangedMethods": 24,
+      "methodProof": [
+        {
+          "path": "Tests/CodexBarTests/CostUsageClaudeMetadataParsingTests.swift",
+          "methodsBefore": 2,
+          "methodsAfter": 2,
+          "unchangedMethods": 1,
+          "adaptedMethods": 1,
+          "methods": [
+            {
+              "beforeName": "`decoded scalar coercion and session fallback preserve complete rows`",
+              "afterName": "`decoded scalar coercion and session fallback preserve complete rows`",
+              "bodyByteIdentical": false,
+              "beforeMethodSHA256": "7ee06ffa4e5637bee7ad546b0cb8e38a66d4d047ba0ced0ab4565e681acd2c1a",
+              "afterMethodSHA256": "b9e18f6940fb0c2d62b19964afdb7e8d6da977310629f8f0fb67565efda9d8a3",
+              "testAttributeSHA256": "da8a45ac5033ac01240d8eb644e61a1c954c73ec0e5faa7ee6a5b766be2a75d7",
+              "assertionCount": 9,
+              "assertionTokensSHA256": "cd9a3ae284875f5df135093a5090a98802f12c9fba2c2b286416e61dd4eec33d",
+              "fixtureLiteralBytesSHA256": "c6a31f3687708b63094e58116b036030431461da58e770632ddc1c31ea8431b7",
+              "numericTokensSHA256": "939d8f6e6334fe65c129601f1ef09de9f79315fe2ec01c8de1753b52ab69c3c4",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`JSONSerialization rejection and trailing comma acceptance preserve bytes`",
+              "afterName": "`JSONSerialization rejection and trailing comma acceptance preserve bytes`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "ecdbd2fb1bc304172123a9643a783c455e82aff375f03196721a57ca5273f4f1",
+              "afterMethodSHA256": "ecdbd2fb1bc304172123a9643a783c455e82aff375f03196721a57ca5273f4f1",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 5,
+              "assertionTokensSHA256": "ec3559d1fe4c13817e064a58313ad0469e2bcb1c20af4d89e3e6eced606a4e17",
+              "fixtureLiteralBytesSHA256": "2e06e3f7884d8c32553b535c6548ca6cbeacfc58fe972e75f7b7ff11f65e8e8e",
+              "numericTokensSHA256": "6738baaa03bec9d59968582e8cd0d8f1c4f58570b28d442e468d979368949ec1",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            }
+          ]
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageClaudeResolverTests+Parser.swift",
+          "methodsBefore": 2,
+          "methodsAfter": 2,
+          "unchangedMethods": 1,
+          "adaptedMethods": 1,
+          "methods": [
+            {
+              "beforeName": "`parser preserves complete rows days and decoded model bytes against scalar pricing`",
+              "afterName": "`parser preserves complete rows days and decoded model bytes against scalar pricing`",
+              "bodyByteIdentical": false,
+              "beforeMethodSHA256": "adfb93c0a53aecd33a352e843525cec1b88c9fc4c624cd4613ab914f4cd476d3",
+              "afterMethodSHA256": "a0bd4dccbaecba73b350ee52d15c0ae55115f0446039e429893be72cb2fdbe2b",
+              "testAttributeSHA256": "4dc3d99bd8418cef044345d49d5f92190b48ec05e14e6bf90a4918b1716779b2",
+              "assertionCount": 12,
+              "assertionTokensSHA256": "b7c16d6f7bffa8a19d9d769ab85a325ce9aa4ba18940f1dfbb688d3fcbc9080b",
+              "fixtureLiteralBytesSHA256": "5e5e4b5f0d6d2600992eaa9bd6a9ff2150b98a42877820238d814f2fa23a1571",
+              "numericTokensSHA256": "b326a19911777a75b30adeee3db1f5b200d37960c87b08c7ba469f90839b432f",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`raw dated parsing and stored report identity retain distinct catalog prices`",
+              "afterName": "`raw dated parsing and stored report identity retain distinct catalog prices`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "4649641df60c1d91289c05fcb04c51f04bf1fb4f7e9310f16a6d89dc3e590c16",
+              "afterMethodSHA256": "4649641df60c1d91289c05fcb04c51f04bf1fb4f7e9310f16a6d89dc3e590c16",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 12,
+              "assertionTokensSHA256": "a2f10909153a4a7e88629854b0e79b98f29f426a8e2eb9b9e3757e2013313fec",
+              "fixtureLiteralBytesSHA256": "a01f488e200e10b44e82c5be5248d1f4baeb50e2ec45941ebdc2f00379f9509b",
+              "numericTokensSHA256": "04d76c7e2807df3714e32a1578bf83133b25d0598cf584e5d62151dc3c6a6db7",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            }
+          ]
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageClaudeVertexClassifierTests.swift",
+          "methodsBefore": 3,
+          "methodsAfter": 3,
+          "unchangedMethods": 2,
+          "adaptedMethods": 1,
+          "methods": [
+            {
+              "beforeName": "`decoded metadata preserves historical classification`",
+              "afterName": "`decoded metadata preserves historical classification`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "bc2bc047d37def8de37e9536d68a263bb499c2f61c902a2357b80e1f5e1c6e64",
+              "afterMethodSHA256": "bc2bc047d37def8de37e9536d68a263bb499c2f61c902a2357b80e1f5e1c6e64",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 6,
+              "assertionTokensSHA256": "4f706ebc6157822c886c8cfc8097819fef9edb5c7bf418988090f6ac07278bca",
+              "fixtureLiteralBytesSHA256": "67cf5257da0a138ab7ef97a464d77c080db5756748ba3b5a15506d038c11543c",
+              "numericTokensSHA256": "e3a4a789f49a710e26e99b266b08c5cf731500a4376d7dd2e43fa0b9ce6e2ce1",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`raw decoded roots and deeply nested containers match frozen classifier`",
+              "afterName": "`raw decoded roots and deeply nested containers match frozen classifier`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "a39f33bfc5a152570aa2b7769cd640179d7d99493472032c5e54087ffcc53c11",
+              "afterMethodSHA256": "a39f33bfc5a152570aa2b7769cd640179d7d99493472032c5e54087ffcc53c11",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 2,
+              "assertionTokensSHA256": "a57a4bef7e29a7214ed2606fd315c620ec631573c08443b2941d4b909e406a36",
+              "fixtureLiteralBytesSHA256": "c46c14adb2db54480c7bd7c440889f356bd2b1c73d5005eefa6fc8ada87fbac0",
+              "numericTokensSHA256": "055cda82ece56a555c3396f1add98f9cf3e1766a2d8d934499bdf5c46f2589dd",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`Claude and Vertex ingestion preserve historical rows days tokens and costs`",
+              "afterName": "`Claude and Vertex ingestion preserve historical rows days tokens and costs`",
+              "bodyByteIdentical": false,
+              "beforeMethodSHA256": "31751148019a0e9a9827a05eb1a88e19f0158bd9ea39ff5e378b81825a4d2f27",
+              "afterMethodSHA256": "d2d98b5ebdc3ac73191516889f5bd5782f8f8603029af9936c9b7a553f5dac50",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 15,
+              "assertionTokensSHA256": "0cc6de0a84592607e75dc36b361bae5f1d0129049283d832dba3f019e8fafd1e",
+              "fixtureLiteralBytesSHA256": "313fe21e3a6d04b072296d0f0a720164ab0f607c9cc2bd98f28619b0e4dcae07",
+              "numericTokensSHA256": "9b4f08f3acde6ab91c85c8d6c0743ed16b2d54770890744558915c530e5a9001",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            }
+          ]
+        },
+        {
+          "path": "Tests/CodexBarTests/CostUsageScannerTests.swift",
+          "methodsBefore": 22,
+          "methodsAfter": 22,
+          "unchangedMethods": 20,
+          "adaptedMethods": 2,
+          "methods": [
+            {
+              "beforeName": "`codex session metadata skips an oversized line without retaining it`",
+              "afterName": "`codex session metadata skips an oversized line without retaining it`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "7288b1fc38da9b96f0261d99b8bf1ad8d94f1ab757249f995038f827859ac797",
+              "afterMethodSHA256": "7288b1fc38da9b96f0261d99b8bf1ad8d94f1ab757249f995038f827859ac797",
+              "testAttributeSHA256": "2fa06c19064e397f3578d5ad1041bf8d9ef105fea646c9c94f456033619450f3",
+              "assertionCount": 1,
+              "assertionTokensSHA256": "cb0c5595e24b0e5a0892ffc8c80854f6596f126cf91a4b31f052af8352661890",
+              "fixtureLiteralBytesSHA256": "50a0700b333d962384c4380c8b831a903f67accce980af5fdb59e123f2741c5d",
+              "numericTokensSHA256": "a54eaf44b907b733658bedf194dff15b22f132bd48a483df97072b8e1ffb13db",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`codex session metadata accepts a line exactly at the byte limit`",
+              "afterName": "`codex session metadata accepts a line exactly at the byte limit`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "201be8544fca70163775bcc7026cb5dea4316d5f2cb736f8aed66e3b400693ef",
+              "afterMethodSHA256": "201be8544fca70163775bcc7026cb5dea4316d5f2cb736f8aed66e3b400693ef",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 3,
+              "assertionTokensSHA256": "746495947f42862ccf01cbf32182086f232f4c9001657c4e95ad75248165322c",
+              "fixtureLiteralBytesSHA256": "af823a8a68bcd4fc0dc37dc6d608b3f3c87714f2853d4e4d655d5b480a609929",
+              "numericTokensSHA256": "1596aac18611acf919fcd790cbab3bd237f4e613f9d83648e566aaa91a43df9e",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`codex file metadata detects append truncation and replacement`",
+              "afterName": "`codex file metadata detects append truncation and replacement`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "193add43a5a6cf5780ec281d98775b1c751db3c3633af185c225bd73c7725ab4",
+              "afterMethodSHA256": "193add43a5a6cf5780ec281d98775b1c751db3c3633af185c225bd73c7725ab4",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 10,
+              "assertionTokensSHA256": "2c7b5e402bad9eee86fe69d54d589cb6252fdc1f82c663921a19d09127828b2a",
+              "fixtureLiteralBytesSHA256": "51b01f766011e1eeb40af2b6ae68c74db7d120e2cdbd01f96cc75d16ec0c780c",
+              "numericTokensSHA256": "3e4dbd8abf0e918dc2ab2051667d99202f6c1a3861d7d1f49580f89b9e82f051",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`vertex daily report filters claude logs`",
+              "afterName": "`Claude scanner isolates Vertex metadata with an explicit filter`",
+              "bodyByteIdentical": false,
+              "beforeMethodSHA256": "70d22d993b0ceb2540d5640ed383d313f3a6277e3b7455b91c1263622245dc7d",
+              "afterMethodSHA256": "098e957355c7ad06ecdf07cd621d0ea316c1d1c43a9a52a9c91e9fd7b75c3336",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 4,
+              "assertionTokensSHA256": "a74014194382aae17940d479e7bad4b27e14120259e1a99041c044d265f102d3",
+              "fixtureLiteralBytesSHA256": "281ba711ab976192540a71463879e7eec3708e578d4d04688145c65f48c6ba03",
+              "numericTokensSHA256": "ac9ac01d93406dea73f2abaa7f9891b598794e451d9e1cf891c06f985892d5bc",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`vertex daily report detects by vrtx id prefix`",
+              "afterName": "`Claude scanner separates Vertex ID rows from native rows`",
+              "bodyByteIdentical": false,
+              "beforeMethodSHA256": "9b5c16a44fe4bafcc5aaaa6ba0ba1660df5a3f05a9db82e0072c75f9c36a590d",
+              "afterMethodSHA256": "544ee6cb45c7ff76dbd19af6bfc1366ad8bb686c3827a903827e05dae781ec08",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 8,
+              "assertionTokensSHA256": "45e65bc1c4a420a27a7b0dbe978f4c5ae2120d98f47dbc0d8e1f07d21e584e95",
+              "fixtureLiteralBytesSHA256": "b874fca520f3c3a9fcc2d91c57aae67e372b5970468dd075bad078016ce886ac",
+              "numericTokensSHA256": "9a398d4c373ca983bc06e0bba3af4e2eee46dd8d174334bee3ddc1a737485848",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`claude report preserves per-request threshold pricing`",
+              "afterName": "`claude report preserves per-request threshold pricing`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "efb1497f3c5c2014c46774816dee8a0e53e4913ee958f3d35a981b18915fe2dd",
+              "afterMethodSHA256": "efb1497f3c5c2014c46774816dee8a0e53e4913ee958f3d35a981b18915fe2dd",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 5,
+              "assertionTokensSHA256": "b6fba31799675007e827cd22ab13dc725db5eb9a7073de828bf1347ea8e203c4",
+              "fixtureLiteralBytesSHA256": "27ba0cda59d729a61c7f5a352d935f7054cb526722fcbe2e4f7fbcb6f0a601cd",
+              "numericTokensSHA256": "25022ef8786bf6534545f12dab1f01898d9e5b534e6f644c067b3c4e23792014",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`claude parses large lines with usage at tail`",
+              "afterName": "`claude parses large lines with usage at tail`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "d87bdf1d64f410873ea3c1778b41bbfcf170c8ccdd3af6c079386aa0ddcb0349",
+              "afterMethodSHA256": "d87bdf1d64f410873ea3c1778b41bbfcf170c8ccdd3af6c079386aa0ddcb0349",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 4,
+              "assertionTokensSHA256": "88a35a0a45962a9f176d79987b3162349634ed71a61d9df6711a5b7213f77a06",
+              "fixtureLiteralBytesSHA256": "0facdcda6b4760e2a03835fe6eaeb31b026eb82152922cfb94956bba0b9bd403",
+              "numericTokensSHA256": "dcc9b34c076f43a35b88b61e1c8cc9054ae846d8b30458283ddb6d19149127be",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`claude daily report refreshes when file changes`",
+              "afterName": "`claude daily report refreshes when file changes`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "39d56e24bceddfe1688b5a81f048fd592b4ab4fbaf59e5ad086bfccf858eee0b",
+              "afterMethodSHA256": "39d56e24bceddfe1688b5a81f048fd592b4ab4fbaf59e5ad086bfccf858eee0b",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 2,
+              "assertionTokensSHA256": "8ae17bc965e1d8cd879c0ec5071a0f122d8425ad8a1bfc0d37546a2dc8d54ade",
+              "fixtureLiteralBytesSHA256": "4f1adbead52920a77647b494408c0c5c65c93e24b25230bdef027a79cdd32c0e",
+              "numericTokensSHA256": "64a96ef3217a60f860fa84a334ebe2545c6015c5d3934e2613e5613ef5150cc1",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`codex incremental parsing uses previous totals`",
+              "afterName": "`codex incremental parsing uses previous totals`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "4cc3546df96355f45ce7a03143249a5e1097169505076e4ff76f7ace4a857e50",
+              "afterMethodSHA256": "4cc3546df96355f45ce7a03143249a5e1097169505076e4ff76f7ace4a857e50",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 12,
+              "assertionTokensSHA256": "38248c5df06628d514c6c25301dc26e315966e5e8d45aa7eedf9b5519245e14b",
+              "fixtureLiteralBytesSHA256": "cd63bd860853c64d1ab4e72f6c2af49e7038140c1ea04d69163919db42395d62",
+              "numericTokensSHA256": "1f1347eed7042b1e302e51d8ad08f7d8b9cbdc80528408b1f5df47c2c68108ea",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`codex cached tokens use maximum of both cache fields`",
+              "afterName": "`codex cached tokens use maximum of both cache fields`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "bad6b13a72bba9350551d317dd58287332e80f26f2635b288e0b51edec9c5a36",
+              "afterMethodSHA256": "bad6b13a72bba9350551d317dd58287332e80f26f2635b288e0b51edec9c5a36",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 4,
+              "assertionTokensSHA256": "cb174e9dc9c95609b4c76f6df27d88bc9a249607454e92688192a55f585a4437",
+              "fixtureLiteralBytesSHA256": "2b4671b6fb12563ad18b5c9dc85272d79c651695652fa26cf56b56e9f2f38594",
+              "numericTokensSHA256": "1c8f983e3b56459bf1d7609ba715f6f4ea692871b367ac101cd813974136c3ad",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`codex out-of-order stale snapshot does not double-count last usage`",
+              "afterName": "`codex out-of-order stale snapshot does not double-count last usage`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "ab6033c643889cd90867da704b59d3c0c510ebe63b107ab1151aa6e82a87bc70",
+              "afterMethodSHA256": "ab6033c643889cd90867da704b59d3c0c510ebe63b107ab1151aa6e82a87bc70",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 3,
+              "assertionTokensSHA256": "f849ce466af5b2066f0afed91cc3db46a48895b86de25aa436969f82c60bb482",
+              "fixtureLiteralBytesSHA256": "7b21ef369677dc4a2f0c3676711d21a2bbd98e00d1f62029d96da06fb8c7827d",
+              "numericTokensSHA256": "85dee3f131a8d7fb044a976a721a297e72a8048f3024694ae08b94da9f2bbf8f",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`codex stale detection treats omitted reasoning as unknown`",
+              "afterName": "`codex stale detection treats omitted reasoning as unknown`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "c4ecb1a072d3b2003b666c9b4fcb85c46001a50718253c949c20c4d2c3464bfe",
+              "afterMethodSHA256": "c4ecb1a072d3b2003b666c9b4fcb85c46001a50718253c949c20c4d2c3464bfe",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 3,
+              "assertionTokensSHA256": "f849ce466af5b2066f0afed91cc3db46a48895b86de25aa436969f82c60bb482",
+              "fixtureLiteralBytesSHA256": "32c2eac26cfc01f2b40782c1367f6ec3c858bc5c9b524be2b4c82f1f70450d8b",
+              "numericTokensSHA256": "8bb4d791f7f75e2d2f0d39f120862dcf19bce786e83a9df7861bf65c8f73db8f",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`codex bare usage rows count exec aliases with cached input subtraction`",
+              "afterName": "`codex bare usage rows count exec aliases with cached input subtraction`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "b9afa03b34187f67c075d57d4d3adc1b5c449f05a89f529d588d190c5cfbef8f",
+              "afterMethodSHA256": "b9afa03b34187f67c075d57d4d3adc1b5c449f05a89f529d588d190c5cfbef8f",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 3,
+              "assertionTokensSHA256": "679bc914f66d0f1a301314d649956119ab60e97eaea81258fa2f5061708eb07c",
+              "fixtureLiteralBytesSHA256": "a686d21deca648bf409dd74144269aa4db6e057cf5467e8f8297f4166fe3f825",
+              "numericTokensSHA256": "14618bbca8ec93093cf19211c6ca2c20e2c5d6f1629a612f96bfb6e80c286ded",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`codex bare usage without timestamp uses prior accepted timestamp`",
+              "afterName": "`codex bare usage without timestamp uses prior accepted timestamp`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "30984c3e337ceab4034e3eee940ca5080fd61e7742b1e109b4d7617d3d523f33",
+              "afterMethodSHA256": "30984c3e337ceab4034e3eee940ca5080fd61e7742b1e109b4d7617d3d523f33",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 2,
+              "assertionTokensSHA256": "3dccc5493f7c53f1946909a678c4bbcd0a73a94513effc3203e07b044c427508",
+              "fixtureLiteralBytesSHA256": "860a37bae8e89aeaa80c04f031e8d3190358242137cc1426691e9d87d15f9cf9",
+              "numericTokensSHA256": "9fdca88da9d3fa0b8ee3e6cc4dce409bf0f6754d80b73c8b3d6d1baf9edc80dc",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`codex incremental parsing keeps current turn id`",
+              "afterName": "`codex incremental parsing keeps current turn id`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "5320d04a5c97aa614aaacd976a46106bdcd58bf2c783d1589fb6d72f57dfd8fd",
+              "afterMethodSHA256": "5320d04a5c97aa614aaacd976a46106bdcd58bf2c783d1589fb6d72f57dfd8fd",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 7,
+              "assertionTokensSHA256": "299e1f4a183dc2d5d1221f7cf7d49fcc3a59933488445ee428b955e6510184bc",
+              "fixtureLiteralBytesSHA256": "1a0541d94cd3b227fd2a2bb0c7ed81ff83accafd38cf7ebae60fa9a3a4d74eb5",
+              "numericTokensSHA256": "e3aa322983a65b6ec3f679e206c08d4bfdd59baa8a66e815ff3d1ae5ea2d40f8",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`codex fast parser does not trap on overflowing token integers`",
+              "afterName": "`codex fast parser does not trap on overflowing token integers`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "e2d245b8727bdfbc9e4b4765801d33202ea9a885b1c714815cc999c73a4cdb07",
+              "afterMethodSHA256": "e2d245b8727bdfbc9e4b4765801d33202ea9a885b1c714815cc999c73a4cdb07",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 4,
+              "assertionTokensSHA256": "36823de8d591c79348feb38cee922e74692096e1805485cc9d3da102ca2f59c2",
+              "fixtureLiteralBytesSHA256": "2edff5b95a63e13f0b4016b0b1567a9f445cb25d55a0e3e486126a27f6610ccb",
+              "numericTokensSHA256": "99adb3e3035490ae4b881af42a892cb17e444aafe93d49caf68d9e2267ac137e",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`codex json fallback applies maximum cache selection`",
+              "afterName": "`codex json fallback applies maximum cache selection`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "10919e0dd22fa8ad69d535317d65489599cdbfb97228828983f7d5167f7c1f8d",
+              "afterMethodSHA256": "10919e0dd22fa8ad69d535317d65489599cdbfb97228828983f7d5167f7c1f8d",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 4,
+              "assertionTokensSHA256": "d08bcc727ce6b3cd8ee6b6b9f389d31dcf69ba988bd4a4971172981e0b8c0e8a",
+              "fixtureLiteralBytesSHA256": "4e5e0104b1f20563fbf5c2370efa078a7cf1f8c29105de161b7bb970fa80800f",
+              "numericTokensSHA256": "0b3b0c923c66cafd5a0e20200b96823f9d98eb8b82af2510f621dbedd00bbe32",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`claude incremental parsing reads appended lines only`",
+              "afterName": "`claude incremental parsing reads appended lines only`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "7c6fdac424fd573d097f0f32af51b2a9672e5769352826d301e2d923f1ad4968",
+              "afterMethodSHA256": "7c6fdac424fd573d097f0f32af51b2a9672e5769352826d301e2d923f1ad4968",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 10,
+              "assertionTokensSHA256": "c1fd2519042af257bd5753c2bd6bae7b26b239e06ebe261139d9ac1d2e7dc9ac",
+              "fixtureLiteralBytesSHA256": "4f1adbead52920a77647b494408c0c5c65c93e24b25230bdef027a79cdd32c0e",
+              "numericTokensSHA256": "70ab4cc39f23d2bfbf7cbfae9508c38cc63de09e99308d112c58c56dfdd84189",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`day key from timestamp matches ISO parsing`",
+              "afterName": "`day key from timestamp matches ISO parsing`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "df59e241c40ea196e00c89dc22e92474edf082352973f0ee0818e4222ec5d458",
+              "afterMethodSHA256": "df59e241c40ea196e00c89dc22e92474edf082352973f0ee0818e4222ec5d458",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 1,
+              "assertionTokensSHA256": "3af23b33eb38586f3676902a87153e100a08aa26edcc45e5cd88e9176c903bbb",
+              "fixtureLiteralBytesSHA256": "6d3caa28a863f512c14836a1093f55a0b290af4faba5b5ca85ee2a62c30ba804",
+              "numericTokensSHA256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`claude deduplicates streaming chunks`",
+              "afterName": "`claude deduplicates streaming chunks`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "0e55d218e1b4075cff85da3c1ab996d60bfe150e6c7d3a2eb14eae996d6cc619",
+              "afterMethodSHA256": "0e55d218e1b4075cff85da3c1ab996d60bfe150e6c7d3a2eb14eae996d6cc619",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 6,
+              "assertionTokensSHA256": "5c2369414cde851d5da697a2f806ca1ded34465641af9c155d8c42fe206f34a3",
+              "fixtureLiteralBytesSHA256": "a41af51cc44bf7c2a7a228ab36ecf38e010aa0cff3efa1751529da41f4863806",
+              "numericTokensSHA256": "f52e9a3a774594c1aa02226e57a0820db00df8845cc9fb2900cf988faf98cdfa",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`claude counts entries without ids as separate`",
+              "afterName": "`claude counts entries without ids as separate`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "6c9acbd40dbf44a024c89b3b030395cb36c82fa7b2b926ba3b448f66d0d581d5",
+              "afterMethodSHA256": "6c9acbd40dbf44a024c89b3b030395cb36c82fa7b2b926ba3b448f66d0d581d5",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 4,
+              "assertionTokensSHA256": "6404bc10ce99ea356a6e88adde0cad393312846b7d53bc9662acc169398bf076",
+              "fixtureLiteralBytesSHA256": "0d32aba0ab7c1c91d9130675f36244872905cfc11b7019aaa0180ad995b4f03a",
+              "numericTokensSHA256": "8263242bd2744367d190de888eaf720c9c33f7d5e14e909f089d57640a5b8966",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            },
+            {
+              "beforeName": "`claude counts different request ids separately`",
+              "afterName": "`claude counts different request ids separately`",
+              "bodyByteIdentical": true,
+              "beforeMethodSHA256": "22b586038801435162ce7f08c786a30f8347c1cb9f1e3475baafbd3ab48428cc",
+              "afterMethodSHA256": "22b586038801435162ce7f08c786a30f8347c1cb9f1e3475baafbd3ab48428cc",
+              "testAttributeSHA256": "4cf09eb0c5744fb97331b98ff3fbf05a602ba3f7f67e5da5be9095033f625825",
+              "assertionCount": 4,
+              "assertionTokensSHA256": "a0bad192e5917a3c6d5136dbeb5fda4986d3a81e58d9dff863c10e1ca86f55f8",
+              "fixtureLiteralBytesSHA256": "f819ccc1d407dad58b1ae77bd31bc084752ec176f0d6c8c9e6141818c69fe5a6",
+              "numericTokensSHA256": "3666dd1bc058b83ba2982371cc1a92b0be238a8aa208b1c56e185a0f97f87c2c",
+              "assertionsFixtureLiteralsAndNumericTokensUnchanged": true
+            }
+          ]
+        }
+      ],
+      "accountingLimitOrFixtureChanges": false,
+      "interpretation": "All 29 methods retained; five methods adapt provider dispatch/cache identity while assertions, fixture string-literal bytes and numeric token sequences stay identical. Remaining 24 method bodies are byte-identical. Two scanner method names describe retained filtering. This is source preservation, not native execution."
     }
   },
   "staticAudits": {
@@ -367,42 +785,46 @@
       "status": "unavailable",
       "exitCode": 2,
       "reason": "plutil absent",
-      "latestAttemptRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d"
+      "latestAttemptRevision": "7a8a3717827e6302defd1175269a72ec07499bf7",
+      "revisionMeaning": "Exact repair bytes checked before source commit and subsequently verified against every committed source/test blob."
     },
     "makeTest": {
       "status": "unavailable",
       "exitCode": 2,
       "reason": "Swift absent; no test executable ran",
-      "latestAttemptRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d"
+      "latestAttemptRevision": "7a8a3717827e6302defd1175269a72ec07499bf7",
+      "revisionMeaning": "Exact repair bytes checked before source commit and subsequently verified against every committed source/test blob."
     },
     "normalAndFullProfileManifests": {
       "status": "pass",
-      "latestCheckRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d",
-      "normal": "passed at start of make check and make test",
-      "full": "explicit validate pass"
+      "latestCheckRevision": "7a8a3717827e6302defd1175269a72ec07499bf7",
+      "normal": "explicit validation passed",
+      "full": "explicit validation passed"
     },
     "documentationLinks": {
       "status": "pass",
       "localLinks": 181,
-      "latestAttemptRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d"
+      "latestAttemptRevision": "7a8a3717827e6302defd1175269a72ec07499bf7",
+      "revisionMeaning": "Exact repair bytes checked before source commit and subsequently verified against every committed source/test blob."
     },
     "llmsIndex": {
       "status": "pass",
-      "latestAttemptRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d"
+      "latestAttemptRevision": "7a8a3717827e6302defd1175269a72ec07499bf7",
+      "revisionMeaning": "Exact repair bytes checked before source commit and subsequently verified against every committed source/test blob."
     },
     "whitespace": "pass",
     "providerManifestGeneration": {
       "status": "pass",
       "method": "Existing generator --write followed by --check; only one generated Swift doccomment differed; two retained providers",
       "revision": "f1bae83de761ee383e5845111993671f1ed308cb",
-      "latestCheckRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d"
+      "latestCheckRevision": "7a8a3717827e6302defd1175269a72ec07499bf7"
     },
     "codexParserHash": {
       "status": "pass",
       "method": "Existing generator --write followed by --check",
       "value": "56738678d8c0245c",
       "generatedOnlyRepairRevision": "e0575c44592208fa16d0ac71d7b14044c0b49418",
-      "latestCheckRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d",
+      "latestCheckRevision": "7a8a3717827e6302defd1175269a72ec07499bf7",
       "latestCheckMethod": "Existing generator --check; value unchanged"
     },
     "portableHarnessFixtures": {
@@ -449,10 +871,10 @@
       "repairRevision": "b0e2069e515ffecd72de920f0aca96547750ab55"
     },
     "swiftFormat": {
-      "status": "pass at504398c14; repaired new head pending",
-      "qualifiedRevision": "504398c14944516191d9b162135f504634f3deb9",
-      "repairRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d",
-      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40153719090",
+      "status": "pass at7215b63; repaired new head pending",
+      "qualifiedRevision": "7215b63bec5f50e4612da7bda647b4e0b90b0349",
+      "repairRevision": "7a8a3717827e6302defd1175269a72ec07499bf7",
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40154587231",
       "reason": "No native formatter locally; not inherited as a new-head pass"
     }
   },
@@ -549,6 +971,67 @@
       ],
       "source": "Root saved exact producer diagnostics; repeated compile diagnostics deduplicated by exact source message",
       "aggregate": "Producer failure causes selected shards to skip; no distinct aggregate defect reported."
+    },
+    "latestTestCompilerAttempt": {
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40154587231",
+      "producerJobID": 121053186896,
+      "prHeadRevision": "7215b63bec5f50e4612da7bda647b4e0b90b0349",
+      "source": "Root exact-head observation and bounded saved 46-message diagnostic inventory",
+      "swiftFormat": "pass:0/1346 files require formatting,4skipped",
+      "nativeToolPreflight": "complete",
+      "distinctTestDiagnostics": 46,
+      "diagnosticPaths": 17,
+      "diagnosticInventorySHA256": "9842719abb5587d19fe3896b391542bfd3ffc0cfc43634dfda52f3530580ff7e",
+      "diagnostics": [
+        "Tests/CodexBarTests/ClaudeMenuCardCostTests.swift:129:59: error: type 'ProviderCostMenuCardStyle' has no member 'clawRouter'",
+        "Tests/CodexBarTests/ClaudeNativeProfileMenuSelectionTests.swift:195:48: error: extra argument 'refreshAugmentSession' in call",
+        "Tests/CodexBarTests/ClaudeNativeProfileMenuSelectionTests.swift:31:44: error: extra argument 'refreshAugmentSession' in call",
+        "Tests/CodexBarTests/CodexSessionQuotaFalseRestoreTests.swift:328:26: error: type 'UsageStore.SessionQuotaWindowSource' has no member 'copilotSecondaryFallback'",
+        "Tests/CodexBarTests/CodexSessionQuotaFalseRestoreTests.swift:335:40: error: cannot infer contextual base in reference to member 'baselineChanged'",
+        "Tests/CodexBarTests/CodexSessionQuotaFalseRestoreTests.swift:337:45: error: cannot infer contextual base in reference to member 'copilotSecondaryFallback'",
+        "Tests/CodexBarTests/CostUsageClaudeMetadataParsingTests.swift:12:49: error: type 'UsageProvider' has no member 'vertexai'",
+        "Tests/CodexBarTests/CostUsageClaudeResolverTests+Parser.swift:11:49: error: type 'UsageProvider' has no member 'vertexai'",
+        "Tests/CodexBarTests/CostUsageClaudeVertexClassifierTests.swift:174:58: error: tuple pattern cannot match values of non-tuple type 'Any'",
+        "Tests/CodexBarTests/CostUsageClaudeVertexClassifierTests.swift:176:25: error: cannot infer contextual base in reference to member 'vertexAIOnly'",
+        "Tests/CodexBarTests/CostUsageClaudeVertexClassifierTests.swift:176:48: error: cannot infer contextual base in reference to member 'vertexai'",
+        "Tests/CodexBarTests/CostUsageClaudeVertexClassifierTests.swift:212:48: error: cannot infer contextual base in reference to member 'all'",
+        "Tests/CodexBarTests/CostUsageClaudeVertexClassifierTests.swift:218:52: error: cannot infer key path type from context; consider explicitly specifying a root type",
+        "Tests/CodexBarTests/CostUsageScannerTests.swift:153:24: error: type 'UsageProvider' has no member 'vertexai'",
+        "Tests/CodexBarTests/CostUsageScannerTests.swift:219:24: error: type 'UsageProvider' has no member 'vertexai'",
+        "Tests/CodexBarTests/Jones/JonesCodexFleetPromotionMenuTests.swift:176:40: error: extra argument 'refreshAugmentSession' in call",
+        "Tests/CodexBarTests/Jones/JonesCodexFleetPromotionMenuTests.swift:201:35: error: cannot infer contextual base in reference to member 'submenu'",
+        "Tests/CodexBarTests/Jones/JonesCodexFleetPromotionMenuTests.swift:207:35: error: cannot infer contextual base in reference to member 'submenu'",
+        "Tests/CodexBarTests/LocalizationLanguageCatalogTests.swift:36:34: error: type 'SettingsPane' has no member 'plugins'",
+        "Tests/CodexBarTests/MenuLayoutScreenshotRenderTests.swift:62:39: error: cannot find 'CursorOverviewProofFixture' in scope",
+        "Tests/CodexBarTests/PaceVisibilityScreenshotRenderTests.swift:47:54: error: cannot find 'OpenCodeGoPaceTestSupport' in scope",
+        "Tests/CodexBarTests/PaceVisibilityScreenshotRenderTests.swift:47:99: error: cannot infer contextual base in reference to member 'estimated'",
+        "Tests/CodexBarTests/PaceVisibilityScreenshotRenderTests.swift:53:112: error: cannot infer contextual base in reference to member 'atomic'",
+        "Tests/CodexBarTests/RefreshFailureHookStatusTests.swift:12:28: error: type 'UsageStore' has no member 'refreshFailureHookStatus'",
+        "Tests/CodexBarTests/RefreshFailureHookStatusTests.swift:15:28: error: type 'UsageStore' has no member 'refreshFailureHookStatus'",
+        "Tests/CodexBarTests/RefreshFailureHookStatusTests.swift:17:28: error: type 'UsageStore' has no member 'refreshFailureHookStatus'",
+        "Tests/CodexBarTests/RefreshFailureHookStatusTests.swift:28:33: error: type 'UsageStore' has no member 'refreshFailureHookStatus'",
+        "Tests/CodexBarTests/RefreshFailureHookStatusTests.swift:9:28: error: type 'UsageStore' has no member 'refreshFailureHookStatus'",
+        "Tests/CodexBarTests/SessionEquivalentForecastTests.swift:314:28: error: call to main actor-isolated static method 'historyFixture(burns:)' in a synchronous nonisolated context [#ActorIsolatedCall]",
+        "Tests/CodexBarTests/SessionEquivalentForecastTests.swift:36:28: error: call to main actor-isolated static method 'historyFixture(burns:)' in a synchronous nonisolated context [#ActorIsolatedCall]",
+        "Tests/CodexBarTests/SessionEquivalentForecastTests.swift:379:28: error: call to main actor-isolated static method 'historyFixture(burns:)' in a synchronous nonisolated context [#ActorIsolatedCall]",
+        "Tests/CodexBarTests/SessionEquivalentForecastTests.swift:407:28: error: call to main actor-isolated static method 'historyFixture(burns:)' in a synchronous nonisolated context [#ActorIsolatedCall]",
+        "Tests/CodexBarTests/SessionEquivalentForecastTests.swift:427:28: error: call to main actor-isolated static method 'historyFixture(burns:)' in a synchronous nonisolated context [#ActorIsolatedCall]",
+        "Tests/CodexBarTests/SessionEquivalentForecastTests.swift:89:28: error: call to main actor-isolated static method 'historyFixture(burns:)' in a synchronous nonisolated context [#ActorIsolatedCall]",
+        "Tests/CodexBarTests/SettingsStoreCoverageTests.swift:350:18: error: value of type 'SettingsStore' has no member 'kimiCookieSource'",
+        "Tests/CodexBarTests/SettingsStoreCoverageTests.swift:350:38: error: cannot infer contextual base in reference to member 'off'",
+        "Tests/CodexBarTests/SettingsStoreCoverageTests.swift:355:26: error: value of type 'SettingsStore' has no member 'kimiCookieSource'",
+        "Tests/CodexBarTests/SettingsStoreCoverageTests.swift:355:47: error: cannot infer contextual base in reference to member 'off'",
+        "Tests/CodexBarTests/SettingsStoreTests.swift:877:16: error: value of type 'SettingsStore' has no member 'minimaxAPIRegion'",
+        "Tests/CodexBarTests/SettingsStoreTests.swift:877:36: error: cannot infer contextual base in reference to member 'chinaMainland'",
+        "Tests/CodexBarTests/SettingsStoreTests.swift:884:24: error: value of type 'SettingsStore' has no member 'minimaxAPIRegion'",
+        "Tests/CodexBarTests/SpendDashboardScreenshotRenderTests.swift:112:31: error: generic parameter 'T' could not be inferred",
+        "Tests/CodexBarTests/SpendDashboardScreenshotRenderTests.swift:113:28: error: generic parameter 'T' could not be inferred",
+        "Tests/CodexBarTests/SpendDashboardScreenshotRenderTests.swift:207:27: error: cannot infer contextual base in reference to member 'atomic'",
+        "Tests/CodexBarTests/SpendDashboardScreenshotRenderTests.swift:92:13: error: invalid redeclaration of 'claude'",
+        "Tests/CodexBarTests/StatusItemIconObservationSignatureTests.swift:428:18: error: value of type 'SettingsStore' has no member 'zaiAPIToken'"
+      ],
+      "aggregateJobID": 121055718535,
+      "aggregate": "producer=failure, shards=skipped; no separate defect. No test execution pass is established."
     }
   },
   "appSizeAndBuildComparison": {
@@ -618,7 +1101,7 @@
     "normalAndFullAccepted": true,
     "featureOnlyExclusions": 0,
     "mixedFullOnlyPartitions": 0,
-    "retainedRepositoryTestSwiftPaths": 734,
+    "retainedRepositoryTestSwiftPaths": 733,
     "manifestSHA256": "136f44cb5604cf4364709c429e2e7ff8d275c0065d26bfb4896e1899008865d8",
     "platformTargetSelectionUnchanged": true
   },
@@ -965,7 +1448,7 @@
     ],
     "deferredReason": "Three fresh below-threshold admissions, separated by ready source/evidence work, each found shared benchmark.lock busy. No test command or queued wait started. Existing local tool absences also prevent native make check/test. Prior exact-revision check results are retained as historical evidence, not new-head passes."
   },
-  "countMethodLatest": "Exact prior committed Git inventory plus four-file committed repair delta: product +4 lines/+182 bytes, tests +62 lines/+3087 bytes; no file changes; one parameterized @Test declaration added.",
+  "countMethodLatest": "Exact committed source Git blobs at 7a8a3717827e6302defd1175269a72ec07499bf7 independently read back against all measured worktree bytes; bytes.splitlines for lines, lexical @Test token count excludes comments/strings, and an independent line-pattern count agrees on every base/prior/current test file. Declarations are not parameterized or runtime case counts.",
   "swiftFormatRepair": {
     "baseRevision": "1d9787f8b4075068f3282cb723e42170a6e702c3",
     "repairRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
@@ -3702,6 +4185,1027 @@
         "status": "passed",
         "exitCode": 0,
         "output": "llms index OK: docs/llms.txt\n"
+      }
+    ]
+  },
+  "declarationCountCorrection": {
+    "previousReportedBefore": {
+      "swiftTestingDeclarations": 10616,
+      "filesWithTestAttributes": 1006
+    },
+    "previousReportedPrior": {
+      "swiftTestingDeclarations": 6569,
+      "filesWithTestAttributes": 691
+    },
+    "correctedBefore": {
+      "swiftTestingDeclarations": 10616,
+      "filesWithTestAttributes": 1006
+    },
+    "correctedPrior": {
+      "swiftTestingDeclarations": 6574,
+      "filesWithTestAttributes": 692
+    },
+    "currentAfter": {
+      "swiftTestingDeclarations": 6569,
+      "filesWithTestAttributes": 691
+    },
+    "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+    "priorRevision": "7215b63bec5f50e4612da7bda647b4e0b90b0349",
+    "repairRevision": "7a8a3717827e6302defd1175269a72ec07499bf7",
+    "actualBatchDelta": {
+      "swiftTestingDeclarationsRemoved": 5,
+      "xctestMethodsRemoved": 1,
+      "newTestMethods": 0
+    },
+    "method": "Fresh complete Git-blob count plus independent per-file line-pattern count; they agree on every file. Old recorded totals were understated; the earlier extraction cause is not established.",
+    "supersedes": "Earlier declaration totals in historical formatter/compiler entries and Work Note; historical blob-preservation findings remain revision-bound."
+  },
+  "testCompilationRepair": {
+    "baseRevision": "7215b63bec5f50e4612da7bda647b4e0b90b0349",
+    "repairRevision": "7a8a3717827e6302defd1175269a72ec07499bf7",
+    "hostedFailingBefore": {
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40154587231",
+      "producerJobID": 121053186896,
+      "prHeadRevision": "7215b63bec5f50e4612da7bda647b4e0b90b0349",
+      "source": "Root exact-head observation and bounded saved 46-message diagnostic inventory",
+      "swiftFormat": "pass:0/1346 files require formatting,4skipped",
+      "nativeToolPreflight": "complete",
+      "distinctTestDiagnostics": 46,
+      "diagnosticPaths": 17,
+      "diagnosticInventorySHA256": "9842719abb5587d19fe3896b391542bfd3ffc0cfc43634dfda52f3530580ff7e",
+      "diagnostics": [
+        "Tests/CodexBarTests/ClaudeMenuCardCostTests.swift:129:59: error: type 'ProviderCostMenuCardStyle' has no member 'clawRouter'",
+        "Tests/CodexBarTests/ClaudeNativeProfileMenuSelectionTests.swift:195:48: error: extra argument 'refreshAugmentSession' in call",
+        "Tests/CodexBarTests/ClaudeNativeProfileMenuSelectionTests.swift:31:44: error: extra argument 'refreshAugmentSession' in call",
+        "Tests/CodexBarTests/CodexSessionQuotaFalseRestoreTests.swift:328:26: error: type 'UsageStore.SessionQuotaWindowSource' has no member 'copilotSecondaryFallback'",
+        "Tests/CodexBarTests/CodexSessionQuotaFalseRestoreTests.swift:335:40: error: cannot infer contextual base in reference to member 'baselineChanged'",
+        "Tests/CodexBarTests/CodexSessionQuotaFalseRestoreTests.swift:337:45: error: cannot infer contextual base in reference to member 'copilotSecondaryFallback'",
+        "Tests/CodexBarTests/CostUsageClaudeMetadataParsingTests.swift:12:49: error: type 'UsageProvider' has no member 'vertexai'",
+        "Tests/CodexBarTests/CostUsageClaudeResolverTests+Parser.swift:11:49: error: type 'UsageProvider' has no member 'vertexai'",
+        "Tests/CodexBarTests/CostUsageClaudeVertexClassifierTests.swift:174:58: error: tuple pattern cannot match values of non-tuple type 'Any'",
+        "Tests/CodexBarTests/CostUsageClaudeVertexClassifierTests.swift:176:25: error: cannot infer contextual base in reference to member 'vertexAIOnly'",
+        "Tests/CodexBarTests/CostUsageClaudeVertexClassifierTests.swift:176:48: error: cannot infer contextual base in reference to member 'vertexai'",
+        "Tests/CodexBarTests/CostUsageClaudeVertexClassifierTests.swift:212:48: error: cannot infer contextual base in reference to member 'all'",
+        "Tests/CodexBarTests/CostUsageClaudeVertexClassifierTests.swift:218:52: error: cannot infer key path type from context; consider explicitly specifying a root type",
+        "Tests/CodexBarTests/CostUsageScannerTests.swift:153:24: error: type 'UsageProvider' has no member 'vertexai'",
+        "Tests/CodexBarTests/CostUsageScannerTests.swift:219:24: error: type 'UsageProvider' has no member 'vertexai'",
+        "Tests/CodexBarTests/Jones/JonesCodexFleetPromotionMenuTests.swift:176:40: error: extra argument 'refreshAugmentSession' in call",
+        "Tests/CodexBarTests/Jones/JonesCodexFleetPromotionMenuTests.swift:201:35: error: cannot infer contextual base in reference to member 'submenu'",
+        "Tests/CodexBarTests/Jones/JonesCodexFleetPromotionMenuTests.swift:207:35: error: cannot infer contextual base in reference to member 'submenu'",
+        "Tests/CodexBarTests/LocalizationLanguageCatalogTests.swift:36:34: error: type 'SettingsPane' has no member 'plugins'",
+        "Tests/CodexBarTests/MenuLayoutScreenshotRenderTests.swift:62:39: error: cannot find 'CursorOverviewProofFixture' in scope",
+        "Tests/CodexBarTests/PaceVisibilityScreenshotRenderTests.swift:47:54: error: cannot find 'OpenCodeGoPaceTestSupport' in scope",
+        "Tests/CodexBarTests/PaceVisibilityScreenshotRenderTests.swift:47:99: error: cannot infer contextual base in reference to member 'estimated'",
+        "Tests/CodexBarTests/PaceVisibilityScreenshotRenderTests.swift:53:112: error: cannot infer contextual base in reference to member 'atomic'",
+        "Tests/CodexBarTests/RefreshFailureHookStatusTests.swift:12:28: error: type 'UsageStore' has no member 'refreshFailureHookStatus'",
+        "Tests/CodexBarTests/RefreshFailureHookStatusTests.swift:15:28: error: type 'UsageStore' has no member 'refreshFailureHookStatus'",
+        "Tests/CodexBarTests/RefreshFailureHookStatusTests.swift:17:28: error: type 'UsageStore' has no member 'refreshFailureHookStatus'",
+        "Tests/CodexBarTests/RefreshFailureHookStatusTests.swift:28:33: error: type 'UsageStore' has no member 'refreshFailureHookStatus'",
+        "Tests/CodexBarTests/RefreshFailureHookStatusTests.swift:9:28: error: type 'UsageStore' has no member 'refreshFailureHookStatus'",
+        "Tests/CodexBarTests/SessionEquivalentForecastTests.swift:314:28: error: call to main actor-isolated static method 'historyFixture(burns:)' in a synchronous nonisolated context [#ActorIsolatedCall]",
+        "Tests/CodexBarTests/SessionEquivalentForecastTests.swift:36:28: error: call to main actor-isolated static method 'historyFixture(burns:)' in a synchronous nonisolated context [#ActorIsolatedCall]",
+        "Tests/CodexBarTests/SessionEquivalentForecastTests.swift:379:28: error: call to main actor-isolated static method 'historyFixture(burns:)' in a synchronous nonisolated context [#ActorIsolatedCall]",
+        "Tests/CodexBarTests/SessionEquivalentForecastTests.swift:407:28: error: call to main actor-isolated static method 'historyFixture(burns:)' in a synchronous nonisolated context [#ActorIsolatedCall]",
+        "Tests/CodexBarTests/SessionEquivalentForecastTests.swift:427:28: error: call to main actor-isolated static method 'historyFixture(burns:)' in a synchronous nonisolated context [#ActorIsolatedCall]",
+        "Tests/CodexBarTests/SessionEquivalentForecastTests.swift:89:28: error: call to main actor-isolated static method 'historyFixture(burns:)' in a synchronous nonisolated context [#ActorIsolatedCall]",
+        "Tests/CodexBarTests/SettingsStoreCoverageTests.swift:350:18: error: value of type 'SettingsStore' has no member 'kimiCookieSource'",
+        "Tests/CodexBarTests/SettingsStoreCoverageTests.swift:350:38: error: cannot infer contextual base in reference to member 'off'",
+        "Tests/CodexBarTests/SettingsStoreCoverageTests.swift:355:26: error: value of type 'SettingsStore' has no member 'kimiCookieSource'",
+        "Tests/CodexBarTests/SettingsStoreCoverageTests.swift:355:47: error: cannot infer contextual base in reference to member 'off'",
+        "Tests/CodexBarTests/SettingsStoreTests.swift:877:16: error: value of type 'SettingsStore' has no member 'minimaxAPIRegion'",
+        "Tests/CodexBarTests/SettingsStoreTests.swift:877:36: error: cannot infer contextual base in reference to member 'chinaMainland'",
+        "Tests/CodexBarTests/SettingsStoreTests.swift:884:24: error: value of type 'SettingsStore' has no member 'minimaxAPIRegion'",
+        "Tests/CodexBarTests/SpendDashboardScreenshotRenderTests.swift:112:31: error: generic parameter 'T' could not be inferred",
+        "Tests/CodexBarTests/SpendDashboardScreenshotRenderTests.swift:113:28: error: generic parameter 'T' could not be inferred",
+        "Tests/CodexBarTests/SpendDashboardScreenshotRenderTests.swift:207:27: error: cannot infer contextual base in reference to member 'atomic'",
+        "Tests/CodexBarTests/SpendDashboardScreenshotRenderTests.swift:92:13: error: invalid redeclaration of 'claude'",
+        "Tests/CodexBarTests/StatusItemIconObservationSignatureTests.swift:428:18: error: value of type 'SettingsStore' has no member 'zaiAPIToken'"
+      ],
+      "aggregateJobID": 121055718535,
+      "aggregate": "producer=failure, shards=skipped; no separate defect. No test execution pass is established."
+    },
+    "pathDispositions": [
+      {
+        "path": "Tests/CodexBarTests/ClaudeMenuCardCostTests.swift",
+        "disposition": "Drop only retired ClawRouter style argument; generic capped-cost assertions and used/left Boolean cases stay."
+      },
+      {
+        "path": "Tests/CodexBarTests/ClaudeNativeProfileMenuSelectionTests.swift",
+        "disposition": "Remove two obsolete Augment callback arguments; native Claude selection/capture/action assertions remain exact."
+      },
+      {
+        "path": "Tests/CodexBarTests/CodexSessionQuotaFalseRestoreTests.swift",
+        "disposition": "Remove only unrepresentable primary-to-Copilot fallback source method; all owner/reset/disabled/unavailable/false-restore methods remain exact."
+      },
+      {
+        "path": "Tests/CodexBarTests/CostUsageClaudeMetadataParsingTests.swift",
+        "disposition": "Keep both Vertex/native parameters; run explicit filters and cache under Claude, retaining decoded scalar/session/rows/bytes/tokens assertions."
+      },
+      {
+        "path": "Tests/CodexBarTests/CostUsageClaudeResolverTests+Parser.swift",
+        "disposition": "Keep both parameter cases; explicit Claude filter/cache preserves scalar pricing, days/rows/model bytes, costs and existing dated-price proof."
+      },
+      {
+        "path": "Tests/CodexBarTests/CostUsageClaudeVertexClassifierTests.swift",
+        "disposition": "Keep frozen independent classifier and all three tests; both filters run Claude scanner/cache with identical row/day/deduplication/token/cost/bytes assertions."
+      },
+      {
+        "path": "Tests/CodexBarTests/CostUsageScannerTests.swift",
+        "disposition": "Keep all 22 tests; explicit inclusion and exclusion filter dispatch under Claude replaces retired enum cases; no numeric/literal/assertion/large-line/scale edits."
+      },
+      {
+        "path": "Tests/CodexBarTests/Jones/JonesCodexFleetPromotionMenuTests.swift",
+        "disposition": "Remove obsolete Augment callback only; fleet submenu inference recovers without changing action/selection assertions."
+      },
+      {
+        "path": "Tests/CodexBarTests/LocalizationLanguageCatalogTests.swift",
+        "disposition": "Remove plugin-pane-only Catalan wording method; shared language/key/token/localization inventory remains."
+      },
+      {
+        "path": "Tests/CodexBarTests/MenuLayoutScreenshotRenderTests.swift",
+        "disposition": "Replace deleted Cursor adapter fixture with synthetic Codex data and unavailable Claude roster; same 600 input/400 output/1000 total/$12 and list-price provenance, rendering/accessibility assertions remain."
+      },
+      {
+        "path": "Tests/CodexBarTests/PaceVisibilityScreenshotRenderTests.swift",
+        "disposition": "Remove only OpenCodeGo estimate capture; existing Claude pace on/off capture body and input/PNG helpers remain."
+      },
+      {
+        "path": "Tests/CodexBarTests/RefreshFailureHookStatusTests.swift",
+        "disposition": "Remove hook-only file/two methods; original helper in UsageStore+Hooks.swift:229 was consumed only by hook dispatch at UsageStore+Refresh.swift:1498. Shared LogRedactor privacy tests unchanged."
+      },
+      {
+        "path": "Tests/CodexBarTests/SessionEquivalentForecastTests.swift",
+        "disposition": "Remove actor annotation only from pure historyFixture(burns:) wrapper. All method/helper bodies and assertions remain exact; actor-owned UsageStore callers stay MainActor."
+      },
+      {
+        "path": "Tests/CodexBarTests/SettingsStoreCoverageTests.swift",
+        "disposition": "Remove only Kimi assignment/assertion from shared keychain-disable test; keep Codex/Claude manual-source expectations and switch touched fixture to dictionary-backed defaults plus unique contained config."
+      },
+      {
+        "path": "Tests/CodexBarTests/SettingsStoreTests.swift",
+        "disposition": "Remove only MiniMax region persistence method; shared persistence/reload tests remain."
+      },
+      {
+        "path": "Tests/CodexBarTests/SpendDashboardScreenshotRenderTests.swift",
+        "disposition": "Repair duplicate Claude local to distinct Codex input; keep all range/cost/token/model fixtures/assertions and add explicit two-ID row assertions for both ranges."
+      },
+      {
+        "path": "Tests/CodexBarTests/StatusItemIconObservationSignatureTests.swift",
+        "disposition": "Use disabled Claude admin API-key config in place of disabled Zai token; keep widget-save override, wait, and empty-publication assertion."
+      }
+    ],
+    "removedMethods": [
+      {
+        "path": "Tests/CodexBarTests/CodexSessionQuotaFalseRestoreTests.swift",
+        "method": "`source change establishes a new reducer baseline`",
+        "reason": "The only second source was Copilot secondary fallback; retained SessionQuotaWindowSource has only primary. Owner/reset baseline regressions remain.",
+        "beforeMethodSHA256": "11782bc5f5b3c8fcea2d0650a4979a184efd7777df5a0abcf12d621d08823ec7"
+      },
+      {
+        "path": "Tests/CodexBarTests/LocalizationLanguageCatalogTests.swift",
+        "method": "`catalan plugin sidebar uses the same terminology as its pane`",
+        "reason": "The provider plugin pane and sidebar entry are removed; all general language, locale, and token catalog tests remain.",
+        "beforeMethodSHA256": "90c01b98be32ab5620f3f6cb00fb1a165f00ed9d936e7b2e485999a384fc7900"
+      },
+      {
+        "path": "Tests/CodexBarTests/PaceVisibilityScreenshotRenderTests.swift",
+        "method": "test_renderOpenCodeGoEstimateScreenshots",
+        "reason": "This opt-in screenshot used the removed OpenCodeGo local quota estimate. The Claude pace on/off screenshot method and fixtures remain exact.",
+        "beforeMethodSHA256": "b1685c6dbaa14241418441138cfa245413b710fc8793e0607805ae58798734fc"
+      },
+      {
+        "path": "Tests/CodexBarTests/RefreshFailureHookStatusTests.swift",
+        "method": "`maps URL errors to coarse categories`",
+        "reason": "The deleted hook dispatch alone consumed refreshFailureHookStatus; hook-only coarse status/privacy transport tests have no surviving API. Shared LogRedactor credential/header privacy tests remain unchanged.",
+        "beforeMethodSHA256": "8acb9bae39f099a4d3304ff54eb2629ce901b9470d710550b6cb0d0d03be8ae1"
+      },
+      {
+        "path": "Tests/CodexBarTests/RefreshFailureHookStatusTests.swift",
+        "method": "`never forwards the raw error description`",
+        "reason": "The deleted hook dispatch alone consumed refreshFailureHookStatus; hook-only coarse status/privacy transport tests have no surviving API. Shared LogRedactor credential/header privacy tests remain unchanged.",
+        "beforeMethodSHA256": "3b3bf0978e36c4a3feb8b58593f6a32fea2a8d3cf5a57e35bca35f52ebc1a0ee"
+      },
+      {
+        "path": "Tests/CodexBarTests/SettingsStoreTests.swift",
+        "method": "`persists mini max API region across instances`",
+        "reason": "Only the removed MiniMax region preference and its instances were exercised; retained shared config persistence/reload cases remain.",
+        "beforeMethodSHA256": "b3a18477e653644e9286353e3c447db3be9973d8d7aa16bccc4d052ce2f7ab87"
+      }
+    ],
+    "removedFiles": [
+      "Tests/CodexBarTests/RefreshFailureHookStatusTests.swift"
+    ],
+    "addedTestMethods": 0,
+    "testMethodInventory": [
+      {
+        "path": "Tests/CodexBarTests/ClaudeMenuCardCostTests.swift",
+        "beforeMethods": 10,
+        "afterMethods": 10,
+        "beforeMethodsSHA256": "d589365b79108e0fad9dd822ed54d4a255f955604a0c6d1a806bc9383823a7c9",
+        "afterMethodsSHA256": "d589365b79108e0fad9dd822ed54d4a255f955604a0c6d1a806bc9383823a7c9"
+      },
+      {
+        "path": "Tests/CodexBarTests/ClaudeNativeProfileMenuSelectionTests.swift",
+        "beforeMethods": 8,
+        "afterMethods": 8,
+        "beforeMethodsSHA256": "71d57c54055c7f38910a20d78523c3e3cb52f3557b23f4096eb5b0b88f8541b9",
+        "afterMethodsSHA256": "71d57c54055c7f38910a20d78523c3e3cb52f3557b23f4096eb5b0b88f8541b9"
+      },
+      {
+        "path": "Tests/CodexBarTests/CodexSessionQuotaFalseRestoreTests.swift",
+        "beforeMethods": 35,
+        "afterMethods": 34,
+        "beforeMethodsSHA256": "bebb313fac03f9272996b8045bf54339eca549326c1a3b2e9de0352fa3754b8d",
+        "afterMethodsSHA256": "4da2fb38ec61c5938191a7d9aa31ce93bb2e69861f46b2a0d4f581c8258987fb"
+      },
+      {
+        "path": "Tests/CodexBarTests/CostUsageClaudeMetadataParsingTests.swift",
+        "beforeMethods": 2,
+        "afterMethods": 2,
+        "beforeMethodsSHA256": "3094b5de09f3b108fbb73bc4e93d726f3de1ff4ec966375b3057be644c7c2327",
+        "afterMethodsSHA256": "3094b5de09f3b108fbb73bc4e93d726f3de1ff4ec966375b3057be644c7c2327"
+      },
+      {
+        "path": "Tests/CodexBarTests/CostUsageClaudeResolverTests+Parser.swift",
+        "beforeMethods": 2,
+        "afterMethods": 2,
+        "beforeMethodsSHA256": "fe75a367074ee0a35e762fa84b0a37a388359abd235cb1d5706f4d1edf63a8ef",
+        "afterMethodsSHA256": "fe75a367074ee0a35e762fa84b0a37a388359abd235cb1d5706f4d1edf63a8ef"
+      },
+      {
+        "path": "Tests/CodexBarTests/CostUsageClaudeVertexClassifierTests.swift",
+        "beforeMethods": 3,
+        "afterMethods": 3,
+        "beforeMethodsSHA256": "699df2c5123110c52bfff43b28e5e745b6025c5b0e017fddce34dd45fae87db3",
+        "afterMethodsSHA256": "699df2c5123110c52bfff43b28e5e745b6025c5b0e017fddce34dd45fae87db3"
+      },
+      {
+        "path": "Tests/CodexBarTests/CostUsageScannerTests.swift",
+        "beforeMethods": 22,
+        "afterMethods": 22,
+        "beforeMethodsSHA256": "fe951c46110c5bbfe28fbae7d5dffd8fb06a1a4fd10f7af0d66e359a49a846c4",
+        "afterMethodsSHA256": "327312a36fd70f6ccca6b64fd38ece1b5c632e6c6ea58dfa44848e6e94f38c08"
+      },
+      {
+        "path": "Tests/CodexBarTests/Jones/JonesCodexFleetPromotionMenuTests.swift",
+        "beforeMethods": 6,
+        "afterMethods": 6,
+        "beforeMethodsSHA256": "7c63ca1a75272708f33802acfa73f6eaa7f78b7ad814816817723557acf0b556",
+        "afterMethodsSHA256": "7c63ca1a75272708f33802acfa73f6eaa7f78b7ad814816817723557acf0b556"
+      },
+      {
+        "path": "Tests/CodexBarTests/LocalizationLanguageCatalogTests.swift",
+        "beforeMethods": 33,
+        "afterMethods": 32,
+        "beforeMethodsSHA256": "e5ede3533ef8c1acb7864b790887a82b1860a5c697b94271288683cf3a347c8c",
+        "afterMethodsSHA256": "7ab0dd4bb15005edede4d1e4d0f1769da25c9b7765d8a8208681313e9fdb2252"
+      },
+      {
+        "path": "Tests/CodexBarTests/MenuLayoutScreenshotRenderTests.swift",
+        "beforeMethods": 8,
+        "afterMethods": 8,
+        "beforeMethodsSHA256": "c6c570d20216f038284427a9abbd95d1bd6dd6ff75df2779ec0726943e08cd94",
+        "afterMethodsSHA256": "c6c570d20216f038284427a9abbd95d1bd6dd6ff75df2779ec0726943e08cd94"
+      },
+      {
+        "path": "Tests/CodexBarTests/PaceVisibilityScreenshotRenderTests.swift",
+        "beforeMethods": 2,
+        "afterMethods": 1,
+        "beforeMethodsSHA256": "abb10ebd3b0d92258747e2d984aa6d00b84026343ef8768f6ed89fd174239b06",
+        "afterMethodsSHA256": "c4456174b650b1ab718b2334ad29b56081a49e02c40ac10cea9b7ab239b16612"
+      },
+      {
+        "path": "Tests/CodexBarTests/RefreshFailureHookStatusTests.swift",
+        "beforeMethods": 2,
+        "afterMethods": 0,
+        "beforeMethodsSHA256": "11f8d06586fffb0a76d078cc7f4a75d59428b7d6f0709172b8eb5f5a74666b0f",
+        "afterMethodsSHA256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "path": "Tests/CodexBarTests/SessionEquivalentForecastTests.swift",
+        "beforeMethods": 35,
+        "afterMethods": 35,
+        "beforeMethodsSHA256": "b4184d5c551adb7c80f8613c6b07d882c965b973160e4c50d47ddb8916a6724a",
+        "afterMethodsSHA256": "b4184d5c551adb7c80f8613c6b07d882c965b973160e4c50d47ddb8916a6724a"
+      },
+      {
+        "path": "Tests/CodexBarTests/SettingsStoreCoverageTests.swift",
+        "beforeMethods": 31,
+        "afterMethods": 31,
+        "beforeMethodsSHA256": "9fa6f37f6e206311a401d011f5c6c4884b6a640643948c74d3eb44b940628a68",
+        "afterMethodsSHA256": "9fa6f37f6e206311a401d011f5c6c4884b6a640643948c74d3eb44b940628a68"
+      },
+      {
+        "path": "Tests/CodexBarTests/SettingsStoreTests.swift",
+        "beforeMethods": 62,
+        "afterMethods": 61,
+        "beforeMethodsSHA256": "7bc1bd27a802f28f34f100783a54188b873149c2b0a23143b49ee524df1bb9b9",
+        "afterMethodsSHA256": "b2c005f24c30a141888c77355239b12c931771c95b2109e145c23f84810eb75f"
+      },
+      {
+        "path": "Tests/CodexBarTests/SpendDashboardScreenshotRenderTests.swift",
+        "beforeMethods": 2,
+        "afterMethods": 2,
+        "beforeMethodsSHA256": "8e2346a5c9052a243e26f2710ab3ed5ba0952ca74f2bda46d028f5a632010504",
+        "afterMethodsSHA256": "8e2346a5c9052a243e26f2710ab3ed5ba0952ca74f2bda46d028f5a632010504"
+      },
+      {
+        "path": "Tests/CodexBarTests/StatusItemIconObservationSignatureTests.swift",
+        "beforeMethods": 21,
+        "afterMethods": 21,
+        "beforeMethodsSHA256": "452bca5a6af0131272a92fa21121cea7d6b7758c259ee74c25197555bd636004",
+        "afterMethodsSHA256": "452bca5a6af0131272a92fa21121cea7d6b7758c259ee74c25197555bd636004"
+      }
+    ],
+    "renamedTestMethods": {
+      "`vertex daily report filters claude logs`": "`Claude scanner isolates Vertex metadata with an explicit filter`",
+      "`vertex daily report detects by vrtx id prefix`": "`Claude scanner separates Vertex ID rows from native rows`"
+    },
+    "retainedProof": {
+      "costExactBlobs": 56,
+      "costAdaptedFiles": 4,
+      "costMethodsBefore": 29,
+      "costMethodsAfter": 29,
+      "costChangedMethods": 5,
+      "costUnchangedMethodBodies": 24,
+      "otherTouchedSuiteMethodBodiesByteIdentical": 243,
+      "allTestBodiesInForecastSuiteByteIdentical": true,
+      "pureForecastWrapperBodyByteIdentical": true,
+      "unchangedCriticalHistorySuites": 4,
+      "unchangedSharedProcessSource": 7,
+      "unchangedSharedFixtures": 19,
+      "unchangedSharedRedactionSuite": "Tests/CodexBarTests/MiniMaxLogRedactorTests.swift",
+      "sourceHarnessWorkflowsFixturesUnchangedFrom": "7215b63bec5f50e4612da7bda647b4e0b90b0349",
+      "accountingLimitsOrFixturesChanged": false,
+      "delimiterFiles": 16,
+      "delimiterFindings": 0,
+      "retiredCodeTokenReferencesInAllRetainedTestSwift": 0,
+      "newSkipsDisablesOrOverlongChangedLines": false,
+      "catalog": "All source and ProviderArchitectureGatekeeperTests bytes unchanged from7215b63; prior312 anchors preserved, no native scanner execution."
+    },
+    "costFilterProvenance": {
+      "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+      "originalDispatch": "CostUsageScanner.swift:2002 used Vertex provider as a loadClaudeDaily alias and substituted vertexAIOnly when options filter was all.",
+      "retainedDispatch": "Explicit ClaudeLogProviderFilter with Claude scanner/cache; all/excludeVertexAI/vertexAIOnly survive independently of retired product enum.",
+      "cacheIsolation": "CostUsageClaudeCacheIO.cacheFileURL preconditions Claude. Memo key includes filter and scanConfigurationChanged forces reparse; the ID-prefix test now also covers switching the same Claude cache to excludeVertexAI."
+    },
+    "declarationCountCorrection": "See top-level declarationCountCorrection; current counts are6569, not older6545minus5.",
+    "checks": [
+      {
+        "name": "test-source-retention-proof",
+        "command": [
+          "python3",
+          "-B",
+          "/home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/.build/slim-product-work/test-compile-7215/verify_repair.py"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:57:32Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 42.69,
+              "cpu_used_percent": 40.95,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 1.0906,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 8.57
+            },
+            "summary": "CPU 40.95% used; 42.69 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "status": "passed",
+        "exitCode": 0,
+        "elapsedSeconds": 2.704,
+        "output": "{\n  \"removedMethods\": 6,\n  \"addedTestMethods\": 0,\n  \"retainedSharedMethodBodiesExact\": 243,\n  \"costExactFiles\": 56,\n  \"costAdaptedFiles\": 4,\n  \"costAdaptedMethods\": 5,\n  \"costMethodsBeforeAfter\": 29,\n  \"swiftTestInventory\": {\n    \"files\": 733,\n    \"swiftTestingDeclarations\": 6569,\n    \"filesWithTestAttributes\": 691,\n    \"retiredCodeTokens\": 0\n  },\n  \"scopeAndFixtureProof\": \"passed\",\n  \"nativeQualification\": \"unavailable locally\"\n}\n"
+      },
+      {
+        "name": "codex-parser-hash",
+        "command": [
+          "bash",
+          "Scripts/regenerate-codex-parser-hash.sh",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:57:35Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 5,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 5,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 42.11,
+              "cpu_used_percent": 71.31,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 1.0938,
+              "sampled_steal_percent": 0.279,
+              "cpu_psi_some_avg10_percent": 10.93
+            },
+            "summary": "CPU 71.31% used; 42.11 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 5."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "status": "passed",
+        "exitCode": 0,
+        "elapsedSeconds": 0.172,
+        "output": "Codex parser hash is current (56738678d8c0245c)\n"
+      },
+      {
+        "name": "provider-manifests",
+        "command": [
+          "bash",
+          "Scripts/regenerate-provider-manifests.sh",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:57:36Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 42.1,
+              "cpu_used_percent": 52.62,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 1.0938,
+              "sampled_steal_percent": 0.308,
+              "cpu_psi_some_avg10_percent": 10.93
+            },
+            "summary": "CPU 52.62% used; 42.10 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "status": "passed",
+        "exitCode": 0,
+        "elapsedSeconds": 0.088,
+        "output": "Provider manifests are current (2 providers)\n"
+      },
+      {
+        "name": "normal-profile",
+        "command": [
+          "python3",
+          "-B",
+          "Scripts/test_profiles.py",
+          "validate"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:57:36Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 42.09,
+              "cpu_used_percent": 45.31,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 1.0938,
+              "sampled_steal_percent": 0.312,
+              "cpu_psi_some_avg10_percent": 10.93
+            },
+            "summary": "CPU 45.31% used; 42.09 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "status": "passed",
+        "exitCode": 0,
+        "elapsedSeconds": 0.038,
+        "output": "Test profile contract OK: normal; manifest 136f44cb5604cf4364709c429e2e7ff8d275c0065d26bfb4896e1899008865d8\n"
+      },
+      {
+        "name": "full-profile",
+        "command": [
+          "python3",
+          "-B",
+          "Scripts/test_profiles.py",
+          "validate"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:57:36Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 42.06,
+              "cpu_used_percent": 42.58,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 1.0938,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 10.93
+            },
+            "summary": "CPU 42.58% used; 42.06 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "status": "passed",
+        "exitCode": 0,
+        "elapsedSeconds": 0.077,
+        "output": "Test profile contract OK: full; manifest 136f44cb5604cf4364709c429e2e7ff8d275c0065d26bfb4896e1899008865d8\n"
+      },
+      {
+        "name": "profile-regressions",
+        "command": [
+          "python3",
+          "-B",
+          "Scripts/test_test_profiles.py"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:57:37Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 42.01,
+              "cpu_used_percent": 53.29,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 1.0938,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 10.93
+            },
+            "summary": "CPU 53.29% used; 42.01 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "status": "passed",
+        "exitCode": 0,
+        "elapsedSeconds": 0.516,
+        "output": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.378s\n\nOK\n"
+      },
+      {
+        "name": "documentation-links",
+        "command": [
+          "node",
+          "Scripts/check-documentation-links.mjs"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:57:37Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 41.99,
+              "cpu_used_percent": 50.31,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 1.0938,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 11.49
+            },
+            "summary": "CPU 50.31% used; 41.99 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "status": "passed",
+        "exitCode": 0,
+        "elapsedSeconds": 0.21,
+        "output": "documentation links OK: 181 local links\n"
+      },
+      {
+        "name": "llms-index",
+        "command": [
+          "node",
+          "Scripts/generate-llms.mjs",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:57:38Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 41.96,
+              "cpu_used_percent": 53.07,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 1.0938,
+              "sampled_steal_percent": 0.307,
+              "cpu_psi_some_avg10_percent": 11.49
+            },
+            "summary": "CPU 53.07% used; 41.96 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "status": "passed",
+        "exitCode": 0,
+        "elapsedSeconds": 0.058,
+        "output": "llms index OK: docs/llms.txt\n"
+      },
+      {
+        "name": "make-check",
+        "command": [
+          "make",
+          "check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:57:38Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 41.88,
+              "cpu_used_percent": 55.7,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 1.0938,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 11.49
+            },
+            "summary": "CPU 55.70% used; 41.88 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "status": "unavailable",
+        "exitCode": 2,
+        "elapsedSeconds": 0.158,
+        "output": "./Scripts/lint.sh lint\nTest profile contract OK: normal; manifest 136f44cb5604cf4364709c429e2e7ff8d275c0065d26bfb4896e1899008865d8\nnode:internal/child_process:1191\n    result.error = new ErrnoException(result.error, 'spawnSync ' + options.file);\n                   ^\n\n<ref *1> Error: spawnSync plutil ENOENT\n    at Object.spawnSync (node:internal/child_process:1191:20)\n    at spawnSync (node:child_process:929:24)\n    at execFileSync (node:child_process:972:15)\n    at readCatalog (file:///home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/Scripts/check-app-locales.mjs:44:18)\n    at file:///home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/Scripts/check-app-locales.mjs:9:17\n    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)\n    at async node:internal/modules/esm/loader:647:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  errno: -2,\n  code: 'ENOENT',\n  syscall: 'spawnSync plutil',\n  path: 'plutil',\n  spawnargs: [\n    '-convert',\n    'json',\n    '-o',\n    '-',\n    '/home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/Sources/CodexBar/Resources/en.lproj/Localizable.strings'\n  ],\n  error: [Circular *1],\n  status: null,\n  signal: null,\n  output: null,\n  pid: 0,\n  stdout: undefined,\n  stderr: undefined\n}\n\nNode.js v24.22.1\nmake: *** [Makefile:22: check] Error 1\n",
+        "reason": "plutil absent before installer/formatter"
+      },
+      {
+        "name": "make-test",
+        "command": [
+          "make",
+          "test"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:57:39Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 41.86,
+              "cpu_used_percent": 67.3,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 1.0938,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 11.49
+            },
+            "summary": "CPU 67.30% used; 41.86 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "status": "unavailable",
+        "exitCode": 2,
+        "elapsedSeconds": 0.15,
+        "output": "./Scripts/test.sh\nSwift test timing summary:\n- Shard: none\n- Group size: 12\n- Discovered test identities: 0\n- Discovery manifest SHA256: \n- Selected manifest SHA256: \n- Discovered selections: 0\n- Selected selections: 0\n- Selected groups: 0\n- First-pass successful groups: 0\n- First-pass failed groups: 0\n- Full-group retries: 0\n- Recovered groups: 0\n- Timed out groups: 0\n- Isolated selection retries: 0\n- Test build seconds: 0.0\n- Build artifact seconds: 0.0\n- Discovery seconds: 0.0\n- Execution seconds: 0.0\n- Total seconds: 0.0\nFixture scratch parent (owned): /home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/.test-fixtures-kxr_6x8o\nSwift test profile: normal\n+ swift build --build-tests\nFileNotFoundError: [Errno 2] No such file or directory: 'swift'\nFixture scratch parent removed and absence verified: /home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/.test-fixtures-kxr_6x8o\nmake: *** [Makefile:34: test] Error 1\n",
+        "reason": "Swift absent; no compiler or native test ran"
+      },
+      {
+        "name": "diff-whitespace",
+        "command": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:57:39Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 41.84,
+              "cpu_used_percent": 49.84,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 1.0938,
+              "sampled_steal_percent": 0.322,
+              "cpu_psi_some_avg10_percent": 11.49
+            },
+            "summary": "CPU 49.84% used; 41.84 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "status": "passed",
+        "exitCode": 0,
+        "elapsedSeconds": 0.015,
+        "output": ""
+      },
+      {
+        "name": "test-source-retention-proof",
+        "command": [
+          "python3",
+          "-B",
+          "/home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/.build/slim-product-work/test-compile-7215/verify_repair.py"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T03:02:41Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 45.26,
+              "cpu_used_percent": 10.06,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.2,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 1.52
+            },
+            "summary": "CPU 10.06% used; 45.26 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "status": "passed",
+        "exitCode": 0,
+        "elapsedSeconds": 2.426,
+        "output": "{\n  \"removedMethods\": 6,\n  \"addedTestMethods\": 0,\n  \"retainedSharedMethodBodiesExact\": 243,\n  \"costExactFiles\": 56,\n  \"costAdaptedFiles\": 4,\n  \"costAdaptedMethods\": 5,\n  \"costMethodsBeforeAfter\": 29,\n  \"swiftTestInventory\": {\n    \"files\": 733,\n    \"swiftTestingDeclarations\": 6569,\n    \"filesWithTestAttributes\": 691,\n    \"retiredCodeTokens\": 0\n  },\n  \"scopeAndFixtureProof\": \"passed\",\n  \"nativeQualification\": \"unavailable locally\"\n}\n"
+      },
+      {
+        "name": "inventory-recount",
+        "command": [
+          "python3",
+          "-B",
+          "/home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/.build/slim-product-work/test-compile-7215/count_probe.py"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:59:33Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.93,
+              "cpu_used_percent": 15.94,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.5656,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 2.44
+            },
+            "summary": "CPU 15.94% used; 43.93 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "status": "passed",
+        "exitCode": 0,
+        "elapsedSeconds": 5.971,
+        "output": "{\n  \"base\": {\n    \"counts\": {\n      \"productSwift\": {\n        \"files\": 1201,\n        \"lines\": 307271,\n        \"bytes\": 12636947\n      },\n      \"productCHeaders\": {\n        \"files\": 21,\n        \"lines\": 79719,\n        \"bytes\": 2700592\n      },\n      \"testSwift\": {\n        \"files\": 1059,\n        \"lines\": 368064,\n        \"bytes\": 15677754\n      }\n    },\n    \"swiftTestingDeclarations\": {\n      \"swiftTestingDeclarations\": 10616,\n      \"filesWithTestAttributes\": 1006\n    },\n    \"independentLinePatternCount\": 10616\n  },\n  \"prior\": {\n    \"counts\": {\n      \"productSwift\": {\n        \"files\": 651,\n        \"lines\": 193218,\n        \"bytes\": 7944079\n      },\n      \"productCHeaders\": {\n        \"files\": 1,\n        \"lines\": 1,\n        \"bytes\": 21\n      },\n      \"testSwift\": {\n        \"files\": 734,\n        \"lines\": 252332,\n        \"bytes\": 10937435\n      }\n    },\n    \"swiftTestingDeclarations\": {\n      \"swiftTestingDeclarations\": 6574,\n      \"filesWithTestAttributes\": 692\n    },\n    \"independentLinePatternCount\": 6574\n  },\n  \"worktree\": {\n    \"counts\": {\n      \"productSwift\": {\n        \"files\": 651,\n        \"lines\": 193218,\n        \"bytes\": 7944079\n      },\n      \"productCHeaders\": {\n        \"files\": 1,\n        \"lines\": 1,\n        \"bytes\": 21\n      },\n      \"testSwift\": {\n        \"files\": 733,\n        \"lines\": 252268,\n        \"bytes\": 10934612\n      }\n    },\n    \"swiftTestingDeclarations\": {\n      \"swiftTestingDeclarations\": 6569,\n      \"filesWithTestAttributes\": 691\n    },\n    \"independentLinePatternCount\": 6569\n  }\n}\n"
+      }
+    ],
+    "checkSetupDisposition": "Initial workspace count-helper invocation lacked __file__ in its isolated namespace; corrected and rerun under fresh admission/lock. It never invoked a compiler, test binary or product. A later source-check start found the shared lock busy, started nothing, did ready evidence/Git work, then passed with a new snapshot and acquired lock.",
+    "checkSourceIdentity": "Checks ran on repair bytes, verified against all source/test blobs committed at 7a8a3717827e6302defd1175269a72ec07499bf7. Evidence-only publication does not alter those bytes.",
+    "limitations": [
+      "Swift/SwiftFormat/SwiftLint/plutil unavailable locally; make check and make test exit2 before formatter/compiler/native tests.",
+      "Lexical/hash/portable contract checks are not native Swift parsing, type checking or runtime proof.",
+      "Current exact-head hosted qualification and comparable executable/bundle size/cold-build measurements remain pending with root."
+    ],
+    "nextGate": "One normal PR41 publication and automatic exact-head native formatter/producer, both skip-build shards and applicable Linux/aggregate jobs. Root owns watching; no manual campaign, additional agent/review, merge, install or host effect.",
+    "evidenceReadbackChecks": [
+      {
+        "name": "evidence-coherence",
+        "command": [
+          "python3",
+          "-B",
+          "/home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/.build/slim-product-work/test-compile-7215/verify_evidence.py"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T03:05:52Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 44.83,
+              "cpu_used_percent": 19.44,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.2612,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 0.94
+            },
+            "summary": "CPU 19.44% used; 44.83 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "status": "passed",
+        "exitCode": 0,
+        "elapsedSeconds": 0.081,
+        "output": "Evidence coherence OK: exact source7a8a371;17closures;6feature methods;56exact+4adapted Cost files/29methods;count correction;native/fingerprint/workflow/source bytes preserved;no native pass inferred.\n"
+      },
+      {
+        "name": "documentation-links",
+        "command": [
+          "node",
+          "Scripts/check-documentation-links.mjs"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T03:05:52Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 44.82,
+              "cpu_used_percent": 13.48,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.2612,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 0.94
+            },
+            "summary": "CPU 13.48% used; 44.82 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "status": "passed",
+        "exitCode": 0,
+        "elapsedSeconds": 0.126,
+        "output": "documentation links OK: 181 local links\n"
+      },
+      {
+        "name": "llms-index",
+        "command": [
+          "node",
+          "Scripts/generate-llms.mjs",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T03:05:53Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 44.82,
+              "cpu_used_percent": 13.35,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.2612,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 0.95
+            },
+            "summary": "CPU 13.35% used; 44.82 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "status": "passed",
+        "exitCode": 0,
+        "elapsedSeconds": 0.046,
+        "output": "llms index OK: docs/llms.txt\n"
+      },
+      {
+        "name": "diff-whitespace",
+        "command": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T03:05:53Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 44.83,
+              "cpu_used_percent": 12.85,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.2612,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 0.95
+            },
+            "summary": "CPU 12.85% used; 44.83 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "status": "passed",
+        "exitCode": 0,
+        "elapsedSeconds": 0.01,
+        "output": ""
       }
     ]
   }

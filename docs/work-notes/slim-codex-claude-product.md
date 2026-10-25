@@ -408,21 +408,23 @@ cost/history/process/fixture proofs remain intact. Root retains automatic exact-
 CI watching; no manual run, extra agent/review, remote merge or host effect occurs.
 
 Exact committed-blob [comparison](../engineering-specs/slim-codex-claude-comparison.json)
-at source revision `ffaebabdba0c0394bc0ebd6fa3a42e53c008763d`:
+at source revision `7a8a3717827e6302defd1175269a72ec07499bf7`:
 
 | Inventory | Base | Product candidate |
 | --- | ---: | ---: |
 | Product Swift files / lines | 1,201 / 307,271 | 651 / 193,218 |
 | Product C/header files / lines | 21 / 79,719 | 1 / 1 |
-| Test Swift files / lines | 1,059 / 368,064 | 734 / 252,332 |
-| Lexical Swift Testing declarations | 10,575 | 6,545 |
+| Test Swift files / lines | 1,059 / 368,064 | 733 / 252,268 |
+| Lexical Swift Testing declarations | 10,616 | 6,569 |
 
-330 test paths were removed and 5 added, including shared-suite renames; these are
+331 test paths were removed and 5 added, including shared-suite renames; these are
 not runtime case counts. Package targets `CQuickJS` and `CodexBarPluginTests`, core
 JavaScript resources and JavaScriptCore linkage are gone; no external package was
-removed. Provider enum cases go from 69 to 2. Git-blob checks preserve 60 cost
+removed. Provider enum cases go from 69 to 2. Git-blob checks preserve 56 cost
 regression suites, 7 shared process files, 4 critical history/identity/catch-up
-suites and 19 shared fixtures exactly. In the remaining cost suite, only the
+suites and 19 shared fixtures exactly. Four more cost suites retain all 29 methods,
+with five adapted methods and 24 byte-identical method bodies; assertions, fixture
+literal bytes and numeric tokens are unchanged. In the remaining cost suite, only the
 Cursor remote-adapter day-boundary helper test was removed; all other 12 shared
 day/currency tests are byte-identical. No scanner limit or persistence-scale proof changed. The lexical removal sweep covers 1,144
 retired top-level declaration names with zero remaining product/test references.
@@ -459,5 +461,68 @@ in the saved diagnostic list and this existing spec/note/comparison are the writ
 cone; no product, harness, native artifact, schedule or signing changes are planned.
 Scratch is owned at `.build/slim-product-work/test-compile-7215` and is removed
 after durable evidence/publication. No tools, agents or manual campaigns are started.
+
+Test compilation repair `7a8a3717827e6302defd1175269a72ec07499bf7` addresses all
+17 reported paths in one source batch. Augment callback arguments and retired
+ClawRouter style input are removed without changing retained dispatch or generic
+cost assertions. The shared manual-cookie fixture now uses dictionary-backed
+defaults and retains both Codex/Claude expectations; widget config-churn uses the
+disabled Claude API-key setting. The forecast history wrapper loses only its
+incorrect MainActor annotation: its body and all suite test bodies stay exact.
+Localized SPEND uses a synthetic Codex report plus unavailable Claude roster;
+range captures use distinct Claude/Codex inputs with explicit two-ID assertions.
+Original screenshot rendering, accessibility and range assertions remain.
+
+Exactly six feature-only methods are removed:
+
+| Method | Removed feature and retained boundary |
+| --- | --- |
+| CodexSessionQuotaFalseRestore: source change establishes a new reducer baseline | Its second source was Copilot fallback; primary is now the only representable source. Owner/reset/false-restore methods stay exact. |
+| LocalizationLanguageCatalog: Catalan plugin sidebar terminology | Plugin pane/sidebar removed; shared locale/key/token catalog remains. |
+| PaceVisibilityScreenshotRender: renderOpenCodeGoEstimateScreenshots | Only OpenCodeGo estimate capture; Claude pace on/off capture and input/PNG helpers remain exact. |
+| RefreshFailureHookStatus: maps URL errors to coarse categories | Hook-only dispatch API removed; no surviving source consumer. |
+| RefreshFailureHookStatus: never forwards the raw error description | Hook-only status transport removed; shared credential/header LogRedactor privacy tests remain exact. |
+| SettingsStore: persists MiniMax API region across instances | Only the deleted MiniMax preference; shared config persistence/reload methods remain. |
+
+The hook-status file is the only whole-file removal. No shared suite is removed,
+no skip/disable is added, and no assertion or scale limit is relaxed. Source
+inspection confirms the original Vertex provider dispatch merely selected the
+Claude loader with a Vertex filter. Four cost files now select that filter
+explicitly with Claude cache identity. All 29 methods survive; the five adapted
+methods keep exact assertion-token sequences, fixture string-literal bytes and
+numeric-token sequences, and the other 24 method bodies are byte-identical.
+Two scanner method names now describe inclusion/exclusion; both scalar Bool
+parameter cases and frozen classifier cases remain. The same-cache exclusion
+check retains filter-change reparse coverage. The previous 60-exact-blob statement
+applies through `7215b63`; current proof is 56 exact cost files plus four adapted,
+with per-method before/after hashes in the comparison. The separately recorded
+Cursor helper removal still preserves its other 12 shared tests exactly.
+
+Independent Git-blob recount corrects earlier declaration totals: base 10,616
+(previously reported 10,575), prior `7215b63` 6,574 (previously 6,545), current
+6,569. A lexical token count and independent line-pattern count agree in every
+base/prior/current test file. The old extraction cause is not established; this
+correction is not new or executed coverage. This batch removes five Swift Testing
+methods and one XCTest capture method. File/line/byte totals independently match
+the old source inventory before the batch; current tests are 733 files / 252,268
+lines / 10.43 MiB. Product source remains exactly 651 Swift files /
+193,218 lines. There are no product, scanner, harness, artifact/fingerprint,
+schedule, signing, fixture or high-limit persistence changes.
+
+Fresh admission and nonblocking serial lock checks pass both profile contracts,
+four profile regression tests, parser/provider generation, 181 documentation links,
+llms index and whitespace. Static proof finds 16 retained edited Swift files with
+balanced lexical delimiters, zero retired code tokens across all 733 test files,
+243 other touched-suite method bodies unchanged, and no new overlong changed line.
+Initial owned count-helper setup lacked __file__; corrected before a successful
+source-only recount. One later lock-busy start ran nothing; ready evidence/Git
+work continued before a fresh admitted successful check. Required make commands
+again stop at missing plutil/Swift (exit 2), before installer/formatter/compiler or
+native test execution; the runner's fixture parent was removed with absence
+verified. No tools were installed. Local native compilation/formatting and new-head
+runtime results remain unavailable. Prior formatter/preflight success does not
+qualify this repair. Root's next gate remains normal automatic exact-head producer,
+both execution shards and applicable Linux/aggregate checks; no child watcher,
+manual campaign, agent/review round, merge, installation or host action is started.
 
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->
