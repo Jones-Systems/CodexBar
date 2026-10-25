@@ -112,6 +112,13 @@ subscription beside priced Codex and unpriced Claude. Keep known/nil totals,
 all-unpriced unavailability, row cardinality, token conservation and presentation.
 Do not change production model grouping to preserve an invalid migrated fixture.
 
+Extra-usage fixtures must preserve retained-provider display policy: Claude
+uses currency for the extra-usage preference and automatic quota fallback uses
+primary before secondary. Shared percent/combined formatting can be proved with
+the actual extra-usage rate window without restoring the removed Cursor-only
+controller exception. Check explicit quota-versus-spend preference switching and
+missing-cost fallback with both present-primary and absent-primary states.
+
 Run `make check` and `make test`; report missing local Swift/formatter tools as
 unavailable. Use the shared nonblocking benchmark lock and fresh CPU/RAM admission
 before local test starts. Hosted macOS/Linux compilation and isolated tests must

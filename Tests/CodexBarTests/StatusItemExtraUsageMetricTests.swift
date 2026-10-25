@@ -7,7 +7,7 @@ import Testing
 @MainActor
 struct StatusItemExtraUsageMetricTests {
     @Test
-    func `menu bar extra usage preference uses percent in combined mode`() {
+    func `extra usage window keeps combined percent formatting and claude spend preference`() {
         let (store, controller) = self.makeController(
             suiteName: "StatusItemExtraUsageMetricTests-claude-combined-text",
             provider: .claude)
@@ -27,9 +27,20 @@ struct StatusItemExtraUsageMetricTests {
         store._setSnapshotForTesting(snapshot, provider: .claude)
         store._setErrorForTesting(nil, provider: .claude)
 
-        let displayText = controller.menuBarDisplayText(for: .claude, snapshot: snapshot)
+        #expect(controller.settings.menuBarMetricPreference(for: .claude, snapshot: snapshot) == .extraUsage)
+        #expect(controller.menuBarDisplayText(for: .claude, snapshot: snapshot) == "$56.00")
+        let extraUsageWindow = controller.menuBarMetricWindow(for: .claude, snapshot: snapshot)
+        #expect(extraUsageWindow?.usedPercent == 56)
+        let displayText = MenuBarDisplayText.displayText(
+            mode: controller.settings.menuBarDisplayMode,
+            percentWindow: extraUsageWindow,
+            showUsed: controller.settings.usageBarsShowUsed)
 
         #expect(displayText == "56%")
+
+        controller.settings.setMenuBarMetricPreference(.primary, for: .claude)
+        #expect(controller.settings.menuBarMetricPreference(for: .claude, snapshot: snapshot) == .primary)
+        #expect(controller.menuBarDisplayText(for: .claude, snapshot: snapshot) == "10%")
     }
 
     @Test
@@ -74,7 +85,20 @@ struct StatusItemExtraUsageMetricTests {
         store._setSnapshotForTesting(snapshot, provider: .claude)
         store._setErrorForTesting(nil, provider: .claude)
 
-        let displayText = controller.menuBarDisplayText(for: .claude, snapshot: snapshot)
+        #expect(controller.settings.menuBarMetricPreference(for: .claude) == .extraUsage)
+        #expect(controller.settings.menuBarMetricPreference(for: .claude, snapshot: snapshot) == .automatic)
+        #expect(controller.menuBarMetricWindow(for: .claude, snapshot: snapshot) == snapshot.primary)
+        #expect(controller.menuBarDisplayText(for: .claude, snapshot: snapshot) == "10%")
+        let secondaryOnly = UsageSnapshot(
+            primary: nil,
+            secondary: snapshot.secondary,
+            tertiary: nil,
+            providerCost: nil,
+            updatedAt: snapshot.updatedAt)
+        store._setSnapshotForTesting(secondaryOnly, provider: .claude)
+        #expect(controller.settings.menuBarMetricPreference(for: .claude, snapshot: secondaryOnly) == .automatic)
+        #expect(controller.menuBarMetricWindow(for: .claude, snapshot: secondaryOnly) == snapshot.secondary)
+        let displayText = controller.menuBarDisplayText(for: .claude, snapshot: secondaryOnly)
 
         #expect(displayText == "72%")
     }

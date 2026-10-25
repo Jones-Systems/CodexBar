@@ -1079,4 +1079,82 @@ production blocks, three read-only audit files, all 56 exact Cost suite blobs,
 Git whitespace and fixture-parent absence. This readback starts at CPU 22.57%
 with 47.18 GiB available, the acquired nonblocking lock and one serial process.
 
+Root continuation on exact `25a69714c9af61e4e094bdd82d232bff6b5c2aa3`,
+run `40173875411` / merge `c8148368b2ce23548d76118c15f3fc34b6bc51fd`:
+changes/lint/Linux x64/ARM64/musl/producer pass. Shard 0 (`121113822849`)
+verifies complete native fingerprints, then reports two extra-usage metric
+assertions after 71/85 successful groups, with zero test builds/retries/timeouts.
+Root initially held publication for shard 1. Completed fan-in at
+2026-10-25 04:14:05 EDT reports shard 1 (`121113822747`) SUCCESS and releases
+the hold; aggregate `121115733911` fails only the consequential required macOS
+producer-success/shards-failure mismatch. No independent aggregate defect.
+Existing sole Git owner/worktree remains bound. Write only
+StatusItemExtraUsageMetricTests.swift and this existing spec/note/comparison;
+read-only audit the adjacent resolver, settings capabilities, presentation and
+pace/combined formatter suites. All product/accounting/native/harness/schedule/
+frozen boundaries stay intact.
+
+Exact source trace: the old controller currency shortcut excluded Cursor in
+percent/both modes (`provider != .cursor || mode == .pace`). Claude always
+returned currency for a valid extra-usage cost in those modes. Cursor's removed
+automatic resolver selected the most-used total/subquota; Claude's unchanged
+policy prefers primary, then secondary. Removing the Cursor clause does not
+change either retained provider's behavior. The ports therefore cannot retain
+Cursor integration expectations just by using Claude.
+Preserve the original combined-mode 56% assertion via the actual retained
+extra-usage window plus shared display formatter, and separately prove Claude
+currency output and an explicit primary quota preference with provider cost
+still present. Preserve the original fallback 72% assertion with the existing
+secondary quota when primary is absent; additionally prove the original
+10/72 snapshot correctly uses primary 10 when provider cost is absent. Keep
+all original snapshot literals and assertions, with one purpose-correct method
+rename, no deletion or product-policy change.
+
+The repaired combined case now distinguishes three retained layers: effective
+Claude extra-usage preference returns $56.00; the actual extra-usage rate window
+maps the same unchanged 56/100 cost fixture into 56% through shared `.both`
+formatting; switching explicitly to primary retains quota 10% despite that cost.
+Its nil cadence prevents a fabricated pace. The missing-cost case keeps the
+original 10/72 snapshot and verifies configured extra-usage -> effective automatic
+-> primary 10. A second snapshot removes primary and reuses the original secondary
+window unchanged, preserving the original 72% assertion and proving fallback to
+the actual available quota. All four existing expectations remain, including
+56%, 72%, Claude $88.80 and reset-time output. Two unrelated methods/helpers and
+all original snapshot literal blocks remain unchanged; one combined-case method
+is renamed for its shared-formatting/retained-policy scope. No original assertion
+is changed to accept the failing output alone.
+
+Bounded audit covers five metric/settings/presentation/pace suites. The adjacent
+extra-usage resolver case was also Cursor->Claude, but its 37.5/150 ->25 assertion
+uses the shared mapper and remains valid. Claude enterprise/placeholder quota
+cases and the explicit capability matrix name retained policy. Presentation
+cases pin requested lane fallbacks; pure pace sign/zero cases have no provider
+conversion. No other changes are indicated. Scripted checks initially could not
+acquire the existing benchmark lock on two nonblocking attempts; no test/check
+process or queued waiter started. Continue ready source/evidence work without
+claiming those pending checks passed.
+
+The lock became available on the next source-work boundary. Preservation
+readback retains all four declarations, four original expectations and every
+original snapshot literal, adds 11 assertions, and keeps the other two methods
+and shared helpers byte-identical. Test delta: 24 lines / 1683 bytes. Four
+read-only audit files remain exact. Eight source blocks match base exactly;
+the shared display formatter differs from base only by the previously removed
+Copilot example in a comment, with all executable/literal text byte-identical.
+The first admitted script failed its overly strict base-byte comparison at that
+known comment difference; corrected proof records that exact comment-only delta
+and passes. Product source is unchanged by this continuation. The currency
+clause's only executable difference from base is the removed Cursor exclusion,
+which was always true for Codex/Claude. Missing-cost extra-usage fallback remains
+base-exact.
+
+`make check` passes the normal-profile contract then exits 2 at missing plutil;
+`make test` exits 2 at missing Swift before build/discovery/execution. Owned
+`.test-fixtures-isaknbrb` is removed and absence verified. Documentation links
+pass (181). Every admitted command uses fresh CPU/RAM admission, nonblocking
+benchmark lock and one serial process. SwiftFormat/SwiftLint/native runtime
+remain unavailable locally; no tools installed and no live probes. Existing
+Cost/history/scale/account/auth/TTY and native/harness/workflow/schedule/frozen
+handoff boundaries are untouched. Root owns exact-publication-head qualification.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->
