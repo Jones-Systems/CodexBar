@@ -128,6 +128,11 @@ providers with no scoped cost data. Preserve native link/unavailable row identit
 across full close while releasing only actual hosted views; do not turn seeded
 chart data into an unavailable expectation when retiring a provider fixture.
 
+Switcher geometry fixtures cover overview plus every retained provider with
+visible, bounded quota bars. Distinguish the supported three-segment inline
+height from obsolete larger provider inventories; quota presence must not be
+inferred solely from row height or weakened to fit missing bars.
+
 Run `make check` and `make test`; report missing local Swift/formatter tools as
 unavailable. Use the shared nonblocking benchmark lock and fresh CPU/RAM admission
 before local test starts. Hosted macOS/Linux compilation and isolated tests must

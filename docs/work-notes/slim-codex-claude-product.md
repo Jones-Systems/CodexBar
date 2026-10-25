@@ -1293,4 +1293,56 @@ inventory, scope, whitespace and fixture-parent absence. Admission: CPU 14.81%,
 46.18 GiB available, one serial process and acquired nonblocking lock. Native
 exact-head qualification remains root-owned and pending.
 
+Root switcher-layout continuation on exact `3001c20200c7e6bf5890a77aa5570fb0b8818c7b`,
+run `40181633949` / merge `2f344b4d7ae6e61662c8b7cc4a105c11da2117c9`:
+changes/lint/Linux x64/ARM64/musl/producer and shard 1 (`121136555143`) pass.
+Shard 0 (`121136555118`) verifies complete native fingerprints, passes 74/85
+groups, and reports only stale frame count 4 (actual 3) and row height 36 (actual
+30) in the quota-present overview geometry case. No worker builds/retries/
+timeouts. Aggregate `121138347354` is consequential, not an independent defect.
+Completed fan-in permits publication. Existing bound worktree, sole Git owner,
+Sol Max/default pin and all product/protected boundaries remain. Write only
+StatusMenuSwitcherLayoutTests.swift plus this existing spec/note/comparison;
+five related source/quota-fixture paths stay read-only. No additional agents,
+reviews, hosted campaigns, watch/poll, merge, installs or host effects.
+
+Source trace: base providers Claude/Grok/Cursor plus overview yielded four
+segments. Migration keeps Claude/Codex plus overview, yielding three. The
+unchanged switcher stacks icons only above three segments; button height is
+36 for the former stacked single row and 30 for inline layout. These choices
+never consult quota data. This fixture supplies 50 directly through
+weeklyRemainingProvider for every provider; it has no UsageStore snapshot or
+metric preference to lose. Overview deliberately has no indicator. Retained
+provider IDs resolve through firstPartyProvider, so both Codex and Claude still
+receive genuine quota tracks/fills. The entire SwitcherViews source is base-exact.
+Replace the two obsolete count/stacked-height expectations with the supported
+three-segment/30-point inline contract. Preserve exact height/minY/maxY equality,
+and add explicit all-retained-provider, one-row, real visible 50% bars and
+per-provider bar-bounds proofs. Do not fabricate a third provider to reach a
+removed inventory state. The adjacent click/refresh/selected-provider quota
+fixtures preserve distinct retained IDs, quota values/updates and visibility;
+the other three layout methods already assert valid inline behavior and stay exact.
+
+Focused preservation passes: all four test names/declarations remain. Only the
+first method changes, with import/type setup for an explicit provider inventory.
+Its two count/height expectations are updated for the proven inline geometry;
+all 18 other existing expectations, including exact equal height/minY/maxY,
+remain unchanged. Twelve assertions add complete retained-provider membership,
+one row, actual segment height, two visible 50%-filled tracks and nonzero track
+width / exact 2-point height / containment in each provider frame. Quota callback
+and all original fixture literals remain. The other three methods are byte-exact.
+Five read-only paths and all 56 exact Cost suite blobs remain unchanged; full
+production SwitcherViews source is byte-identical to base. Test delta: 18 lines /
+999 bytes, without test addition/removal, skips or tolerance changes.
+
+`make check` passes the normal-profile contract then exits 2 at missing plutil;
+`make test` exits 2 at missing Swift before build/discovery/runtime. Owned
+`.test-fixtures-5tg_iru0` is removed and absence verified. Documentation links
+pass (181). Each command uses fresh telemetry, the acquired nonblocking benchmark
+lock and one serial process: CPU 13.21–16.35%, RAM 46.50–46.58 GiB available;
+one fully used core is 6.25% of host capacity. No tools installed. Native formatter,
+compiler/AppKit geometry execution remain unavailable locally, with exact-head
+qualification owned by root. Product/catalog/generator and all retained accounting/
+scale/history/auth/TTY/fallback/native/harness/workflow/schedule/frozen proofs stay.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->
