@@ -1,7 +1,7 @@
 {
   "schema": "codexbar-product-removal-comparison/v1",
   "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
-  "candidateSourceRevision": "e4e5d1699195fe5dcc832d1f5d0cf5259e2250e3",
+  "candidateSourceRevision": "47cfdfcb09037b49b40d7c49b4aabce07c9e8e40",
   "pullRequest": "https://github.com/Jones-Systems/CodexBar/pull/41",
   "baseBranch": "work/test-value-bar-pass2-20261024",
   "method": "Exact committed Git blobs; files include Swift source under Sources and tests under Tests, TestsLinux, TestsPlugin; line count uses bytes.splitlines; lexical Swift Testing @Test declaration counts exclude comments/strings and do not represent parameterized/runtime cases.",
@@ -36,8 +36,8 @@
       },
       "testSwift": {
         "files": 733,
-        "lines": 252392,
-        "bytes": 10941438
+        "lines": 252418,
+        "bytes": 10942679
       }
     }
   },
@@ -989,49 +989,83 @@
       "qualification": "No new-head compile or execution pass inferred."
     },
     "latestNativeRuntimeAttempt": {
-      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40166212553",
-      "prHeadRevision": "a1f5b3588cfb45148f54623a9b14ba665c2bd508",
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40168464172",
+      "prHeadRevision": "761c9ee1f9b12d1b551e138e04c9d2026dd4389b",
+      "mergeCheckout": "c80e30b966db5a2667ab3c49eaab3127854c5961",
+      "changes": "success",
+      "lint": "success",
+      "linuxX64": "success",
+      "linuxARM64": "success",
+      "linuxMusl": "success",
       "producer": "success",
-      "workerJobs": [
+      "workers": [
         {
-          "jobID": 121089467424,
+          "jobID": 121096305372,
           "selectedGroups": 85,
-          "successfulGroupsBeforeFailure": 66,
+          "successfulGroupsBeforeFailure": 68,
           "timeouts": 0,
-          "nativeCompatibility": {
-            "status": "verified",
-            "mode": "complete-fingerprint",
-            "source": "Root completed-run observation; no new image/identity inference"
-          },
+          "log": "shard0",
+          "nativeMetadata": [
+            {
+              "event": "native-compatibility",
+              "mode": "complete-fingerprint",
+              "producer_image": "20261021.0445.8",
+              "source_revision": "c80e30b966db5a2667ab3c49eaab3127854c5961",
+              "status": "verified",
+              "worker_image": "20261021.0445.8"
+            }
+          ],
           "recordedIssues": [
-            "2026-10-25T05:57:06.8713610Z \u2718 Test \"resolved merged overview providers honors explicit empty selection\" recorded an issue at SettingsStoreTests.swift:403:9: Expectation failed: (resolved \u2192 [CodexBarCore.UsageProvider.codex, CodexBarCore.UsageProvider.claude]) == []"
-          ]
+            "2026-10-25T06:36:23.1714280Z Swift/NativeDictionary.swift:792: Fatal error: Duplicate values for key: 'codex'"
+          ],
+          "discovery": {
+            "sha256": "dbcc586dffe6abdde0a2894d83cdbad8629bff8170e05d97f75d06862fa387ff",
+            "source_revision": "c80e30b966db5a2667ab3c49eaab3127854c5961",
+            "runtimeIDs": 6675
+          }
         },
         {
-          "jobID": 121089467409,
+          "jobID": 121096305342,
           "selectedGroups": 85,
-          "successfulGroupsBeforeFailure": 78,
+          "successfulGroupsBeforeFailure": 80,
           "timeouts": 0,
-          "nativeCompatibility": {
-            "status": "verified",
-            "mode": "complete-fingerprint",
-            "source": "Root completed-run observation; no new image/identity inference"
-          },
+          "log": "shard1",
+          "nativeMetadata": [
+            {
+              "event": "native-compatibility",
+              "mode": "complete-fingerprint",
+              "producer_image": "20261021.0445.8",
+              "source_revision": "c80e30b966db5a2667ab3c49eaab3127854c5961",
+              "status": "verified",
+              "worker_image": "20261013.0424.1"
+            }
+          ],
           "recordedIssues": [
-            "2026-10-25T05:55:55.1596300Z \u2718 Test \"provider with highest usage and icon style\" recorded an issue at UsageStoreCoverageTests.swift:49:9: Expectation failed: (highest?.provider \u2192 .codex) == .claude",
-            "2026-10-25T05:55:55.1597680Z \u2718 Test \"provider with highest usage and icon style\" recorded an issue at UsageStoreCoverageTests.swift:50:9: Expectation failed: (highest?.usedPercent \u2192 50.0) == (70 \u2192 70.0)"
+            "2026-10-25T06:41:40.1307110Z \u2718 Test \"generic provider weekly lane is persisted to provider history json\" recorded an issue at UsageStorePlanUtilizationTests.swift:924:9: Expectation failed: (findSeries(histories, name: .weekly, windowMinutes: 10080)?.entries.map(\\.usedPercent) \u2192 nil) == ([42, 58] \u2192 [42.0, 58.0])",
+            "2026-10-25T06:41:40.1308630Z \u2718 Test \"generic provider weekly lane is persisted to provider history json\" recorded an issue at UsageStorePlanUtilizationTests.swift:925:9: Expectation failed: (findSeries(histories, name: .session, windowMinutes: 300)?.entries.map(\\.usedPercent) \u2192 nil) == ([15, 25] \u2192 [15.0, 25.0])",
+            "2026-10-25T06:41:40.1310130Z \u2718 Test \"generic provider weekly lane is persisted to provider history json\" recorded an issue at UsageStorePlanUtilizationTests.swift:941:9: Expectation failed: (persisted.histories(for: persisted.preferredAccountKey)"
+          ],
+          "discovery": {
+            "sha256": "dbcc586dffe6abdde0a2894d83cdbad8629bff8170e05d97f75d06862fa387ff",
+            "source_revision": "c80e30b966db5a2667ab3c49eaab3127854c5961",
+            "runtimeIDs": 6675
+          },
+          "recordedIssue941Continuation": [
+            "2026-10-25T06:41:40.1311210Z             .first { $0.name == .weekly }?.entries.map(\\.usedPercent) \u2192 [15.0, 25.0]) == ([42, 58] \u2192 [42.0, 58.0])",
+            "2026-10-25T06:41:40.1312030Z \u2718 Test \"generic provider weekly lane is persisted to provider history json\" failed after 0.009 seconds with 3 issues."
           ]
         }
       ],
       "aggregate": {
-        "jobID": 121091071457,
+        "jobID": 121098755685,
         "producer": "success",
         "shards": "failure",
+        "required": true,
+        "deferred": false,
         "independentDefect": false
       },
-      "priorDispatchHistoryGroups": "progressed before the later stops; no full-run qualification implied",
-      "source": "Root completed-run report plus bounded saved issue lines; child did not watch or poll GitHub checks.",
-      "qualification": "Failed partial prior-head run, not a timing/savings result and not qualification of this repair."
+      "source": "Root completed fan-in plus bounded saved metadata/issues. Child did not poll or watch CI.",
+      "qualification": "Failed partial prior-head run, not full qualification/timing/savings and not qualification of the new repair."
     }
   },
   "appSizeAndBuildComparison": {
@@ -1448,7 +1482,7 @@
     ],
     "deferredReason": "Three fresh below-threshold admissions, separated by ready source/evidence work, each found shared benchmark.lock busy. No test command or queued wait started. Existing local tool absences also prevent native make check/test. Prior exact-revision check results are retained as historical evidence, not new-head passes."
   },
-  "countMethodLatest": "Complete committed Git-blob inventory at e4e5d1699195fe5dcc832d1f5d0cf5259e2250e3 independently confirms all file/line/byte totals. The two repaired test files add 12 lines/646 bytes, preserve all 85 declarations and 267 existing assertions, and add four setup assertions. Independent Test line-pattern count agrees with the prior lexical count plus zero attribute edits: 6570 declarations/691 files with attributes. No product bytes, files, tests, limits or runtime cases are removed; no hosted-ID or timing saving is inferred.",
+  "countMethodLatest": "Complete committed Git-blob inventory at 47cfdfcb09037b49b40d7c49b4aabce07c9e8e40 confirms product counts unchanged and tests +26 lines/+1241 bytes. All 69 declarations in the two edited files remain, with one purpose-correct rename and no added/removed tests. Independent Test line-pattern count agrees with prior lexical count plus zero attribute edits: 6570 declarations across 691 files. Hosted 6675 IDs belong only to the prior head; no runtime or timing savings are inferred.",
   "swiftFormatRepair": {
     "baseRevision": "1d9787f8b4075068f3282cb723e42170a6e702c3",
     "repairRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
@@ -8985,6 +9019,816 @@
           "normalized_load_one_minute": 0.2275,
           "sampled_steal_percent": 0.0,
           "cpu_psi_some_avg10_percent": 0.47
+        }
+      }
+    ]
+  },
+  "spendHistoryRuntimeRepair": {
+    "priorRevision": "761c9ee1f9b12d1b551e138e04c9d2026dd4389b",
+    "repairRevision": "47cfdfcb09037b49b40d7c49b4aabce07c9e8e40",
+    "hostedFailingBefore": {
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40168464172",
+      "prHeadRevision": "761c9ee1f9b12d1b551e138e04c9d2026dd4389b",
+      "mergeCheckout": "c80e30b966db5a2667ab3c49eaab3127854c5961",
+      "changes": "success",
+      "lint": "success",
+      "linuxX64": "success",
+      "linuxARM64": "success",
+      "linuxMusl": "success",
+      "producer": "success",
+      "workers": [
+        {
+          "jobID": 121096305372,
+          "selectedGroups": 85,
+          "successfulGroupsBeforeFailure": 68,
+          "timeouts": 0,
+          "log": "shard0",
+          "nativeMetadata": [
+            {
+              "event": "native-compatibility",
+              "mode": "complete-fingerprint",
+              "producer_image": "20261021.0445.8",
+              "source_revision": "c80e30b966db5a2667ab3c49eaab3127854c5961",
+              "status": "verified",
+              "worker_image": "20261021.0445.8"
+            }
+          ],
+          "recordedIssues": [
+            "2026-10-25T06:36:23.1714280Z Swift/NativeDictionary.swift:792: Fatal error: Duplicate values for key: 'codex'"
+          ],
+          "discovery": {
+            "sha256": "dbcc586dffe6abdde0a2894d83cdbad8629bff8170e05d97f75d06862fa387ff",
+            "source_revision": "c80e30b966db5a2667ab3c49eaab3127854c5961",
+            "runtimeIDs": 6675
+          }
+        },
+        {
+          "jobID": 121096305342,
+          "selectedGroups": 85,
+          "successfulGroupsBeforeFailure": 80,
+          "timeouts": 0,
+          "log": "shard1",
+          "nativeMetadata": [
+            {
+              "event": "native-compatibility",
+              "mode": "complete-fingerprint",
+              "producer_image": "20261021.0445.8",
+              "source_revision": "c80e30b966db5a2667ab3c49eaab3127854c5961",
+              "status": "verified",
+              "worker_image": "20261013.0424.1"
+            }
+          ],
+          "recordedIssues": [
+            "2026-10-25T06:41:40.1307110Z \u2718 Test \"generic provider weekly lane is persisted to provider history json\" recorded an issue at UsageStorePlanUtilizationTests.swift:924:9: Expectation failed: (findSeries(histories, name: .weekly, windowMinutes: 10080)?.entries.map(\\.usedPercent) \u2192 nil) == ([42, 58] \u2192 [42.0, 58.0])",
+            "2026-10-25T06:41:40.1308630Z \u2718 Test \"generic provider weekly lane is persisted to provider history json\" recorded an issue at UsageStorePlanUtilizationTests.swift:925:9: Expectation failed: (findSeries(histories, name: .session, windowMinutes: 300)?.entries.map(\\.usedPercent) \u2192 nil) == ([15, 25] \u2192 [15.0, 25.0])",
+            "2026-10-25T06:41:40.1310130Z \u2718 Test \"generic provider weekly lane is persisted to provider history json\" recorded an issue at UsageStorePlanUtilizationTests.swift:941:9: Expectation failed: (persisted.histories(for: persisted.preferredAccountKey)"
+          ],
+          "discovery": {
+            "sha256": "dbcc586dffe6abdde0a2894d83cdbad8629bff8170e05d97f75d06862fa387ff",
+            "source_revision": "c80e30b966db5a2667ab3c49eaab3127854c5961",
+            "runtimeIDs": 6675
+          },
+          "recordedIssue941Continuation": [
+            "2026-10-25T06:41:40.1311210Z             .first { $0.name == .weekly }?.entries.map(\\.usedPercent) \u2192 [15.0, 25.0]) == ([42, 58] \u2192 [42.0, 58.0])",
+            "2026-10-25T06:41:40.1312030Z \u2718 Test \"generic provider weekly lane is persisted to provider history json\" failed after 0.009 seconds with 3 issues."
+          ]
+        }
+      ],
+      "aggregate": {
+        "jobID": 121098755685,
+        "producer": "success",
+        "shards": "failure",
+        "required": true,
+        "deferred": false,
+        "independentDefect": false
+      },
+      "source": "Root completed fan-in plus bounded saved metadata/issues. Child did not poll or watch CI.",
+      "qualification": "Failed partial prior-head run, not full qualification/timing/savings and not qualification of the new repair."
+    },
+    "publicationHold": {
+      "initial": "Root requested no push while the other shard was running.",
+      "completedFanIn": "Root message at 2026-10-25 02:45:54 EDT supplied both completed workers/aggregate and released publication after both causes were diagnosed/repaired.",
+      "noChildPollingOrCancellation": true
+    },
+    "causeAndRepair": [
+      {
+        "method": "refresh retains only sources that actually failed",
+        "cause": "Default Codex input and retired OpenAI->Codex third input share bare codex ID; apply constructs unique-key scopes before stableUniqueInputs and traps.",
+        "repair": "Keep all three roles using codex, claude and codex:same with matching same|cache account identity and only two unique provider IDs. Require three unique initial source IDs. Fresh cost 8 plus failed cost 3 totals 11 while absent cost 2 drops.",
+        "productionOverwriteWorkaround": false
+      },
+      {
+        "method": "changed provider ownership drops only stale source and retains unchanged failures",
+        "cause": "The same third-source collapse also duplicates provider IDs and collapses expected retained-source sets.",
+        "repair": "Stable codex:same account ownership replaces the removed third provider; changing the Claude fingerprint removes only Claude. Preserve retained cost 9 then refreshed/retained cost 10, two distinct final source IDs and failed count 2. Require initial three-source cardinality.",
+        "retainedOutcomeRoles": 3
+      },
+      {
+        "method": "Codex auth rotation invalidates stale spend while retaining unrelated providers",
+        "cause": "Removed OpenAI unrelated provider was mapped to Codex, losing cross-provider intent despite a passing prior execution.",
+        "repair": "Use Claude captured input, provider ID and stable fingerprint; restore original unrelated-provider postcondition under Claude, add initial Codex/Claude model identity assertion. Both completion-delay cases, auth fixture bytes and invalidation/failure/cost assertions remain."
+      },
+      {
+        "method": "generic weekly and session components persist under an isolated provider account",
+        "originalMethod": "generic provider weekly lane is persisted to provider history json",
+        "cause": "Zai duration-based generic classification was routed to Claude fixed session/weekly lanes. Its organization-only identity also no longer scopes Claude history.",
+        "repair": "Use unchanged existing generic component/persistence helper and explicit synthetic ProviderTokenAccount. Keep both snapshot literal bytes and original weekly[42,58]/session[15,25]/JSON/polling assertions. Add persisted session, preferred-account, empty-unscoped and untouched-Codex bucket checks.",
+        "productionClaudeLaneOrIdentityPolicyChanged": false
+      }
+    ],
+    "sourcePreservationProof": {
+      "priorRevision": "761c9ee1f9b12d1b551e138e04c9d2026dd4389b",
+      "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+      "files": [
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardControllerTests.swift",
+          "beforeSHA256": "d91123251d1323e4701ea97a529f02f3f0eb354c3437efe36e1a381cc21dde90",
+          "afterSHA256": "c28ea6114cff5889317e1289d3459ee7b2713c7d7372392505329d46337b74b6",
+          "testDeclarationsBefore": 23,
+          "testDeclarationsAfter": 23,
+          "assertionsBefore": 125,
+          "assertionsAfter": 126,
+          "requireAssertionsBefore": 6,
+          "requireAssertionsAfter": 8,
+          "lineDelta": 10,
+          "byteDelta": 499,
+          "otherMethodsByteIdentical": true
+        },
+        {
+          "path": "Tests/CodexBarTests/UsageStorePlanUtilizationTests.swift",
+          "beforeSHA256": "c33f3b71eb22645974724f64170386a11c5bf3f40f59849ee81483f6c1ff10f5",
+          "afterSHA256": "031f937fc984c7568b0bcf91ad2b2a1b50402762bf21e77f417d900537621c66",
+          "testDeclarationsBefore": 46,
+          "testDeclarationsAfter": 46,
+          "assertionsBefore": 108,
+          "assertionsAfter": 112,
+          "requireAssertionsBefore": 37,
+          "requireAssertionsAfter": 38,
+          "lineDelta": 16,
+          "byteDelta": 742,
+          "otherMethodsByteIdentical": true
+        }
+      ],
+      "methods": [
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardControllerTests.swift",
+          "beforeName": "Codex auth rotation invalidates stale spend while retaining unrelated providers",
+          "afterName": "Codex auth rotation invalidates stale spend while retaining unrelated providers",
+          "beforeSHA256": "2ca97b939bcf4f0c030a96ea0f06e9782b47638f3f840291564a9cb24bcb2b95",
+          "afterSHA256": "65c8876ece4a7902c8c37e94150782477c91927d7b032c8887ce130922ae902e",
+          "assertionsBefore": 6,
+          "assertionsAfter": 7,
+          "allExistingAssertionsPreservedExceptDeclaredIdentityMapping": true,
+          "costValuesExact": true,
+          "waitsAndBudgetsExact": true,
+          "snapshotFixtureBytesExact": null
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardControllerTests.swift",
+          "beforeName": "refresh retains only sources that actually failed",
+          "afterName": "refresh retains only sources that actually failed",
+          "beforeSHA256": "42778bd65d8e8a08e0606ce5151c69d44a21b0409d57a6e539bea3269bb98746",
+          "afterSHA256": "0032d1a8e38daaf08474a5a0a1e9f4d645c1bb3cf6314906d27e4ee15badd1f9",
+          "assertionsBefore": 2,
+          "assertionsAfter": 2,
+          "allExistingAssertionsPreservedExceptDeclaredIdentityMapping": true,
+          "costValuesExact": true,
+          "waitsAndBudgetsExact": true,
+          "snapshotFixtureBytesExact": null
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardControllerTests.swift",
+          "beforeName": "changed provider ownership drops only stale source and retains unchanged failures",
+          "afterName": "changed provider ownership drops only stale source and retains unchanged failures",
+          "beforeSHA256": "1ba39ed644d3b052ae8ed9d597677cb55049945ca5bd6c4cdacd94c9a6cb5480",
+          "afterSHA256": "84909a6d9cc03b6e028208ba4292c1bf26fd31d0ba46d4d77f39421b66c83a43",
+          "assertionsBefore": 7,
+          "assertionsAfter": 7,
+          "allExistingAssertionsPreservedExceptDeclaredIdentityMapping": true,
+          "costValuesExact": true,
+          "waitsAndBudgetsExact": true,
+          "snapshotFixtureBytesExact": null
+        },
+        {
+          "path": "Tests/CodexBarTests/UsageStorePlanUtilizationTests.swift",
+          "beforeName": "generic provider weekly lane is persisted to provider history json",
+          "afterName": "generic weekly and session components persist under an isolated provider account",
+          "beforeSHA256": "44a52e8a6fd4536743aeaffd30b730312b4f4c8d18d20e7954f577086b05ec4e",
+          "afterSHA256": "330592d5f8d9608bccf3a825868bc6a553a518060ce0a7d2f0837a111a219112",
+          "assertionsBefore": 4,
+          "assertionsAfter": 8,
+          "allExistingAssertionsPreservedExceptDeclaredIdentityMapping": true,
+          "costValuesExact": true,
+          "waitsAndBudgetsExact": true,
+          "snapshotFixtureBytesExact": true
+        }
+      ],
+      "readOnlyAuditFiles": [
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardAllTimeTokenSnapshotTests.swift",
+          "SHA256": "714c9bee812312e9a38a55f4092e0efabcbb249f8f4d4be40e1fa1d995af7527"
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardCachedPresentationTests.swift",
+          "SHA256": "7f3e662dd0d090c4a2dab75bc93ab2b2f525d663a2cd221fb0789d1908ce683e"
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardClockRolloverTests.swift",
+          "SHA256": "527e9934d1accc227750635475353e3eb81f5c83dd7cbb1d2adb8a9bf8db577c"
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardDateTruthTests.swift",
+          "SHA256": "9879e07242c231a0b56f2fde4a2d73a76eab1f70b5c9aa07d946bd9e969850e3"
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardExportTests.swift",
+          "SHA256": "7cb56254cd37f8e70d7e171f6b3abf347fa8567718690aa6b3b51972ea34d86d"
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardForceStateMachineTests.swift",
+          "SHA256": "60b4ae2663214c8c74256ca6c9a9c4752b6ec4ed20ac5f17333b308419b83109"
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardFreshnessScannerTests.swift",
+          "SHA256": "bbe7f35c72b7add54be166bcf968c25c574e1b06dcda8dfece71bb1ccce71359"
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardFreshnessTests.swift",
+          "SHA256": "4db8153c80a3410b0ed57d491136217d05c1762e8f494036f3c6577c771a8473"
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardMetricTextTests.swift",
+          "SHA256": "3b0be0624da41759add59e704c524fdd4460730a608d2e6d0b0912708f12fd53"
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardModelTests.swift",
+          "SHA256": "2c3f8ae352ade7feeafd9f0c7f82face144287fbe4f78e145fb79412c6d91e9f"
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardOpenCodexSourceTests.swift",
+          "SHA256": "2dbf40fe21654e385fa959dbca5ef343061ea6c28fc4eeadf644a524639b8f21"
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardPartialCostTests.swift",
+          "SHA256": "6a74c3697df1a4ca76415186e3a3a520718e0d101d256f74fc862168b9942234"
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardPublicationTests.swift",
+          "SHA256": "fd97c95ad099371b4848fd73f0cf4b5d461f10a3858d1212fa5817db7fdc5f6b"
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardScreenshotRenderTests.swift",
+          "SHA256": "fd3ee1b6b73c552a847b6bb5e03083bcaf2fd8b989c4be94f48ece69317aaa9e"
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardSourceConcurrencyTests.swift",
+          "SHA256": "61ecf9936296be074f7fc0bf4f58545fa82946d2ce44506d42d444cdd590982b"
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardTokenActivityIntegrationTests.swift",
+          "SHA256": "c2dd0fd20ec568eaedd0abda2016610e2c459f2986d827b0732290944595290f"
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardTokenProvenanceTests.swift",
+          "SHA256": "4ac3bef7fdefa71299352daa0c204f0009828ae0bb3ae6ea5b6937136052d73a"
+        },
+        {
+          "path": "Tests/CodexBarTests/SessionEquivalentForecastTests.swift",
+          "SHA256": "7baef4d0f56a254c93d525516cf558f0b927137fb036d7c9b71738008bf1e272"
+        },
+        {
+          "path": "Tests/CodexBarTests/SessionEquivalentForecastMigrationTests.swift",
+          "SHA256": "f3de37ce6b4deed464cd32b1a1ea986107e412ace5e893a8608771eee94520ae"
+        },
+        {
+          "path": "Tests/CodexBarTests/UsageStorePlanUtilizationAsyncLoadTests.swift",
+          "SHA256": "f47b807613e7266a588e0dab850aefa7737a964136441395549bc80206862d5d"
+        },
+        {
+          "path": "Tests/CodexBarTests/UsageStorePlanUtilizationClaudeIdentityTests.swift",
+          "SHA256": "2e03196eaefbfd64e889de62219f54b6af235c2fa697a01b3b3b44ede8b668f3"
+        },
+        {
+          "path": "Tests/CodexBarTests/UsageStorePlanUtilizationCelebrationTests.swift",
+          "SHA256": "06c28d6a915e2e838f389a618126e075d53718e7374679cbddca8faec335c114"
+        },
+        {
+          "path": "Tests/CodexBarTests/PlanUtilizationHistoryChartMenuViewTests.swift",
+          "SHA256": "98cd4c39d01332d50e61879b2ecdfaf62978a2533aac076164649826f071372b"
+        }
+      ],
+      "sourceBlocks": [
+        {
+          "path": "Sources/CodexBar/SpendDashboardController.swift",
+          "method": "private func apply(",
+          "baseSHA256": "c323677954b051480f614fe5e88041e2cd82caeaa1de922ab2e72ea541c3ad03",
+          "currentSHA256": "c323677954b051480f614fe5e88041e2cd82caeaa1de922ab2e72ea541c3ad03",
+          "baseExact": true
+        },
+        {
+          "path": "Sources/CodexBar/SpendDashboardController.swift",
+          "method": "private static func invalidatedSourceIDs(",
+          "baseSHA256": "1224377e0e8de50f1549dfd422169ef8cca7f7bd10bf983ea21696e17692716b",
+          "currentSHA256": "1224377e0e8de50f1549dfd422169ef8cca7f7bd10bf983ea21696e17692716b",
+          "baseExact": true
+        },
+        {
+          "path": "Sources/CodexBar/SpendDashboardController.swift",
+          "method": "private static func sourceOwnershipByID(",
+          "baseSHA256": "5eaba6bf30888365c234d1de02c9cc78a3efe71248b1b1e0696a80f6cef8b893",
+          "currentSHA256": "5eaba6bf30888365c234d1de02c9cc78a3efe71248b1b1e0696a80f6cef8b893",
+          "baseExact": true
+        },
+        {
+          "path": "Sources/CodexBar/SpendDashboardController.swift",
+          "method": "private static func codexOwnershipByID(",
+          "baseSHA256": "037b9a22a33e3421164d3bc9b03313cd74ffe56e3ba2d23a5b88f14f377d1aa9",
+          "currentSHA256": "037b9a22a33e3421164d3bc9b03313cd74ffe56e3ba2d23a5b88f14f377d1aa9",
+          "baseExact": true
+        },
+        {
+          "path": "Sources/CodexBar/SpendDashboardController.swift",
+          "method": "private static func stableUniqueInputs(",
+          "baseSHA256": "98c04c4b39c569b0e479c5835bd3d38c358e31a06e55bf89ce37d9f74890c2ee",
+          "currentSHA256": "98c04c4b39c569b0e479c5835bd3d38c358e31a06e55bf89ce37d9f74890c2ee",
+          "baseExact": true
+        },
+        {
+          "path": "Sources/CodexBar/UsageStore+PlanUtilization.swift",
+          "method": "private nonisolated static func planUtilizationIdentityAccountKey(",
+          "baseSHA256": "855a69e9c12ccb69903be29f5a9356efad006dc47e80695759337e853956518c",
+          "currentSHA256": "855a69e9c12ccb69903be29f5a9356efad006dc47e80695759337e853956518c",
+          "baseExact": true
+        },
+        {
+          "path": "Sources/CodexBar/UsageStore+PlanUtilization.swift",
+          "method": "Claude fixed-role history sampling clause",
+          "baseSHA256": "49e34d07f7cc5507ffd58e99f76b2005d63b3537f467a209bc903bd17cde0f5e",
+          "currentSHA256": "49e34d07f7cc5507ffd58e99f76b2005d63b3537f467a209bc903bd17cde0f5e",
+          "baseExact": true
+        }
+      ],
+      "spendIdentityFindingsBefore": 5,
+      "spendIdentityFindingsAfter": 0,
+      "historyCallDisposition": "Existing generic helper preserves duration-based component pairing and shared persistence under an explicit provider-scoped synthetic account; production Claude keeps fixed lanes and organization-only identity rejection."
+    },
+    "boundedSpendIdentityAudit": {
+      "method": "Bounded lexical array scan of literal provider/ownership/account lists and direct input constructors; unresolved variables are not treated as proved unique. Changed fixture mappings also inspected against base; intentional model duplicate tests are classified separately.",
+      "files": [
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardAllTimeTokenSnapshotTests.swift",
+          "changedSinceBase": true,
+          "beforeSHA256": "714c9bee812312e9a38a55f4092e0efabcbb249f8f4d4be40e1fa1d995af7527",
+          "afterSHA256": "714c9bee812312e9a38a55f4092e0efabcbb249f8f4d4be40e1fa1d995af7527",
+          "duplicatesBefore": [],
+          "duplicatesAfter": []
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardCachedPresentationTests.swift",
+          "changedSinceBase": false,
+          "beforeSHA256": "7f3e662dd0d090c4a2dab75bc93ab2b2f525d663a2cd221fb0789d1908ce683e",
+          "afterSHA256": "7f3e662dd0d090c4a2dab75bc93ab2b2f525d663a2cd221fb0789d1908ce683e",
+          "duplicatesBefore": [],
+          "duplicatesAfter": []
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardClockRolloverTests.swift",
+          "changedSinceBase": false,
+          "beforeSHA256": "527e9934d1accc227750635475353e3eb81f5c83dd7cbb1d2adb8a9bf8db577c",
+          "afterSHA256": "527e9934d1accc227750635475353e3eb81f5c83dd7cbb1d2adb8a9bf8db577c",
+          "duplicatesBefore": [],
+          "duplicatesAfter": []
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardControllerTests.swift",
+          "changedSinceBase": true,
+          "beforeSHA256": "d91123251d1323e4701ea97a529f02f3f0eb354c3437efe36e1a381cc21dde90",
+          "afterSHA256": "c28ea6114cff5889317e1289d3459ee7b2713c7d7372392505329d46337b74b6",
+          "duplicatesBefore": [
+            {
+              "line": 81,
+              "method": "Codex auth rotation invalidates stale spend while retaining unrelated providers",
+              "category": "providerIDs",
+              "ids": [
+                "codex",
+                "codex"
+              ],
+              "duplicates": [
+                "codex"
+              ]
+            },
+            {
+              "line": 188,
+              "method": "refresh retains only sources that actually failed",
+              "category": "directInputSourceIDs",
+              "ids": [
+                "codex",
+                "claude",
+                "codex"
+              ],
+              "duplicates": [
+                "codex"
+              ]
+            },
+            {
+              "line": 362,
+              "method": "changed provider ownership drops only stale source and retains unchanged failures",
+              "category": "providerIDs",
+              "ids": [
+                "codex",
+                "claude",
+                "codex"
+              ],
+              "duplicates": [
+                "codex"
+              ]
+            },
+            {
+              "line": 368,
+              "method": "changed provider ownership drops only stale source and retains unchanged failures",
+              "category": "providerIDs",
+              "ids": [
+                "codex",
+                "claude",
+                "codex"
+              ],
+              "duplicates": [
+                "codex"
+              ]
+            },
+            {
+              "line": 376,
+              "method": "changed provider ownership drops only stale source and retains unchanged failures",
+              "category": "directInputSourceIDs",
+              "ids": [
+                "codex",
+                "claude",
+                "codex"
+              ],
+              "duplicates": [
+                "codex"
+              ]
+            }
+          ],
+          "duplicatesAfter": []
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardDateTruthTests.swift",
+          "changedSinceBase": true,
+          "beforeSHA256": "9879e07242c231a0b56f2fde4a2d73a76eab1f70b5c9aa07d946bd9e969850e3",
+          "afterSHA256": "9879e07242c231a0b56f2fde4a2d73a76eab1f70b5c9aa07d946bd9e969850e3",
+          "duplicatesBefore": [],
+          "duplicatesAfter": []
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardExportTests.swift",
+          "changedSinceBase": true,
+          "beforeSHA256": "7cb56254cd37f8e70d7e171f6b3abf347fa8567718690aa6b3b51972ea34d86d",
+          "afterSHA256": "7cb56254cd37f8e70d7e171f6b3abf347fa8567718690aa6b3b51972ea34d86d",
+          "duplicatesBefore": [],
+          "duplicatesAfter": []
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardForceStateMachineTests.swift",
+          "changedSinceBase": false,
+          "beforeSHA256": "60b4ae2663214c8c74256ca6c9a9c4752b6ec4ed20ac5f17333b308419b83109",
+          "afterSHA256": "60b4ae2663214c8c74256ca6c9a9c4752b6ec4ed20ac5f17333b308419b83109",
+          "duplicatesBefore": [],
+          "duplicatesAfter": []
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardFreshnessScannerTests.swift",
+          "changedSinceBase": false,
+          "beforeSHA256": "bbe7f35c72b7add54be166bcf968c25c574e1b06dcda8dfece71bb1ccce71359",
+          "afterSHA256": "bbe7f35c72b7add54be166bcf968c25c574e1b06dcda8dfece71bb1ccce71359",
+          "duplicatesBefore": [],
+          "duplicatesAfter": []
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardFreshnessTests.swift",
+          "changedSinceBase": true,
+          "beforeSHA256": "4db8153c80a3410b0ed57d491136217d05c1762e8f494036f3c6577c771a8473",
+          "afterSHA256": "4db8153c80a3410b0ed57d491136217d05c1762e8f494036f3c6577c771a8473",
+          "duplicatesBefore": [],
+          "duplicatesAfter": []
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardMetricTextTests.swift",
+          "changedSinceBase": false,
+          "beforeSHA256": "3b0be0624da41759add59e704c524fdd4460730a608d2e6d0b0912708f12fd53",
+          "afterSHA256": "3b0be0624da41759add59e704c524fdd4460730a608d2e6d0b0912708f12fd53",
+          "duplicatesBefore": [],
+          "duplicatesAfter": []
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardModelTests.swift",
+          "changedSinceBase": true,
+          "beforeSHA256": "2c3f8ae352ade7feeafd9f0c7f82face144287fbe4f78e145fb79412c6d91e9f",
+          "afterSHA256": "2c3f8ae352ade7feeafd9f0c7f82face144287fbe4f78e145fb79412c6d91e9f",
+          "duplicatesBefore": [],
+          "duplicatesAfter": []
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardOpenCodexSourceTests.swift",
+          "changedSinceBase": false,
+          "beforeSHA256": "2dbf40fe21654e385fa959dbca5ef343061ea6c28fc4eeadf644a524639b8f21",
+          "afterSHA256": "2dbf40fe21654e385fa959dbca5ef343061ea6c28fc4eeadf644a524639b8f21",
+          "duplicatesBefore": [],
+          "duplicatesAfter": []
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardPartialCostTests.swift",
+          "changedSinceBase": true,
+          "beforeSHA256": "6a74c3697df1a4ca76415186e3a3a520718e0d101d256f74fc862168b9942234",
+          "afterSHA256": "6a74c3697df1a4ca76415186e3a3a520718e0d101d256f74fc862168b9942234",
+          "duplicatesBefore": [],
+          "duplicatesAfter": []
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardPublicationTests.swift",
+          "changedSinceBase": true,
+          "beforeSHA256": "fd97c95ad099371b4848fd73f0cf4b5d461f10a3858d1212fa5817db7fdc5f6b",
+          "afterSHA256": "fd97c95ad099371b4848fd73f0cf4b5d461f10a3858d1212fa5817db7fdc5f6b",
+          "duplicatesBefore": [],
+          "duplicatesAfter": []
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardScreenshotRenderTests.swift",
+          "changedSinceBase": true,
+          "beforeSHA256": "fd3ee1b6b73c552a847b6bb5e03083bcaf2fd8b989c4be94f48ece69317aaa9e",
+          "afterSHA256": "fd3ee1b6b73c552a847b6bb5e03083bcaf2fd8b989c4be94f48ece69317aaa9e",
+          "duplicatesBefore": [],
+          "duplicatesAfter": []
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardSourceConcurrencyTests.swift",
+          "changedSinceBase": true,
+          "beforeSHA256": "61ecf9936296be074f7fc0bf4f58545fa82946d2ce44506d42d444cdd590982b",
+          "afterSHA256": "61ecf9936296be074f7fc0bf4f58545fa82946d2ce44506d42d444cdd590982b",
+          "duplicatesBefore": [],
+          "duplicatesAfter": []
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardTokenActivityIntegrationTests.swift",
+          "changedSinceBase": false,
+          "beforeSHA256": "c2dd0fd20ec568eaedd0abda2016610e2c459f2986d827b0732290944595290f",
+          "afterSHA256": "c2dd0fd20ec568eaedd0abda2016610e2c459f2986d827b0732290944595290f",
+          "duplicatesBefore": [],
+          "duplicatesAfter": []
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardTokenProvenanceTests.swift",
+          "changedSinceBase": true,
+          "beforeSHA256": "4ac3bef7fdefa71299352daa0c204f0009828ae0bb3ae6ea5b6937136052d73a",
+          "afterSHA256": "4ac3bef7fdefa71299352daa0c204f0009828ae0bb3ae6ea5b6937136052d73a",
+          "duplicatesBefore": [],
+          "duplicatesAfter": []
+        }
+      ]
+    },
+    "boundedHistoryAudit": {
+      "paths": [
+        {
+          "path": "Tests/CodexBarTests/UsageStorePlanUtilizationTests.swift",
+          "priorSHA256": "c33f3b71eb22645974724f64170386a11c5bf3f40f59849ee81483f6c1ff10f5"
+        },
+        {
+          "path": "Tests/CodexBarTests/SessionEquivalentForecastTests.swift",
+          "priorSHA256": "7baef4d0f56a254c93d525516cf558f0b927137fb036d7c9b71738008bf1e272"
+        },
+        {
+          "path": "Tests/CodexBarTests/SessionEquivalentForecastMigrationTests.swift",
+          "priorSHA256": "f3de37ce6b4deed464cd32b1a1ea986107e412ace5e893a8608771eee94520ae"
+        },
+        {
+          "path": "Tests/CodexBarTests/UsageStorePlanUtilizationAsyncLoadTests.swift",
+          "priorSHA256": "f47b807613e7266a588e0dab850aefa7737a964136441395549bc80206862d5d"
+        },
+        {
+          "path": "Tests/CodexBarTests/UsageStorePlanUtilizationClaudeIdentityTests.swift",
+          "priorSHA256": "2e03196eaefbfd64e889de62219f54b6af235c2fa697a01b3b3b44ede8b668f3"
+        },
+        {
+          "path": "Tests/CodexBarTests/UsageStorePlanUtilizationCelebrationTests.swift",
+          "priorSHA256": "06c28d6a915e2e838f389a618126e075d53718e7374679cbddca8faec335c114"
+        },
+        {
+          "path": "Tests/CodexBarTests/PlanUtilizationHistoryChartMenuViewTests.swift",
+          "priorSHA256": "98cd4c39d01332d50e61879b2ecdfaf62978a2533aac076164649826f071372b"
+        }
+      ],
+      "dispositions": [
+        "Neighboring generic weekly-extra/filter cases and migration tests already use the unchanged direct generic helper.",
+        "Claude identity and async-load persistence fixtures use supported lane/account scopes and remain exact.",
+        "Inverted Codex celebration windows intentionally test semantic projection; inverted Claude celebration explicitly tests no arbitrary secondary-session inference.",
+        "Chart primary-weekly fixture uses Codex semantic projection and keeps its existing weekly selection assertions."
+      ]
+    },
+    "existingExpectationDisposition": {
+      "before": 233,
+      "after": 238,
+      "byteIdenticalExisting": 230,
+      "identityExpectationsCorrected": 3,
+      "identityCorrectionReasons": [
+        "Auth-rotation final unrelated source changes from collapsed codex to Claude, restoring original cross-provider isolation.",
+        "Both ownership postconditions replace collapsed [codex,codex] with two distinct [codex,codex:same], restoring original two-source cardinality."
+      ],
+      "newExpectations": 5,
+      "requireGuardsBefore": 43,
+      "requireGuardsAfter": 46,
+      "testMethodsRemoved": 0,
+      "testMethodsAdded": 0,
+      "renamedMethods": 1
+    },
+    "localChecks": [
+      {
+        "name": "spend-identity-audit",
+        "command": [
+          "python3",
+          ".build/slim-product-work/spend-identity-761c/audit_source_ids.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.213,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "admission": {
+          "ram_available_gib": 46.93,
+          "cpu_used_percent": 10.06,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2181,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 0.94
+        }
+      },
+      {
+        "name": "preservation",
+        "command": [
+          "python3",
+          ".build/slim-product-work/spend-identity-761c/check_preservation.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.083,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "admission": {
+          "ram_available_gib": 46.79,
+          "cpu_used_percent": 15.1,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2013,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 1.28
+        }
+      },
+      {
+        "name": "make-check",
+        "command": [
+          "make",
+          "check"
+        ],
+        "exitCode": 2,
+        "elapsedSeconds": 0.078,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "admission": {
+          "ram_available_gib": 47.25,
+          "cpu_used_percent": 13.25,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1825,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 0.83
+        }
+      },
+      {
+        "name": "make-test",
+        "command": [
+          "make",
+          "test"
+        ],
+        "exitCode": 2,
+        "elapsedSeconds": 0.094,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "admission": {
+          "ram_available_gib": 47.25,
+          "cpu_used_percent": 10.0,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1825,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 0.83
+        }
+      },
+      {
+        "name": "documentation-links",
+        "command": [
+          "node",
+          "Scripts/check-documentation-links.mjs"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.129,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "admission": {
+          "ram_available_gib": 47.24,
+          "cpu_used_percent": 13.88,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1825,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 0.83
+        }
+      },
+      {
+        "name": "inventory",
+        "command": [
+          "python3",
+          ".build/slim-product-work/spend-identity-761c/recount.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.296,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "admission": {
+          "ram_available_gib": 46.94,
+          "cpu_used_percent": 19.5,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1975,
+          "sampled_steal_percent": 0.314,
+          "cpu_psi_some_avg10_percent": 1.12
+        }
+      }
+    ],
+    "completeGitInventory": {
+      "sourceRevision": "47cfdfcb09037b49b40d7c49b4aabce07c9e8e40",
+      "method": "Complete committed Git blob inventory; independent Test line-pattern count agrees with prior lexical count plus zero attribute edits; runtime cases are not inferred.",
+      "counts": {
+        "productSwift": {
+          "files": 651,
+          "lines": 193218,
+          "bytes": 7944079
+        },
+        "productCHeaders": {
+          "files": 1,
+          "lines": 1,
+          "bytes": 21
+        },
+        "testSwift": {
+          "files": 733,
+          "lines": 252418,
+          "bytes": 10942679
+        }
+      },
+      "swiftTestingDeclarations": {
+        "swiftTestingDeclarations": 6570,
+        "filesWithTestAttributes": 691
+      }
+    },
+    "sourceInventoryDelta": {
+      "productSourceBytes": 0,
+      "testSwiftFiles": 0,
+      "testSwiftLines": 26,
+      "testSwiftBytes": 1241,
+      "swiftTestingDeclarations": 0
+    },
+    "priorAccountingProofPreserved": "All previous 56 exact Cost files and four adapted Cost files (29 methods), four critical history suites and separate 12 shared day-selection methods retain their prior proofs; no scan/persistence scale or limits changed.",
+    "nativeHarnessScheduleFrozenConsumptionUnchanged": true,
+    "sourceIdentity": "Checks ran on test blobs verified against committed source 47cfdfcb09037b49b40d7c49b4aabce07c9e8e40. Subsequent publication changes comparison/note evidence only.",
+    "limitations": [
+      "Swift/plutil/SwiftFormat/SwiftLint unavailable locally; make check/test exit2 before native build/format/runtime. Normal-profile contract passed before plutil failure.",
+      "Literal-array audit does not treat unresolved variables as proved unique; changed identity mappings and related history call sites were also source-inspected.",
+      "Static preservation/hash evidence does not establish native runtime success. Full-suite qualification/timing and comparable cold-build/app-size evidence remain pending."
+    ],
+    "nextGate": "Root-owned normal automatic exact-publication-head native producer/shards/aggregate; no child watch/poll/manual campaign.",
+    "evidenceReadbackChecks": [
+      {
+        "name": "evidence-coherence",
+        "command": [
+          "python3",
+          ".build/slim-product-work/spend-identity-761c/check_evidence.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.088,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "admission": {
+          "ram_available_gib": 46.66,
+          "cpu_used_percent": 13.75,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2794,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 1.84
         }
       }
     ]

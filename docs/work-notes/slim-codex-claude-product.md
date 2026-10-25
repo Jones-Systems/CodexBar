@@ -980,4 +980,23 @@ before build/discovery/execution. Its owned `.test-fixtures-8g5tco8t` parent is
 removed and absence verified. Native formatting/compilation/runtime qualification
 remains pending root's automatic exact-head CI; no tools or live probes used.
 
+Source commit `47cfdfcb09037b49b40d7c49b4aabce07c9e8e40` contains the four method
+repairs and spec/note. Complete committed inventory confirms product unchanged
+at 651 Swift files / 193218 lines, tests 733 / 252418 lines / 10942679 bytes,
+and 6570 declarations across 691 files with attributes. This adds 26 test lines
+and 1241 bytes, without test additions/removals. The first six checks run with
+CPU 10.00–19.50%, available RAM 46.79–47.25 GiB, one serial process and the
+nonblocking lock; one fully used core is 6.25% of host capacity. Final evidence
+readback is recorded separately. Root's completed prior run discovers the same
+6675 IDs/hash on both workers; this is revision-bound, distinct from source
+declarations and does not forecast current runtime counts or savings. All prior
+cost/history/TTY/privacy proofs, catalog/generators, native/harness/schedule and
+frozen handoff evidence remain unchanged. App-size/cold-build comparison remains
+unavailable; only evidence follows in the publication commit.
+
+Final evidence coherence passed on committed test blobs: all declared paths,
+counts, method/hash proofs and prior accounting/native handoff records agree.
+Admission was CPU 13.75% / 46.66 GiB available, nonblocking lock and one serial
+process; Git whitespace passed and the owned fixture parent remains absent.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->
