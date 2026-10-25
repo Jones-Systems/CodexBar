@@ -135,6 +135,18 @@ def validate_environment(environment):
         raise ValueError("native-loader-or-toolchain-override")
 
 
+def validate_work(value):
+    fields = {"images", "attempted_edges", "resolved_edges", "memo_hits", "memo_misses", "processes"}
+    need(isinstance(value, dict) and set(value) == fields
+         and all(type(item) is int and item >= 0 for item in value.values())
+         and value["images"] <= MAX_IMAGES
+         and value["resolved_edges"] <= value["attempted_edges"] <= MAX_EDGES + 1
+         and value["memo_misses"] <= MAX_CONTEXTS + 1
+         and value["processes"] <= MAX_CONTEXTS + 1
+         and value["memo_hits"] <= MAX_EDGES + MAX_CONTEXTS + 1, "invalid-native-work-counters")
+    return value
+
+
 def validate_diagnostic(value):
     """Closed, bounded data only. A manifest diagnostic never selects a file or command."""
     def text(value, nullable=False):
@@ -146,12 +158,14 @@ def validate_diagnostic(value):
 
     if isinstance(value, dict) and value.get("type") == "resolver":
         fields = {"type", "loader", "install_name", "executable", "mode", "chain", "rpaths", "candidates", "truncated"}
-        optional = {key for key in ("file", "unapproved_declarations", "location") if key in value}
+        optional = {key for key in ("file", "unapproved_declarations", "location", "work") if key in value}
         need(set(value) == fields | optional
              and text(value["loader"]) and text(value["install_name"], True) and text(value["executable"], True)
              and isinstance(value["mode"], str) and value["mode"] in {"plain", "swiftpm-test", "audit"}
              and type(value["truncated"]) is bool,
              "invalid-native-diagnostic")
+        if "work" in value:
+            validate_work(value["work"])
         for field in ("chain", "rpaths", "candidates"):
             need(isinstance(value[field], list) and len(value[field]) <= MAX_DIAGNOSTIC_ITEMS,
                  "invalid-native-diagnostic")
@@ -704,7 +718,11 @@ class Host:
         return found
 
     def closure(self, *, include_build=True):
-        return RuntimeClosure(self).collect(include_build=include_build)
+        collector = RuntimeClosure(self)
+        try:
+            return collector.collect(include_build=include_build)
+        finally:
+            self.closure_work = collector.work()
 
 
 class RuntimeClosure:
@@ -717,12 +735,19 @@ class RuntimeClosure:
     def __init__(self, host):
         self.host = host
         self.images, self.entries, self.edges = {}, {}, {}
-        self.visited, self.covered = set(), set()
+        self.covered = set()
+        self.edge_keys = {}
         self.edge_count = 0
+        self.attempted_edges = self.memo_hits = self.memo_misses = self.processes = 0
         self.loader_key = None
         self.diagnostic = {"type":"resolver", "loader":"<inventory>", "install_name":None,
                            "executable":None, "mode":"audit", "chain":[], "rpaths":[],
                            "candidates":[], "truncated":False}
+
+    def work(self):
+        return {"images":len(self.images), "attempted_edges":self.attempted_edges,
+                "resolved_edges":self.edge_count, "memo_hits":self.memo_hits,
+                "memo_misses":self.memo_misses, "processes":self.processes}
 
     def label(self, value):
         if value is None:
@@ -852,7 +877,7 @@ class RuntimeClosure:
             raise UnsupportedRuntime("unsupported-runtime-path-token")
         return safe_absolute(posixpath.normpath(value))
 
-    def candidates(self, dependency, chain, executable, mode):
+    def candidates(self, dependency, chain, executable, mode, usage=None):
         raw = dependency["path"]
         if raw.startswith("@rpath/"):
             suffix = raw[len("@rpath/"):]
@@ -879,13 +904,17 @@ class RuntimeClosure:
             suffix = raw[len("@rpath/"):]
             # This generator stops at the first chosen candidate. Unused later
             # rpaths (including old compiler paths) never cause filesystem probes.
-            for loader, variant in chain:
+            for index, (loader, variant) in enumerate(chain):
                 for rpath in variant["rpaths"]:
                     item = {"loader":self.label(loader), "raw":self.label(rpath), "expanded":None}
                     self.note("rpaths", item)
                     root = self.expanded(rpath, loader, executable)
                     item["expanded"] = self.label(root)
                     need(self.permitted(root), "unsupported-required-rpath")
+                    if usage is not None:
+                        usage["roots"].append(str(root))
+                        if index:
+                            usage["inherited"].append(str(root))
                     yield root / suffix
         else:
             yield self.expanded(raw, chain[0][0], executable)
@@ -896,7 +925,8 @@ class RuntimeClosure:
         self.state(key, executable, mode, chain, raw)
         selected = None
         absences = []
-        for index, logical in enumerate(self.candidates(dependency, chain, executable, mode)):
+        usage = {"roots":[], "inherited":[], "exhausted":False}
+        for index, logical in enumerate(self.candidates(dependency, chain, executable, mode, usage)):
             need(index < MAX_CANDIDATES, "native-resolution-candidate-budget")
             candidate = {"path":self.label(logical), "canonical":None, "kind":"uninspected", "sha256":None}
             self.note("candidates", candidate)
@@ -925,37 +955,111 @@ class RuntimeClosure:
         if raw.startswith("@rpath/"):
             bindings[raw] = {"target":selected, "rpaths":list(self.diagnostic["rpaths"]),
                              "truncated":self.diagnostic["truncated"]}
-        return selected, absences
+            usage["exhausted"] = selected is None
+        return selected, absences, usage
 
-    def walk(self, key, ancestors, executable, mode, bindings, variant=None):
+    def inherited_matches(self, requirement, ancestors, executable):
+        """Compare only the consulted prefix; never expand an unused suffix."""
+        prefix, at = requirement["prefix"], 0
+        for loader, variant in ancestors:
+            for raw in variant["rpaths"]:
+                self.host.budget.tick()
+                if at == len(prefix):
+                    return not requirement["exhausted"]
+                try:
+                    expanded = self.expanded(raw, loader, executable)
+                except UnsupportedRuntime:
+                    return False  # A real visit determines whether this input is needed.
+                if str(expanded) != prefix[at]:
+                    return False
+                at += 1
+        return at == len(prefix)
+
+    @staticmethod
+    def merge_requirement(result, prefix, exhausted, reached=(), height=0):
+        prefix = tuple(prefix)
+        prior = result["prefix"]
+        need(prefix[:len(prior)] == prior or prior[:len(prefix)] == prefix,
+             "inconsistent-native-rpath-requirement")
+        if len(prefix) > len(prior):
+            result["prefix"] = prefix
+        result["exhausted"] |= exhausted
+        result["reached"].update(reached)
+        result["height"] = max(result["height"], height)
+
+    def walk(self, key, ancestors, executable, mode, bindings, memo, process, variant=None):
+        self.host.budget.tick()
+        result = {"prefix":(), "exhausted":False, "reached":set(), "height":0}
         if key not in self.images:
-            return  # The matching cache UUID covers the system cache's internal closure.
+            return result  # The matching cache UUID covers its internal closure.
+        ancestor_ids = frozenset((path, item["subtype"]) for path, item in ancestors)
         for current in [variant] if variant is not None else self.images[key]["variants"]:
             self.state(key, executable, mode, ancestors)
-            if any(path == key and prior["subtype"] == current["subtype"] for path, prior in ancestors):
+            identity = (key, current["subtype"])
+            result["reached"].add(identity)  # Include blocked cycle calls in the reuse support.
+            if identity in ancestor_ids:
                 continue
             chain = ((key, current), *ancestors)
             self.state(key, executable, mode, chain)
             need(len(chain) <= MAX_CHAIN, "native-loader-chain-budget")
-            identity = (executable, mode, tuple((path, item["subtype"]) for path, item in chain))
-            if identity in self.visited:
+            reuse = None
+            for entry in memo.get(identity, ()):
+                self.host.budget.tick()
+                if (ancestor_ids & entry["reached"] == entry["blocked"]
+                        and len(ancestors) + entry["height"] <= MAX_CHAIN
+                        and self.inherited_matches(entry, ancestors, executable)):
+                    reuse = entry
+                    break
+            if reuse is not None:
+                self.memo_hits += 1
+                self.merge_requirement(result, reuse["prefix"], reuse["exhausted"],
+                                       reuse["reached"], reuse["height"])
                 continue
-            need(len(self.visited) < MAX_CONTEXTS, "native-loader-context-budget")
-            self.visited.add(identity)
+            self.memo_misses += 1
+            need(self.memo_misses <= MAX_CONTEXTS, "native-loader-context-budget")
             self.covered.add(key)
+            completed = {"prefix":(), "exhausted":False, "reached":{identity}, "height":1}
             for dependency in current["dependencies"]:
-                target, absences = self.resolve(dependency, chain, executable, mode, bindings)
+                self.attempted_edges += 1
+                target, absences, usage = self.resolve(dependency, chain, executable, mode, bindings)
+                self.edge_count += 1
+                need(self.edge_count <= MAX_EDGES, "native-runtime-edge-budget")
+                self.merge_requirement(completed, usage["inherited"], usage["exhausted"])
                 edge = {"install_name":dependency["path"], "weak":dependency["weak"],
                         "targets":[] if target is None else [target],
                         "context":{"executable":executable, "mode":mode,
-                                   "chain":[[path, item["subtype"]] for path, item in chain]}}
+                                   "process":process, "subtype":current["subtype"], "rpaths":usage["roots"]}}
                 if target is None:
                     edge["absence"] = absences
-                self.edges.setdefault(key, []).append(edge)
-                self.edge_count += 1
-                need(self.edge_count <= MAX_EDGES, "native-runtime-edge-budget")
+                encoded = json.dumps(edge, sort_keys=True)
+                if encoded not in self.edge_keys.setdefault(key, set()):
+                    self.edge_keys[key].add(encoded)
+                    self.edges.setdefault(key, []).append(edge)
                 if target is not None:
-                    self.walk(target, chain, executable, mode, bindings)
+                    child = self.walk(target, chain, executable, mode, bindings, memo, process)
+                    # Child requirements start with this frame's own rpaths.
+                    # Their remaining suffix is relative to our external ancestors.
+                    own = len(current["rpaths"])
+                    need(not child["exhausted"] or len(child["prefix"]) >= own,
+                         "inconsistent-native-rpath-requirement")
+                    self.merge_requirement(completed, child["prefix"][own:], child["exhausted"],
+                                           child["reached"], 1 + child["height"])
+            completed["reached"] = frozenset(completed["reached"])
+            completed["blocked"] = ancestor_ids & completed["reached"]
+            # Only completed success enters this process's memo. Its binding
+            # constraints remain enforced in the SAME monotone binding map.
+            memo.setdefault(identity, []).append(completed)
+            self.merge_requirement(result, completed["prefix"], completed["exhausted"],
+                                   completed["reached"], completed["height"])
+        return result
+
+    def launch(self, key, executable, mode, variant, test=None):
+        self.processes += 1
+        process = {"root":key, "subtype":variant["subtype"], "test_bundle":test}
+        bindings, memo = {}, {}
+        self.walk(key, (), executable, mode, bindings, memo, process, variant)
+        if test is not None:
+            self.walk(test, ((key, variant),), executable, mode, bindings, memo, process)
 
     def collect(self, *, include_build):
         try:
@@ -981,20 +1085,22 @@ class RuntimeClosure:
                          ("plain", "swiftpm-test") if key in bundled else ("plain",))
                 for mode in modes:
                     for variant in self.images[key]["variants"]:
-                        bindings = {}
-                        self.walk(key, (), key, mode, bindings, variant)
+                        self.launch(key, key, mode, variant)
                         if key in test_launchers and mode == "swiftpm-test":
                             for test in tests:
                                 # SwiftPM starts a separate process for each bundle.
-                                self.walk(test, ((key, variant),), key, mode, dict(bindings))
+                                self.launch(key, key, mode, variant, test)
             # Audit every remaining loadable image too, including unreferenced
             # dependency SDK tools/libraries. No invented parent search paths.
             for key in sorted(self.images):
                 if key not in self.covered:
-                    self.walk(key, (), None, "audit", {})
-            return {"schema":SCHEMA, "context":self.host.context, "entries":dict(sorted(self.entries.items())),
-                    "edges":{key:sorted(values, key=lambda item: json.dumps(item, sort_keys=True))
-                             for key, values in sorted(self.edges.items())}}
+                    for variant in self.images[key]["variants"]:
+                        self.launch(key, None, "audit", variant)
+            fingerprint = {"schema":SCHEMA, "context":self.host.context, "entries":dict(sorted(self.entries.items())),
+                           "edges":{key:sorted(values, key=lambda item: json.dumps(item, sort_keys=True))
+                                    for key, values in sorted(self.edges.items())}}
+            self.host.budget.tick()
+            return fingerprint
         except (UnsupportedRuntime, OSError) as error:
             if self.diagnostic["loader"] == "<inventory>" and hasattr(self.host, "inspected_path"):
                 self.state(self.host.inspected_path)
@@ -1015,6 +1121,7 @@ class RuntimeClosure:
                 self.diagnostic["location"] = detail
                 self.diagnostic["truncated"] |= location["status"] == "budget"
             self.diagnostic["unapproved_declarations"] = self.unapproved_declarations()
+            self.diagnostic["work"] = self.work()
             failure.diagnostic = validate_diagnostic(self.diagnostic)
             raise failure from (error if failure is not error else None)
 

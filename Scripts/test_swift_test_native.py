@@ -163,6 +163,163 @@ class NativeTests(unittest.TestCase):
                     ((layout["source"], layout["raw"], layout["target"]),), create=True):
             yield
 
+    def shared_dag(self, levels=5, width=4, leaf_count=16):
+        host = self.host()
+        nodes = [[self.xcode / f"SharedFrameworks/DAG-{level}-{index}.dylib"
+                  for index in range(width)] for level in range(levels)]
+        for level, row in enumerate(nodes):
+            targets = (nodes[level + 1] if level + 1 < levels else
+                       [Path(f"/usr/lib/libSynthetic{index}.dylib") for index in range(leaf_count)])
+            for path in row:
+                self.write(str(path.relative_to(self.root)), image(kind=6,
+                    dependencies=[(0xC, str(target)) for target in targets]))
+        host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(path)) for path in nodes[0]]))
+        return host, nodes
+
+    def shared_rpath_layout(self, *, weak=False):
+        host = self.host()
+        paths = {name:self.xcode / f"SharedFrameworks/{name}.dylib" for name in ("A", "B", "Shared")}
+        paths["first"] = self.xcode / "SharedFrameworks/first"
+        paths["second"] = self.xcode / "SharedFrameworks/second"
+        for name in ("A", "B"):
+            self.write(str(paths[name].relative_to(self.root)), image(kind=6,
+                dependencies=[(0xC, str(paths["Shared"]))], rpaths=[str(paths["first"])]))
+        self.write(str(paths["Shared"].relative_to(self.root)), image(kind=6,
+            dependencies=[(native.WEAK if weak else 0xC, "@rpath/Choice.dylib")]))
+        host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(paths[name])) for name in ("A", "B")]))
+        return host, paths
+
+    def test_shared_branching_dag_qualifies_without_raising_native_limits(self):
+        host, nodes = self.shared_dag()
+        proof = host.closure(include_build=False)
+        for level, row in enumerate(nodes):
+            expected = ({str(path) for path in nodes[level + 1]} if level + 1 < len(nodes) else
+                        {f"/usr/lib/libSynthetic{index}.dylib" for index in range(16)})
+            for path in row:
+                self.assertIn(str(path), proof["entries"])
+                self.assertEqual({target for edge in proof["edges"][str(path)] for target in edge["targets"]}, expected)
+        self.assertEqual(native.MAX_EDGES, 16384)
+        self.assertEqual(native.MAX_CONTEXTS, 4096)
+        native.validate_work(host.closure_work)
+        self.assertGreater(host.closure_work["memo_hits"], 0)
+        self.assertLess(host.closure_work["resolved_edges"], 200)
+
+    def test_completed_reuse_matches_complete_small_reference_without_fingerprint_normalization(self):
+        host, _nodes = self.shared_dag(levels=3, width=3, leaf_count=4)
+        reused = host.closure(include_build=False)
+        work = dict(host.closure_work)
+        with patch.object(native.RuntimeClosure, "inherited_matches", return_value=False):
+            reference = host.closure(include_build=False)
+        self.assertEqual(host.closure_work["memo_hits"], 0)
+        self.assertGreater(host.closure_work["resolved_edges"], work["resolved_edges"])
+        native.same_native_fingerprint(reference, reused)
+
+    def test_shared_subtree_reuses_only_consulted_prefix_without_expanding_unused_ancestor_suffix(self):
+        host, paths = self.shared_rpath_layout()
+        chosen = self.write(str((paths["first"] / "Choice.dylib").relative_to(self.root)), image(kind=6))
+        for name in ("A", "B"):
+            paths[name].write_bytes(image(kind=6, dependencies=[(0xC, str(paths["Shared"]))],
+                rpaths=[str(paths["first"]), f"@unknown/unused-{name}"]))
+        with patch.object(native.RuntimeClosure, "expanded", wraps=native.RuntimeClosure(host).expanded) as expanded:
+            proof = host.closure(include_build=False)
+        self.assertFalse(any(str(call.args[0]).startswith("@unknown") for call in expanded.call_args_list))
+        self.assertGreater(host.closure_work["memo_hits"], 0)
+        edges = proof["edges"][str(paths["Shared"])]
+        self.assertEqual(len(edges), 1)
+        self.assertEqual(edges[0]["targets"], [str(chosen)])
+        self.assertEqual(edges[0]["context"]["rpaths"], [str(paths["first"])])
+
+    def test_shared_subtree_changed_order_rechecks_late_binding_and_refuses_conflicting_target(self):
+        host, paths = self.shared_rpath_layout()
+        for root in (paths["first"], paths["second"]):
+            self.write(str((root / "Choice.dylib").relative_to(self.root)), image(kind=6))
+        paths["A"].write_bytes(image(kind=6, dependencies=[(0xC, str(paths["Shared"]))],
+                                     rpaths=[str(paths["first"]), str(paths["second"])]))
+        paths["B"].write_bytes(image(kind=6, dependencies=[(0xC, str(paths["Shared"]))],
+                                     rpaths=[str(paths["second"]), str(paths["first"])]))
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "binding-order-unproven") as error:
+            host.closure(include_build=False)
+        self.assertEqual(error.exception.diagnostic["chain"][1]["path"], "<xcode>/SharedFrameworks/B.dylib")
+        self.assertEqual(len({item["sha256"] for item in error.exception.diagnostic["candidates"] if item["sha256"]}), 1)
+        self.assertEqual({item["canonical"] for item in error.exception.diagnostic["candidates"] if item["sha256"]}, {
+            "<xcode>/SharedFrameworks/first/Choice.dylib", "<xcode>/SharedFrameworks/second/Choice.dylib"})
+
+    def test_exhausted_weak_lookup_requires_full_inherited_stream_and_preserves_changed_absence(self):
+        host, paths = self.shared_rpath_layout(weak=True)
+        paths["B"].write_bytes(image(kind=6, dependencies=[(0xC, str(paths["Shared"]))],
+                                     rpaths=[str(paths["first"]), str(paths["second"])]))
+        proof = host.closure(include_build=False)
+        edges = proof["edges"][str(paths["Shared"])]
+        self.assertEqual(len(edges), 2)
+        self.assertTrue(all(edge["targets"] == [] for edge in edges))
+        self.assertEqual({tuple(edge["context"]["rpaths"]) for edge in edges}, {
+            (str(paths["first"]),), (str(paths["first"]), str(paths["second"]))})
+        self.write(str((paths["second"] / "Choice.dylib").relative_to(self.root)), image(kind=6))
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "binding-order-unproven"):
+            host.closure(include_build=False)
+
+    def test_cycle_support_includes_blocked_variants_before_completed_subtree_reuse(self):
+        host, paths = self.shared_rpath_layout()
+        for root in (paths["first"], paths["second"]):
+            self.write(str((root / "Choice.dylib").relative_to(self.root)), image(kind=6))
+        paths["Shared"].write_bytes(image(kind=6, dependencies=[(0xC, str(paths["A"]))],
+                                          rpaths=[str(paths["second"])]))
+        paths["A"].write_bytes(image(kind=6, dependencies=[(0xC, str(paths["Shared"])), (0xC, "@rpath/Choice.dylib")]))
+        host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(paths[name])) for name in ("A", "B")],
+                                                rpaths=[str(paths["first"])]))
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "binding-order-unproven") as error:
+            host.closure(include_build=False)
+        self.assertEqual([item["path"] for item in error.exception.diagnostic["chain"][:3]], [
+            "<xcode>/SharedFrameworks/A.dylib", "<xcode>/SharedFrameworks/Shared.dylib", "<xcode>/SharedFrameworks/B.dylib"])
+
+    def test_completed_subtree_cannot_bypass_chain_budget_at_a_deeper_call(self):
+        host = self.host()
+        shared = self.write("Xcode.app/Contents/Shared.dylib", image(kind=6,
+            dependencies=[(0xC, "@loader_path/Leaf.dylib")]))
+        self.write("Xcode.app/Contents/Leaf.dylib", image(kind=6))
+        prior = shared
+        for index in range(4):
+            prior = self.write(f"Xcode.app/Contents/Deep{index}.dylib", image(kind=6, dependencies=[(0xC, str(prior))]))
+        host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(shared)), (0xC, str(prior))]))
+        with patch.object(native, "MAX_CHAIN", 6), self.assertRaisesRegex(native.UnsupportedRuntime, "chain-budget"):
+            host.closure(include_build=False)
+
+    def test_root_variants_keep_separate_memos_binding_maps_and_explicit_process_identity(self):
+        host, nodes = self.shared_dag(levels=2, width=2, leaf_count=2)
+        dependencies = [(0xC, str(path)) for path in nodes[0]]
+        host.tools["xctest"].write_bytes(universal([
+            (native.ARM64, 0, image(dependencies=dependencies)),
+            (native.ARM64, 0x80000002, image(subtype=0x80000002, dependencies=dependencies))]))
+        proof = host.closure(include_build=False)
+        for path in nodes[1]:
+            self.assertEqual({edge["context"]["process"]["subtype"] for edge in proof["edges"][str(path)]},
+                             {0, 0x80000002})
+        self.assertEqual(host.closure_work["processes"], 5)
+        self.assertGreater(host.closure_work["memo_hits"], 0)
+
+    def test_work_counters_are_closed_bounded_non_fingerprint_observations(self):
+        host, _nodes = self.shared_dag(levels=2, width=2, leaf_count=2)
+        proof = host.closure(include_build=False)
+        self.assertIs(native.validate_work(host.closure_work), host.closure_work)
+        self.assertNotIn("work", proof)
+        self.assertNotIn("work", proof["context"])
+        for key, value in (("memo_hits", True), ("resolved_edges", native.MAX_EDGES + 2),
+                           ("memo_misses", native.MAX_CONTEXTS + 2), ("command", "untrusted")):
+            with self.subTest(key=key), self.assertRaisesRegex(native.UnsupportedRuntime, "work-counters"):
+                native.validate_work({**host.closure_work, key:value})
+
+    def test_collection_deadline_remains_enforced_after_completed_memoized_work(self):
+        host, _nodes = self.shared_dag(levels=2, width=2, leaf_count=2)
+        host.tools = {"xctest":host.tools["xctest"]}
+        launch = native.RuntimeClosure.launch
+        def deadline(collector, *args, **kwargs):
+            launch(collector, *args, **kwargs)
+            host.budget.started = time.monotonic() - native.MAX_SECONDS
+        with patch.object(native.RuntimeClosure, "launch", deadline), \
+                self.assertRaisesRegex(native.UnsupportedRuntime, "time-budget"):
+            host.closure(include_build=False)
+        self.assertGreater(host.closure_work["memo_hits"], 0)
+
     def products(self):
         self.write("workspace/.build/ExampleTests.xctest/Contents/MacOS/ExampleTests", image(
             kind=8, dependencies=[(0xC, "@rpath/Sparkle.framework/Versions/B/Sparkle"),
@@ -503,6 +660,8 @@ class NativeTests(unittest.TestCase):
             self.assertEqual({tuple(edge["targets"]) for edge in fingerprint["edges"][test]}, {(target,)})
             self.assertEqual({Path(edge["context"]["executable"]).name for edge in fingerprint["edges"][test]},
                              {"xctest", "swiftpm-xctest-helper", "swiftpm-testing-helper"})
+            self.assertTrue(all(edge["context"]["process"]["test_bundle"] == test
+                                for edge in fingerprint["edges"][test]))
 
     def test_selected_test_launchers_use_only_swiftpm_environment_without_invented_plain_launch(self):
         self.products()
@@ -860,7 +1019,7 @@ class NativeTests(unittest.TestCase):
         with patch.object(host, "location", wraps=host.location) as location:
             fingerprint = host.closure()
         self.assertFalse(any("private-person" in str(call) for call in location.call_args_list))
-        selected = {edge["context"]["chain"][0][1]:edge["targets"]
+        selected = {edge["context"]["subtype"]:edge["targets"]
                     for edge in fingerprint["edges"][str(helper)]}
         self.assertEqual(selected, {0:[str(first)], 0x80000002:[str(second)]})
 
@@ -874,7 +1033,7 @@ class NativeTests(unittest.TestCase):
         parent = self.write("workspace/.build/lib/Nested.dylib", image(kind=6) + b"parent")
         fingerprint = self.host().closure()
         self.assertEqual({tuple(edge["targets"]) for edge in fingerprint["edges"][str(child)]}, {(str(own),)})
-        self.assertTrue(all(edge["context"]["chain"][-1][0] == str(helper)
+        self.assertTrue(all(edge["context"]["process"]["root"] == str(helper)
                             for edge in fingerprint["edges"][str(child)]))
         own.unlink()
         fingerprint = self.host().closure()

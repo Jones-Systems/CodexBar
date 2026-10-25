@@ -253,6 +253,7 @@ def native_precheck(workspace, capture, swift_command=None):
 def native_finish(state, build, *, include_build=True):
     import ci_swift_test_native as native
     if state["host"] is None:
+        state["closure_work"] = None
         payload = {"status": "unavailable", "reason": state["reason"]}
         if state.get("diagnostic") is not None:
             payload["diagnostic"] = state["diagnostic"]
@@ -268,6 +269,13 @@ def native_finish(state, build, *, include_build=True):
             payload["diagnostic"] = error.diagnostic
     except OSError:
         payload = {"status": "unavailable", "reason": "native-runtime-file-unavailable"}
+    finally:
+        work = getattr(state["host"], "closure_work", None)
+        try:
+            state["closure_work"] = dict(native.validate_work(work)) if work is not None else None
+        except native.UnsupportedRuntime:
+            # Observability data never changes proof or fallback admission.
+            state["closure_work"] = None
     return payload, time.monotonic() - started
 
 
@@ -404,6 +412,7 @@ def restore_build(workspace, root, expected_sha256, current, native_state=None, 
                                     status=status, producer_image=manifest["identity"]["image_version"],
                                     worker_image=current["image_version"], host_seconds=native_state["host_seconds"],
                                     closure_seconds=seconds,
+                                    work=native_state.get("closure_work"),
                                     reason=None if complete else actual.get("reason", expected.get("reason")),
                                     diagnostic=None if complete else actual.get("diagnostic", expected.get("diagnostic")))
         require(not os.path.lexists(workspace / ".build"), "worker build tree appeared during restore")

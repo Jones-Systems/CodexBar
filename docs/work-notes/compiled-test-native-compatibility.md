@@ -615,3 +615,75 @@ qualification, overhead and savings remain hosted evidence gaps. Root alone
 watches the next automatic source candidate. Source/run/profile/integrity gates,
 early build gate, strict fallback, 05:00 America/New_York schedule, nine frozen
 residuals and both durable product patches are unchanged.
+
+## Shared runtime traversal repair intent
+
+Run `40145045507`, producer `121024518196`, at exact
+`1c94f73676de7c4b91e08c18ac2f354a8c046702` now stops before compilation
+at `native-runtime-edge-budget`: host 9.3542s, closure 29.686634875s,
+complete host, no unapproved declarations. The last selected dependency is
+cache-resident `/usr/lib/swift/libswiftDispatch.dylib` after a missing selected
+platform override, through xctest/XCTest/XCUIAutomation/XCTestCore and the three
+Symbolication/DebugSymbols frameworks. Saved log SHA256 is
+`30c3b9f57b1ce4142795703ee784fe58290e4997e06b0630664bb251df61876d`.
+The event establishes rejection at edge 16,385, not actual duplicate counts.
+
+Current visit identity includes every ancestor image/subtype. Shared dependency
+routes can therefore repeat identical candidate searches and complete edges.
+Investigate completed-subtree reuse within one process/root variant only,
+matching the inherited ordered rpath prefix actually read (full stream if
+exhausted), plus ancestor-cycle membership over every attempted subtree variant.
+Keep completed @rpath constraints in that same launch's monotone binding map.
+Retain full chains for diagnostics and exact byte/hash/target/absence equality;
+represent fingerprint edges by actual launch, loader subtype and consulted roots.
+Reported this representation boundary to the coordinator before implementation.
+No root, alias, API, fallback or resource limit changes are proposed.
+
+Affected proof plan: deterministic shared branching DAG failing exact old head;
+small-reference complete semantic edge/result equivalence; distinct rpath order,
+required prefix versus unused suffix, weak exhaustion, cycle-support membership,
+root variants/test processes and late binding conflicts. Keep actual work under
+existing edge/context/time/query limits. Reuse the deduplicated affected union
+and required make attempts under fresh admission/nonblocking lock; preserve
+schedule, frozen patches and nine residual files. No hosted campaign/watch,
+native execution, agent, install or host mutation is part of this repair.
+
+## Shared runtime traversal repair result
+
+Coordinator accepted the exact equivalence and fingerprint representation
+boundary at 20:13:20 EDT on October 24, 2026. Completed successes are reused only
+inside one explicit launch/root variant or test-bundle process with the same
+binding map. Prefix/full-miss equality, attempted-variant cycle support and subtree
+depth guard every hit. Full chains remain in failure diagnostics; fingerprints
+bind explicit process/loader variant and consulted roots with exact comparison.
+All root/alias/API/source/integrity/fallback policies and resource limits remain.
+
+The unchanged five-level/four-way shared DAG rejects exact
+`1c94f73676de7c4b91e08c18ac2f354a8c046702` at 16,385 resolved edges and
+1,265 route contexts, with 24 parsed images. The candidate completes all the same
+nodes/dependency targets with 135 attempted/resolved edges, 24 memo misses,
+48 memo hits and four process contexts, at unchanged 16,384-edge/4,096-context
+limits. These are fixture counters, not measurements of the hosted workload.
+The smaller exhaustive no-reuse walk produces the exact same full fingerprint
+as the optimized walk; no fingerprint projection/normalization is used.
+
+The final deduplicated artifact/native/evidence/isolated-command union passes
+186 checks in 18.242s, zero skips. Existing path-gate/aggregate fixtures and 302
+local documentation links pass. Controls cover ordered prefixes, unused malformed
+suffixes, exhaustive weak absence and newly present targets, blocked-cycle
+support, late binding conflicts, deeper-chain refusal, end-of-collection deadline,
+all root variants and separate bundle processes. Native work counters reach
+producer/worker evidence outside proof/identity; malformed observation data
+cannot change admission. Existing content, alias, presence, staged equality,
+early compiler sentinels and strict-fallback controls remain covered.
+
+Durable final regression and union records are
+`.evidence-compiled-tests-20261024/context-reuse-final-regression.json` and
+`context-reuse-final-union.log`. Fresh CPU/RAM admission and the nonblocking
+portfolio lock preceded serial execution; owned scratch cleanup/absence verified.
+Required `make test` and `make check` each exit 2 because local Swift and
+`plutil` are unavailable; both attempts verify owned scratch removal. No tools
+were installed and no Mac APIs/apps executed. Real graph counters, complete
+hosted native closure, two-shard qualification, overhead and savings remain
+unproved until parent-owned hosted observation. Schedule, frozen patches and
+nine residual files are unchanged; no new campaign or child watcher is started.

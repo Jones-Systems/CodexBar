@@ -1087,7 +1087,8 @@ def run_suites() -> int:
                               host_status="complete" if host_complete else "unavailable",
                               build_allowed=build_allowed,
                               reason=tool_runtime.get("reason"), host_seconds=preflight["host_seconds"],
-                              closure_seconds=tool_seconds, diagnostic=tool_runtime.get("diagnostic"))
+                              closure_seconds=tool_seconds, diagnostic=tool_runtime.get("diagnostic"),
+                              work=preflight.get("closure_work"))
                 if not build_allowed:
                     raise ValueError("native selected-tool runtime closure incomplete before compilation: "
                                      + tool_runtime["reason"])
@@ -1106,7 +1107,8 @@ def run_suites() -> int:
                 native_runtime, native_seconds = build_artifact.native_finish(native_state, Path.cwd() / ".build")
                 emit_evidence("native-compatibility-produced", status=native_runtime["status"],
                               reason=native_runtime.get("reason"), host_seconds=native_state["host_seconds"],
-                              closure_seconds=native_seconds, diagnostic=native_runtime.get("diagnostic"))
+                              closure_seconds=native_seconds, diagnostic=native_runtime.get("diagnostic"),
+                              work=native_state.get("closure_work"))
             artifact_started = time.monotonic()
             manifest, manifest_sha256 = build_artifact.export_build(
                 Path.cwd(), args.export_build, current, stats.test_ids,

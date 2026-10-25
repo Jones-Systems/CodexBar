@@ -272,6 +272,55 @@ Read regular files only with canonical containment checks. No shell, dlopen of
 metadata-selected paths, metadata execution, native product execution, signing,
 host changes, provisioning, installation or full-system hash is part of collection.
 
+## Completed shared-subtree reuse
+
+Run `40145045507` at `1c94f73676de7c4b91e08c18ac2f354a8c046702`
+reaches the unchanged 16,384-edge cap before compilation (host 9.3542s,
+closure 29.686634875s), without an unapproved declaration. Its event contains
+no work counters; it does not establish exact duplication counts. The original
+visit key includes the entire ancestor route, so a shared dependency can repeat
+identical work for each path through a branching graph.
+
+Apple's [rpath search](https://github.com/apple-oss-distributions/dyld/blob/main/dyld/Loader.cpp)
+uses the requestor-to-ancestor order and stops at selection. The collector retains
+that order. It reuses only a completed successful subtree in the same explicit
+process/root variant or test-bundle process and the same monotone binding map.
+No memo or fresh binding map crosses those boundaries. Root dependencies are
+visited within each bundle process too. Every supported ARM64 variant remains
+separate; ordinary/test/audit contexts retain their previous launch modes.
+
+A completed record binds image/subtype, ordered expanded inherited rpath prefix
+actually consulted anywhere below it, full-stream equality when any weak rpath
+lookup exhausts search, every attempted image/subtype including blocked cycle
+edges, and maximum completed subtree depth. Reuse requires the same ancestor
+cycle-membership intersection over that support, equal consulted prefix (without
+expanding unused suffixes), and enough remaining chain budget. Otherwise perform
+the original traversal. Failed, active or incomplete records never enter the memo.
+
+This is a conservative equivalence proof: equal prefix inputs reproduce every
+candidate visited before selection; a complete miss also requires no extra
+candidate. Equal cycle support reproduces every recurse/block decision. Completed
+binding constraints have already been checked in that same process and remain in
+its binding map. Every target, proved absence, alias record and whole-file content
+identity is retained. A smaller exhaustive traversal must produce the exact same
+fingerprint without comparison-time normalization.
+
+Fingerprint edge contexts now bind explicit process root/subtype/test-bundle,
+loader subtype and ordered consulted roots. Duplicate semantic edges are stored
+once. Failure diagnostics still carry the full capped ancestor chain. Exact
+producer/worker fingerprint equality is unchanged. MAX_EDGES still counts actual
+resolved work, including repeated misses; MAX_CONTEXTS counts actual memo misses.
+All chain/time/file/hash/query/command/image limits remain unchanged. Closed
+bounded counters report images, attempted/resolved edges, memo hits/misses and
+processes in producer/worker evidence and failure diagnostics. These observations
+are outside fingerprints and never change admission or fallback decisions.
+
+The deterministic branching DAG, small exhaustive reference, rpath-order and
+unused-suffix controls, full weak-miss stream, blocked-cycle support, late binding
+conflict, deeper-chain limit and separate variant/process fixtures prove the
+local contract. They do not prove actual hosted graph size, native completeness,
+runtime savings or two-shard qualification.
+
 ## Activation and affected checks
 
 `ENABLE_NATIVE_COMPATIBILITY=True` activates the reviewed contract. A v2 manifest

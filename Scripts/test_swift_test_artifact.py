@@ -229,7 +229,9 @@ class BuildArtifactTests(unittest.TestCase):
             self.assertFalse((self.workspace / ".build").exists())
             self.assertTrue((host.build / "debug/CodexBarCLI").is_file())
             return fingerprint
-        host = SimpleNamespace(context=fingerprint["context"], closure=staged)
+        work = {"images":1, "attempted_edges":2, "resolved_edges":2,
+                "memo_hits":0, "memo_misses":1, "processes":1}
+        host = SimpleNamespace(context=fingerprint["context"], closure=staged, closure_work=work)
         state = {"host":host, "reason":None, "host_seconds":0.25}
         observed = []
         with patch.object(artifact, "ENABLE_NATIVE_COMPATIBILITY", True):
@@ -240,6 +242,42 @@ class BuildArtifactTests(unittest.TestCase):
         self.assertEqual(observed[0]["status"], "verified")
         self.assertEqual(observed[0]["worker_image"], worker["image_version"])
         self.assertEqual(observed[0]["host_seconds"], 0.25)
+        self.assertEqual(observed[0]["work"], work)
+        self.assertNotIn("work", restored["native_runtime"])
+
+    def test_native_work_observations_never_change_payload_or_admission(self):
+        import ci_swift_test_native as native
+        fingerprint = {"schema":native.SCHEMA, "context":{}, "entries":{}, "edges":{}}
+        for work in (None, {"command":"untrusted"}, {
+                "images":1, "attempted_edges":1, "resolved_edges":1,
+                "memo_hits":0, "memo_misses":1, "processes":1}):
+            with self.subTest(work=work):
+                state = {"host":SimpleNamespace(closure=lambda: fingerprint, closure_work=work)}
+                payload, _seconds = artifact.native_finish(state, self.workspace / ".build")
+                self.assertEqual(payload, {"status":"complete", "fingerprint":fingerprint})
+                self.assertEqual(state["closure_work"], work if work and "images" in work else None)
+
+    def test_actual_shared_dag_work_is_emitted_before_build_without_entering_manifest_identity(self):
+        self.runtime()
+        fixtures = NativeTests()
+        fixtures.setUp()
+        self.addCleanup(fixtures.doCleanups)
+        host, _nodes = fixtures.shared_dag(levels=2, width=2, leaf_count=2)
+        state = {"host":host, "reason":None, "host_seconds":0.1}
+        unavailable = {"host":None, "reason":"native-cache-api-unavailable", "host_seconds":0.1}
+        with self.harness(["--export-build", str(self.root)]) as (_, execute), \
+                patch.object(artifact, "native_precheck", side_effect=[state, unavailable]), \
+                patch.object(runner, "emit_evidence") as evidence:
+            self.assertEqual(runner.run_suites(), 0)
+        execute.assert_not_called()
+        preflight = next(call.kwargs for call in evidence.call_args_list if call.args == ("native-tool-preflight",))
+        self.assertTrue(preflight["build_allowed"])
+        self.assertEqual(preflight["work"], host.closure_work)
+        self.assertGreater(preflight["work"]["memo_hits"], 0)
+        manifest = json.loads((self.root / artifact.MANIFEST).read_text())
+        self.assertNotIn("work", manifest["identity"])
+        self.assertEqual(manifest["native_runtime"], {
+            "status":"unavailable", "reason":"native-cache-api-unavailable"})
 
     def test_native_host_mismatch_fails_before_extraction_even_with_identical_image(self):
         _, digest, _ = self.native_export()
