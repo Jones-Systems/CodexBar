@@ -8,6 +8,7 @@ include/mach-o/{dyld,dyld_priv}.h. No artifact-provided command or code is run.
 from __future__ import annotations
 
 import ctypes
+import errno
 import hashlib
 import json
 import os
@@ -52,7 +53,11 @@ SYSTEM_ROOTS = (Path("/usr/lib"), Path("/System/Library/Frameworks"),
 APPLE_RUNTIME_FRAMEWORKS = (Path("/Library/Developer/PrivateFrameworks/CoreDevice.framework"),
                             Path("/Library/Developer/PrivateFrameworks/CoreDeviceUtilities.framework"),
                             Path("/Library/Apple/System/Library/PrivateFrameworks/Mercury.framework"),
-                            Path("/Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework"))
+                            Path("/Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework"),
+                            Path("/Library/Apple/System/Library/PrivateFrameworks/DeviceInterface.framework"))
+# A reached weak import from the hashed MobileDevice image in run 40143266253.
+# Exact file membership only: its directory, siblings and children are not roots.
+APPLE_RUNTIME_FILES = (Path("/Library/Apple/usr/appleinternal/lib/libMobileRestoreInternalExtensions.dylib"),)
 # Exact first-link metadata from hosted run 40141076460. No generic escape exception.
 APPLE_FRAMEWORK_ALIASES = ((Path("/System/Library/PrivateFrameworks/MobileDevice.framework"),
                             "../../../Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework",
@@ -162,7 +167,7 @@ def validate_diagnostic(value):
                  and text(item["path"]) and text(item["canonical"], True) and digest(item["sha256"])
                  and isinstance(item["kind"], str)
                  and item["kind"] in {"uninspected", "missing", "bundled", "xcode", "system-file",
-                                     "system-cache", "system-swift-shim", "developer-framework"},
+                                     "system-cache", "system-swift-shim", "developer-framework", "apple-runtime-file"},
                  "invalid-native-diagnostic")
         if "unapproved_declarations" in value:
             items = value["unapproved_declarations"]
@@ -499,12 +504,14 @@ class Host:
             "test_framework_roots": [str(path) for path in self.test_framework_roots],
             "test_library_roots": [str(path) for path in self.test_library_roots],
             "developer_framework_roots": [str(path) for path in APPLE_RUNTIME_FRAMEWORKS],
+            "apple_runtime_files": [str(path) for path in APPLE_RUNTIME_FILES],
             "framework_aliases": [framework_alias_record(*mapping) for mapping in APPLE_FRAMEWORK_ALIASES],
             "tools": {name: {"path": str(path), "sha256": self.budget.digest(path)}
                       for name, path in sorted(self.tools.items())},
         }
 
-    def location(self, logical):
+    def path_policy(self, logical):
+        """Source-defined routing; no candidate bytes or directory inventory are read."""
         logical = safe_absolute(str(logical))
         alias_record = None
         mapping = next((item for item in APPLE_FRAMEWORK_ALIASES if logical.is_relative_to(item[0])), None)
@@ -524,20 +531,28 @@ class Host:
             need(posixpath.normpath(posixpath.join(str(source.parent), raw)) == str(root),
                  "runtime-framework-alias-target-differs")
             self.budget.tick()
-            need(root in APPLE_RUNTIME_FRAMEWORKS and root.resolve(strict=True) == root,
-                 "noncanonical-developer-framework-root")
+            need(root in APPLE_RUNTIME_FRAMEWORKS, "noncanonical-developer-framework-root")
             physical, kind = root / logical.relative_to(source), "developer-framework"
             alias_record = framework_alias_record(source, raw, root)
         elif any(logical.is_relative_to(root) for root in APPLE_RUNTIME_FRAMEWORKS):
             root = next(root for root in APPLE_RUNTIME_FRAMEWORKS if logical.is_relative_to(root))
-            need(root.resolve(strict=True) == root, "noncanonical-developer-framework-root")
             physical, kind = logical, "developer-framework"
+        elif logical in APPLE_RUNTIME_FILES:
+            physical, root, kind = logical, logical.parent, "apple-runtime-file"
         elif logical == getattr(self, "entrypoint", None) == Path("/usr/bin/swift"):
             physical, root, kind = logical, Path("/usr/bin"), "system-swift-shim"
         else:
             roots = [root for root in SYSTEM_ROOTS if logical.is_relative_to(root)]
             need(roots, "runtime-path-outside-approved-roots")
             physical, root, kind = logical, roots[0], "system-file"
+        return physical, root, kind, alias_record
+
+    def location(self, logical):
+        physical, root, kind, alias_record = self.path_policy(logical)
+        if kind == "developer-framework":
+            need(root.resolve(strict=True) == root, "noncanonical-developer-framework-root")
+        elif kind == "apple-runtime-file":
+            need(root.resolve(strict=True) == root, "noncanonical-apple-runtime-file-parent")
         # Only the validated fixed alias may cross its source root. Other escapes reject.
         resolved = physical.resolve(strict=True)
         canonical_root = root.resolve(strict=True)
@@ -545,6 +560,8 @@ class Host:
             failure = UnsupportedRuntime("runtime-symlink-escapes-root")
             failure.location = self.alias_metadata(logical, physical, root, resolved, canonical_root)
             raise failure
+        if kind == "apple-runtime-file":
+            need(resolved == physical, "noncanonical-apple-runtime-file")
         need(stat.S_ISREG(resolved.stat().st_mode), "runtime-path-is-not-regular")
         canonical = (self.logical_build / resolved.relative_to(self.build.resolve(strict=True))
                      if kind == "bundled" else resolved)
@@ -587,14 +604,77 @@ class Host:
             return False
         if not any(logical.is_relative_to(root) for root in SYSTEM_ROOTS):
             return False
+        return self.cache_contains(logical)
+
+    def cache_contains(self, logical):
+        """Exact fixed-API query, also used to prove an approved disk miss is absent."""
         if str(logical) in self.cache_membership:
-            return self.cache_membership[str(logical)]
+            result = self.cache_membership[str(logical)]
+            need(type(result) is bool, "native-cache-membership-unavailable")
+            return result
         self.budget.queries += 1
         need(self.budget.queries <= MAX_QUERIES, "native-cache-query-budget")
         self.budget.tick()
         result = self.system.contains(logical)
+        need(type(result) is bool, "native-cache-membership-unavailable")
         self.cache_membership[str(logical)] = result
         return result
+
+    def prove_missing(self, logical):
+        """ENOENT is optional absence only after containment and a negative cache query.
+
+        A dangling/escaping alias, access/type failure, or cache-only external
+        runtime is incomplete evidence. Do not open a missing or rejected target.
+        """
+        try:
+            physical, root, kind, alias = self.path_policy(logical)
+        except FileNotFoundError as error:
+            # A missing source alias cannot prove its reviewed mapping.
+            raise UnsupportedRuntime("runtime-missing-alias-unproven") from error
+        self.budget.tick()
+        need(len(physical.parts) <= MAX_ALIAS_COMPONENTS, "runtime-missing-path-budget")
+        canonical_root = root.resolve(strict=False)
+        need(canonical_root == root, "runtime-missing-root-noncanonical")
+        canonical = physical.resolve(strict=False)
+        self.budget.tick()
+        need(canonical.is_relative_to(canonical_root), "runtime-missing-symlink-escapes-root")
+        if kind == "apple-runtime-file":
+            need(canonical == physical, "noncanonical-apple-runtime-file")
+
+        ancestor = physical
+        for _index in range(MAX_ALIAS_COMPONENTS):
+            self.budget.tick()
+            try:
+                ancestor.lstat()
+            except FileNotFoundError as error:
+                need(error.errno == errno.ENOENT and ancestor != ancestor.parent,
+                     "runtime-missing-ancestor-unproven")
+                ancestor = ancestor.parent
+                continue
+            need(ancestor != physical, "runtime-missing-candidate-changed")
+            try:
+                resolved = ancestor.resolve(strict=True)
+            except FileNotFoundError as error:
+                raise UnsupportedRuntime("runtime-missing-ancestor-unproven") from error
+            # Existing ancestors within the root may use contained version links.
+            # If the root itself is absent, its existing parent must be canonical.
+            need(resolved.is_relative_to(root) if ancestor.is_relative_to(root) else resolved == ancestor,
+                 "runtime-missing-ancestor-escapes-root")
+            need(stat.S_ISDIR(resolved.stat().st_mode), "runtime-missing-ancestor-is-not-directory")
+            break
+        else:
+            raise UnsupportedRuntime("runtime-missing-path-budget")
+        try:
+            physical.stat()
+        except FileNotFoundError as error:
+            need(error.errno == errno.ENOENT, "runtime-missing-candidate-unproven")
+        else:
+            raise UnsupportedRuntime("runtime-missing-candidate-changed")
+        for path in dict.fromkeys((logical, canonical)):
+            need(not self.cache_contains(path), "runtime-cache-only-dependency-unproven")
+        if kind == "bundled":
+            canonical = self.logical_build / canonical.relative_to(root)
+        return {"path":str(logical), "canonical":str(canonical), "alias":alias, "cache_absent":True}
 
     def images(self):
         """All transferred loadable images, including tools and dependency helpers."""
@@ -657,7 +737,7 @@ class RuntimeClosure:
                     break
             else:
                 if not (any(path.is_relative_to(root) for root in (*SYSTEM_ROOTS, *APPLE_RUNTIME_FRAMEWORKS))
-                        or path == Path("/usr/bin/swift")):
+                        or path in APPLE_RUNTIME_FILES or path == Path("/usr/bin/swift")):
                     raw = "<outside-approved-roots:" + hashlib.sha256(raw.encode("utf-8", "surrogatepass")).hexdigest() + ">"
         elif not raw.startswith(("@rpath/", "@loader_path", "@executable_path", "<")):
             raw = "<unsupported-path:" + hashlib.sha256(raw.encode("utf-8", "surrogatepass")).hexdigest() + ">"
@@ -721,6 +801,7 @@ class RuntimeClosure:
     def permitted(self, path):
         return (path.is_relative_to(self.host.logical_build) or path.is_relative_to(self.host.xcode)
                 or any(path.is_relative_to(root) for root in (*SYSTEM_ROOTS, *APPLE_RUNTIME_FRAMEWORKS))
+                or path in APPLE_RUNTIME_FILES
                 or path == getattr(self.host, "entrypoint", None))
 
     def add(self, logical, image=None, candidate=None):
@@ -765,6 +846,8 @@ class RuntimeClosure:
             value = str(Path(executable).parent) + raw[len("@executable_path"):]
         elif raw.startswith("/"):
             value = raw
+            if Path(posixpath.normpath(raw)) in APPLE_RUNTIME_FILES:
+                safe_absolute(raw)  # The exact file grants no alternate absolute spelling.
         else:
             raise UnsupportedRuntime("unsupported-runtime-path-token")
         return safe_absolute(posixpath.normpath(value))
@@ -812,6 +895,7 @@ class RuntimeClosure:
         raw = dependency["path"]
         self.state(key, executable, mode, chain, raw)
         selected = None
+        absences = []
         for index, logical in enumerate(self.candidates(dependency, chain, executable, mode)):
             need(index < MAX_CANDIDATES, "native-resolution-candidate-budget")
             candidate = {"path":self.label(logical), "canonical":None, "kind":"uninspected", "sha256":None}
@@ -819,6 +903,7 @@ class RuntimeClosure:
             try:
                 selected = self.add(logical, candidate=candidate)
             except FileNotFoundError:
+                absences.append(self.host.prove_missing(logical))
                 candidate["kind"] = "missing"
                 continue
             break
@@ -840,7 +925,7 @@ class RuntimeClosure:
         if raw.startswith("@rpath/"):
             bindings[raw] = {"target":selected, "rpaths":list(self.diagnostic["rpaths"]),
                              "truncated":self.diagnostic["truncated"]}
-        return selected
+        return selected, absences
 
     def walk(self, key, ancestors, executable, mode, bindings, variant=None):
         if key not in self.images:
@@ -859,11 +944,13 @@ class RuntimeClosure:
             self.visited.add(identity)
             self.covered.add(key)
             for dependency in current["dependencies"]:
-                target = self.resolve(dependency, chain, executable, mode, bindings)
+                target, absences = self.resolve(dependency, chain, executable, mode, bindings)
                 edge = {"install_name":dependency["path"], "weak":dependency["weak"],
                         "targets":[] if target is None else [target],
                         "context":{"executable":executable, "mode":mode,
                                    "chain":[[path, item["subtype"]] for path, item in chain]}}
+                if target is None:
+                    edge["absence"] = absences
                 self.edges.setdefault(key, []).append(edge)
                 self.edge_count += 1
                 need(self.edge_count <= MAX_EDGES, "native-runtime-edge-budget")

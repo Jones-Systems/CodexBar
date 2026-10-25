@@ -533,3 +533,85 @@ establish layout, not content compatibility, further dependency completeness or
 two-shard success. Root alone watches the ordinary source push. Workflow, daily
 05:00 America/New_York (EST/EDT) schedule, early gate, fallback/identity/integrity
 rules, frozen patches and nine known packaging/doc residuals stay unchanged.
+
+## DeviceInterface and exact weak-file repair intent
+
+Root approved both exact boundaries and conservative weak-load handling at
+19:45:15 EDT on October 24, 2026. Resume at
+`4d88540d0960a055d881156957296c34f65826a9`. Run `40143266253`, producer
+`121019287928`, validates the MobileDevice alias and hashes the actual ARM64e
+image to `87490526530f31bc31ee3f981a9b625540996aa67606cc4fb67b019502e4aad8`.
+Its nontruncated declaration snapshot contains two weak absolute imports:
+`/Library/Apple/System/Library/PrivateFrameworks/DeviceInterface.framework/Versions/A/DeviceInterface`
+and `/Library/Apple/usr/appleinternal/lib/libMobileRestoreInternalExtensions.dylib`.
+Their independently matched path-string hashes are respectively
+`007b89b1d29ed72a2fb9a48c74264545f343b4172db93cacb128c3be46822adb` and
+`7b64426e60ed950a9c11fbc008a2006774e7371e561d7d2d2d4ffa9b1e90c4f2`.
+Neither import digest proves target contents, presence or alias layout.
+
+Admit only canonical DeviceInterface.framework with the existing contained
+declared recursive full-hash policy, plus source-defined exact-file membership
+for that one internal-extension dylib. No parent, sibling, child-prefix,
+alternate spelling or new alias is admitted. Preserve selected-Xcode ordered
+overrides, the sole MobileDevice alias and static host-context policy. Present
+selected dependencies retain all native slice/hash/recursive closure checks.
+
+Missing candidates need explicit proof before they can justify an empty weak
+edge: genuine ENOENT, canonical/no-escape existing ancestors and negative bounded
+cache queries for the exact logical/canonical candidate. Cache-only unsupported
+external dependencies and permission/type/policy/unknown errors stay incomplete.
+Use the current APIs, shared budgets and exact path metadata only; no scanning,
+native artifact execution or host change. Apple primary JustInTimeLoader and
+Loader source support optional absence after search, not unconditional omission.
+
+Affected checks: unchanged old-head ARM64e two-import fixture; both present,
+one/both absent, cache-only/unknown/access errors, root/ancestor/leaf containment,
+exact-file sibling/child/prefix refusal, changed bytes/presence equality,
+unsupported third weak import and real-collector early compiler sentinel. Run
+the final deduplicated native/artifact/evidence/isolated-command union and existing
+path-gate/aggregate/doc checks under fresh admission/nonblocking lock. Keep all
+early-gate/fallback/source/integrity rules, schedule, frozen patches and residuals.
+No further unread dependency boundary is inferred or admitted.
+
+## DeviceInterface and exact weak-file repair result
+
+Implemented both approved paths as one source repair. DeviceInterface uses the
+existing canonical framework/reached nested dependency policy. The internal
+extension is exact-file membership with canonical parent, exact canonical regular
+leaf and full byte/slice/recursive checking. Parent/sibling/child-prefix paths,
+alternate absolute spellings and file aliases reject. The sole MobileDevice
+mapping and its independent actual metadata binding stay unchanged.
+
+Every missing resolver candidate now requires genuine ENOENT, canonical root,
+bounded existing-directory ancestor validation and negative exact logical and
+canonical cache membership. Cache-only/unknown, access, type, dangling/escaping
+alias and race cases stay incomplete. Present overrides retain their ordered
+precedence and full hashes. Empty weak edges bind absence paths and reviewed
+alias metadata; canonical staged paths map back to the original workspace.
+Changed presence or contained version-link destination therefore changes the
+fingerprint. No new native API, directory scan, rejected-target byte read,
+execution or host effect was added.
+
+The unchanged observed two-import fixture rejects exact
+`4d88540d0960a055d881156957296c34f65826a9` with
+`runtime-path-outside-approved-roots` and passes the candidate. Its durable
+regression receipt is
+`.evidence-compiled-tests-20261024/mobiledevice-weak-paths-regression.json`.
+The final deduplicated artifact/native/evidence/isolated-command union passes
+174 checks in 16.335s, zero skips. Existing path-gate/aggregate fixtures pass,
+and 302 local documentation links pass. Tests cover both/one present or absent,
+cache-only/unknown/access failures, exact policy refusal, changed nested/file
+bytes, changed presence, contained-version alias differences, staged equality,
+unsupported third weak imports and real-collector early compiler sentinels.
+Unavailable-host fallback and existing identity/integrity/aggregate contracts
+remain covered. Fresh admission and the nonblocking portfolio lock preceded
+serial execution; automatic owned fixture cleanup and absence were verified.
+
+Required `make test` and `make check` each exit 2: Swift is unavailable, and the
+app-locales check cannot spawn `plutil`, respectively. No tools were installed.
+These Linux fixtures prove parser/contract behavior only. The two actual target
+files' presence/bytes, complete native closure across current images, both-shard
+qualification, overhead and savings remain hosted evidence gaps. Root alone
+watches the next automatic source candidate. Source/run/profile/integrity gates,
+early build gate, strict fallback, 05:00 America/New_York schedule, nine frozen
+residuals and both durable product patches are unchanged.

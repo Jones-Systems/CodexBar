@@ -133,12 +133,13 @@ Audit every regular loadable file below the complete `.build`, including
 framework/helper children and dependency tools, plus the selected native launchers. Follow declared
 dependencies recursively. Bundled dependencies stay below .build and are also
 covered by archive integrity; external dependencies must resolve inside the
-selected Xcode, system-library roots or the four explicitly reviewed Apple
-framework roots and receive SHA256 identities. The additional roots are
+selected Xcode, system-library roots, the five explicitly reviewed Apple
+framework roots or the one exact runtime file and receive SHA256 identities. The additional roots are
 `/Library/Developer/PrivateFrameworks/CoreDevice.framework`,
 `/Library/Developer/PrivateFrameworks/CoreDeviceUtilities.framework`,
-`/Library/Apple/System/Library/PrivateFrameworks/Mercury.framework` and
-`/Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework`; require each
+`/Library/Apple/System/Library/PrivateFrameworks/Mercury.framework`,
+`/Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework` and
+`/Library/Apple/System/Library/PrivateFrameworks/DeviceInterface.framework`; require each
 root itself canonical and each reached runtime file canonically contained. Include
 only declared dependencies and their nested framework/dylib closure, with full
 hashes and existing file/byte/time limits. Do not enumerate the framework or its
@@ -146,6 +147,39 @@ parent, admit sibling frameworks, follow symlink escapes, or accept host roots
 from metadata. Missing or unsupported further dependencies stay incomplete. Preserve
 weak-link absence as explicit evidence; unresolved strong, ambiguous, unsupported
 or escaping dependencies make the proof incomplete. Inspect no provider state.
+
+Run `40143266253` validates the MobileDevice alias and hashes the actual ARM64e
+MobileDevice image to
+`87490526530f31bc31ee3f981a9b625540996aa67606cc4fb67b019502e4aad8`.
+Its nontruncated declaration snapshot binds two weak imports to that image:
+DeviceInterface's `Versions/A/DeviceInterface`, with path-string SHA256
+`007b89b1d29ed72a2fb9a48c74264545f343b4172db93cacb128c3be46822adb`, and
+`/Library/Apple/usr/appleinternal/lib/libMobileRestoreInternalExtensions.dylib`,
+with path-string SHA256
+`7b64426e60ed950a9c11fbc008a2006774e7371e561d7d2d2d4ffa9b1e90c4f2`.
+The latter is source-defined exact-file membership: canonical parent and exact
+canonical regular leaf, with no directory, sibling, child-prefix or alias grant.
+Record the static file policy in the host identity. Present selected dependencies
+receive full byte/slice/recursive closure checks, including nested declared
+dependencies of DeviceInterface. Both actual target presence and contents remain
+unproved before the next hosted run; these path digests are not content hashes.
+
+Apple's [JustInTimeLoader dependency traversal](https://github.com/apple-oss-distributions/dyld/blob/main/dyld/JustInTimeLoader.cpp)
+passes optional-missing status for weak loads and still resolves present images.
+The [loader search](https://github.com/apple-oss-distributions/dyld/blob/main/dyld/Loader.cpp)
+also considers the active cache. Therefore a weak flag alone never justifies an
+empty target list. Every approved missing search candidate must independently
+prove genuine ENOENT, canonical root and nonescaping existing directory ancestors,
+then negative exact logical/canonical cache membership. Use at most 32 source
+components and the existing shared time/query limits; no directory scan or target
+byte read. Contained version links remain supported. Missing alias metadata,
+dangling/escaping links, permission/type/race errors, unknown cache results or
+cache-only external dependencies make evidence incomplete. Ordered selected-Xcode
+overrides retain precedence. An empty weak edge is fingerprint evidence of proved
+absence and binds the tried logical/canonical paths and reviewed alias metadata;
+staged build paths retain the original logical workspace paths. Producer and worker
+independently recompute it, so changed presence, alias destination, bytes or
+recursive closure rejects. The sole alias below is unchanged.
 
 Run `40141076460` provides bounded actual MobileDevice alias metadata. Admit
 exactly `/System/Library/PrivateFrameworks/MobileDevice.framework` with raw relative

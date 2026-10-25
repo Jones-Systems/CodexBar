@@ -3,6 +3,7 @@
 
 import contextlib
 import ctypes
+import errno
 import hashlib
 import json
 import os
@@ -102,6 +103,8 @@ class NativeTests(unittest.TestCase):
                                          image(dependencies=[(0xC, "/usr/lib/libSystem.B.dylib")]))
         host.context = {"schema":native.SCHEMA, "os_build":"25G83", "arch":"arm64",
                         "system_cache_uuid":"a" * 32, "sdk_build":"17C529", "tools":{},
+                        "developer_framework_roots":[str(path) for path in native.APPLE_RUNTIME_FRAMEWORKS],
+                        "apple_runtime_files":[str(path) for path in getattr(native, "APPLE_RUNTIME_FILES", ())],
                         "framework_aliases":[{"source":str(source), "target":str(target),
                             "raw_target_sha256":hashlib.sha256(os.fsencode(raw)).hexdigest()}
                             for source, raw, target in getattr(native, "APPLE_FRAMEWORK_ALIASES", ())]}
@@ -128,6 +131,36 @@ class NativeTests(unittest.TestCase):
                 patch.object(native, "APPLE_RUNTIME_FRAMEWORKS", (*native.APPLE_RUNTIME_FRAMEWORKS, layout["target"])), \
                 patch.object(native, "APPLE_FRAMEWORK_ALIASES",
                              ((layout["source"], layout["raw"], layout["target"]),), create=True):
+            yield
+
+    def weak_mobiledevice_layout(self, present=(True, True)):
+        layout = self.mobiledevice_layout()
+        layout["device_root"] = self.root / "Library/Apple/System/Library/PrivateFrameworks/DeviceInterface.framework"
+        layout["device"] = layout["device_root"] / "Versions/A/DeviceInterface"
+        layout["device_nested"] = layout["device_root"] / "Versions/A/Frameworks/Nested.framework/Versions/A/Nested"
+        layout["extension"] = self.root / "Library/Apple/usr/appleinternal/lib/libMobileRestoreInternalExtensions.dylib"
+        layout["binary"].write_bytes(image(kind=6, subtype=0x80000002,
+            dependencies=[(native.WEAK, str(layout["device"])), (native.WEAK, str(layout["extension"]))]))
+        if present[0]:
+            self.write(str(layout["device"].relative_to(self.root)), image(kind=6, subtype=0x80000002,
+                dependencies=[(0xC, "@loader_path/Frameworks/Nested.framework/Versions/A/Nested")]))
+            self.write(str(layout["device_nested"].relative_to(self.root)), image(kind=6))
+        if present[1]:
+            self.write(str(layout["extension"].relative_to(self.root)), image(kind=6, subtype=0x80000002,
+                dependencies=[(0xC, "/usr/lib/libSystem.B.dylib")]))
+        return layout
+
+    @contextlib.contextmanager
+    def weak_mobiledevice_policy(self, layout):
+        # Translate only roots/files the source actually admits. This fixture is
+        # unchanged when executed against the exact older source for regression.
+        with patch.object(native, "SYSTEM_ROOTS", (*native.SYSTEM_ROOTS, layout["source"].parent)), \
+                patch.object(native, "APPLE_RUNTIME_FRAMEWORKS", tuple(
+                    self.root / path.relative_to("/") for path in native.APPLE_RUNTIME_FRAMEWORKS)), \
+                patch.object(native, "APPLE_RUNTIME_FILES", tuple(self.root / path.relative_to("/")
+                    for path in getattr(native, "APPLE_RUNTIME_FILES", ())), create=True), \
+                patch.object(native, "APPLE_FRAMEWORK_ALIASES",
+                    ((layout["source"], layout["raw"], layout["target"]),), create=True):
             yield
 
     def products(self):
@@ -356,6 +389,8 @@ class NativeTests(unittest.TestCase):
 
     def test_staged_closure_uses_original_logical_paths_without_installing_build(self):
         self.products()
+        self.write("workspace/.build/Optional.dylib", image(kind=6,
+            dependencies=[(native.WEAK, "@loader_path/Absent.dylib")]))
         producer = self.host().closure()
         stage = self.root / "stage/.build"
         shutil.copytree(self.build, stage, symlinks=True)
@@ -374,6 +409,8 @@ class NativeTests(unittest.TestCase):
         self.assertEqual([{key:edge[key] for key in ("install_name", "weak", "targets")} for edge in missing],
                          [{"install_name":"@loader_path/Absent.dylib", "weak":True, "targets":[]}])
         self.assertEqual(missing[0]["context"]["mode"], "audit")
+        self.assertTrue(all(item["cache_absent"] for item in missing[0]["absence"]))
+        self.assertEqual(missing[0]["absence"][-1]["canonical"], str(self.build / "Absent.dylib"))
 
     def test_unresolved_strong_outside_root_and_escaping_symlink_are_incomplete(self):
         self.products()
@@ -568,6 +605,218 @@ class NativeTests(unittest.TestCase):
                     self.assertRaisesRegex(native.UnsupportedRuntime, "outside-approved-roots"):
                 host.closure(include_build=False)
             self.assertFalse(any(call.args[0] == incorrect for call in location.call_args_list))
+
+    def test_reviewed_mobiledevice_weak_paths_are_exact_observed_declarations(self):
+        framework = Path("/Library/Apple/System/Library/PrivateFrameworks/DeviceInterface.framework")
+        extension = Path("/Library/Apple/usr/appleinternal/lib/libMobileRestoreInternalExtensions.dylib")
+        self.assertIn(framework, native.APPLE_RUNTIME_FRAMEWORKS)
+        self.assertEqual(native.APPLE_RUNTIME_FILES, (extension,))
+        for path, digest in ((framework / "Versions/A/DeviceInterface",
+                "007b89b1d29ed72a2fb9a48c74264545f343b4172db93cacb128c3be46822adb"),
+                (extension, "7b64426e60ed950a9c11fbc008a2006774e7371e561d7d2d2d4ffa9b1e90c4f2")):
+            self.assertEqual(hashlib.sha256(os.fsencode(path)).hexdigest(), digest)
+        self.assertEqual(len(native.APPLE_FRAMEWORK_ALIASES), 1)
+
+    def test_observed_mobiledevice_weak_imports_require_both_exact_boundaries_and_recursive_hashes(self):
+        layout = self.weak_mobiledevice_layout()
+        with self.weak_mobiledevice_policy(layout):
+            host = self.host()
+            host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(layout["logical"]))]))
+            context = json.loads(json.dumps(host.context))
+            # Forged cache hits cannot skip actual external file identities.
+            host.cache_membership.update({str(layout[key]):True for key in ("device", "extension")})
+            with patch.object(Path, "iterdir", side_effect=AssertionError("no framework inventory")):
+                original = host.closure(include_build=False)
+            self.assertEqual(host.context, context)
+            for key, kind in (("device", "developer-framework"), ("extension", "apple-runtime-file")):
+                self.assertEqual(original["entries"][str(layout[key])], {"kind":kind, "subtypes":[0x80000002],
+                    "sha256":hashlib.sha256(layout[key].read_bytes()).hexdigest()})
+            edges = original["edges"][str(layout["binary"])]
+            self.assertEqual({tuple(edge["targets"]) for edge in edges},
+                             {(str(layout["device"]),), (str(layout["extension"]),)})
+            self.assertTrue(all(edge["weak"] for edge in edges))
+            self.assertIn(str(layout["device_nested"]), original["entries"])
+            for key in ("device_nested", "extension"):
+                layout[key].write_bytes(layout[key].read_bytes() + b"changed reached dependency")
+                changed = host.closure(include_build=False)
+                with self.assertRaisesRegex(native.UnsupportedRuntime, "fingerprint-differs"):
+                    native.same_native_fingerprint(original, changed)
+
+    def test_both_absent_weak_imports_require_negative_exact_cache_queries_without_target_reads(self):
+        layout = self.weak_mobiledevice_layout(present=(False, False))
+        with self.weak_mobiledevice_policy(layout):
+            host = self.host()
+            host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(layout["logical"]))]))
+            with patch.object(host.budget, "digest", wraps=host.budget.digest) as digest:
+                absent = host.closure(include_build=False)
+            edges = absent["edges"][str(layout["binary"])]
+            self.assertTrue(all(edge["targets"] == [] and edge["weak"] for edge in edges))
+            for key in ("device", "extension"):
+                self.assertIn(str(layout[key]), self.api_calls)
+                self.assertNotIn(str(layout[key]), absent["entries"])
+                self.assertFalse(any(call.args[0] == layout[key] for call in digest.call_args_list))
+            self.write(str(layout["extension"].relative_to(self.root)), image(kind=6))
+            changed = host.closure(include_build=False)
+            self.assertTrue(any(edge["targets"] == [str(layout["extension"])]
+                                for edge in changed["edges"][str(layout["binary"])]))
+            with self.assertRaisesRegex(native.UnsupportedRuntime, "fingerprint-differs"):
+                native.same_native_fingerprint(absent, changed)
+
+    def test_present_device_and_absent_extension_preserve_selected_xcode_override_order(self):
+        layout = self.weak_mobiledevice_layout(present=(True, False))
+        with self.weak_mobiledevice_policy(layout):
+            host = self.host()
+            override = self.write("Xcode.app/Contents/Developer/usr/lib/" + layout["extension"].name, image(kind=6))
+            host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(layout["logical"]))]))
+            with patch.object(host, "location", wraps=host.location) as location:
+                proof = host.closure(include_build=False)
+            self.assertEqual({tuple(edge["targets"]) for edge in proof["edges"][str(layout["binary"])]},
+                             {(str(layout["device"]),), (str(override),)})
+            self.assertFalse(any(call.args[0] == layout["extension"] for call in location.call_args_list))
+            override.unlink()
+            proof = host.closure(include_build=False)
+            self.assertEqual({tuple(edge["targets"]) for edge in proof["edges"][str(layout["binary"])]},
+                             {(str(layout["device"]),), ()})
+
+    def test_present_extension_does_not_hide_absent_device_interface(self):
+        layout = self.weak_mobiledevice_layout(present=(False, True))
+        with self.weak_mobiledevice_policy(layout):
+            host = self.host()
+            host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(layout["logical"]))]))
+            proof = host.closure(include_build=False)
+            self.assertEqual({tuple(edge["targets"]) for edge in proof["edges"][str(layout["binary"])]},
+                             {(str(layout["extension"]),), ()})
+
+    def test_absent_external_weak_imports_reject_cache_only_unknown_and_access_errors(self):
+        layout = self.weak_mobiledevice_layout(present=(False, False))
+        with self.weak_mobiledevice_policy(layout):
+            for key in ("device", "extension"):
+                for result in (True, None, PermissionError(errno.EACCES, "denied")):
+                    with self.subTest(path=key, result=type(result).__name__):
+                        host = self.host()
+                        host.tools["xctest"].write_bytes(image(dependencies=[(native.WEAK, str(layout[key]))]))
+                        original_contains = host.system.contains
+                        def contains(path):
+                            if path == layout[key]:
+                                if isinstance(result, Exception):
+                                    raise result
+                                return result
+                            return original_contains(path)
+                        host.system.contains = contains
+                        reason = ("cache-only-dependency-unproven" if result is True else
+                                  "cache-membership-unavailable" if result is None else "file-unavailable")
+                        with self.assertRaisesRegex(native.UnsupportedRuntime, reason) as error:
+                            host.closure(include_build=False)
+                        native.validate_diagnostic(error.exception.diagnostic)
+
+    def test_exact_runtime_file_does_not_admit_siblings_children_prefixes_or_aliases(self):
+        layout = self.weak_mobiledevice_layout()
+        extension = layout["extension"]
+        with self.weak_mobiledevice_policy(layout):
+            host = self.host()
+            for path in (extension.parent, extension.with_name("Other.dylib"),
+                         Path(str(extension) + ".other"), extension / "child"):
+                host.tools["xctest"].write_bytes(image(dependencies=[(native.WEAK, str(path))]))
+                with patch.object(host, "location", wraps=host.location) as location, \
+                        self.assertRaisesRegex(native.UnsupportedRuntime, "outside-approved-roots"):
+                    host.closure(include_build=False)
+                self.assertFalse(any(call.args[0] == path for call in location.call_args_list))
+            for raw in (str(extension.parent) + "/./" + extension.name,
+                        str(extension.parent) + "//" + extension.name,
+                        str(extension.parent) + "/../lib/" + extension.name):
+                host.tools["xctest"].write_bytes(image(dependencies=[(native.WEAK, raw)]))
+                with self.assertRaisesRegex(native.UnsupportedRuntime, "invalid-native-path"):
+                    host.closure(include_build=False)
+            actual = extension.with_name("Other.dylib")
+            extension.rename(actual)
+            extension.symlink_to(actual.name)
+            with self.assertRaisesRegex(native.UnsupportedRuntime, "noncanonical-apple-runtime-file"):
+                host.location(extension)
+
+    def test_missing_runtime_file_with_escaping_parent_is_not_optional_absence(self):
+        layout = self.weak_mobiledevice_layout(present=(True, False))
+        outside = self.root / "outside"
+        outside.mkdir()
+        layout["extension"].parent.parent.mkdir(parents=True)
+        layout["extension"].parent.symlink_to(outside, target_is_directory=True)
+        with self.weak_mobiledevice_policy(layout):
+            host = self.host()
+            host.tools["xctest"].write_bytes(image(dependencies=[(native.WEAK, str(layout["extension"]))]))
+            with self.assertRaisesRegex(native.UnsupportedRuntime, "noncanonical-apple-runtime-file-parent"):
+                host.closure(include_build=False)
+            self.assertNotIn(str(layout["extension"]), self.api_calls)
+
+    def test_dangling_runtime_file_or_framework_alias_is_not_weak_absence(self):
+        layout = self.weak_mobiledevice_layout(present=(False, False))
+        layout["extension"].parent.mkdir(parents=True)
+        layout["extension"].symlink_to("Missing.dylib")
+        layout["device_root"].symlink_to(self.root / "missing-outside", target_is_directory=True)
+        with self.weak_mobiledevice_policy(layout):
+            for key, reason in (("extension", "noncanonical-apple-runtime-file"),
+                                ("device", "runtime-missing-root-noncanonical")):
+                with self.subTest(path=key):
+                    host = self.host()
+                    host.tools["xctest"].write_bytes(image(dependencies=[(native.WEAK, str(layout[key]))]))
+                    with self.assertRaisesRegex(native.UnsupportedRuntime, reason):
+                        host.closure(include_build=False)
+                    self.assertNotIn(str(layout[key]), self.api_calls)
+
+    def test_missing_contained_version_link_checks_both_logical_and_canonical_cache_names(self):
+        layout = self.weak_mobiledevice_layout(present=(False, True))
+        version = layout["device_root"] / "Versions/A"
+        version.mkdir(parents=True)
+        (version.parent / "Current").symlink_to("A", target_is_directory=True)
+        logical = version.parent / "Current/DeviceInterface"
+        with self.weak_mobiledevice_policy(layout):
+            host = self.host()
+            host.tools["xctest"].write_bytes(image(dependencies=[(native.WEAK, str(logical))]))
+            proof = host.closure(include_build=False)
+            self.assertIn(str(logical), self.api_calls)
+            self.assertIn(str(layout["device"]), self.api_calls)
+            self.assertEqual(proof["edges"][str(host.tools["xctest"])][0]["targets"], [])
+            (version.parent / "Current").unlink()
+            (version.parent / "B").mkdir()
+            (version.parent / "Current").symlink_to("B", target_is_directory=True)
+            changed = host.closure(include_build=False)
+            with self.assertRaisesRegex(native.UnsupportedRuntime, "fingerprint-differs"):
+                native.same_native_fingerprint(proof, changed)
+            host.cache_membership[str(version.parent / "B/DeviceInterface")] = True
+            with self.assertRaisesRegex(native.UnsupportedRuntime, "cache-only-dependency-unproven"):
+                host.closure(include_build=False)
+
+    def test_missing_proof_rejects_type_permission_race_and_non_enoent_errors(self):
+        layout = self.weak_mobiledevice_layout(present=(True, False))
+        with self.weak_mobiledevice_policy(layout):
+            host = self.host()
+            extension = layout["extension"]
+            for failure in (PermissionError(errno.EACCES, "denied"), NotADirectoryError(errno.ENOTDIR, "type"),
+                            FileNotFoundError("unproven ENOENT")):
+                with self.subTest(error=type(failure).__name__), patch.object(Path, "lstat", side_effect=failure), \
+                        self.assertRaises((OSError, native.UnsupportedRuntime)):
+                    host.prove_missing(extension)
+            extension.parent.mkdir(parents=True)
+            extension.mkdir()
+            with self.assertRaisesRegex(native.UnsupportedRuntime, "not-regular"):
+                host.location(extension)
+            with self.assertRaisesRegex(native.UnsupportedRuntime, "candidate-changed"):
+                host.prove_missing(extension)
+
+    def test_unapproved_third_weak_mobiledevice_import_stays_incomplete_without_target_io(self):
+        layout = self.weak_mobiledevice_layout()
+        third = layout["extension"].with_name("Unreviewed.dylib")
+        layout["binary"].write_bytes(image(kind=6, subtype=0x80000002, dependencies=[
+            (native.WEAK, str(layout["device"])), (native.WEAK, str(layout["extension"])),
+            (native.WEAK, str(third))]))
+        with self.weak_mobiledevice_policy(layout):
+            host = self.host()
+            host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(layout["logical"]))]))
+            with patch.object(host, "location", wraps=host.location) as location, \
+                    self.assertRaisesRegex(native.UnsupportedRuntime, "outside-approved-roots") as error:
+                host.closure(include_build=False)
+            self.assertFalse(any(call.args[0] == third for call in location.call_args_list))
+            self.assertNotIn(str(third), self.api_calls)
+            self.assertEqual(len(error.exception.diagnostic["unapproved_declarations"]), 1)
+            self.assertTrue(error.exception.diagnostic["unapproved_declarations"][0]["weak"])
 
     def test_swift_testing_helper_selection_matches_first_executable_and_refuses_escape_or_absence(self):
         usr = self.xcode / "Developer/Toolchains/Selected.xctoolchain/usr"
@@ -936,9 +1185,10 @@ class NativeTests(unittest.TestCase):
             host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(layout["logical"]))]))
             host.cache_membership[str(layout["logical"])] = True
             host.cache_membership[str(layout["binary"])] = True
+            original_contains = host.system.contains
             def contains(path):
                 self.assertFalse(path.is_relative_to(layout["source"]))
-                return True
+                return original_contains(path)
             host.system.contains = contains
             fingerprint = host.closure(include_build=False)
             self.assertEqual(fingerprint["entries"][str(layout["binary"])]["sha256"],
@@ -1024,7 +1274,7 @@ class NativeTests(unittest.TestCase):
                 host.closure(include_build=False)
             layout["binary"].write_bytes(original_binary)
             layout["source"].unlink()
-            with self.assertRaisesRegex(native.UnsupportedRuntime, "unresolved-runtime-dependency"):
+            with self.assertRaisesRegex(native.UnsupportedRuntime, "runtime-missing-alias-unproven"):
                 host.closure(include_build=False)
 
     def test_alias_metadata_stops_at_first_absolute_or_relative_link_without_target_queries(self):
