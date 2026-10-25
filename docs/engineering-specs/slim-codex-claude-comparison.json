@@ -1,7 +1,7 @@
 {
   "schema": "codexbar-product-removal-comparison/v1",
   "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
-  "candidateSourceRevision": "47cfdfcb09037b49b40d7c49b4aabce07c9e8e40",
+  "candidateSourceRevision": "66d8c2387597d2ba1ae7d87f821e3c6c60ea1a08",
   "pullRequest": "https://github.com/Jones-Systems/CodexBar/pull/41",
   "baseBranch": "work/test-value-bar-pass2-20261024",
   "method": "Exact committed Git blobs; files include Swift source under Sources and tests under Tests, TestsLinux, TestsPlugin; line count uses bytes.splitlines; lexical Swift Testing @Test declaration counts exclude comments/strings and do not represent parameterized/runtime cases.",
@@ -36,8 +36,8 @@
       },
       "testSwift": {
         "files": 733,
-        "lines": 252418,
-        "bytes": 10942679
+        "lines": 252424,
+        "bytes": 10943106
       }
     }
   },
@@ -989,9 +989,10 @@
       "qualification": "No new-head compile or execution pass inferred."
     },
     "latestNativeRuntimeAttempt": {
-      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40168464172",
-      "prHeadRevision": "761c9ee1f9b12d1b551e138e04c9d2026dd4389b",
-      "mergeCheckout": "c80e30b966db5a2667ab3c49eaab3127854c5961",
+      "runID": 40171535655,
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40171535655",
+      "prHeadRevision": "7c294a614db77df3177e408fcdf4b2cb927fe601",
+      "mergeCheckout": "d2ac6e015ca6e8710c1be0535a3f54d59afc8a98",
       "changes": "success",
       "lint": "success",
       "linuxX64": "success",
@@ -1000,72 +1001,30 @@
       "producer": "success",
       "workers": [
         {
-          "jobID": 121096305372,
-          "selectedGroups": 85,
-          "successfulGroupsBeforeFailure": 68,
+          "jobID": 121106055371,
+          "status": "failure",
+          "nativeCompatibility": "verified complete-fingerprint",
           "timeouts": 0,
-          "log": "shard0",
-          "nativeMetadata": [
-            {
-              "event": "native-compatibility",
-              "mode": "complete-fingerprint",
-              "producer_image": "20261021.0445.8",
-              "source_revision": "c80e30b966db5a2667ab3c49eaab3127854c5961",
-              "status": "verified",
-              "worker_image": "20261021.0445.8"
-            }
-          ],
-          "recordedIssues": [
-            "2026-10-25T06:36:23.1714280Z Swift/NativeDictionary.swift:792: Fatal error: Duplicate values for key: 'codex'"
+          "issues": [
+            "\u2718 Test \"priced subscription keeps group spend when peers lack prices\" recorded an issue at SpendDashboardPartialCostTests.swift:189:9: Expectation failed: (group.models.map(\\.modelName) \u2192 [\"gpt-5.4-mini\", \"deepseek-v4-flash\"]) == [\"gpt-5.4-mini\", \"deepseek-v4-flash\", \"deepseek-v4-flash\"]",
+            "\u2718 Test \"priced subscription keeps group spend when peers lack prices\" recorded an issue at SpendDashboardPartialCostTests.swift:190:9: Expectation failed: (group.models.map(\\.totalCost) \u2192 [Optional(4.0), nil]) == ([4, nil, nil] \u2192 [Optional(4.0), nil, nil])",
+            "\u2718 Test \"all unpriced subscriptions keep group spend unavailable\" recorded an issue at SpendDashboardPartialCostTests.swift:216:9: Expectation failed: (group.models.map(\\.modelName) \u2192 [\"deepseek-v4-flash\"]) == [\"deepseek-v4-flash\", \"deepseek-v4-flash\"]",
+            "\u2718 Test \"all unpriced subscriptions keep group spend unavailable\" recorded an issue at SpendDashboardPartialCostTests.swift:217:9: Expectation failed: (group.models.map(\\.totalCost) \u2192 [nil]) == [nil, nil]"
           ],
           "discovery": {
-            "sha256": "dbcc586dffe6abdde0a2894d83cdbad8629bff8170e05d97f75d06862fa387ff",
-            "source_revision": "c80e30b966db5a2667ab3c49eaab3127854c5961",
-            "runtimeIDs": 6675
+            "count": 6675,
+            "sha256": "6c51148beb994a908f631c7ff49e2270ef9259ac8c07add31904f86fbbac3ccd",
+            "sourceRevision": "d2ac6e015ca6e8710c1be0535a3f54d59afc8a98"
           }
         },
         {
-          "jobID": 121096305342,
-          "selectedGroups": 85,
-          "successfulGroupsBeforeFailure": 80,
-          "timeouts": 0,
-          "log": "shard1",
-          "nativeMetadata": [
-            {
-              "event": "native-compatibility",
-              "mode": "complete-fingerprint",
-              "producer_image": "20261021.0445.8",
-              "source_revision": "c80e30b966db5a2667ab3c49eaab3127854c5961",
-              "status": "verified",
-              "worker_image": "20261013.0424.1"
-            }
-          ],
-          "recordedIssues": [
-            "2026-10-25T06:41:40.1307110Z \u2718 Test \"generic provider weekly lane is persisted to provider history json\" recorded an issue at UsageStorePlanUtilizationTests.swift:924:9: Expectation failed: (findSeries(histories, name: .weekly, windowMinutes: 10080)?.entries.map(\\.usedPercent) \u2192 nil) == ([42, 58] \u2192 [42.0, 58.0])",
-            "2026-10-25T06:41:40.1308630Z \u2718 Test \"generic provider weekly lane is persisted to provider history json\" recorded an issue at UsageStorePlanUtilizationTests.swift:925:9: Expectation failed: (findSeries(histories, name: .session, windowMinutes: 300)?.entries.map(\\.usedPercent) \u2192 nil) == ([15, 25] \u2192 [15.0, 25.0])",
-            "2026-10-25T06:41:40.1310130Z \u2718 Test \"generic provider weekly lane is persisted to provider history json\" recorded an issue at UsageStorePlanUtilizationTests.swift:941:9: Expectation failed: (persisted.histories(for: persisted.preferredAccountKey)"
-          ],
-          "discovery": {
-            "sha256": "dbcc586dffe6abdde0a2894d83cdbad8629bff8170e05d97f75d06862fa387ff",
-            "source_revision": "c80e30b966db5a2667ab3c49eaab3127854c5961",
-            "runtimeIDs": 6675
-          },
-          "recordedIssue941Continuation": [
-            "2026-10-25T06:41:40.1311210Z             .first { $0.name == .weekly }?.entries.map(\\.usedPercent) \u2192 [15.0, 25.0]) == ([42, 58] \u2192 [42.0, 58.0])",
-            "2026-10-25T06:41:40.1312030Z \u2718 Test \"generic provider weekly lane is persisted to provider history json\" failed after 0.009 seconds with 3 issues."
-          ]
+          "jobID": 121106055365,
+          "status": "success",
+          "source": "Root completed shard fan-in"
         }
       ],
-      "aggregate": {
-        "jobID": 121098755685,
-        "producer": "success",
-        "shards": "failure",
-        "required": true,
-        "deferred": false,
-        "independentDefect": false
-      },
-      "source": "Root completed fan-in plus bounded saved metadata/issues. Child did not poll or watch CI.",
-      "qualification": "Failed partial prior-head run, not full qualification/timing/savings and not qualification of the new repair."
+      "aggregate": "Still pending at root bounded snapshot; any ordinary producer-success/shards-failure gate mismatch is consequential, not an independent established defect.",
+      "qualification": "Prior-head one successful shard and one failed shard; not full qualification of the candidate and not savings/build-size evidence."
     }
   },
   "appSizeAndBuildComparison": {
@@ -1482,7 +1441,7 @@
     ],
     "deferredReason": "Three fresh below-threshold admissions, separated by ready source/evidence work, each found shared benchmark.lock busy. No test command or queued wait started. Existing local tool absences also prevent native make check/test. Prior exact-revision check results are retained as historical evidence, not new-head passes."
   },
-  "countMethodLatest": "Complete committed Git-blob inventory at 47cfdfcb09037b49b40d7c49b4aabce07c9e8e40 confirms product counts unchanged and tests +26 lines/+1241 bytes. All 69 declarations in the two edited files remain, with one purpose-correct rename and no added/removed tests. Independent Test line-pattern count agrees with prior lexical count plus zero attribute edits: 6570 declarations across 691 files. Hosted 6675 IDs belong only to the prior head; no runtime or timing savings are inferred.",
+  "countMethodLatest": "Complete committed Git blob inventory at 66d8c2387597d2ba1ae7d87f821e3c6c60ea1a08: product unchanged, test source +6 lines/+427 bytes, 13 suite declarations retained and no additions/removals/renames. All 73 prior suite expectations remain byte-identical and six source/model/token assertions are added. Independent Test line-pattern count remains 6570 across 691 files. Prior-head hosted discovery has 6675 IDs; runtime counts and savings for the repair are not inferred.",
   "swiftFormatRepair": {
     "baseRevision": "1d9787f8b4075068f3282cb723e42170a6e702c3",
     "repairRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
@@ -9829,6 +9788,534 @@
           "normalized_load_one_minute": 0.2794,
           "sampled_steal_percent": 0.0,
           "cpu_psi_some_avg10_percent": 1.84
+        }
+      }
+    ]
+  },
+  "partialCostRuntimeRepair": {
+    "priorRevision": "7c294a614db77df3177e408fcdf4b2cb927fe601",
+    "repairRevision": "66d8c2387597d2ba1ae7d87f821e3c6c60ea1a08",
+    "hostedFailingBefore": {
+      "runID": 40171535655,
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40171535655",
+      "prHeadRevision": "7c294a614db77df3177e408fcdf4b2cb927fe601",
+      "mergeCheckout": "d2ac6e015ca6e8710c1be0535a3f54d59afc8a98",
+      "changes": "success",
+      "lint": "success",
+      "linuxX64": "success",
+      "linuxARM64": "success",
+      "linuxMusl": "success",
+      "producer": "success",
+      "workers": [
+        {
+          "jobID": 121106055371,
+          "status": "failure",
+          "nativeCompatibility": "verified complete-fingerprint",
+          "timeouts": 0,
+          "issues": [
+            "\u2718 Test \"priced subscription keeps group spend when peers lack prices\" recorded an issue at SpendDashboardPartialCostTests.swift:189:9: Expectation failed: (group.models.map(\\.modelName) \u2192 [\"gpt-5.4-mini\", \"deepseek-v4-flash\"]) == [\"gpt-5.4-mini\", \"deepseek-v4-flash\", \"deepseek-v4-flash\"]",
+            "\u2718 Test \"priced subscription keeps group spend when peers lack prices\" recorded an issue at SpendDashboardPartialCostTests.swift:190:9: Expectation failed: (group.models.map(\\.totalCost) \u2192 [Optional(4.0), nil]) == ([4, nil, nil] \u2192 [Optional(4.0), nil, nil])",
+            "\u2718 Test \"all unpriced subscriptions keep group spend unavailable\" recorded an issue at SpendDashboardPartialCostTests.swift:216:9: Expectation failed: (group.models.map(\\.modelName) \u2192 [\"deepseek-v4-flash\"]) == [\"deepseek-v4-flash\", \"deepseek-v4-flash\"]",
+            "\u2718 Test \"all unpriced subscriptions keep group spend unavailable\" recorded an issue at SpendDashboardPartialCostTests.swift:217:9: Expectation failed: (group.models.map(\\.totalCost) \u2192 [nil]) == [nil, nil]"
+          ],
+          "discovery": {
+            "count": 6675,
+            "sha256": "6c51148beb994a908f631c7ff49e2270ef9259ac8c07add31904f86fbbac3ccd",
+            "sourceRevision": "d2ac6e015ca6e8710c1be0535a3f54d59afc8a98"
+          }
+        },
+        {
+          "jobID": 121106055365,
+          "status": "success",
+          "source": "Root completed shard fan-in"
+        }
+      ],
+      "aggregate": "Still pending at root bounded snapshot; any ordinary producer-success/shards-failure gate mismatch is consequential, not an independent established defect.",
+      "qualification": "Prior-head one successful shard and one failed shard; not full qualification of the candidate and not savings/build-size evidence."
+    },
+    "diagnosis": {
+      "original": "Claude and Cursor shared an unpriced model name but had distinct provider/model keys; ModelKey is provider plus modelName, while ProviderInput/ProviderRow use a source ID.",
+      "failedPort": "Cursor became scoped Claude. Both subscription IDs stayed unique, but same-provider same-model keys merged intentionally; the two methods lost one model row each.",
+      "repair": "Only the secondary input becomes scoped Codex codex:secondary. It differs from the priced Codex model and from the identical-name unpriced Claude model. Original three/two subscription and model roles remain representable.",
+      "productionGroupingChanged": false,
+      "expectedRowsOrCostsReduced": false
+    },
+    "sourcePreservationProof": {
+      "priorRevision": "7c294a614db77df3177e408fcdf4b2cb927fe601",
+      "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+      "path": "Tests/CodexBarTests/SpendDashboardPartialCostTests.swift",
+      "beforeSHA256": "6a74c3697df1a4ca76415186e3a3a520718e0d101d256f74fc862168b9942234",
+      "afterSHA256": "a42d2823333496c0058d1677fdae06c3b0962bac2e4adb4277909a0ea787e587",
+      "testDeclarationsBefore": 13,
+      "testDeclarationsAfter": 13,
+      "assertionsBefore": 73,
+      "assertionsAfter": 79,
+      "allExistingExpectationsByteIdentical": true,
+      "lineDelta": 6,
+      "byteDelta": 427,
+      "methods": [
+        {
+          "name": "priced subscription keeps group spend when peers lack prices",
+          "beforeSHA256": "d31e4ab41bb6cc9b72b074a763a8d06628045c678cf7b77d4a8ed80504f8a4e1",
+          "afterSHA256": "2d13a61219d940509ce0ff84e88100b0e18845c8ab63a95de8b254b8700d1c28",
+          "existingExpectations": 15,
+          "newExpectations": 3,
+          "snapshotFixtureBytesExact": true,
+          "expectedModelsAndCostsExact": true
+        },
+        {
+          "name": "all unpriced subscriptions keep group spend unavailable",
+          "beforeSHA256": "c4bafbd714e4c57553ca599e00f4c3abf4f7a2ad3410c50b50478bb6ac5b7a28",
+          "afterSHA256": "fb3f96d0c801f1b322558f145af9aff1b0344476a5e87079ec778ed26a108223",
+          "existingExpectations": 9,
+          "newExpectations": 3,
+          "snapshotFixtureBytesExact": true,
+          "expectedModelsAndCostsExact": true
+        }
+      ],
+      "otherMethodsByteIdentical": 11,
+      "readOnlyAuditFiles": [
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardModelTests.swift",
+          "SHA256": "2c3f8ae352ade7feeafd9f0c7f82face144287fbe4f78e145fb79412c6d91e9f"
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardDateTruthTests.swift",
+          "SHA256": "9879e07242c231a0b56f2fde4a2d73a76eab1f70b5c9aa07d946bd9e969850e3"
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardExportTests.swift",
+          "SHA256": "7cb56254cd37f8e70d7e171f6b3abf347fa8567718690aa6b3b51972ea34d86d"
+        }
+      ],
+      "baseExactSourceBlocks": [
+        {
+          "path": "Sources/CodexBar/SpendDashboardModel+ModelBreakdown.swift",
+          "block": "private struct ModelKey:",
+          "SHA256": "eb1f85722a19b1c2c58bec15ef6e4c04b7689ec6a20bafec995f4ddbca68ce99"
+        },
+        {
+          "path": "Sources/CodexBar/SpendDashboardModel+ModelBreakdown.swift",
+          "block": "static func modelSummary(",
+          "SHA256": "ac11c0631a8af44b638962494795851d6d040c9f51d48d4439653691ea7822f9"
+        },
+        {
+          "path": "Sources/CodexBar/SpendDashboardModel+ModelBreakdown.swift",
+          "block": "static func canRetainUnpricedModelHistory(",
+          "SHA256": "a452fd1df648308a3de29beb3a92e46191372b9be704a12d7f20257720ac27b7"
+        },
+        {
+          "path": "Sources/CodexBar/SpendDashboardModel.swift",
+          "block": "private static func buildCurrencyGroup(",
+          "SHA256": "f914a36778b324c99e72fe6100313351e34a34a45e6cf05ea84f471fdcd70b34"
+        },
+        {
+          "path": "Sources/CodexBar/SpendDashboardModel.swift",
+          "block": "private static func inputSummary(",
+          "SHA256": "9155546e98e129b64d86250d2dd24a052fe4063fee44a697d15ce8eea19e4a38"
+        },
+        {
+          "path": "Sources/CodexBar/SpendDashboardModel.swift",
+          "block": "private static func providerRows(",
+          "SHA256": "579d4e725719d1f790f6a0b6ea6d5b6a980d6984d2812c63b092679499a9251e"
+        },
+        {
+          "path": "Sources/CodexBar/SpendDashboardModel.swift",
+          "block": "private static func knownCostSum(",
+          "SHA256": "4b027880b03bc4ce019903a3ed665255641a7e4fd9d0326bb2f0ffa27c33265d"
+        }
+      ]
+    },
+    "fixtureIdentityProvenanceAndBoundedAudit": {
+      "partialPricingFixtures": [
+        {
+          "method": "priced subscription keeps group spend when peers lack prices",
+          "expectedSubscriptionAndModelRows": 3,
+          "revisions": {
+            "original": {
+              "inputs": [
+                {
+                  "sourceID": "codex",
+                  "provider": "codex",
+                  "model": "gpt-5.4-mini",
+                  "displayName": "Codex"
+                },
+                {
+                  "sourceID": "claude",
+                  "provider": "claude",
+                  "model": "deepseek-v4-flash",
+                  "displayName": "Claude"
+                },
+                {
+                  "sourceID": "cursor",
+                  "provider": "cursor",
+                  "model": "deepseek-v4-flash",
+                  "displayName": "Cursor"
+                }
+              ],
+              "distinctSourceIDs": 3,
+              "distinctModelKeys": 3
+            },
+            "before": {
+              "inputs": [
+                {
+                  "sourceID": "codex",
+                  "provider": "codex",
+                  "model": "gpt-5.4-mini",
+                  "displayName": "Codex"
+                },
+                {
+                  "sourceID": "claude",
+                  "provider": "claude",
+                  "model": "deepseek-v4-flash",
+                  "displayName": "Claude"
+                },
+                {
+                  "sourceID": "claude:secondary",
+                  "provider": "claude",
+                  "model": "deepseek-v4-flash",
+                  "displayName": "Claude secondary"
+                }
+              ],
+              "distinctSourceIDs": 3,
+              "distinctModelKeys": 2
+            },
+            "after": {
+              "inputs": [
+                {
+                  "sourceID": "codex",
+                  "provider": "codex",
+                  "model": "gpt-5.4-mini",
+                  "displayName": "Codex"
+                },
+                {
+                  "sourceID": "claude",
+                  "provider": "claude",
+                  "model": "deepseek-v4-flash",
+                  "displayName": "Claude"
+                },
+                {
+                  "sourceID": "codex:secondary",
+                  "provider": "codex",
+                  "model": "deepseek-v4-flash",
+                  "displayName": "Codex secondary"
+                }
+              ],
+              "distinctSourceIDs": 3,
+              "distinctModelKeys": 3
+            }
+          }
+        },
+        {
+          "method": "all unpriced subscriptions keep group spend unavailable",
+          "expectedSubscriptionAndModelRows": 2,
+          "revisions": {
+            "original": {
+              "inputs": [
+                {
+                  "sourceID": "claude",
+                  "provider": "claude",
+                  "model": "deepseek-v4-flash",
+                  "displayName": "Claude"
+                },
+                {
+                  "sourceID": "cursor",
+                  "provider": "cursor",
+                  "model": "deepseek-v4-flash",
+                  "displayName": "Cursor"
+                }
+              ],
+              "distinctSourceIDs": 2,
+              "distinctModelKeys": 2
+            },
+            "before": {
+              "inputs": [
+                {
+                  "sourceID": "claude",
+                  "provider": "claude",
+                  "model": "deepseek-v4-flash",
+                  "displayName": "Claude"
+                },
+                {
+                  "sourceID": "claude:secondary",
+                  "provider": "claude",
+                  "model": "deepseek-v4-flash",
+                  "displayName": "Claude secondary"
+                }
+              ],
+              "distinctSourceIDs": 2,
+              "distinctModelKeys": 1
+            },
+            "after": {
+              "inputs": [
+                {
+                  "sourceID": "claude",
+                  "provider": "claude",
+                  "model": "deepseek-v4-flash",
+                  "displayName": "Claude"
+                },
+                {
+                  "sourceID": "codex:secondary",
+                  "provider": "codex",
+                  "model": "deepseek-v4-flash",
+                  "displayName": "Codex secondary"
+                }
+              ],
+              "distinctSourceIDs": 2,
+              "distinctModelKeys": 2
+            }
+          }
+        }
+      ],
+      "relatedFixtureAudit": [
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardModelTests.swift",
+          "disposition": "Currency-separated peers do not share a model group; invalid/nonfinite/overflow sources are excluded by completeness rules or assert only aggregate/chart behavior. Covered/uncovered partial model tests retain distinct Codex/Claude providers. No same-name cross-provider expectation lost."
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardDateTruthTests.swift",
+          "disposition": "USD partial token/cost peers remain Codex versus Claude; CAD invalid source is excluded while healthy Claude remains; EUR is a separate currency. Negative/overflow/mismatch valid rows use distinct model names. Empty coverage fixtures have no model rows. No further migrated model-key collapse."
+        },
+        {
+          "path": "Tests/CodexBarTests/SpendDashboardExportTests.swift",
+          "disposition": "Each migrated export/copy/save fixture builds one source, so no multi-source/model-key cardinality dependency."
+        }
+      ],
+      "limits": "Four named suites only, direct source inspection plus exact fixture-key extraction for the two failing methods; not runtime execution or a whole-repository uniqueness proof."
+    },
+    "assertionDisposition": {
+      "testDeclarationsBefore": 13,
+      "testDeclarationsAfter": 13,
+      "methodsAdded": 0,
+      "methodsRemoved": 0,
+      "methodsRenamed": 0,
+      "existingExpectationsByteIdentical": 73,
+      "newExpectations": 6,
+      "snapshotFixturesExact": true,
+      "moneyTokenModelLiteralsExact": true,
+      "otherMethodsExact": 11,
+      "newChecks": "Both cases assert source-ID lists, model-provider lists and per-model tokens. All four originally failing model-name/nil-cost expectations are unchanged."
+    },
+    "previousReadOnlyAuditRequalified": {
+      "historicalRepairRevision": "47cfdfcb09037b49b40d7c49b4aabce07c9e8e40",
+      "nowExplicitlyChangedPath": "Tests/CodexBarTests/SpendDashboardPartialCostTests.swift",
+      "reason": "This path was read-only in the prior source-ID audit. That historical receipt remains revision-bound; the new method-level proof explicitly qualifies this scoped change.",
+      "otherReadOnlyFilesStillExact": 22
+    },
+    "priorAccountingAndBoundaryProofs": "56 exact Cost suite files, four adapted Cost files/29 methods, four critical history suites, separate 12 shared day-selection methods, shared process/privacy and all product/catalog/generator/native/harness/schedule/frozen handoff source remain unchanged by this repair.",
+    "localChecks": [
+      {
+        "name": "preservation",
+        "command": [
+          "python3",
+          ".build/slim-product-work/partial-cost-7c294a61/check_preservation.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.075,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T07:37:50Z",
+          "ram_available_gib": 47.5,
+          "cpu_used_percent": 20.38,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1931,
+          "sampled_steal_percent": 0.318,
+          "cpu_psi_some_avg10_percent": 0.09
+        },
+        "classification": "pass"
+      },
+      {
+        "name": "make-check",
+        "command": [
+          "make",
+          "check"
+        ],
+        "exitCode": 2,
+        "elapsedSeconds": 0.095,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T07:38:03Z",
+          "ram_available_gib": 47.38,
+          "cpu_used_percent": 14.11,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1781,
+          "sampled_steal_percent": 0.313,
+          "cpu_psi_some_avg10_percent": 0.02
+        },
+        "classification": "unavailable: missing local native tool before native execution"
+      },
+      {
+        "name": "make-test",
+        "command": [
+          "make",
+          "test"
+        ],
+        "exitCode": 2,
+        "elapsedSeconds": 0.134,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [
+          {
+            "name": ".test-fixtures-eu4vwhlm",
+            "absentAfterCommand": true
+          }
+        ],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T07:38:03Z",
+          "ram_available_gib": 47.39,
+          "cpu_used_percent": 17.08,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1781,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 0.02
+        },
+        "classification": "unavailable: missing local native tool before native execution"
+      },
+      {
+        "name": "identity-provenance",
+        "command": [
+          "python3",
+          ".build/slim-product-work/partial-cost-7c294a61/check_identity.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.036,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T07:40:07Z",
+          "ram_available_gib": 47.53,
+          "cpu_used_percent": 13.56,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1981,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 0.63
+        },
+        "classification": "pass"
+      },
+      {
+        "name": "documentation-links",
+        "command": [
+          "node",
+          "Scripts/check-documentation-links.mjs"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.134,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T07:40:08Z",
+          "ram_available_gib": 47.54,
+          "cpu_used_percent": 14.06,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1981,
+          "sampled_steal_percent": 0.312,
+          "cpu_psi_some_avg10_percent": 0.63
+        },
+        "classification": "pass"
+      },
+      {
+        "name": "inventory",
+        "command": [
+          "python3",
+          ".build/slim-product-work/partial-cost-7c294a61/recount.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.524,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T07:40:27Z",
+          "ram_available_gib": 47.5,
+          "cpu_used_percent": 14.11,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2194,
+          "sampled_steal_percent": 0.313,
+          "cpu_psi_some_avg10_percent": 0.37
+        },
+        "classification": "pass"
+      }
+    ],
+    "normalProfileManifestSHA256": "136f44cb5604cf4364709c429e2e7ff8d275c0065d26bfb4896e1899008865d8",
+    "completeGitInventory": {
+      "sourceRevision": "66d8c2387597d2ba1ae7d87f821e3c6c60ea1a08",
+      "method": "Complete committed Git blob file/line/byte count and independent Test line-pattern count; runtime cases are not inferred.",
+      "counts": {
+        "productSwift": {
+          "files": 651,
+          "lines": 193218,
+          "bytes": 7944079
+        },
+        "productCHeaders": {
+          "files": 1,
+          "lines": 1,
+          "bytes": 21
+        },
+        "testSwift": {
+          "files": 733,
+          "lines": 252424,
+          "bytes": 10943106
+        }
+      },
+      "swiftTestingDeclarations": {
+        "swiftTestingDeclarations": 6570,
+        "filesWithTestAttributes": 691
+      }
+    },
+    "sourceInventoryDelta": {
+      "productSourceBytes": 0,
+      "testSwiftFiles": 0,
+      "testSwiftLines": 6,
+      "testSwiftBytes": 427,
+      "swiftTestingDeclarations": 0
+    },
+    "sourceIdentity": "Checks cover the test blob committed at 66d8c2387597d2ba1ae7d87f821e3c6c60ea1a08; publication after this source commit adds note/comparison evidence only.",
+    "limitations": [
+      "Swift/plutil/SwiftFormat/SwiftLint unavailable locally; make check/test exit2 before native formatting/compilation/runtime.",
+      "Bounded direct inspection plus fixture-key extraction is not whole-repository uniqueness proof or native runtime execution.",
+      "Prior-head one-shard success does not qualify the repair or the complete retained suite. Comparable cold-build and binary/bundle sizes remain unavailable."
+    ],
+    "nextGate": "Root-owned normal automatic exact-publication-head producer/shards/aggregate. Child did not watch/poll or dispatch a manual campaign.",
+    "evidenceReadbackChecks": [
+      {
+        "name": "evidence-coherence",
+        "command": [
+          "python3",
+          ".build/slim-product-work/partial-cost-7c294a61/check_evidence.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.239,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T07:42:39Z",
+          "ram_available_gib": 47.18,
+          "cpu_used_percent": 22.57,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2125,
+          "sampled_steal_percent": 0.313,
+          "cpu_psi_some_avg10_percent": 1.02
         }
       }
     ]

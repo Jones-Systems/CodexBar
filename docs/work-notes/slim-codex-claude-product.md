@@ -1054,4 +1054,29 @@ compiler and runtime results for the repair remain unavailable locally. Retain
 all prior accounting/scale/auth/history/TTY/catalog/generator/native/harness/
 schedule/frozen-handoff proofs; root owns automatic exact-head qualification.
 
+Source commit `66d8c2387597d2ba1ae7d87f821e3c6c60ea1a08` contains the bounded test/spec/note
+repair. Complete committed inventory confirms product 651 Swift files / 193218
+lines unchanged; tests 733 / 252424 lines / 10943106 bytes and 6570 declarations
+across 691 files. Counts add six test lines / 427 bytes, without test changes
+in cardinality or names. Prior run discovery has 6675 IDs at merge checkout
+`d2ac6e015ca6e8710c1be0535a3f54d59afc8a98`; it does not forecast the new head.
+The first six admitted commands observe CPU 13.56–20.38% and 47.38–47.54 GiB
+available, each with one serial process and the acquired nonblocking lock.
+One fully used core is 6.25% of host capacity. 181 documentation links pass.
+
+SpendDashboardPartialCostTests was a read-only path in the previous source-ID
+audit. That earlier receipt remains bound to its historical revision; this
+continuation explicitly qualifies the changed path with the two-method proof.
+The other 22 read-only paths from that audit remain byte-identical. Previous
+56 exact Cost suites/four adapted suites (29 methods), four critical history
+suites and the separate 12 shared day-selection cases remain untouched.
+The publication's following commit contains evidence only. App-size/cold-build
+comparison and native results for the new head remain pending; no savings inferred.
+
+Final evidence coherence passes against committed test blobs: 13 declarations,
+73 exact expectations, six additions, 11 exact other methods, seven base-exact
+production blocks, three read-only audit files, all 56 exact Cost suite blobs,
+Git whitespace and fixture-parent absence. This readback starts at CPU 22.57%
+with 47.18 GiB available, the acquired nonblocking lock and one serial process.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->
