@@ -80,6 +80,9 @@ changes to formerly exact cost blobs receive method-level preservation evidence.
 For Swift Testing property-access macro failures, materialize the unchanged
 nonoptional collection expression before asserting its property; preserve the
 filter/tuple predicate and expectation rather than changing the tested contract.
+Mixed-provider fixtures must retain distinct provider/scope keys after removal.
+Standalone menu fixtures must represent a supported state without the history
+cluster; keep both standalone separators and normal grouped-history assertions.
 
 Run `make check` and `make test`; report missing local Swift/formatter tools as
 unavailable. Use the shared nonblocking benchmark lock and fresh CPU/RAM admission

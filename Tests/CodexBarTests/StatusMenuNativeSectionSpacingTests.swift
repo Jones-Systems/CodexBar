@@ -39,6 +39,10 @@ struct StatusMenuNativeSectionSpacingTests {
                     modelBreakdowns: nil),
             ],
             updatedAt: Date()), provider: .claude)
+        // Before the first quota refresh finishes, cached cost stands alone without Plan Usage.
+        store._setSnapshotForTesting(nil, provider: .claude)
+        store.isRefreshing = true
+        store.refreshingProviders.insert(.claude)
 
         let controller = StatusItemController(
             store: store,
@@ -51,6 +55,7 @@ struct StatusMenuNativeSectionSpacingTests {
 
         let menu = controller.makeMenu(for: .claude)
         controller.menuWillOpen(menu)
+        #expect(!menu.items.contains { ($0.representedObject as? String) == "usageHistorySubmenu" })
         let costIndex = try #require(menu.items.firstIndex {
             ($0.representedObject as? String) == "menuCardCost"
         })
@@ -337,11 +342,13 @@ struct StatusMenuNativeSectionSpacingTests {
 
     private func makeSettings() -> SettingsStore {
         let suite = "StatusMenuNativeSectionSpacingTests-\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: suite)!
-        defaults.removePersistentDomain(forName: suite)
+        let defaults = InMemoryUserDefaults()
         let settings = SettingsStore(
             userDefaults: defaults,
-            configStore: testConfigStore(suiteName: suite))
+            configStore: testConfigStore(suiteName: suite),
+            codexCookieStore: InMemoryCookieHeaderStore(),
+            claudeCookieStore: InMemoryCookieHeaderStore(),
+            tokenAccountStore: InMemoryTokenAccountStore())
         settings.providerDetectionCompleted = true
         return settings
     }

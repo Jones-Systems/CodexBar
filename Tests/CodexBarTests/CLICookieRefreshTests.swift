@@ -25,7 +25,7 @@ struct CLICookieRefreshTests {
 
         #expect(Set(targets.map(\.id)) == [.codex, .claude])
         #expect(targets.contains(where: { $0.id == .claude }))
-        #expect(targets.contains(where: { $0.id == .claude }))
+        #expect(targets.contains(where: { $0.id == .codex }))
         #expect(targets.allSatisfy { $0.metadata.browserCookieOrder != nil })
         #expect(targets.allSatisfy { $0.fetchPlan.sourceModes.contains(.web) })
     }

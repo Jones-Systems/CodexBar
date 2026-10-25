@@ -574,4 +574,59 @@ macro error and 48 repetitions; the aggregate only reflects producer failure and
 skipped shards. No child watcher, manual campaign, new agent/review, merge or host
 action is started. Owned scratch is removed after publication/readback.
 
+Runtime fixture repair begins from verified clean sole-owned
+`232c5520b3c30680667dbf9979ff416f28b3ad8f`, matching open non-draft PR41 and
+unchanged PR39 base. Root's run `40158541514` compiles successfully; both workers
+restore/skip-build with verified complete fingerprints across the newer producer
+and older worker images. Both discover 6674 IDs. They stop after first failed
+groups (36 and 73 successful groups respectively, each of 85 selected groups),
+so neither full qualification nor savings is established.
+
+Diagnosis before edits: the former Perplexity cookie fixture was converted into
+an existing unscoped Codex key and overwrote its expected global value. Keep the
+Claude/default/account versus Codex/default/account isolation and all payload/count
+assertions; place the former third-provider payload under a distinct synthetic
+Codex profile scope. The standalone menu fixture converted Cursor to Claude;
+unchanged production Plan Usage grouping now applies. Use the real retained
+initial-quota-refresh state with cached cost but no usage snapshot, when existing
+policy hides Plan Usage, and assert that standalone precondition. Preserve the
+exact separator/nonadjacency assertions and production grouping. Touched menu
+settings use dictionary-backed defaults and memory stores.
+
+Bounded related inspection covers these three editable tests (including
+CLICookieRefreshTests' duplicate Claude presence check) plus read-only cookie
+conditional-mutation, Keychain cache, provider identity, animation signature,
+icon observation and StatusMenu fixtures. Restore the duplicate explicit presence
+check to distinct Codex/Claude IDs. No other demonstrated identity collapse was
+found in those scoped fixture regions. No removal, skip, looser assertion,
+accounting/scale or product-source change is planned. The write cone is exactly
+those three tests plus the existing spec/note/comparison. Scratch is owned under
+`.build/slim-product-work/runtime-232c`; root retains CI watching, with no child
+watcher, campaign, new agent/review, merge, installation or host effect.
+
+Runtime fixture implementation is limited to three test files. Exact-edit
+comparison against the captured `232c5520` blobs preserves all 52 test
+identities and 182 existing assertions; one standalone-menu precondition is
+added. The global/account/profile cookie entries now occupy five distinct keys
+across Codex and Claude, with every original payload and clear-count expectation
+retained. The original separator and grouped-history expectations remain intact.
+The six audit-only paths, all product source, other tests, architecture catalog,
+native artifact/fingerprint harness, schedule and frozen-consumption proofs are
+unchanged. The cache implementation and both production menu grouping files are
+also byte-identical to the PR39 base. No test is removed or skipped.
+
+Fresh admission before each local command allowed one serial process under the
+nonblocking benchmark lock: CPU 17.65–50.62%, available RAM 39.27–43.67 GiB;
+one fully used core is 6.25% of host capacity. Exact fixture preservation,
+normal/full profile validation, both existing generator `--check` commands,
+181 documentation links, the llms index and whitespace checks pass. The initial
+scratch inspector assumed a repeated fixture suffix was unique; constraining
+that inspection to the named standalone method corrected the inspector without
+changing test bytes. `make check` exits 2 at missing plutil before installing
+lint tools; `make test` exits 2 at missing Swift and verifies removal of its own
+fixture root. Native formatter/compiler/runtime checks remain unavailable
+locally. The source-only proof does not qualify either runtime repair; root's
+normal automatic exact-head CI is the next gate. App-size/cold-build comparison
+remains unavailable, and partial execution does not establish savings.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->

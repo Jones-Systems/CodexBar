@@ -274,6 +274,7 @@ struct CookieHeaderCacheTests {
         self.withIsolatedCookieCache {
             let claudeAccount = UUID()
             let codexAccount = UUID()
+            let codexProfile = CookieHeaderCache.Scope.profileHome("/synthetic/codex-profile")
 
             CookieHeaderCache.store(
                 provider: .claude,
@@ -290,7 +291,11 @@ struct CookieHeaderCacheTests {
                 scope: .managedAccount(codexAccount),
                 cookieHeader: "auth=codex-account",
                 sourceLabel: "Safari")
-            CookieHeaderCache.store(provider: .codex, cookieHeader: "pplx=web", sourceLabel: "Chrome")
+            CookieHeaderCache.store(
+                provider: .codex,
+                scope: codexProfile,
+                cookieHeader: "pplx=web",
+                sourceLabel: "Chrome")
 
             let cleared = CookieHeaderCache.clearAllScopesDetailed(provider: .claude)
 
@@ -300,7 +305,7 @@ struct CookieHeaderCacheTests {
             #expect(CookieHeaderCache.load(provider: .codex)?.cookieHeader == "auth=codex-global")
             #expect(CookieHeaderCache.load(provider: .codex, scope: .managedAccount(codexAccount))?
                 .cookieHeader == "auth=codex-account")
-            #expect(CookieHeaderCache.load(provider: .codex)?.cookieHeader == "pplx=web")
+            #expect(CookieHeaderCache.load(provider: .codex, scope: codexProfile)?.cookieHeader == "pplx=web")
         }
     }
 
