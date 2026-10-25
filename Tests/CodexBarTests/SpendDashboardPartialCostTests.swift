@@ -175,7 +175,7 @@ struct SpendDashboardPartialCostTests {
         let group = try Self.group(inputs: [
             .init(provider: .codex, displayName: "Codex", snapshot: priced),
             .init(provider: .claude, displayName: "Claude", snapshot: unpriced),
-            .init(id: "claude:secondary", provider: .claude, displayName: "Claude secondary", snapshot: unpriced),
+            .init(id: "codex:secondary", provider: .codex, displayName: "Codex secondary", snapshot: unpriced),
         ])
 
         #expect(group.totalCost == 4)
@@ -188,6 +188,9 @@ struct SpendDashboardPartialCostTests {
         #expect(group.modelHistoryCompleteness == .incomplete)
         #expect(group.models.map(\.modelName) == ["gpt-5.4-mini", "deepseek-v4-flash", "deepseek-v4-flash"])
         #expect(group.models.map(\.totalCost) == [4, nil, nil])
+        #expect(group.providers.map(\.id) == ["codex", "claude", "codex:secondary"])
+        #expect(group.models.map(\.provider) == [.codex, .claude, .codex])
+        #expect(group.models.map(\.totalTokens) == [40, 100, 100])
         #expect(spendDashboardModelHistoryPresentation(group) == .partial)
         CodexBarLocalizationOverride.$appLanguage.withValue("en") {
             #expect(spendDashboardGroupCostText(group).hasPrefix("~"))
@@ -205,7 +208,7 @@ struct SpendDashboardPartialCostTests {
             last30DaysCostUSD: nil)
         let group = try Self.group(inputs: [
             .init(provider: .claude, displayName: "Claude", snapshot: unpriced),
-            .init(id: "claude:secondary", provider: .claude, displayName: "Claude secondary", snapshot: unpriced),
+            .init(id: "codex:secondary", provider: .codex, displayName: "Codex secondary", snapshot: unpriced),
         ])
 
         #expect(group.totalCost == nil)
@@ -215,6 +218,9 @@ struct SpendDashboardPartialCostTests {
         #expect(group.modelHistoryCompleteness == .incomplete)
         #expect(group.models.map(\.modelName) == ["deepseek-v4-flash", "deepseek-v4-flash"])
         #expect(group.models.map(\.totalCost) == [nil, nil])
+        #expect(group.providers.map(\.id) == ["claude", "codex:secondary"])
+        #expect(group.models.map(\.provider) == [.claude, .codex])
+        #expect(group.models.map(\.totalTokens) == [100, 100])
         #expect(spendDashboardModelHistoryPresentation(group) == .partial)
         CodexBarLocalizationOverride.$appLanguage.withValue("en") {
             #expect(spendDashboardGroupCostText(group) == "Spend unavailable")

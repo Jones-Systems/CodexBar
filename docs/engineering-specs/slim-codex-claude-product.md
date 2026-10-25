@@ -104,6 +104,14 @@ persistence seam with explicit synthetic account scope. Keep both saved series,
 values and provider/account isolation; production Claude retains fixed lane roles
 and its stricter identity policy.
 
+SPEND subscription identity and model identity are separate contracts: source
+rows retain account-scoped IDs, while model rows aggregate by provider/model.
+Partial-pricing fixtures must use distinct retained provider/model keys to preserve
+same-name cross-provider rows; a scoped Codex account can supply the third
+subscription beside priced Codex and unpriced Claude. Keep known/nil totals,
+all-unpriced unavailability, row cardinality, token conservation and presentation.
+Do not change production model grouping to preserve an invalid migrated fixture.
+
 Run `make check` and `make test`; report missing local Swift/formatter tools as
 unavailable. Use the shared nonblocking benchmark lock and fresh CPU/RAM admission
 before local test starts. Hosted macOS/Linux compilation and isolated tests must

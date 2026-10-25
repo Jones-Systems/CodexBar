@@ -999,4 +999,59 @@ counts, method/hash proofs and prior accounting/native handoff records agree.
 Admission was CPU 13.75% / 46.66 GiB available, nonblocking lock and one serial
 process; Git whitespace passed and the owned fixture parent remains absent.
 
+Continuation from root on exact `7c294a614db77df3177e408fcdf4b2cb927fe601`:
+run `40171535655` passes changes/lint, all three Linux jobs and the macOS
+producer. Shard 1 (`121106055365`) succeeds; shard 0 (`121106055371`) verifies
+native complete fingerprints but reports four assertions in two partial-cost
+methods, without a timeout. Aggregate was still pending at root's snapshot;
+no separate aggregate defect is established. Publication has no other-shard hold.
+Existing coordinator remains sole Git owner in the bound product worktree.
+Bounded write scope is SpendDashboardPartialCostTests.swift plus the existing
+spec/note/comparison; read-only audit scope is that suite plus related changed
+Model/DateTruth/Export fixtures. Retain all source/native/harness/schedule/frozen
+handoff boundaries and accounting scales.
+
+Source provenance establishes different identity layers: ProviderInput/ProviderRow
+use the source ID, while ModelKey and ModelRow use provider plus model name.
+The two original partial-pricing fixtures used Claude and Cursor with the same
+unpriced model name, so they produced two model rows. Replacing Cursor with a
+second Claude source preserved subscription IDs but collapsed the model key.
+The grouping implementation is unchanged. Replace only that secondary input
+with scoped Codex `codex:secondary`: it stays distinct from bare Codex's priced
+model and from Claude's identical unpriced model. Keep every original row/name,
+nil-cost, token, partial-pricing and presentation assertion; add explicit source
+IDs, model providers and per-model tokens. No production grouping/dedup change,
+expectation reduction, test removal or scale adjustment is planned.
+
+The two repaired methods keep all 13 suite declarations and all 73 existing
+expectations byte-for-byte, including all four reported model-name/nil-cost
+expectations. Six new assertions verify source IDs, model provider identities
+and per-model tokens (40/100/100 and 100/100). Both snapshot fixture blocks,
+costs, token counts and model names remain exact; the other 11 methods and
+all helpers are byte-identical. Test delta is six lines / 427 bytes. Scoped
+Codex is a separate subscription source; its unpriced model is intentionally
+distinct from the priced Codex model and identical in name to Claude's model,
+preserving the original cross-provider grouping proof. No product change.
+
+The bounded four-suite audit keeps the other three suites byte-identical.
+Model tests separate currencies, exclude invalid/incomplete sources as intended,
+or retain distinct Codex/Claude model peers. DateTruth uses separate currencies
+and distinct provider/model keys, including independent malformed-metric cases;
+its same-provider rows either have distinct model names or no model rows.
+Each migrated Export fixture has one input. No additional repair is indicated
+by this bounded audit; it is not whole-repository uniqueness proof. Seven
+production blocks, including ModelKey, modelSummary, input/currency summaries,
+provider rows and known-cost totals, are exact to base. The prior source-ID
+literal audit did not claim provider/model-key uniqueness; this evidence covers
+that separate grouping layer explicitly.
+
+Preservation/fixture-key checks and Git whitespace pass with fresh CPU admission,
+the nonblocking benchmark lock and one serial process. `make check` passes the
+normal-profile contract then exits 2 at missing plutil; `make test` exits 2 at
+missing Swift before build/discovery/execution. Its owned
+`.test-fixtures-eu4vwhlm` is removed and absence verified. Native formatter,
+compiler and runtime results for the repair remain unavailable locally. Retain
+all prior accounting/scale/auth/history/TTY/catalog/generator/native/harness/
+schedule/frozen-handoff proofs; root owns automatic exact-head qualification.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->
