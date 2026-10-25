@@ -152,9 +152,10 @@ struct ProviderArchitectureGatekeeperTests {
         #expect(Set(descriptors.filter(\.tokenCost.preservesCalendarDaysInCharts).map(\.id)) == [.codex])
         #expect(Set(descriptors.filter(\.tokenCost.supportsTokenSnapshot).map(\.id)) == [.codex, .claude])
         #expect(Set(descriptors.filter { $0.cli.binaryLocator != nil }.map(\.id)) == [.codex, .claude])
-        #expect(descriptors.compactMap { descriptor in
+        let apiKeyDebugLabels = descriptors.compactMap { descriptor in
             descriptor.credentials?.apiKeyDebugLabel.map { (descriptor.id, $0) }
-        }.isEmpty)
+        }
+        #expect(apiKeyDebugLabels.isEmpty)
 
         #expect(CodexProviderDescriptor.descriptor.tokenCost.menuHintLines == [.localized("codex_api_estimate_hint")])
         #expect(ClaudeProviderDescriptor.descriptor.tokenCost.menuHintLines == [.estimate])

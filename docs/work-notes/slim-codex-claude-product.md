@@ -525,4 +525,20 @@ qualify this repair. Root's next gate remains normal automatic exact-head produc
 both execution shards and applicable Linux/aggregate checks; no child watcher,
 manual campaign, agent/review round, merge, installation or host action is started.
 
+
+Narrow macro repair begins at verified clean sole-owned head
+`898e776bd385132f52fd472569ffa1e1ac988f26`, with matching open non-draft PR41
+and unchanged PR39 base. Root's run `40157119793`, producer `121060801893`,
+passes SwiftFormat (0/1345 files, four skips) and complete native preflight,
+then reports one distinct test compiler error repeated 48 times. At gatekeeper
+lines 155–157, Swift Testing expands a nonoptional compactMap result using an
+optional `.isEmpty` getter. Plan: evaluate the exact descriptor/credential/tuple
+expression into a named local before #expect; preserve the empty expectation,
+all neighboring assertions, test identity and every scanner/catalog byte.
+Check adjacent assertions for the same shape. Only that test and existing
+spec/note/comparison are owned for this repair. Product/accounting/harness/native/
+fingerprint/schedule/frozen-consumption bytes stay unchanged. Scratch is owned
+at `.build/slim-product-work/macro-898e` and removed after durable publication.
+Root retains automatic CI watching; no manual run, agent/review or host effect.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->

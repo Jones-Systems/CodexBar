@@ -77,6 +77,9 @@ Synthetic screenshot inputs use distinct Codex/Claude IDs. Pure history fixture
 helpers stay nonisolated; actor annotations must follow actual actor-owned state.
 Feature-only test removals receive a per-method reason in the Work Note/comparison;
 changes to formerly exact cost blobs receive method-level preservation evidence.
+For Swift Testing property-access macro failures, materialize the unchanged
+nonoptional collection expression before asserting its property; preserve the
+filter/tuple predicate and expectation rather than changing the tested contract.
 
 Run `make check` and `make test`; report missing local Swift/formatter tools as
 unavailable. Use the shared nonblocking benchmark lock and fresh CPU/RAM admission
