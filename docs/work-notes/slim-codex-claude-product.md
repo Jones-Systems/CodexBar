@@ -1360,4 +1360,63 @@ counts/scope, whitespace and fixture absence. Admission: CPU 14.91%, 46.58 GiB
 available, one serial process and acquired nonblocking lock. Native exact-head
 qualification remains root-owned and pending.
 
+Root account-override continuation on exact `0e7aa206e18cd84b8f4c9d351a13047ab1af9e75`,
+run `40183666633` / merge `82ec5f567082ad918dde872cea4060b6c10645d4`:
+changes/lint/Linux x64/ARM64/musl/producer and shard 1 (`121142590944`) pass.
+Shard 0 (`121142590990`) verifies complete native fingerprints across old
+producer/new worker images, passes 77/85 groups, and reports only `.auto` versus
+`.manual` in the app cookie-account snapshot override case. Group: 46 tests /
+4 suites; no worker builds/retries/timeouts. Aggregate `121144940578` is
+consequential, not independent. Fan-in is complete; no publication hold. Existing
+bound worktree, sole Git owner and Sol Max/default pin remain. Write only that
+precedence test file and the existing spec/note/comparison; related source and
+three credential/cookie fixture suites remain read-only. All protected product,
+accounting/scale/history/auth/TTY/fallback/catalog/native/harness/workflow/schedule/
+frozen boundaries stay. No new agents/reviews/campaign/watch/merge/install effects.
+
+Source trace: the original Cursor fixture used the shared cookie resolver, which
+forces manual mode whenever a selected/override cookie account exists. Claude's
+base-exact app snapshot instead preserves configured cookie source when its saved
+account list is empty. It still resolves the provider-matching override first,
+normalizes its header and suppresses configured credential fallback when an
+account exists. A nonempty saved Claude account list causes manual mode, while
+its selected ID is not mutated by snapshot construction. Hence replacing Cursor
+with Claude did not preserve the old mode-forcing precondition. Startup detection
+defaults to disabled under tests, and only changes provider enablement; it is
+not the cause. No product-routing regression is established.
+
+Keep the original manual/header/empty-store assertions with explicit manual mode
+for the empty-store Claude override. Use memory-only defaults/cookie/account
+stores, synthetic workspace config, a no-op disabled Keychain policy, explicit
+no-startup-detection and watcher cleanup in this one fixture. Then save a distinct
+Claude account, set configured mode back to auto, and prove the same explicit
+override wins without changing saved IDs, active index, source or configured
+header. Verify a foreign-provider override cannot replace the saved Claude
+account and cannot enable Codex's disabled cookie mode or replace its separate
+configured header. All original assertions and synthetic account literals remain;
+only this method changes, with no production policy edits or test removals.
+Adjacent generic resolver, CLI/Claude routing, malformed-account fail-closed and
+credential-routing fixtures preserve their distinct supported preconditions.
+
+Focused preservation passes: all 26 test names/declarations and 83 existing
+expectations remain exact, including the three originally failing-method checks.
+Only that method changes (+40 lines / 2468 bytes); all other methods/helpers and
+the original override account initializer are byte-identical. Eighteen assertions
+add web routing, non-mutation of configured headers/source, distinct saved-account
+precedence and unchanged saved IDs/active index, foreign-provider rejection and
+Codex's disabled-cookie/header isolation. Fourteen read-only source/fixture paths
+and all 56 exact Cost suite blobs remain unchanged. Base-exact proof covers
+Claude app cookie snapshot, shared cookie resolver, credential normalization and
+provider-matching override dispatch. No production/catalog/generator changes.
+
+`make check` passes the normal-profile contract then exits 2 at missing plutil;
+`make test` exits 2 at missing Swift before build/discovery/runtime. Owned
+`.test-fixtures-zxeebxk8` is removed and absence verified. Documentation links
+pass (181). Each command uses fresh telemetry, the acquired nonblocking benchmark
+lock and one serial process: CPU 19.24–31.68%, RAM 46.49–46.68 GiB available;
+one fully used core is 6.25% of capacity. Native formatter/compiler/runtime are
+unavailable locally; no tools installed or real account/credential probes run.
+Root retains exact-head qualification. Accounting/scale/history/auth/TTY/fallback
+and native/harness/workflow/schedule/frozen proofs remain unchanged.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->

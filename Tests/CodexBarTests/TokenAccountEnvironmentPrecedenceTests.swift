@@ -47,9 +47,20 @@ struct TokenAccountEnvironmentPrecedenceTests {
 
     @Test
     func `app snapshot override resolves cookie account without mutating stored selection`() throws {
-        let settings = Self.makeSettingsStore(suite: "TokenAccountEnvironmentPrecedenceTests-cookie-override-app")
-        settings.claudeCookieSource = .auto
+        let settings = SettingsStore(
+            userDefaults: InMemoryUserDefaults(),
+            configStore: testConfigStore(suiteName: "TokenAccountEnvironmentPrecedenceTests-cookie-override-app"),
+            codexCookieStore: InMemoryCookieHeaderStore(),
+            claudeCookieStore: InMemoryCookieHeaderStore(),
+            tokenAccountStore: InMemoryTokenAccountStore(),
+            keychainAccessPolicy: SettingsStoreKeychainAccessPolicy(
+                setDisabled: { _ in }, isExplicitlyDisabled: { true }),
+            performInitialProviderDetection: false)
+        defer { settings.configFileWatcher?.stop() }
+        settings.claudeCookieSource = .manual
         settings.claudeCookieHeader = "configured=true"
+        settings.codexCookieSource = .off
+        settings.codexCookieHeader = "codex-configured=true"
         let account = ProviderTokenAccount(
             id: UUID(),
             label: "Override",
@@ -65,6 +76,35 @@ struct TokenAccountEnvironmentPrecedenceTests {
         #expect(claudeSettings.cookieSource == .manual)
         #expect(claudeSettings.manualCookieHeader == "sessionKey=account")
         #expect(settings.tokenAccounts(for: .claude).isEmpty)
+        #expect(claudeSettings.usageDataSource == .web)
+        #expect(settings.claudeCookieSource == .manual)
+        #expect(settings.claudeCookieHeader == "configured=true")
+        #expect(snapshot.codex?.cookieSource == .off)
+        #expect(snapshot.codex?.manualCookieHeader == "codex-configured=true")
+
+        settings.addTokenAccount(provider: .claude, label: "Saved", token: "sessionKey=saved")
+        let savedAccount = try #require(settings.selectedTokenAccount(for: .claude))
+        settings.claudeCookieSource = .auto
+        #expect(savedAccount.id != account.id)
+        #expect(settings.claudeCookieSource == .auto)
+        let withStoredSelection = ProviderRegistry.makeSettingsSnapshot(
+            settings: settings,
+            tokenOverride: TokenAccountOverride(provider: .claude, account: account))
+        #expect(withStoredSelection.claude?.cookieSource == .manual)
+        #expect(withStoredSelection.claude?.manualCookieHeader == "sessionKey=account")
+        #expect(settings.selectedTokenAccount(for: .claude)?.id == savedAccount.id)
+        #expect(settings.tokenAccounts(for: .claude).map(\.id) == [savedAccount.id])
+        #expect(settings.tokenAccountsData(for: .claude)?.activeIndex == 0)
+        #expect(settings.claudeCookieSource == .auto)
+        #expect(settings.claudeCookieHeader == "configured=true")
+
+        let foreignOverride = ProviderRegistry.makeSettingsSnapshot(
+            settings: settings,
+            tokenOverride: TokenAccountOverride(provider: .codex, account: account))
+        #expect(foreignOverride.claude?.manualCookieHeader == "sessionKey=saved")
+        #expect(foreignOverride.codex?.cookieSource == .off)
+        #expect(foreignOverride.codex?.manualCookieHeader == "codex-configured=true")
+        #expect(settings.selectedTokenAccount(for: .claude)?.id == savedAccount.id)
     }
 
     @Test

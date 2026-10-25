@@ -133,6 +133,12 @@ visible, bounded quota bars. Distinguish the supported three-segment inline
 height from obsolete larger provider inventories; quota presence must not be
 inferred solely from row height or weakened to fit missing bars.
 
+Account-override fixtures use retained-provider manual-cookie prerequisites,
+then prove explicit account precedence over a distinct saved selection without
+mutating provider settings or account IDs. Preserve disabled cross-provider
+cookie policy and fail-closed credential behavior with memory-only stores and
+explicit startup isolation; retired mode-forcing policy is not a Claude default.
+
 Run `make check` and `make test`; report missing local Swift/formatter tools as
 unavailable. Use the shared nonblocking benchmark lock and fresh CPU/RAM admission
 before local test starts. Hosted macOS/Linux compilation and isolated tests must
