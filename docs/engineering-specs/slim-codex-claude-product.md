@@ -119,6 +119,10 @@ the actual extra-usage rate window without restoring the removed Cursor-only
 controller exception. Check explicit quota-versus-spend preference switching and
 missing-cost fallback with both present-primary and absent-primary states.
 
+Derived percentage guards allow only a justified binary64 rounding bound;
+keep exact user-facing text expectations and fail closed for missing/nonfinite
+values. Do not round production accounting/quota values to satisfy a setup guard.
+
 Run `make check` and `make test`; report missing local Swift/formatter tools as
 unavailable. Use the shared nonblocking benchmark lock and fresh CPU/RAM admission
 before local test starts. Hosted macOS/Linux compilation and isolated tests must

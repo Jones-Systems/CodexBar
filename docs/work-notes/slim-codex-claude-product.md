@@ -1179,4 +1179,42 @@ failed byte assumption is recorded with the corrected pass. Git whitespace and
 fixture-parent absence pass. Admission: CPU 17.03%, 47.41 GiB available, one
 serial process and acquired nonblocking lock. Native qualification remains pending.
 
+Root numeric continuation on exact `e54c39f353197e5e5fb7852272e67e676b46b473`,
+run `40176584648` / merge `1288fd8858d664d1e9b3b1f2b35b337344106edd`:
+changes/lint/Linux x64/ARM64/musl/producer and shard 1 (`121121500880`) pass.
+Shard 0 (`121121500881`) verifies complete native fingerprints across producer/
+worker images, passes 71/85 groups, and reports only the newly added exact
+numeric setup guard: 56.00000000000001 versus 56. Original display expectations
+in the group pass. No worker build/retry/timeout. Aggregate `121123897388` reflects
+that failed shard, with no new behavioral defect. Fan-in is complete; no hold.
+Sole owned source change is one assertion in StatusItemExtraUsageMetricTests.swift,
+plus existing evidence documents. All protected product/accounting/native/harness/
+workflow/schedule/frozen boundaries remain intact.
+
+The unchanged mapper computes `(56 / 100) * 100` in binary64: division rounds
+0.56, then multiplication yields one ULP above 56. The new setup assertion was
+incorrectly exact. Use a two-ULP bound around 56 for these two elementary rounded
+operations; the relative error bound (2u + u²), u=2^-53, is below that allowance.
+Missing windows map to NaN so the guard still fails closed. Keep every fixture,
+original exact display expectation, other new guard and production value unchanged.
+The bounded audit covers only the 11 newly introduced guards: the other ten
+compare enums, exact formatted strings, or a copied quota window with no new
+arithmetic, so they keep exact comparisons. This corrects a new numeric-test
+assumption and does not reduce retained display or quota behavior coverage.
+
+Focused binary64/preservation checks pass: observed error is one ULP
+(7.105427357601002e-15 percentage points), and the two-operation error bound
+1.2434497875801753e-14 is below the two-ULP allowance 1.4210854715202004e-14.
+Exact/observed/two-ULP values pass; three ULPs, missing->NaN, infinities and wrong
+quotas fail. This is a Python binary64 diagnostic, not native Swift execution.
+The only test-file byte change is that one newly added guard (+36 bytes, zero
+line delta); four declarations/15 assertions, original four expectations and
+other ten new guards remain. All fixtures, all other file bytes and production
+source are exact to the prior head. Normal-profile contract, 181 docs links and
+Git whitespace pass. `make check`/`make test` remain unavailable (exit 2) at
+missing plutil/Swift before native execution. Owned `.test-fixtures-4b4s0dm4`
+is removed and absence verified. Every check starts with fresh telemetry,
+nonblocking lock and one serial process. Root retains native qualification;
+all accounting/scale/auth/history/TTY/catalog/harness/schedule/frozen proofs stay.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->

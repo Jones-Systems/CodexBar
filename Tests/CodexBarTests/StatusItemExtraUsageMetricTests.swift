@@ -30,7 +30,7 @@ struct StatusItemExtraUsageMetricTests {
         #expect(controller.settings.menuBarMetricPreference(for: .claude, snapshot: snapshot) == .extraUsage)
         #expect(controller.menuBarDisplayText(for: .claude, snapshot: snapshot) == "$56.00")
         let extraUsageWindow = controller.menuBarMetricWindow(for: .claude, snapshot: snapshot)
-        #expect(extraUsageWindow?.usedPercent == 56)
+        #expect(abs((extraUsageWindow?.usedPercent ?? .nan) - 56) <= 2 * Double(56).ulp)
         let displayText = MenuBarDisplayText.displayText(
             mode: controller.settings.menuBarDisplayMode,
             percentWindow: extraUsageWindow,
