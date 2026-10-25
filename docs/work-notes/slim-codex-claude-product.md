@@ -408,13 +408,13 @@ cost/history/process/fixture proofs remain intact. Root retains automatic exact-
 CI watching; no manual run, extra agent/review, remote merge or host effect occurs.
 
 Exact committed-blob [comparison](../engineering-specs/slim-codex-claude-comparison.json)
-at source revision `7a8a3717827e6302defd1175269a72ec07499bf7`:
+at source revision `6e511c38eb263d590700ceeccf93ae0d5894bf7a`:
 
 | Inventory | Base | Product candidate |
 | --- | ---: | ---: |
 | Product Swift files / lines | 1,201 / 307,271 | 651 / 193,218 |
 | Product C/header files / lines | 21 / 79,719 | 1 / 1 |
-| Test Swift files / lines | 1,059 / 368,064 | 733 / 252,268 |
+| Test Swift files / lines | 1,059 / 368,064 | 733 / 252,269 |
 | Lexical Swift Testing declarations | 10,616 | 6,569 |
 
 331 test paths were removed and 5 added, including shared-suite renames; these are
@@ -540,5 +540,38 @@ spec/note/comparison are owned for this repair. Product/accounting/harness/nativ
 fingerprint/schedule/frozen-consumption bytes stay unchanged. Scratch is owned
 at `.build/slim-product-work/macro-898e` and removed after durable publication.
 Root retains automatic CI watching; no manual run, agent/review or host effect.
+
+
+Macro repair `6e511c38eb263d590700ceeccf93ae0d5894bf7a` changes only the gatekeeper expression: the exact
+`descriptors.compactMap` closure, optional credential-label filter and
+`(descriptor.id, $0)` tuple now evaluate into `apiKeyDebugLabels` before
+`#expect(apiKeyDebugLabels.isEmpty)`. compactMap returns the nonoptional tuple
+array identified in the diagnostic. The macro no longer receives the nested
+optional chain inside its property-access expression; the original empty-list
+expectation and evaluation are preserved. No descriptor, test, assertion or
+neighboring contract is removed or weakened.
+
+Static readback proves the entire file except that extraction byte-identical:
+39 test declarations and 77 #expect calls remain. All seven other assertions in
+the affected method are exact. Adjacent ordered closures and capability checks
+have no other nested optional-chain/closure/direct-isEmpty shape. Scanner and
+catalog suffix bytes are unchanged; all 312 line anchors still refer to unchanged
+shipped source, so no reanchor is needed. Accounting (56 exact cost files, four
+adapted files/all 29 methods), other tests, scale/fixture, product, artifact/native,
+harness, schedule and frozen-consumption bytes are unchanged from `898e776`.
+Inventory changes only by one test line and 50 bytes: 733 test Swift files /
+252,269 lines; 6,569 Swift Testing declarations. Product counts are unchanged.
+
+Fresh per-command CPU admission and successful nonblocking serial lock checks pass
+source preservation, both profile contracts, parser/provider generation, 181
+documentation links, llms index and whitespace. Required `make check` and
+`make test` again stop with absent plutil/Swift (exit 2), before any installer,
+formatter/compiler or native test; the fixture parent was removed and absence
+verified. No tools were installed. Native macro expansion and repaired-head
+compilation/execution remain unavailable locally and pending automatic CI.
+Root's exact prior-head formatter/preflight success is recorded, with the single
+macro error and 48 repetitions; the aggregate only reflects producer failure and
+skipped shards. No child watcher, manual campaign, new agent/review, merge or host
+action is started. Owned scratch is removed after publication/readback.
 
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->
