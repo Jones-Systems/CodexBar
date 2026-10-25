@@ -1,7 +1,7 @@
 {
   "schema": "codexbar-product-removal-comparison/v1",
   "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
-  "candidateSourceRevision": "38d63baa0375809b36f79bd7770a301a78128768",
+  "candidateSourceRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d",
   "pullRequest": "https://github.com/Jones-Systems/CodexBar/pull/41",
   "baseBranch": "work/test-value-bar-pass2-20261024",
   "method": "Exact committed Git blobs; files include Swift source under Sources and tests under Tests, TestsLinux, TestsPlugin; line count uses bytes.splitlines; lexical Swift Testing @Test declaration counts exclude comments/strings and do not represent parameterized/runtime cases.",
@@ -26,8 +26,8 @@
     "after": {
       "productSwift": {
         "files": 651,
-        "lines": 193214,
-        "bytes": 7943897
+        "lines": 193218,
+        "bytes": 7944079
       },
       "productCHeaders": {
         "files": 1,
@@ -36,8 +36,8 @@
       },
       "testSwift": {
         "files": 734,
-        "lines": 252270,
-        "bytes": 10934348
+        "lines": 252332,
+        "bytes": 10937435
       }
     }
   },
@@ -47,7 +47,7 @@
       "filesWithTestAttributes": 1006
     },
     "after": {
-      "swiftTestingDeclarations": 6544,
+      "swiftTestingDeclarations": 6545,
       "filesWithTestAttributes": 692
     }
   },
@@ -359,52 +359,50 @@
     "architectureScannerByteIdentical": true,
     "shippedSwiftFilesInspected": 651,
     "architectureSourceFindings": 0,
-    "latestCatalogAnchorCheckRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
-    "latestCatalogAnchorCheck": "312 exact anchors match; scanner bytes unchanged; not native scanner execution"
+    "latestCatalogAnchorCheckRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d",
+    "latestCatalogAnchorCheck": "312 exact anchors match;2 line pins shift+5; all other metadata/scanner bytes unchanged,not native scanner execution."
   },
   "checks": {
     "makeCheck": {
       "status": "unavailable",
       "exitCode": 2,
       "reason": "plutil absent",
-      "latestAttemptRevision": "38d63baa0375809b36f79bd7770a301a78128768"
+      "latestAttemptRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d"
     },
     "makeTest": {
       "status": "unavailable",
       "exitCode": 2,
       "reason": "Swift absent; no test executable ran",
-      "latestAttemptRevision": "38d63baa0375809b36f79bd7770a301a78128768"
+      "latestAttemptRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d"
     },
     "normalAndFullProfileManifests": {
       "status": "pass",
-      "latestCheckRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
-      "profiles": [
-        "normal",
-        "full"
-      ]
+      "latestCheckRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d",
+      "normal": "passed at start of make check and make test",
+      "full": "explicit validate pass"
     },
     "documentationLinks": {
       "status": "pass",
       "localLinks": 181,
-      "latestAttemptRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b"
+      "latestAttemptRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d"
     },
     "llmsIndex": {
       "status": "pass",
-      "latestAttemptRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b"
+      "latestAttemptRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d"
     },
     "whitespace": "pass",
     "providerManifestGeneration": {
       "status": "pass",
       "method": "Existing generator --write followed by --check; only one generated Swift doccomment differed; two retained providers",
       "revision": "f1bae83de761ee383e5845111993671f1ed308cb",
-      "latestCheckRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b"
+      "latestCheckRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d"
     },
     "codexParserHash": {
       "status": "pass",
       "method": "Existing generator --write followed by --check",
       "value": "56738678d8c0245c",
       "generatedOnlyRepairRevision": "e0575c44592208fa16d0ac71d7b14044c0b49418",
-      "latestCheckRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
+      "latestCheckRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d",
       "latestCheckMethod": "Existing generator --check; value unchanged"
     },
     "portableHarnessFixtures": {
@@ -451,9 +449,11 @@
       "repairRevision": "b0e2069e515ffecd72de920f0aca96547750ab55"
     },
     "swiftFormat": {
-      "status": "unavailable locally; new exact-head CI pending",
-      "repairRevision": "38d63baa0375809b36f79bd7770a301a78128768",
-      "priorHostedFailure": "Only 3 residual diagnostics in 2 files at88d766182; compiler not reached"
+      "status": "pass at504398c14; repaired new head pending",
+      "qualifiedRevision": "504398c14944516191d9b162135f504634f3deb9",
+      "repairRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d",
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40153719090",
+      "reason": "No native formatter locally; not inherited as a new-head pass"
     }
   },
   "hostedEvidence": {
@@ -531,6 +531,24 @@
       "phase": "lint-macos before compiler/native preflight",
       "compileResult": "not reached",
       "currentCandidateResult": "pending automatic CI; not inferred from older Linux or prerequisite results"
+    },
+    "latestProductCompilerAttempt": {
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40153719090",
+      "producerJobID": 121050508845,
+      "prHeadRevision": "504398c14944516191d9b162135f504634f3deb9",
+      "workflowCheckoutRevision": "2cf0e8d9341f19223ce3173ad84fba6eed92dda1",
+      "swiftFormat": "pass:0/1346 files require formatting,4skipped",
+      "nativeToolPreflight": {
+        "status": "complete",
+        "build_allowed": true,
+        "host_status": "complete"
+      },
+      "distinctSourceDiagnostics": [
+        "/Users/runner/work/CodexBar/CodexBar/Sources/CodexBar/SettingsStore.swift:339:14: error: value of type 'SettingsStore' has no member 'ensureAlibabaProviderAutoEnabledIfNeeded'",
+        "/Users/runner/work/CodexBar/CodexBar/Sources/CodexBar/UsageStore.swift:540:38: error: value of type 'UsageStore' has no member 'isEnabledProviderInstance'"
+      ],
+      "source": "Root saved exact producer diagnostics; repeated compile diagnostics deduplicated by exact source message",
+      "aggregate": "Producer failure causes selected shards to skip; no distinct aggregate defect reported."
     }
   },
   "appSizeAndBuildComparison": {
@@ -947,7 +965,7 @@
     ],
     "deferredReason": "Three fresh below-threshold admissions, separated by ready source/evidence work, each found shared benchmark.lock busy. No test command or queued wait started. Existing local tool absences also prevent native make check/test. Prior exact-revision check results are retained as historical evidence, not new-head passes."
   },
-  "countMethodLatest": "Exact prior committed inventory plus verified two-file Git-blob delta: product bytes +5, test bytes -8; file/line and declaration inventories unchanged.",
+  "countMethodLatest": "Exact prior committed Git inventory plus four-file committed repair delta: product +4 lines/+182 bytes, tests +62 lines/+3087 bytes; no file changes; one parameterized @Test declaration added.",
   "swiftFormatRepair": {
     "baseRevision": "1d9787f8b4075068f3282cb723e42170a6e702c3",
     "repairRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
@@ -3272,6 +3290,410 @@
               "cpu_psi_some_avg10_percent": 2.39
             },
             "summary": "CPU 26.56% used; 41.14 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "status": "passed",
+        "exitCode": 0,
+        "output": "llms index OK: docs/llms.txt\n"
+      }
+    ]
+  },
+  "compilerRepair": {
+    "baseRevision": "504398c14944516191d9b162135f504634f3deb9",
+    "repairRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d",
+    "hostedFailingBefore": {
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40153719090",
+      "producerJobID": 121050508845,
+      "prHeadRevision": "504398c14944516191d9b162135f504634f3deb9",
+      "workflowCheckoutRevision": "2cf0e8d9341f19223ce3173ad84fba6eed92dda1",
+      "swiftFormat": "pass:0/1346 files require formatting,4skipped",
+      "nativeToolPreflight": {
+        "status": "complete",
+        "build_allowed": true,
+        "host_status": "complete"
+      },
+      "distinctSourceDiagnostics": [
+        "/Users/runner/work/CodexBar/CodexBar/Sources/CodexBar/SettingsStore.swift:339:14: error: value of type 'SettingsStore' has no member 'ensureAlibabaProviderAutoEnabledIfNeeded'",
+        "/Users/runner/work/CodexBar/CodexBar/Sources/CodexBar/UsageStore.swift:540:38: error: value of type 'UsageStore' has no member 'isEnabledProviderInstance'"
+      ],
+      "source": "Root saved exact producer diagnostics; repeated compile diagnostics deduplicated by exact source message",
+      "aggregate": "Producer failure causes selected shards to skip; no distinct aggregate defect reported."
+    },
+    "implementationAndTestProof": {
+      "baseRevision": "504398c14944516191d9b162135f504634f3deb9",
+      "priorSourceRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+      "originalSharedHelper": {
+        "path": "Sources/CodexBar/UsageStore+UserPlugins.swift",
+        "blob": "4c6f33674f0faa35c97c37a15a8ffbc26ffe57dc",
+        "firstPartyBranch": "        if let provider = instanceID.firstPartyProvider {\n            return self.isProviderAvailable(provider, now: now)\n        }"
+      },
+      "originalAlibabaHelper": {
+        "path": "Sources/CodexBar/Providers/Alibaba/AlibabaCodingPlanSettingsStore.swift",
+        "line": 58,
+        "scope": "Only auto-enables Alibaba from its API token and writes its migration marker; no Codex/Claude behavior."
+      },
+      "preservation": {
+        "settingsOnlyObsoleteCallRemoved": true,
+        "sharedHelperOnlyFirstPartyBranchRestored": true,
+        "unknownID": "reject before availability call; no alias/default provider",
+        "existingEnabledFilterAndAvailabilityPolicyByteIdentical": true,
+        "newTestDeclarations": 1,
+        "parameterArguments": [
+          "codex",
+          "claude"
+        ],
+        "newNativeTestStatus": "not executed locally; Swift absent",
+        "fixtures": "dictionary-backed defaults, contained unique root/config/accounts, memory stores, disabled keychain policy/detection, testing startup, explicit watcher stop and failure-reporting cleanup",
+        "catalog": {
+          "baseRevision": "504398c14944516191d9b162135f504634f3deb9",
+          "entries": 312,
+          "lineChanges": [
+            {
+              "path": "Sources/CodexBar/UsageStore+Accessors.swift",
+              "oldLine": 54,
+              "newLine": 59,
+              "anchor": "snapshot.accountEmail(for: .codex) ?? self.accountInfo(for: .codex).email),"
+            },
+            {
+              "path": "Sources/CodexBar/UsageStore+Accessors.swift",
+              "oldLine": 100,
+              "newLine": 105,
+              "anchor": "case .codex:"
+            }
+          ],
+          "allAnchorsMatch": true,
+          "metadataExceptLinePinsAndScannerByteIdentical": true
+        },
+        "existingCoverageSuiteSourceByteIdenticalApartFromAddition": true
+      },
+      "nearbyDeletedFileMethods": {
+        "Sources/CodexBar/UsageStore+UserPlugins.swift": [
+          "isEnabledProviderInstance",
+          "refreshUserPluginDiscovery",
+          "refreshUserPlugin",
+          "approveUserPlugin",
+          "deleteUserPlugin",
+          "replaceConfigAfterPluginDeletion"
+        ],
+        "Sources/CodexBar/Providers/Alibaba/AlibabaCodingPlanSettingsStore.swift": [
+          "ensureAlibabaCodingPlanAPITokenLoaded",
+          "ensureAlibabaProviderAutoEnabledIfNeeded",
+          "alibabaCodingPlanSettingsSnapshot"
+        ]
+      },
+      "retainedSourceReferencesToThoseMethods": {
+        "ensureAlibabaCodingPlanAPITokenLoaded": [],
+        "replaceConfigAfterPluginDeletion": [],
+        "ensureAlibabaProviderAutoEnabledIfNeeded": [],
+        "refreshUserPluginDiscovery": [],
+        "alibabaCodingPlanSettingsSnapshot": [],
+        "refreshUserPlugin": [],
+        "isEnabledProviderInstance": [
+          "Sources/CodexBar/UsageStore+Accessors.swift",
+          "Sources/CodexBar/UsageStore.swift"
+        ],
+        "approveUserPlugin": [],
+        "deleteUserPlugin": []
+      },
+      "sourceInventoryDelta": {
+        "productSwift": {
+          "files": 0,
+          "lines": 4,
+          "bytes": 182
+        },
+        "testSwift": {
+          "files": 0,
+          "lines": 62,
+          "bytes": 3087
+        }
+      },
+      "newTestSource": "    @Test(arguments: [UsageProvider.codex, .claude])\n    func `enabled instances isolate availability and reject unknown provider IDs`(\n        availableProvider: UsageProvider) throws\n    {\n        try #require(SettingsStore.isRunningTests)\n        let root = TestFixtureScratch.root\n            .appendingPathComponent(\"enabled-instances-\\(UUID().uuidString)\", isDirectory: true)\n        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)\n        defer {\n            do {\n                try FileManager.default.removeItem(at: root)\n            } catch {\n                Issue.record(\"Could not remove enabled-instance fixture: \\(error)\")\n            }\n        }\n        let settings = SettingsStore(\n            userDefaults: InMemoryUserDefaults(),\n            configStore: CodexBarConfigStore(fileURL: root.appendingPathComponent(\"config.json\")),\n            codexCookieStore: InMemoryCookieHeaderStore(),\n            claudeCookieStore: InMemoryCookieHeaderStore(),\n            tokenAccountStore: InMemoryTokenAccountStore(fileURL: root.appendingPathComponent(\"accounts.json\")),\n            keychainAccessPolicy: SettingsStoreKeychainAccessPolicy(\n                setDisabled: { _ in },\n                isExplicitlyDisabled: { true }),\n            performInitialProviderDetection: false)\n        defer { settings.configFileWatcher?.stop() }\n        for provider in UsageProvider.allCases {\n            settings.setProviderEnabled(\n                provider: provider,\n                metadata: ProviderDescriptorRegistry.descriptor(for: provider).metadata,\n                enabled: true)\n        }\n        let store = UsageStore(\n            fetcher: UsageFetcher(environment: [:]),\n            browserDetection: BrowserDetection(cacheTTL: 0),\n            settings: settings,\n            startupBehavior: .testing,\n            environmentBase: [:])\n        var availabilityRequests: [UsageProvider] = []\n        store._test_providerAvailabilityOverride = { provider in\n            availabilityRequests.append(provider)\n            return provider == availableProvider\n        }\n        defer { store._test_providerAvailabilityOverride = nil }\n\n        #expect(store.enabledProviders() == [availableProvider.instanceID])\n        #expect(store.enabledProvidersForBackgroundWork() == [availableProvider.instanceID])\n        #expect(Set(store.enabledProvidersForDisplay()) == Set(UsageProvider.allCases.map(\\.instanceID)))\n\n        availabilityRequests.removeAll()\n        let unknown = try #require(ProviderInstanceID(rawValue: \"retired-gateway\"))\n        #expect(!store.isEnabledProviderInstance(unknown, now: Date(timeIntervalSince1970: 1_700_000_000)))\n        #expect(availabilityRequests.isEmpty)\n\n        settings.setProviderEnabled(\n            provider: availableProvider,\n            metadata: ProviderDescriptorRegistry.descriptor(for: availableProvider).metadata,\n            enabled: false)\n        #expect(store.enabledProviders().isEmpty)\n        #expect(!store.enabledProvidersForDisplay().contains(availableProvider.instanceID))\n    }\n\n",
+      "affectedSwiftTestSuite": "UsageStoreCoverageTests",
+      "limitations": "Source inspection and exact prefix/suffix/blob proof do not establish Swift format, compile or runtime success.",
+      "repairRevision": "ffaebabdba0c0394bc0ebd6fa3a42e53c008763d"
+    },
+    "affectedChecks": [
+      {
+        "name": "source-proof",
+        "command": [
+          "/usr/bin/python3",
+          "-B",
+          "/home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/.build/slim-product-work/prove_compiler_repair.py"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:25:51Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 45.57,
+              "cpu_used_percent": 14.15,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.1969,
+              "sampled_steal_percent": 0.314,
+              "cpu_psi_some_avg10_percent": 0.29
+            },
+            "summary": "CPU 14.15% used; 45.57 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "status": "passed",
+        "exitCode": 0
+      },
+      {
+        "name": "parser-hash",
+        "command": [
+          "bash",
+          "Scripts/regenerate-codex-parser-hash.sh",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:25:52Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 45.55,
+              "cpu_used_percent": 13.61,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.1969,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 0.6
+            },
+            "summary": "CPU 13.61% used; 45.55 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "status": "passed",
+        "exitCode": 0
+      },
+      {
+        "name": "provider-manifests",
+        "command": [
+          "bash",
+          "Scripts/regenerate-provider-manifests.sh",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:25:53Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 45.55,
+              "cpu_used_percent": 19.87,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.2112,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 0.6
+            },
+            "summary": "CPU 19.87% used; 45.55 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "status": "passed",
+        "exitCode": 0
+      },
+      {
+        "name": "full-profile",
+        "command": [
+          "/usr/bin/python3",
+          "-B",
+          "Scripts/test_profiles.py",
+          "validate"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:25:53Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 45.55,
+              "cpu_used_percent": 19.3,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.2112,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 0.6
+            },
+            "summary": "CPU 19.30% used; 45.55 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "status": "passed",
+        "exitCode": 0
+      },
+      {
+        "name": "make-check",
+        "command": [
+          "make",
+          "check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:25:53Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 45.55,
+              "cpu_used_percent": 20.5,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.2112,
+              "sampled_steal_percent": 0.315,
+              "cpu_psi_some_avg10_percent": 0.6
+            },
+            "summary": "CPU 20.50% used; 45.55 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "status": "unavailable",
+        "exitCode": 2
+      },
+      {
+        "name": "make-test",
+        "command": [
+          "make",
+          "test"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:25:54Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 45.55,
+              "cpu_used_percent": 16.88,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.2112,
+              "sampled_steal_percent": 0.312,
+              "cpu_psi_some_avg10_percent": 1.04
+            },
+            "summary": "CPU 16.88% used; 45.55 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "status": "unavailable",
+        "exitCode": 2
+      }
+    ],
+    "tools": "Swift/plutil/native formatters unavailable locally; make commands attempted,exit2 before compiler/native tests. No tools installed.",
+    "retainedBehavior": "Original Codex/Claude branch delegates to unchanged isProviderAvailable(provider,now:), preserving effective account environment/token overrides, provider-specific cache/config revision and availability. Unknown instance IDs return false before any provider lookup; enabled-list guard and display/background split stay intact.",
+    "allPreviousTestMethodsPreserved": true,
+    "allHarnessNativeScheduleAndFrozenConsumptionBytesUnchanged": true,
+    "nextGate": "Normal automatic exact-head macOS formatter/compiler/producer/native and execution shards, plus applicable Linux/aggregate checks; root watches. New regression has not run locally.",
+    "documentationChecks": [
+      {
+        "name": "documentation-links",
+        "command": [
+          "node",
+          "Scripts/check-documentation-links.mjs"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:27:35Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 45.07,
+              "cpu_used_percent": 23.34,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.2806,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 1.49
+            },
+            "summary": "CPU 23.34% used; 45.07 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "status": "passed",
+        "exitCode": 0,
+        "output": "documentation links OK: 181 local links\n"
+      },
+      {
+        "name": "llms-index",
+        "command": [
+          "node",
+          "Scripts/generate-llms.mjs",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:27:36Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 45.0,
+              "cpu_used_percent": 22.5,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.2806,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 1.58
+            },
+            "summary": "CPU 22.50% used; 45.00 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
           },
           "warnings": [],
           "errors": [],

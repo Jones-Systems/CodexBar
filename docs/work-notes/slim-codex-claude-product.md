@@ -368,15 +368,54 @@ line and declaration counts, all harness/native/schedule/frozen-consumption byte
 remain unchanged. Product/test byte counts change by +5/-8 from qualification
 and indentation only. Root retains normal automatic exact-head CI watching.
 
+At PR head `504398c14944516191d9b162135f504634f3deb9`, root's saved
+[run 40153719090](https://github.com/Jones-Systems/CodexBar/actions/runs/40153719090),
+producer `121050508845`, passes SwiftFormat (0/1346 files, 4 skipped) and complete
+native-tool preflight with `build_allowed=true`. Its tested PR merge checkout is
+`2cf0e8d9341f19223ce3173ad84fba6eed92dda1`. Compilation then reports two distinct missing
+members, repeated across compilation: obsolete Alibaba startup initialization and
+the shared enabled-provider-instance predicate. Shards skip because the producer
+fails; root reports no separate aggregate defect. This is failing-before compiler
+evidence, not successful product compilation.
+
+Repair `ffaebabdba0c0394bc0ebd6fa3a42e53c008763d` removes only the orphaned Alibaba initialization call.
+At base `91bd5fb4`, that deleted helper in
+`Providers/Alibaba/AlibabaCodingPlanSettingsStore.swift:58` only auto-enabled
+Alibaba from its token and wrote its migration marker. The shared instance
+predicate lived inside deleted `UsageStore+UserPlugins.swift:7`; its original
+Codex/Claude branch called `isProviderAvailable(provider, now: now)`. Restore that
+branch in `UsageStore+Accessors.swift`, with an explicit false result for unknown
+IDs before any availability/credential lookup. Keep the enabled-list filter and
+the complete existing availability/environment/token-account/cache policy unchanged.
+A bounded sweep of all nine methods from these two deleted files finds no other
+remaining caller; only the restored predicate and existing call remain.
+
+One added parameterized regression covers both retained providers: independently
+available providers remain in background work, both stay listed for display,
+unknown IDs never consult another provider, and disabling the available provider
+excludes it. It uses dictionary-backed defaults, explicit in-memory stores and
+contained config/account paths, disabled keychain policy/detection, testing startup,
+a unique owned fixture root, watcher shutdown and failure-reporting cleanup. All
+pre-existing test source in the coverage suite is byte-identical around this
+addition. No test is removed, skipped or weakened. Its execution awaits native CI.
+Two catalog line pins move by five; all 312 anchors match, and all other metadata
+and scanner bytes remain unchanged. Parser/provider generation checks and both
+profile contracts pass. Fresh telemetry/nonblocking serial lock checks pass source
+inspection; required make commands stop at missing plutil/Swift (exit 2) before
+installer/compiler/native tests. No local native pass or installed tools are claimed.
+All harness/native/fingerprint/schedule/frozen-consumption bytes and retained
+cost/history/process/fixture proofs remain intact. Root retains automatic exact-head
+CI watching; no manual run, extra agent/review, remote merge or host effect occurs.
+
 Exact committed-blob [comparison](../engineering-specs/slim-codex-claude-comparison.json)
-at source revision `38d63baa0375809b36f79bd7770a301a78128768`:
+at source revision `ffaebabdba0c0394bc0ebd6fa3a42e53c008763d`:
 
 | Inventory | Base | Product candidate |
 | --- | ---: | ---: |
-| Product Swift files / lines | 1,201 / 307,271 | 651 / 193,214 |
+| Product Swift files / lines | 1,201 / 307,271 | 651 / 193,218 |
 | Product C/header files / lines | 21 / 79,719 | 1 / 1 |
-| Test Swift files / lines | 1,059 / 368,064 | 734 / 252,270 |
-| Lexical Swift Testing declarations | 10,575 | 6,544 |
+| Test Swift files / lines | 1,059 / 368,064 | 734 / 252,332 |
+| Lexical Swift Testing declarations | 10,575 | 6,545 |
 
 330 test paths were removed and 5 added, including shared-suite renames; these are
 not runtime case counts. Package targets `CQuickJS` and `CodexBarPluginTests`, core
