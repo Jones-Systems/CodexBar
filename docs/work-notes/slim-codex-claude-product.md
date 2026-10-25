@@ -1345,4 +1345,19 @@ compiler/AppKit geometry execution remain unavailable locally, with exact-head
 qualification owned by root. Product/catalog/generator and all retained accounting/
 scale/history/auth/TTY/fallback/native/harness/workflow/schedule/frozen proofs stay.
 
+Source commit `40c8c2287405a448f3aa8c1259901c8dc78801c5` contains the bounded test/spec/note repair.
+Complete committed inventory confirms product 651 Swift files / 193218 lines
+unchanged; tests 733 / 252470 lines / 10946130 bytes and 6570 declarations
+across 691 files. Eighteen test lines / 999 bytes add supported geometry proofs,
+with no test addition/removal/rename. The following commit adds evidence only.
+Prior source/runtime evidence remains revision-bound. Root owns complete native
+qualification; no runtime-case, speed, app-size or cold-build savings inferred.
+
+Final evidence coherence passes on the committed fixture: four unchanged test
+identities, 18 exact prior assertions, two source-justified count/height changes,
+12 added quota/geometry assertions, five read-only paths, 56 exact Cost blobs,
+counts/scope, whitespace and fixture absence. Admission: CPU 14.91%, 46.58 GiB
+available, one serial process and acquired nonblocking lock. Native exact-head
+qualification remains root-owned and pending.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->

@@ -1,7 +1,7 @@
 {
   "schema": "codexbar-product-removal-comparison/v1",
   "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
-  "candidateSourceRevision": "5c36fb289b1a35bdbddc6f8d5b3093422fbd4090",
+  "candidateSourceRevision": "40c8c2287405a448f3aa8c1259901c8dc78801c5",
   "pullRequest": "https://github.com/Jones-Systems/CodexBar/pull/41",
   "baseBranch": "work/test-value-bar-pass2-20261024",
   "method": "Exact committed Git blobs; files include Swift source under Sources and tests under Tests, TestsLinux, TestsPlugin; line count uses bytes.splitlines; lexical Swift Testing @Test declaration counts exclude comments/strings and do not represent parameterized/runtime cases.",
@@ -36,8 +36,8 @@
       },
       "testSwift": {
         "files": 733,
-        "lines": 252452,
-        "bytes": 10945131
+        "lines": 252470,
+        "bytes": 10946130
       }
     }
   },
@@ -989,10 +989,10 @@
       "qualification": "No new-head compile or execution pass inferred."
     },
     "latestNativeRuntimeAttempt": {
-      "runID": 40178882812,
-      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40178882812",
-      "prHeadRevision": "612e86ac4569391aa10dd768cb8426538fa82fa7",
-      "mergeCheckout": "36e74a836405bc9498ad7570c9fe2303b595080d",
+      "runID": 40181633949,
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40181633949",
+      "prHeadRevision": "3001c20200c7e6bf5890a77aa5570fb0b8818c7b",
+      "mergeCheckout": "2f344b4d7ae6e61662c8b7cc4a105c11da2117c9",
       "changes": "success",
       "lint": "success",
       "linuxX64": "success",
@@ -1001,30 +1001,30 @@
       "producer": "success",
       "workers": [
         {
-          "jobID": 121129085816,
+          "jobID": 121136555118,
           "status": "failure",
-          "nativeCompatibility": "verified complete-fingerprint across older producer/newer worker",
-          "successfulGroupsBeforeFailure": 73,
+          "nativeCompatibility": "verified complete-fingerprint",
+          "successfulGroupsBeforeFailure": 74,
           "selectedGroups": 85,
           "testBuilds": 0,
           "fullGroupRetries": 0,
           "timeouts": 0,
           "issues": [
-            "\u2718 Test \"full close preserves native status links and unavailable rows\" recorded an issue at StatusMenuHostedSubmenuReleaseTests.swift:107:13: Expectation failed: (unavailableItem.title \u2192 \"NSMenuItem\") == \"No data available\"",
-            "\u2718 Test \"full close preserves native status links and unavailable rows\" recorded an issue at StatusMenuHostedSubmenuReleaseTests.swift:110:13: Expectation failed: (unavailable.items.first \u2192 <NSMenuItem: 0x888ba9900 NSMenuItem>) === (unavailableItem \u2192 <NSMenuItem: 0x888baaf80 NSMenuItem, view: <_TtGC8CodexBar15MenuHostingViewVS_24CostHistoryChartMenuView_: 0x88626e800>>)"
+            "\u2718 Test \"overview switcher segment matches provider segment height when quota bars are present\" recorded an issue at StatusMenuSwitcherLayoutTests.swift:23:9: Expectation failed: (frames.count \u2192 3) == 4",
+            "\u2718 Test \"overview switcher segment matches provider segment height when quota bars are present\" recorded an issue at StatusMenuSwitcherLayoutTests.swift:32:9: Expectation failed: (view._test_rowHeight() \u2192 30.0) == (36 \u2192 36.0)"
           ],
           "failingGroup": {
-            "tests": 15,
-            "suites": 4
+            "tests": 23,
+            "suites": 3
           }
         },
         {
-          "jobID": 121129085811,
+          "jobID": 121136555143,
           "status": "success"
         }
       ],
       "aggregate": {
-        "jobID": 121131228188,
+        "jobID": 121138347354,
         "status": "failure consequential to shard0",
         "independentDefect": false
       },
@@ -1446,7 +1446,7 @@
     ],
     "deferredReason": "Three fresh below-threshold admissions, separated by ready source/evidence work, each found shared benchmark.lock busy. No test command or queued wait started. Existing local tool absences also prevent native make check/test. Prior exact-revision check results are retained as historical evidence, not new-head passes."
   },
-  "countMethodLatest": "Complete committed Git inventory at 5c36fb289b1a35bdbddc6f8d5b3093422fbd4090: unchanged product counts; four test lines / 306 bytes added in one fixture, no file/declaration/name delta. All other test blobs remain unchanged from the prior published head; runtime cases/savings are not inferred.",
+  "countMethodLatest": "Complete committed Git inventory at 40c8c2287405a448f3aa8c1259901c8dc78801c5: product counts unchanged; 18 test lines / 999 bytes added in one fixture, no file/declaration/name delta. All other test blobs remain unchanged from the prior published head; runtime cases/savings are not inferred.",
   "swiftFormatRepair": {
     "baseRevision": "1d9787f8b4075068f3282cb723e42170a6e702c3",
     "repairRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
@@ -11421,5 +11421,327 @@
     "boundaries": "Test fixture and existing spec/note/comparison only; production, catalog/generator, accounting/scale/history/auth/TTY/fallback, native/harness/workflow/05:00 America/New_York schedule and frozen handoffs unchanged. No test deletion, skips, expectation weakening or product policy change.",
     "nextValidationGate": "Root-owned automatic exact published-head native formatter/compiler and both full shards; app-size/cold-build comparisons remain pending.",
     "evidenceCoherence": "pass on exact committed repair and durable records; protected historical evidence unchanged"
+  },
+  "switcherLayoutRuntimeRepair": {
+    "priorRevision": "3001c20200c7e6bf5890a77aa5570fb0b8818c7b",
+    "repairRevision": "40c8c2287405a448f3aa8c1259901c8dc78801c5",
+    "hostedFailingBefore": {
+      "runID": 40181633949,
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40181633949",
+      "prHeadRevision": "3001c20200c7e6bf5890a77aa5570fb0b8818c7b",
+      "mergeCheckout": "2f344b4d7ae6e61662c8b7cc4a105c11da2117c9",
+      "changes": "success",
+      "lint": "success",
+      "linuxX64": "success",
+      "linuxARM64": "success",
+      "linuxMusl": "success",
+      "producer": "success",
+      "workers": [
+        {
+          "jobID": 121136555118,
+          "status": "failure",
+          "nativeCompatibility": "verified complete-fingerprint",
+          "successfulGroupsBeforeFailure": 74,
+          "selectedGroups": 85,
+          "testBuilds": 0,
+          "fullGroupRetries": 0,
+          "timeouts": 0,
+          "issues": [
+            "\u2718 Test \"overview switcher segment matches provider segment height when quota bars are present\" recorded an issue at StatusMenuSwitcherLayoutTests.swift:23:9: Expectation failed: (frames.count \u2192 3) == 4",
+            "\u2718 Test \"overview switcher segment matches provider segment height when quota bars are present\" recorded an issue at StatusMenuSwitcherLayoutTests.swift:32:9: Expectation failed: (view._test_rowHeight() \u2192 30.0) == (36 \u2192 36.0)"
+          ],
+          "failingGroup": {
+            "tests": 23,
+            "suites": 3
+          }
+        },
+        {
+          "jobID": 121136555143,
+          "status": "success"
+        }
+      ],
+      "aggregate": {
+        "jobID": 121138347354,
+        "status": "failure consequential to shard0",
+        "independentDefect": false
+      },
+      "source": "Completed root fan-in and bounded supplied shard0/aggregate issues; child did not watch/poll.",
+      "qualification": "Prior-head one failed shard; not full qualification or app-size/build/savings proof."
+    },
+    "reason": "The fixture was reduced from three providers plus overview to two retained providers plus overview, but retained four-segment/stacked-height expectations. The unchanged production switcher selects three inline 30-point segments independently of quota presence. Keep the quota callback and prove actual bars/geometry.",
+    "sourceTrace": {
+      "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+      "path": "Sources/CodexBar/StatusItemController+SwitcherViews.swift",
+      "baseExact": true,
+      "oldProviders": [
+        "claude",
+        "grok",
+        "cursor"
+      ],
+      "retainedProviders": [
+        "claude",
+        "codex"
+      ],
+      "oldSegmentsWithOverview": 4,
+      "retainedSegmentsWithOverview": 3,
+      "stackedPredicate": "showsIcons && segments.count > 3",
+      "buttonHeight": "inline: 30; stacked: 36 with fewer than three rows, otherwise 39",
+      "quotaInput": "Existing weeklyRemainingProvider supplies 50 directly for each retained provider; no snapshot, provider capability or metric-preference gate in this fixture.",
+      "quotaRouting": "Provider instance resolves its own firstPartyProvider; overview returns nil. Both retained provider segments create quota tracks/fills.",
+      "geometryPreservation": "Exact equal height/minY/maxY checks remain; added actual-segment-to-row height, two visible half-filled bars, nonzero width, exact 2-point height and per-provider x/y containment."
+    },
+    "preservationProof": {
+      "priorRevision": "3001c20200c7e6bf5890a77aa5570fb0b8818c7b",
+      "path": "Tests/CodexBarTests/StatusMenuSwitcherLayoutTests.swift",
+      "beforeSHA256": "09242cc85664ba67dd3b49ac55b87164a18fac4279733b06875c6ecdaed3a7c2",
+      "afterSHA256": "3a524741257d054704eace9b77b76fee81217b62d6d2ce4a2e525bd1b4d10d55",
+      "testNames": [
+        "overview switcher segment matches provider segment height when quota bars are present",
+        "quota bars do not offset inline switcher content",
+        "integrated quota indicator selects its provider",
+        "localized inline switcher titles fit without losing equal sizing"
+      ],
+      "testDeclarationsBefore": 4,
+      "testDeclarationsAfter": 4,
+      "expectationsBefore": 20,
+      "expectationsAfter": 32,
+      "changedExpectations": [
+        {
+          "before": "#expect(frames.count == 4)",
+          "after": "#expect(frames.count == 3)",
+          "reason": "Old overview plus three providers stacked at 36pt; supported overview plus both retained providers is inline at 30pt. Quota data remains present and now receives direct visibility/geometry assertions."
+        },
+        {
+          "before": "#expect(view._test_rowHeight() == 36)",
+          "after": "#expect(view._test_rowHeight() == 30)",
+          "reason": "Old overview plus three providers stacked at 36pt; supported overview plus both retained providers is inline at 30pt. Quota data remains present and now receives direct visibility/geometry assertions."
+        }
+      ],
+      "otherExistingAssertionsExact": 18,
+      "exactGeometryAssertions": [
+        "#expect(frame.height == overviewFrame.height)",
+        "#expect(frame.minY == overviewFrame.minY)",
+        "#expect(frame.maxY == overviewFrame.maxY)"
+      ],
+      "quotaCallbackAndLiteralsExact": true,
+      "otherThreeMethodsExact": true,
+      "otherMethodsSHA256": "70774a2dadd3693f0346d6459b58e1e1928a120abdc3a86eb96056bc62ca55a8",
+      "onlyChangedTestMethod": "overview switcher segment matches provider segment height when quota bars are present",
+      "newAssertions": 12,
+      "productionSwitcherBaseExact": true,
+      "readOnlyAudit": [
+        {
+          "path": "Sources/CodexBar/StatusItemController+SwitcherViews.swift",
+          "blob": "3d25fdfe1d7028118e8ad7acb1fa5b2bb28f05dd",
+          "unchanged": true
+        },
+        {
+          "path": "Sources/CodexBarCore/Providers/Providers.swift",
+          "blob": "3281ab44b5d9a83936b222fd07db56a6649e7253",
+          "unchanged": true
+        },
+        {
+          "path": "Tests/CodexBarTests/StatusMenuSwitcherClickTests.swift",
+          "blob": "59f54b912c85685fd6f9d0e4b95349f231673b8a",
+          "unchanged": true
+        },
+        {
+          "path": "Tests/CodexBarTests/StatusMenuSwitcherRefreshTests.swift",
+          "blob": "608d48bd2bec63e3123d5668b7d5e3079402a588",
+          "unchanged": true
+        },
+        {
+          "path": "Tests/CodexBarTests/CodexBusinessSwitcherTests.swift",
+          "blob": "f25dc47dfbe7c8b2b0620613518c56ad9b47f605",
+          "unchanged": true
+        }
+      ],
+      "protectedCostSuitesExact": 56,
+      "lineDelta": 18,
+      "byteDelta": 999,
+      "gitWhitespace": "pass",
+      "nativeExecution": "unavailable locally; source/preservation evidence does not prove AppKit layout execution"
+    },
+    "boundedRelatedAudit": "Full four-method layout suite plus converted quota-related regions in click/refresh and selected-provider visibility fixtures. Those retained fixtures preserve distinct Codex/Claude IDs, remaining percentages, ratio updates, selected visibility and stable inline heights; no other fixes indicated. Five exact read-only path blobs recorded.",
+    "localChecks": [
+      {
+        "name": "preservation",
+        "command": [
+          "python3",
+          ".build/slim-product-work/switcher-layout-3001c202/verify.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.176,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T10:07:30Z",
+          "ram_available_gib": 46.5,
+          "cpu_used_percent": 13.21,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2044,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 0.86
+        },
+        "classification": "pass"
+      },
+      {
+        "name": "make-check",
+        "command": [
+          "make",
+          "check"
+        ],
+        "exitCode": 2,
+        "elapsedSeconds": 0.105,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T10:07:43Z",
+          "ram_available_gib": 46.58,
+          "cpu_used_percent": 16.35,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1963,
+          "sampled_steal_percent": 0.314,
+          "cpu_psi_some_avg10_percent": 1.19
+        },
+        "classification": "unavailable before native execution: missing local tool"
+      },
+      {
+        "name": "make-test",
+        "command": [
+          "make",
+          "test"
+        ],
+        "exitCode": 2,
+        "elapsedSeconds": 0.108,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [
+          {
+            "name": ".test-fixtures-5tg_iru0",
+            "absentAfterCommand": true
+          }
+        ],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T10:07:44Z",
+          "ram_available_gib": 46.52,
+          "cpu_used_percent": 15.58,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1963,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 1.19
+        },
+        "classification": "unavailable before native execution: missing local tool"
+      },
+      {
+        "name": "documentation-links",
+        "command": [
+          "node",
+          "Scripts/check-documentation-links.mjs"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.127,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T10:07:44Z",
+          "ram_available_gib": 46.51,
+          "cpu_used_percent": 14.02,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1963,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 1.19
+        },
+        "classification": "pass"
+      },
+      {
+        "name": "inventory",
+        "command": [
+          "python3",
+          ".build/slim-product-work/switcher-layout-3001c202/inventory.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.207,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T10:08:27Z",
+          "ram_available_gib": 46.68,
+          "cpu_used_percent": 14.29,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.1875,
+          "sampled_steal_percent": 0.311,
+          "cpu_psi_some_avg10_percent": 0.33
+        },
+        "classification": "pass"
+      },
+      {
+        "name": "evidence-coherence",
+        "command": [
+          "python3",
+          ".build/slim-product-work/switcher-layout-3001c202/coherence.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.259,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T10:09:20Z",
+          "ram_available_gib": 46.58,
+          "cpu_used_percent": 14.91,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2188,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 0.56
+        },
+        "classification": "pass"
+      }
+    ],
+    "committedInventory": {
+      "sourceRevision": "40c8c2287405a448f3aa8c1259901c8dc78801c5",
+      "method": "Complete committed Git blob inventory; bytes.splitlines; declarations unchanged by exact one-method replacement.",
+      "counts": {
+        "productSwift": {
+          "files": 651,
+          "lines": 193218,
+          "bytes": 7944079
+        },
+        "productCHeaders": {
+          "files": 1,
+          "lines": 1,
+          "bytes": 21
+        },
+        "testSwift": {
+          "files": 733,
+          "lines": 252470,
+          "bytes": 10946130
+        }
+      },
+      "swiftTestingDeclarations": {
+        "swiftTestingDeclarations": 6570,
+        "filesWithTestAttributes": 691
+      },
+      "declarationsBasis": "The only changed Swift blob retains four @Test declarations and names; all remaining test blobs are unchanged from the prior complete inventory."
+    },
+    "boundaries": "Test fixture and existing spec/note/comparison only; production/catalog/generator, retained accounting/scale/history/auth/TTY/fallback, native/harness/workflow/05:00 America/New_York schedule and frozen handoffs unchanged. No deletion, skip, retry, tolerance loosening or production policy change.",
+    "nextValidationGate": "Root-owned automatic exact published-head native formatter/compiler and both complete shards; comparable app-size/cold-build evidence remains pending.",
+    "evidenceCoherence": "pass on exact committed repair and durable records; historical protected evidence unchanged"
   }
 }
