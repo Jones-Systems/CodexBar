@@ -2101,7 +2101,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "This exact app-runtime bridge coordinates provider-owned state through the shared controller."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/UsageStore+Accessors.swift",
-            line: 54,
+            line: 59,
             anchor: "snapshot.accountEmail(for: .codex) ?? self.accountInfo(for: .codex).email),",
             expectedProviderIDs: ["codex"],
             expectedReferenceCount: 2,
@@ -2109,7 +2109,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "This exact app-runtime bridge coordinates provider-owned state through the shared controller."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/UsageStore+Accessors.swift",
-            line: 100,
+            line: 105,
             anchor: "case .codex:",
             expectedProviderIDs: ["claude", "codex"],
             expectedReferenceCount: 2,

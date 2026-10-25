@@ -336,7 +336,6 @@ final class SettingsStore {
         if performInitialProviderDetection {
             self.runInitialProviderDetectionIfNeeded()
         }
-        self.ensureAlibabaProviderAutoEnabledIfNeeded()
         self.applyTokenCostDefaultIfNeeded()
         if self.claudeUsageDataSource != .cli {
             if Self.isRunningTests {

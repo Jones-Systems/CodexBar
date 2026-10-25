@@ -153,6 +153,68 @@ struct UsageStoreCoverageTests {
         #expect(!UsageStore.isSubscriptionPlan("api"))
     }
 
+    @Test(arguments: [UsageProvider.codex, .claude])
+    func `enabled instances isolate availability and reject unknown provider IDs`(
+        availableProvider: UsageProvider) throws
+    {
+        try #require(SettingsStore.isRunningTests)
+        let root = TestFixtureScratch.root
+            .appendingPathComponent("enabled-instances-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer {
+            do {
+                try FileManager.default.removeItem(at: root)
+            } catch {
+                Issue.record("Could not remove enabled-instance fixture: \(error)")
+            }
+        }
+        let settings = SettingsStore(
+            userDefaults: InMemoryUserDefaults(),
+            configStore: CodexBarConfigStore(fileURL: root.appendingPathComponent("config.json")),
+            codexCookieStore: InMemoryCookieHeaderStore(),
+            claudeCookieStore: InMemoryCookieHeaderStore(),
+            tokenAccountStore: InMemoryTokenAccountStore(fileURL: root.appendingPathComponent("accounts.json")),
+            keychainAccessPolicy: SettingsStoreKeychainAccessPolicy(
+                setDisabled: { _ in },
+                isExplicitlyDisabled: { true }),
+            performInitialProviderDetection: false)
+        defer { settings.configFileWatcher?.stop() }
+        for provider in UsageProvider.allCases {
+            settings.setProviderEnabled(
+                provider: provider,
+                metadata: ProviderDescriptorRegistry.descriptor(for: provider).metadata,
+                enabled: true)
+        }
+        let store = UsageStore(
+            fetcher: UsageFetcher(environment: [:]),
+            browserDetection: BrowserDetection(cacheTTL: 0),
+            settings: settings,
+            startupBehavior: .testing,
+            environmentBase: [:])
+        var availabilityRequests: [UsageProvider] = []
+        store._test_providerAvailabilityOverride = { provider in
+            availabilityRequests.append(provider)
+            return provider == availableProvider
+        }
+        defer { store._test_providerAvailabilityOverride = nil }
+
+        #expect(store.enabledProviders() == [availableProvider.instanceID])
+        #expect(store.enabledProvidersForBackgroundWork() == [availableProvider.instanceID])
+        #expect(Set(store.enabledProvidersForDisplay()) == Set(UsageProvider.allCases.map(\.instanceID)))
+
+        availabilityRequests.removeAll()
+        let unknown = try #require(ProviderInstanceID(rawValue: "retired-gateway"))
+        #expect(!store.isEnabledProviderInstance(unknown, now: Date(timeIntervalSince1970: 1_700_000_000)))
+        #expect(availabilityRequests.isEmpty)
+
+        settings.setProviderEnabled(
+            provider: availableProvider,
+            metadata: ProviderDescriptorRegistry.descriptor(for: availableProvider).metadata,
+            enabled: false)
+        #expect(store.enabledProviders().isEmpty)
+        #expect(!store.enabledProvidersForDisplay().contains(availableProvider.instanceID))
+    }
+
     @Test
     func `background refresh only tracks enabled providers`() throws {
         let settings = Self.makeSettingsStore(suite: "UsageStoreCoverageTests-background-refresh")

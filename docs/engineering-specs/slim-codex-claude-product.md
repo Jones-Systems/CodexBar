@@ -40,6 +40,10 @@ old files safely; do not retain executable plugin behavior.
 
 Remove CloudKit sync transport/coordinator and its app lifecycle wiring. Retain or
 relocate shared account/menu/fleet identity models that happen to live in `Sync`.
+Keep the shared provider-instance availability predicate independent of removed
+plugin ownership: classify an instance as Codex/Claude before delegating to the
+unchanged availability/environment policy; reject unknown IDs without aliasing.
+Remove deleted-provider-only startup calls without restoring those providers.
 Source-level architecture changes affect app, core, CLI and widget consumers, so
 all applicable platform compiler jobs remain required. The CI sibling authored
 compile-once sharding. Root transferred patch01 and then the exact qualified PR40
