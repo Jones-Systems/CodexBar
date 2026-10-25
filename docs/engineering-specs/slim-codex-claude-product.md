@@ -69,6 +69,14 @@ Remove tests only with deleted product behavior; preserve shared account,
 privacy/isolation, quota, cost scanner, persistence and TTY cleanup cases. Update
 mixed suites to assert the retained two-provider contract and add synthetic old
 config regression coverage. Normal/full membership must reference existing source.
+Claude local accounting retains Vertex metadata classification and explicit scanner
+filters even though the Vertex provider product is removed. Test compilation
+closure must preserve both inclusion/exclusion cases, exact rows/tokens/costs,
+cache/deduplication assertions and scale fixtures under the Claude identity.
+Synthetic screenshot inputs use distinct Codex/Claude IDs. Pure history fixture
+helpers stay nonisolated; actor annotations must follow actual actor-owned state.
+Feature-only test removals receive a per-method reason in the Work Note/comparison;
+changes to formerly exact cost blobs receive method-level preservation evidence.
 
 Run `make check` and `make test`; report missing local Swift/formatter tools as
 unavailable. Use the shared nonblocking benchmark lock and fresh CPU/RAM admission

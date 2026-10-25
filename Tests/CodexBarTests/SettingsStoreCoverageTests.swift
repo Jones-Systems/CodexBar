@@ -338,21 +338,18 @@ struct SettingsStoreCoverageTests {
     }
 
     @Test
-    func `keychain disable forces manual cookie sources`() throws {
-        let suite = "SettingsStoreCoverageTests-keychain"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defaults.removePersistentDomain(forName: suite)
+    func `keychain disable forces manual cookie sources`() {
+        let suite = "SettingsStoreCoverageTests-keychain-\(UUID().uuidString)"
+        let defaults = InMemoryUserDefaults()
         let configStore = testConfigStore(suiteName: suite)
         let settings = Self.makeSettingsStore(userDefaults: defaults, configStore: configStore)
 
         settings.codexCookieSource = .auto
         settings.claudeCookieSource = .auto
-        settings.kimiCookieSource = .off
         settings.debugDisableKeychainAccess = true
 
         #expect(settings.codexCookieSource == .manual)
         #expect(settings.claudeCookieSource == .manual)
-        #expect(settings.kimiCookieSource == .off)
     }
 
     @Test

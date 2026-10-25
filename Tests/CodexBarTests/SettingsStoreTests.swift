@@ -865,26 +865,6 @@ struct SettingsStoreTests {
     }
 
     @Test
-    func `persists mini max API region across instances`() throws {
-        let suite = "SettingsStoreTests-minimax-region"
-        let defaultsA = try #require(UserDefaults(suiteName: suite))
-        defaultsA.removePersistentDomain(forName: suite)
-        let configStore = testConfigStore(suiteName: suite)
-        let storeA = SettingsStore(
-            userDefaults: defaultsA,
-            configStore: configStore)
-
-        storeA.minimaxAPIRegion = .chinaMainland
-
-        let defaultsB = try #require(UserDefaults(suiteName: suite))
-        let storeB = SettingsStore(
-            userDefaults: defaultsB,
-            configStore: configStore)
-
-        #expect(storeB.minimaxAPIRegion == .chinaMainland)
-    }
-
-    @Test
     func `defaults open AI web access to disabled`() throws {
         let suite = "SettingsStoreTests-openai-web"
         let defaults = try #require(UserDefaults(suiteName: suite))

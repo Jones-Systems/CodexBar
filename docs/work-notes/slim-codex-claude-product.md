@@ -435,4 +435,29 @@ automatic macOS/Linux qualification, then exact comparable hosted macOS builds
 with matching toolchain, architecture, configuration and dependency/cache conditions.
 Source counts are not build-time or binary-size estimates. Prerequisite PR40 success,
 old PR41 Linux/musl successes and draft macOS skips do not qualify the new head.
+
+Test-module closure repair starts from verified clean sole-owned head
+`7215b63bec5f50e4612da7bda647b4e0b90b0349` and matching open, non-draft PR41.
+Root's saved run `40154587231`, producer `121053186896`, passes SwiftFormat
+(0/1346 files, four exclusions) and native preflight, then reports 46 unique test
+compiler diagnostics across 17 paths. These diagnostics include inference cascades;
+no test execution result is established. Root retains hosted watching.
+
+Bounded plan: preserve all Claude metadata/classifier/parser/scanner methods and
+fixtures by selecting the retained scanner's explicit Vertex inclusion/exclusion
+filter under the Claude cache identity. Four previously exact cost-suite files
+will change; refresh the exact-blob proof and preserve method-level assertions,
+fixture bytes, limits and the unchanged remainder. Keep the forecast history
+fixture pure/nonisolated, the shared Codex/Claude cookie/manual-source and widget
+config-churn assertions, native-profile/fleet dispatch, and generic cost styling.
+Build localized SPEND screenshots from synthetic retained providers with distinct
+IDs. Remove only six individually identified feature-only methods: Copilot fallback
+source switching, the plugin pane's Catalan label, the OpenCodeGo estimate capture,
+two hook status transport methods, and MiniMax API-region persistence. No retained
+quota/auth/TTY/fallback/accounting behavior or scale limit is reduced. The 17 paths
+in the saved diagnostic list and this existing spec/note/comparison are the write
+cone; no product, harness, native artifact, schedule or signing changes are planned.
+Scratch is owned at `.build/slim-product-work/test-compile-7215` and is removed
+after durable evidence/publication. No tools, agents or manual campaigns are started.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->

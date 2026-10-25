@@ -171,9 +171,9 @@ struct CostUsageClaudeVertexClassifierTests {
         }
         _ = try env.writeClaudeProjectFile(
             relativePath: "all/subagents/duplicates.jsonl", contents: env.jsonl(subagents))
-        for (name, filter, expectedEntries, provider) in [
-            ("claude", CostUsageScanner.ClaudeLogProviderFilter.excludeVertexAI, claude, UsageProvider.claude),
-            ("vertex", .vertexAIOnly, vertex, .vertexai),
+        for (name, filter, expectedEntries) in [
+            ("claude", CostUsageScanner.ClaudeLogProviderFilter.excludeVertexAI, claude),
+            ("vertex", .vertexAIOnly, vertex),
         ] {
             let expectedFile = try env.writeClaudeProjectFile(
                 relativePath: "\(name)/session.jsonl", contents: env.jsonl(expectedEntries))
@@ -202,8 +202,8 @@ struct CostUsageClaudeVertexClassifierTests {
             options.claudeLogProviderFilter = filter
             options.refreshMinIntervalSeconds = 0
             let actualReport = CostUsageScanner.loadDailyReport(
-                provider: provider, since: since, until: until, now: until, options: options)
-            let actualCache = CostUsageClaudeCacheIO.load(provider: provider, cacheRoot: options.cacheRoot)
+                provider: .claude, since: since, until: until, now: until, options: options)
+            let actualCache = CostUsageClaudeCacheIO.load(provider: .claude, cacheRoot: options.cacheRoot)
             #expect(actualCache.days.count == 3)
             #expect(actualCache.files.values.contains { $0.claudeRows == actual.rows })
             #expect(actualCache.files.count == 2)

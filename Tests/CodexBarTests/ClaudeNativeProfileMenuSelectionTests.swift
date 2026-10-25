@@ -28,7 +28,6 @@ struct ClaudeNativeProfileMenuSelectionTests {
                 actions: MenuActions(
                     installUpdate: {},
                     refresh: {},
-                    refreshAugmentSession: {},
                     openDashboard: {},
                     openStatusPage: {},
                     openChangelog: {},
@@ -192,7 +191,6 @@ struct ClaudeNativeProfileMenuSelectionTests {
                     actions: MenuActions(
                         installUpdate: {},
                         refresh: {},
-                        refreshAugmentSession: {},
                         openDashboard: {},
                         openStatusPage: {},
                         openChangelog: {},

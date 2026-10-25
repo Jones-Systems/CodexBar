@@ -1275,8 +1275,6 @@ extension SessionEquivalentForecastTests {
 }
 
 extension SessionEquivalentForecastTests {
-    @MainActor
-
     static func historyFixture(burns: [Double])
         -> (histories: [PlanUtilizationSeriesHistory], currentSessionReset: Date)
     {

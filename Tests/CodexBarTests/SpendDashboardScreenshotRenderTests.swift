@@ -89,9 +89,9 @@ final class SpendDashboardScreenshotRenderTests: XCTestCase {
                 ],
                 historyDays: SpendDashboardSource.scanDays,
                 now: now))
-        let claude = SpendDashboardModel.ProviderInput(
-            provider: .claude,
-            displayName: "Cursor",
+        let codex = SpendDashboardModel.ProviderInput(
+            provider: .codex,
+            displayName: "Codex",
             snapshot: Self.snapshot(
                 entries: [
                     Self.entry(day: recentDay, cost: nil, tokens: 8, model: "deepseek-v4-flash"),
@@ -100,17 +100,19 @@ final class SpendDashboardScreenshotRenderTests: XCTestCase {
                 now: now))
 
         let thirty = SpendDashboardModel.build(
-            inputs: [claude, claude],
+            inputs: [claude, codex],
             requestedDays: 30,
             now: now,
             calendar: calendar)
         let allTime = SpendDashboardModel.build(
-            inputs: [claude, claude],
+            inputs: [claude, codex],
             requestedDays: SpendDashboardSource.scanDays,
             now: now,
             calendar: calendar)
         let thirtyGroup = try XCTUnwrap(thirty.groups.first)
         let allGroup = try XCTUnwrap(allTime.groups.first)
+        XCTAssertEqual(Set(thirtyGroup.providers.map(\.id)), ["claude", "codex"])
+        XCTAssertEqual(Set(allGroup.providers.map(\.id)), ["claude", "codex"])
         XCTAssertFalse(thirtyGroup.models.contains { $0.modelName == "MiniMax-M3" })
         XCTAssertTrue(allGroup.models.contains { $0.modelName == "MiniMax-M3" })
 

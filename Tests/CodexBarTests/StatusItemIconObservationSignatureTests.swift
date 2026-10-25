@@ -425,7 +425,7 @@ struct StatusItemIconObservationSignatureTests {
         store._test_widgetSnapshotSaveOverride = { widgetSnapshots.append($0) }
         defer { store._test_widgetSnapshotSaveOverride = nil }
 
-        settings.zaiAPIToken = "test-token"
+        settings.claudeAdminAPIKey = "test-token"
         try? await Task.sleep(nanoseconds: 100_000_000)
         await store.widgetSnapshotPersistTask?.value
 

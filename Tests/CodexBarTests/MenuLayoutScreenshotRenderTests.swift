@@ -59,8 +59,7 @@ final class MenuLayoutScreenshotRenderTests: XCTestCase {
                         startupBehavior: .testing,
                         environmentBase: [:],
                         widgetSnapshotURL: root.appendingPathComponent("widget.json"))
-                    let fixture = try CursorOverviewProofFixture.make()
-                    let group = try XCTUnwrap(fixture.model.groups.first)
+                    let group = try Self.localizedSpendGroup()
                     // Render production views, with no engine, providers, hooks, or credential access running.
                     // Offscreen Forms do not expose their children through the accessibility traversal.
                     let views: [(String, AnyView, [String])] = [
@@ -104,6 +103,57 @@ final class MenuLayoutScreenshotRenderTests: XCTestCase {
                 }
             }
         }
+    }
+
+    private static func localizedSpendGroup() throws -> SpendDashboardModel.CurrencyGroup {
+        let now = Date(timeIntervalSince1970: 1_787_011_200)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let day = CostUsageScanner.CostUsageDayRange.dayKey(from: now, calendar: calendar)
+        let breakdown = CostUsageDailyReport.ModelBreakdown(
+            modelName: "fixture-model",
+            costUSD: 12,
+            totalTokens: 1000,
+            inputTokens: 600,
+            outputTokens: 400,
+            cacheReadTokens: 0,
+            cacheCreationTokens: 0)
+        let entry = CostUsageDailyReport.Entry(
+            date: day,
+            inputTokens: 600,
+            outputTokens: 400,
+            cacheReadTokens: 0,
+            cacheCreationTokens: 0,
+            totalTokens: 1000,
+            costUSD: 12,
+            modelsUsed: ["fixture-model"],
+            modelBreakdowns: [breakdown])
+        let report = CostUsageDailyReport(data: [entry], summary: nil)
+        let snapshot = CostUsageFetcher.tokenSnapshot(
+            from: report,
+            now: now,
+            historyDays: 30,
+            calendar: calendar,
+            historyCoverageIsEstablished: true,
+            costProvenance: .listPriceEstimate)
+        let publication = SpendDashboardPublication(
+            revision: 1,
+            generation: 1,
+            configuration: nil,
+            loadedAt: now,
+            isRefreshing: false,
+            inputs: [.init(provider: .codex, displayName: "Codex", snapshot: snapshot)],
+            sources: [
+                .init(id: "codex", provider: .codex, displayName: "Codex", role: .subscription, state: .available),
+                .init(id: "claude", provider: .claude, displayName: "Claude", role: .subscription, state: .unavailable),
+            ])
+        let model = publication.model(
+            requestedDays: 30,
+            now: now,
+            calendar: calendar,
+            preferredCurrencyCode: "USD",
+            providerScope: [.codex, .claude])
+        return try XCTUnwrap(model.groups.first)
     }
 
     private static func accessibilityText(_ element: Any, depth: Int = 0) -> String {
