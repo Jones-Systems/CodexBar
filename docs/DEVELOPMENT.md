@@ -643,7 +643,10 @@ classified before Markdown suffixes. Changes to the classifier, aggregate verifi
 select all platforms. The path partition selects platforms; the [test profile](testing-profiles.md) selects
 normal or full compatibility names for the same retained source.
 
-The selected checks retain their names: `swift-test-macos (0, 2)`, `swift-test-macos (1, 2)`,
+Selected macOS runs require `swift-build-macos` before both shards. It compiles once and distributes a
+verified same-run build artifact; workers fail closed on an invalid handoff and execute with `--skip-build`.
+See [compiled test handoff](ci-test-build-handoff.md) for runtime compatibility, storage, and cleanup.
+The existing selected checks retain their names: `swift-test-macos (0, 2)`, `swift-test-macos (1, 2)`,
 `build-linux-cli (linux-x64, ubuntu-24.04)`, `build-linux-cli (linux-arm64, ubuntu-24.04-arm)` and
 `build-linux-musl-cli`. Both glibc architectures run the selected profile’s complete portable suite and CLI smoke assertions.
 Ordinary PRs build and smoke-test the debug CLI, sharing compilation with debug tests. Main and manual runs

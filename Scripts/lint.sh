@@ -85,6 +85,7 @@ check_build_jobs() {
 
 check_ci_isolated_commands() {
   "${ROOT_DIR}/Scripts/test.sh" --command python3 -B "${ROOT_DIR}/Scripts/test_ci_isolated_commands.py"
+  "${ROOT_DIR}/Scripts/test.sh" --command python3 -B "${ROOT_DIR}/Scripts/test_swift_test_artifact.py"
 }
 
 check_codexbar_skill() {

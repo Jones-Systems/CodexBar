@@ -159,7 +159,7 @@ class DiscoveryRecoveryTests(unittest.TestCase):
 class CacheContractTests(unittest.TestCase):
     def test_cache_saves_new_source_builds_with_a_toolchain_bound_fallback(self):
         workflow = (ROOT / ".github/workflows/ci.yml").read_text()
-        job = re.search(r"(?ms)^  swift-test-macos:\n(.*?)(?=^  [\w-]+:|\Z)", workflow).group(1)
+        job = re.search(r"(?ms)^  swift-build-macos:\n(.*?)(?=^  [\w-]+:|\Z)", workflow).group(1)
         cache = re.search(r"(?ms)^      - name: Restore SwiftPM build cache\n(.*?)(?=^      - |\Z)", job).group(1)
         key = re.search(r"(?m)^          key: (.+)$", cache).group(1)
         self.assertIn("${{ github.sha }}", key)
@@ -171,10 +171,24 @@ class CacheContractTests(unittest.TestCase):
         restore = re.search(r"(?m)^          restore-keys: \|\n((?:            .+\n)+)", cache).group(1)
         self.assertEqual(restore.strip(), key.removesuffix("${{ github.sha }}"))
         self.assertLess(job.index("id: swift-toolchain"), job.index("- name: Restore SwiftPM build cache"))
-        self.assertNotIn("cache-hit", job[job.index("- name: Swift Test"):])
+        worker = re.search(r"(?ms)^  swift-test-macos:\n(.*?)(?=^  [\w-]+:|\Z)", workflow).group(1)
+        self.assertNotIn("uses: actions/cache", worker)
+        self.assertIn('./Scripts/test.sh --use-build "$CODEXBAR_TEST_BUILD_ROOT"', worker)
 
 
 class CampaignActivationTests(unittest.TestCase):
+    def test_nightly_uses_native_timezone_normal_profile_and_separate_concurrency(self):
+        workflow = (ROOT / ".github/workflows/ci.yml").read_text()
+        triggers = workflow.split("on:\n", 1)[1].split("\nconcurrency:\n", 1)[0]
+        schedule = triggers.split("  schedule:\n", 1)[1].split("  push:\n", 1)[0]
+        self.assertEqual(schedule, "    - cron: '0 5 * * *'\n      timezone: America/New_York\n")
+        group = re.search(r"(?m)^  group: (.+)$", workflow).group(1)
+        self.assertIn("github.event_name == 'schedule' && format('ci-nightly-{0}-{1}', github.workflow, github.ref)", group)
+        self.assertIn("format('ci-{0}-{1}', github.workflow, github.ref)", group)
+        self.assertIn("format('ci-manual-{0}-{1}-{2}-{3}', github.workflow, github.ref, github.run_id, github.run_attempt)", group)
+        self.assertIn("cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}", workflow)
+        self.assertIn("CODEXBAR_TEST_PROFILE: ${{ github.event_name == 'workflow_dispatch' && inputs.test_profile || 'normal' }}", workflow)
+
     def test_manual_campaign_has_explicit_validated_controls(self):
         workflow = (ROOT / ".github/workflows/ci.yml").read_text()
         self.assertIn("  workflow_dispatch:", workflow)
@@ -182,7 +196,9 @@ class CampaignActivationTests(unittest.TestCase):
             self.assertIn(f"      {name}:", workflow)
         self.assertIn("Scripts/ci_swift_test_campaign.py plan", workflow)
         self.assertIn("CODEXBAR_TEST_PROFILE: ${{ github.event_name == 'workflow_dispatch' && inputs.test_profile || 'normal' }}", workflow)
-        self.assertIn("if: ${{ env.CODEXBAR_TEST_PROFILE == 'full' && matrix.shard-index == 0 }}", workflow)
+        self.assertIn('if [[ "$CODEXBAR_TEST_PROFILE" == full', workflow)
+        self.assertIn("'${{ matrix.shard-index }}' == 0", workflow)
+        self.assertIn("extra+=(--jsc-goldens)", workflow)
 
     def test_native_evidence_is_opt_in(self):
         source = (ROOT / "Scripts/ci_swift_test_by_suite.py").read_text()
@@ -191,7 +207,7 @@ class CampaignActivationTests(unittest.TestCase):
 
 class CampaignPlanTests(unittest.TestCase):
     def test_ordinary_defaults_ignore_manual_inputs(self):
-        for event in ("pull_request", "push"):
+        for event in ("pull_request", "push", "schedule"):
             plan = campaign.resolve_plan(event, "12", "3", "untrusted", SHA, "cold")
             self.assertEqual(plan["include"], [
                 {"shard-index": index, "shard-count": 2, "group-size": 4,
@@ -220,18 +236,21 @@ class CampaignPlanTests(unittest.TestCase):
         self.assertIn("timeout-minutes: 70", job)
         self.assertIn("CODEXBAR_TEST_SUITE_TIMEOUT=120", job)
         self.assertIn("CODEXBAR_TEST_RETRY_NON_TIMEOUT_FAILURES=0", job)
-        self.assertIn("if: ${{ matrix.cache-mode != 'cold' }}", job)
+        producer = workflow.split("  swift-build-macos:\n", 1)[1].split("  swift-test-macos:\n", 1)[0]
+        self.assertIn("if: ${{ github.event_name != 'workflow_dispatch' || inputs.cache_mode != 'cold' }}", producer)
+        self.assertNotIn("uses: actions/cache", job)
         swift_step = job.split("- name: Swift Test\n", 1)[1].split("      - name:", 1)[0]
         self.assertIn("CODEXBAR_TEST_EVIDENCE_DIR:", swift_step)
         self.assertEqual(job.count("CODEXBAR_TEST_EVIDENCE_DIR:"), 1)
-        for required in ("Check app locales and Swift formatting", "Provider plugin JavaScriptCore goldens",
-                         "Collect crash reports on failure", "Summarize macOS shard"):
+        self.assertIn("Check app locales and Swift formatting", producer)
+        for required in ("Collect crash reports on failure", "Summarize macOS shard"):
             self.assertIn(required, job)
         self.assertLess(job.index("Summarize macOS shard"), job.index("Validate campaign evidence"))
         self.assertIn("retention-days: 7", job)
         self.assertIn("steps.campaign-upload.outcome == 'success'", job)
         self.assertIn("./Scripts/test.sh --parallel", workflow)
-        self.assertIn("run: ./Scripts/test-plugin-engines.sh --jsc-only", job)
+        self.assertIn("extra+=(--jsc-goldens)", swift_step)
+        self.assertIn('-d Sources/CodexBarCore/Resources/Plugins', swift_step)
         self.assertNotIn("GITHUB_ENV", (ROOT / "Scripts/ci_swift_test_campaign.py").read_text())
 
     def test_prepare_refuses_unproved_warm_cold_and_storage(self):
@@ -1010,7 +1029,9 @@ class LinuxCacheTests(unittest.TestCase):
         workflow = (ROOT / ".github/workflows/ci.yml").read_text()
         self.assertIn("group: ${{ github.event_name == 'workflow_dispatch' && "
                       "format('ci-manual-{0}-{1}-{2}-{3}', github.workflow, github.ref, "
-                      "github.run_id, github.run_attempt) || format('ci-{0}-{1}', github.workflow, github.ref) }}",
+                      "github.run_id, github.run_attempt) || github.event_name == 'schedule' && "
+                      "format('ci-nightly-{0}-{1}', github.workflow, github.ref) || "
+                      "format('ci-{0}-{1}', github.workflow, github.ref) }}",
                       workflow)
         self.assertIn("cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}", workflow)
         linux = workflow.split("  build-linux-cli:\n", 1)[1]
