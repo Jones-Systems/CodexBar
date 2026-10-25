@@ -1494,7 +1494,7 @@ extension CodexBarCLI {
         context: ServeCostCollectionContext,
         fetch: @Sendable @escaping (UsageProvider) async -> CostPayload) async -> [CostPayload]
     {
-        await serveCollectCostPayloads(providers: providers, context: context) { provider in
+        await self.serveCollectCostPayloads(providers: providers, context: context) { provider in
             await fetch(provider)
         }
     }

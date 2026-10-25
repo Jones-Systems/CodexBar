@@ -1623,7 +1623,7 @@ struct ProviderArchitectureGatekeeperTests {
                 "claude@22",
             ],
             reason:
-                "Claude account actions accept proven CLI quota success without inventing identity; Codex retains its default-provider fallback."),
+            "Claude account actions accept proven CLI quota success without inventing identity; Codex retains its default-provider fallback."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/MenuDescriptor.swift",
             line: 637,
@@ -1698,7 +1698,7 @@ struct ProviderArchitectureGatekeeperTests {
                 "claude@18",
             ],
             reason:
-                "This exact preferences test fixture seeds representative provider versions, snapshots, and accounts."),
+            "This exact preferences test fixture seeds representative provider versions, snapshots, and accounts."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/PreferencesProvidersPane.swift",
             line: 284,
