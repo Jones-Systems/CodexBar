@@ -873,4 +873,21 @@ owned `.test-fixtures-pkq9_t1q` parent is removed and absence verified. No nativ
 formatter/compiler/runtime success is claimed; root's automatic exact-head CI
 remains the next gate, with full-suite qualification/timing still pending.
 
+Source commit `e4e5d1699195fe5dcc832d1f5d0cf5259e2250e3` contains the two fixture repairs
+and spec/note. Complete committed Git inventory confirms unchanged product
+651 Swift files / 193218 lines / 7944079 bytes, and tests 733 files / 252392
+lines / 10941438 bytes. This batch adds 12 test lines / 646 bytes, no test
+declarations (6570 across 691 files with attributes), removals, skips or limits.
+The first eight admitted checks use CPU 10.13–27.07% and 44.81–45.95 GiB available
+RAM, with one serial process and the nonblocking benchmark lock; one fully used
+core is 6.25% of host capacity. Final evidence readback is separately recorded.
+All prior cost/history/TTY/privacy preservation proofs, 312 catalog anchors,
+generator/source blobs and native/harness/schedule/frozen handoff bytes remain
+unchanged. Only comparison/note evidence follows; app-size/cold-build evidence
+is still unavailable and no partial-run or source-count savings is inferred.
+
+Final evidence coherence/whitespace and documentation-link readback pass under
+fresh serial admission (CPU 11.91% and 21.25%, 45.36 and 45.37 GiB available RAM).
+Receipts are retained in the comparison; no subsequent test/source changes.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->
