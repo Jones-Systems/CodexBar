@@ -1,7 +1,7 @@
 {
   "schema": "codexbar-product-removal-comparison/v1",
   "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
-  "candidateSourceRevision": "f92aa420b526db64f2ca6b2213496a19d3b249c0",
+  "candidateSourceRevision": "257e2282a286b0257c962460fa7cf63a0a9a7b08",
   "pullRequest": "https://github.com/Jones-Systems/CodexBar/pull/41",
   "baseBranch": "work/test-value-bar-pass2-20261024",
   "method": "Exact committed Git blobs; files include Swift source under Sources and tests under Tests, TestsLinux, TestsPlugin; line count uses bytes.splitlines; lexical Swift Testing @Test declaration counts exclude comments/strings and do not represent parameterized/runtime cases.",
@@ -37,7 +37,7 @@
       "testSwift": {
         "files": 733,
         "lines": 252448,
-        "bytes": 10944789
+        "bytes": 10944825
       }
     }
   },
@@ -989,10 +989,10 @@
       "qualification": "No new-head compile or execution pass inferred."
     },
     "latestNativeRuntimeAttempt": {
-      "runID": 40173875411,
-      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40173875411",
-      "prHeadRevision": "25a69714c9af61e4e094bdd82d232bff6b5c2aa3",
-      "mergeCheckout": "c8148368b2ce23548d76118c15f3fc34b6bc51fd",
+      "runID": 40176584648,
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40176584648",
+      "prHeadRevision": "e54c39f353197e5e5fb7852272e67e676b46b473",
+      "mergeCheckout": "1288fd8858d664d1e9b3b1f2b35b337344106edd",
       "changes": "success",
       "lint": "success",
       "linuxX64": "success",
@@ -1001,45 +1001,31 @@
       "producer": "success",
       "workers": [
         {
-          "jobID": 121113822849,
+          "jobID": 121121500881,
           "status": "failure",
-          "nativeCompatibility": "verified complete-fingerprint",
+          "nativeCompatibility": "verified complete-fingerprint across newer producer/older worker",
           "successfulGroupsBeforeFailure": 71,
           "selectedGroups": 85,
           "testBuilds": 0,
           "fullGroupRetries": 0,
           "timeouts": 0,
           "issues": [
-            "\u2718 Test \"menu bar extra usage preference uses percent in combined mode\" recorded an issue at StatusItemExtraUsageMetricTests.swift:32:9: Expectation failed: (displayText \u2192 \"$56.00\") == \"56%\"",
-            "\u2718 Test \"menu bar extra usage preference falls back to existing percent text when provider cost is unavailable\" recorded an issue at StatusItemExtraUsageMetricTests.swift:79:9: Expectation failed: (displayText \u2192 \"10%\") == \"72%\""
+            "\u2718 Test \"extra usage window keeps combined percent formatting and claude spend preference\" recorded an issue at StatusItemExtraUsageMetricTests.swift:33:9: Expectation failed: (extraUsageWindow?.usedPercent \u2192 56.00000000000001) == (56 \u2192 56.0)"
           ],
-          "discovery": {
-            "count": 6675,
-            "sha256": "6c51148beb994a908f631c7ff49e2270ef9259ac8c07add31904f86fbbac3ccd",
-            "sourceRevision": "c8148368b2ce23548d76118c15f3fc34b6bc51fd"
-          }
+          "originalDisplayExpectationsInGroup": "all passed; only newly added setup scalar equality failed"
         },
         {
-          "jobID": 121113822747,
-          "status": "success",
-          "source": "Root completed fan-in 2026-10-25 04:14:05 EDT"
+          "jobID": 121121500880,
+          "status": "success"
         }
       ],
       "aggregate": {
-        "jobID": 121115733911,
-        "status": "failure",
-        "required": true,
-        "deferred": false,
-        "producer": "success",
-        "shards": "failure",
-        "independentDefect": false,
-        "diagnostic": "macOS test gate/result mismatch: required=true deferred=false producer=success shards=failure"
+        "jobID": 121123897388,
+        "status": "failure consequential to shard0",
+        "independentDefect": false
       },
-      "publicationHold": {
-        "initiallyHeld": true,
-        "releasedByCompletedRootFanIn": "2026-10-25 04:14:05 EDT"
-      },
-      "qualification": "Prior-head shard1 success and shard0 failure; no exact-new-head full qualification or timing/size savings."
+      "source": "Completed root fan-in and bounded supplied shard0 issue; child did not watch/poll.",
+      "qualification": "Prior-head one failed shard; not full qualification or app-size/build/savings proof."
     }
   },
   "appSizeAndBuildComparison": {
@@ -1456,7 +1442,7 @@
     ],
     "deferredReason": "Three fresh below-threshold admissions, separated by ready source/evidence work, each found shared benchmark.lock busy. No test command or queued wait started. Existing local tool absences also prevent native make check/test. Prior exact-revision check results are retained as historical evidence, not new-head passes."
   },
-  "countMethodLatest": "Complete committed Git blob inventory at f92aa420b526db64f2ca6b2213496a19d3b249c0: product unchanged; test source +24 lines/+1683 bytes. All four edited-suite declarations and original expectations remain, one method renamed, 11 assertions added. Independent Test line-pattern count remains 6570 across 691 files. Prior-head discovery 6675 IDs is revision-bound; runtime/timing/size savings not inferred.",
+  "countMethodLatest": "Prior complete Git inventory plus exact single-line test-blob replacement at 257e2282a286b0257c962460fa7cf63a0a9a7b08: +36 test bytes, zero line/file/declaration delta. Product counts and all 6570 declarations remain. All other test bytes are unchanged from the prior published head; runtime cases/savings are not inferred.",
   "swiftFormatRepair": {
     "baseRevision": "1d9787f8b4075068f3282cb723e42170a6e702c3",
     "repairRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
@@ -10812,6 +10798,296 @@
           "normalized_load_one_minute": 0.2275,
           "sampled_steal_percent": 0.0,
           "cpu_psi_some_avg10_percent": 1.54
+        }
+      }
+    ]
+  },
+  "numericGuardRepair": {
+    "priorRevision": "e54c39f353197e5e5fb7852272e67e676b46b473",
+    "repairRevision": "257e2282a286b0257c962460fa7cf63a0a9a7b08",
+    "hostedFailingBefore": {
+      "runID": 40176584648,
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40176584648",
+      "prHeadRevision": "e54c39f353197e5e5fb7852272e67e676b46b473",
+      "mergeCheckout": "1288fd8858d664d1e9b3b1f2b35b337344106edd",
+      "changes": "success",
+      "lint": "success",
+      "linuxX64": "success",
+      "linuxARM64": "success",
+      "linuxMusl": "success",
+      "producer": "success",
+      "workers": [
+        {
+          "jobID": 121121500881,
+          "status": "failure",
+          "nativeCompatibility": "verified complete-fingerprint across newer producer/older worker",
+          "successfulGroupsBeforeFailure": 71,
+          "selectedGroups": 85,
+          "testBuilds": 0,
+          "fullGroupRetries": 0,
+          "timeouts": 0,
+          "issues": [
+            "\u2718 Test \"extra usage window keeps combined percent formatting and claude spend preference\" recorded an issue at StatusItemExtraUsageMetricTests.swift:33:9: Expectation failed: (extraUsageWindow?.usedPercent \u2192 56.00000000000001) == (56 \u2192 56.0)"
+          ],
+          "originalDisplayExpectationsInGroup": "all passed; only newly added setup scalar equality failed"
+        },
+        {
+          "jobID": 121121500880,
+          "status": "success"
+        }
+      ],
+      "aggregate": {
+        "jobID": 121123897388,
+        "status": "failure consequential to shard0",
+        "independentDefect": false
+      },
+      "source": "Completed root fan-in and bounded supplied shard0 issue; child did not watch/poll.",
+      "qualification": "Prior-head one failed shard; not full qualification or app-size/build/savings proof."
+    },
+    "reason": "New setup guard incorrectly required exact equality after binary64 division/multiplication; observed error is one ULP, within the rigorous two-operation bound. Two-ULP numeric allowance preserves intent while original exact display/fixture coverage remains.",
+    "preservationAndNumericProof": {
+      "priorRevision": "e54c39f353197e5e5fb7852272e67e676b46b473",
+      "path": "Tests/CodexBarTests/StatusItemExtraUsageMetricTests.swift",
+      "beforeSHA256": "b935ff78a39b5b88142619f4d9c6bcc0c22b599ebfbc70800b2ab83a58a8c882",
+      "afterSHA256": "52e5eca437a62cf18c6c436a4f2f025d4929105879c472c0df3af900a5749c95",
+      "exactOnlyReplacement": {
+        "before": "#expect(extraUsageWindow?.usedPercent == 56)",
+        "after": "#expect(abs((extraUsageWindow?.usedPercent ?? .nan) - 56) <= 2 * Double(56).ulp)"
+      },
+      "testDeclarationsBefore": 4,
+      "testDeclarationsAfter": 4,
+      "expectationsBefore": 15,
+      "expectationsAfter": 15,
+      "originalFourExpectationsExact": true,
+      "otherTenNewGuardsExact": true,
+      "allOtherFileBytesExact": true,
+      "lineDelta": 0,
+      "byteDelta": 36,
+      "narrowGuardAudit": {
+        "newGuardsFromPriorRepair": [
+          "#expect(controller.settings.menuBarMetricPreference(for: .claude, snapshot: snapshot) == .extraUsage)",
+          "#expect(controller.menuBarDisplayText(for: .claude, snapshot: snapshot) == \"$56.00\")",
+          "#expect(extraUsageWindow?.usedPercent == 56)",
+          "#expect(controller.settings.menuBarMetricPreference(for: .claude, snapshot: snapshot) == .primary)",
+          "#expect(controller.menuBarDisplayText(for: .claude, snapshot: snapshot) == \"10%\")",
+          "#expect(controller.menuBarDisplayText(for: .claude, snapshot: snapshot) == \"10%\")",
+          "#expect(controller.settings.menuBarMetricPreference(for: .claude) == .extraUsage)",
+          "#expect(controller.settings.menuBarMetricPreference(for: .claude, snapshot: snapshot) == .automatic)",
+          "#expect(controller.menuBarMetricWindow(for: .claude, snapshot: snapshot) == snapshot.primary)",
+          "#expect(controller.settings.menuBarMetricPreference(for: .claude, snapshot: secondaryOnly) == .automatic)",
+          "#expect(controller.menuBarMetricWindow(for: .claude, snapshot: secondaryOnly) == snapshot.secondary)"
+        ],
+        "onlyArithmeticScalarExactComparison": "#expect(extraUsageWindow?.usedPercent == 56)",
+        "otherGuards": "Enums, formatted strings, or directly copied snapshot quota windows; no arithmetic equality repair needed."
+      },
+      "numericProof": {
+        "language": "Python binary64 diagnostic, not Swift compilation/execution",
+        "operations": "(56/100)*100",
+        "observed": 56.00000000000001,
+        "absoluteError": 7.105427357601002e-15,
+        "oneULP": 7.105427357601002e-15,
+        "allowanceULPs": 2,
+        "absoluteTolerance": 1.4210854715202004e-14,
+        "twoOperationRoundingBound": 1.2434497875801753e-14,
+        "boundBelowTolerance": true,
+        "samples": [
+          {
+            "case": "exact",
+            "passes": true
+          },
+          {
+            "case": "observed",
+            "passes": true
+          },
+          {
+            "case": "two ULPs",
+            "passes": true
+          },
+          {
+            "case": "three ULPs",
+            "passes": false
+          },
+          {
+            "case": "missing -> NaN",
+            "passes": false
+          },
+          {
+            "case": "positive infinity",
+            "passes": false
+          },
+          {
+            "case": "negative infinity",
+            "passes": false
+          },
+          {
+            "case": "material wrong quota",
+            "passes": false
+          },
+          {
+            "case": "other quota",
+            "passes": false
+          }
+        ]
+      },
+      "gitWhitespace": "pass"
+    },
+    "localChecks": [
+      {
+        "name": "numeric-preservation",
+        "command": [
+          "python3",
+          ".build/slim-product-work/numeric-guard-e54c39f3/verify.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.054,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T08:57:39Z",
+          "ram_available_gib": 47.38,
+          "cpu_used_percent": 20.43,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2575,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 1.25
+        },
+        "classification": "pass"
+      },
+      {
+        "name": "make-check",
+        "command": [
+          "make",
+          "check"
+        ],
+        "exitCode": 2,
+        "elapsedSeconds": 0.087,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T08:57:50Z",
+          "ram_available_gib": 47.24,
+          "cpu_used_percent": 17.5,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2562,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 1.64
+        },
+        "classification": "unavailable before native execution: missing local tool"
+      },
+      {
+        "name": "make-test",
+        "command": [
+          "make",
+          "test"
+        ],
+        "exitCode": 2,
+        "elapsedSeconds": 0.097,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [
+          {
+            "name": ".test-fixtures-4b4s0dm4",
+            "absentAfterCommand": true
+          }
+        ],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T08:57:50Z",
+          "ram_available_gib": 47.25,
+          "cpu_used_percent": 16.61,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2562,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 1.64
+        },
+        "classification": "unavailable before native execution: missing local tool"
+      },
+      {
+        "name": "documentation-links",
+        "command": [
+          "node",
+          "Scripts/check-documentation-links.mjs"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.113,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T08:57:50Z",
+          "ram_available_gib": 47.13,
+          "cpu_used_percent": 14.78,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2562,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 1.7
+        },
+        "classification": "pass"
+      }
+    ],
+    "sourceInventoryDelta": {
+      "productSourceBytes": 0,
+      "testSwiftFiles": 0,
+      "testSwiftLines": 0,
+      "testSwiftBytes": 36,
+      "swiftTestingDeclarations": 0
+    },
+    "countMethod": "Inherited complete committed inventory; exact old/new file replacement proves only +36 bytes and zero line/file/attribute delta.",
+    "countsAfter": {
+      "productSwift": {
+        "files": 651,
+        "lines": 193218,
+        "bytes": 7944079
+      },
+      "productCHeaders": {
+        "files": 1,
+        "lines": 1,
+        "bytes": 21
+      },
+      "testSwift": {
+        "files": 733,
+        "lines": 252448,
+        "bytes": 10944825
+      }
+    },
+    "normalProfileManifestSHA256": "136f44cb5604cf4364709c429e2e7ff8d275c0065d26bfb4896e1899008865d8",
+    "priorProtectedProofsUnchanged": true,
+    "sourceIdentity": "Single test assertion committed at 257e2282a286b0257c962460fa7cf63a0a9a7b08; following commit changes only existing evidence documents.",
+    "limitations": [
+      "Python binary64 numeric diagnostic is not Swift compilation/runtime execution. Swift/plutil/formatters remain unavailable; make check/test exit2 before native execution.",
+      "Prior-head original display/group successes and other-shard success are revision-bound. Root owns exact-new-head automatic qualification. App-size/cold-build comparison and full savings remain unavailable."
+    ],
+    "evidenceReadbackChecks": [
+      {
+        "name": "evidence-coherence",
+        "command": [
+          "python3",
+          ".build/slim-product-work/numeric-guard-e54c39f3/check_evidence.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.082,
+        "nonblockingBenchmarkLockAcquired": true,
+        "serialProcessCount": 1,
+        "fixtureParentsRemaining": [],
+        "recordedFixtureParents": [],
+        "admission": {
+          "collectedAtUTC": "2026-10-25T08:59:42Z",
+          "ram_available_gib": 47.19,
+          "cpu_used_percent": 18.24,
+          "effective_cpu_capacity": 16.0,
+          "one_fully_used_core_percent": 6.25,
+          "normalized_load_one_minute": 0.2669,
+          "sampled_steal_percent": 0.0,
+          "cpu_psi_some_avg10_percent": 1.8
         }
       }
     ]

@@ -1217,4 +1217,15 @@ is removed and absence verified. Every check starts with fresh telemetry,
 nonblocking lock and one serial process. Root retains native qualification;
 all accounting/scale/auth/history/TTY/catalog/harness/schedule/frozen proofs stay.
 
+Source commit `257e2282a286b0257c962460fa7cf63a0a9a7b08` contains the assertion/spec/note repair.
+Exact old/new committed test-blob replacement proves +36 bytes, zero line/file/
+declaration delta; prior complete inventory remains 651 product Swift files /
+193218 lines and 733 test files / 252448 lines / 10944825 bytes, with 6570
+source declarations. The following commit adds evidence only. No runtime-count,
+size or speed savings inferred; native exact-head qualification remains pending.
+
+Final evidence readback passes: exact one-assertion replacement, all other test
+bytes/protected proofs, counts/scope, whitespace and fixture-parent absence.
+Native Swift/format/runtime qualification remains root-owned and pending.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->
