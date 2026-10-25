@@ -51,7 +51,7 @@ struct PlanUtilizationHistoryChartMenuViewTests {
     }
 
     @Test
-    func `generic unknown weekly extra window does not filter saved history`() {
+    func `unknown weekly extras preserve generic fallback and saved Codex history`() {
         let history = PlanUtilizationSeriesHistory(
             name: .weekly,
             windowMinutes: 10080,
@@ -77,12 +77,26 @@ struct PlanUtilizationHistoryChartMenuViewTests {
             ],
             updatedAt: Date(timeIntervalSince1970: 1_700_000_000))
 
+        #expect(ProviderUsagePresentation.standardPlanUtilizationSeries(snapshot: snapshot) == nil)
+
+        // Codex has a known-window whitelist; offline history has no current snapshot to constrain it.
         let model = PlanUtilizationHistoryChartMenuView._modelSnapshotForTesting(
             histories: [history],
-            provider: .codex,
-            snapshot: snapshot)
+            provider: .codex)
 
         #expect(model.visibleSeries == ["weekly:10080"])
         #expect(model.selectedSeries == "weekly:10080")
+        #expect(model.usedPercents.contains(42))
+
+        let knownSnapshot = UsageSnapshot(
+            primary: nil,
+            secondary: RateWindow(usedPercent: 42, windowMinutes: 10080, resetsAt: nil, resetDescription: nil),
+            extraRateWindows: snapshot.extraRateWindows,
+            updatedAt: snapshot.updatedAt)
+        let knownModel = PlanUtilizationHistoryChartMenuView._modelSnapshotForTesting(
+            histories: [history],
+            provider: .codex,
+            snapshot: knownSnapshot)
+        #expect(knownModel == model)
     }
 }

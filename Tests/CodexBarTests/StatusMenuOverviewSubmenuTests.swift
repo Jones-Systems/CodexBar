@@ -75,7 +75,7 @@ extension StatusMenuTests {
     }
 
     @Test
-    func `selecting overview row defers provider detail rebuild`() async throws {
+    func `selecting provider switcher from overview defers provider detail rebuild`() async throws {
         let previousMenuCardRendering = StatusItemController.menuCardRenderingEnabled
         let previousMenuRefresh = StatusItemController.menuRefreshEnabled
         StatusItemController.menuCardRenderingEnabled = false
@@ -101,10 +101,6 @@ extension StatusMenuTests {
 
         let fetcher = UsageFetcher()
         let store = UsageStore(fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
-        // A first quota refresh leaves this row without a Plan Usage submenu.
-        store._setSnapshotForTesting(nil, provider: .claude)
-        store.isRefreshing = true
-        store.refreshingProviders.insert(.claude)
         let controller = StatusItemController(
             store: store,
             settings: settings,
@@ -118,20 +114,19 @@ extension StatusMenuTests {
         controller.menuWillOpen(menu)
         defer { controller.menuDidClose(menu) }
 
-        let claudeRow = try #require(menu.items.first {
-            ($0.representedObject as? String) == "overviewRow-claude"
-        })
+        let switcher = try #require(menu.items.first?.view as? ProviderSwitcherView)
+        let claudeButton = try #require(switcher.subviews.compactMap { $0 as? NSButton }.first { $0.tag == 2 })
         var rebuildCount = 0
         controller._test_openMenuRebuildObserver = { _ in
             rebuildCount += 1
         }
         defer { controller._test_openMenuRebuildObserver = nil }
 
-        #expect(claudeRow.submenu == nil)
-        #expect(claudeRow.action == #selector(StatusItemController.selectOverviewProvider(_:)))
-        let action = try #require(claudeRow.action)
-        let target = try #require(claudeRow.target as? StatusItemController)
-        _ = target.perform(action, with: claudeRow)
+        #expect(controller.lastSwitcherProviders == [.codex, .claude])
+        #expect(claudeButton.isEnabled)
+        #expect(claudeButton.target === switcher)
+        let action = try #require(claudeButton.action)
+        #expect(NSApplication.shared.sendAction(action, to: switcher, from: claudeButton))
 
         #expect(settings.mergedMenuLastSelectedWasOverview == false)
         #expect(settings.selectedMenuProvider == .claude)
@@ -155,7 +150,7 @@ extension StatusMenuTests {
     }
 
     @Test
-    func `overview row action close renders selected provider on next open`() async throws {
+    func `provider switcher action close renders selected provider on next open`() async throws {
         let previousMenuCardRendering = StatusItemController.menuCardRenderingEnabled
         let previousMenuRefresh = StatusItemController.menuRefreshEnabled
         StatusItemController.menuCardRenderingEnabled = false
@@ -181,10 +176,6 @@ extension StatusMenuTests {
 
         let fetcher = UsageFetcher()
         let store = UsageStore(fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
-        // A first quota refresh leaves this row without a Plan Usage submenu.
-        store._setSnapshotForTesting(nil, provider: .claude)
-        store.isRefreshing = true
-        store.refreshingProviders.insert(.claude)
         let controller = StatusItemController(
             store: store,
             settings: settings,
@@ -197,20 +188,19 @@ extension StatusMenuTests {
         let menu = controller.makeMenu()
         controller.menuWillOpen(menu)
 
-        let claudeRow = try #require(menu.items.first {
-            ($0.representedObject as? String) == "overviewRow-claude"
-        })
+        let switcher = try #require(menu.items.first?.view as? ProviderSwitcherView)
+        let claudeButton = try #require(switcher.subviews.compactMap { $0 as? NSButton }.first { $0.tag == 2 })
         var rebuildCount = 0
         controller._test_openMenuRebuildObserver = { _ in
             rebuildCount += 1
         }
         defer { controller._test_openMenuRebuildObserver = nil }
 
-        #expect(claudeRow.submenu == nil)
-        #expect(claudeRow.action == #selector(StatusItemController.selectOverviewProvider(_:)))
-        let action = try #require(claudeRow.action)
-        let target = try #require(claudeRow.target as? StatusItemController)
-        _ = target.perform(action, with: claudeRow)
+        #expect(controller.lastSwitcherProviders == [.codex, .claude])
+        #expect(claudeButton.isEnabled)
+        #expect(claudeButton.target === switcher)
+        let action = try #require(claudeButton.action)
+        #expect(NSApplication.shared.sendAction(action, to: switcher, from: claudeButton))
         controller.menuDidClose(menu)
 
         await Task.yield()
@@ -227,5 +217,57 @@ extension StatusMenuTests {
         #expect(representedIDs.contains("menuCard"))
         #expect(representedIDs.contains(where: { $0.hasPrefix("overviewRow-") }) == false)
         #expect(switcherButtons.first(where: { $0.state == .on })?.tag == 2)
+    }
+
+    @Test
+    func `plain overview row action delivers summary expansion without navigation`() throws {
+        self.disableMenuCardsForTesting()
+        let settings = self.makeSettings()
+        settings.statusChecksEnabled = false
+        settings.refreshFrequency = .manual
+        settings.mergeIcons = true
+        settings.selectedMenuProvider = .codex
+        settings.mergedMenuLastSelectedWasOverview = true
+        for provider in UsageProvider.allCases {
+            guard let metadata = ProviderRegistry.shared.metadata[provider] else { continue }
+            settings.setProviderEnabled(provider: provider, metadata: metadata, enabled: true)
+        }
+
+        let fetcher = UsageFetcher()
+        let store = UsageStore(fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
+        // This plain row uses the same account-summary action as a rendered row.
+        store._setSnapshotForTesting(nil, provider: .claude)
+        store.isRefreshing = true
+        store.refreshingProviders.insert(.claude)
+        let controller = StatusItemController(
+            store: store,
+            settings: settings,
+            account: fetcher.loadAccountInfo(),
+            updater: DisabledUpdaterController(),
+            preferencesSelection: PreferencesSelection(),
+            statusBar: self.makeStatusBarForTesting())
+        defer { controller.releaseStatusItemsForTesting() }
+
+        let menu = controller.makeMenu()
+        controller.menuWillOpen(menu)
+        defer { controller.menuDidClose(menu) }
+        let claudeRow = try #require(menu.items.first {
+            ($0.representedObject as? String) == "overviewRow-claude"
+        })
+        #expect(claudeRow.menu === menu)
+        #expect(claudeRow.target === controller)
+        #expect(claudeRow.isEnabled)
+        #expect(claudeRow.tag == 0)
+        #expect(claudeRow.submenu == nil)
+        #expect(claudeRow.action == #selector(StatusItemController.selectOverviewProvider(_:)))
+        #expect(controller.overviewExpansionState.collapsedSummaryProviders.isEmpty)
+        let action = try #require(claudeRow.action)
+
+        #expect(NSApplication.shared.sendAction(action, to: controller, from: claudeRow))
+
+        #expect(controller.overviewExpansionState.collapsedSummaryProviders == [.claude])
+        #expect(settings.mergedMenuLastSelectedWasOverview)
+        #expect(settings.selectedMenuProvider == .codex)
+        #expect(controller.lastMergedSwitcherSelection == .overview)
     }
 }

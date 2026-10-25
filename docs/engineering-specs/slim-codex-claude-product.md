@@ -87,6 +87,10 @@ Menu fixtures must distinguish plain first-refresh row activation from generic
 history submenus. Use public selection edits for explicit-empty overview state
 below the provider limit; preserve exact provider identities, navigation tags,
 deferred rebuilds and stale viewport-restore protections.
+Overview summary activation preserves account expansion for both retained
+providers; use the provider switcher for navigation proofs and verify native
+action delivery. Preserve generic unknown-window policy separately from retained
+provider whitelists, plus saved-history fallback without a current snapshot.
 
 Run `make check` and `make test`; report missing local Swift/formatter tools as
 unavailable. Use the shared nonblocking benchmark lock and fresh CPU/RAM admission

@@ -729,4 +729,80 @@ identity without removing a declaration. All 56 exact cost files, four adapted
 files/29 retained methods and the separate 12 shared day-selection methods keep
 their prior proofs. The final publication adds only comparison/note evidence.
 
+Dispatch/history closure starts from verified clean PR41 head
+`5cee87b16c08bb0f31b4a912a8aee04161218fce`, with unchanged PR39 base `91bd5fb4`.
+Root run `40163389886` has a successful producer and complete-fingerprint workers,
+no timeouts, then stops after 59/85 and 74/85 successful groups. Saved logs show
+two history issues and nine remaining navigation issues; no full qualification.
+
+Source-bound trace before edits: the plain `overviewRow-claude` has controller
+as target, `selectOverviewProvider:` action (both prior preconditions passed),
+default tag 0, enabled because of its click closure, no submenu during the first
+quota refresh, and its owning menu. `NSObject.perform` sends that selector;
+receiver guards validate the represented prefix/provider and sender menu. It
+then calls `activateOverviewRow`, which always finds a Claude fleet source,
+even with no account rows, toggles summary expansion and invalidates the menu.
+It intentionally does not enter provider-selection mutation. Fleet source and
+activation match the base; the retained receiver/selection suffix also matches
+(the file prologue previously removed OpenAI API/Mistral branches). Existing
+OverviewFleetAccountsTests explicitly protects both providers expanding without
+navigation. The original tests used Cursor, whose nil fleet source entered the
+now-unrepresentable non-fleet row-navigation branch. The preceding repair fixed
+submenu admission but stopped its trace too early; it did not resolve this fleet
+branch and must be superseded without changing intended account interaction.
+
+Move the two shared deferred/close navigation proofs to the actual provider
+switcher NSButton action. Assert provider order, button target/enabled state and
+NSApplication delivery; retain all original behavioral postconditions, tags and
+wait budgets. Add one focused plain-row dispatch test for metadata, delivery and
+accordion state without navigation; this covers real action delivery beyond the
+existing direct-handler fleet tests. No product policy or source change.
+
+History provenance is Zed to Codex (not Claude): Codex has a known-window whitelist,
+where unknown-only metadata yields an empty set; the retained generic resolver
+returns nil when unknown extras supply no known weekly window. Both policies
+match the base. Exercise the generic resolver directly with the unchanged
+unknown fixture, then prove saved Codex weekly history survives no current
+snapshot and agrees with a valid Codex weekly snapshot containing that extra.
+Keep the original visible/selected series assertions and verify saved usage.
+Do not change Codex/Claude filtering, restore a retired provider or accept empty
+history as success.
+
+Exact write scope is StatusMenuOverviewSubmenuTests.swift and
+PlanUtilizationHistoryChartMenuViewTests.swift plus the existing spec/note/comparison.
+Read-only audit covers fleet, switcher-click and tracking test files and the
+bounded dispatch/history source chain. Captured before blobs and source-trace
+proof are owned under `.build/slim-product-work/dispatch-5cee`, removed after
+publication. Accounting/auth/TTY/fallback/limits and native/harness/schedule/frozen
+consumption remain; no agents/reviews/manual runs/installation/merge/child watch.
+
+Dispatch source proof pins ten retained blocks to the base: fleet lookup and
+activation, receiver/typed selection, switcher handler/applySelection/onSelect,
+rebuild scheduling, Codex series resolver, generic resolver and chart whitelist.
+All block hashes match. Prior logs did not record `NSObject.perform` delivery;
+no local runtime delivery is inferred. The admitted row handler cannot navigate
+for either retained provider. New assertions now distinguish actual dispatch
+from this intended expansion branch and verify the real switcher callback.
+
+The two edited files retain all six existing test declarations, rename three
+for their valid retained scope, and add one focused plain-row native dispatch
+case. Assertions go from 29 to 48. Original navigation state/card/tag/rebuild
+postconditions and yield/sleep budgets are exact; row-only preconditions move
+to the dedicated row proof while switcher target/order/enabled/delivery replace
+them in navigation cases. The unknown-window fixture and original weekly/selected
+history assertions remain byte-identical. The retained generic nil-whitelist,
+Codex offline saved usage (42), and valid-weekly model equality add direct proof;
+no expected history is replaced by empty/nil. All other tests and product source,
+including existing fleet tests and accounting scale/persistence, remain exact.
+
+Fresh per-command admission and the nonblocking benchmark lock allow one serial
+process: CPU 15.14–46.25%, RAM 42.37–43.71 GiB; one core is 6.25% of host capacity.
+Source trace/preservation, normal/full manifests, both generator `--check`
+commands, 181 documentation links, llms index and whitespace checks pass.
+`make check`/`make test` exit 2 at missing plutil/Swift before native lint/build/test;
+no tools are installed, and test fixture scratch absence is verified. The repair
+is still unqualified by native execution; root's automatic exact-head CI is the
+next gate. App-size/cold-build comparison remains unavailable, with no savings
+inferred from partial workers or source counts.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->
