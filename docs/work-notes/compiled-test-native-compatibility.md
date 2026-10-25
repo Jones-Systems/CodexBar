@@ -687,3 +687,81 @@ were installed and no Mac APIs/apps executed. Real graph counters, complete
 hosted native closure, two-shard qualification, overhead and savings remain
 unproved until parent-owned hosted observation. Schedule, frozen patches and
 nine residual files are unchanged; no new campaign or child watcher is started.
+
+## Internal parent suffix repair intent
+
+Run `40146716851`, producer `121029562638`, at exact
+`6b0ee22549375c2397af8d2085020aae1b95230d` stops before compilation at
+`unsafe-rpath-dependency`. The selected plain swift-frontend launch reaches
+`usr/lib/swift/host/compiler/lib_CompilerSwiftIDEUtils.dylib`, subtype 0,
+whose declared import is `@rpath/XcodeDefault/../lib_CompilerSwiftParser.dylib`.
+No candidates or rpaths have been inspected. Host collection takes 13.176s;
+closure 1.694s, with 740 attempted/739 resolved edges, 30 images, 106 memo hits,
+49 misses and two processes. This establishes that the previous edge-budget
+failure is gone at this point, not complete closure or two-shard qualification.
+Saved producer log SHA256 is
+`10aea7289f26b6472fee5f9c13113498ce97f11afcd5e42193bc46f30bd3a9e3`.
+
+Apple dyld commit `fd8d0c4d52320ebf64db34f3cb280310d905c5ae` appends the
+rpath tail unchanged; its file-existence path uses stat. Lexically cancelling
+`NAME/..` would lose intermediate symlink semantics and could accept a file
+whose raw path does not exist. Proposed support is limited to the three-component
+internal-parent form, with bounded component metadata traversal inside the same
+existing policy root, containment before target bytes/cache admission, explicit
+raw-join/hop identity and exact file/recursive closure equality. Leading or
+repeated parents and all other newly unsupported forms remain rejected. The
+coordinator received this precise syntax/representation boundary before code
+mutation; no new root, API, environment override, limit or fallback is proposed.
+
+Affected check plan: unchanged observed-form fixture fails exact old head;
+native-filesystem raw-path reference for ordinary directories and contained
+symlinks; ordered misses/selection; prefix/root/link/leaf escape and malformed
+suffix negatives; changed link, content and presence inequality; fail-before-build
+compiler sentinel. Then run the deduplicated artifact/native/evidence/isolated
+command union, path-gate/aggregate and documentation links, plus required make
+attempts under fresh CPU/RAM admission and the nonblocking portfolio lock.
+Preserve all nine residuals, both durable patches and the nightly schedule.
+
+## Internal parent suffix repair result
+
+Coordinator accepted the exact boundary at 20:39:45 EDT on October 24, 2026.
+The implementation follows raw joined components under one canonical admitted
+directory root, including contained links before parent steps, at unchanged
+32-component/shared-time limits. Edges bind raw joins, canonical destinations,
+metadata hops, link-byte hashes and negative cache evidence. File-only grants
+cannot become directory roots; a canonical target change between traversal and
+loading rejects. Closed capped failure diagnostics preserve the raw parent
+suffix and bounded hops without exposing rejected target paths or reading bytes.
+No root, alias, API, environment, resource cap, fallback or comparison rule changed.
+
+The unchanged observed-form fixture rejects exact
+`6b0ee22549375c2397af8d2085020aae1b95230d` at `unsafe-rpath-dependency`
+and passes the repair against actual raw-path realpath/stat and full-file SHA256.
+An ordinary-rpath graph produces the exact same complete fingerprint on old and
+new source, without projection or normalization. Contained relative/absolute,
+nested and parent-bearing link forms agree with the actual filesystem reference.
+Missing intermediate directories never select an existing lexical substitute;
+ordered later candidates remain available only after exact negative cache proof.
+
+The final deduplicated artifact/native/evidence/isolated-command union passes
+199 checks in 18.283s, zero skips. Existing path-gate/aggregate fixtures and 302
+local documentation links pass. Controls cover malformed/overlong suffixes,
+prefix/root/link/leaf escapes before target I/O/cache/hash, dangling links,
+permissions/types/cycles/budgets, cache-only/unknown/error outcomes, changed
+presence/link bytes/nested bytes, exact-file refusal, canonical-target races,
+staged fingerprint equality and actual-collector early compiler/discovery
+sentinels. Unavailable-host fallback and all original identity/integrity gates
+remain covered. Durable records are
+`.evidence-compiled-tests-20261024/rpath-parent-final-regression.json` and
+`rpath-parent-final-union.log`. Fresh admission/nonblocking lock and serial
+execution preceded checks; owned fixture scratch cleanup/absence was verified.
+
+Required `make test` exits 2 because local Swift is unavailable. The `make check`
+attempt before the final two containment guards exits 2 because `plutil` is
+unavailable; final retry admission stops at the busy nonblocking benchmark lock
+(exit 75), before make runs. No lint success is claimed. No tool was installed
+and no Mac API/app was executed. Local
+filesystem/parser contracts do not prove the real Xcode directory layout,
+complete native closure, both-shard qualification, collection/transfer overhead
+or runner savings. The coordinator alone observes the next automatic source
+candidate. Frozen patches, nine residual paths and the nightly schedule remain.

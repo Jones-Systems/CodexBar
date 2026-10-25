@@ -189,6 +189,295 @@ class NativeTests(unittest.TestCase):
         host.tools["xctest"].write_bytes(image(dependencies=[(0xC, str(paths[name])) for name in ("A", "B")]))
         return host, paths
 
+    def compiler_parent_suffix_layout(self):
+        host = self.host()
+        base = self.xcode / "Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/compiler"
+        base.mkdir(parents=True)
+        (base / "XcodeDefault").mkdir()
+        suffix = "XcodeDefault/../lib_CompilerSwiftParser.dylib"
+        parser = self.write(str((base / "lib_CompilerSwiftParser.dylib").relative_to(self.root)),
+                            image(kind=6, dependencies=[(0xC, "/usr/lib/libSystem.B.dylib")]))
+        loader = self.write(str((base / "lib_CompilerSwiftIDEUtils.dylib").relative_to(self.root)),
+                            image(kind=6, dependencies=[(0xC, "@rpath/" + suffix)], rpaths=["@loader_path"]))
+        frontend = self.write("Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend",
+                              image(dependencies=[(0xC, str(loader))]))
+        host.tools["swift-frontend"] = frontend
+        return host, {"base":base, "suffix":suffix, "raw":base / suffix,
+                      "parser":parser, "loader":loader, "frontend":frontend}
+
+    def test_observed_compiler_parent_suffix_matches_actual_filesystem_resolution(self):
+        host, paths = self.compiler_parent_suffix_layout()
+        reference = paths["raw"].resolve(strict=True)
+        self.assertEqual(reference, paths["parser"])
+        self.assertEqual(paths["raw"].stat().st_ino, reference.stat().st_ino)
+        proof = host.closure(include_build=False)
+        edge, = proof["edges"][str(paths["loader"])]
+        self.assertEqual(edge["targets"], [str(reference)])
+        self.assertEqual(edge["context"]["rpaths"], [str(paths["base"])])
+        join, = edge["rpath_joins"]
+        self.assertEqual(join["path"], str(paths["raw"]))
+        self.assertEqual(join["canonical"], str(reference))
+        self.assertEqual(join["root"], str(self.xcode))
+        self.assertIsNone(join["missing"])
+        self.assertEqual(proof["entries"][str(reference)]["sha256"], hashlib.sha256(reference.read_bytes()).hexdigest())
+        self.assertTrue(any(hop["kind"] == "parent" for hop in join["hops"]))
+
+    def test_internal_parent_follows_contained_symlink_before_parent_and_binds_link_bytes(self):
+        host, paths = self.compiler_parent_suffix_layout()
+        name = paths["base"] / "XcodeDefault"
+        name.rmdir()
+        (paths["base"] / "Alternate/Child").mkdir(parents=True)
+        name.symlink_to("Alternate/Child", target_is_directory=True)
+        actual = self.write(str((paths["base"] / "Alternate/lib_CompilerSwiftParser.dylib").relative_to(self.root)),
+                            image(kind=6, dependencies=[(0xC, "/usr/lib/libActual.dylib")]))
+        self.assertEqual(paths["raw"].resolve(strict=True), actual)
+        original = host.closure(include_build=False)
+        edge, = original["edges"][str(paths["loader"])]
+        self.assertEqual(edge["targets"], [str(actual)])
+        self.assertNotIn(str(paths["parser"]), original["entries"])
+        link, = [hop for hop in edge["rpath_joins"][0]["hops"] if hop["kind"] == "link"]
+        self.assertEqual(link["path"], str(name))
+        self.assertEqual(link["raw_target_sha256"], hashlib.sha256(b"Alternate/Child").hexdigest())
+        name.unlink()
+        name.symlink_to("./Alternate/Child", target_is_directory=True)
+        self.assertEqual(paths["raw"].resolve(strict=True), actual)
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "fingerprint-differs"):
+            native.same_native_fingerprint(original, host.closure(include_build=False))
+        name.unlink()
+        name.symlink_to("Alternate/Child", target_is_directory=True)
+        actual.write_bytes(actual.read_bytes() + b"changed nested runtime bytes")
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "fingerprint-differs"):
+            native.same_native_fingerprint(original, host.closure(include_build=False))
+
+    def test_internal_parent_missing_intermediate_does_not_read_lexical_substitute_and_preserves_order(self):
+        host, paths = self.compiler_parent_suffix_layout()
+        first = paths["base"] / "first"
+        substitute = self.write(str((first / paths["parser"].name).relative_to(self.root)), b"must never be read")
+        paths["loader"].write_bytes(image(kind=6, dependencies=[(0xC, "@rpath/" + paths["suffix"])],
+                                         rpaths=[str(first), "@loader_path"]))
+        with self.assertRaises(FileNotFoundError):
+            (first / paths["suffix"]).stat()
+        with patch.object(host.budget, "digest", wraps=host.budget.digest) as digest:
+            original = host.closure(include_build=False)
+        self.assertFalse(any(call.args[0] == substitute for call in digest.call_args_list))
+        edge, = original["edges"][str(paths["loader"])]
+        self.assertEqual(edge["targets"], [str(paths["parser"])])
+        self.assertEqual(edge["context"]["rpaths"], [str(first), str(paths["base"])])
+        missing, present = edge["rpath_joins"]
+        self.assertIsNone(missing["canonical"])
+        self.assertEqual(missing["missing"], str(first / "XcodeDefault"))
+        self.assertEqual(missing["cache_absent"], [str(first / paths["suffix"]), str(substitute)])
+        self.assertEqual(present["canonical"], str(paths["parser"]))
+        (first / "XcodeDefault").mkdir()
+        substitute.write_bytes(image(kind=6))
+        changed = host.closure(include_build=False)
+        self.assertEqual(changed["edges"][str(paths["loader"])][0]["targets"], [str(substitute)])
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "fingerprint-differs"):
+            native.same_native_fingerprint(original, changed)
+
+    def test_internal_parent_weak_absence_requires_exact_negative_cache_evidence(self):
+        host, paths = self.compiler_parent_suffix_layout()
+        (paths["base"] / "XcodeDefault").rmdir()
+        paths["loader"].write_bytes(image(kind=6, dependencies=[(native.WEAK, "@rpath/" + paths["suffix"])],
+                                         rpaths=["@loader_path"]))
+        queries = []
+        def absent(path):
+            queries.append(str(path))
+            return str(path).startswith("/usr/lib/")
+        host.system.contains = absent
+        with patch.object(host.budget, "digest", wraps=host.budget.digest) as digest:
+            proof = host.closure(include_build=False)
+        edge, = proof["edges"][str(paths["loader"])]
+        self.assertEqual(edge["targets"], [])
+        self.assertEqual(edge["absence"], [{"rpath_join":edge["rpath_joins"][0]}])
+        self.assertEqual(edge["rpath_joins"][0]["cache_absent"], [str(paths["raw"]), str(paths["parser"])])
+        self.assertTrue(all(queries.count(path) == 1 for path in (str(paths["raw"]), str(paths["parser"]))))
+        self.assertFalse(any(call.args[0] == paths["parser"] for call in digest.call_args_list))
+        for answer in (True, None, "unknown"):
+            host.cache_membership.clear()
+            host.system.contains = lambda _path, answer=answer: answer
+            with self.subTest(answer=answer), self.assertRaisesRegex(native.UnsupportedRuntime, "cache"):
+                host.rpath_join(paths["base"], paths["suffix"])
+        host.cache_membership.clear()
+        host.system.contains = lambda _path: (_ for _ in ()).throw(PermissionError("cache unavailable"))
+        with self.assertRaises(PermissionError):
+            host.rpath_join(paths["base"], paths["suffix"])
+
+    def test_internal_parent_rejects_other_parent_syntax_before_any_path_or_cache_probe(self):
+        host = self.host()
+        collector = native.RuntimeClosure(host)
+        key = str(host.tools["swift-package"])
+        chain = [(key, {"rpaths":[str(self.xcode)]})]
+        cases = ("../Leaf", "Name/../../Leaf", "Name/../Other/Leaf", "Name//../Leaf", "Name/./../Leaf",
+                 "/Name/../Leaf", "./Name/../Leaf", "Name/../.", "Name/../..", "@other/../Leaf",
+                 "Name/../@loader_path", "Na\\me/../Leaf", "Name/../Le\taf", "Name/../Le\0af",
+                 "Name/../Le\u007faf", "Name/../Le\udcffaf", "Name/../" + "x" * 4096)
+        with patch.object(host, "rpath_join", side_effect=AssertionError("no path traversal")), \
+                patch.object(host, "cache_contains", side_effect=AssertionError("no cache query")):
+            for suffix in cases:
+                with self.subTest(suffix=repr(suffix)), self.assertRaisesRegex(native.UnsupportedRuntime, "unsafe-rpath"):
+                    list(collector.candidates({"path":"@rpath/" + suffix, "weak":False}, chain, key, "swiftpm-test"))
+        base = self.xcode / "Developer/Library"
+        suffix = "Name/../" + "x" * (4096 - len(str(base).encode()) - len("/Name/../") + 1)
+        with patch.object(host, "path_policy", side_effect=AssertionError("no overlong path probe")), \
+                self.assertRaisesRegex(native.UnsupportedRuntime, "unsafe-rpath"):
+            host.rpath_join(base, suffix)
+
+    def test_internal_parent_contained_link_forms_match_raw_filesystem_reference(self):
+        host, paths = self.compiler_parent_suffix_layout()
+        name = paths["base"] / "XcodeDefault"
+        name.rmdir()
+        child = paths["base"] / "Alternate/Child"
+        child.mkdir(parents=True)
+        (child.parent / "Current").symlink_to("Child", target_is_directory=True)
+        actual = self.write(str((child.parent / paths["parser"].name).relative_to(self.root)), image(kind=6))
+        for target in ("Alternate/Child", str(child), "Alternate/Current", "Alternate/Child/../Child"):
+            name.symlink_to(target, target_is_directory=True)
+            with self.subTest(target=target):
+                canonical, proof = host.rpath_join(paths["base"], paths["suffix"])
+                self.assertEqual(canonical, paths["raw"].resolve(strict=True))
+                self.assertEqual(canonical, actual)
+                self.assertEqual(paths["raw"].stat().st_ino, canonical.stat().st_ino)
+                self.assertEqual(proof["path"], str(paths["raw"]))
+                self.assertTrue(all(Path(hop["path"]).is_relative_to(self.xcode) for hop in proof["hops"]))
+            name.unlink()
+
+    def test_internal_parent_refuses_root_prefix_link_leaf_and_component_escape_before_target_io(self):
+        host, paths = self.compiler_parent_suffix_layout()
+        outside = self.root / "outside"
+        outside.mkdir()
+        sibling = self.root / "Xcode.app/Contents-sibling"
+        sibling.mkdir()
+        name = paths["base"] / "XcodeDefault"
+        name.rmdir()
+        cases = [(str(outside), "link-escapes"), (str(sibling), "link-escapes"),
+                 ("../" * 20 + "outside", "parent-escapes")]
+        lstat = Path.lstat
+        def no_outside_metadata(path, *args, **kwargs):
+            if path.is_relative_to(outside) or path.is_relative_to(sibling):
+                raise AssertionError("escaped target metadata must not be queried")
+            return lstat(path, *args, **kwargs)
+        for target, reason in cases:
+            name.symlink_to(target, target_is_directory=True)
+            with self.subTest(target=target), \
+                    patch.object(Path, "lstat", no_outside_metadata), \
+                    patch.object(Path, "open", side_effect=AssertionError("no target bytes")), \
+                    patch.object(host.budget, "digest", side_effect=AssertionError("no hash")), \
+                    patch.object(host, "cache_contains", side_effect=AssertionError("no cache query")), \
+                    self.assertRaisesRegex(native.UnsupportedRuntime, reason):
+                host.rpath_join(paths["base"], paths["suffix"])
+            name.unlink()
+        name.mkdir()
+        paths["parser"].unlink()
+        paths["parser"].symlink_to(outside / "secret")
+        with patch.object(Path, "lstat", no_outside_metadata), \
+                patch.object(Path, "open", side_effect=AssertionError("no target bytes")), \
+                patch.object(host.budget, "digest", side_effect=AssertionError("no hash")), \
+                patch.object(host, "cache_contains", side_effect=AssertionError("no cache query")), \
+                self.assertRaisesRegex(native.UnsupportedRuntime, "link-escapes"):
+            host.rpath_join(paths["base"], paths["suffix"])
+        prefix = self.xcode / "Escaped"
+        prefix.symlink_to(outside, target_is_directory=True)
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "link-escapes"):
+            host.rpath_join(prefix, paths["suffix"])
+        actual_root = self.root / "actual-contents"
+        actual_root.mkdir()
+        root_alias = self.root / "contents-alias"
+        root_alias.symlink_to(actual_root, target_is_directory=True)
+        host.xcode = root_alias
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "root-noncanonical"):
+            host.rpath_join(root_alias, paths["suffix"])
+
+    def test_internal_parent_rejects_type_permission_dangling_link_cycle_and_work_budget(self):
+        host, paths = self.compiler_parent_suffix_layout()
+        name = paths["base"] / "XcodeDefault"
+        name.rmdir()
+        name.write_bytes(b"not a directory")
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "prefix-not-directory"):
+            host.rpath_join(paths["base"], paths["suffix"])
+        name.unlink()
+        name.symlink_to("Absent", target_is_directory=True)
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "missing-link-unproven"):
+            host.rpath_join(paths["base"], paths["suffix"])
+        name.unlink()
+        name.symlink_to("XcodeDefault", target_is_directory=True)
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "component-budget"):
+            host.rpath_join(paths["base"], paths["suffix"])
+        name.unlink()
+        name.mkdir()
+        lstat = Path.lstat
+        def denied(path, *args, **kwargs):
+            if path == name:
+                raise PermissionError(errno.EACCES, "fixture access denied")
+            return lstat(path, *args, **kwargs)
+        with patch.object(Path, "lstat", denied), self.assertRaises(PermissionError):
+            host.rpath_join(paths["base"], paths["suffix"])
+        with patch.object(native, "MAX_ALIAS_COMPONENTS", 3), \
+                self.assertRaisesRegex(native.UnsupportedRuntime, "component-budget"):
+            host.rpath_join(paths["base"], paths["suffix"])
+        host.budget.started = time.monotonic() - native.MAX_SECONDS
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "time-budget"):
+            host.rpath_join(paths["base"], paths["suffix"])
+
+    def test_internal_parent_cannot_turn_exact_file_or_swift_shim_into_a_directory_root(self):
+        host = self.host()
+        exact = self.root / "appleinternal/lib/Exact.dylib"
+        host.entrypoint = Path("/usr/bin/swift")
+        with patch.object(native, "APPLE_RUNTIME_FILES", (exact,)), \
+                patch.object(Path, "resolve", side_effect=AssertionError("no directory traversal")), \
+                patch.object(host, "cache_contains", side_effect=AssertionError("no cache query")):
+            for base in (exact, host.entrypoint):
+                with self.subTest(base=base), self.assertRaisesRegex(native.UnsupportedRuntime, "directory-root-unavailable"):
+                    host.rpath_join(base, "Name/../Leaf.dylib")
+
+    def test_internal_parent_rejects_canonical_target_change_before_actual_load(self):
+        host, paths = self.compiler_parent_suffix_layout()
+        replacement = self.write(str((paths["base"] / "Alternate.dylib").relative_to(self.root)), image(kind=6))
+        join = host.rpath_join
+        def changed(*args):
+            result = join(*args)
+            paths["parser"].unlink()
+            paths["parser"].symlink_to(replacement.name)
+            return result
+        with patch.object(host, "rpath_join", side_effect=changed), \
+                self.assertRaisesRegex(native.UnsupportedRuntime, "rpath-candidate-changed"):
+            host.closure(include_build=False)
+
+    def test_internal_parent_failure_diagnostic_is_closed_capped_and_preserves_raw_parent(self):
+        host, paths = self.compiler_parent_suffix_layout()
+        (paths["base"] / "XcodeDefault").rmdir()
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "unresolved") as failure:
+            host.closure(include_build=False)
+        diagnostic = failure.exception.diagnostic
+        native.validate_diagnostic(diagnostic)
+        join = diagnostic["rpath_join"]
+        self.assertTrue(join["path"].endswith("/" + paths["suffix"]))
+        self.assertEqual(join["canonical"], None)
+        self.assertEqual(len(join["cache_absent"]), 2)
+        for field, value in (("root", {"command":"untrusted"}), ("canonical", "x" * 513),
+                             ("hops", join["hops"] * native.MAX_ALIAS_COMPONENTS),
+                             ("cache_absent", ["<xcode>/missing"] * 3)):
+            invalid = json.loads(json.dumps(diagnostic))
+            invalid["rpath_join"][field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(native.UnsupportedRuntime, "invalid-native-diagnostic"):
+                native.validate_diagnostic(invalid)
+        invalid = json.loads(json.dumps(diagnostic))
+        invalid["rpath_join"]["hops"][0]["kind"] = {"command":"untrusted"}
+        with self.assertRaisesRegex(native.UnsupportedRuntime, "invalid-native-diagnostic"):
+            native.validate_diagnostic(invalid)
+
+    def test_internal_parent_join_evidence_remains_equal_after_build_staging(self):
+        self.products()
+        (self.build / "lib/XcodeDefault").mkdir(parents=True)
+        self.write("workspace/.build/lib/Leaf.dylib", image(kind=6))
+        self.write("workspace/.build/parent-helper", image(dependencies=[(0xC, "@rpath/XcodeDefault/../Leaf.dylib")],
+                   rpaths=["@loader_path/lib"]))
+        original = self.host().closure()
+        stage = self.root / "stage/.build"
+        shutil.copytree(self.build, stage, symlinks=True)
+        staged = self.host(stage).closure()
+        native.same_native_fingerprint(original, staged)
+
     def test_shared_branching_dag_qualifies_without_raising_native_limits(self):
         host, nodes = self.shared_dag()
         proof = host.closure(include_build=False)

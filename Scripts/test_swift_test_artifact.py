@@ -744,6 +744,39 @@ class BuildArtifactTests(unittest.TestCase):
                     self.assertEqual(preflight["reason"], reason)
                     artifact_native.validate_diagnostic(preflight["diagnostic"])
 
+    def test_actual_internal_parent_escape_or_strong_miss_stops_before_compiler_and_discovery(self):
+        import ci_swift_test_native as artifact_native
+        for scenario, reason in (("escape", "runtime-rpath-link-escapes-root"),
+                                 ("missing", "unresolved-runtime-dependency")):
+            with self.subTest(scenario=scenario):
+                fixtures = NativeTests()
+                fixtures.setUp()
+                self.addCleanup(fixtures.doCleanups)
+                host, paths = fixtures.compiler_parent_suffix_layout()
+                name = paths["base"] / "XcodeDefault"
+                name.rmdir()
+                if scenario == "escape":
+                    name.symlink_to(fixtures.root / "private-user/secret", target_is_directory=True)
+                state = {"host":host, "reason":None, "host_seconds":0.1}
+                with self.harness(["--export-build", str(self.root)]) as (captured, execute), \
+                        patch.object(artifact, "native_precheck", return_value=state), \
+                        patch.object(runner, "emit_evidence") as evidence:
+                    captured.side_effect = AssertionError("compiler/discovery sentinel must not run")
+                    with self.assertRaisesRegex(ValueError, "incomplete before compilation: " + reason):
+                        runner.run_suites()
+                captured.assert_not_called()
+                execute.assert_not_called()
+                self.assertFalse((self.root / artifact.MANIFEST).exists())
+                preflight = next(call.kwargs for call in evidence.call_args_list
+                                 if call.args == ("native-tool-preflight",))
+                self.assertFalse(preflight["build_allowed"])
+                self.assertEqual(preflight["host_status"], "complete")
+                self.assertEqual(preflight["reason"], reason)
+                diagnostic = preflight["diagnostic"]
+                self.assertTrue(diagnostic["rpath_join"]["path"].endswith("/" + paths["suffix"]))
+                self.assertNotIn("private-user", json.dumps(diagnostic))
+                artifact_native.validate_diagnostic(diagnostic)
+
     def test_full_profile_jsc_uses_shared_build_before_cleanup(self):
         self.current["profile"] = "full"
         _, digest = self.export()

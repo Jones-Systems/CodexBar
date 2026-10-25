@@ -221,6 +221,36 @@ identities, rather than an arbitrary choice. Unsupported required roots, absent
 strong loads and unsupported loader shapes remain incomplete. Unvisited later
 rpaths are neither probed nor used as roots.
 
+### Bounded internal parent suffix
+
+The exact swift-frontend dependency observed in run `40146716851` is
+`@rpath/XcodeDefault/../lib_CompilerSwiftParser.dylib`. The implemented repair
+extends only the otherwise canonical relative three-component `NAME/../LEAF`
+form. Leading/repeated parents, dot/empty components, extra tokens, controls,
+invalid encoding and oversized joins remain unsupported.
+
+Apple dyld's [rpath expansion](https://github.com/apple-oss-distributions/dyld/blob/fd8d0c4d52320ebf64db34f3cb280310d905c5ae/dyld/Loader.cpp)
+appends the tail using [concatenatePaths](https://github.com/apple-oss-distributions/dyld/blob/fd8d0c4d52320ebf64db34f3cb280310d905c5ae/common/Utilities.cpp),
+which preserves internal parents. Its [file-existence delegate](https://github.com/apple-oss-distributions/dyld/blob/fd8d0c4d52320ebf64db34f3cb280310d905c5ae/dyld/DyldDelegates.cpp)
+uses stat on that joined path. The collector must therefore follow actual
+intermediate directory/symlink semantics before applying the parent component;
+lexical normalization is not resolution or proof of absence.
+
+Resolve the joined components using at most the existing 32 metadata steps,
+inside the single original policy root. Reject an escaped prefix, link target,
+parent step or leaf before target bytes or a cache shortcut. Preserve the raw
+join, bounded metadata hops/link-byte identities and actual canonical result
+in edge evidence. Real ENOENT misses may continue ordered search only with exact
+negative raw-join and conservative lexical cache queries; the latter is not a
+canonical destination or a substitute disk read. Dangling links cannot prove
+absence. Exact-file and Swift-shim grants cannot become directory roots. Reject
+a canonical candidate that changes between traversal and loading. External
+non-cache targets still receive whole-file hashes and recursive closure proof;
+existing system-cache identities remain bound to the exact OS/cache UUID.
+Unsupported/access/type/cache-unknown cases retain the existing early gate and
+strict fallback policy. This is a source implementation contract; hosted native
+path/layout completeness and both-shard qualification remain unproved.
+
 Apple's [universal loader](https://github.com/apple-oss-distributions/dyld/blob/main/mach_o/Universal.cpp),
 [architecture definitions](https://github.com/apple-oss-distributions/dyld/blob/main/mach_o/Architecture.cpp)
 and [grading rules](https://github.com/apple-oss-distributions/dyld/blob/main/mach_o/GradedArchitectures.cpp)

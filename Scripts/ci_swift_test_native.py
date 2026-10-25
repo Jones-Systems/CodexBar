@@ -125,6 +125,24 @@ def safe_absolute(raw):
     return Path(raw)
 
 
+def rpath_suffix(raw):
+    """Ordinary relative suffix, or the bounded observed NAME/../LEAF form."""
+    parts = PurePosixPath(raw).parts
+    need(raw and not raw.startswith("/") and str(PurePosixPath(raw)) == raw,
+         "unsafe-rpath-dependency")
+    if ".." in parts:
+        need(len(parts) == 3 and parts[1] == ".." and parts[0] not in {".", ".."}
+             and parts[2] not in {".", ".."}
+             and not any(part.startswith("@") for part in (parts[0], parts[2]))
+             and not any(ord(character) < 32 or ord(character) == 127 or character == "\\" for character in raw),
+             "unsafe-rpath-dependency")
+        try:
+            need(len(raw.encode("utf-8", errors="strict")) < 4096, "unsafe-rpath-dependency")
+        except UnicodeEncodeError as error:
+            raise UnsupportedRuntime("unsafe-rpath-dependency") from error
+    return ".." in parts
+
+
 def validate_environment(environment):
     if any(key.startswith(("DYLD_", "SWIFTPM_PLATFORM_PATH_")) or key in {
         "TOOLCHAINS", "SDKROOT", "SWIFT_EXEC", "SWIFT_EXEC_MANIFEST", "SWIFT_DRIVER_SWIFT_FRONTEND_EXEC",
@@ -158,7 +176,7 @@ def validate_diagnostic(value):
 
     if isinstance(value, dict) and value.get("type") == "resolver":
         fields = {"type", "loader", "install_name", "executable", "mode", "chain", "rpaths", "candidates", "truncated"}
-        optional = {key for key in ("file", "unapproved_declarations", "location", "work") if key in value}
+        optional = {key for key in ("file", "unapproved_declarations", "location", "rpath_join", "work") if key in value}
         need(set(value) == fields | optional
              and text(value["loader"]) and text(value["install_name"], True) and text(value["executable"], True)
              and isinstance(value["mode"], str) and value["mode"] in {"plain", "swiftpm-test", "audit"}
@@ -166,6 +184,22 @@ def validate_diagnostic(value):
              "invalid-native-diagnostic")
         if "work" in value:
             validate_work(value["work"])
+        if "rpath_join" in value:
+            item = value["rpath_join"]
+            need(isinstance(item, dict) and set(item) == {
+                "path", "root", "canonical", "missing", "hops", "cache_absent"}
+                and text(item["path"]) and text(item["root"])
+                and text(item["canonical"], True) and text(item["missing"], True)
+                and isinstance(item["hops"], list) and len(item["hops"]) <= MAX_ALIAS_COMPONENTS
+                and isinstance(item["cache_absent"], list) and len(item["cache_absent"]) <= 2
+                and all(text(path) for path in item["cache_absent"]), "invalid-native-diagnostic")
+            for hop in item["hops"]:
+                need(isinstance(hop, dict) and set(hop) == {"path", "kind", "raw_target_sha256"}
+                     and text(hop["path"]) and isinstance(hop["kind"], str)
+                     and hop["kind"] in {"parent", "directory", "file", "link", "missing"}
+                     and digest(hop["raw_target_sha256"])
+                     and (hop["raw_target_sha256"] is not None) == (hop["kind"] == "link"),
+                     "invalid-native-diagnostic")
         for field in ("chain", "rpaths", "candidates"):
             need(isinstance(value[field], list) and len(value[field]) <= MAX_DIAGNOSTIC_ITEMS,
                  "invalid-native-diagnostic")
@@ -690,6 +724,91 @@ class Host:
             canonical = self.logical_build / canonical.relative_to(root)
         return {"path":str(logical), "canonical":str(canonical), "alias":alias, "cache_absent":True}
 
+    def rpath_join(self, base, suffix):
+        """Resolve NAME/../LEAF as filesystem components, never lexical cancellation.
+
+        Only metadata within the same canonical policy root is inspected. A
+        link target is walked before the following parent component. Every hop
+        uses the existing shared deadline and 32-component bound.
+        """
+        need(rpath_suffix(suffix), "unsafe-rpath-dependency")
+        raw = str(base / suffix)
+        need(len(raw.encode("utf-8", errors="strict")) < 4096, "unsafe-rpath-dependency")
+        physical, root, kind, alias = self.path_policy(base)
+        need(kind in {"bundled", "xcode", "system-file", "developer-framework"},
+             "runtime-rpath-directory-root-unavailable")
+        self.budget.tick()
+        need(root.resolve(strict=True) == root, "runtime-rpath-root-noncanonical")
+        need(physical.is_relative_to(root), "runtime-rpath-prefix-escapes-root")
+
+        def logical(path):
+            return self.logical_build / path.relative_to(root) if kind == "bundled" else path
+
+        proof = {"path":raw, "root":str(logical(root)), "hops":[], "canonical":None,
+                 "missing":None, "cache_absent":[], "alias":alias}
+        self.rpath_join_evidence = proof  # Failure diagnostics only; never host context or admission input.
+        # The boolean marks components of a link target. A dangling link is
+        # incomplete evidence, not a proved ordinary ENOENT candidate.
+        pending = [(part, False) for part in (*physical.relative_to(root).parts, *suffix.split("/"))]
+        current = root
+        steps = 0
+        while pending:
+            self.budget.tick()
+            steps += 1
+            need(steps + len(pending) - 1 <= MAX_ALIAS_COMPONENTS, "runtime-rpath-component-budget")
+            part, link_target = pending.pop(0)
+            if part == "..":
+                need(current != root, "runtime-rpath-parent-escapes-root")
+                current = current.parent
+                proof["hops"].append({"path":str(logical(current)), "kind":"parent", "raw_target_sha256":None})
+                continue
+            path = current / part
+            try:
+                info = path.lstat()
+            except FileNotFoundError as error:
+                need(error.errno == errno.ENOENT and not link_target, "runtime-rpath-missing-link-unproven")
+                need(current.resolve(strict=True) == current and stat.S_ISDIR(current.stat().st_mode),
+                     "runtime-rpath-missing-parent-unproven")
+                # The second query is a conservative lexical cache lookup only,
+                # never a claimed canonical result or a substitute disk read.
+                tail = [item[0] for item in pending]
+                query = Path(posixpath.normpath(str(path.joinpath(*tail))))
+                need(query.is_relative_to(root), "runtime-rpath-parent-escapes-root")
+                proof["missing"] = str(logical(path))
+                proof["hops"].append({"path":str(logical(path)), "kind":"missing", "raw_target_sha256":None})
+                for candidate in dict.fromkeys((Path(raw), logical(query))):
+                    need(not self.cache_contains(candidate), "runtime-cache-only-dependency-unproven")
+                    proof["cache_absent"].append(str(candidate))
+                return None, proof
+            if stat.S_ISLNK(info.st_mode):
+                target = os.readlink(path)
+                need(0 < len(os.fsencode(target)) < 4096
+                     and not any(ord(character) < 32 or ord(character) == 127 or character == "\\" for character in target),
+                     "runtime-rpath-link-unproven")
+                try:
+                    target.encode("utf-8", errors="strict")
+                except UnicodeEncodeError as error:
+                    raise UnsupportedRuntime("runtime-rpath-link-unproven") from error
+                parts = PurePosixPath(target)
+                proof["hops"].append({"path":str(logical(path)), "kind":"link",
+                                      "raw_target_sha256":hashlib.sha256(os.fsencode(target)).hexdigest()})
+                if parts.is_absolute():
+                    need(parts.is_relative_to(root), "runtime-rpath-link-escapes-root")
+                    extra = parts.relative_to(root).parts
+                    current = root
+                else:
+                    extra = parts.parts
+                pending = [(part, True) for part in extra] + pending
+                continue
+            need(stat.S_ISDIR(info.st_mode) if pending else stat.S_ISREG(info.st_mode),
+                 "runtime-rpath-prefix-not-directory" if pending else "runtime-path-is-not-regular")
+            proof["hops"].append({"path":str(logical(path)),
+                                  "kind":"directory" if pending else "file", "raw_target_sha256":None})
+            current = path
+        need(stat.S_ISREG(current.stat().st_mode), "runtime-path-is-not-regular")
+        proof["canonical"] = str(logical(current))
+        return logical(current), proof
+
     def images(self):
         """All transferred loadable images, including tools and dependency helpers."""
         pending = [self.build]
@@ -774,8 +893,15 @@ class RuntimeClosure:
         else:
             self.diagnostic["truncated"] = True
 
+    def join_label(self, raw):
+        path = Path(raw)
+        # Unlike label(), preserve the observed internal parent in raw joins.
+        suffix = self.label("@rpath/" + "/".join(path.parts[-3:]))[len("@rpath/"):]
+        return (self.label(path.parents[2]) + "/" + suffix)[:512]
+
     def state(self, key, executable=None, mode="audit", chain=(), raw=None):
         self.loader_key = key
+        self.host.rpath_join_evidence = None
         self.diagnostic = {"type":"resolver", "loader":self.label(key), "install_name":self.label(raw),
                            "executable":self.label(executable), "mode":mode,
                            "chain":[{"path":self.label(path), "subtype":variant["subtype"]}
@@ -881,8 +1007,7 @@ class RuntimeClosure:
         raw = dependency["path"]
         if raw.startswith("@rpath/"):
             suffix = raw[len("@rpath/"):]
-            need(suffix and not suffix.startswith("/") and str(PurePosixPath(suffix)) == suffix
-                 and ".." not in PurePosixPath(suffix).parts, "unsafe-rpath-dependency")
+            rpath_suffix(suffix)
         else:
             # Validate even if a test override could otherwise satisfy the leaf.
             self.expanded(raw, chain[0][0], executable)
@@ -925,17 +1050,29 @@ class RuntimeClosure:
         self.state(key, executable, mode, chain, raw)
         selected = None
         absences = []
-        usage = {"roots":[], "inherited":[], "exhausted":False}
+        usage = {"roots":[], "inherited":[], "exhausted":False, "joins":[]}
         for index, logical in enumerate(self.candidates(dependency, chain, executable, mode, usage)):
             need(index < MAX_CANDIDATES, "native-resolution-candidate-budget")
-            candidate = {"path":self.label(logical), "canonical":None, "kind":"uninspected", "sha256":None}
+            joined = ".." in logical.parts
+            base = logical.parents[2] if joined else None
+            candidate = {"path":self.join_label(logical) if joined else self.label(logical),
+                         "canonical":None, "kind":"uninspected", "sha256":None}
             self.note("candidates", candidate)
+            if joined:
+                logical, proof = self.host.rpath_join(base, raw[len("@rpath/"):])
+                usage["joins"].append(proof)
+                if logical is None:
+                    absences.append({"rpath_join":proof})
+                    candidate["kind"] = "missing"
+                    continue
             try:
                 selected = self.add(logical, candidate=candidate)
             except FileNotFoundError:
                 absences.append(self.host.prove_missing(logical))
                 candidate["kind"] = "missing"
                 continue
+            if joined:
+                need(selected == proof["canonical"], "runtime-rpath-candidate-changed")
             break
         need(selected is not None or dependency["weak"], "unresolved-runtime-dependency")
         # Already-loaded @rpath names can bind before a new search. Rather than
@@ -1031,6 +1168,8 @@ class RuntimeClosure:
                                    "process":process, "subtype":current["subtype"], "rpaths":usage["roots"]}}
                 if target is None:
                     edge["absence"] = absences
+                if usage["joins"]:
+                    edge["rpath_joins"] = usage["joins"]
                 encoded = json.dumps(edge, sort_keys=True)
                 if encoded not in self.edge_keys.setdefault(key, set()):
                     self.edge_keys[key].add(encoded)
@@ -1120,6 +1259,14 @@ class RuntimeClosure:
                     detail["first_symlink"] = {**link, "path":self.label(link["path"]), "target":self.label(link["target"])}
                 self.diagnostic["location"] = detail
                 self.diagnostic["truncated"] |= location["status"] == "budget"
+            join = getattr(self.host, "rpath_join_evidence", None)
+            if join is not None:
+                self.diagnostic["rpath_join"] = {
+                    "path":self.join_label(join["path"]), "root":self.label(join["root"]),
+                    "canonical":self.label(join["canonical"]), "missing":self.label(join["missing"]),
+                    "hops":[{**hop, "path":self.label(hop["path"])} for hop in join["hops"]],
+                    "cache_absent":[self.join_label(path) if ".." in Path(path).parts else self.label(path)
+                                    for path in join["cache_absent"]]}
             self.diagnostic["unapproved_declarations"] = self.unapproved_declarations()
             self.diagnostic["work"] = self.work()
             failure.diagnostic = validate_diagnostic(self.diagnostic)
