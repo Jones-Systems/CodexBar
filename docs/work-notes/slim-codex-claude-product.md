@@ -711,7 +711,7 @@ bytes changed between those inspector retries. All product source, other tests,
 architecture anchors, accounting limits, native harness and schedule remain
 unchanged from `488adcad`.
 
-Fresh admission (CPU 14.15–46.95%, RAM 40.61–43.53 GiB; one core is 6.25% of host
+Fresh admission (CPU 14.15–46.95%, RAM 40.61–44.36 GiB; one core is 6.25% of host
 capacity) and the nonblocking benchmark lock allow one serial check at a time.
 Menu/method/assertion preservation, normal/full profile validation, parser and
 provider generator `--check`, 181 documentation links, llms index and whitespace
@@ -719,5 +719,14 @@ checks pass. `make check` and `make test` exit 2 at missing plutil/Swift before
 native lint/compile/tests; no installation occurs, and the runner removes its
 exact fixture parent. Root's normal automatic exact-head CI is the next gate.
 There is no new-head runtime pass or comparable app-size/cold-build evidence.
+
+Menu source repair commit `f7a457bea54d630e51b527c8b061097c8a4f3e02` contains the five bounded test
+files and spec/note. Exact before/after file/method hashes and six assertion
+dispositions are recorded in the comparison. Source inventory remains 651 Swift
+files / 193218 lines; tests remain 733 files / 6569 declarations, now 252324 lines
+and 10937882 bytes (+43 lines/+2562 bytes). A single test rename changes its
+identity without removing a declaration. All 56 exact cost files, four adapted
+files/29 retained methods and the separate 12 shared day-selection methods keep
+their prior proofs. The final publication adds only comparison/note evidence.
 
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->
