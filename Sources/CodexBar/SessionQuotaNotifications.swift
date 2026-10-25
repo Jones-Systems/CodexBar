@@ -409,9 +409,7 @@ extension UsageStore {
         provider: UsageProvider,
         snapshot: UsageSnapshot) -> (window: RateWindow, source: SessionQuotaWindowSource)?
     {
-
         if let primary = snapshot.primary, Self.isSessionWindow(primary) {
-
             return (primary, .primary)
         }
 

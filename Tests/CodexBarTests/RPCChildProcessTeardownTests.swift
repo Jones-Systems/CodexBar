@@ -142,5 +142,4 @@ struct RPCChildProcessTeardownTests {
         #expect(kill(pid, 0) == -1)
         #expect(errno == ESRCH)
     }
-
 }

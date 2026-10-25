@@ -6,7 +6,6 @@ import Testing
 @Suite(.serialized)
 @MainActor
 struct StatusItemExtraUsageMetricTests {
-
     @Test
     func `menu bar extra usage preference uses percent in combined mode`() {
         let (store, controller) = self.makeController(

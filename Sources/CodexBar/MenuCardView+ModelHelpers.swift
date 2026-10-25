@@ -446,7 +446,6 @@ extension UsageMenuCardView.Model {
         input: Input,
         snapshot: UsageSnapshot) -> (primary: String, secondary: String, tertiary: String, showsTertiary: Bool)
     {
-
         let primaryLabel = input.metadata.sessionLabel
         let secondaryLabel = input.metadata.weeklyLabel
         let tertiaryLabel = input.metadata.opusLabel.map(L) ?? L("Sonnet")

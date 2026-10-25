@@ -3,7 +3,6 @@ import Testing
 @testable import CodexBarCore
 
 struct AdminAPIUsageLocalDaySelectionTests {
-
     @Test
     func `Claude Admin current day includes UTC bucket containing positive timezone morning`() throws {
         let calendar = try Self.calendar(timeZoneIdentifier: "Australia/Sydney")

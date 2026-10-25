@@ -6,7 +6,6 @@ import Testing
 /// inactive accounts as headroom-sorted compact rows, healthy tail collapsed
 /// behind a summary row, and per-account expansion back to full cards.
 struct AccountMenuLayoutPlannerTests {
-
     @Test
     func `limiting windows retain planner order and exclude synthetic and unknown usage`() {
         let known = RateWindow(usedPercent: 80, windowMinutes: 10080, resetsAt: Self.now, resetDescription: nil)
@@ -425,5 +424,4 @@ struct AccountMenuLayoutPlannerTests {
             #expect(toggled.rows.count == 8)
         }
     }
-
 }

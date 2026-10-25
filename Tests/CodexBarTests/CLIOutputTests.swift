@@ -5,7 +5,6 @@ import Testing
 @testable import CodexBarCore
 
 struct CLIOutputTests {
-
     @Test
     func `output preferences json only forces JSON`() {
         let output = CLIOutputPreferences.from(argv: ["--json-only"])

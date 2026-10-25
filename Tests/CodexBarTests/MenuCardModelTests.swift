@@ -101,7 +101,6 @@ struct OverviewMenuCardVisibilityTests {
 }
 
 struct ProviderInlineDashboardModelTests {
-
     @Test
     func `local cost history gets inline dashboard`() throws {
         let now = Date(timeIntervalSince1970: 1_700_179_200)

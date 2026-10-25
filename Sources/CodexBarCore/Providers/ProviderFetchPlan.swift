@@ -227,7 +227,7 @@ public enum ProviderFetchError: LocalizedError, Sendable {
     public var errorDescription: String? {
         switch self {
         case let .noAvailableStrategy(provider):
-            return "No available fetch strategy for \(provider.rawValue)."
+            "No available fetch strategy for \(provider.rawValue)."
         }
     }
 }

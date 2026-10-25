@@ -4,7 +4,6 @@ import Testing
 @testable import CodexBar
 
 struct MenuBarMetricWindowResolverTests {
-
     @Test
     func `combined primary and secondary metric uses the most constrained lane`() {
         let snapshot = UsageSnapshot(

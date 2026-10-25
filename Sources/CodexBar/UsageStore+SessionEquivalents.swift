@@ -30,7 +30,6 @@ extension UsageStore {
     private nonisolated static let unresolvedSessionEquivalentComponentIdentity = "__unresolved__"
 
     func planUtilizationWeeklyWindow(provider: UsageProvider, snapshot: UsageSnapshot) -> RateWindow? {
-
         let standardWeeklyWindow = [snapshot.primary, snapshot.secondary, snapshot.tertiary]
             .compactMap(\.self)
             .first { $0.windowMinutes == Self.weeklyWindowMinutes }

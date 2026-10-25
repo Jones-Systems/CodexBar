@@ -233,10 +233,6 @@ struct ProviderSettingsDescriptorTests {
 }
 
 extension ProviderSettingsDescriptorTests {
-}
-
-extension ProviderSettingsDescriptorTests {
-
     @Test
     func `provider settings labels an empty transition as refreshing`() {
         #expect(ProviderMetricsInlineView.placeholderText(

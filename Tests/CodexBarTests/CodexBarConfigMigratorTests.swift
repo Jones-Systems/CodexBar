@@ -263,8 +263,7 @@ struct CodexBarConfigMigratorTests {
     }
 }
 
-private final class CountingLegacySecretStore: CookieHeaderStoring, @unchecked Sendable
-{
+private final class CountingLegacySecretStore: CookieHeaderStoring, @unchecked Sendable {
     private let lock = NSLock()
     private var token: String?
     var throwOnLoad: Bool

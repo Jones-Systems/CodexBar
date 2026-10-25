@@ -263,7 +263,6 @@ extension UsageStore {
     }
 
     func tokenCostScope(for provider: UsageProvider) -> (codexHomePath: String?, signature: String) {
-
         guard provider == .codex else {
             return (nil, provider.rawValue)
         }

@@ -111,7 +111,6 @@ struct CodexBarConfigMigrator {
         state: inout MigrationState,
         log: CodexBarLogger)
     {
-
         self.migrateCookieProviders(
             [
                 (.codex, "codex-cookie", stores.codexCookieStore.loadCookieHeader),

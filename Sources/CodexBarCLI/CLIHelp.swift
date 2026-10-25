@@ -2,7 +2,6 @@ import CodexBarCore
 import Foundation
 
 extension CodexBarCLI {
-
     static func cardsHelp(version: String) -> String {
         """
         CodexBar \(version)

@@ -46,7 +46,6 @@ struct CodexAccountReconciliationTests {
 }
 
 extension CodexAccountReconciliationTests {
-
     @Test
     @MainActor
     func `settings store reconciliation environment override drives live observation with synthetic store`() throws {

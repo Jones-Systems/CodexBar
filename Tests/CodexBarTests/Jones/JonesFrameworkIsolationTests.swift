@@ -5,7 +5,6 @@ import Testing
 
 /// Identifier-only fixtures: no WebKit store, file, network, or packaged-identity lookup.
 struct JonesFrameworkIsolationTests {
-
     @Test
     func `fork cache keys remain bounded with long synthetic inputs`() throws {
         let key = try #require(JonesFrameworkIsolation.openAIDashboardStorageKey(

@@ -4,7 +4,6 @@ import Testing
 @testable import CodexBar
 
 struct SessionEquivalentForecastTests {
-
     @Test
     func `rejects synthetic Claude session placeholder with a future reset`() {
         let now = Date(timeIntervalSince1970: 1_900_000_000)
@@ -1421,8 +1420,8 @@ extension SessionEquivalentForecastTests {
     }
 }
 
-// These fixtures exercise the shared pairing and persistence primitives directly.
-// Codex and Claude retain their production account-adoption and fixed-pair routing.
+/// These fixtures exercise the shared pairing and persistence primitives directly.
+/// Codex and Claude retain their production account-adoption and fixed-pair routing.
 extension UsageStore {
     func _genericSessionEquivalentWindowsForTesting(snapshot: UsageSnapshot)
         -> (session: RateWindow, weekly: RateWindow, weeklyWindowID: String?, historyIdentity: String)?

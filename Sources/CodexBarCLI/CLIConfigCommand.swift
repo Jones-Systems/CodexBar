@@ -352,7 +352,6 @@ struct ConfigSetAPIKeyOptions: CommanderParsable {
 
     @Flag(name: .long("no-enable"), help: "Store the key without enabling the provider")
     var noEnable: Bool = false
-
 }
 
 struct ConfigProviderToggleOptions: CommanderParsable {

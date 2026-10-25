@@ -853,7 +853,7 @@ enum SpendDashboardSource {
         // Provider-specific by design: Grok's catalog input is the local session scan, even when
         // the remote billing snapshot is missing.
 
-        return publication.snapshot
+        publication.snapshot
     }
 
     @MainActor

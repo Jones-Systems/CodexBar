@@ -446,9 +446,9 @@ struct MenuDescriptor {
         }
         if let loginMethodText, !loginMethodText.isEmpty {
             entries.append(
-                    .text(
-                        "\(L("Plan")): \(AccountFormatter.plan(loginMethodText, provider: provider))",
-                        .secondary))
+                .text(
+                    "\(L("Plan")): \(AccountFormatter.plan(loginMethodText, provider: provider))",
+                    .secondary))
         }
 
         if metadata.usesAccountFallback {
@@ -634,7 +634,6 @@ struct MenuDescriptor {
         metadata: ProviderMetadata,
         snapshot: UsageSnapshot) -> (primary: String, secondary: String, tertiary: String, showsTertiary: Bool)
     {
-
         let primaryLabel = if provider == .codex {
             CodexConsumerProjection.rateTitle(
                 lane: .session,

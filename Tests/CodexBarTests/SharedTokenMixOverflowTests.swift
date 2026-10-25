@@ -3,8 +3,6 @@ import Testing
 @testable import CodexBarCore
 
 struct SharedTokenMixOverflowTests {
-
-
     @Test
     func `shared token mix overflow cannot revive on a third day`() throws {
         var mix = CostUsageTokenMix(inputTokens: Int.max - 1, outputTokens: 2)
@@ -22,6 +20,4 @@ struct SharedTokenMixOverflowTests {
         absent.merge(CostUsageTokenMix())
         #expect(absent.inputTokens == 8)
     }
-
-
 }

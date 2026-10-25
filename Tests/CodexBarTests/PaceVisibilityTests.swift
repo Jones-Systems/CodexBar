@@ -111,11 +111,11 @@ struct PaceVisibilityTests {
         #expect(primary.detailLeftText == nil)
     }
 
-    /// Regression for the P1 review finding: `detailLeftText` is a shared slot,
-    /// so provider-owned text must survive when pace is hidden.
+    // Regression for the P1 review finding: `detailLeftText` is a shared slot,
+    // so provider-owned text must survive when pace is hidden.
 
-    /// ZenMux without a reset date is the worst case the review flagged: the
-    /// shared detail slot carries that card's only reset information.
+    // ZenMux without a reset date is the worst case the review flagged: the
+    // shared detail slot carries that card's only reset information.
 
     /// Quota and workday decorations are unrelated to pace and must survive.
     @Test

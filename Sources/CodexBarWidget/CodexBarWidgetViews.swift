@@ -193,7 +193,6 @@ enum CompactMetricFormatter {
     static func display(for entry: WidgetSnapshot.ProviderEntry, metric: CompactMetric) -> CompactMetricDisplay {
         switch metric {
         case .credits:
-
             let value = entry.creditsRemaining.map(WidgetFormat.credits) ?? "—"
             return CompactMetricDisplay(value: value, label: "Credits left", detail: nil)
         case .todayCost:

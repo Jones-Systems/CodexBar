@@ -564,7 +564,6 @@ extension CodexBarCLI {
             .sorted()
             .joined(separator: ", ")
     }
-
 }
 
 struct CostOptions: CommanderParsable {

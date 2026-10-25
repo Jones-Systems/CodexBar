@@ -5,7 +5,6 @@ import Testing
 
 @MainActor
 struct UsageStoreWidgetSnapshotTests {
-
     @Test
     func `widget snapshot preserves raw Codex windows for timeline projection`() async throws {
         let suite = "UsageStoreWidgetSnapshotTests-codex-weekly-cap"
@@ -461,7 +460,6 @@ struct UsageStoreWidgetSnapshotTests {
 
 @MainActor
 struct UsageStoreWidgetSnapshotVisibilityTests {
-
     @Test
     func `widget snapshot carries token usage age separately from entry freshness`() async throws {
         let suite = "UsageStoreWidgetSnapshotTests-token-usage-age"

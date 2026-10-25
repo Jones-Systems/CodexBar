@@ -809,10 +809,10 @@ extension StatusMenuPersistentRefreshTests {
         let settings = self.makeSettings()
         let controller = self.makeController(settings: settings)
         func snapshot(personal: String, team: String) throws -> UsageSnapshot {
-            UsageSnapshot(
+            try UsageSnapshot(
                 primary: nil,
                 secondary: nil,
-                details: [try ProviderDetailSection(
+                details: [ProviderDetailSection(
                     title: "Credits",
                     rows: [
                         .init(label: "Personal", value: personal),

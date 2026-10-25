@@ -599,7 +599,7 @@ extension HistoricalUsagePaceTests {
     }
 
     @MainActor
-@Test
+    @Test
     func `menu bar layout pace opens weekly early but floors session and automatic at three percent`() throws {
         let (store, controller) = try Self.makeStoreAndControllerForMenuBarPaceTests(
             suite: "HistoricalUsagePaceTests-menu-bar-early-window-floors-\(UUID().uuidString)")

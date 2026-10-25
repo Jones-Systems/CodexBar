@@ -1437,5 +1437,4 @@ extension CostUsageFetcher {
 
         return "v2:\(scopedFiles.count):\(progressHasher.finalize())"
     }
-
 }

@@ -7,7 +7,6 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ClaudeNativeProfileMenuSelectionTests {
-
     @Test(.enabled(if: ProcessInfo.processInfo.environment["CODEXBAR_CLAUDE_PROFILE_MENU_CAPTURE"] == "1"))
     func `capture actual SwiftUI profile menu rows with synthetic enrollment`() async throws {
         let environment = ProcessInfo.processInfo.environment

@@ -80,9 +80,3 @@ struct UsageStoreHighestUsageTests {
         #expect(highest?.usedPercent == 80)
     }
 }
-
-extension UsageStoreHighestUsageTests {
-}
-
-extension UsageStoreHighestUsageTests {
-}

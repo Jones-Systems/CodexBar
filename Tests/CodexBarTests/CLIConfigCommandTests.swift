@@ -5,7 +5,6 @@ import Testing
 @testable import CodexBarCLI
 
 struct CLIConfigCommandTests {
-
     @Test
     func `config set api key parses provider stdin and no enable flags`() throws {
         let parser = CommandParser(signature: CodexBarCLI._configSetAPIKeySignatureForTesting())
@@ -28,7 +27,6 @@ struct CLIConfigCommandTests {
         let codexMsg = CodexBarCLI.unsupportedAPIKeyErrorMessage(for: .codex, rawProvider: "codex")
         #expect(codexMsg ==
             "codex does not support config API keys.")
-
     }
 
     @Test

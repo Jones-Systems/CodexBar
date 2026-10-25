@@ -10,7 +10,6 @@ import Glibc
 
 @Suite(.serialized)
 struct BoundedChildProcessProofTests {
-
     @Test
     func `synthetic PTY child overflow propagates and cleans up the process`() throws {
         let directory = TestFixtureScratch.root
@@ -55,5 +54,4 @@ struct BoundedChildProcessProofTests {
         #expect(kill(pid, 0) == -1)
         #expect(errno == ESRCH)
     }
-
 }

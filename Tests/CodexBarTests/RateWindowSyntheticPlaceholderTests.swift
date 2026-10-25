@@ -7,7 +7,6 @@ import Testing
 /// marker is set at the web boundary, survives Codable (with backward compatibility), and survives the
 /// reset backfill that previously defeated a shape-only heuristic.
 struct RateWindowSyntheticPlaceholderTests {
-
     @Test
     func `web mapping flags the null five-hour session as a synthetic placeholder`() throws {
         let json = """

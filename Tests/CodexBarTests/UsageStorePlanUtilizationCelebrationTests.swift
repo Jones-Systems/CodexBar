@@ -1045,7 +1045,7 @@ extension UsageStorePlanUtilizationTests {
 
     @MainActor
     @Test
-    func `session quota celebration uses generic provider canonical primary without history sample`() async {
+    func `session quota celebration uses generic provider canonical primary without history sample`() {
         let store = Self.makeStore()
         let accountLabel = "scoped-session-fixture"
         let recorder = SessionLimitResetEventRecorder(provider: .claude, accountLabel: accountLabel)

@@ -115,8 +115,7 @@ extension UsageMenuCardView.Model {
     }
 
     static func tokenUsageSnapshot(input: Input) -> CostUsageTokenSnapshot? {
-
-        return input.tokenSnapshot
+        input.tokenSnapshot
     }
 
     static func creditsLine(

@@ -48,6 +48,5 @@ struct CookieImporterOverrideIsolationTests {
 
         #expect(observedLabels == Set(expectedLabels))
     }
-
 }
 #endif

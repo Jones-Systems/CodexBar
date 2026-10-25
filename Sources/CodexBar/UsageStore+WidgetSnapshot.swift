@@ -388,8 +388,7 @@ extension UsageStore {
         snapshot: UsageSnapshot,
         metadata: ProviderMetadata?) -> String
     {
-
-        return metadata?.sessionLabel ?? "Session"
+        metadata?.sessionLabel ?? "Session"
     }
 
     private func widgetUsageRows(

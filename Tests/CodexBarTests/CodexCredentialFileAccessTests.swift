@@ -4,7 +4,6 @@ import Testing
 @testable import CodexBarCore
 
 struct CodexCredentialFileAccessTests {
-
     @Test
     func `explicit file fixtures allow synthetic reads and whole write substitution`() throws {
         let io = IO()

@@ -527,7 +527,6 @@ extension CodexBarCLI {
 
         switch outcome.result {
         case let .success(result):
-
             var usage = result.usage.scoped(to: provider)
             if let account {
                 usage = tokenContext.applyAccountLabel(usage, provider: provider, account: account)

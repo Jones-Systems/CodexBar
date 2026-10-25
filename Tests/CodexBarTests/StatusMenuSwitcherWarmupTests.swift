@@ -153,12 +153,12 @@ final class StatusMenuSwitcherWarmupTests: XCTestCase {
         controller: StatusItemController) throws
     {
         let submenu = try XCTUnwrap(item.submenu)
-            if submenu.items.first?.identifier == nil {
-                XCTAssertTrue(controller.hydrateHostedSubviewMenuIfNeeded(submenu))
-            }
-            let link = try XCTUnwrap(submenu.items.last)
-            XCTAssertEqual(link.identifier?.rawValue, provider.rawValue)
-            XCTAssertEqual(link.action, #selector(StatusItemController.openStatusPageFromMenuItem(_:)))
-            XCTAssertTrue(link.target === controller)
+        if submenu.items.first?.identifier == nil {
+            XCTAssertTrue(controller.hydrateHostedSubviewMenuIfNeeded(submenu))
+        }
+        let link = try XCTUnwrap(submenu.items.last)
+        XCTAssertEqual(link.identifier?.rawValue, provider.rawValue)
+        XCTAssertEqual(link.action, #selector(StatusItemController.openStatusPageFromMenuItem(_:)))
+        XCTAssertTrue(link.target === controller)
     }
 }

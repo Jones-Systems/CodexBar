@@ -6,7 +6,6 @@ import Testing
 @Suite(.serialized)
 @MainActor
 struct ConfigFileWatcherTests {
-
     @Test
     func `config watcher suppresses self writes and observes external atomic replacement`() async throws {
         let directory = TestFixtureScratch.root
@@ -32,7 +31,6 @@ struct ConfigFileWatcherTests {
         watcher.stop()
         #expect(changes.value >= 1)
     }
-
 }
 
 private final class LockedCounter: @unchecked Sendable {

@@ -7,7 +7,6 @@ extension StatusItemController {
         model: UsageMenuCardView.Model,
         width: CGFloat) -> NSMenu?
     {
-
         if self.settings.costSummaryShowsSubmenu(for: provider),
            model.tokenUsage != nil,
            let submenu = self.makeCostHistorySubmenu(provider: provider, width: width)

@@ -5,7 +5,6 @@ import Testing
 
 @MainActor
 struct CodexCombinedMetricHighestUsageTests {
-
     @Test
     func `combined claude metric excludes an exhausted weekly-only account with a synthetic placeholder`() {
         let store = self.makeStore(

@@ -4,7 +4,6 @@ import Testing
 @testable import CodexBarCLI
 
 struct DashboardSnapshotBuilderTests {
-
     @Test
     func `dashboard producer forwards its config to cost collection`() async throws {
         let recorder = DashboardCostConfigRecorder()

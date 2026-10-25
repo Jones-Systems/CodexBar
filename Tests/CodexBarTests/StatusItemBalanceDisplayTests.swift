@@ -6,7 +6,6 @@ import Testing
 @Suite(.serialized)
 @MainActor
 struct StatusItemBalanceDisplayTests {
-
     @Test
     func `button title spacing only applies when image is present`() {
         #expect(StatusItemController.buttonTitle("42%", hasImage: true) == " 42%")

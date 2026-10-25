@@ -8,5 +8,4 @@ struct ResetCountdownDayRolloverTests {
     private func at(hoursFromNow hours: Double) -> Date {
         Self.now.addingTimeInterval(hours * 3600)
     }
-
 }

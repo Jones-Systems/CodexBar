@@ -2,7 +2,6 @@ import CodexBarCore
 import Testing
 
 struct TextParsingTests {
-
     @Test
     func `first number parses decimal separators`() {
         let dotDecimal = TextParsing.firstNumber(pattern: #"Credits:\s*([0-9][0-9., ]*)"#, text: "Credits: 54.72")

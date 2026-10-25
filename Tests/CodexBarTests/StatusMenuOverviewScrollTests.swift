@@ -37,7 +37,6 @@ private final class OverviewScrollEvent: NSEvent {
 
 @MainActor
 struct StatusMenuOverviewScrollTests {
-
     @Test(arguments: [CGFloat(-1), 0, 0.5, 1, 30, 500], [false, true])
     func `synthetic scroll events preserve handler inputs`(deltaY: CGFloat, precise: Bool) {
         let event = self.makeScrollEvent(deltaY: deltaY, precise: precise)

@@ -73,7 +73,6 @@ struct UsageOptions: CommanderParsable {
 
     @Flag(name: .long("web-debug-dump-html"), help: "Dump HTML snapshots to /tmp when Codex dashboard data is missing")
     var webDebugDumpHtml: Bool = false
-
 }
 
 struct GuardOptions: CommanderParsable {

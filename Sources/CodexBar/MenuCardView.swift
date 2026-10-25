@@ -171,8 +171,7 @@ struct UsageMenuCardView: View {
     @Environment(\.menuCardRefreshMonitor) private var refreshMonitor
 
     static func popupMetricTitle(provider: UsageProvider, metric: Model.Metric) -> String {
-
-        return metric.title
+        metric.title
     }
 
     var body: some View {
@@ -1102,7 +1101,6 @@ extension UsageMenuCardView.Model {
     }
 
     private static func planDisplay(_ text: String, for provider: UsageProvider) -> String {
-
         let cleaned = if provider == .codex {
             CodexPlanFormatting.displayName(text) ?? UsageFormatter.cleanPlanName(text)
         } else {
@@ -1312,11 +1310,11 @@ extension UsageMenuCardView.Model {
         title: String? = nil) -> Metric
     {
         var paceDetail = Self.weeklyPaceDetail(
-                provider: input.provider,
-                window: weekly,
-                now: input.now,
-                pace: input.weeklyPace,
-                showUsed: input.usageBarsShowUsed)
+            provider: input.provider,
+            window: weekly,
+            now: input.now,
+            pace: input.weeklyPace,
+            showUsed: input.usageBarsShowUsed)
         let weeklyResetText = Self.resetText(for: weekly, style: input.resetTimeDisplayStyle, now: input.now)
 
         if let windowPaceDetail = Self.resetWindowPaceDetail(

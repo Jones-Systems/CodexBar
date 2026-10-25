@@ -4,7 +4,6 @@ import Testing
 @testable import CodexBar
 
 struct UsageStorePlanUtilizationExactFitResetTests {
-
     @Test
     func `weekly chart prefers reset backed history over legacy synthetic points`() {
         let legacyCapturedAt = Date(timeIntervalSince1970: 1_742_100_000)

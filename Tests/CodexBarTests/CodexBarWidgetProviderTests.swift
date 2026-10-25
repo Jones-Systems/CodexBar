@@ -467,7 +467,6 @@ struct CodexBarWidgetProviderTests {
 }
 
 extension CodexBarWidgetProviderTests {
-
     @Test
     func `widget token titles disclose stale age for today and history rows`() {
         let entryUpdatedAt = Date()

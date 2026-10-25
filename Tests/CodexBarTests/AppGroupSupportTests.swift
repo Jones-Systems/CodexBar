@@ -3,7 +3,6 @@ import Testing
 @testable import CodexBarCore
 
 struct AppGroupSupportTests {
-
     @Test
     func `unavailable synthetic target does not mark migration complete`() throws {
         let fixture = try MigrationFixture()
@@ -140,7 +139,6 @@ struct AppGroupSupportTests {
         #expect(try Data(contentsOf: fixture.currentSnapshotURL) == Data("current-snapshot".utf8))
         #expect(fixture.fileManager.operations == [.exists(fixture.currentSnapshotURL.path)])
     }
-
 }
 
 private struct MigrationFixture {

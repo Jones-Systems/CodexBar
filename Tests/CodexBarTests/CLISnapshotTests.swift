@@ -4,7 +4,6 @@ import Testing
 @testable import CodexBarCLI
 
 struct CLISnapshotTests {
-
     @Test
     func `renders text snapshot for codex`() {
         let identity = ProviderIdentitySnapshot(
@@ -704,5 +703,4 @@ struct CLISnapshotTests {
         #expect(!output.contains("\u{001B}["))
         #expect(output.contains("Status: Operational – Operational"))
     }
-
 }

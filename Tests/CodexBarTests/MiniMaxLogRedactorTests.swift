@@ -72,5 +72,4 @@ struct MiniMaxLogRedactorTests {
         #expect(redacted.contains(originalToken) == false)
         #expect(redacted.contains("<redacted-minimax-token>"))
     }
-
 }

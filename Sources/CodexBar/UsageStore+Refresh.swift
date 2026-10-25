@@ -787,7 +787,6 @@ extension UsageStore {
         }
         // Credential-change cleanup already ran above; cancellation is now safe to suppress.
         if Self.errorIsCancellation(error) {
-
             return
         }
         guard self.isCurrentProviderRefreshGeneration(provider, generation: context.generation) else { return }

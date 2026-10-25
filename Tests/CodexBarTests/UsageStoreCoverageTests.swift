@@ -284,7 +284,6 @@ struct UsageStoreCoverageTests {
 }
 
 extension UsageStoreCoverageTests {
-
     @Test
     func `refresh clears enabled but unavailable cached state`() async throws {
         let settings = Self.makeSettingsStore(suite: "UsageStoreCoverageTests-background-cleanup")

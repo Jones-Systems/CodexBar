@@ -121,7 +121,7 @@ enum CodexBarCLI {
         let diagnoseSignature = CommandSignature.describe(DiagnoseOptions())
         let guardSignature = CommandSignature.describe(GuardOptions())
 
-        var descriptors = [
+        return [
             CommandDescriptor(
                 name: "cards",
                 abstract: "Print usage as a terminal card grid",
@@ -224,7 +224,6 @@ enum CodexBarCLI {
                 discussion: nil,
                 signature: diagnoseSignature),
         ]
-        return descriptors
     }
 
     private static func dashboardCommandDescriptor() -> CommandDescriptor {

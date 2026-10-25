@@ -7,12 +7,13 @@ import Testing
 @MainActor
 struct SharedTokenPublicationTests {
     private static let now = Date(timeIntervalSince1970: 1_787_832_000)
-    private static var calendar: Calendar { CostUsageBucketTimeZone.calendar(identifier: "UTC") }
-
+    private static var calendar: Calendar {
+        CostUsageBucketTimeZone.calendar(identifier: "UTC")
+    }
 
     @Test(arguments: [UsageProvider.claude, .codex])
     func `regular unavailable handling preserves failure gating and Codex catchup retention`(
-        provider: UsageProvider) async throws
+        provider: UsageProvider) async
     {
         let store = Self.store(provider: provider)
         // Synthetic snapshots exercise the retained publication and unavailable-history paths.
@@ -29,7 +30,6 @@ struct SharedTokenPublicationTests {
         await store.widgetSnapshotPersistTask?.value
         store._test_tokenUsageSnapshotLoaderOverride = nil
     }
-
 
     @Test(arguments: [UsageProvider.claude, .codex])
     func `shared overflow repair preserves missing buckets and other providers`(provider: UsageProvider) {

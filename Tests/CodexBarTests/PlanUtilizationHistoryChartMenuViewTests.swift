@@ -4,7 +4,6 @@ import Testing
 @testable import CodexBarCore
 
 struct PlanUtilizationHistoryChartMenuViewTests {
-
     @Test
     func `merged entries preserve first occurrence order while removing duplicates`() {
         let first = PlanUtilizationHistoryEntry(
@@ -86,5 +85,4 @@ struct PlanUtilizationHistoryChartMenuViewTests {
         #expect(model.visibleSeries == ["weekly:10080"])
         #expect(model.selectedSeries == "weekly:10080")
     }
-
 }
