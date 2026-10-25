@@ -1,7 +1,7 @@
 {
   "schema": "codexbar-product-removal-comparison/v1",
   "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
-  "candidateSourceRevision": "ad4aea4f101ba50a48f38e285d683359f8e81672",
+  "candidateSourceRevision": "ab357f8d874326331e6a32c0abe0bc2ce310287b",
   "pullRequest": "https://github.com/Jones-Systems/CodexBar/pull/41",
   "baseBranch": "work/test-value-bar-pass2-20261024",
   "method": "Exact committed Git blobs; files include Swift source under Sources and tests under Tests, TestsLinux, TestsPlugin; line count uses bytes.splitlines; lexical Swift Testing @Test declaration counts exclude comments/strings and do not represent parameterized/runtime cases.",
@@ -439,7 +439,7 @@
     }
   },
   "hostedEvidence": {
-    "status": "pending root integration/qualification",
+    "status": "Integrated source/harness awaiting exact-head automatic macOS/Linux qualification; root owns watch",
     "firstRunURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40121196414",
     "firstHeadLint": "failure: stale parser hash, repaired by e0575c44592208fa16d0ac71d7b14044c0b49418; product-dependent patch01 contracts now applied and portable checks pass; native qualification pending",
     "currentHeadChecksMustBeReadFromGitHub": true,
@@ -483,6 +483,22 @@
       },
       "repairRevision": "ad4aea4f101ba50a48f38e285d683359f8e81672",
       "qualification": "Direct completed-job log inspected; all 38 reported violations addressed without new disables. Native SwiftLint/SwiftFormat remain unavailable locally; exact new-head lint is pending."
+    },
+    "qualifiedCompileOncePrerequisite": {
+      "pullRequest": "https://github.com/Jones-Systems/CodexBar/pull/40",
+      "revision": "951c99a96b052e1a70898e75330554403bb643b3",
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40148474449",
+      "source": "Root exact-head completed-run observation, October 24, 2026, 9:25:23 PM EDT",
+      "allNineChecks": "success",
+      "producerJob": 121034849021,
+      "workerJobs": [
+        121037780364,
+        121037780442
+      ],
+      "nativeCompatibilityStatus": "verified",
+      "nativeCompatibilityMode": "complete-fingerprint",
+      "producerDiscoverySHA256": "67d0307bbff37082f0df4ff1e1a95181e8bacf43d886e13801fd28f72216a49b",
+      "qualification": "Prerequisite source only; does not qualify the later product/patch02 head. No remote PR40 merge was performed."
     }
   },
   "appSizeAndBuildComparison": {
@@ -493,7 +509,7 @@
     "afterBundleBytes": null,
     "beforeColdBuildSeconds": null,
     "afterColdBuildSeconds": null,
-    "nextGate": "Exact comparable hosted macOS builds after CI product-contract integration; same toolchain, configuration, architecture, dependency/cache conditions and unsigned packaging. Root owns scheduling and CI watch. Source reduction is not a binary-size or build-time estimate."
+    "nextGate": "Exact comparable hosted macOS builds after integrated-head automatic CI qualification; same toolchain, configuration, architecture, dependency/cache conditions and unsigned packaging. Root owns scheduling and watch. Source reduction is not a binary-size or build-time estimate."
   },
   "restorationRevision": "91bd5fb4af704da9181212bea636d527a058e615",
   "bulkReview": {
@@ -584,9 +600,52 @@
     "additionalTransferredPath": "Scripts/test_ci_path_gate.sh",
     "currentSharedPluginTestInventory": 0,
     "historicalDeletedPathTriggersRetained": true,
-    "patch02Applied": false,
+    "patch02Applied": true,
     "fullWorkflowQualified": false,
-    "remainingGate": "Root integrates qualified PR40 compile-once descendant, rechecks patch02, and integrates the separate 05:00 America/New_York nightly before combined native qualification."
+    "remainingGate": "Exact integrated non-draft PR41 automatic required checks and native product qualification; root owns CI watch and remote merge. Both profiles retain skip-build/profile identity; full-route native success and comparable app-size/cold-build evidence remain unproved.",
+    "fullWorkflowSourceClosure": true,
+    "patch02": {
+      "file": "02-after-compile-once.patch",
+      "sha256": "1633958a3be59d768be2afc3722c71146c047a84db27cd043a69ada774af6d77",
+      "recordedBaseRevision": "19749e9e59c41d5a345cfcd8256add571755dbff",
+      "actualIntegratedBaseRevision": "5f4dc85a5cf8421bb5913ec544c218da56353531",
+      "consumptionRevision": "ab357f8d874326331e6a32c0abe0bc2ce310287b",
+      "paths": [
+        ".github/workflows/ci.yml",
+        "Scripts/ci_swift_test_by_suite.py",
+        "Scripts/test-plugin-engines.sh",
+        "Scripts/test_ci_isolated_commands.py",
+        "Scripts/test_swift_test_artifact.py",
+        "Scripts/test_swift_test_evidence.py",
+        "docs/ci-test-build-handoff.md"
+      ],
+      "deletedPaths": [
+        "Scripts/test-plugin-engines.sh"
+      ],
+      "actualTreeApplyCheck": "Five paths clean; two expected context collisions adapted narrowly",
+      "adaptations": [
+        {
+          "path": "Scripts/test_swift_test_artifact.py",
+          "change": "Apply the frozen full-profile method replacement at its new location; all other native/provenance fixture bytes identical to qualified PR40"
+        },
+        {
+          "path": "docs/ci-test-build-handoff.md",
+          "change": "Replace only obsolete JSC paragraph; retain already integrated normal-nightly/default-branch wording"
+        },
+        {
+          "path": ".github/workflows/ci.yml",
+          "change": "Additional input-description correction: normal/full select retained Codex/Claude tests; selector values and gates unchanged"
+        }
+      ],
+      "removedWrapperOnlyTestMethods": [
+        "test_plugin_passes_share_parent_and_preserve_filters",
+        "test_plugin_failure_keeps_status_and_does_not_run_second_engine",
+        "test_plugin_rollback_selects_full_build_and_preserves_result",
+        "test_plugin_unknown_option_starts_no_command"
+      ],
+      "sharedFullProfileProofRetained": "Exact profile identity, skip-build discovery, one test execution and owned cleanup; obsolete engine pass removed",
+      "frozenHandoffRetention": "Original sibling handoff retained until root confirms consumption; creating lane owns cleanup"
+    }
   },
   "cliFixtureRepair": {
     "footerExpectations": "Keep shared footer/card assertions with Claude instead of retired Cursor/Grok labels",
@@ -757,5 +816,103 @@
       "documentationLinks": "pass: 178 local links",
       "llmsIndex": "pass: actual Scripts/generate-llms.mjs --check"
     }
+  },
+  "compiledTestIntegration": {
+    "qualifiedRevision": "951c99a96b052e1a70898e75330554403bb643b3",
+    "ordinaryMergeRevision": "5f4dc85a5cf8421bb5913ec544c218da56353531",
+    "parents": [
+      "f134f56e8fee597de1822688eac6530cd01149ed",
+      "951c99a96b052e1a70898e75330554403bb643b3"
+    ],
+    "mergeConflictPaths": [
+      "AGENTS.md",
+      "Scripts/lint.sh",
+      "docs/testing-profiles.md"
+    ],
+    "mergeConflictDisposition": "Preserve source removal, retired tooling deletion and restoration notes; incorporate producer/shard/aggregate requirements and normal nightly schedule",
+    "qualifiedNativeSourcePreservation": {
+      "qualifiedRevision": "951c99a96b052e1a70898e75330554403bb643b3",
+      "unchangedQualifiedNativeFiles": [
+        {
+          "path": "Scripts/ci_swift_test_artifact.py",
+          "blob": "f88fef76d303c504f4f82fd003e452965de3cce7",
+          "sha256": "8694adbddd969e9b28046642d40c10a0a9d4a1219e049d4a19c8b8b69bfe8218"
+        },
+        {
+          "path": "Scripts/ci_swift_test_native.py",
+          "blob": "f7166bc89c1534bb714407b3b5189dcc1e4b3f2f",
+          "sha256": "46e865b36ef32c095394e7defc3639ddca6dcc32048f880beff951a7feb960f0"
+        },
+        {
+          "path": "Scripts/test_swift_test_native.py",
+          "blob": "b1fdce5417f7f3afbc837bae239f6a57c5602dc7",
+          "sha256": "563c0c29163d62656b1a5a5a6b29c84c34d95a2d2e581b539e8f35f0db2100b1"
+        },
+        {
+          "path": "Scripts/ci_verify_test_jobs.sh",
+          "blob": "6709053d9d86c489ef9ffa83fdd41129cb83cb93",
+          "sha256": "d16e103577dd879e239e4452402b8190c1d6100d4f4837c8316afefc37ab8954"
+        }
+      ],
+      "artifactFixtureDelta": "Only the frozen patch full-profile method changed; all native compatibility/provenance fixtures and surrounding bytes remain identical to qualified revision.",
+      "productAndSwiftTestDeltaFromPublishedHead": []
+    },
+    "productSwiftAndSwiftTestsByteIdenticalTo": "f134f56e8fee597de1822688eac6530cd01149ed",
+    "packageDependencyAndProfileBlobsChanged": false,
+    "normalNightly": {
+      "cron": "0 5 * * *",
+      "timezone": "America/New_York",
+      "profile": "normal",
+      "separateConcurrency": true,
+      "sourceRevision": "951c99a96b052e1a70898e75330554403bb643b3",
+      "effectiveOnlyOnDefaultBranch": true,
+      "historicalNightlyCommitWasNotMergedSeparately": true
+    },
+    "latestLocalChecks": [
+      {
+        "name": "handoff_fixtures",
+        "status": "not-started",
+        "reason": "lock busy"
+      }
+    ],
+    "initialAdmission": "Shared nonblocking benchmark.lock busy; no tests or queued waits started; continued ready source/evidence work",
+    "toolAvailability": {
+      "swift": "unavailable",
+      "plutil": "unavailable",
+      "swiftformat": "unavailable",
+      "swiftlint": "unavailable",
+      "actionlint": "unavailable"
+    },
+    "newHeadHostedChecks": "pending automatic CI after coherent push and ready-for-review transition; root owns watching and subsequent repair",
+    "localInspection": {
+      "pythonASTFiles": [
+        "Scripts/ci_swift_test_artifact.py",
+        "Scripts/ci_swift_test_by_suite.py",
+        "Scripts/ci_swift_test_native.py",
+        "Scripts/test_ci_isolated_commands.py",
+        "Scripts/test_swift_test_artifact.py",
+        "Scripts/test_swift_test_evidence.py",
+        "Scripts/test_swift_test_native.py"
+      ],
+      "shellSyntaxFiles": [
+        "Scripts/ci_verify_test_jobs.sh",
+        "Scripts/lint.sh",
+        "Scripts/test_ci_path_gate.sh"
+      ],
+      "yaml": "pass: existing PyYAML BaseLoader syntax; fixed job inventory and schedule parsed",
+      "retiredWorkerRouteAbsent": true,
+      "productAndSwiftTestBlobsUnchanged": true
+    },
+    "blockedAdmissionAttempts": 3,
+    "deferredAffectedChecks": [
+      "isolated/artifact/native/profile fixture union",
+      "sharding/evidence/process-cleanup fixtures",
+      "path-gate/aggregate fixtures",
+      "normal and full profile validation",
+      "provider-manifest and Codex parser-hash generation checks",
+      "make check",
+      "make test"
+    ],
+    "deferredReason": "Three fresh below-threshold admissions, separated by ready source/evidence work, each found shared benchmark.lock busy. No test command or queued wait started. Existing local tool absences also prevent native make check/test. Prior exact-revision check results are retained as historical evidence, not new-head passes."
   }
 }

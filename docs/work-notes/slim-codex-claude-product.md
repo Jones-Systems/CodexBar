@@ -12,8 +12,10 @@ Owner authorized actual product source removal and PR publication. Root thread
 `7116f0d2-eb93-407b-9a19-08f15c670ac8` owns merge and cross-lane CI coordination.
 This child does not merge or update installed apps. No sudo, credentials, live
 provider probes, signing, release, deployment or tool installation is authorized.
-Explicit model override: gpt-6.1-sol / max / default service tier; inherited
-high_intelligence personal_default revision 8 remains unchanged.
+Explicit model override: gpt-6.1-sol / max / default service tier. Initial inherited
+personal_default was high_intelligence revision 8. The resumed local read observes
+temporary blended_frontier_max revision 10; the explicit Sol Max task pin remains
+in force and no shared preference or thread selection was changed.
 
 Worktree: `/home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024`.
 Branch: `work/slim-codex-claude-product-20261024`.
@@ -56,8 +58,9 @@ Native goal ownership stays with root rather than creating a competing child goa
   the exact core/app test scopes; no coordinator writes those scopes while leaves own them.
 - Initial exclusions cover `.github/**`, CI sharding/campaign scripts,
   build_jobs.py, shared harness/artifact scripts and signing/bootstrap work. Root
-  transferred the 17 patch01 application paths below to this coordinator; every
-  other CI exclusion remains. No signing/bootstrap contract is changed.
+  transferred the 17 patch01 application paths and later the exact qualified
+  PR40 source plus frozen patch02's seven paths for integration. Those paths are
+  recorded in the comparison; all other CI/signing/bootstrap exclusions remain.
 
 Both implementation leaves completed their source/test cones and returned ownership
 to the coordinator. They shared this worktree with disjoint scopes, launched no
@@ -128,7 +131,7 @@ without a TestsPlugin directory. The five removed shared suites are
 remain in an explicitly historical gate set so modified/deleted/renamed old inputs
 still select macOS and Linux. Every existing historical-trigger assertion and
 aggregate/unknown-path gate remains; required job selection is unchanged.
-Patch02 is held until root integrates the qualified compile-once descendant;
+At the patch01 checkpoint, patch02 was held for qualified compile-once integration;
 patch01 alone leaves the old manual full-JSC workflow consumer obsolete. Neither
 full-route qualification nor real packaged-app proof is claimed. Root retains
 nightly and compile-once integration. No duplicated PR38 matched campaign was
@@ -151,7 +154,7 @@ an empty synthetic token store; they do not depend on the removed Cursor dormanc
 policy. Removed Kiro preference localization assertions leave the shared System
 localization checks intact.
 
-Published [draft PR41](https://github.com/Jones-Systems/CodexBar/pull/41), stacked on
+Initially published [draft PR41](https://github.com/Jones-Systems/CodexBar/pull/41), stacked on
 PR39. Source removal commit: `39ebae79e3f0dd31e4afc9d2bb2f4dba5a4ac808`.
 The first hosted lint job caught a stale parser hash before reaching the pending
 CI-sibling contracts. Existing `Scripts/regenerate-codex-parser-hash.sh --write`
@@ -239,7 +242,62 @@ scratch-catalog, fixture-parent and index-command setup errors were corrected;
 none ran native tests or prompted product/assertion changes. Details and the final
 passing static results are in the comparison record. Owned scratch is removed
 after process drain. Root retains the CI watch; no manual run or extra agent is
-started. Exact new-head lint/native qualification and the existing draft hold remain.
+started. At that checkpoint, exact new-head qualification and the draft hold remained.
+
+Root resumed this lane after qualifying exact PR40
+`951c99a96b052e1a70898e75330554403bb643b3` in run `40148474449`: all nine
+checks succeeded, including producer `121034849021` and shards `121037780364` /
+`121037780442`. Root observed complete-fingerprint verification across runner
+images and matching discovery SHA256
+`67d0307bbff37082f0df4ff1e1a95181e8bacf43d886e13801fd28f72216a49b`.
+This is prerequisite evidence for that exact source, not qualification of PR41.
+Root's bounded transfer authorizes ordinary local merge, patch02 consumption,
+normal publication and removal of the draft hold; no remote PR merge, install,
+extra agent/reviewer or manual campaign is authorized.
+
+Ordinary merge `5f4dc85a5cf8421bb5913ec544c218da56353531` has exact parents
+`f134f56e8fee597de1822688eac6530cd01149ed` and qualified `951c99a`. Three
+conflicts in AGENTS.md, Scripts/lint.sh and docs/testing-profiles.md preserve the
+product removals and compile-once/normal-nightly contracts. The nightly behavior
+is already in the qualified descendant; no separate merge of historical nightly
+commit `0110a56430470106ad7ffed6c96707d3eb5cc636` is needed.
+
+Frozen `02-after-compile-once.patch` SHA256
+`1633958a3be59d768be2afc3722c71146c047a84db27cd043a69ada774af6d77` was
+reverified against its retained manifest. Actual merged-tree apply checking found
+two expected context collisions: Scripts/test_swift_test_artifact.py and
+docs/ci-test-build-handoff.md. Five clean paths apply directly; the full-profile
+method and handoff paragraph are adapted narrowly. All surrounding native fixture
+bytes and four qualified artifact/native/aggregate implementation/test files stay
+identical. The workflow input description now truthfully says both profiles select
+retained Codex/Claude tests. Patch02 removes only the retired JSC worker route,
+its engine wrapper and four wrapper-only tests. Full still proves exact profile
+identity, skip-build discovery/execution and cleanup. Nightly remains 05:00
+America/New_York with normal profile and separate concurrency; no schedule is
+activated on this task branch. The sibling retains its frozen handoff until root
+confirms consumption; this lane does not clean another worktree.
+
+No product Swift, Swift test, Package.swift, dependency, resource or profile-manifest
+blob changes during this integration. The spend/history scale, identity, quota,
+account/auth, offline fallback and shared TTY protections remain intact. The first
+check admission found the shared benchmark lock busy and started no test; ready
+source/specification/evidence work continued without waiting on that lock.
+
+Patch02 consumption commit `ab357f8d874326331e6a32c0abe0bc2ce310287b` changes
+only its seven declared paths. Read-only source inspection passes for seven
+Python AST files, three shell syntax files and workflow YAML using the existing
+PyYAML BaseLoader. The parsed job inventory and normal nightly schedule are
+preserved; retired JSC runtime entrypoints are absent. Git whitespace inspection
+passes. Across three final admissions separated by ready source/evidence work,
+the shared benchmark lock remained busy. No affected fixture, generator, profile
+validation or make command started in this resumed slice, and no queued wait was
+created. These checks are deferred, not passed. Swift/plutil/formatters remain
+absent; the prior make attempts and portable passes remain tied to their recorded
+older revisions. Coherent source is published for automatic CI with the draft hold
+removed; root owns the exact-head watch and subsequent fixes. This transition does
+not merge a remote PR, activate nightly scheduling or establish native/app-size
+success. Owned check scratch is removed after evidence preservation; the frozen
+sibling transfer remains intact.
 
 Exact committed-blob [comparison](../engineering-specs/slim-codex-claude-comparison.json):
 
@@ -262,10 +320,10 @@ retired top-level declaration names with zero remaining product/test references.
 Architecture scanner code is unchanged; 312 catalog entries match 651 shipped
 Swift files with zero source-inspection findings. None of these replace compilation.
 
-Comparable executable/bundle sizes and cold-build times are unavailable. Root's
-next gate is qualified compile-once/patch02 integration followed by exact comparable hosted
-macOS builds with the same toolchain, architecture, configuration and dependency/cache
-conditions, then required macOS/Linux coverage for the final source. Source counts
-are not build-time or binary-size estimates. Draft state prevents a readiness claim;
-the Linux/musl successes at `41b9f8a` and draft macOS skips do not qualify the new head.
+Comparable executable/bundle sizes and cold-build times are unavailable. Following
+source/harness closure and removal of the draft hold, root's next gate is exact-head
+automatic macOS/Linux qualification, then exact comparable hosted macOS builds
+with matching toolchain, architecture, configuration and dependency/cache conditions.
+Source counts are not build-time or binary-size estimates. Prerequisite PR40 success,
+old PR41 Linux/musl successes and draft macOS skips do not qualify the new head.
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->

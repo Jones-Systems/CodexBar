@@ -41,10 +41,21 @@ old files safely; do not retain executable plugin behavior.
 Remove CloudKit sync transport/coordinator and its app lifecycle wiring. Retain or
 relocate shared account/menu/fleet identity models that happen to live in `Sync`.
 Source-level architecture changes affect app, core, CLI and widget consumers, so
-all applicable platform compiler jobs remain required. The CI sibling owns
-compile-once sharding. Root transferred application of its frozen 17-path product
-harness cleanup to this coordinator; the Work Note records the exact boundary.
-Compile-once and nightly integration stay with root.
+all applicable platform compiler jobs remain required. The CI sibling authored
+compile-once sharding. Root transferred patch01 and then the exact qualified PR40
+source plus frozen seven-path patch02 to this coordinator for task-branch integration.
+Root retains CI watching, hosted qualification and remote PR merge coordination.
+
+`swift-build-macos` builds/discovers once; both existing shards verify the same-run
+artifact and execute only `--skip-build`, with no compilation fallback. Preserve
+`ci_swift_test_artifact.py` and `ci_swift_test_native.py` identity, manifest, archive,
+native-fingerprint, cleanup and provenance checks. Patch02 removes the obsolete
+JSC option/engine wrapper and its four wrapper-only tests; the full-profile test
+continues proving discovery, one skipped-build execution and owned cleanup.
+The daily 05:00 America/New_York normal-profile schedule, separate concurrency,
+producer/shard/aggregate gates and normal/full selector identities remain intact.
+Scheduling takes effect only after default-branch integration. The Work Note and
+comparison record identify the qualified source, frozen bytes and narrow adaptations.
 <!-- codex-section:end spec.slim-codex-claude-product#architecture -->
 
 <!-- codex-section:begin spec.slim-codex-claude-product#verification -->
