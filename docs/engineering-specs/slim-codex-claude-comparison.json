@@ -1,7 +1,7 @@
 {
   "schema": "codexbar-product-removal-comparison/v1",
   "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
-  "candidateSourceRevision": "6e511c38eb263d590700ceeccf93ae0d5894bf7a",
+  "candidateSourceRevision": "d5b0ee5a1a7b4ab9f76cfad07bfeebd20161711a",
   "pullRequest": "https://github.com/Jones-Systems/CodexBar/pull/41",
   "baseBranch": "work/test-value-bar-pass2-20261024",
   "method": "Exact committed Git blobs; files include Swift source under Sources and tests under Tests, TestsLinux, TestsPlugin; line count uses bytes.splitlines; lexical Swift Testing @Test declaration counts exclude comments/strings and do not represent parameterized/runtime cases.",
@@ -36,8 +36,8 @@
       },
       "testSwift": {
         "files": 733,
-        "lines": 252269,
-        "bytes": 10934662
+        "lines": 252281,
+        "bytes": 10935320
       }
     }
   },
@@ -785,31 +785,31 @@
       "status": "unavailable",
       "exitCode": 2,
       "reason": "plutil absent",
-      "latestAttemptRevision": "6e511c38eb263d590700ceeccf93ae0d5894bf7a",
+      "latestAttemptRevision": "d5b0ee5a1a7b4ab9f76cfad07bfeebd20161711a",
       "revisionMeaning": "Exact repair bytes checked before source commit and subsequently verified against every committed source/test blob."
     },
     "makeTest": {
       "status": "unavailable",
       "exitCode": 2,
       "reason": "Swift absent; no test executable ran",
-      "latestAttemptRevision": "6e511c38eb263d590700ceeccf93ae0d5894bf7a",
+      "latestAttemptRevision": "d5b0ee5a1a7b4ab9f76cfad07bfeebd20161711a",
       "revisionMeaning": "Exact repair bytes checked before source commit and subsequently verified against every committed source/test blob."
     },
     "normalAndFullProfileManifests": {
       "status": "pass",
-      "latestCheckRevision": "6e511c38eb263d590700ceeccf93ae0d5894bf7a",
+      "latestCheckRevision": "d5b0ee5a1a7b4ab9f76cfad07bfeebd20161711a",
       "normal": "explicit validation passed",
       "full": "explicit validation passed"
     },
     "documentationLinks": {
       "status": "pass",
       "localLinks": 181,
-      "latestAttemptRevision": "6e511c38eb263d590700ceeccf93ae0d5894bf7a",
+      "latestAttemptRevision": "d5b0ee5a1a7b4ab9f76cfad07bfeebd20161711a",
       "revisionMeaning": "Exact repair bytes checked before source commit and subsequently verified against every committed source/test blob."
     },
     "llmsIndex": {
       "status": "pass",
-      "latestAttemptRevision": "6e511c38eb263d590700ceeccf93ae0d5894bf7a",
+      "latestAttemptRevision": "d5b0ee5a1a7b4ab9f76cfad07bfeebd20161711a",
       "revisionMeaning": "Exact repair bytes checked before source commit and subsequently verified against every committed source/test blob."
     },
     "whitespace": "pass",
@@ -817,14 +817,14 @@
       "status": "pass",
       "method": "Existing generator --write followed by --check; only one generated Swift doccomment differed; two retained providers",
       "revision": "f1bae83de761ee383e5845111993671f1ed308cb",
-      "latestCheckRevision": "6e511c38eb263d590700ceeccf93ae0d5894bf7a"
+      "latestCheckRevision": "d5b0ee5a1a7b4ab9f76cfad07bfeebd20161711a"
     },
     "codexParserHash": {
       "status": "pass",
       "method": "Existing generator --write followed by --check",
       "value": "56738678d8c0245c",
       "generatedOnlyRepairRevision": "e0575c44592208fa16d0ac71d7b14044c0b49418",
-      "latestCheckRevision": "6e511c38eb263d590700ceeccf93ae0d5894bf7a",
+      "latestCheckRevision": "d5b0ee5a1a7b4ab9f76cfad07bfeebd20161711a",
       "latestCheckMethod": "Existing generator --check; value unchanged"
     },
     "portableHarnessFixtures": {
@@ -871,15 +871,15 @@
       "repairRevision": "b0e2069e515ffecd72de920f0aca96547750ab55"
     },
     "swiftFormat": {
-      "status": "pass at898e776; new macro repair pending",
-      "qualifiedRevision": "898e776bd385132f52fd472569ffa1e1ac988f26",
-      "repairRevision": "6e511c38eb263d590700ceeccf93ae0d5894bf7a",
-      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40157119793",
-      "reason": "No native formatter locally; not inherited as a new-head pass"
+      "status": "Successful producer at232c5520; new fixture repair pending automatic CI",
+      "qualifiedRevision": "232c5520b3c30680667dbf9979ff416f28b3ad8f",
+      "repairRevision": "d5b0ee5a1a7b4ab9f76cfad07bfeebd20161711a",
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40158541514",
+      "reason": "New fixture bytes have source-preservation and whitespace checks only; native formatter unavailable locally."
     }
   },
   "hostedEvidence": {
-    "status": "Integrated source/harness awaiting exact-head automatic macOS/Linux qualification; root owns watch",
+    "status": "Prior product head compiled successfully and both workers executed with verified native fingerprints; two fixture assertions failed. Current fixture repair awaits normal automatic exact-head qualification; root owns watch.",
     "firstRunURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40121196414",
     "firstHeadLint": "failure: stale parser hash, repaired by e0575c44592208fa16d0ac71d7b14044c0b49418; product-dependent patch01 contracts now applied and portable checks pass; native qualification pending",
     "currentHeadChecksMustBeReadFromGitHub": true,
@@ -987,6 +987,47 @@
       "aggregate": "producer=failure, shards=skipped; no distinct aggregate defect",
       "source": "Root exact-head observation plus bounded saved producer log diagnostic at lines11017-11045; unrelated log regions not inspected",
       "qualification": "No new-head compile or execution pass inferred."
+    },
+    "latestNativeRuntimeAttempt": {
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40158541514",
+      "prHeadRevision": "232c5520b3c30680667dbf9979ff416f28b3ad8f",
+      "workflowCheckoutRevision": "13bcecd378487f96f839f34ee59487817a613ae0",
+      "producer": "success",
+      "workers": "failure after actual test execution; stop on first failed group",
+      "nativeCompatibility": {
+        "status": "verified",
+        "mode": "complete-fingerprint",
+        "producerImage": "20261021.0445.8",
+        "workerImage": "20261013.0424.1"
+      },
+      "discovery": {
+        "runtimeIDsPerWorker": 6674,
+        "sha256": "8ea6890e33115ce315c5d4c4f547f55e87b5c2299f2f9e576af00a5429829148"
+      },
+      "workerJobs": [
+        {
+          "id": 121068050840,
+          "selectedGroups": 85,
+          "successfulGroupsBeforeFailure": 36
+        },
+        {
+          "id": 121068050881,
+          "selectedGroups": 85,
+          "successfulGroupsBeforeFailure": 73
+        }
+      ],
+      "aggregate": {
+        "jobID": 121069220619,
+        "producer": "success",
+        "shards": "failure",
+        "independentDefect": false
+      },
+      "source": "Root completed-run observation plus bounded saved worker event metadata and exact recorded-issue lines; no check polling by child.",
+      "qualification": "Previous head compiled and executed tests; both shards stopped early. Does not qualify current fixtures, full suite, app size or build savings.",
+      "recordedIssues": [
+        "2026-10-25T03:54:04.1418230Z \u2718 Test \"claude clear all scopes does not remove other provider cookie caches\" recorded an issue at CookieHeaderCacheTests.swift:300:13: Expectation failed: (CookieHeaderCache.load(provider: .codex)?.cookieHeader \u2192 \"pplx=web\") == \"auth=codex-global\"",
+        "2026-10-25T03:54:43.5778830Z \u2718 Test \"standalone cost section has one separator above it\" recorded an issue at StatusMenuNativeSectionSpacingTests.swift:59:9: Expectation failed: (menu.items[costIndex - 1] \u2192 <NSMenuItem: 0x84fe43660 Plan Usage, submenu: 0x84f940540 ()>).isSeparatorItem \u2192 false"
+      ]
     }
   },
   "appSizeAndBuildComparison": {
@@ -1403,7 +1444,7 @@
     ],
     "deferredReason": "Three fresh below-threshold admissions, separated by ready source/evidence work, each found shared benchmark.lock busy. No test command or queued wait started. Existing local tool absences also prevent native make check/test. Prior exact-revision check results are retained as historical evidence, not new-head passes."
   },
-  "countMethodLatest": "Exact prior source Git inventory at 7a8a371 plus the sole committed test expression extraction at 6e511c38eb263d590700ceeccf93ae0d5894bf7a: +1 line / +50 bytes; all other source/test bytes, declaration counts and file counts unchanged. Prior independent lexical/per-file line-pattern count remains applicable.",
+  "countMethodLatest": "Exact prior Git inventory at 6e511c38eb263d590700ceeccf93ae0d5894bf7a plus three fixture-only edits at d5b0ee5a1a7b4ab9f76cfad07bfeebd20161711a: +12 test lines / +658 test bytes; all other product/test bytes, declaration and file counts unchanged. Exact per-file proof is recorded in runtimeFixtureRepair; declaration counts are distinct from 6674 hosted runtime discovery IDs.",
   "swiftFormatRepair": {
     "baseRevision": "1d9787f8b4075068f3282cb723e42170a6e702c3",
     "repairRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
@@ -5766,6 +5807,728 @@
         "exitCode": 0,
         "elapsedSeconds": 0.01,
         "output": ""
+      }
+    ]
+  },
+  "runtimeFixtureRepair": {
+    "priorRevision": "232c5520b3c30680667dbf9979ff416f28b3ad8f",
+    "repairRevision": "d5b0ee5a1a7b4ab9f76cfad07bfeebd20161711a",
+    "hostedFailingBefore": {
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40158541514",
+      "prHeadRevision": "232c5520b3c30680667dbf9979ff416f28b3ad8f",
+      "workflowCheckoutRevision": "13bcecd378487f96f839f34ee59487817a613ae0",
+      "producer": "success",
+      "workers": "failure after actual test execution; stop on first failed group",
+      "nativeCompatibility": {
+        "status": "verified",
+        "mode": "complete-fingerprint",
+        "producerImage": "20261021.0445.8",
+        "workerImage": "20261013.0424.1"
+      },
+      "discovery": {
+        "runtimeIDsPerWorker": 6674,
+        "sha256": "8ea6890e33115ce315c5d4c4f547f55e87b5c2299f2f9e576af00a5429829148"
+      },
+      "workerJobs": [
+        {
+          "id": 121068050840,
+          "selectedGroups": 85,
+          "successfulGroupsBeforeFailure": 36
+        },
+        {
+          "id": 121068050881,
+          "selectedGroups": 85,
+          "successfulGroupsBeforeFailure": 73
+        }
+      ],
+      "aggregate": {
+        "jobID": 121069220619,
+        "producer": "success",
+        "shards": "failure",
+        "independentDefect": false
+      },
+      "source": "Root completed-run observation plus bounded saved worker event metadata and exact recorded-issue lines; no check polling by child.",
+      "qualification": "Previous head compiled and executed tests; both shards stopped early. Does not qualify current fixtures, full suite, app size or build savings.",
+      "recordedIssues": [
+        "2026-10-25T03:54:04.1418230Z \u2718 Test \"claude clear all scopes does not remove other provider cookie caches\" recorded an issue at CookieHeaderCacheTests.swift:300:13: Expectation failed: (CookieHeaderCache.load(provider: .codex)?.cookieHeader \u2192 \"pplx=web\") == \"auth=codex-global\"",
+        "2026-10-25T03:54:43.5778830Z \u2718 Test \"standalone cost section has one separator above it\" recorded an issue at StatusMenuNativeSectionSpacingTests.swift:59:9: Expectation failed: (menu.items[costIndex - 1] \u2192 <NSMenuItem: 0x84fe43660 Plan Usage, submenu: 0x84f940540 ()>).isSeparatorItem \u2192 false"
+      ]
+    },
+    "causesAndRepairs": [
+      {
+        "path": "Tests/CodexBarTests/CookieHeaderCacheTests.swift",
+        "cause": "Former Perplexity entry remapped to an existing Codex global key and overwrote auth=codex-global.",
+        "repair": "Keep all original payloads, clearedCount2/failedCount0 and global/managed assertions; store/load the third payload under a distinct synthetic Codex profile scope.",
+        "productionChange": false
+      },
+      {
+        "path": "Tests/CodexBarTests/StatusMenuNativeSectionSpacingTests.swift",
+        "cause": "Former Cursor standalone fixture remapped to Claude, whose retained descriptor always supports Plan Usage; unchanged grouping correctly places cost after its submenu.",
+        "repair": "Use supported first quota refresh with no usage snapshot and cached cost; assert Plan Usage absent, preserving all separator and nonadjacency checks. Use in-memory defaults/cookie/token stores.",
+        "productionChange": false
+      },
+      {
+        "path": "Tests/CodexBarTests/CLICookieRefreshTests.swift",
+        "cause": "Original Claude/OpenCode presence assertions collapsed to duplicate Claude checks.",
+        "repair": "Restore explicit distinct Codex/Claude presence assertions alongside the unchanged exact set and descriptor contracts.",
+        "productionChange": false
+      }
+    ],
+    "sourcePreservationProof": {
+      "priorRevision": "232c5520b3c30680667dbf9979ff416f28b3ad8f",
+      "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+      "files": [
+        {
+          "path": "Tests/CodexBarTests/CookieHeaderCacheTests.swift",
+          "beforeSHA256": "856df41482b976bc6baa6806676f10a5aac18c72e1e269816bcc51b1db649b12",
+          "afterSHA256": "6bb15fee04ab47f941f10386ec41067085684c8de1e7c977dfeda7cd37792a1c",
+          "testDeclarationsBefore": 35,
+          "testDeclarationsAfter": 35,
+          "assertionsBefore": 120,
+          "assertionsAfter": 120,
+          "lineDelta": 5,
+          "byteDelta": 202,
+          "methodNamesUnchanged": true,
+          "onlyDeclaredExactEdits": true
+        },
+        {
+          "path": "Tests/CodexBarTests/StatusMenuNativeSectionSpacingTests.swift",
+          "beforeSHA256": "65b4f68c905a492af35c7f1e69208c9f902d387edcc074ca67816ae815b7fd23",
+          "afterSHA256": "d209250f640f69522561b3dec3c53a7a0267e169db24f41a16ef1a8f6d718d72",
+          "testDeclarationsBefore": 5,
+          "testDeclarationsAfter": 5,
+          "assertionsBefore": 20,
+          "assertionsAfter": 21,
+          "lineDelta": 7,
+          "byteDelta": 457,
+          "methodNamesUnchanged": true,
+          "onlyDeclaredExactEdits": true
+        },
+        {
+          "path": "Tests/CodexBarTests/CLICookieRefreshTests.swift",
+          "beforeSHA256": "b4ca69fc27db3eae82541e7c5fe897944f84d0032714bfeae8d5ddf8c54c1ac7",
+          "afterSHA256": "7f6726a13fc06f0f32b45ff57eab506cee7527d8cb99f5b90c000cce272ba95f",
+          "testDeclarationsBefore": 12,
+          "testDeclarationsAfter": 12,
+          "assertionsBefore": 42,
+          "assertionsAfter": 42,
+          "lineDelta": 0,
+          "byteDelta": -1,
+          "methodNamesUnchanged": true,
+          "onlyDeclaredExactEdits": true
+        }
+      ],
+      "auditOnlyFilesUnchanged": [
+        "Tests/CodexBarTests/StatusItemAnimationSignatureTests.swift",
+        "Tests/CodexBarTests/StatusItemIconObservationSignatureTests.swift",
+        "Tests/CodexBarTests/CookieHeaderCacheConditionalMutationTests.swift",
+        "Tests/CodexBarTests/ProviderInstanceIdentityCharacterizationTests.swift",
+        "Tests/CodexBarTests/KeychainCacheStoreTests.swift",
+        "Tests/CodexBarTests/StatusMenuTests.swift"
+      ],
+      "productionCacheAndMenuFilesByteIdenticalToBase": true,
+      "productionHarnessScheduleCatalogAndOtherTestsUnchanged": true,
+      "testRemovalsOrSkips": 0,
+      "assertionsRemoved": 0,
+      "additionalAssertions": 1,
+      "nativeExecution": "unavailable locally; source preservation only"
+    },
+    "localChecks": [
+      {
+        "name": "fixture-preservation",
+        "command": [
+          "python3",
+          "-B",
+          ".build/slim-product-work/runtime-232c/inspect_fixture_preservation.py"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T04:06:00Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.3,
+              "cpu_used_percent": 19.63,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.4244,
+              "sampled_steal_percent": 0.312,
+              "cpu_psi_some_avg10_percent": 2.73
+            },
+            "summary": "CPU 19.63% used; 43.30 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 1,
+        "elapsedSeconds": 0.062,
+        "output": "Traceback (most recent call last):\n  File \"/home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/.build/slim-product-work/runtime-232c/inspect_fixture_preservation.py\", line 57, in <module>\n    expected = replace_once(expected, needle, needle +\n        '        // Before the first quota refresh finishes, cached cost stands alone without Plan Usage.\\n'\n        '        store._setSnapshotForTesting(nil, provider: .claude)\\n'\n        '        store.isRefreshing = true\\n'\n        '        store.refreshingProviders.insert(.claude)\\n')\n  File \"/home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/.build/slim-product-work/runtime-232c/inspect_fixture_preservation.py\", line 23, in replace_once\n    assert text.count(old) == 1, old\n           ^^^^^^^^^^^^^^^^^^^^\nAssertionError:             updatedAt: Date()), provider: .claude)\n\n",
+        "status": "failed"
+      },
+      {
+        "name": "fixture-preservation",
+        "command": [
+          "python3",
+          "-B",
+          ".build/slim-product-work/runtime-232c/inspect_fixture_preservation.py"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T04:06:19Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 39.27,
+              "cpu_used_percent": 42.54,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.4606,
+              "sampled_steal_percent": 0.317,
+              "cpu_psi_some_avg10_percent": 2.92
+            },
+            "summary": "CPU 42.54% used; 39.27 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.098,
+        "output": "{\"changedTests\": 3, \"auditedOnly\": 6, \"declarationsBefore\": 52, \"declarationsAfter\": 52, \"assertionDelta\": 1, \"removedOrSkipped\": 0, \"testLinesDelta\": 12, \"testBytesDelta\": 658, \"productionAndOtherTestsUnchanged\": true}\n",
+        "status": "passed"
+      },
+      {
+        "name": "normal-profile",
+        "command": [
+          "python3",
+          "-B",
+          "Scripts/test_profiles.py",
+          "validate"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T04:06:32Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.47,
+              "cpu_used_percent": 17.65,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.47,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 3.51
+            },
+            "summary": "CPU 17.65% used; 43.47 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.039,
+        "output": "Test profile contract OK: normal; manifest 136f44cb5604cf4364709c429e2e7ff8d275c0065d26bfb4896e1899008865d8\n",
+        "status": "passed"
+      },
+      {
+        "name": "full-profile",
+        "command": [
+          "python3",
+          "-B",
+          "Scripts/test_profiles.py",
+          "validate"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T04:06:33Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.49,
+              "cpu_used_percent": 43.61,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.4525,
+              "sampled_steal_percent": 0.312,
+              "cpu_psi_some_avg10_percent": 3.51
+            },
+            "summary": "CPU 43.61% used; 43.49 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.052,
+        "output": "Test profile contract OK: full; manifest 136f44cb5604cf4364709c429e2e7ff8d275c0065d26bfb4896e1899008865d8\n",
+        "status": "passed"
+      },
+      {
+        "name": "provider-manifests",
+        "command": [
+          "bash",
+          "Scripts/regenerate-provider-manifests.sh",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T04:06:33Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.52,
+              "cpu_used_percent": 49.22,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.4525,
+              "sampled_steal_percent": 0.312,
+              "cpu_psi_some_avg10_percent": 3.51
+            },
+            "summary": "CPU 49.22% used; 43.52 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.092,
+        "output": "Provider manifests are current (2 providers)\n",
+        "status": "passed"
+      },
+      {
+        "name": "codex-parser-hash",
+        "command": [
+          "bash",
+          "Scripts/regenerate-codex-parser-hash.sh",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T04:06:33Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.65,
+              "cpu_used_percent": 50.62,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.4525,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 4.86
+            },
+            "summary": "CPU 50.62% used; 43.65 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.112,
+        "output": "Codex parser hash is current (56738678d8c0245c)\n",
+        "status": "passed"
+      },
+      {
+        "name": "documentation-links",
+        "command": [
+          "node",
+          "Scripts/check-documentation-links.mjs"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T04:06:34Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.67,
+              "cpu_used_percent": 28.3,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.4525,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 4.86
+            },
+            "summary": "CPU 28.30% used; 43.67 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.183,
+        "output": "documentation links OK: 181 local links\n",
+        "status": "passed"
+      },
+      {
+        "name": "llms-index",
+        "command": [
+          "node",
+          "Scripts/generate-llms.mjs",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T04:06:34Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.65,
+              "cpu_used_percent": 37.02,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.4525,
+              "sampled_steal_percent": 0.316,
+              "cpu_psi_some_avg10_percent": 4.86
+            },
+            "summary": "CPU 37.02% used; 43.65 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.046,
+        "output": "llms index OK: docs/llms.txt\n",
+        "status": "passed"
+      },
+      {
+        "name": "make-check",
+        "command": [
+          "make",
+          "check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T04:06:35Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.65,
+              "cpu_used_percent": 24.3,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.4525,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 4.86
+            },
+            "summary": "CPU 24.30% used; 43.65 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 2,
+        "elapsedSeconds": 0.081,
+        "output": "./Scripts/lint.sh lint\nTest profile contract OK: normal; manifest 136f44cb5604cf4364709c429e2e7ff8d275c0065d26bfb4896e1899008865d8\nnode:internal/child_process:1191\n    result.error = new ErrnoException(result.error, 'spawnSync ' + options.file);\n                   ^\n\n<ref *1> Error: spawnSync plutil ENOENT\n    at Object.spawnSync (node:internal/child_process:1191:20)\n    at spawnSync (node:child_process:929:24)\n    at execFileSync (node:child_process:972:15)\n    at readCatalog (file:///home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/Scripts/check-app-locales.mjs:44:18)\n    at file:///home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/Scripts/check-app-locales.mjs:9:17\n    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)\n    at async node:internal/modules/esm/loader:647:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  errno: -2,\n  code: 'ENOENT',\n  syscall: 'spawnSync plutil',\n  path: 'plutil',\n  spawnargs: [\n    '-convert',\n    'json',\n    '-o',\n    '-',\n    '/home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/Sources/CodexBar/Resources/en.lproj/Localizable.strings'\n  ],\n  error: [Circular *1],\n  status: null,\n  signal: null,\n  output: null,\n  pid: 0,\n  stdout: undefined,\n  stderr: undefined\n}\n\nNode.js v24.22.1\nmake: *** [Makefile:22: check] Error 1\n",
+        "status": "unavailable",
+        "reason": "Missing plutil"
+      },
+      {
+        "name": "make-test",
+        "command": [
+          "make",
+          "test"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T04:06:35Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.65,
+              "cpu_used_percent": 18.32,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.4525,
+              "sampled_steal_percent": 0.311,
+              "cpu_psi_some_avg10_percent": 4.86
+            },
+            "summary": "CPU 18.32% used; 43.65 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 2,
+        "elapsedSeconds": 0.121,
+        "output": "./Scripts/test.sh\nFixture scratch parent (owned): /home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/.test-fixtures-zvnebw4z\nSwift test profile: normal\n+ swift build --build-tests\nSwift test timing summary:\n- Shard: none\n- Group size: 12\n- Discovered test identities: 0\n- Discovery manifest SHA256: \n- Selected manifest SHA256: \n- Discovered selections: 0\n- Selected selections: 0\n- Selected groups: 0\n- First-pass successful groups: 0\n- First-pass failed groups: 0\n- Full-group retries: 0\n- Recovered groups: 0\n- Timed out groups: 0\n- Isolated selection retries: 0\n- Test build seconds: 0.0\n- Build artifact seconds: 0.0\n- Discovery seconds: 0.0\n- Execution seconds: 0.0\n- Total seconds: 0.0\nFileNotFoundError: [Errno 2] No such file or directory: 'swift'\nFixture scratch parent removed and absence verified: /home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/.test-fixtures-zvnebw4z\nmake: *** [Makefile:34: test] Error 1\n",
+        "status": "unavailable",
+        "reason": "Missing Swift; no native test ran"
+      },
+      {
+        "name": "diff-whitespace",
+        "command": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T04:06:36Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.63,
+              "cpu_used_percent": 18.07,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.4525,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 5.25
+            },
+            "summary": "CPU 18.07% used; 43.63 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.01,
+        "output": "",
+        "status": "passed"
+      }
+    ],
+    "scratchInspectorCorrection": "Initial exact-edit inspection assumed the repeated Claude fixture suffix was unique across a file. Bound its comparison to the named standalone method and reran successfully; no test bytes changed between inspector attempts.",
+    "priorAccountingProofPreserved": {
+      "costExactFiles": 56,
+      "adaptedCostFiles": 4,
+      "adaptedCostMethodsRetained": 29,
+      "sharedDaySelectionMethodsRetained": 12,
+      "allCostHistoryScaleFixturesAndOtherTestFilesUnchanged": true
+    },
+    "sourceInventoryDelta": {
+      "testSwiftFiles": 0,
+      "testSwiftLines": 12,
+      "testSwiftBytes": 658,
+      "swiftTestingDeclarations": 0,
+      "productSourceBytes": 0
+    },
+    "sourceIdentity": "Checks ran on exact fixture bytes subsequently read back against committed source d5b0ee5a1a7b4ab9f76cfad07bfeebd20161711a.",
+    "nativeHarnessScheduleFrozenConsumptionUnchanged": true,
+    "limitations": [
+      "Swift/plutil/SwiftFormat/SwiftLint unavailable locally; no native formatter/compiler/test run.",
+      "make check and make test exit2 before native lint/build/test; no tool installation.",
+      "Source checks do not establish runtime success; prior workers stopped early.",
+      "App-size and cold-build comparable qualification remain unavailable; no savings inferred."
+    ],
+    "nextGate": "Normal automatic exact-head CI; root sole watcher. No manual campaign, extra agents/reviews, merge or host effects.",
+    "evidenceReadbackChecks": [
+      {
+        "name": "evidence-coherence",
+        "command": [
+          "python3",
+          "-B",
+          ".build/slim-product-work/runtime-232c/check_final_evidence.py"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T04:09:17Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 42.74,
+              "cpu_used_percent": 27.5,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.4975,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 4.37
+            },
+            "summary": "CPU 27.50% used; 42.74 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.203,
+        "output": "Evidence coherent: 3 fixture edits, 52 declarations retained, 1 assertion added; 733 test files/252281 lines/10935320 bytes/6569 declarations; accounting, production, catalog, native harness and schedule unchanged. Native runtime repair pending.\n",
+        "status": "passed"
+      },
+      {
+        "name": "documentation-links",
+        "command": [
+          "node",
+          "Scripts/check-documentation-links.mjs"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T04:09:17Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 42.72,
+              "cpu_used_percent": 26.84,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.4975,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 4.37
+            },
+            "summary": "CPU 26.84% used; 42.72 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.131,
+        "output": "documentation links OK: 181 local links\n",
+        "status": "passed"
+      },
+      {
+        "name": "llms-index",
+        "command": [
+          "node",
+          "Scripts/generate-llms.mjs",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T04:09:18Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 42.64,
+              "cpu_used_percent": 31.23,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.4975,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 4.37
+            },
+            "summary": "CPU 31.23% used; 42.64 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.043,
+        "output": "llms index OK: docs/llms.txt\n",
+        "status": "passed"
+      },
+      {
+        "name": "diff-whitespace",
+        "command": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T04:09:18Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 42.72,
+              "cpu_used_percent": 16.93,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.4925,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 4.12
+            },
+            "summary": "CPU 16.93% used; 42.72 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.009,
+        "output": "",
+        "status": "passed"
       }
     ]
   }

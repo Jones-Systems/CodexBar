@@ -616,7 +616,7 @@ unchanged. The cache implementation and both production menu grouping files are
 also byte-identical to the PR39 base. No test is removed or skipped.
 
 Fresh admission before each local command allowed one serial process under the
-nonblocking benchmark lock: CPU 17.65–50.62%, available RAM 39.27–43.67 GiB;
+nonblocking benchmark lock: CPU 16.93–50.62%, available RAM 39.27–43.67 GiB;
 one fully used core is 6.25% of host capacity. Exact fixture preservation,
 normal/full profile validation, both existing generator `--check` commands,
 181 documentation links, the llms index and whitespace checks pass. The initial
@@ -628,5 +628,16 @@ fixture root. Native formatter/compiler/runtime checks remain unavailable
 locally. The source-only proof does not qualify either runtime repair; root's
 normal automatic exact-head CI is the next gate. App-size/cold-build comparison
 remains unavailable, and partial execution does not establish savings.
+
+Source repair commit `d5b0ee5a1a7b4ab9f76cfad07bfeebd20161711a` contains the three fixture edits and
+specification/diagnosis. The comparison records exact before/after hashes,
+35/5/12 unchanged test declarations, assertion counts and the bounded audit.
+Product inventory stays 651 Swift files / 193218 lines; test inventory stays 733
+files / 6569 declarations, now 252281 lines and 10935320 bytes (+12 lines/+658
+bytes). These declarations differ from hosted discovery's 6674 runtime IDs.
+All 56 exact cost files, four adapted cost files/29 retained methods and the
+separate day-selection suite's 12 shared methods retain their prior proofs.
+The final evidence-only commit changes the existing note/comparison, and the
+coherent publication contains no further source, harness or fixture mutation.
 
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->
