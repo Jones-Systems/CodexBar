@@ -890,4 +890,94 @@ Final evidence coherence/whitespace and documentation-link readback pass under
 fresh serial admission (CPU 11.91% and 21.25%, 45.36 and 45.37 GiB available RAM).
 Receipts are retained in the comparison; no subsequent test/source changes.
 
+SPEND identity closure starts from clean, bound PR41 head
+`761c9ee1f9b12d1b551e138e04c9d2026dd4389b`, base `91bd5fb4`. Root run
+`40168464172` passes lint, all three Linux jobs and the producer. Shard 0 verifies
+native compatibility, completes 68/85 groups, then traps on duplicate `codex`
+dictionary keys in the first load of `refresh retains only sources that actually
+failed`. This is a crash without retries/timeouts, not a savings result. The
+other shard is still running at intake. Publication is held until root supplies
+completed other-shard fan-in; no child watch/poll/manual run.
+
+The concrete source path is loader result inputs -> `apply` ->
+`Dictionary(uniqueKeysWithValues: nextInputs.map { (input.id, scope) })`.
+The original fixture used distinct Codex/Claude/OpenAI source IDs; remapping
+OpenAI to bare Codex duplicates the default input's ID before retention logic.
+The ownership-change fixture repeats this collision and collapses its expected
+two-source set. Preserve all refreshed/failed/absent and changed/stable ownership
+roles through a distinct scoped Codex account ID, with only Codex/Claude provider
+IDs and stable matching account ownership. Keep strict production dictionary
+construction. The related auth-rotation fixture also mapped its unrelated OpenAI
+provider to Codex; use Claude to restore independent-provider retention proof.
+
+Exact initial write scope is SpendDashboardControllerTests.swift plus this note,
+the existing spec and comparison; related SpendDashboard test files are read-only
+identity-audit scope. Preserve methods, failure/invalidation assertions, money,
+numeric fixtures, waits, cancellation and scale. Any added fan-in write scope is
+named before mutation. Own scratch `.build/slim-product-work/spend-identity-761c`
+is removed after evidence publication and command drain; preserve frozen handoff
+and all production/native/harness/schedule/accounting/auth/TTY/fallback contracts.
+No new agents, reviews, installations, merges or host effects.
+
+Root completed fan-in releases the publication hold after both causes are
+repaired: shard 1 verifies native complete fingerprints across producer image
+`20261021.0445.8` and worker `20261013.0424.1`, then stops after 80/85 groups on
+the generic weekly/session persistence fixture. Aggregate `121098755685` reports
+only producer success/shards failure. No timeout or independent aggregate defect.
+
+History write scope adds only UsageStorePlanUtilizationTests.swift. The original
+Zai fixture classified windows by duration, including primary-weekly and
+secondary-session. Its Claude port instead enters unchanged fixed-role sampling:
+primary -> session and secondary -> weekly. Canonical weekly minutes turn the
+secondary 300-minute values into weekly [15,25], matching the observed wrong data.
+Claude also refuses organization-only identity keys, unlike the original generic
+provider; leaving the port unchanged would lose its account-scoped intent.
+Use the existing generic component/persistence helper already used by adjacent
+generic tests, with an explicit synthetic token-account scope. Keep both original
+snapshots, values, weekly/session assertions, file check and polling budget; add
+persisted-session/preferred-account/unscoped/provider-isolation assertions. This
+exercises retained generic algorithms and persistence without changing production
+Claude lane or identity policy. Related history helpers/fixtures are read-only
+audit scope; no helper, scale or accounting-limit mutation.
+
+Both repaired SPEND fixtures retain three distinct source IDs: bare Codex,
+Claude and scoped `codex:same`. Their configurations name only Codex/Claude;
+`same|cache` supplies stable Codex account ownership independently of the changing
+Claude fingerprint. Fresh Codex 8 + failed Claude 3 still totals 11 while the
+absent third source drops. Ownership replacement still drops stale Claude 3,
+keeps Codex 7 + account 2 (9), then retains only the stable failed account beside
+fresh Codex 8 (10), with the original failed-source count 2. Both initial loads
+require three unique IDs before entering the strict product dictionary. The
+auth-rotation case restores Claude as the unrelated provider, keeps its synthetic
+Codex credential fixture and both original completion-delay parameter cases,
+and adds a cross-provider model assertion. No production overwrite/dedup change.
+
+Audit covers 18 SPEND files (11 changed since base) and seven related history
+files. The bounded literal-array scan finds five collapsed provider/input lists
+before repair and none after; unresolved variable expressions are not treated
+as uniqueness proof. Changed constructor mappings and related history call sites
+were also inspected. Other SPEND fixtures use distinct explicit source IDs;
+the adjacent generic persistence cases already use the direct helper. Inverted
+Codex celebration windows are intentional semantic-lane tests, and the Claude
+inverted-window celebration is an explicit negative test; preserve all of them.
+Twenty-three read-only audit files remain byte-identical. The generic helper is
+unchanged and still enqueues the real shared persistence coordinator.
+
+The two edited files retain all 69 declarations, with one history method renamed
+and no removal/skip. Of 233 original expectations, only three source-ID
+expectations are corrected to restore the original distinct-source cardinality
+and cross-provider intent; the other 230 remain byte-identical. Five expectations
+and three fixture guards are added. All money values, both history snapshot
+literals, historical assertions, polling/wait budgets and other method bodies
+remain exact. Seven retained production blocks match the base, including strict
+SPEND apply/ownership/uniqueness logic, history identity keys and Claude fixed
+lane sampling. Product source and all other tests stay unchanged.
+
+Identity/preservation audits and 181 documentation links pass under fresh CPU
+admission and the nonblocking serial lock. `make check` passes the normal-profile
+contract then exits 2 at missing plutil; `make test` exits 2 at missing Swift
+before build/discovery/execution. Its owned `.test-fixtures-8g5tco8t` parent is
+removed and absence verified. Native formatting/compilation/runtime qualification
+remains pending root's automatic exact-head CI; no tools or live probes used.
+
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->

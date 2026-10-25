@@ -78,15 +78,15 @@ struct SpendDashboardControllerTests {
         let recorder = SpendDashboardLoadResultRecorder()
         let configuration = SpendDashboardConfiguration(
             costUsageEnabled: true,
-            providerIDs: [UsageProvider.codex.rawValue, UsageProvider.codex.rawValue],
+            providerIDs: [UsageProvider.codex.rawValue, UsageProvider.claude.rawValue],
             codexAccountIdentities: ["account|auth-rotation"],
             codexAccountDisplayNames: ["codex:account": "Codex"],
-            sourceOwnershipFingerprints: ["codex:stable"])
+            sourceOwnershipFingerprints: ["claude:stable"])
         let controller = SpendDashboardController(
             requestBuilder: { mode in
                 SpendDashboardLoadRequest(
                     configuration: configuration,
-                    capturedInputs: [Self.input(id: "codex", provider: .codex, cost: 2)],
+                    capturedInputs: [Self.input(id: "claude", provider: .claude, cost: 2)],
                     unavailableSourceIDs: [],
                     codexRequests: [account],
                     now: Date(timeIntervalSince1970: 1_784_179_200),
@@ -111,6 +111,7 @@ struct SpendDashboardControllerTests {
         gate.resume(returning: Self.input(cost: 6).snapshot)
         try await SpendDashboardStateWait.until { !controller.isRefreshing }
         #expect(controller.model.groups.first?.totalCost == 8)
+        #expect(Set(controller.model.groups.flatMap(\.providers).map(\.provider)) == [.codex, .claude])
 
         controller.refresh()
         try await gate.waitForPendingCount(1)
@@ -125,7 +126,7 @@ struct SpendDashboardControllerTests {
         #expect(results.last?.failedSourceIDs == ["codex:account"])
         #expect(controller.failedSourceCount == 1)
         #expect(controller.model.groups.first?.totalCost == 2)
-        #expect(Set(controller.model.groups.flatMap(\.providers).map(\.id)) == ["codex"])
+        #expect(Set(controller.model.groups.flatMap(\.providers).map(\.id)) == ["claude"])
     }
 
     @Test
@@ -177,19 +178,25 @@ struct SpendDashboardControllerTests {
     }
 
     @Test
-    func `refresh retains only sources that actually failed`() async {
+    func `refresh retains only sources that actually failed`() async throws {
         let gate = SpendDashboardLoaderGate()
         let controller = Self.controller(gate: gate)
-        let configuration = Self.configuration(account: "same")
+        let configuration = SpendDashboardConfiguration(
+            costUsageEnabled: true,
+            providerIDs: ["codex", "claude"],
+            codexAccountIdentities: ["same|cache"])
+        let initialInputs = [
+            Self.input(cost: 7),
+            Self.input(id: "claude", provider: .claude, cost: 3),
+            Self.input(id: "codex:same", provider: .codex, cost: 2),
+        ]
+        let initialSourceIDs = initialInputs.map(\.id)
+        try #require(Set(initialSourceIDs).count == 3)
 
         controller.update(configuration: configuration)
         await Self.waitForPendingCount(1, gate: gate)
         await gate.resume(at: 0, result: .init(
-            inputs: [
-                Self.input(cost: 7),
-                Self.input(id: "claude", provider: .claude, cost: 3),
-                Self.input(id: "codex", provider: .codex, cost: 2),
-            ],
+            inputs: initialInputs,
             failedSourceIDs: []))
         await Self.waitUntil { !controller.isRefreshing }
 
@@ -354,30 +361,33 @@ struct SpendDashboardControllerTests {
     }
 
     @Test
-    func `changed provider ownership drops only stale source and retains unchanged failures`() async {
+    func `changed provider ownership drops only stale source and retains unchanged failures`() async throws {
         let gate = SpendDashboardLoaderGate()
         let controller = Self.controller(gate: gate)
         let firstConfiguration = SpendDashboardConfiguration(
             costUsageEnabled: true,
-            providerIDs: ["codex", "claude", "codex"],
+            providerIDs: ["codex", "claude"],
             codexAccountIdentities: ["same|cache"],
-            sourceOwnershipFingerprints: ["claude:owner-one", "codex:owner"],
+            sourceOwnershipFingerprints: ["claude:owner-one"],
             sourceRevisions: ["first"])
         let replacementConfiguration = SpendDashboardConfiguration(
             costUsageEnabled: true,
-            providerIDs: ["codex", "claude", "codex"],
+            providerIDs: ["codex", "claude"],
             codexAccountIdentities: ["same|cache"],
-            sourceOwnershipFingerprints: ["claude:owner-two", "codex:owner"],
+            sourceOwnershipFingerprints: ["claude:owner-two"],
             sourceRevisions: ["second"])
+        let initialInputs = [
+            Self.input(cost: 7),
+            Self.input(id: "claude", provider: .claude, cost: 3),
+            Self.input(id: "codex:same", provider: .codex, cost: 2),
+        ]
+        let initialSourceIDs = initialInputs.map(\.id)
+        try #require(Set(initialSourceIDs).count == 3)
 
         controller.update(configuration: firstConfiguration)
         await Self.waitForPendingCount(1, gate: gate)
         await gate.resume(at: 0, result: .init(
-            inputs: [
-                Self.input(cost: 7),
-                Self.input(id: "claude", provider: .claude, cost: 3),
-                Self.input(id: "codex", provider: .codex, cost: 2),
-            ],
+            inputs: initialInputs,
             failedSourceIDs: []))
         await Self.waitUntil { !controller.isRefreshing }
 
@@ -385,15 +395,15 @@ struct SpendDashboardControllerTests {
         await Self.waitForPendingCount(1, gate: gate)
         #expect(controller.isRefreshing)
         #expect(controller.model.groups.first?.totalCost == 9)
-        #expect(Set(controller.model.groups.flatMap(\.providers).map(\.id)) == ["codex", "codex"])
+        #expect(Set(controller.model.groups.flatMap(\.providers).map(\.id)) == ["codex", "codex:same"])
         #expect(controller.failedSourceCount == 0)
         await gate.resume(at: 0, result: .init(
             inputs: [Self.input(cost: 8)],
-            failedSourceIDs: ["claude", "codex"]))
+            failedSourceIDs: ["claude", "codex:same"]))
         await Self.waitUntil { !controller.isRefreshing }
 
         #expect(controller.model.groups.first?.totalCost == 10)
-        #expect(Set(controller.model.groups.flatMap(\.providers).map(\.id)) == ["codex", "codex"])
+        #expect(Set(controller.model.groups.flatMap(\.providers).map(\.id)) == ["codex", "codex:same"])
         #expect(controller.failedSourceCount == 2)
     }
 

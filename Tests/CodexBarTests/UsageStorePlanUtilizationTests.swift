@@ -893,10 +893,13 @@ struct UsageStorePlanUtilizationTests {
 
     @MainActor
     @Test
-    func `generic provider weekly lane is persisted to provider history json`() async throws {
+    func `generic weekly and session components persist under an isolated provider account`() async throws {
         let store = Self.makeStore()
         store.settings.historicalTrackingEnabled = true
         let accountLabel = "zai-history-org"
+        let account = ProviderTokenAccount(id: UUID(), label: accountLabel, token: "fixture", addedAt: 0, lastUsed: nil)
+        let accountKey = try #require(
+            UsageStore._planUtilizationTokenAccountKeyForTesting(provider: .claude, account: account))
         let firstDate = Date(timeIntervalSince1970: 1_700_000_000)
         let before = UsageSnapshot(
             primary: RateWindow(usedPercent: 42, windowMinutes: 10080, resetsAt: nil, resetDescription: nil),
@@ -917,8 +920,16 @@ struct UsageStorePlanUtilizationTests {
                 accountOrganization: accountLabel,
                 loginMethod: "pro"))
 
-        await store.recordPlanUtilizationHistorySample(provider: .claude, snapshot: before, now: before.updatedAt)
-        await store.recordPlanUtilizationHistorySample(provider: .claude, snapshot: after, now: after.updatedAt)
+        await store._recordGenericSessionEquivalentHistoryForTesting(
+            provider: .claude,
+            snapshot: before,
+            account: account,
+            now: before.updatedAt)
+        await store._recordGenericSessionEquivalentHistoryForTesting(
+            provider: .claude,
+            snapshot: after,
+            account: account,
+            now: after.updatedAt)
 
         let histories = store.planUtilizationHistory(for: .claude)
         #expect(findSeries(histories, name: .weekly, windowMinutes: 10080)?.entries.map(\.usedPercent) == [42, 58])
@@ -940,6 +951,11 @@ struct UsageStorePlanUtilizationTests {
         let persisted = try #require(persistedBuckets)
         #expect(persisted.histories(for: persisted.preferredAccountKey)
             .first { $0.name == .weekly }?.entries.map(\.usedPercent) == [42, 58])
+        #expect(persisted.histories(for: accountKey)
+            .first { $0.name == .session }?.entries.map(\.usedPercent) == [15, 25])
+        #expect(persisted.preferredAccountKey == accountKey)
+        #expect(persisted.unscoped.isEmpty)
+        #expect(store.planUtilizationHistory[.codex] == nil)
     }
 
     @MainActor

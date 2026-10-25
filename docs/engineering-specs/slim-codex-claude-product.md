@@ -94,6 +94,15 @@ provider whitelists, plus saved-history fallback without a current snapshot.
 Highest-usage fixtures must select a supported retained-provider metric explicitly
 when replacing a retired provider's lane policy; retain ranking and exhaustion
 assertions without changing Codex/Claude defaults or enabled-instance isolation.
+SPEND retention fixtures distinguish source IDs from provider IDs: three source
+roles can use a scoped Codex account alongside Codex/Claude without duplicate
+dictionary keys. Preserve cross-provider auth-rotation isolation, independent
+failure retention and account/provider ownership invalidation; keep strict input
+uniqueness in product dictionaries.
+Generic duration-based history proofs use the existing direct component and
+persistence seam with explicit synthetic account scope. Keep both saved series,
+values and provider/account isolation; production Claude retains fixed lane roles
+and its stricter identity policy.
 
 Run `make check` and `make test`; report missing local Swift/formatter tools as
 unavailable. Use the shared nonblocking benchmark lock and fresh CPU/RAM admission
