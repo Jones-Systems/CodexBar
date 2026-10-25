@@ -1,7 +1,7 @@
 {
   "schema": "codexbar-product-removal-comparison/v1",
   "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
-  "candidateSourceRevision": "f7a457bea54d630e51b527c8b061097c8a4f3e02",
+  "candidateSourceRevision": "4f0599a09c225f4a3486456b58f446afd6eb6a91",
   "pullRequest": "https://github.com/Jones-Systems/CodexBar/pull/41",
   "baseBranch": "work/test-value-bar-pass2-20261024",
   "method": "Exact committed Git blobs; files include Swift source under Sources and tests under Tests, TestsLinux, TestsPlugin; line count uses bytes.splitlines; lexical Swift Testing @Test declaration counts exclude comments/strings and do not represent parameterized/runtime cases.",
@@ -36,8 +36,8 @@
       },
       "testSwift": {
         "files": 733,
-        "lines": 252324,
-        "bytes": 10937882
+        "lines": 252380,
+        "bytes": 10940792
       }
     }
   },
@@ -47,7 +47,7 @@
       "filesWithTestAttributes": 1006
     },
     "after": {
-      "swiftTestingDeclarations": 6569,
+      "swiftTestingDeclarations": 6570,
       "filesWithTestAttributes": 691
     }
   },
@@ -785,31 +785,31 @@
       "status": "unavailable",
       "exitCode": 2,
       "reason": "plutil absent",
-      "latestAttemptRevision": "f7a457bea54d630e51b527c8b061097c8a4f3e02",
+      "latestAttemptRevision": "4f0599a09c225f4a3486456b58f446afd6eb6a91",
       "revisionMeaning": "Exact repair bytes checked before source commit and subsequently verified against every committed source/test blob."
     },
     "makeTest": {
       "status": "unavailable",
       "exitCode": 2,
       "reason": "Swift absent; no test executable ran",
-      "latestAttemptRevision": "f7a457bea54d630e51b527c8b061097c8a4f3e02",
+      "latestAttemptRevision": "4f0599a09c225f4a3486456b58f446afd6eb6a91",
       "revisionMeaning": "Exact repair bytes checked before source commit and subsequently verified against every committed source/test blob."
     },
     "normalAndFullProfileManifests": {
       "status": "pass",
-      "latestCheckRevision": "f7a457bea54d630e51b527c8b061097c8a4f3e02",
+      "latestCheckRevision": "4f0599a09c225f4a3486456b58f446afd6eb6a91",
       "normal": "explicit validation passed",
       "full": "explicit validation passed"
     },
     "documentationLinks": {
       "status": "pass",
       "localLinks": 181,
-      "latestAttemptRevision": "f7a457bea54d630e51b527c8b061097c8a4f3e02",
+      "latestAttemptRevision": "4f0599a09c225f4a3486456b58f446afd6eb6a91",
       "revisionMeaning": "Exact repair bytes checked before source commit and subsequently verified against every committed source/test blob."
     },
     "llmsIndex": {
       "status": "pass",
-      "latestAttemptRevision": "f7a457bea54d630e51b527c8b061097c8a4f3e02",
+      "latestAttemptRevision": "4f0599a09c225f4a3486456b58f446afd6eb6a91",
       "revisionMeaning": "Exact repair bytes checked before source commit and subsequently verified against every committed source/test blob."
     },
     "whitespace": "pass",
@@ -817,14 +817,14 @@
       "status": "pass",
       "method": "Existing generator --write followed by --check; only one generated Swift doccomment differed; two retained providers",
       "revision": "f1bae83de761ee383e5845111993671f1ed308cb",
-      "latestCheckRevision": "f7a457bea54d630e51b527c8b061097c8a4f3e02"
+      "latestCheckRevision": "4f0599a09c225f4a3486456b58f446afd6eb6a91"
     },
     "codexParserHash": {
       "status": "pass",
       "method": "Existing generator --write followed by --check",
       "value": "56738678d8c0245c",
       "generatedOnlyRepairRevision": "e0575c44592208fa16d0ac71d7b14044c0b49418",
-      "latestCheckRevision": "f7a457bea54d630e51b527c8b061097c8a4f3e02",
+      "latestCheckRevision": "4f0599a09c225f4a3486456b58f446afd6eb6a91",
       "latestCheckMethod": "Existing generator --check; value unchanged"
     },
     "portableHarnessFixtures": {
@@ -871,15 +871,15 @@
       "repairRevision": "b0e2069e515ffecd72de920f0aca96547750ab55"
     },
     "swiftFormat": {
-      "status": "Success at488adcad; current menu fixture repair pending automatic CI",
-      "qualifiedRevision": "488adcad444ccc342e090de9734a1ae327fe8781",
-      "repairRevision": "f7a457bea54d630e51b527c8b061097c8a4f3e02",
-      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40160928065",
-      "reason": "Root reports formatter/lint success on prior head; native tools unavailable locally and new fixture bytes are not yet qualified."
+      "status": "Producer success at5cee87b1; current dispatch/history tests pending automatic CI",
+      "qualifiedRevision": "5cee87b16c08bb0f31b4a912a8aee04161218fce",
+      "repairRevision": "4f0599a09c225f4a3486456b58f446afd6eb6a91",
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40163389886",
+      "reason": "The unchanged producer contains the formatter gate; no separate current-head lint/Linux success is inferred. Native formatter unavailable locally."
     }
   },
   "hostedEvidence": {
-    "status": "Prior head488adcad passes formatter/lint, all three Linux jobs and producer; native-verified workers stop on later menu/layout fixture assertions. Current repair awaits normal automatic exact-head qualification; root owns watch.",
+    "status": "Prior head5cee87b1 has successful producer and verified native workers; remaining failures expose fleet-row navigation and generic-history fixture policy mismatches. Current dispatch/history repair awaits normal automatic exact-head qualification; root owns watch.",
     "firstRunURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40121196414",
     "firstHeadLint": "failure: stale parser hash, repaired by e0575c44592208fa16d0ac71d7b14044c0b49418; product-dependent patch01 contracts now applied and portable checks pass; native qualification pending",
     "currentHeadChecksMustBeReadFromGitHub": true,
@@ -989,18 +989,14 @@
       "qualification": "No new-head compile or execution pass inferred."
     },
     "latestNativeRuntimeAttempt": {
-      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40160928065",
-      "prHeadRevision": "488adcad444ccc342e090de9734a1ae327fe8781",
-      "formatterLint": "success",
-      "linuxX64": "success",
-      "linuxARM64": "success",
-      "linuxMusl": "success",
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40163389886",
+      "prHeadRevision": "5cee87b16c08bb0f31b4a912a8aee04161218fce",
       "producer": "success",
       "workerJobs": [
         {
-          "jobID": 121074730238,
+          "jobID": 121081329713,
           "selectedGroups": 85,
-          "successfulGroupsBeforeFailure": 51,
+          "successfulGroupsBeforeFailure": 59,
           "timeouts": 0,
           "evidence": {
             "native-compatibility": {
@@ -1008,22 +1004,21 @@
               "mode": "complete-fingerprint",
               "producer_image": "20261013.0424.1",
               "worker_image": "20261013.0424.1",
-              "source_revision": "62dbdf89f1a5082d766e93b39e6415be869cde24"
+              "source_revision": "8a56b272cc4f2278f6dc8321566ca112572cc2f9"
             },
             "discovery": {
               "runtimeIDs": 6674,
-              "sha256": "8ea6890e33115ce315c5d4c4f547f55e87b5c2299f2f9e576af00a5429829148",
-              "source_revision": "62dbdf89f1a5082d766e93b39e6415be869cde24"
+              "sha256": "8c24113b4fd9bd935256a03b3a7ea23daa53ef983ccbd4a41997d717f00aadfa",
+              "source_revision": "8a56b272cc4f2278f6dc8321566ca112572cc2f9"
             }
           },
           "recordedIssues": [
-            "2026-10-25T04:33:48.0274280Z \u2718 Test \"missing token data keeps every sibling visible as a placeholder\" recorded an issue at MenuBarLayoutRendererTests.swift:192:9: Expectation failed: (output.attributedTitle.string.count(where: { $0 == \"\u2013\" }) \u2192 20) == 21",
-            "2026-10-25T04:33:48.0375320Z \u2718 Test \"metric drives the editor row controls and units\" recorded an issue at MenuBarLayoutTests.swift:433:9: Expectation failed: (MenuBarConditionalMetric.allCases.count \u2192 17) == 18",
-            "2026-10-25T04:33:48.0393040Z \u2718 Test \"direct lane tokens only expose provider supported metrics\" recorded an issue at MenuBarLayoutTests.swift:665:9: Expectation failed: (MenuBarLayoutLane.available(for: .codex, snapshot: usageSnapshot) \u2192 [CodexBar.MenuBarLayoutLane.primary, CodexBar.MenuBarLayoutLane.secondary]) == (["
+            "2026-10-25T05:09:35.9379110Z \u2718 Test \"generic unknown weekly extra window does not filter saved history\" recorded an issue at PlanUtilizationHistoryChartMenuViewTests.swift:85:9: Expectation failed: (model.visibleSeries \u2192 []) == [\"weekly:10080\"]",
+            "2026-10-25T05:09:35.9382730Z \u2718 Test \"generic unknown weekly extra window does not filter saved history\" recorded an issue at PlanUtilizationHistoryChartMenuViewTests.swift:86:9: Expectation failed: (model.selectedSeries \u2192 nil) == \"weekly:10080\""
           ]
         },
         {
-          "jobID": 121074730207,
+          "jobID": 121081329622,
           "selectedGroups": 85,
           "successfulGroupsBeforeFailure": 74,
           "timeouts": 0,
@@ -1033,36 +1028,35 @@
               "mode": "complete-fingerprint",
               "producer_image": "20261013.0424.1",
               "worker_image": "20261013.0424.1",
-              "source_revision": "62dbdf89f1a5082d766e93b39e6415be869cde24"
+              "source_revision": "8a56b272cc4f2278f6dc8321566ca112572cc2f9"
             },
             "discovery": {
               "runtimeIDs": 6674,
-              "sha256": "8ea6890e33115ce315c5d4c4f547f55e87b5c2299f2f9e576af00a5429829148",
-              "source_revision": "62dbdf89f1a5082d766e93b39e6415be869cde24"
+              "sha256": "8c24113b4fd9bd935256a03b3a7ea23daa53ef983ccbd4a41997d717f00aadfa",
+              "source_revision": "8a56b272cc4f2278f6dc8321566ca112572cc2f9"
             }
           },
           "recordedIssues": [
-            "2026-10-25T04:36:16.2283300Z \u2718 Test \"overview row uses declarative details without bespoke submenu\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:62:9: Expectation failed: (codexRow.submenu \u2192 <NSMenu: 0xc04edc200>",
-            "2026-10-25T04:36:16.2287780Z \u2718 Test \"selecting overview row defers provider detail rebuild\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:128:9: Expectation failed: (settings.mergedMenuLastSelectedWasOverview \u2192 true) == false",
-            "2026-10-25T04:36:16.2288590Z \u2718 Test \"selecting overview row defers provider detail rebuild\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:129:9: Expectation failed: (settings.selectedMenuProvider \u2192 codex) == (.claude \u2192 claude)",
-            "2026-10-25T04:36:16.2289570Z \u2718 Test \"selecting overview row defers provider detail rebuild\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:144:9: Expectation failed: (representedIDs \u2192 [\"overviewRow-claude\", \"persistentRefreshAction\"]).contains(\"menuCard\")",
-            "2026-10-25T04:36:16.2290330Z \u2718 Test \"selecting overview row defers provider detail rebuild\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:145:9: Expectation failed: (representedIDs.contains(where: { $0.hasPrefix(\"overviewRow-\") }) \u2192 true) == false",
-            "2026-10-25T04:36:16.2291090Z \u2718 Test \"selecting overview row defers provider detail rebuild\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:146:9: Expectation failed: (switcherButtons.first(where: { $0.state == .on })?.tag \u2192 0) == 2",
-            "2026-10-25T04:36:16.2294710Z \u2718 Test \"overview row action close renders selected provider on next open\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:205:9: Expectation failed: (settings.selectedMenuProvider \u2192 codex) == (.claude \u2192 claude)",
-            "2026-10-25T04:36:16.2296480Z \u2718 Test \"overview row action close renders selected provider on next open\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:213:9: Expectation failed: (representedIDs \u2192 [\"overviewRow-codex\", \"overviewRow-claude\", \"persistentRefreshAction\"]).contains(\"menuCard\")",
-            "2026-10-25T04:36:16.2297320Z \u2718 Test \"overview row action close renders selected provider on next open\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:214:9: Expectation failed: (representedIDs.contains(where: { $0.hasPrefix(\"overviewRow-\") }) \u2192 true) == false",
-            "2026-10-25T04:36:16.2298030Z \u2718 Test \"overview row action close renders selected provider on next open\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:215:9: Expectation failed: (switcherButtons.first(where: { $0.state == .on })?.tag \u2192 0) == 2",
-            "2026-10-25T04:36:16.2352450Z \u2718 Test \"merged menu refresh uses resolved enabled provider when selection is cleared\" recorded an issue at StatusMenuTests.swift:330:9: Expectation failed: (store.enabledProviders().count \u2192 1) > 1",
-            "2026-10-25T04:36:16.2353040Z \u2718 Test \"merged menu refresh uses resolved enabled provider when selection is cleared\" recorded an issue at StatusMenuTests.swift:331:9: Expectation failed: (controller.shouldMergeIcons \u2192 false) == true",
-            "2026-10-25T04:36:16.2433970Z \u2718 Test \"overview tab honors stored subset when within the provider limit\" recorded an issue at StatusMenuTests.swift:1389:9: Expectation failed: (overviewRows.count \u2192 1) == 2",
-            "2026-10-25T04:36:16.2437610Z \u2718 Test \"overview tab with explicit empty selection is hidden and shows provider detail\" recorded an issue at StatusMenuTests.swift:1430:9: Expectation failed: (switcherButtons.count \u2192 3) == (store.enabledProvidersForDisplay().count \u2192 2)",
-            "2026-10-25T04:36:16.2438600Z \u2718 Test \"overview tab with explicit empty selection is hidden and shows provider detail\" recorded an issue at StatusMenuTests.swift:1433:9: Expectation failed: (ids \u2192 [\"overviewRow-codex\", \"overviewRow-claude\", \"persistentRefreshAction\"]).contains(\"menuCard\")",
-            "2026-10-25T04:36:16.2439450Z \u2718 Test \"overview tab with explicit empty selection is hidden and shows provider detail\" recorded an issue at StatusMenuTests.swift:1434:9: Expectation failed: (ids.contains(where: { $0.hasPrefix(\"overviewRow-\") }) \u2192 true) == false"
+            "2026-10-25T05:09:22.9311710Z \u2718 Test \"selecting overview row defers provider detail rebuild\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:136:9: Expectation failed: (settings.mergedMenuLastSelectedWasOverview \u2192 true) == false",
+            "2026-10-25T05:09:22.9312520Z \u2718 Test \"selecting overview row defers provider detail rebuild\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:137:9: Expectation failed: (settings.selectedMenuProvider \u2192 codex) == (.claude \u2192 claude)",
+            "2026-10-25T05:09:22.9313420Z \u2718 Test \"selecting overview row defers provider detail rebuild\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:152:9: Expectation failed: (representedIDs \u2192 [\"overviewRow-codex\", \"overviewRow-claude\", \"persistentRefreshAction\"]).contains(\"menuCard\")",
+            "2026-10-25T05:09:22.9314150Z \u2718 Test \"selecting overview row defers provider detail rebuild\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:153:9: Expectation failed: (representedIDs.contains(where: { $0.hasPrefix(\"overviewRow-\") }) \u2192 true) == false",
+            "2026-10-25T05:09:22.9314920Z \u2718 Test \"selecting overview row defers provider detail rebuild\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:154:9: Expectation failed: (switcherButtons.first(where: { $0.state == .on })?.tag \u2192 0) == 2",
+            "2026-10-25T05:09:22.9318880Z \u2718 Test \"overview row action close renders selected provider on next open\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:219:9: Expectation failed: (settings.selectedMenuProvider \u2192 codex) == (.claude \u2192 claude)",
+            "2026-10-25T05:09:22.9321760Z \u2718 Test \"overview row action close renders selected provider on next open\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:227:9: Expectation failed: (representedIDs \u2192 [\"overviewRow-codex\", \"overviewRow-claude\", \"persistentRefreshAction\"]).contains(\"menuCard\")",
+            "2026-10-25T05:09:22.9322490Z \u2718 Test \"overview row action close renders selected provider on next open\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:228:9: Expectation failed: (representedIDs.contains(where: { $0.hasPrefix(\"overviewRow-\") }) \u2192 true) == false",
+            "2026-10-25T05:09:22.9323140Z \u2718 Test \"overview row action close renders selected provider on next open\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:229:9: Expectation failed: (switcherButtons.first(where: { $0.state == .on })?.tag \u2192 0) == 2"
           ]
         }
       ],
-      "source": "Root completed-run observation plus bounded saved native/discovery event metadata and recorded-issue lines; child did not watch or poll checks.",
-      "qualification": "Both workers execute with verified same-run artifacts, stop at first failed group; no complete-suite or current repair qualification and no time/build/size savings inferred."
+      "aggregate": {
+        "jobID": 121082702105,
+        "producer": "success",
+        "shards": "failure",
+        "independentDefect": false
+      },
+      "source": "Root completed-run observation plus bounded saved native/discovery metadata and issue lines; child did not watch or poll checks.",
+      "qualification": "Actual execution stops after 59/85 and74/85 successful groups. Prior issue groups progress but full qualification, current repair success and savings remain unproved."
     }
   },
   "appSizeAndBuildComparison": {
@@ -1479,7 +1473,7 @@
     ],
     "deferredReason": "Three fresh below-threshold admissions, separated by ready source/evidence work, each found shared benchmark.lock busy. No test command or queued wait started. Existing local tool absences also prevent native make check/test. Prior exact-revision check results are retained as historical evidence, not new-head passes."
   },
-  "countMethodLatest": "Exact prior Git inventory at d5b0ee5a1a7b4ab9f76cfad07bfeebd20161711a plus five fixture-only edits at f7a457bea54d630e51b527c8b061097c8a4f3e02: +43 test lines/+2562 bytes; all product/test file and declaration counts unchanged. One test is renamed without removal. Menu source/method/assertion preservation and independent current Git-file inventory appear in menuRuntimeClosureRepair; declarations differ from parameter-expanded hosted IDs.",
+  "countMethodLatest": "Exact prior Git inventory at f7a457bea54d630e51b527c8b061097c8a4f3e02 plus two test-file edits at 4f0599a09c225f4a3486456b58f446afd6eb6a91: +56 lines/+2910 bytes/+one focused native action-delivery test declaration. All six existing tests remain with three purpose-correct renames; no file counts or other product/test bytes change. Current complete Git inventory is independently recounted in dispatchHistoryRuntimeRepair; hosted IDs are revision-bound and distinct from source declarations.",
   "swiftFormatRepair": {
     "baseRevision": "1d9787f8b4075068f3282cb723e42170a6e702c3",
     "repairRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
@@ -7517,6 +7511,949 @@
               "cpu_psi_some_avg10_percent": 1.69
             },
             "summary": "CPU 16.40% used; 44.36 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.01,
+        "output": "",
+        "status": "passed"
+      }
+    ]
+  },
+  "dispatchHistoryRuntimeRepair": {
+    "priorRevision": "5cee87b16c08bb0f31b4a912a8aee04161218fce",
+    "repairRevision": "4f0599a09c225f4a3486456b58f446afd6eb6a91",
+    "hostedFailingBefore": {
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40163389886",
+      "prHeadRevision": "5cee87b16c08bb0f31b4a912a8aee04161218fce",
+      "producer": "success",
+      "workerJobs": [
+        {
+          "jobID": 121081329713,
+          "selectedGroups": 85,
+          "successfulGroupsBeforeFailure": 59,
+          "timeouts": 0,
+          "evidence": {
+            "native-compatibility": {
+              "status": "verified",
+              "mode": "complete-fingerprint",
+              "producer_image": "20261013.0424.1",
+              "worker_image": "20261013.0424.1",
+              "source_revision": "8a56b272cc4f2278f6dc8321566ca112572cc2f9"
+            },
+            "discovery": {
+              "runtimeIDs": 6674,
+              "sha256": "8c24113b4fd9bd935256a03b3a7ea23daa53ef983ccbd4a41997d717f00aadfa",
+              "source_revision": "8a56b272cc4f2278f6dc8321566ca112572cc2f9"
+            }
+          },
+          "recordedIssues": [
+            "2026-10-25T05:09:35.9379110Z \u2718 Test \"generic unknown weekly extra window does not filter saved history\" recorded an issue at PlanUtilizationHistoryChartMenuViewTests.swift:85:9: Expectation failed: (model.visibleSeries \u2192 []) == [\"weekly:10080\"]",
+            "2026-10-25T05:09:35.9382730Z \u2718 Test \"generic unknown weekly extra window does not filter saved history\" recorded an issue at PlanUtilizationHistoryChartMenuViewTests.swift:86:9: Expectation failed: (model.selectedSeries \u2192 nil) == \"weekly:10080\""
+          ]
+        },
+        {
+          "jobID": 121081329622,
+          "selectedGroups": 85,
+          "successfulGroupsBeforeFailure": 74,
+          "timeouts": 0,
+          "evidence": {
+            "native-compatibility": {
+              "status": "verified",
+              "mode": "complete-fingerprint",
+              "producer_image": "20261013.0424.1",
+              "worker_image": "20261013.0424.1",
+              "source_revision": "8a56b272cc4f2278f6dc8321566ca112572cc2f9"
+            },
+            "discovery": {
+              "runtimeIDs": 6674,
+              "sha256": "8c24113b4fd9bd935256a03b3a7ea23daa53ef983ccbd4a41997d717f00aadfa",
+              "source_revision": "8a56b272cc4f2278f6dc8321566ca112572cc2f9"
+            }
+          },
+          "recordedIssues": [
+            "2026-10-25T05:09:22.9311710Z \u2718 Test \"selecting overview row defers provider detail rebuild\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:136:9: Expectation failed: (settings.mergedMenuLastSelectedWasOverview \u2192 true) == false",
+            "2026-10-25T05:09:22.9312520Z \u2718 Test \"selecting overview row defers provider detail rebuild\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:137:9: Expectation failed: (settings.selectedMenuProvider \u2192 codex) == (.claude \u2192 claude)",
+            "2026-10-25T05:09:22.9313420Z \u2718 Test \"selecting overview row defers provider detail rebuild\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:152:9: Expectation failed: (representedIDs \u2192 [\"overviewRow-codex\", \"overviewRow-claude\", \"persistentRefreshAction\"]).contains(\"menuCard\")",
+            "2026-10-25T05:09:22.9314150Z \u2718 Test \"selecting overview row defers provider detail rebuild\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:153:9: Expectation failed: (representedIDs.contains(where: { $0.hasPrefix(\"overviewRow-\") }) \u2192 true) == false",
+            "2026-10-25T05:09:22.9314920Z \u2718 Test \"selecting overview row defers provider detail rebuild\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:154:9: Expectation failed: (switcherButtons.first(where: { $0.state == .on })?.tag \u2192 0) == 2",
+            "2026-10-25T05:09:22.9318880Z \u2718 Test \"overview row action close renders selected provider on next open\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:219:9: Expectation failed: (settings.selectedMenuProvider \u2192 codex) == (.claude \u2192 claude)",
+            "2026-10-25T05:09:22.9321760Z \u2718 Test \"overview row action close renders selected provider on next open\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:227:9: Expectation failed: (representedIDs \u2192 [\"overviewRow-codex\", \"overviewRow-claude\", \"persistentRefreshAction\"]).contains(\"menuCard\")",
+            "2026-10-25T05:09:22.9322490Z \u2718 Test \"overview row action close renders selected provider on next open\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:228:9: Expectation failed: (representedIDs.contains(where: { $0.hasPrefix(\"overviewRow-\") }) \u2192 true) == false",
+            "2026-10-25T05:09:22.9323140Z \u2718 Test \"overview row action close renders selected provider on next open\" recorded an issue at StatusMenuOverviewSubmenuTests.swift:229:9: Expectation failed: (switcherButtons.first(where: { $0.state == .on })?.tag \u2192 0) == 2"
+          ]
+        }
+      ],
+      "aggregate": {
+        "jobID": 121082702105,
+        "producer": "success",
+        "shards": "failure",
+        "independentDefect": false
+      },
+      "source": "Root completed-run observation plus bounded saved native/discovery metadata and issue lines; child did not watch or poll checks.",
+      "qualification": "Actual execution stops after 59/85 and74/85 successful groups. Prior issue groups progress but full qualification, current repair success and savings remain unproved."
+    },
+    "sourceBoundDispatchAndHistoryTrace": {
+      "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+      "priorRevision": "5cee87b16c08bb0f31b4a912a8aee04161218fce",
+      "sourceBindings": [
+        {
+          "path": "Sources/CodexBar/StatusItemController+OverviewFleetAccounts.swift",
+          "startMarker": "func overviewFleetSource(",
+          "currentStartLine": 16,
+          "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+          "currentRevisionBeforeTestRepair": "5cee87b16c08bb0f31b4a912a8aee04161218fce",
+          "baseAndCurrentBlockSHA256": "e01566983555c0a524866e518642fc6a4435c18ff9407b9135da0f2cea58fba2",
+          "byteIdentical": true
+        },
+        {
+          "path": "Sources/CodexBar/StatusItemController+OverviewFleetAccounts.swift",
+          "startMarker": "func activateOverviewRow(",
+          "currentStartLine": 191,
+          "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+          "currentRevisionBeforeTestRepair": "5cee87b16c08bb0f31b4a912a8aee04161218fce",
+          "baseAndCurrentBlockSHA256": "cda6fcb642016472a452d73790bf301193666c68a0b4138ff4b70575bb6d0ccb",
+          "byteIdentical": true
+        },
+        {
+          "path": "Sources/CodexBar/StatusItemController+OverviewSubmenus.swift",
+          "startMarker": "@objc func selectOverviewProvider(_ sender:",
+          "currentStartLine": 22,
+          "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+          "currentRevisionBeforeTestRepair": "5cee87b16c08bb0f31b4a912a8aee04161218fce",
+          "baseAndCurrentBlockSHA256": "90acfa21d4d55065ba2b93c84da2f3fe8d0c3e28f38806f769af12b907961e1e",
+          "byteIdentical": true
+        },
+        {
+          "path": "Sources/CodexBar/StatusItemController+SwitcherViews.swift",
+          "startMarker": "@objc private func handleSelection(",
+          "currentStartLine": 684,
+          "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+          "currentRevisionBeforeTestRepair": "5cee87b16c08bb0f31b4a912a8aee04161218fce",
+          "baseAndCurrentBlockSHA256": "a5353f9ca70ab2dda48a49b9c31a16060ca6c752c5d5c84e94cc3e5734a8d85c",
+          "byteIdentical": true
+        },
+        {
+          "path": "Sources/CodexBar/StatusItemController+SwitcherViews.swift",
+          "startMarker": "private func applySelection(",
+          "currentStartLine": 338,
+          "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+          "currentRevisionBeforeTestRepair": "5cee87b16c08bb0f31b4a912a8aee04161218fce",
+          "baseAndCurrentBlockSHA256": "28b1c43dc163bbe31ccb78a73798d81808808b29e4ff751dd55344839e33e2da",
+          "byteIdentical": true
+        },
+        {
+          "path": "Sources/CodexBar/StatusItemController+Menu.swift",
+          "startMarker": "onSelect: { [weak self, weak menu] selection in",
+          "currentStartLine": 999,
+          "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+          "currentRevisionBeforeTestRepair": "5cee87b16c08bb0f31b4a912a8aee04161218fce",
+          "baseAndCurrentBlockSHA256": "88fa50c5ba5eaac7aeb5677fb6e755f89f449157b992e8721ee88943aa5ccd63",
+          "byteIdentical": true
+        },
+        {
+          "path": "Sources/CodexBar/StatusItemController+MenuRefreshScheduling.swift",
+          "startMarker": "func deferSwitcherMenuRebuildIfStillVisible(",
+          "currentStartLine": 257,
+          "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+          "currentRevisionBeforeTestRepair": "5cee87b16c08bb0f31b4a912a8aee04161218fce",
+          "baseAndCurrentBlockSHA256": "cf1ed28a950c57b377bcbf411a030cbe8769b6e2c948dbeb66082c0ef42beeb4",
+          "byteIdentical": true
+        },
+        {
+          "path": "Sources/CodexBarCore/Providers/Codex/CodexProviderDescriptor.swift",
+          "startMarker": "private static func planUtilizationSeries(",
+          "currentStartLine": 176,
+          "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+          "currentRevisionBeforeTestRepair": "5cee87b16c08bb0f31b4a912a8aee04161218fce",
+          "baseAndCurrentBlockSHA256": "4c80a6386338494f284b61b7128c2d78c3d6b5656034a1a91f5dffd5984c5350",
+          "byteIdentical": true
+        },
+        {
+          "path": "Sources/CodexBarCore/Providers/ProviderUsagePresentation.swift",
+          "startMarker": "public static func standardPlanUtilizationSeries(",
+          "currentStartLine": 575,
+          "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+          "currentRevisionBeforeTestRepair": "5cee87b16c08bb0f31b4a912a8aee04161218fce",
+          "baseAndCurrentBlockSHA256": "879f1e0dff898b2b60cb5e1d13b2c89b83a04cc0ade47b0fadc316eebb495c7b",
+          "byteIdentical": true
+        },
+        {
+          "path": "Sources/CodexBar/PlanUtilizationHistoryChartMenuView.swift",
+          "startMarker": "private nonisolated static func visibleSeriesNames(",
+          "currentStartLine": 257,
+          "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+          "currentRevisionBeforeTestRepair": "5cee87b16c08bb0f31b4a912a8aee04161218fce",
+          "baseAndCurrentBlockSHA256": "1a24be4c2dbb402cf4f3bc24801d1affee6e0c4ef46cd4583ddd165f95431137",
+          "byteIdentical": true
+        }
+      ],
+      "priorSelectedMenuItem": {
+        "representedObject": "overviewRow-claude",
+        "target": "the StatusItemController",
+        "action": "selectOverviewProvider:",
+        "tag": 0,
+        "enabled": true,
+        "submenu": null,
+        "menu": "the root menu containing this NSMenuItem",
+        "evidenceQualification": "ID, action and nil submenu follow the prior passed require/expect checks; target/tag/enabled/menu ownership follow construction and are explicitly checked in the new native dispatch test. No local runtime inspection occurred.",
+        "oldInvocation": "target.perform(action, with: claudeRow), return ignored",
+        "oldDeliveryResult": "not recorded; not inferred from unchanged settings"
+      },
+      "rowCallChain": [
+        "addOverviewRows supplies represented ID and click closure; plain no-submenu path wires controller/selectOverviewProvider:",
+        "receiver requires represented prefix, parses UsageProvider(rawValue: claude), requires sender.menu",
+        "receiver calls activateOverviewRow(.claude, menu:)",
+        "overviewFleetSource(.claude) returns an OverviewFleetSource unconditionally, even if accounts is empty",
+        "fleet branch advances interaction, toggles collapsed summary, invalidates menu; no provider-selection settings mutation",
+        "former Cursor returned nil fleet source through default and invoked the separate typed provider-navigation overload"
+      ],
+      "earliestSemanticDivergence": "activateOverviewRow fleet-source branch: mapping Cursor to Claude changes intended row behavior. Even successful dispatch cannot satisfy the old navigation assertions.",
+      "retainedPolicyCoverage": "OverviewFleetAccountsTests: both providers expand and collapse runtime rows without navigation or selection (read-only, unchanged).",
+      "newSwitcherDispatch": [
+        "Overview plus Codex and Claude segments map to tags0/1/2; test checks exact provider order, tag2 lookup, enabled button and target===switcher",
+        "NSApplication.shared.sendAction forwards the actual button action to the captured switcher; Bool must be true",
+        "handleSelection checks tag is in segment indices; applySelection rejects only the already-selected segment (initial Overview0, requested Claude2)",
+        "onSelect closure requires live controller/menu, then sets overview flag false, selected provider Claude, last menu provider/selection",
+        "provider-dependent UI invalidates while preserving switcher caches and defers rendering; requestProviderSwitcherMenuRebuild schedules next-turn work",
+        "observer chooses existing task scheduler with zero debounce; original100 yields/10ms budget stays unchanged",
+        "menuDidClose forgets/cancels menu work; subsequent menuWillOpen renders persisted Claude detail with selected tag2"
+      ],
+      "newPlainRowDispatchProof": "Actual NSMenuItem metadata plus NSApplication delivery Bool and changed expansion state while Overview/Codex selection stays unchanged; separate from navigation fixtures.",
+      "historyTrace": [
+        "Old Zed descriptor used ProviderUsagePresentation's default standardPlanUtilizationSeries resolver",
+        "standard resolver ignores usageKnown=false extras and returns nil when no known weekly window exists",
+        "current Codex resolver maps only known canonical lanes; unknown-only input produces empty whitelist, matching its unchanged base policy",
+        "chart maps nil whitelist to unrestricted saved names; empty whitelist rejects all names",
+        "test directly checks retained generic unknown resolver; real Codex no-current-snapshot guard returns nil whitelist and preserves saved weekly selection/value42",
+        "valid Codex secondary weekly snapshot with the same unknown extra must produce the identical saved-history model"
+      ],
+      "productionChange": false,
+      "limits": "Source-bound trace and added assertions await automatic native execution; no local Objective-C action delivery or history-model runtime result is claimed."
+    },
+    "sourcePreservationProof": {
+      "priorRevision": "5cee87b16c08bb0f31b4a912a8aee04161218fce",
+      "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
+      "renamedTests": {
+        "`selecting overview row defers provider detail rebuild`": "`selecting provider switcher from overview defers provider detail rebuild`",
+        "`overview row action close renders selected provider on next open`": "`provider switcher action close renders selected provider on next open`",
+        "`generic unknown weekly extra window does not filter saved history`": "`unknown weekly extras preserve generic fallback and saved Codex history`"
+      },
+      "addedTest": "`plain overview row action delivers summary expansion without navigation`",
+      "files": [
+        {
+          "path": "Tests/CodexBarTests/StatusMenuOverviewSubmenuTests.swift",
+          "beforeSHA256": "68598a253d05bb37e4be24e031d08deca5d63f939ca94e51a0126aa56f21ee1f",
+          "afterSHA256": "471a5a66b19334328b7ebf33c5690c9a9b140457876adcdb1b08379f3841c0af",
+          "testDeclarationsBefore": 3,
+          "testDeclarationsAfter": 4,
+          "assertionsBefore": 24,
+          "assertionsAfter": 40,
+          "lineDelta": 42,
+          "byteDelta": 2175,
+          "existingMethodProofs": [
+            {
+              "name": "`overview row keeps declarative details alongside generic plan usage`",
+              "beforeSHA256": "898b6f7c4a3964ce73b68abcf29ba115185cfec74cb3acbfb788aff8649c0044",
+              "afterSHA256": "898b6f7c4a3964ce73b68abcf29ba115185cfec74cb3acbfb788aff8649c0044",
+              "assertionsBefore": 7,
+              "assertionsAfter": 7
+            },
+            {
+              "name": "`selecting provider switcher from overview defers provider detail rebuild`",
+              "beforeSHA256": "6d3bab305188f381a6b1914fa9c9cc0fd932a793337b5e4bbba0e57cb11d67f9",
+              "afterSHA256": "ed909c2be5cd6da8401605580621952c9d9c06e696b6d132a6ddc1286eef10ad",
+              "assertionsBefore": 10,
+              "assertionsAfter": 12
+            },
+            {
+              "name": "`provider switcher action close renders selected provider on next open`",
+              "beforeSHA256": "f55879466ca82273e47634f76c90562d5ad1bdb2ec1fd1a706bfe01b0a320775",
+              "afterSHA256": "7cc75db4903f1ab1b76c460fce647b3dc38b5629c32f60717767c8e6774b12f3",
+              "assertionsBefore": 7,
+              "assertionsAfter": 9
+            }
+          ],
+          "addedMethods": [
+            "`plain overview row action delivers summary expansion without navigation`"
+          ]
+        },
+        {
+          "path": "Tests/CodexBarTests/PlanUtilizationHistoryChartMenuViewTests.swift",
+          "beforeSHA256": "b8b460889e0a4246e364f88a3112207515d12daa8ccea7a12087d275811d970f",
+          "afterSHA256": "98cd4c39d01332d50e61879b2ecdfaf62978a2533aac076164649826f071372b",
+          "testDeclarationsBefore": 3,
+          "testDeclarationsAfter": 3,
+          "assertionsBefore": 5,
+          "assertionsAfter": 8,
+          "lineDelta": 14,
+          "byteDelta": 735,
+          "existingMethodProofs": [
+            {
+              "name": "`merged entries preserve first occurrence order while removing duplicates`",
+              "beforeSHA256": "23fcd9c86431742b0a5ba5aa4058c1675089fbf9349ee9ed05be4f91ebcfa127",
+              "afterSHA256": "23fcd9c86431742b0a5ba5aa4058c1675089fbf9349ee9ed05be4f91ebcfa127",
+              "assertionsBefore": 1,
+              "assertionsAfter": 1
+            },
+            {
+              "name": "`generic primary weekly window keeps weekly history visible`",
+              "beforeSHA256": "968611520a6d15c4c9300012acc27d5633ca0248b0031d5f2b9dc707a27805af",
+              "afterSHA256": "968611520a6d15c4c9300012acc27d5633ca0248b0031d5f2b9dc707a27805af",
+              "assertionsBefore": 2,
+              "assertionsAfter": 2
+            },
+            {
+              "name": "`unknown weekly extras preserve generic fallback and saved Codex history`",
+              "beforeSHA256": "185783715941276b3d5435bcce5efdcd879a6ed77b7e594c08b25918486e0ea6",
+              "afterSHA256": "01838b7042267f25493b7a11b9ca7466917d98b43e9aaec6a5d0412475077124",
+              "assertionsBefore": 2,
+              "assertionsAfter": 5
+            }
+          ],
+          "addedMethods": []
+        }
+      ],
+      "sourceProvenance": [
+        {
+          "path": "Sources/CodexBar/StatusItemController+OverviewFleetAccounts.swift",
+          "baseAndCurrentSHA256": "d7320434a5f84df5044aa51e8d7e150e0c38fdb5bf1a7eb537308fb780b06410",
+          "wholeFileByteIdenticalToBase": true
+        },
+        {
+          "path": "Sources/CodexBar/StatusItemController+SwitcherViews.swift",
+          "baseAndCurrentSHA256": "76a1eba94acf2f360ffb8865bf7c67fe197492143a74253d99f5ee2099fda4c9",
+          "wholeFileByteIdenticalToBase": true
+        },
+        {
+          "path": "Sources/CodexBar/PlanUtilizationHistoryChartMenuView.swift",
+          "baseAndCurrentSHA256": "f5b502b5a27bf2570769beaecd6e357863b0e1784ea5316db0f02dc9f83828e7",
+          "wholeFileByteIdenticalToBase": true
+        },
+        {
+          "path": "Sources/CodexBar/StatusItemController+OverviewSubmenus.swift",
+          "retainedReceiverAndSelectionSuffixSHA256": "90acfa21d4d55065ba2b93c84da2f3fe8d0c3e28f38806f769af12b907961e1e",
+          "retainedSuffixByteIdenticalToBase": true,
+          "earlierAuthorizedDifference": "OpenAI API/Mistral-only submenu prologue removed; not part of the receiver/selection suffix."
+        }
+      ],
+      "allExistingTestDeclarationsRetained": true,
+      "newFocusedActionDeliveryTest": 1,
+      "originalNavigationPostconditionsAndWaitBudgetsByteIdentical": true,
+      "originalUnknownWindowFixtureAndHistoryExpectationsByteIdentical": true,
+      "rowMetadataPreconditionDisposition": "Two prior row-only preconditions per navigation test move to the dedicated row dispatch proof. Navigation uses actual switcher target/enabled/provider mapping and NSApplication delivery assertions.",
+      "priorRuntimeDelivery": "NSObject.perform result was not asserted or recorded. Existing preconditions passed; source proves the admitted row handler expands a fleet summary, not provider navigation.",
+      "auditOnlyFilesUnchanged": [
+        "Tests/CodexBarTests/OverviewFleetAccountsTests.swift",
+        "Tests/CodexBarTests/StatusMenuSwitcherClickTests.swift",
+        "Tests/CodexBarTests/StatusMenuSwitcherTrackingTests.swift"
+      ],
+      "productOtherTestsAccountingCatalogHarnessScheduleAndFrozenConsumptionUnchanged": true,
+      "nativeExecution": "Unavailable locally; source-bound dispatch and preservation proof only."
+    },
+    "localChecks": [
+      {
+        "name": "dispatch-preservation",
+        "command": [
+          "python3",
+          "-B",
+          ".build/slim-product-work/dispatch-5cee/inspect_dispatch_preservation.py"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T05:25:39Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 42.37,
+              "cpu_used_percent": 15.14,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.2269,
+              "sampled_steal_percent": 0.315,
+              "cpu_psi_some_avg10_percent": 1.32
+            },
+            "summary": "CPU 15.14% used; 42.37 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.073,
+        "output": "{\"changedTestFiles\": 2, \"testsBefore\": 6, \"testsAfter\": 7, \"assertionsBefore\": 29, \"assertionsAfter\": 48, \"lineDelta\": 56, \"byteDelta\": 2910, \"existingTestsRemovedOrSkipped\": 0, \"newFocusedDeliveryTest\": 1}\n",
+        "status": "passed"
+      },
+      {
+        "name": "source-trace",
+        "command": [
+          "python3",
+          "-B",
+          ".build/slim-product-work/dispatch-5cee/inspect_trace.py"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T05:27:54Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.07,
+              "cpu_used_percent": 20.83,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.2888,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 2.65
+            },
+            "summary": "CPU 20.83% used; 43.07 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.07,
+        "output": "Ten retained dispatch/history source blocks match base; fleet and navigation paths separated; legacy Zed policy verified. Native action delivery is explicitly unqualified locally.\n",
+        "status": "passed"
+      },
+      {
+        "name": "normal-profile",
+        "command": [
+          "python3",
+          "-B",
+          "Scripts/test_profiles.py",
+          "validate"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T05:28:18Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.69,
+              "cpu_used_percent": 30.7,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.3019,
+              "sampled_steal_percent": 0.316,
+              "cpu_psi_some_avg10_percent": 4.11
+            },
+            "summary": "CPU 30.70% used; 43.69 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.042,
+        "output": "Test profile contract OK: normal; manifest 136f44cb5604cf4364709c429e2e7ff8d275c0065d26bfb4896e1899008865d8\n",
+        "status": "passed"
+      },
+      {
+        "name": "full-profile",
+        "command": [
+          "python3",
+          "-B",
+          "Scripts/test_profiles.py",
+          "validate"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T05:28:18Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.71,
+              "cpu_used_percent": 18.5,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.3019,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 4.11
+            },
+            "summary": "CPU 18.50% used; 43.71 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.04,
+        "output": "Test profile contract OK: full; manifest 136f44cb5604cf4364709c429e2e7ff8d275c0065d26bfb4896e1899008865d8\n",
+        "status": "passed"
+      },
+      {
+        "name": "provider-manifests",
+        "command": [
+          "bash",
+          "Scripts/regenerate-provider-manifests.sh",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T05:28:19Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.68,
+              "cpu_used_percent": 16.72,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.3019,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 4.11
+            },
+            "summary": "CPU 16.72% used; 43.68 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.084,
+        "output": "Provider manifests are current (2 providers)\n",
+        "status": "passed"
+      },
+      {
+        "name": "codex-parser-hash",
+        "command": [
+          "bash",
+          "Scripts/regenerate-codex-parser-hash.sh",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T05:28:19Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.67,
+              "cpu_used_percent": 17.46,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.3019,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 4.11
+            },
+            "summary": "CPU 17.46% used; 43.67 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.091,
+        "output": "Codex parser hash is current (56738678d8c0245c)\n",
+        "status": "passed"
+      },
+      {
+        "name": "documentation-links",
+        "command": [
+          "node",
+          "Scripts/check-documentation-links.mjs"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T05:28:19Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.55,
+              "cpu_used_percent": 29.65,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.3019,
+              "sampled_steal_percent": 0.315,
+              "cpu_psi_some_avg10_percent": 4.45
+            },
+            "summary": "CPU 29.65% used; 43.55 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.221,
+        "output": "documentation links OK: 181 local links\n",
+        "status": "passed"
+      },
+      {
+        "name": "llms-index",
+        "command": [
+          "node",
+          "Scripts/generate-llms.mjs",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T05:28:20Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.67,
+              "cpu_used_percent": 46.25,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.3019,
+              "sampled_steal_percent": 0.312,
+              "cpu_psi_some_avg10_percent": 4.45
+            },
+            "summary": "CPU 46.25% used; 43.67 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.05,
+        "output": "llms index OK: docs/llms.txt\n",
+        "status": "passed"
+      },
+      {
+        "name": "make-check",
+        "command": [
+          "make",
+          "check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T05:28:20Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.66,
+              "cpu_used_percent": 29.28,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.3019,
+              "sampled_steal_percent": 0.312,
+              "cpu_psi_some_avg10_percent": 4.45
+            },
+            "summary": "CPU 29.28% used; 43.66 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 2,
+        "elapsedSeconds": 0.089,
+        "output": "./Scripts/lint.sh lint\nTest profile contract OK: normal; manifest 136f44cb5604cf4364709c429e2e7ff8d275c0065d26bfb4896e1899008865d8\nnode:internal/child_process:1191\n    result.error = new ErrnoException(result.error, 'spawnSync ' + options.file);\n                   ^\n\n<ref *1> Error: spawnSync plutil ENOENT\n    at Object.spawnSync (node:internal/child_process:1191:20)\n    at spawnSync (node:child_process:929:24)\n    at execFileSync (node:child_process:972:15)\n    at readCatalog (file:///home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/Scripts/check-app-locales.mjs:44:18)\n    at file:///home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/Scripts/check-app-locales.mjs:9:17\n    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)\n    at async node:internal/modules/esm/loader:647:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  errno: -2,\n  code: 'ENOENT',\n  syscall: 'spawnSync plutil',\n  path: 'plutil',\n  spawnargs: [\n    '-convert',\n    'json',\n    '-o',\n    '-',\n    '/home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/Sources/CodexBar/Resources/en.lproj/Localizable.strings'\n  ],\n  error: [Circular *1],\n  status: null,\n  signal: null,\n  output: null,\n  pid: 0,\n  stdout: undefined,\n  stderr: undefined\n}\n\nNode.js v24.22.1\nmake: *** [Makefile:22: check] Error 1\n",
+        "status": "unavailable",
+        "reason": "Missing plutil"
+      },
+      {
+        "name": "make-test",
+        "command": [
+          "make",
+          "test"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T05:28:21Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.6,
+              "cpu_used_percent": 23.64,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.3019,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 4.45
+            },
+            "summary": "CPU 23.64% used; 43.60 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 2,
+        "elapsedSeconds": 0.116,
+        "output": "./Scripts/test.sh\nFixture scratch parent (owned): /home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/.test-fixtures-9h4huqiz\nSwift test profile: normal\n+ swift build --build-tests\nSwift test timing summary:\n- Shard: none\n- Group size: 12\n- Discovered test identities: 0\n- Discovery manifest SHA256: \n- Selected manifest SHA256: \n- Discovered selections: 0\n- Selected selections: 0\n- Selected groups: 0\n- First-pass successful groups: 0\n- First-pass failed groups: 0\n- Full-group retries: 0\n- Recovered groups: 0\n- Timed out groups: 0\n- Isolated selection retries: 0\n- Test build seconds: 0.0\n- Build artifact seconds: 0.0\n- Discovery seconds: 0.0\n- Execution seconds: 0.0\n- Total seconds: 0.0\nFileNotFoundError: [Errno 2] No such file or directory: 'swift'\nFixture scratch parent removed and absence verified: /home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/.test-fixtures-9h4huqiz\nmake: *** [Makefile:34: test] Error 1\n",
+        "status": "unavailable",
+        "reason": "Missing Swift; no native test ran"
+      },
+      {
+        "name": "diff-whitespace",
+        "command": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T05:28:21Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.52,
+              "cpu_used_percent": 25.71,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.3019,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 4.45
+            },
+            "summary": "CPU 25.71% used; 43.52 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.007,
+        "output": "",
+        "status": "passed"
+      }
+    ],
+    "causeDisposition": {
+      "overview": "Old Cursor non-fleet rows navigated; Codex/Claude fleet rows intentionally expand summaries. Previous submenu repair traced too little. Retain fleet semantics, exercise actual provider-switcher action for navigation, and add explicit plain-row NSApplication dispatch/expansion proof. Old NSObject.perform delivery itself was not recorded.",
+      "history": "Old Zed default generic policy returns nil for unknown-only metadata. Codex known-window policy returns empty whitelist, matching base. Directly test retained generic resolver plus real offline and valid-weekly Codex saved-history paths; do not change provider policies or accept empty history."
+    },
+    "testDisposition": {
+      "existingDeclarationsBefore": 6,
+      "existingDeclarationsRetained": 6,
+      "renamedExistingTests": 3,
+      "newFocusedActionDeliveryTest": 1,
+      "newTestValue": "Actual plain NSMenuItem action dispatch and metadata, followed by summary mutation without navigation; existing fleet test invokes the handler directly.",
+      "assertionsBefore": 29,
+      "assertionsAfter": 48,
+      "allOriginalBehavioralPostconditionsAndWaitBudgetsPreserved": true,
+      "priorRowOnlyPreconditions": "Replaced with actual switcher target/order/enabled/delivery checks in navigation tests and asserted in the dedicated row action test."
+    },
+    "priorAccountingProofPreserved": {
+      "costExactFiles": 56,
+      "adaptedCostFiles": 4,
+      "retainedAdaptedCostMethods": 29,
+      "sharedDaySelectionMethods": 12,
+      "highLimitsPersistenceFixturesAndOtherTestsUnchanged": true
+    },
+    "sourceInventoryDelta": {
+      "testSwiftFiles": 0,
+      "testSwiftLines": 56,
+      "testSwiftBytes": 2910,
+      "swiftTestingDeclarations": 1,
+      "productSourceBytes": 0
+    },
+    "sourceIdentity": "Checks ran on exact test repair bytes subsequently verified against committed source 4f0599a09c225f4a3486456b58f446afd6eb6a91.",
+    "nativeHarnessScheduleFrozenConsumptionUnchanged": true,
+    "limitations": [
+      "Swift/plutil/SwiftFormat/SwiftLint unavailable locally; required make check/test exit2 before native lint/build/test.",
+      "Source-bound control flow and added assertions are not a runtime delivery/result trace. New dispatch/history tests await native automatic CI.",
+      "Prior workers stop at first failure; no full qualification, comparable app-size/cold-build measurements or savings inference."
+    ],
+    "nextGate": "Normal automatic exact-head CI under root sole watch; no manual campaign, extra agents/reviews, merge, installation or host effect.",
+    "evidenceReadbackChecks": [
+      {
+        "name": "evidence-coherence",
+        "command": [
+          "python3",
+          "-B",
+          ".build/slim-product-work/dispatch-5cee/check_final_evidence.py"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T05:33:42Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.96,
+              "cpu_used_percent": 14.78,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.3294,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 2.06
+            },
+            "summary": "CPU 14.78% used; 43.96 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.288,
+        "output": "Evidence coherent: ten retained source blocks match base; original six tests remain, three renamed/one focused dispatch test added, assertions29\u219248; 733 files/252380 lines/10940792 bytes/6570 declarations. Navigation budgets, unknown fixture, product/accounting/catalog/harness/schedule preserved. Native execution pending.\n",
+        "status": "passed"
+      },
+      {
+        "name": "documentation-links",
+        "command": [
+          "node",
+          "Scripts/check-documentation-links.mjs"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T05:33:43Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.96,
+              "cpu_used_percent": 14.46,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.3294,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 2.06
+            },
+            "summary": "CPU 14.46% used; 43.96 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.123,
+        "output": "documentation links OK: 181 local links\n",
+        "status": "passed"
+      },
+      {
+        "name": "llms-index",
+        "command": [
+          "node",
+          "Scripts/generate-llms.mjs",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T05:33:43Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.99,
+              "cpu_used_percent": 15.41,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.3294,
+              "sampled_steal_percent": 0.314,
+              "cpu_psi_some_avg10_percent": 2.06
+            },
+            "summary": "CPU 15.41% used; 43.99 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "benchmarkLock": "nonblocking-exclusive",
+        "exitCode": 0,
+        "elapsedSeconds": 0.042,
+        "output": "llms index OK: docs/llms.txt\n",
+        "status": "passed"
+      },
+      {
+        "name": "diff-whitespace",
+        "command": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T05:33:43Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 43.98,
+              "cpu_used_percent": 15.41,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.3294,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 2.06
+            },
+            "summary": "CPU 15.41% used; 43.98 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
           },
           "warnings": [],
           "errors": [],

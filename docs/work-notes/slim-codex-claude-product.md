@@ -796,7 +796,7 @@ no expected history is replaced by empty/nil. All other tests and product source
 including existing fleet tests and accounting scale/persistence, remain exact.
 
 Fresh per-command admission and the nonblocking benchmark lock allow one serial
-process: CPU 15.14–46.25%, RAM 42.37–43.71 GiB; one core is 6.25% of host capacity.
+process: CPU 14.46–46.25%, RAM 42.37–43.99 GiB; one core is 6.25% of host capacity.
 Source trace/preservation, normal/full manifests, both generator `--check`
 commands, 181 documentation links, llms index and whitespace checks pass.
 `make check`/`make test` exit 2 at missing plutil/Swift before native lint/build/test;
@@ -804,5 +804,15 @@ no tools are installed, and test fixture scratch absence is verified. The repair
 is still unqualified by native execution; root's automatic exact-head CI is the
 next gate. App-size/cold-build comparison remains unavailable, with no savings
 inferred from partial workers or source counts.
+
+Dispatch/history source commit `4f0599a09c225f4a3486456b58f446afd6eb6a91` contains the two test files
+and spec/note. The comparison pins ten source-block hashes, the old/new dispatch
+trace, three test renames, one added delivery case and per-method preservation.
+Product inventory remains 651 Swift files / 193218 lines. Test inventory remains
+733 files, now 252380 lines / 10940792 bytes and 6570 declarations (+56 lines,
+2910 bytes, one declaration). No runtime-ID total is predicted from declarations.
+All 56 exact cost files, four adapted files/29 methods, four critical history
+suites and 12 shared day-selection methods keep their prior proofs. The final
+publication adds only comparison/note evidence; native qualification is pending.
 
 <!-- codex-section:end work.slim-codex-claude-product#evidence -->
