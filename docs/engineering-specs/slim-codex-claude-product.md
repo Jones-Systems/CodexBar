@@ -71,6 +71,11 @@ unavailable. Use the shared nonblocking benchmark lock and fresh CPU/RAM admissi
 before local test starts. Hosted macOS/Linux compilation and isolated tests must
 prove the complete source removal. A final focused bulk correctness review checks
 removed versus retained behavior. Record source/test counts at the exact base and
-candidate revisions. Binary/bundle size and cold-build comparisons require exact,
+candidate revisions. Linux SwiftLint and macOS SwiftFormat are distinct checks;
+Linux success alone cannot qualify the producer's pinned formatter gate. Formatting
+repairs preserve literals, assertions, test inventories and scale limits, with
+explicit source dispositions for redundant effects/returns and hoisted try. Native
+formatter/compiler results remain required when local tools are unavailable.
+Binary/bundle size and cold-build comparisons require exact,
 comparable hosted artifacts; source counts are not size or speed forecasts.
 <!-- codex-section:end spec.slim-codex-claude-product#verification -->

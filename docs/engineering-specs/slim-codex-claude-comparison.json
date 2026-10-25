@@ -1,7 +1,7 @@
 {
   "schema": "codexbar-product-removal-comparison/v1",
   "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
-  "candidateSourceRevision": "ab357f8d874326331e6a32c0abe0bc2ce310287b",
+  "candidateSourceRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
   "pullRequest": "https://github.com/Jones-Systems/CodexBar/pull/41",
   "baseBranch": "work/test-value-bar-pass2-20261024",
   "method": "Exact committed Git blobs; files include Swift source under Sources and tests under Tests, TestsLinux, TestsPlugin; line count uses bytes.splitlines; lexical Swift Testing @Test declaration counts exclude comments/strings and do not represent parameterized/runtime cases.",
@@ -26,8 +26,8 @@
     "after": {
       "productSwift": {
         "files": 651,
-        "lines": 193236,
-        "bytes": 7944030
+        "lines": 193214,
+        "bytes": 7943892
       },
       "productCHeaders": {
         "files": 1,
@@ -36,8 +36,8 @@
       },
       "testSwift": {
         "files": 734,
-        "lines": 252279,
-        "bytes": 10933846
+        "lines": 252270,
+        "bytes": 10934356
       }
     }
   },
@@ -358,40 +358,53 @@
     "architectureCatalogEntriesAfter": 312,
     "architectureScannerByteIdentical": true,
     "shippedSwiftFilesInspected": 651,
-    "architectureSourceFindings": 0
+    "architectureSourceFindings": 0,
+    "latestCatalogAnchorCheckRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
+    "latestCatalogAnchorCheck": "312 exact anchors match; scanner bytes unchanged; not native scanner execution"
   },
   "checks": {
     "makeCheck": {
       "status": "unavailable",
       "exitCode": 2,
       "reason": "plutil absent",
-      "latestAttemptRevision": "ad4aea4f101ba50a48f38e285d683359f8e81672"
+      "latestAttemptRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b"
     },
     "makeTest": {
       "status": "unavailable",
       "exitCode": 2,
       "reason": "Swift absent; no test executable ran",
-      "latestAttemptRevision": "ad4aea4f101ba50a48f38e285d683359f8e81672"
+      "latestAttemptRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b"
     },
-    "normalAndFullProfileManifests": "pass",
+    "normalAndFullProfileManifests": {
+      "status": "pass",
+      "latestCheckRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
+      "profiles": [
+        "normal",
+        "full"
+      ]
+    },
     "documentationLinks": {
       "status": "pass",
-      "localLinks": 178,
-      "latestAttemptRevision": "ad4aea4f101ba50a48f38e285d683359f8e81672"
+      "localLinks": 181,
+      "latestAttemptRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b"
     },
-    "llmsIndex": "pass",
+    "llmsIndex": {
+      "status": "pass",
+      "latestAttemptRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b"
+    },
     "whitespace": "pass",
     "providerManifestGeneration": {
       "status": "pass",
       "method": "Existing generator --write followed by --check; only one generated Swift doccomment differed; two retained providers",
-      "revision": "f1bae83de761ee383e5845111993671f1ed308cb"
+      "revision": "f1bae83de761ee383e5845111993671f1ed308cb",
+      "latestCheckRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b"
     },
     "codexParserHash": {
       "status": "pass",
       "method": "Existing generator --write followed by --check",
       "value": "56738678d8c0245c",
       "generatedOnlyRepairRevision": "e0575c44592208fa16d0ac71d7b14044c0b49418",
-      "latestCheckRevision": "ad4aea4f101ba50a48f38e285d683359f8e81672",
+      "latestCheckRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
       "latestCheckMethod": "Existing generator --check; value unchanged"
     },
     "portableHarnessFixtures": {
@@ -436,6 +449,11 @@
       ],
       "meaningfulFixtureMethod": "Execute actual checker in contained copies of source/docs; two valid cases and eleven failures for inventory/locale/assets; owned scratch removed",
       "repairRevision": "b0e2069e515ffecd72de920f0aca96547750ab55"
+    },
+    "swiftFormat": {
+      "status": "unavailable locally; automatic CI pending",
+      "repairRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
+      "reason": "No formatter installed; make check stops earlier at missing plutil"
     }
   },
   "hostedEvidence": {
@@ -499,6 +517,20 @@
       "nativeCompatibilityMode": "complete-fingerprint",
       "producerDiscoverySHA256": "67d0307bbff37082f0df4ff1e1a95181e8bacf43d886e13801fd28f72216a49b",
       "qualification": "Prerequisite source only; does not qualify the later product/patch02 head. No remote PR40 merge was performed."
+    },
+    "swiftFormatFailure": {
+      "revision": "1d9787f8b4075068f3282cb723e42170a6e702c3",
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40151412652",
+      "producerJobID": 121044538055,
+      "source": "Root exact-head saved producer log and 210 extracted diagnostic records",
+      "ruleDiagnostics": 210,
+      "filesRequiringFormatting": 65,
+      "filesChecked": 1346,
+      "filesSkipped": 4,
+      "tool": "SwiftFormat 0.61.1",
+      "phase": "lint-macos before compiler/native preflight",
+      "compileResult": "not reached",
+      "currentCandidateResult": "pending automatic CI; not inferred from older Linux or prerequisite results"
     }
   },
   "appSizeAndBuildComparison": {
@@ -914,5 +946,2091 @@
       "make test"
     ],
     "deferredReason": "Three fresh below-threshold admissions, separated by ready source/evidence work, each found shared benchmark.lock busy. No test command or queued wait started. Existing local tool absences also prevent native make check/test. Prior exact-revision check results are retained as historical evidence, not new-head passes."
+  },
+  "countMethodLatest": "Exact committed git cat-file --batch blobs; bytes.splitlines; independent cross-check against per-file format delta.",
+  "swiftFormatRepair": {
+    "baseRevision": "1d9787f8b4075068f3282cb723e42170a6e702c3",
+    "repairRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
+    "diagnosticSource": "run40151412652-format-errors.json supplied by root",
+    "reportedPaths": 65,
+    "reportedDiagnostics": 210,
+    "ruleCounts": {
+      "blankLinesAtEndOfScope": 17,
+      "blankLinesAtStartOfScope": 46,
+      "braces": 2,
+      "consecutiveBlankLines": 3,
+      "docComments": 6,
+      "emptyBraces": 3,
+      "emptyExtensions": 4,
+      "hoistTry": 2,
+      "indent": 58,
+      "redundantAsync": 1,
+      "redundantReturn": 5,
+      "redundantSelf": 1,
+      "redundantStaticSelf": 1,
+      "redundantThrows": 1,
+      "redundantVariable": 2,
+      "trailingCommas": 4,
+      "trailingSpace": 43,
+      "wrap": 8,
+      "wrapPropertyBodies": 3
+    },
+    "coverageDistinction": {
+      "linux": "ci.yml lint -> Scripts/lint.sh lint-linux runs portable, JavaScript and SwiftLint checks; it does not invoke SwiftFormat",
+      "macOS": "swift-build-macos -> lint-macos invokes SwiftFormat Sources Tests --lint using install_lint_tools.sh pinned 0.61.1",
+      "savedLog": "Producer log records SwiftFormat 0.61.1 and 65/1346 files with 4 skipped, before compile/native preflight",
+      "toolVersionDrift": "No evidence of a changed formatter version. Different job check coverage explains why Linux lint success did not establish formatter success."
+    },
+    "preservationProof": {
+      "base": "1d9787f8b4075068f3282cb723e42170a6e702c3",
+      "scopeFiles": 65,
+      "files": [
+        {
+          "path": "Sources/CodexBarWidget/CodexBarWidgetViews.swift",
+          "beforeBlob": "03bbe8f2f1a37290d17faccbfcd6c080ff8180cb",
+          "afterBlob": "7bb98dd08a5cbfd6775354b5472a9a1bf5db54d3",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 49,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 902,
+          "afterLines": 901,
+          "beforeBytes": 34462,
+          "afterBytes": 34461
+        },
+        {
+          "path": "Sources/CodexBarCLI/CLIOptions.swift",
+          "beforeBlob": "c759ed78894629407b38e2efc06a7e78b00e727f",
+          "afterBlob": "4de6435ed2d351d5c3f81d13a002e5bef9dd8fa3",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 67,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 179,
+          "afterLines": 178,
+          "beforeBytes": 5705,
+          "afterBytes": 5704
+        },
+        {
+          "path": "Sources/CodexBarCLI/CLIConfigCommand.swift",
+          "beforeBlob": "b59e5932df5ac19f59e3be80d49bf28afb508178",
+          "afterBlob": "604a83f6d6225492ac2f7a7cd0f95ca5d3d9b329",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 117,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 402,
+          "afterLines": 401,
+          "beforeBytes": 14814,
+          "afterBytes": 14813
+        },
+        {
+          "path": "Sources/CodexBarCLI/CLIHelp.swift",
+          "beforeBlob": "d772402cb0aa0dc1aa0a31c2eedd98468950aa90",
+          "afterBlob": "049f2744d9c02e0dd2733802fccca31fd4b5e517",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 12,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 463,
+          "afterLines": 462,
+          "beforeBytes": 22394,
+          "afterBytes": 22393
+        },
+        {
+          "path": "Sources/CodexBarCLI/CLIUsageCommand.swift",
+          "beforeBlob": "ab31b9e0dc8c6e05e7cc87737aff5e0f0e813338",
+          "afterBlob": "582e580d3acb0ae2eed8eb1a8fb63ead527267b7",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 30,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 696,
+          "afterLines": 695,
+          "beforeBytes": 29033,
+          "afterBytes": 29032
+        },
+        {
+          "path": "Sources/CodexBarCLI/CLIEntry.swift",
+          "beforeBlob": "351429144a3d18ab743caff0493c10db2652c6d1",
+          "afterBlob": "e7b20aa10d56fac6417f9a50a7be076c8bce4d9c",
+          "tokenIdentical": false,
+          "tokenChanges": [
+            {
+              "old": [
+                "var",
+                "descriptors",
+                "="
+              ],
+              "new": [
+                "return"
+              ]
+            },
+            {
+              "old": [
+                "return",
+                "descriptors"
+              ],
+              "new": []
+            }
+          ],
+          "literalCount": 91,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 355,
+          "afterLines": 354,
+          "beforeBytes": 15294,
+          "afterBytes": 15256
+        },
+        {
+          "path": "Sources/CodexBarCLI/CLICostCommand.swift",
+          "beforeBlob": "7dc15139f1d98d59ab81c737006b69061309f0fa",
+          "afterBlob": "06c4e6f3eeda4753ed6d5f4c21fbe8eaee3b4f59",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 98,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 837,
+          "afterLines": 836,
+          "beforeBytes": 33483,
+          "afterBytes": 33482
+        },
+        {
+          "path": "Sources/CodexBarCLI/CLIServeCommand.swift",
+          "beforeBlob": "8dd7d1bf065371a7c3336adbd1f3e8110ad716cc",
+          "afterBlob": "29c70f014b49eee0f59b3aba2cc368b09cac4b8b",
+          "tokenIdentical": false,
+          "tokenChanges": [
+            {
+              "old": [
+                "Self",
+                "."
+              ],
+              "new": []
+            }
+          ],
+          "literalCount": 92,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 1609,
+          "afterLines": 1609,
+          "beforeBytes": 65357,
+          "afterBytes": 65352
+        },
+        {
+          "path": "Sources/CodexBar/StatusItemController+OverviewSubmenus.swift",
+          "beforeBlob": "d0650a71f8fd58b72817fb4bb2cd6460d1275e90",
+          "afterBlob": "e4eb085a39b98819048a683c9f10a2fd08ea3ae7",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 0,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 52,
+          "afterLines": 51,
+          "beforeBytes": 2124,
+          "afterBytes": 2123
+        },
+        {
+          "path": "Sources/CodexBar/MenuCardView+Costs.swift",
+          "beforeBlob": "4b4899ae380ef9e06f90f3b4268e9ce7a46c5531",
+          "afterBlob": "5f646a2a2aa1709852b6f1f659a7693aef1b7d2f",
+          "tokenIdentical": false,
+          "tokenChanges": [
+            {
+              "old": [
+                "return"
+              ],
+              "new": []
+            }
+          ],
+          "literalCount": 46,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 401,
+          "afterLines": 400,
+          "beforeBytes": 15267,
+          "afterBytes": 15259
+        },
+        {
+          "path": "Sources/CodexBar/UsageStore+TokenCost.swift",
+          "beforeBlob": "3cf599c0525b0d7460b8f7ed24c0dd55a46a0a81",
+          "afterBlob": "2c75fea5eb7a161044792471b58f7bfd5e56f69c",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 20,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 418,
+          "afterLines": 417,
+          "beforeBytes": 18308,
+          "afterBytes": 18307
+        },
+        {
+          "path": "Sources/CodexBar/MenuCardView.swift",
+          "beforeBlob": "82a45e5b9a13ac8f2aadd1f9b5c00b0b28f80a2a",
+          "afterBlob": "5aeec6799d09c5983623aae601fba15a1432b512",
+          "tokenIdentical": false,
+          "tokenChanges": [
+            {
+              "old": [
+                "return"
+              ],
+              "new": []
+            }
+          ],
+          "literalCount": 23,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 1372,
+          "afterLines": 1370,
+          "beforeBytes": 58224,
+          "afterBytes": 58195
+        },
+        {
+          "path": "Sources/CodexBar/UsageStore+Refresh.swift",
+          "beforeBlob": "31ef51d4bb4ace6e53fccfeba7a8dde46565a82b",
+          "afterBlob": "e72b730700698e1081155e3eec833db981d13657",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 28,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 1493,
+          "afterLines": 1492,
+          "beforeBytes": 69478,
+          "afterBytes": 69477
+        },
+        {
+          "path": "Sources/CodexBar/SessionQuotaNotifications.swift",
+          "beforeBlob": "f7593ad6c87c1d29910faa8f0d3986e5b8eb7937",
+          "afterBlob": "a4d1dc20771567e3f4352e706e892e279bcc30db",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 26,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 566,
+          "afterLines": 564,
+          "beforeBytes": 22056,
+          "afterBytes": 22054
+        },
+        {
+          "path": "Sources/CodexBar/UsageStore+SessionEquivalents.swift",
+          "beforeBlob": "a1df856c8ad5362c6ad3b6eef2259b5907cdb732",
+          "afterBlob": "5c6492c70a3d94410d8a1ff56873c763921f0fe6",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 23,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 391,
+          "afterLines": 390,
+          "beforeBytes": 17242,
+          "afterBytes": 17241
+        },
+        {
+          "path": "Sources/CodexBar/UsageStore+WidgetSnapshot.swift",
+          "beforeBlob": "0bd0d36f9d790f019782f63ef9b11fb71c5c2b9e",
+          "afterBlob": "728de68a188e37942101cad7f1051d59b9b2bc26",
+          "tokenIdentical": false,
+          "tokenChanges": [
+            {
+              "old": [
+                "return"
+              ],
+              "new": []
+            }
+          ],
+          "literalCount": 22,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 474,
+          "afterLines": 473,
+          "beforeBytes": 21025,
+          "afterBytes": 21017
+        },
+        {
+          "path": "Sources/CodexBar/MenuCardView+ModelHelpers.swift",
+          "beforeBlob": "1f937f8fdbbf8d5f15abeec6ad3a5729f7d7ba9a",
+          "afterBlob": "5dbd4e0fa7328f820e7d2df0f1cce5912d57bd6d",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 11,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 815,
+          "afterLines": 814,
+          "beforeBytes": 32751,
+          "afterBytes": 32750
+        },
+        {
+          "path": "Sources/CodexBar/StatusItemController+Menu.swift",
+          "beforeBlob": "cb689da44064a2c5742cf7b6cbcd269ef49734d7",
+          "afterBlob": "2c85923c991e281b2d783ac797ccb30b1821aa66",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 70,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 1632,
+          "afterLines": 1631,
+          "beforeBytes": 75382,
+          "afterBytes": 75374
+        },
+        {
+          "path": "Tests/CodexBarTests/BoundedChildProcessProofTests.swift",
+          "beforeBlob": "ea8f6c3f2a511e02414d7d0c852f1e766b1d2e53",
+          "afterBlob": "643438b541dfc335a67c940fd8df683d39ff6c83",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 8,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 1,
+          "testAttributesIdentical": true,
+          "beforeLines": 59,
+          "afterLines": 57,
+          "beforeBytes": 2464,
+          "afterBytes": 2462
+        },
+        {
+          "path": "Sources/CodexBar/MenuDescriptor.swift",
+          "beforeBlob": "b12bbd89db1ef4849b419a7afb44342e033961a8",
+          "afterBlob": "e9da1a8a7402273330825323bbf720fd327fb6a9",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 62,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 730,
+          "afterLines": 729,
+          "beforeBytes": 30158,
+          "afterBytes": 30145
+        },
+        {
+          "path": "Tests/CodexBarTests/CodexAccountReconciliationTests.swift",
+          "beforeBlob": "9b66047d3aef92089f05025004b7e27f9755bf01",
+          "afterBlob": "639a4e496efc8714e19cc2cf8c62baad90494462",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 214,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 28,
+          "testAttributesIdentical": true,
+          "beforeLines": 974,
+          "afterLines": 973,
+          "beforeBytes": 44023,
+          "afterBytes": 44022
+        },
+        {
+          "path": "Tests/CodexBarTests/ProviderSettingsDescriptorTests.swift",
+          "beforeBlob": "24ea44e42f32bd8929c9de2b85cb8436a56e6645",
+          "afterBlob": "5419e44607b2d5a8d6ce38025f953b0c69f7e15c",
+          "tokenIdentical": false,
+          "tokenChanges": [
+            {
+              "old": [
+                "}",
+                "extension",
+                "ProviderSettingsDescriptorTests",
+                "{"
+              ],
+              "new": []
+            }
+          ],
+          "literalCount": 30,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 13,
+          "testAttributesIdentical": true,
+          "beforeLines": 332,
+          "afterLines": 328,
+          "beforeBytes": 14636,
+          "afterBytes": 14588
+        },
+        {
+          "path": "Sources/CodexBar/SpendDashboardController.swift",
+          "beforeBlob": "05ac94c7b7275ecb6987cfac783a99644e021534",
+          "afterBlob": "6c00eb734fb419132ee3692d6a9d01cfb09336ff",
+          "tokenIdentical": false,
+          "tokenChanges": [
+            {
+              "old": [
+                "return"
+              ],
+              "new": []
+            }
+          ],
+          "literalCount": 53,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 1825,
+          "afterLines": 1825,
+          "beforeBytes": 80435,
+          "afterBytes": 80428
+        },
+        {
+          "path": "Sources/CodexBarCore/CostUsageFetcher.swift",
+          "beforeBlob": "b6f3e7e7f4024554f40f04a3429febf2d6860103",
+          "afterBlob": "c5855f7d80cc66a6406a4a8c74ebc3dacd4e353f",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 22,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 1441,
+          "afterLines": 1440,
+          "beforeBytes": 62501,
+          "afterBytes": 62500
+        },
+        {
+          "path": "Tests/CodexBarTests/ConfigFileWatcherTests.swift",
+          "beforeBlob": "1d7713b7fc3e76b2620c31f255a749440bce0e12",
+          "afterBlob": "5f6ac8471580557121edeaeb276f40a9916e1f35",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 5,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 1,
+          "testAttributesIdentical": true,
+          "beforeLines": 49,
+          "afterLines": 47,
+          "beforeBytes": 1648,
+          "afterBytes": 1646
+        },
+        {
+          "path": "Tests/CodexBarTests/CLIConfigCommandTests.swift",
+          "beforeBlob": "676750b99eb827fbaee06dc9e2dbb40bc9acc1f2",
+          "afterBlob": "5c14a768a5c26095eb6ca8d86da8f7a6056c541a",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 81,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 14,
+          "testAttributesIdentical": true,
+          "beforeLines": 273,
+          "afterLines": 271,
+          "beforeBytes": 11245,
+          "afterBytes": 11243
+        },
+        {
+          "path": "Tests/CodexBarTests/PaceVisibilityTests.swift",
+          "beforeBlob": "e9f41a36a81b34c686483856ec3d718b880fe635",
+          "afterBlob": "8403391c1efcab1e3582b954962a852fec1a98f1",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 11,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 6,
+          "testAttributesIdentical": true,
+          "beforeLines": 175,
+          "afterLines": 175,
+          "beforeBytes": 6835,
+          "afterBytes": 6831
+        },
+        {
+          "path": "Tests/CodexBarTests/CodexBarConfigMigratorTests.swift",
+          "beforeBlob": "e3fb85bb2eb476089f189dda077c1206c8564dd5",
+          "afterBlob": "6182dfbb42e6085d13137ee9d8444fc3c1dda70b",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 25,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 7,
+          "testAttributesIdentical": true,
+          "beforeLines": 353,
+          "afterLines": 352,
+          "beforeBytes": 14592,
+          "afterBytes": 14592
+        },
+        {
+          "path": "Tests/CodexBarTests/CookieImporterOverrideIsolationTests.swift",
+          "beforeBlob": "7f309eeabcbe6438127f6399623d4af0c54c33bd",
+          "afterBlob": "6736aa45d0073eebdc61254a899ad7f14b66f8ca",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 5,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 1,
+          "testAttributesIdentical": true,
+          "beforeLines": 53,
+          "afterLines": 52,
+          "beforeBytes": 1667,
+          "afterBytes": 1666
+        },
+        {
+          "path": "Tests/CodexBarTests/MenuCardModelTests.swift",
+          "beforeBlob": "33b6b962779130613deababb4fc564d3336d2cd2",
+          "afterBlob": "10dc959297b542e9b2180d8b7d67ed5758da8631",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 44,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 11,
+          "testAttributesIdentical": true,
+          "beforeLines": 483,
+          "afterLines": 482,
+          "beforeBytes": 18213,
+          "afterBytes": 18212
+        },
+        {
+          "path": "Tests/CodexBarTests/SessionEquivalentForecastTests.swift",
+          "beforeBlob": "59ae30f959a221f76f347df3d91e92d6a5879570",
+          "afterBlob": "bfda6cc5127eac987cd4e75a4ed25372842c7278",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 52,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 35,
+          "testAttributesIdentical": true,
+          "beforeLines": 1513,
+          "afterLines": 1512,
+          "beforeBytes": 65705,
+          "afterBytes": 65706
+        },
+        {
+          "path": "Tests/CodexBarTests/RateWindowSyntheticPlaceholderTests.swift",
+          "beforeBlob": "80ee65ea5bc9eb319793997a17714cd185077343",
+          "afterBlob": "33c3c57ca47d57ac0c5d48364168adf14cf372a4",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 8,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 8,
+          "testAttributesIdentical": true,
+          "beforeLines": 142,
+          "afterLines": 141,
+          "beforeBytes": 5912,
+          "afterBytes": 5911
+        },
+        {
+          "path": "Tests/CodexBarTests/UsageStorePlanUtilizationExactFitResetTests.swift",
+          "beforeBlob": "f1e51d42c04a1c32cd9c3ffc7e74aff673a6682a",
+          "afterBlob": "b0b5ca9e75a2eac03667e3850fbe4ab93d28cac9",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 9,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 9,
+          "testAttributesIdentical": true,
+          "beforeLines": 226,
+          "afterLines": 225,
+          "beforeBytes": 10351,
+          "afterBytes": 10350
+        },
+        {
+          "path": "Tests/CodexBarTests/UsageStoreCoverageTests.swift",
+          "beforeBlob": "c9166e2297f2126d50041f86f5385a963fefab3c",
+          "afterBlob": "7dec51d75e37edbf1c8babac6744d7af8c1477c7",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 93,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 23,
+          "testAttributesIdentical": true,
+          "beforeLines": 889,
+          "afterLines": 888,
+          "beforeBytes": 36190,
+          "afterBytes": 36189
+        },
+        {
+          "path": "Tests/CodexBarTests/StatusItemBalanceDisplayTests.swift",
+          "beforeBlob": "e4d00613fbaf81900c2a93b1d2a2e930d6e103b7",
+          "afterBlob": "9c6022da3e2e7b686920b13f687907735a4052d3",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 18,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 6,
+          "testAttributesIdentical": true,
+          "beforeLines": 166,
+          "afterLines": 165,
+          "beforeBytes": 7068,
+          "afterBytes": 7067
+        },
+        {
+          "path": "Tests/CodexBarTests/UsageStoreWidgetSnapshotTests.swift",
+          "beforeBlob": "95f411ada57aeef3476358660c58b1034b996979",
+          "afterBlob": "6c8aa492bd04544def52bc7afcf65518084cb5ea",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 63,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 7,
+          "testAttributesIdentical": true,
+          "beforeLines": 515,
+          "afterLines": 513,
+          "beforeBytes": 23305,
+          "afterBytes": 23303
+        },
+        {
+          "path": "Tests/CodexBarTests/CodexBarWidgetProviderTests.swift",
+          "beforeBlob": "43dc1c951d661ddb89c9e436fc290b1cc3ce55d1",
+          "afterBlob": "ccd3138d51f98fe7b1b451ff4edd8df1e9472690",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 57,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 24,
+          "testAttributesIdentical": true,
+          "beforeLines": 548,
+          "afterLines": 547,
+          "beforeBytes": 22204,
+          "afterBytes": 22203
+        },
+        {
+          "path": "Tests/CodexBarTests/StatusItemExtraUsageMetricTests.swift",
+          "beforeBlob": "4b21dd7434aff0f2bda6d3440cf72f02f294093f",
+          "afterBlob": "ac55b59ae7b0e689ea6b444ac1504e0a13314f8f",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 13,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 4,
+          "testAttributesIdentical": true,
+          "beforeLines": 149,
+          "afterLines": 148,
+          "beforeBytes": 5988,
+          "afterBytes": 5987
+        },
+        {
+          "path": "Tests/CodexBarTests/StatusMenuOverviewScrollTests.swift",
+          "beforeBlob": "c26bc854bd49e1e81c0120cf31f8d9801106ba42",
+          "afterBlob": "c9dd7d277a868c563b9c7a9b7b3f9f1b96e25cee",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 18,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 10,
+          "testAttributesIdentical": true,
+          "beforeLines": 262,
+          "afterLines": 261,
+          "beforeBytes": 10553,
+          "afterBytes": 10552
+        },
+        {
+          "path": "Tests/CodexBarTests/SharedTokenPublicationTests.swift",
+          "beforeBlob": "11aa1d0f137e44d13a94a2fe4785bf50108f9b16",
+          "afterBlob": "cfa4e76e7cdfe23a70c580e51f670520ffaf5ec0",
+          "tokenIdentical": false,
+          "tokenChanges": [
+            {
+              "old": [
+                "throws"
+              ],
+              "new": []
+            }
+          ],
+          "literalCount": 7,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 2,
+          "testAttributesIdentical": true,
+          "beforeLines": 97,
+          "afterLines": 97,
+          "beforeBytes": 4391,
+          "afterBytes": 4394
+        },
+        {
+          "path": "Tests/CodexBarTests/CLISnapshotTests.swift",
+          "beforeBlob": "2b7e3854e6ba6fe63b9f0332930bbd20e3539e0b",
+          "afterBlob": "385ce81b3f99df1372844471ea2e92ae8fa02127",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 138,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 23,
+          "testAttributesIdentical": true,
+          "beforeLines": 708,
+          "afterLines": 706,
+          "beforeBytes": 27108,
+          "afterBytes": 27106
+        },
+        {
+          "path": "Tests/CodexBarTests/DashboardSnapshotBuilderTests.swift",
+          "beforeBlob": "283bca5bc02a721bb4ca0c18fe8f712ba114d905",
+          "afterBlob": "7aedff928d5b550c3ddba7a23ed41c6c5fa25cc4",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 176,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 16,
+          "testAttributesIdentical": true,
+          "beforeLines": 672,
+          "afterLines": 671,
+          "beforeBytes": 27415,
+          "afterBytes": 27414
+        },
+        {
+          "path": "Tests/CodexBarTests/TextParsingTests.swift",
+          "beforeBlob": "03532349075267d4c76578ba42d9726d9e09abd2",
+          "afterBlob": "f6ae3c3489518c839974420865a1f43dafc11a55",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 8,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 1,
+          "testAttributesIdentical": true,
+          "beforeLines": 24,
+          "afterLines": 23,
+          "beforeBytes": 834,
+          "afterBytes": 833
+        },
+        {
+          "path": "Tests/CodexBarTests/MiniMaxLogRedactorTests.swift",
+          "beforeBlob": "4895f547c62b570fe182e7da87d1444d74b14aa1",
+          "afterBlob": "4c3d6a1cc922338f89c0646ed63d8e18e1871e08",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 26,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 7,
+          "testAttributesIdentical": true,
+          "beforeLines": 76,
+          "afterLines": 75,
+          "beforeBytes": 2669,
+          "afterBytes": 2668
+        },
+        {
+          "path": "Tests/CodexBarTests/MenuBarMetricWindowResolverTests.swift",
+          "beforeBlob": "63e60aa8c108707f0c8219babb2b2b41c866b613",
+          "afterBlob": "8f8af1c5616be51b66ca45fc5d39f16a21cec77f",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 15,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 8,
+          "testAttributesIdentical": true,
+          "beforeLines": 198,
+          "afterLines": 197,
+          "beforeBytes": 6777,
+          "afterBytes": 6776
+        },
+        {
+          "path": "Tests/CodexBarTests/UsageStorePlanUtilizationCelebrationTests.swift",
+          "beforeBlob": "50190d39712fddf2a71136129a0e4f92fc932c90",
+          "afterBlob": "c4986b426dc770510f6e29aefb0e0e12f12de7f8",
+          "tokenIdentical": false,
+          "tokenChanges": [
+            {
+              "old": [
+                "async"
+              ],
+              "new": []
+            }
+          ],
+          "literalCount": 70,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 24,
+          "testAttributesIdentical": true,
+          "beforeLines": 1378,
+          "afterLines": 1378,
+          "beforeBytes": 58246,
+          "afterBytes": 58240
+        },
+        {
+          "path": "Tests/CodexBarTests/UsageStoreHighestUsageTests.swift",
+          "beforeBlob": "cab8f9b439d481cbe083e5f8cfe66950438b613e",
+          "afterBlob": "961b0348636c44ff90c7a48d96592b259f407912",
+          "tokenIdentical": false,
+          "tokenChanges": [
+            {
+              "old": [
+                "extension",
+                "UsageStoreHighestUsageTests",
+                "{",
+                "}",
+                "extension",
+                "UsageStoreHighestUsageTests",
+                "{",
+                "}"
+              ],
+              "new": []
+            }
+          ],
+          "literalCount": 2,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 2,
+          "testAttributesIdentical": true,
+          "beforeLines": 88,
+          "afterLines": 82,
+          "beforeBytes": 3539,
+          "afterBytes": 3453
+        },
+        {
+          "path": "Tests/CodexBarTests/ResetCountdownDayRolloverTests.swift",
+          "beforeBlob": "eb944fa475797f5ea06abd57c9b539ab226a034f",
+          "afterBlob": "fc456e74eff35d05d6f7a96e01fcccb63512568d",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 0,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 12,
+          "afterLines": 11,
+          "beforeBytes": 294,
+          "afterBytes": 293
+        },
+        {
+          "path": "Tests/CodexBarTests/AdminAPIUsageLocalDaySelectionTests.swift",
+          "beforeBlob": "8c72188631f43d386aa17be2500e2585c162e271",
+          "afterBlob": "e8c1ec0f8ce640dcea0ed56c57b2945857bae1e5",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 12,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 2,
+          "testAttributesIdentical": true,
+          "beforeLines": 113,
+          "afterLines": 112,
+          "beforeBytes": 4729,
+          "afterBytes": 4728
+        },
+        {
+          "path": "Tests/CodexBarTests/AccountMenuLayoutPlannerTests.swift",
+          "beforeBlob": "1294a00a3bdff0e0b5243921551149a0e8c226ce",
+          "afterBlob": "fa0eed965ce4854ec55530d1c202d6fe382acb43",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 64,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 18,
+          "testAttributesIdentical": true,
+          "beforeLines": 429,
+          "afterLines": 427,
+          "beforeBytes": 19356,
+          "afterBytes": 19354
+        },
+        {
+          "path": "Tests/CodexBarTests/SharedTokenMixOverflowTests.swift",
+          "beforeBlob": "e42554d0eeaa8abacb1310af6161eef72cd5640c",
+          "afterBlob": "f693e52bef9c8a521f34e82f0c29b94e9bb092df",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 1,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 1,
+          "testAttributesIdentical": true,
+          "beforeLines": 27,
+          "afterLines": 23,
+          "beforeBytes": 975,
+          "afterBytes": 971
+        },
+        {
+          "path": "Tests/CodexBarTests/ProviderArchitectureGatekeeperTests.swift",
+          "beforeBlob": "c873cde423658b8a82bc7012620bf76fa6cf725f",
+          "afterBlob": "39b77f172fb8d8a00996ad85b17a7ed3632d91ba",
+          "tokenIdentical": false,
+          "tokenChanges": [
+            {
+              "old": [
+                "440"
+              ],
+              "new": [
+                "438"
+              ]
+            },
+            {
+              "old": [
+                "1112"
+              ],
+              "new": [
+                "1111"
+              ]
+            },
+            {
+              "old": [
+                "873"
+              ],
+              "new": [
+                "872"
+              ]
+            },
+            {
+              "old": [
+                "881"
+              ],
+              "new": [
+                "880"
+              ]
+            },
+            {
+              "old": [
+                "883"
+              ],
+              "new": [
+                "882"
+              ]
+            },
+            {
+              "old": [
+                "1415"
+              ],
+              "new": [
+                "1414"
+              ]
+            },
+            {
+              "old": [
+                "117"
+              ],
+              "new": [
+                "116"
+              ]
+            },
+            {
+              "old": [
+                "308"
+              ],
+              "new": [
+                "307"
+              ]
+            },
+            {
+              "old": [
+                "537"
+              ],
+              "new": [
+                "536"
+              ]
+            },
+            {
+              "old": [
+                "699"
+              ],
+              "new": [
+                "698"
+              ]
+            },
+            {
+              "old": [
+                "789"
+              ],
+              "new": [
+                "788"
+              ]
+            },
+            {
+              "old": [
+                "474"
+              ],
+              "new": [
+                "473"
+              ]
+            },
+            {
+              "old": [
+                "1106"
+              ],
+              "new": [
+                "1104"
+              ]
+            },
+            {
+              "old": [
+                "1178"
+              ],
+              "new": [
+                "1176"
+              ]
+            },
+            {
+              "old": [
+                "1194"
+              ],
+              "new": [
+                "1192"
+              ]
+            },
+            {
+              "old": [],
+              "new": [
+                ","
+              ]
+            },
+            {
+              "old": [
+                "638"
+              ],
+              "new": [
+                "637"
+              ]
+            },
+            {
+              "old": [
+                "694"
+              ],
+              "new": [
+                "693"
+              ]
+            },
+            {
+              "old": [],
+              "new": [
+                ","
+              ]
+            },
+            {
+              "old": [
+                "431"
+              ],
+              "new": [
+                "429"
+              ]
+            },
+            {
+              "old": [
+                "1145"
+              ],
+              "new": [
+                "1144"
+              ]
+            },
+            {
+              "old": [
+                "1158"
+              ],
+              "new": [
+                "1157"
+              ]
+            },
+            {
+              "old": [
+                "795"
+              ],
+              "new": [
+                "794"
+              ]
+            },
+            {
+              "old": [
+                "814"
+              ],
+              "new": [
+                "813"
+              ]
+            },
+            {
+              "old": [
+                "943"
+              ],
+              "new": [
+                "942"
+              ]
+            },
+            {
+              "old": [
+                "1292"
+              ],
+              "new": [
+                "1291"
+              ]
+            },
+            {
+              "old": [
+                "1324"
+              ],
+              "new": [
+                "1323"
+              ]
+            },
+            {
+              "old": [
+                "1340"
+              ],
+              "new": [
+                "1339"
+              ]
+            },
+            {
+              "old": [
+                "1416"
+              ],
+              "new": [
+                "1415"
+              ]
+            },
+            {
+              "old": [
+                "48"
+              ],
+              "new": [
+                "47"
+              ]
+            },
+            {
+              "old": [],
+              "new": [
+                ","
+              ]
+            },
+            {
+              "old": [],
+              "new": [
+                ","
+              ]
+            },
+            {
+              "old": [
+                "\"codex@5\""
+              ],
+              "new": [
+                "\"codex@4\""
+              ]
+            },
+            {
+              "old": [
+                "398"
+              ],
+              "new": [
+                "397"
+              ]
+            },
+            {
+              "old": [
+                "401"
+              ],
+              "new": [
+                "400"
+              ]
+            },
+            {
+              "old": [
+                "420"
+              ],
+              "new": [
+                "419"
+              ]
+            },
+            {
+              "old": [
+                "454"
+              ],
+              "new": [
+                "453"
+              ]
+            }
+          ],
+          "literalCount": 1975,
+          "literalBytesIdentical": false,
+          "functionNamesIdentical": true,
+          "testAttributes": 39,
+          "testAttributesIdentical": true,
+          "beforeLines": 3839,
+          "afterLines": 3884,
+          "beforeBytes": 201820,
+          "afterBytes": 202536
+        },
+        {
+          "path": "Tests/CodexBarTests/CLIOutputTests.swift",
+          "beforeBlob": "5bc483086cc0b05582a2a071921ea208733a21bf",
+          "afterBlob": "3dac9144b681ef5ca485d755555166fedd943709",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 69,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 12,
+          "testAttributesIdentical": true,
+          "beforeLines": 188,
+          "afterLines": 187,
+          "beforeBytes": 7783,
+          "afterBytes": 7782
+        },
+        {
+          "path": "Tests/CodexBarTests/PlanUtilizationHistoryChartMenuViewTests.swift",
+          "beforeBlob": "c85567619ad5bf89325614188d9b83699444dd77",
+          "afterBlob": "1064982b516f5dded6e773d9c948b50ff7c9a7c2",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 6,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 3,
+          "testAttributesIdentical": true,
+          "beforeLines": 90,
+          "afterLines": 88,
+          "beforeBytes": 3138,
+          "afterBytes": 3136
+        },
+        {
+          "path": "Tests/CodexBarTests/RPCChildProcessTeardownTests.swift",
+          "beforeBlob": "19e65efedf54c1d1b520b548db95748dc4890cc3",
+          "afterBlob": "d206f4360ef0b351a5bd3a3a96a78ab343f95f31",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 14,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 4,
+          "testAttributesIdentical": true,
+          "beforeLines": 146,
+          "afterLines": 145,
+          "beforeBytes": 5358,
+          "afterBytes": 5357
+        },
+        {
+          "path": "Tests/CodexBarTests/StatusMenuSwitcherWarmupTests.swift",
+          "beforeBlob": "aeba33ac647fc67299791bafb88a6ffa27a0d210",
+          "afterBlob": "fc5a13603bf24ca55b5324e3daf90c283501118e",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 6,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 164,
+          "afterLines": 164,
+          "beforeBytes": 8054,
+          "afterBytes": 8026
+        },
+        {
+          "path": "Tests/CodexBarTests/AppGroupSupportTests.swift",
+          "beforeBlob": "03dcc7cfcff328575fe874458fa5eef5f6c019b6",
+          "afterBlob": "163e460b994982641514f9c7d64af012e2387696",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 38,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 7,
+          "testAttributesIdentical": true,
+          "beforeLines": 263,
+          "afterLines": 261,
+          "beforeBytes": 10775,
+          "afterBytes": 10773
+        },
+        {
+          "path": "Tests/CodexBarTests/StatusMenuPersistentRefreshTests.swift",
+          "beforeBlob": "c8a9c16ccc920300531105bc1efc31560465c5b5",
+          "afterBlob": "155cfa6e2ab8c5a73b1e800e0b92706aaa4968f8",
+          "tokenIdentical": false,
+          "tokenChanges": [
+            {
+              "old": [],
+              "new": [
+                "try"
+              ]
+            },
+            {
+              "old": [
+                "try"
+              ],
+              "new": []
+            }
+          ],
+          "literalCount": 95,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 39,
+          "testAttributesIdentical": true,
+          "beforeLines": 1631,
+          "afterLines": 1631,
+          "beforeBytes": 71706,
+          "afterBytes": 71706
+        },
+        {
+          "path": "Tests/CodexBarTests/CodexCombinedMetricHighestUsageTests.swift",
+          "beforeBlob": "e0566331b70a5b97f9a49dd596cc75cb5e04c223",
+          "afterBlob": "9a80a73abb36c3044152f186b0993e81980f7550",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 11,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 9,
+          "testAttributesIdentical": true,
+          "beforeLines": 316,
+          "afterLines": 315,
+          "beforeBytes": 13436,
+          "afterBytes": 13435
+        },
+        {
+          "path": "Tests/CodexBarTests/CodexCredentialFileAccessTests.swift",
+          "beforeBlob": "9bf430af28dd619eb46a212033ecc924ee3751d2",
+          "afterBlob": "5b9ebe629e15b72e345852fb4c8b92803f9e38fb",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 81,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 9,
+          "testAttributesIdentical": true,
+          "beforeLines": 287,
+          "afterLines": 286,
+          "beforeBytes": 15544,
+          "afterBytes": 15543
+        },
+        {
+          "path": "Tests/CodexBarTests/ClaudeNativeProfileMenuSelectionTests.swift",
+          "beforeBlob": "2d68f3ef3f5817f8ccae72180252ccf9499f06d8",
+          "afterBlob": "20cd52cdec41a14a1d9d53c22d138829a4de3f5b",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 50,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 8,
+          "testAttributesIdentical": true,
+          "beforeLines": 246,
+          "afterLines": 245,
+          "beforeBytes": 12595,
+          "afterBytes": 12594
+        },
+        {
+          "path": "Tests/CodexBarTests/HistoricalUsagePaceBackfillAuthorityTests.swift",
+          "beforeBlob": "d9252670d8a35dc7a49ab1907dcd430c430c13ad",
+          "afterBlob": "4c05319740a6b0aca0959191c7bffa988d67918f",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 35,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 16,
+          "testAttributesIdentical": true,
+          "beforeLines": 692,
+          "afterLines": 692,
+          "beforeBytes": 29089,
+          "afterBytes": 29093
+        },
+        {
+          "path": "Sources/CodexBar/Config/CodexBarConfigMigrator.swift",
+          "beforeBlob": "0704dde94a0f934ca001a807a5f297d490b9b0fa",
+          "afterBlob": "930b01ecd751f96293d2dc78477277277b48042b",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 19,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 333,
+          "afterLines": 332,
+          "beforeBytes": 12036,
+          "afterBytes": 12035
+        },
+        {
+          "path": "Tests/CodexBarTests/Jones/JonesFrameworkIsolationTests.swift",
+          "beforeBlob": "a6f21c764f022c8e006324ed4967fb310385c599",
+          "afterBlob": "b13edf39a081af749689d968a1f847294a36ac48",
+          "tokenIdentical": true,
+          "tokenChanges": [],
+          "literalCount": 44,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 9,
+          "testAttributesIdentical": true,
+          "beforeLines": 175,
+          "afterLines": 174,
+          "beforeBytes": 7775,
+          "afterBytes": 7774
+        },
+        {
+          "path": "Sources/CodexBarCore/Providers/ProviderFetchPlan.swift",
+          "beforeBlob": "a314c89004fef9c2b4ec844d6c36bb2edafe39ee",
+          "afterBlob": "fa49f19eb6ae2e3429d5fe347fbc9d640a20246b",
+          "tokenIdentical": false,
+          "tokenChanges": [
+            {
+              "old": [
+                "return"
+              ],
+              "new": []
+            }
+          ],
+          "literalCount": 9,
+          "literalBytesIdentical": true,
+          "functionNamesIdentical": true,
+          "testAttributes": 0,
+          "testAttributesIdentical": true,
+          "beforeLines": 419,
+          "afterLines": 419,
+          "beforeBytes": 18069,
+          "afterBytes": 18062
+        }
+      ],
+      "limitations": [
+        "Source-only Swift lexical scanner, not Swift parser/AST, formatter or compilation. Complete literal tokens include interpolation and raw/multiline delimiters."
+      ],
+      "tokenIdenticalFiles": 52,
+      "literalIdenticalFiles": 64,
+      "testAttributes": 467,
+      "catalog": {
+        "entries": 312,
+        "allCurrentAnchorsMatch": true,
+        "scannerBodyByteIdentical": true,
+        "semanticFieldsPreserved": true,
+        "lineAndFingerprintChanges": {
+          "entries": 312,
+          "lineAnchorChanges": [
+            {
+              "path": "Sources/CodexBar/SessionQuotaNotifications.swift",
+              "oldLine": 440,
+              "newLine": 438,
+              "anchor": "let removedState = self.sessionQuotaTransitionStates.removeValue(forKey: .codex)"
+            },
+            {
+              "path": "Sources/CodexBar/StatusItemController+Menu.swift",
+              "oldLine": 1112,
+              "newLine": 1111,
+              "anchor": "controller.refreshOpenMenuIfStillVisible(menu, provider: .codex)"
+            },
+            {
+              "path": "Sources/CodexBar/UsageStore+Refresh.swift",
+              "oldLine": 873,
+              "newLine": 872,
+              "anchor": "let snapshotEmail = CodexIdentityResolver.normalizeEmail(snapshot.accountEmail(for: .codex)),"
+            },
+            {
+              "path": "Sources/CodexBar/UsageStore+Refresh.swift",
+              "oldLine": 881,
+              "newLine": 880,
+              "anchor": "let identity = snapshot.identity(for: .codex)"
+            },
+            {
+              "path": "Sources/CodexBar/UsageStore+Refresh.swift",
+              "oldLine": 883,
+              "newLine": 882,
+              "anchor": "providerID: .codex,"
+            },
+            {
+              "path": "Sources/CodexBar/UsageStore+Refresh.swift",
+              "oldLine": 1415,
+              "newLine": 1414,
+              "anchor": "let currentAccount = self.uniqueTokenAccount(provider: .claude, accountID: fetchedAccount.id),"
+            },
+            {
+              "path": "Sources/CodexBar/Config/CodexBarConfigMigrator.swift",
+              "oldLine": 117,
+              "newLine": 116,
+              "anchor": "(.codex, \"codex-cookie\", stores.codexCookieStore.loadCookieHeader),"
+            },
+            {
+              "path": "Sources/CodexBar/MenuCardView+Costs.swift",
+              "oldLine": 308,
+              "newLine": 307,
+              "anchor": "if style == .claude {"
+            },
+            {
+              "path": "Sources/CodexBar/MenuCardView+ModelHelpers.swift",
+              "oldLine": 537,
+              "newLine": 536,
+              "anchor": "input.provider == .codex &&"
+            },
+            {
+              "path": "Sources/CodexBar/MenuCardView+ModelHelpers.swift",
+              "oldLine": 699,
+              "newLine": 698,
+              "anchor": "if input.provider == .codex, !input.showOptionalCreditsAndExtraUsage {"
+            },
+            {
+              "path": "Sources/CodexBar/MenuCardView+ModelHelpers.swift",
+              "oldLine": 789,
+              "newLine": 788,
+              "anchor": "if provider == .claude, window.windowMinutes != 10080 {"
+            },
+            {
+              "path": "Sources/CodexBar/MenuCardView.swift",
+              "oldLine": 474,
+              "newLine": 473,
+              "anchor": "if self.provider != .codex || self.showsCodexHint,"
+            },
+            {
+              "path": "Sources/CodexBar/MenuCardView.swift",
+              "oldLine": 1106,
+              "newLine": 1104,
+              "anchor": "let cleaned = if provider == .codex {"
+            },
+            {
+              "path": "Sources/CodexBar/MenuCardView.swift",
+              "oldLine": 1178,
+              "newLine": 1176,
+              "anchor": "if input.provider == .codex, let codexProjection = input.codexProjection {"
+            },
+            {
+              "path": "Sources/CodexBar/MenuCardView.swift",
+              "oldLine": 1194,
+              "newLine": 1192,
+              "anchor": "if input.provider != .codex, let weekly = snapshot.secondary {"
+            },
+            {
+              "path": "Sources/CodexBar/MenuDescriptor.swift",
+              "oldLine": 638,
+              "newLine": 637,
+              "anchor": "let primaryLabel = if provider == .codex {"
+            },
+            {
+              "path": "Sources/CodexBar/MenuDescriptor.swift",
+              "oldLine": 694,
+              "newLine": 693,
+              "anchor": "let cleaned = if provider == .codex {"
+            },
+            {
+              "path": "Sources/CodexBar/SessionQuotaNotifications.swift",
+              "oldLine": 431,
+              "newLine": 429,
+              "anchor": "if provider == .codex,"
+            },
+            {
+              "path": "Sources/CodexBar/StatusItemController+Menu.swift",
+              "oldLine": 1145,
+              "newLine": 1144,
+              "anchor": "return .provider((self.resolvedMenuProvider(enabledProviders: enabledProviders) ?? .codex).instanceID)"
+            },
+            {
+              "path": "Sources/CodexBar/StatusItemController+Menu.swift",
+              "oldLine": 1158,
+              "newLine": 1157,
+              "anchor": "return self.store.enabledFirstPartyProvidersForDisplay().first ?? .codex"
+            },
+            {
+              "path": "Sources/CodexBar/UsageStore+Refresh.swift",
+              "oldLine": 795,
+              "newLine": 794,
+              "anchor": "if provider == .codex, let expectedGuard = context.codexExpectedGuard {"
+            },
+            {
+              "path": "Sources/CodexBar/UsageStore+Refresh.swift",
+              "oldLine": 814,
+              "newLine": 813,
+              "anchor": "guard provider == .codex, let expectedGuard else { return }"
+            },
+            {
+              "path": "Sources/CodexBar/UsageStore+Refresh.swift",
+              "oldLine": 943,
+              "newLine": 942,
+              "anchor": "guard provider == .claude, !hasSelectedTokenAccount else { return false }"
+            },
+            {
+              "path": "Sources/CodexBar/UsageStore+Refresh.swift",
+              "oldLine": 1292,
+              "newLine": 1291,
+              "anchor": "if provider == .claude,"
+            },
+            {
+              "path": "Sources/CodexBar/UsageStore+Refresh.swift",
+              "oldLine": 1324,
+              "newLine": 1323,
+              "anchor": "if provider == .claude,"
+            },
+            {
+              "path": "Sources/CodexBar/UsageStore+Refresh.swift",
+              "oldLine": 1340,
+              "newLine": 1339,
+              "anchor": "if provider == .claude,"
+            },
+            {
+              "path": "Sources/CodexBar/UsageStore+Refresh.swift",
+              "oldLine": 1416,
+              "newLine": 1415,
+              "anchor": "cached.cacheKey == self.tokenAccountSnapshotCacheKey(provider: .claude, account: currentAccount)"
+            },
+            {
+              "path": "Sources/CodexBar/UsageStore+SessionEquivalents.swift",
+              "oldLine": 48,
+              "newLine": 47,
+              "anchor": "if provider == .claude {"
+            },
+            {
+              "path": "Sources/CodexBar/UsageStore+TokenCost.swift",
+              "oldLine": 398,
+              "newLine": 397,
+              "anchor": "self.tokenFailureGates[.codex]?.reset()"
+            },
+            {
+              "path": "Sources/CodexBar/UsageStore+WidgetSnapshot.swift",
+              "oldLine": 401,
+              "newLine": 400,
+              "anchor": "if provider == .codex {"
+            },
+            {
+              "path": "Sources/CodexBar/UsageStore+WidgetSnapshot.swift",
+              "oldLine": 420,
+              "newLine": 419,
+              "anchor": "if provider == .claude,"
+            },
+            {
+              "path": "Sources/CodexBar/UsageStore+WidgetSnapshot.swift",
+              "oldLine": 454,
+              "newLine": 453,
+              "anchor": "if provider == .claude, self.settings.claudeModelScopedWeeklyUsageVisible {"
+            }
+          ],
+          "fingerprintChanges": [
+            {
+              "path": "Sources/CodexBar/UsageStore+TokenCost.swift",
+              "oldLine": 262,
+              "newLine": 262,
+              "anchor": "return provider == .codex && self.codexCostCatchUpActivity?.phase == .indexing",
+              "oldFingerprint": [
+                "codex@0",
+                "codex@5"
+              ],
+              "newFingerprint": [
+                "codex@0",
+                "codex@4"
+              ]
+            }
+          ],
+          "method": "Map all exact anchor/reference source lines from previously inspected catalogue through whitespace-only equal lines; count and provider occurrence order retained. Source-only evidence, not native scanner execution."
+        }
+      }
+    },
+    "semanticReview": [
+      {
+        "path": "Sources/CodexBarCLI/CLIEntry.swift",
+        "change": "Return command descriptor array directly",
+        "reason": "The local variable is neither mutated nor used between initialization and return; array contents/evaluation order unchanged."
+      },
+      {
+        "path": "Sources/CodexBarCLI/CLIServeCommand.swift",
+        "change": "Remove redundant static Self qualification on forwarding call",
+        "reason": "Same static overload lookup; no local shadowing. Closure arguments and await remain identical."
+      },
+      {
+        "paths": [
+          "Sources/CodexBar/MenuCardView+Costs.swift",
+          "Sources/CodexBar/MenuCardView.swift",
+          "Sources/CodexBar/UsageStore+WidgetSnapshot.swift",
+          "Sources/CodexBar/SpendDashboardController.swift",
+          "Sources/CodexBarCore/Providers/ProviderFetchPlan.swift"
+        ],
+        "change": "Remove five redundant return keywords",
+        "reason": "Single expression bodies / single-case switch expression retain exact expression tokens and result values."
+      },
+      {
+        "paths": [
+          "Tests/CodexBarTests/ProviderSettingsDescriptorTests.swift",
+          "Tests/CodexBarTests/UsageStoreHighestUsageTests.swift"
+        ],
+        "change": "Remove three empty nonconforming extensions",
+        "reason": "No members, conformances, attributes or generic constraints. All nonempty extensions, function names and test attributes remain."
+      },
+      {
+        "path": "Tests/CodexBarTests/SharedTokenPublicationTests.swift",
+        "change": "Remove unused throws effect",
+        "reason": "The async test body has no try/throw. Its await, assertions, arguments and body tokens are unchanged."
+      },
+      {
+        "path": "Tests/CodexBarTests/UsageStorePlanUtilizationCelebrationTests.swift",
+        "change": "Remove unused async effect",
+        "reason": "The MainActor test has no await/async-let or asynchronous body work; actor attribute and body tokens unchanged."
+      },
+      {
+        "path": "Tests/CodexBarTests/StatusMenuPersistentRefreshTests.swift",
+        "change": "Hoist try from sole throwing ProviderDetailSection argument to containing UsageSnapshot expression",
+        "reason": "The same initializer can throw and propagates the same error before UsageSnapshot construction; argument evaluation order/tokens remain."
+      },
+      {
+        "path": "Tests/CodexBarTests/ProviderArchitectureGatekeeperTests.swift",
+        "change": "Wrap four arrays with trailing commas; reanchor 32 line numbers and one relative fingerprint offset",
+        "reason": "All 312 anchors match current source. Entry identity, provider counts/order, reasons and scanner body are preserved. codex@5 becomes codex@4 solely because one blank inside that existing construct was removed."
+      }
+    ],
+    "literalBlankLineDiagnostics": {
+      "diagnostics": 82,
+      "files": [
+        "Sources/CodexBarCLI/CLIHelp.swift",
+        "Tests/CodexBarTests/RPCChildProcessTeardownTests.swift"
+      ],
+      "observation": "Paired indent/trailingSpace reports point to already-empty lines within multiline help/script literals. Raw literal tokens are preserved byte for byte; source diagnostics alone cannot establish whether paired reports persist after surrounding normalization. Actual pinned formatter revalidation is required.",
+      "nativeRevalidation": "unavailable locally; no pass claimed"
+    },
+    "localChecks": [
+      {
+        "name": "parser-hash",
+        "command": [
+          "bash",
+          "Scripts/regenerate-codex-parser-hash.sh",
+          "--check"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:03:41Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 46.09,
+              "cpu_used_percent": 19.49,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.3137,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 1.6
+            },
+            "summary": "CPU 19.49% used; 46.09 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "reason": null
+      },
+      {
+        "name": "provider-manifests",
+        "command": [
+          "bash",
+          "Scripts/regenerate-provider-manifests.sh",
+          "--check"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:03:41Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 46.09,
+              "cpu_used_percent": 12.58,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.3137,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 1.85
+            },
+            "summary": "CPU 12.58% used; 46.09 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "reason": null
+      },
+      {
+        "name": "normal-profile",
+        "command": [
+          "/usr/bin/python3",
+          "-B",
+          "Scripts/test_profiles.py",
+          "validate"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:03:41Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 46.08,
+              "cpu_used_percent": 8.41,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.3137,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 1.85
+            },
+            "summary": "CPU 8.41% used; 46.08 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "reason": null
+      },
+      {
+        "name": "full-profile",
+        "command": [
+          "/usr/bin/python3",
+          "-B",
+          "Scripts/test_profiles.py",
+          "validate"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:03:42Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 46.09,
+              "cpu_used_percent": 10.28,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.3137,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 1.85
+            },
+            "summary": "CPU 10.28% used; 46.09 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "reason": null
+      },
+      {
+        "name": "make-check",
+        "command": [
+          "make",
+          "check"
+        ],
+        "status": "unavailable",
+        "exitCode": 2,
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:03:42Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 46.09,
+              "cpu_used_percent": 15.09,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.2988,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 1.85
+            },
+            "summary": "CPU 15.09% used; 46.09 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "reason": "plutil absent before any installer"
+      },
+      {
+        "name": "make-test",
+        "command": [
+          "make",
+          "test"
+        ],
+        "status": "unavailable",
+        "exitCode": 2,
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:03:42Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 46.1,
+              "cpu_used_percent": 16.51,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.2988,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 1.85
+            },
+            "summary": "CPU 16.51% used; 46.10 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "reason": "Swift absent; no native executable or compiler ran"
+      }
+    ],
+    "retainedSourceAndTests": {
+      "testDeclarations": 6544,
+      "editedFileTestDeclarations": 467,
+      "functionNamesAndTestAttributesUnchanged": true,
+      "literalBytesIdenticalFiles": 64,
+      "tokenIdenticalFiles": 52,
+      "onlyChangedLiteral": "Architecture metadata codex@5 -> codex@4; no fixture/user-visible string changed",
+      "costRegressionExactBlobs": 60,
+      "criticalHistoryExactBlobs": 4,
+      "sharedProcessSourceFilesUnchanged": 7,
+      "noFixtureFilesChanged": true,
+      "accountingScaleOrLimitChanges": false,
+      "reportedTTYTestFiles": "Whitespace changed, so exact old test-file blob identity is not claimed; script literals and code tokens remain identical."
+    },
+    "incomingImplementationPreservation": {
+      "nativeArtifactFingerprintFilesUnchanged": true,
+      "allHarnessScriptsAndWorkflowsUnchangedFrom": "1d9787f8b4075068f3282cb723e42170a6e702c3",
+      "patch01AndPatch02ConsumptionProofPreserved": true,
+      "normalNightlyScheduleUnchanged": true
+    },
+    "nativeToolsUnavailable": [
+      "Swift",
+      "plutil",
+      "SwiftFormat",
+      "SwiftLint"
+    ],
+    "nextGate": "Normal automatic exact-head macOS formatter, producer compilation/native preflight and both execution shards plus applicable Linux/aggregate checks. Root owns watching; no manual rerun dispatched.",
+    "documentationChecks": [
+      {
+        "name": "documentation-links",
+        "command": [
+          "node",
+          "Scripts/check-documentation-links.mjs"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "output": "documentation links OK: 181 local links\n",
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:06:17Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 45.89,
+              "cpu_used_percent": 9.35,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.2606,
+              "sampled_steal_percent": 0.0,
+              "cpu_psi_some_avg10_percent": 1.04
+            },
+            "summary": "CPU 9.35% used; 45.89 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        }
+      },
+      {
+        "name": "llms-index",
+        "command": [
+          "node",
+          "Scripts/generate-llms.mjs",
+          "--check"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "output": "llms index OK: docs/llms.txt\n",
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:06:18Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 45.91,
+              "cpu_used_percent": 16.93,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.2606,
+              "sampled_steal_percent": 0.313,
+              "cpu_psi_some_avg10_percent": 1.04
+            },
+            "summary": "CPU 16.93% used; 45.91 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        }
+      }
+    ]
   }
 }

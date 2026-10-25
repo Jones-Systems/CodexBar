@@ -299,13 +299,65 @@ not merge a remote PR, activate nightly scheduling or establish native/app-size
 success. Owned check scratch is removed after evidence preservation; the frozen
 sibling transfer remains intact.
 
-Exact committed-blob [comparison](../engineering-specs/slim-codex-claude-comparison.json):
+Root's replacement qualification at `1d9787f8b4075068f3282cb723e42170a6e702c3`
+failed SwiftFormat in [run 40151412652](https://github.com/Jones-Systems/CodexBar/actions/runs/40151412652),
+producer `121044538055`, before compilation/native preflight. The saved log reports
+210 rule diagnostics, 65 of 1346 files requiring formatting and 4 skipped.
+Linux `lint-linux` invokes SwiftLint and portable/JavaScript checks, but no
+SwiftFormat; the macOS producer's `lint-macos` invokes the pinned SwiftFormat
+0.61.1. The saved log confirms that version. There is no evidence of version drift;
+Linux lint success did not cover this gate.
+
+Scoped repair `cbada66dac0fd4f844ec594c142f09c67d6e740b` changes only the 65
+reported Swift paths: blank lines,
+indentation, brace/property/collection wrapping and comment classification, plus
+the explicitly reported redundant/hoist rules. No rule/configuration or check gate
+changes. Source-only lexical inspection compares full raw/multiline/interpolated
+literal tokens and code tokens against `1d9787f8`: 52 files retain every code token;
+all function names and 467 edited-file `@Test` declarations remain. All literal
+bytes match in 64 files; the only changed literal is the architecture catalog's
+relative `codex@5` to `codex@4` offset after removing one blank. The 312 exact
+anchors match current source, with 32 line-number updates; scanner code is unchanged.
+No assertion, fixture value, numeric limit or provider-isolation branch is changed.
+
+The non-whitespace review is explicit in the comparison: directly return an
+unmutated descriptor array; remove one static qualification without shadowing;
+use five single-expression implicit returns; delete three empty, nonconforming
+extensions; remove unused throws/async effects from two tests whose bodies lack
+the corresponding work; and hoist the sole throwing argument's try to its containing
+expression without changing arguments, evaluation order or propagation. This is
+bounded source evidence, not Swift AST/compiler or native test evidence.
+
+82 paired indent/trailing-space diagnostics refer to already-empty lines inside
+CLI help and the RPC test's embedded script. Their raw literal bytes are preserved.
+The diagnostics alone do not establish whether these paired reports persist after
+surrounding normalization; the next actual pinned formatter run must decide. No
+local formatter pass is claimed. Existing unrelated legacy-provider comment wording
+near the single-expression returns is outside this formatting-only repair.
+
+Fresh admission permitted one serial process for each command, and the shared
+nonblocking lock was acquired. Parser hash and provider generator `--check`, normal
+and full profile validation, and Git whitespace checks pass. Required `make check`
+and `make test` were attempted and stop at missing plutil and Swift respectively
+(exit 2); no installer, compiler or native executable ran. The test runner removed
+its owned fixture parent and verified absence. No tools were installed. The
+comparison stores the fresh CPU/RAM samples, exact blobs and semantic dispositions.
+Sixty cost suites, four critical history suites and seven shared process source
+files retain their existing exact-base proof; fixture files are untouched. Reported
+TTY test files have whitespace changes, so old whole-file blob identity is not
+claimed for those tests. All harness/workflow/native-fingerprint files, scheduling
+and frozen consumption records are unchanged in this repair. Root owns the next
+normal automatic exact-head CI gate; no extra watcher, manual run, agent, review,
+remote merge or host effect is started. App-size/cold-build evidence remains absent.
+
+Exact committed-blob [comparison](../engineering-specs/slim-codex-claude-comparison.json)
+at source revision `cbada66dac0fd4f844ec594c142f09c67d6e740b`:
 
 | Inventory | Base | Product candidate |
 | --- | ---: | ---: |
-| Product Swift files / lines | 1,201 / 307,271 | 651 / 193,236 |
+| Product Swift files / lines | 1,201 / 307,271 | 651 / 193,214 |
 | Product C/header files / lines | 21 / 79,719 | 1 / 1 |
-| Test Swift files / lines | 1,059 / 368,064 | 734 / 252,279 |
+| Test Swift files / lines | 1,059 / 368,064 | 734 / 252,270 |
 | Lexical Swift Testing declarations | 10,575 | 6,544 |
 
 330 test paths were removed and 5 added, including shared-suite renames; these are
