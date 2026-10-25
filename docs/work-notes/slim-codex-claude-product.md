@@ -350,8 +350,26 @@ and frozen consumption records are unchanged in this repair. Root owns the next
 normal automatic exact-head CI gate; no extra watcher, manual run, agent, review,
 remote merge or host effect is started. App-size/cold-build evidence remains absent.
 
+Root's next saved [run 40153295699](https://github.com/Jones-Systems/CodexBar/actions/runs/40153295699)
+at `88d766182` reports only three residual diagnostics in two files, still before
+compilation/native preflight. No CLIHelp/RPC literal diagnostics remain; their raw
+bytes stay intact. Repair `38d63baa0375809b36f79bd7770a301a78128768` inserts lowercase `self.` on the
+existing static cost-forwarding call and outdents two catalog reason values by
+four spaces. This matches unchanged `--self insert`, the same-file static
+forwarding context and the pinned [redundantSelf rule](https://raw.githubusercontent.com/nicklockwood/SwiftFormat/0.61.1/Sources/Rules/RedundantSelf.swift);
+uppercase `Self.` belongs to a separate rule. The enum metatype, method/arguments,
+closure, await, all literals and tests are unchanged. Exact source substitution
+and all 312 catalog-anchor checks pass; catalog metadata/scanner bytes remain.
+Fresh serial admission and the nonblocking lock allowed the affected checks.
+`make check`/`make test` again stop at missing plutil/Swift (exit 2), before any
+installer/compiler/native executable. No native formatter pass is claimed.
+Only these three source lines and existing evidence change; source/test file,
+line and declaration counts, all harness/native/schedule/frozen-consumption bytes
+remain unchanged. Product/test byte counts change by +5/-8 from qualification
+and indentation only. Root retains normal automatic exact-head CI watching.
+
 Exact committed-blob [comparison](../engineering-specs/slim-codex-claude-comparison.json)
-at source revision `cbada66dac0fd4f844ec594c142f09c67d6e740b`:
+at source revision `38d63baa0375809b36f79bd7770a301a78128768`:
 
 | Inventory | Base | Product candidate |
 | --- | ---: | ---: |

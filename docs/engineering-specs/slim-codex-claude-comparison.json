@@ -1,7 +1,7 @@
 {
   "schema": "codexbar-product-removal-comparison/v1",
   "baseRevision": "91bd5fb4af704da9181212bea636d527a058e615",
-  "candidateSourceRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
+  "candidateSourceRevision": "38d63baa0375809b36f79bd7770a301a78128768",
   "pullRequest": "https://github.com/Jones-Systems/CodexBar/pull/41",
   "baseBranch": "work/test-value-bar-pass2-20261024",
   "method": "Exact committed Git blobs; files include Swift source under Sources and tests under Tests, TestsLinux, TestsPlugin; line count uses bytes.splitlines; lexical Swift Testing @Test declaration counts exclude comments/strings and do not represent parameterized/runtime cases.",
@@ -27,7 +27,7 @@
       "productSwift": {
         "files": 651,
         "lines": 193214,
-        "bytes": 7943892
+        "bytes": 7943897
       },
       "productCHeaders": {
         "files": 1,
@@ -37,7 +37,7 @@
       "testSwift": {
         "files": 734,
         "lines": 252270,
-        "bytes": 10934356
+        "bytes": 10934348
       }
     }
   },
@@ -367,13 +367,13 @@
       "status": "unavailable",
       "exitCode": 2,
       "reason": "plutil absent",
-      "latestAttemptRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b"
+      "latestAttemptRevision": "38d63baa0375809b36f79bd7770a301a78128768"
     },
     "makeTest": {
       "status": "unavailable",
       "exitCode": 2,
       "reason": "Swift absent; no test executable ran",
-      "latestAttemptRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b"
+      "latestAttemptRevision": "38d63baa0375809b36f79bd7770a301a78128768"
     },
     "normalAndFullProfileManifests": {
       "status": "pass",
@@ -451,9 +451,9 @@
       "repairRevision": "b0e2069e515ffecd72de920f0aca96547750ab55"
     },
     "swiftFormat": {
-      "status": "unavailable locally; automatic CI pending",
-      "repairRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
-      "reason": "No formatter installed; make check stops earlier at missing plutil"
+      "status": "unavailable locally; new exact-head CI pending",
+      "repairRevision": "38d63baa0375809b36f79bd7770a301a78128768",
+      "priorHostedFailure": "Only 3 residual diagnostics in 2 files at88d766182; compiler not reached"
     }
   },
   "hostedEvidence": {
@@ -947,7 +947,7 @@
     ],
     "deferredReason": "Three fresh below-threshold admissions, separated by ready source/evidence work, each found shared benchmark.lock busy. No test command or queued wait started. Existing local tool absences also prevent native make check/test. Prior exact-revision check results are retained as historical evidence, not new-head passes."
   },
-  "countMethodLatest": "Exact committed git cat-file --batch blobs; bytes.splitlines; independent cross-check against per-file format delta.",
+  "countMethodLatest": "Exact prior committed inventory plus verified two-file Git-blob delta: product bytes +5, test bytes -8; file/line and declaration inventories unchanged.",
   "swiftFormatRepair": {
     "baseRevision": "1d9787f8b4075068f3282cb723e42170a6e702c3",
     "repairRevision": "cbada66dac0fd4f844ec594c142f09c67d6e740b",
@@ -2712,7 +2712,12 @@
         "Tests/CodexBarTests/RPCChildProcessTeardownTests.swift"
       ],
       "observation": "Paired indent/trailingSpace reports point to already-empty lines within multiline help/script literals. Raw literal tokens are preserved byte for byte; source diagnostics alone cannot establish whether paired reports persist after surrounding normalization. Actual pinned formatter revalidation is required.",
-      "nativeRevalidation": "unavailable locally; no pass claimed"
+      "nativeRevalidation": "unavailable locally; no pass claimed",
+      "subsequentHostedObservation": {
+        "revision": "88d766182d45b139f64474d2613426c4ede6f5f4",
+        "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40153295699",
+        "status": "No CLIHelp/RPC embedded literal diagnostics remain; literal bytes preserved."
+      }
     },
     "localChecks": [
       {
@@ -3030,6 +3035,251 @@
           "errors": [],
           "unavailable_sources": []
         }
+      }
+    ]
+  },
+  "swiftFormatResidualRepair": {
+    "baseRevision": "88d766182d45b139f64474d2613426c4ede6f5f4",
+    "repairRevision": "38d63baa0375809b36f79bd7770a301a78128768",
+    "hostedObservation": {
+      "runURL": "https://github.com/Jones-Systems/CodexBar/actions/runs/40153295699",
+      "producerJobID": 121049213479,
+      "source": "Root exact-head saved producer diagnostics",
+      "reportedDiagnostics": 3,
+      "filesRequiringFormatting": 2,
+      "filesChecked": 1346,
+      "filesSkipped": 4,
+      "remainingRules": {
+        "CLIServeCommand1497": "redundantSelf",
+        "ProviderArchitectureGatekeeper1626": "indent",
+        "ProviderArchitectureGatekeeper1701": "indent"
+      },
+      "CLILiteralAndRPCLiteralDiagnosticsRemain": false,
+      "compilerAndNativePreflightReached": false
+    },
+    "preferenceEvidence": {
+      "configuration": "Unchanged .swiftformat --self insert; --indent 4; --wraparguments before-first",
+      "sameStaticContext": "CLIServeCommand.cachedServeResponse uses await self.cachedServeResponse and self.serveRequestDeadline in a static function; those forms were not reported by the exact formatter run.",
+      "pinnedRuleURL": "https://raw.githubusercontent.com/nicklockwood/SwiftFormat/0.61.1/Sources/Rules/RedundantSelf.swift",
+      "ruleDistinction": "redundantSelf uses lowercase self and the explicit-self option; uppercase Self is handled by redundantStaticSelf. Insert lowercase self. without reintroducing uppercase Self.",
+      "semanticReason": "CodexBarCLI is an enum; self in this static method denotes the same fixed metatype. Existing callee, await, arguments and closure remain identical."
+    },
+    "preservationProof": {
+      "baseRevision": "88d766182d45b139f64474d2613426c4ede6f5f4",
+      "exactChangedLines": {
+        "Sources/CodexBarCLI/CLIServeCommand.swift": [
+          1497
+        ],
+        "Tests/CodexBarTests/ProviderArchitectureGatekeeperTests.swift": [
+          1626,
+          1701
+        ]
+      },
+      "CLIChange": "Only insert lowercase self. before existing same-enum static call, consistent with --self insert and nearby static forwarding methods; same method, closure and await.",
+      "catalogChange": "Only outdent two existing single-line reason string arguments by four spaces; all metadata tokens/values, anchors and scanner bytes unchanged.",
+      "catalogAnchorsMatching": 312,
+      "allLiteralsByteIdentical": true,
+      "functionNamesAndTestInventoryUnchanged": true,
+      "literalHelpAndRPCFilesChanged": false,
+      "lineCountsUnchanged": true,
+      "byteDeltas": {
+        "productSwift": 5,
+        "testSwift": -8
+      },
+      "files": [
+        {
+          "path": "Sources/CodexBarCLI/CLIServeCommand.swift",
+          "beforeBlob": "29c70f014b49eee0f59b3aba2cc368b09cac4b8b",
+          "afterBlob": "8e016d503457ac7ff9143e81c075ece5ac8305aa"
+        },
+        {
+          "path": "Tests/CodexBarTests/ProviderArchitectureGatekeeperTests.swift",
+          "beforeBlob": "39b77f172fb8d8a00996ad85b17a7ed3632d91ba",
+          "afterBlob": "fff3c8d0fad724853492d7857fb4cfc5b5eda609"
+        }
+      ],
+      "limitations": "Exact bounded source-substitution/metadata proof, not native formatter, Swift AST or compiler execution.",
+      "repairRevision": "38d63baa0375809b36f79bd7770a301a78128768"
+    },
+    "localChecks": [
+      {
+        "name": "source-proof",
+        "command": [
+          "/usr/bin/python3",
+          "-B",
+          "/home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024/.build/slim-product-work/prove_residual.py"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:12:52Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 46.23,
+              "cpu_used_percent": 19.43,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.5244,
+              "sampled_steal_percent": 0.318,
+              "cpu_psi_some_avg10_percent": 2.33
+            },
+            "summary": "CPU 19.43% used; 46.23 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "status": "passed",
+        "exitCode": 0
+      },
+      {
+        "name": "make-check",
+        "command": [
+          "make",
+          "check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:12:53Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 46.14,
+              "cpu_used_percent": 15.56,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.5244,
+              "sampled_steal_percent": 0.317,
+              "cpu_psi_some_avg10_percent": 2.33
+            },
+            "summary": "CPU 15.56% used; 46.14 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "status": "unavailable",
+        "exitCode": 2
+      },
+      {
+        "name": "make-test",
+        "command": [
+          "make",
+          "test"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:12:53Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 46.43,
+              "cpu_used_percent": 14.56,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.5244,
+              "sampled_steal_percent": 0.316,
+              "cpu_psi_some_avg10_percent": 2.33
+            },
+            "summary": "CPU 14.56% used; 46.43 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "status": "unavailable",
+        "exitCode": 2
+      }
+    ],
+    "toolLimits": "Swift, plutil and native formatters remain absent; make check and make test stop before installer/compiler/native tests, exit2. Actual exact-head CI remains pending.",
+    "allHarnessNativeScheduleAndFrozenConsumptionBytesUnchanged": true,
+    "nextGate": "Normal automatic exact-head macOS formatter/producer/native/shards and applicable Linux/aggregate checks; root watches.",
+    "documentationChecks": [
+      {
+        "name": "documentation-links",
+        "command": [
+          "node",
+          "Scripts/check-documentation-links.mjs"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:13:57Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 41.23,
+              "cpu_used_percent": 27.81,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.4575,
+              "sampled_steal_percent": 0.312,
+              "cpu_psi_some_avg10_percent": 2.39
+            },
+            "summary": "CPU 27.81% used; 41.23 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "status": "passed",
+        "exitCode": 0,
+        "output": "documentation links OK: 181 local links\n"
+      },
+      {
+        "name": "llms-index",
+        "command": [
+          "node",
+          "Scripts/generate-llms.mjs",
+          "--check"
+        ],
+        "telemetry": {
+          "schema": "work-capacity-admission/v1",
+          "collected_at_utc": "2026-10-25T02:13:57Z",
+          "status": "ok",
+          "admission": {
+            "agent_batch_ceiling": 10,
+            "memory_batch_ceiling": 10,
+            "cpu_batch_ceiling": 10,
+            "serial_test_process_ceiling": 1,
+            "broad_test_allowed": true,
+            "measurements": {
+              "ram_available_gib": 41.14,
+              "cpu_used_percent": 26.56,
+              "effective_cpu_capacity": 16.0,
+              "one_fully_used_core_percent": 6.25,
+              "normalized_load_one_minute": 0.4412,
+              "sampled_steal_percent": 0.312,
+              "cpu_psi_some_avg10_percent": 2.39
+            },
+            "summary": "CPU 26.56% used; 41.14 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+          },
+          "warnings": [],
+          "errors": [],
+          "unavailable_sources": []
+        },
+        "status": "passed",
+        "exitCode": 0,
+        "output": "llms index OK: docs/llms.txt\n"
       }
     ]
   }
