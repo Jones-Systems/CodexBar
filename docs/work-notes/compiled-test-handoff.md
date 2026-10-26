@@ -37,7 +37,7 @@ Root explicitly confirmed the narrow required-producer AGENTS edit. Repository c
 
 Graphify's verified snapshot is older than the checkout and its query truncated; current source is the
 authority. SwiftPM release source and current Package.swift/harness establish the conservative complete
-`.build` handoff in the Engineering Spec. Hosted runtime proof remains required. Local Swift/plutil are
+`.build` handoff in the Engineering Spec. Hosted qualification is recorded below. Local Swift/plutil are
 unavailable; no installation is authorized. Existing profile owner retains baseline measurements and the
 separate 05:00 Eastern nightly commit; this lane does not overwrite or cherry-pick that worktree.
 
@@ -46,7 +46,7 @@ separate 05:00 Eastern nightly commit; this lane does not overwrite or cherry-pi
 Before every local test start, take fresh capacity telemetry and acquire the portfolio benchmark lock
 nonblockingly. A busy lock means continue source work. Tests run as one serial command below 85% CPU.
 Task scratch stays beneath this workspace with exact cleanup. Affected checks are specified in
-`spec.compiled-test-handoff#ac.proof.001`; outcomes will be recorded here.
+`spec.compiled-test-handoff#ac.proof.001`; the following entries retain their source-checkpoint outcomes.
 
 Initial artifact boundary checks passed (11 tests). The first wider harness run executed 179 tests with
 19 platform skips and one failure: a workflow contract still expected the cache on each worker and a
@@ -64,14 +64,29 @@ status preservation. `Scripts/test_swift_test_sharding.sh` passed, including 95 
 
 `make test` was attempted and failed at absent `swift`; its fixture root was removed. `make check` was
 attempted and failed at `spawnSync plutil ENOENT` before tool installation. No tools were installed.
-Native compilation/execution, transfer timings, complete runtime closure, artifact sizes, and comparative
-macOS runner-minutes remain unproved until the coordinator returns hosted results.
+At that local checkpoint, native compilation/execution, transfer timings, complete runtime closure, artifact
+sizes and comparative macOS runner-minutes were unproved. Later hosted qualification supersedes the pending
+native-execution/two-shard gate, while the local Swift/plutil limitations remain.
 
-## Delivery and remaining work
+## Hosted qualification and delivery
 
-Implement and verify the artifact producer and fail-closed workers, publish a non-draft PR against
-`work/used-feature-tests-20261024`, natively link it, and report exact head/base/check limitations to root.
-Root alone coordinates CI observation, hosted measurements, integration with the product sibling, and merge.
+PR40's published exact head `951c99a96b052e1a70898e75330554403bb643b3` passed all nine required checks in
+[run 40148474449](https://github.com/Jones-Systems/CodexBar/actions/runs/40148474449), including producer and
+both skip-build shards with complete native-fingerprint verification. It used 41.27 Mac runner-minutes and
+28m26s DAG elapsed. The product descendant `ba523f60b7161e70a3afd201f87d49dd2b0e37fe` subsequently qualified
+in [run 40186271235](https://github.com/Jones-Systems/CodexBar/actions/runs/40186271235), retaining attempt-1
+Mac results after a targeted musl retry: 40.00 Mac runner-minutes / 29m33s DAG elapsed, 170 shard groups in
+total, zero worker builds/retries/timeouts. These are unpaired CI observations, not causal runner savings.
+The separate [cold-build measurement](cold-build-size-measurement.md#qualified-hosted-observation) records
+actual build-only timing, app size and cleanup for its fixed historical pair; it does not replace native
+compatibility proof or establish installed-app behavior. Root owns current-head qualification and integration.
+
+## Historical publication and product handoff
+
+The following deferred-consumer list describes the earlier compile-owner checkpoint. The qualified product
+descendant consumed the bounded resource/plugin cleanup; these are no longer outstanding implementation tasks
+for this lane. The nightly source was included in qualified PR40; schedules take effect through default-branch
+integration, with no observed scheduled trigger claimed here. Frozen patches and sibling residuals remain intact.
 
 Additional root-assigned product-dependent consumers are deferred from this checkpoint: the plugin-only
 `CodexBar_CodexBarCore.bundle` copy/sign block in `Scripts/package_app.sh`, resource-smoke assumptions in

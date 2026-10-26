@@ -4,7 +4,8 @@ The coordinator assigned the existing nightly intent from exact commit
 `0110a56430470106ad7ffed6c96707d3eb5cc636` to this CI/harness lane after receipt of
 the frozen product patch. This is a separate commit after inactive native
 compatibility checkpoint `5f6469e2cc6b314902b9b9b86495cd14e7dc484c`; it does not
-activate compatibility or authorize a hosted run. PR #40 remote remains unchanged.
+activate compatibility or authorize a hosted run. That was the pre-publication checkpoint; the schedule
+source was subsequently included in qualified PR40 head `951c99a96b052e1a70898e75330554403bb643b3`.
 
 ## Source and affected checks
 
@@ -28,7 +29,8 @@ profile/concurrency contracts, existing path-gate/aggregate fixtures and local
 documentation links under fresh admission and the nonblocking portfolio lock.
 Keep the product-owned path-gate fixture/source and all frozen handoff bytes
 unchanged. Required make entrypoints remain unavailable locally at absent Swift
-and plutil; native/scheduled execution remains a hosted proof obligation.
+and plutil. Hosted source qualification is recorded below; an actual scheduled trigger remains unobserved
+in this evidence set.
 
 ## Result
 
@@ -40,3 +42,10 @@ an existing exact concurrency assertion that lacked the new nightly branch; it
 now requires all three branches while preserving manual uniqueness/cancellation.
 Schedule and concurrency bytes match `0110a5643` exactly. Removing those two
 changes reproduces the entire producer/shard/aggregate workflow at `5f6469e2c`.
+
+Root later qualified all nine required checks at exact PR40 `951c99a96b052e1a70898e75330554403bb643b3` in
+[run 40148474449](https://github.com/Jones-Systems/CodexBar/actions/runs/40148474449), and the schedule was
+preserved in qualified product descendant `ba523f60b7161e70a3afd201f87d49dd2b0e37fe`. The schedule executes
+from default-branch source after integration; task-branch declaration and successful PR CI do not establish
+that a 05:00 America/New_York trigger actually ran. Local Swift/plutil limitations remain. Root owns integration
+and any separate schedule observation; this closure changes no schedule, concurrency, source or workflow bytes.
