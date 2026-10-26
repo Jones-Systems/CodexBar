@@ -13,11 +13,10 @@ struct MenuBarLayoutEditorTests {
         let settings = try Self.overrideSettings()
         let global = MenuBarLayout(lines: [[.providerName, .percent(window: .session)]])
         settings.setMenuBarLayout(global, for: nil)
-        settings.setMenuBarLayout(global, for: .cursor)
-        settings.setMenuBarLayout(MenuBarLayout(lines: [[.percent(window: .weekly)]]), for: .claude)
         settings.setMenuBarLayout(global, for: .codex)
+        settings.setMenuBarLayout(MenuBarLayout(lines: [[.percent(window: .weekly)]]), for: .claude)
 
-        #expect(MenuBarLayoutEditorScope.all.providersWithOverrides(settings: settings) == [.claude, .cursor])
+        #expect(MenuBarLayoutEditorScope.all.providersWithOverrides(settings: settings) == [.claude, .codex])
         #expect(MenuBarLayoutEditorScope.provider(.claude).providersWithOverrides(settings: settings).isEmpty)
         #expect(MenuBarLayoutEditorScope.all.previewLabel == L("menu_bar_layout_default_preview"))
         #expect(MenuBarLayoutEditorScope.provider(.claude).previewLabel == L("menu_bar_layout_live_preview"))
@@ -31,8 +30,7 @@ struct MenuBarLayoutEditorTests {
         let override = MenuBarLayout(lines: [[.percent(window: .weekly)]])
         settings.setMenuBarLayout(global, for: nil)
         settings.setMenuBarLayout(override, for: .claude)
-        settings.setMenuBarLayout(global, for: .cursor)
-        settings.setMenuBarLayout(override, for: .codex)
+        settings.setMenuBarLayout(global, for: .codex)
         let changed = LockIsolated(false)
         withObservationTracking {
             _ = MenuBarLayoutEditorScope.all.providersWithOverrides(settings: settings)
@@ -44,12 +42,12 @@ struct MenuBarLayoutEditorTests {
 
         #expect(changed.value)
         #expect(settings.menuBarLayout(for: .claude) == global)
-        #expect(settings.menuBarLayoutOverrides == [.cursor: global, .codex: override])
-        #expect(MenuBarLayoutEditorScope.all.providersWithOverrides(settings: settings) == [.cursor])
+        #expect(settings.menuBarLayoutOverrides == [.codex: global])
+        #expect(MenuBarLayoutEditorScope.all.providersWithOverrides(settings: settings) == [.codex])
 
-        MenuBarLayoutEditorPersistence.useAllProvidersLayout(for: .cursor, settings: settings)
+        MenuBarLayoutEditorPersistence.useAllProvidersLayout(for: .codex, settings: settings)
         #expect(MenuBarLayoutEditorScope.all.providersWithOverrides(settings: settings).isEmpty)
-        #expect(settings.menuBarLayoutOverrides == [.codex: override])
+        #expect(settings.menuBarLayoutOverrides == [:])
     }
 
     @Test
@@ -61,10 +59,11 @@ struct MenuBarLayoutEditorTests {
         settings.setMenuBarLayout(override, for: .codex)
         let metadata = try #require(ProviderDefaults.metadata[.claude])
         settings.setProviderEnabled(provider: .claude, metadata: metadata, enabled: false)
+        let codexMetadata = try #require(ProviderDefaults.metadata[.codex])
+        settings.setProviderEnabled(provider: .codex, metadata: codexMetadata, enabled: false)
 
         MenuBarLayoutEditorPersistence.useAllProvidersLayout(for: .claude, settings: settings)
         MenuBarLayoutEditorPersistence.useAllProvidersLayout(for: .codex, settings: settings)
-        MenuBarLayoutEditorPersistence.useAllProvidersLayout(for: .cursor, settings: settings)
 
         #expect(MenuBarLayoutEditorScope.all.providersWithOverrides(settings: settings).isEmpty)
         #expect(settings.menuBarLayoutOverrides == [.claude: override, .codex: override])
@@ -76,7 +75,7 @@ struct MenuBarLayoutEditorTests {
     @MainActor
     private static func overrideSettings() throws -> SettingsStore {
         try #require(SettingsStore.isRunningTests)
-        let enabled: [UsageProvider] = [.claude, .cursor, .kimi]
+        let enabled: [UsageProvider] = [.claude, .codex]
         let order = enabled + UsageProvider.allCases.filter { !enabled.contains($0) }
         return testSettingsStore(
             suiteName: "MenuBarLayoutEditorTests-overrides",
@@ -93,19 +92,6 @@ struct MenuBarLayoutEditorTests {
     func `time palette lists the compact run out token with a clear label`() {
         #expect(MenuBarLayoutPaletteTokens.time.contains(.runsOutCompact))
         #expect(MenuBarLayoutToken.runsOutCompact.editorLabel(provider: .codex) == "Runs out (compact)")
-    }
-
-    @Test
-    func `Notion secondary editor labels use monthly cadence`() {
-        let percent = MenuBarLayoutToken.percent(window: .weekly)
-        let pace = MenuBarLayoutToken.pace(window: .weekly)
-        let monthlyPace = L("%@ %@", L("Monthly"), L("display_mode_pace").lowercased())
-
-        #expect(percent.editorLabel(provider: .notion) == L("%@ %@", L("Monthly"), "%"))
-        #expect(pace.editorLabel(provider: .notion) == monthlyPace)
-        #expect(pace.editorAccessibilityLabel(provider: .notion) == monthlyPace)
-        #expect(percent.editorLabel(provider: .codex) == L("menu_bar_layout_token_weekly"))
-        #expect(pace.editorLabel(provider: .codex) == L("menu_bar_layout_token_weekly_pace"))
     }
 
     @Test
@@ -233,7 +219,7 @@ struct MenuBarLayoutEditorTests {
 
     @Test
     func `drag payload codable round trips`() throws {
-        let layout = MenuBarLayout(lines: [[.icon, .balance], [.providerName, .space, .percent(window: .automatic)]])
+        let layout = MenuBarLayout(lines: [[.icon, .costToday], [.providerName, .space, .percent(window: .automatic)]])
         let payload = MenuBarLayoutDragItem.placed(
             .percent(window: .automatic),
             at: MenuBarLayoutPosition(line: 1, index: 2),
@@ -275,21 +261,6 @@ struct MenuBarLayoutEditorTests {
             .conditional(id: conditionalID),
             to: initial)
         #expect(appended.lines == [[.icon, .resetCountdown, .conditional(id: conditionalID)]])
-    }
-
-    @Test
-    func `balance token is provider aware`() throws {
-        let row = try ProviderDetailSection.Row(label: "Remaining", value: "$12.34")
-        let section = try ProviderDetailSection(title: "Credits", rows: [row])
-        let snapshot = UsageSnapshot(
-            primary: nil,
-            secondary: nil,
-            details: [section],
-            updatedAt: Date())
-
-        #expect(MenuBarLayoutBalanceResolver.balance(provider: .openrouter, snapshot: snapshot) == "$12.34")
-        #expect(MenuBarLayoutBalanceResolver.balance(provider: .codex, snapshot: snapshot) == nil)
-        #expect(MenuBarLayoutToken.balance.editorLabel(provider: .openrouter) == L("Balance"))
     }
 
     @Test

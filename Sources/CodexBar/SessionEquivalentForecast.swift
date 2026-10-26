@@ -448,13 +448,6 @@ extension UsageStore {
         }
 
         let selection = historySelection ?? self.planUtilizationHistorySelection(for: provider)
-        guard self.sessionEquivalentHistoryIdentityMatches(
-            provider: provider,
-            accountKey: selection.accountKey,
-            historyIdentity: historyIdentity)
-        else {
-            return nil
-        }
         let cacheKey = SessionEquivalentBurnCacheKey(
             historyRevision: self.planUtilizationHistoryRevision,
             historySelectionIdentity: selection.cacheIdentity,

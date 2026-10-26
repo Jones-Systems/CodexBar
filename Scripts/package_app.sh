@@ -688,12 +688,25 @@ if [[ ! -f "$APP/Contents/Resources/Icon-classic.icns" ]]; then
 fi
 
 # SwiftPM resource bundles (e.g. KeyboardShortcuts) are emitted next to the built binary.
+# Select the Core contract from tracked source inputs, never stale build output.
+if [[ "$(git -C "$ROOT" rev-parse --show-toplevel)" != "$ROOT" ]]; then
+  echo "ERROR: Core resource contract requires the exact source checkout root." >&2
+  exit 1
+fi
+CORE_RESOURCE_INPUTS="$(git -C "$ROOT" ls-files -- Sources/CodexBarCore/Resources/)"
+CORE_RESOURCES_REQUIRED=0
+if [[ -n "$CORE_RESOURCE_INPUTS" ]]; then
+  CORE_RESOURCES_REQUIRED=1
+fi
 shopt -s nullglob
 SWIFTPM_BUNDLES=("${PREFERRED_BUILD_DIR}/"*.bundle)
 shopt -u nullglob
 if [[ ${#SWIFTPM_BUNDLES[@]} -gt 0 ]]; then
   for bundle in "${SWIFTPM_BUNDLES[@]}"; do
     bundle_name="$(basename "$bundle")"
+    if [[ "$bundle_name" == "CodexBar_CodexBarCore.bundle" && "$CORE_RESOURCES_REQUIRED" == "0" ]]; then
+      continue
+    fi
     cp -R "$bundle" "$APP/Contents/Resources/"
   done
 fi
@@ -703,16 +716,18 @@ if [[ ! -d "$APP/Contents/Resources/KeyboardShortcuts_KeyboardShortcuts.bundle" 
   exit 1
 fi
 
-# The helper CLI resolves CodexBarCore resources beside its executable. Keep a
-# dedicated copy in Helpers; the app copy above remains in Contents/Resources.
+# Builds retaining Core resources resolve them beside the helper executable.
+# Keep the adjacent copy only while current source still requires that bundle.
 CORE_RESOURCE_BUNDLE="${PREFERRED_BUILD_DIR}/CodexBar_CodexBarCore.bundle"
-if [[ ! -d "$CORE_RESOURCE_BUNDLE" ]]; then
-  echo "ERROR: Missing CodexBarCore SwiftPM resource bundle for CodexBarCLI." >&2
-  echo "Expected: ${CORE_RESOURCE_BUNDLE}" >&2
-  exit 1
+if [[ "$CORE_RESOURCES_REQUIRED" == "1" ]]; then
+  if [[ ! -d "$CORE_RESOURCE_BUNDLE" ]]; then
+    echo "ERROR: Missing CodexBarCore SwiftPM resource bundle for CodexBarCLI." >&2
+    echo "Expected: ${CORE_RESOURCE_BUNDLE}" >&2
+    exit 1
+  fi
+  rm -rf "$APP/Contents/Helpers/CodexBar_CodexBarCore.bundle"
+  cp -R "$CORE_RESOURCE_BUNDLE" "$APP/Contents/Helpers/"
 fi
-rm -rf "$APP/Contents/Helpers/CodexBar_CodexBarCore.bundle"
-cp -R "$CORE_RESOURCE_BUNDLE" "$APP/Contents/Helpers/"
 
 # Ensure contents are writable before stripping attributes and signing.
 chmod -R u+w "$APP"
@@ -725,7 +740,7 @@ find "$APP" -name '._*' -delete
 if [[ -f "${APP}/Contents/Helpers/CodexBarCLI" ]]; then
   codesign "${CODESIGN_ARGS[@]}" "${APP}/Contents/Helpers/CodexBarCLI"
 fi
-if [[ -d "${APP}/Contents/Helpers/CodexBar_CodexBarCore.bundle" ]]; then
+if [[ "$CORE_RESOURCES_REQUIRED" == "1" && -d "${APP}/Contents/Helpers/CodexBar_CodexBarCore.bundle" ]]; then
   codesign "${CODESIGN_ARGS[@]}" "${APP}/Contents/Helpers/CodexBar_CodexBarCore.bundle"
 fi
 if [[ -f "${APP}/Contents/Helpers/CodexBarClaudeWatchdog" ]]; then

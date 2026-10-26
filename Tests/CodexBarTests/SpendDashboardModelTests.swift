@@ -69,21 +69,7 @@ struct SpendDashboardModelTests {
         let providers = Set(ProviderDescriptorRegistry.all
             .filter(\.tokenCost.supportsTokenCost)
             .map(\.id))
-        #expect(providers == [
-            .codex,
-            .claude,
-            .vertexai,
-            .openai,
-            .mistral,
-            .bedrock,
-            .cursor,
-            .grok,
-            .opencodego,
-            .openrouter,
-            .xai,
-            // Antigravity joined via the tokscale-compatible local usage readers.
-            .antigravity,
-        ])
+        #expect(providers == [.codex, .claude])
     }
 
     @Test
@@ -91,7 +77,7 @@ struct SpendDashboardModelTests {
         let model = SpendDashboardModel.build(
             inputs: [
                 Self.input(id: "usd-low", provider: .claude, currency: "usd", cost: 2),
-                Self.input(id: "eur", provider: .openai, currency: "EUR", cost: 100),
+                Self.input(id: "eur", provider: .claude, currency: "EUR", cost: 100),
                 Self.input(id: "usd-high", provider: .codex, currency: "USD", cost: 8),
             ],
             requestedDays: 30,
@@ -436,7 +422,7 @@ struct SpendDashboardModelTests {
                 Self.entry(day: "2026-06-31", cost: 99),
             ]))
         let hugeA = Self.input(id: "huge-a", provider: .codex, currency: "USD", cost: .greatestFiniteMagnitude)
-        let hugeB = Self.input(id: "huge-b", provider: .openai, currency: "USD", cost: .greatestFiniteMagnitude)
+        let hugeB = Self.input(id: "huge-b", provider: .claude, currency: "USD", cost: .greatestFiniteMagnitude)
         let group = try #require(SpendDashboardModel.build(
             inputs: [invalid, hugeA, hugeB],
             requestedDays: 30,
@@ -539,7 +525,7 @@ struct SpendDashboardModelTests {
                 ])),
             SpendDashboardModel.ProviderInput(
                 id: "nonfinite",
-                provider: .openai,
+                provider: .claude,
                 displayName: "Nonfinite",
                 snapshot: Self.snapshot(currency: "USD", entries: [
                     Self.entry(day: "2026-07-16", cost: 1, tokens: 1),
@@ -547,7 +533,7 @@ struct SpendDashboardModelTests {
                 ])),
             SpendDashboardModel.ProviderInput(
                 id: "overflow",
-                provider: .mistral,
+                provider: .claude,
                 displayName: "Overflow",
                 snapshot: Self.snapshot(currency: "USD", entries: [
                     Self.entry(day: "2026-07-16", cost: .greatestFiniteMagnitude, tokens: .max),
@@ -718,7 +704,7 @@ struct SpendDashboardModelTests {
                 Self.entry(day: "2026-07-16", cost: .greatestFiniteMagnitude),
                 Self.entry(day: "2026-07-16", cost: .greatestFiniteMagnitude),
             ]))
-        let complete = Self.input(id: "complete", provider: .openai, currency: "USD", cost: 3)
+        let complete = Self.input(id: "complete", provider: .claude, currency: "USD", cost: 3)
         let group = try #require(SpendDashboardModel.build(
             inputs: [missing, overflow, complete],
             requestedDays: 7,
@@ -1203,8 +1189,8 @@ extension SpendDashboardModelTests {
             daily: [Self.entry(day: "2026-07-16", cost: 1)],
             updatedAt: now)
         let input = SpendDashboardModel.ProviderInput(
-            id: "cursor",
-            provider: .cursor,
+            id: "claude",
+            provider: .claude,
             displayName: "Cursor",
             snapshot: snapshot)
         let week = SpendDashboardModel.build(inputs: [input], requestedDays: 7, now: now)
@@ -1224,7 +1210,7 @@ extension SpendDashboardModelTests {
             daily: [Self.entry(day: "2026-07-16", cost: 3.5)],
             updatedAt: Self.now)
         let input = SpendDashboardModel.ProviderInput(
-            provider: .openrouter,
+            provider: .claude,
             displayName: "OpenRouter",
             snapshot: snapshot)
 

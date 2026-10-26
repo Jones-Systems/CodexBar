@@ -60,7 +60,7 @@ final class SettingsWindowController: NSWindowController {
     convenience init(
         settings: SettingsStore,
         store: UsageStore,
-        cloudSyncState: CloudSyncState,
+        fleetAccountState: FleetAccountState,
         updater: UpdaterProviding,
         selection: PreferencesSelection,
         managedCodexAccountCoordinator: ManagedCodexAccountCoordinator,
@@ -71,7 +71,7 @@ final class SettingsWindowController: NSWindowController {
             let rootView = PreferencesView(
                 settings: settings,
                 store: store,
-                cloudSyncState: cloudSyncState,
+                fleetAccountState: fleetAccountState,
                 updater: updater,
                 selection: selection,
                 managedCodexAccountCoordinator: managedCodexAccountCoordinator,

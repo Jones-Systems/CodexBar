@@ -7,131 +7,10 @@ import Testing
 @MainActor
 struct StatusItemExtraUsageMetricTests {
     @Test
-    func `menu bar extra usage preference uses cursor on demand budget`() {
-        let (store, controller) = self.makeCursorController(suiteName: "StatusItemExtraUsageMetricTests-budget")
-        defer { controller.releaseStatusItemsForTesting() }
-        let snapshot = UsageSnapshot(
-            primary: RateWindow(usedPercent: 10, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-            secondary: RateWindow(usedPercent: 20, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-            tertiary: RateWindow(usedPercent: 72, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-            providerCost: ProviderCostSnapshot(
-                used: 15,
-                limit: 100,
-                currencyCode: "USD",
-                updatedAt: Date()),
-            updatedAt: Date())
-
-        store._setSnapshotForTesting(snapshot, provider: .cursor)
-        store._setErrorForTesting(nil, provider: .cursor)
-
-        let window = controller.menuBarMetricWindow(for: .cursor, snapshot: snapshot)
-
-        #expect(window?.usedPercent == 15)
-    }
-
-    @Test
-    func `menu bar extra usage preference falls back to automatic when cursor on demand budget is missing`() {
+    func `extra usage window keeps combined percent formatting and claude spend preference`() {
         let (store, controller) = self.makeController(
-            suiteName: "StatusItemExtraUsageMetricTests-missing-budget",
-            provider: .cursor)
-        defer { controller.releaseStatusItemsForTesting() }
-        let snapshot = UsageSnapshot(
-            primary: RateWindow(usedPercent: 10, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-            secondary: RateWindow(usedPercent: 72, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-            tertiary: nil,
-            providerCost: nil,
-            updatedAt: Date())
-
-        store._setSnapshotForTesting(snapshot, provider: .cursor)
-        store._setErrorForTesting(nil, provider: .cursor)
-
-        let window = controller.menuBarMetricWindow(for: .cursor, snapshot: snapshot)
-
-        #expect(window?.usedPercent == 72)
-    }
-
-    @Test
-    func `menu bar extra usage preference honors percent used display for cursor`() {
-        let (store, controller) = self.makeController(
-            suiteName: "StatusItemExtraUsageMetricTests-cursor-spend-text",
-            provider: .cursor)
-        defer { controller.releaseStatusItemsForTesting() }
-        let snapshot = UsageSnapshot(
-            primary: RateWindow(usedPercent: 10, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-            secondary: RateWindow(usedPercent: 20, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-            tertiary: RateWindow(usedPercent: 72, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-            providerCost: ProviderCostSnapshot(
-                used: 12.34,
-                limit: 100,
-                currencyCode: "USD",
-                updatedAt: Date()),
-            updatedAt: Date())
-
-        store._setSnapshotForTesting(snapshot, provider: .cursor)
-        store._setErrorForTesting(nil, provider: .cursor)
-
-        let displayText = controller.menuBarDisplayText(for: .cursor, snapshot: snapshot)
-
-        #expect(displayText == "12%")
-    }
-
-    @Test
-    func `menu bar extra usage preference honors percent remaining display for cursor`() {
-        let (store, controller) = self.makeController(
-            suiteName: "StatusItemExtraUsageMetricTests-cursor-remaining-text",
-            provider: .cursor)
-        defer { controller.releaseStatusItemsForTesting() }
-        controller.settings.usageBarsShowUsed = false
-        let snapshot = UsageSnapshot(
-            primary: RateWindow(usedPercent: 10, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-            secondary: RateWindow(usedPercent: 20, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-            tertiary: RateWindow(usedPercent: 72, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-            providerCost: ProviderCostSnapshot(
-                used: 12.34,
-                limit: 100,
-                currencyCode: "USD",
-                updatedAt: Date()),
-            updatedAt: Date())
-
-        store._setSnapshotForTesting(snapshot, provider: .cursor)
-        store._setErrorForTesting(nil, provider: .cursor)
-
-        let displayText = controller.menuBarDisplayText(for: .cursor, snapshot: snapshot)
-
-        #expect(displayText == "88%")
-    }
-
-    @Test
-    func `menu bar extra usage preference keeps cursor currency fallback in pace mode`() {
-        let (store, controller) = self.makeController(
-            suiteName: "StatusItemExtraUsageMetricTests-cursor-pace-spend-text",
-            provider: .cursor)
-        defer { controller.releaseStatusItemsForTesting() }
-        controller.settings.menuBarDisplayMode = .pace
-        let snapshot = UsageSnapshot(
-            primary: RateWindow(usedPercent: 42, windowMinutes: 300, resetsAt: nil, resetDescription: nil),
-            secondary: nil,
-            tertiary: nil,
-            providerCost: ProviderCostSnapshot(
-                used: 12.34,
-                limit: 100,
-                currencyCode: "USD",
-                updatedAt: Date()),
-            updatedAt: Date())
-
-        store._setSnapshotForTesting(snapshot, provider: .cursor)
-        store._setErrorForTesting(nil, provider: .cursor)
-
-        let displayText = controller.menuBarDisplayText(for: .cursor, snapshot: snapshot)
-
-        #expect(displayText == "$12.34")
-    }
-
-    @Test
-    func `menu bar extra usage preference uses percent in combined mode`() {
-        let (store, controller) = self.makeController(
-            suiteName: "StatusItemExtraUsageMetricTests-cursor-combined-text",
-            provider: .cursor)
+            suiteName: "StatusItemExtraUsageMetricTests-claude-combined-text",
+            provider: .claude)
         defer { controller.releaseStatusItemsForTesting() }
         controller.settings.menuBarDisplayMode = .both
         let snapshot = UsageSnapshot(
@@ -145,12 +24,23 @@ struct StatusItemExtraUsageMetricTests {
                 updatedAt: Date()),
             updatedAt: Date())
 
-        store._setSnapshotForTesting(snapshot, provider: .cursor)
-        store._setErrorForTesting(nil, provider: .cursor)
+        store._setSnapshotForTesting(snapshot, provider: .claude)
+        store._setErrorForTesting(nil, provider: .claude)
 
-        let displayText = controller.menuBarDisplayText(for: .cursor, snapshot: snapshot)
+        #expect(controller.settings.menuBarMetricPreference(for: .claude, snapshot: snapshot) == .extraUsage)
+        #expect(controller.menuBarDisplayText(for: .claude, snapshot: snapshot) == "$56.00")
+        let extraUsageWindow = controller.menuBarMetricWindow(for: .claude, snapshot: snapshot)
+        #expect(abs((extraUsageWindow?.usedPercent ?? .nan) - 56) <= 2 * Double(56).ulp)
+        let displayText = MenuBarDisplayText.displayText(
+            mode: controller.settings.menuBarDisplayMode,
+            percentWindow: extraUsageWindow,
+            showUsed: controller.settings.usageBarsShowUsed)
 
         #expect(displayText == "56%")
+
+        controller.settings.setMenuBarMetricPreference(.primary, for: .claude)
+        #expect(controller.settings.menuBarMetricPreference(for: .claude, snapshot: snapshot) == .primary)
+        #expect(controller.menuBarDisplayText(for: .claude, snapshot: snapshot) == "10%")
     }
 
     @Test
@@ -183,7 +73,7 @@ struct StatusItemExtraUsageMetricTests {
     func `menu bar extra usage preference falls back to existing percent text when provider cost is unavailable`() {
         let (store, controller) = self.makeController(
             suiteName: "StatusItemExtraUsageMetricTests-fallback-percent",
-            provider: .cursor)
+            provider: .claude)
         defer { controller.releaseStatusItemsForTesting() }
         let snapshot = UsageSnapshot(
             primary: RateWindow(usedPercent: 10, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
@@ -192,10 +82,23 @@ struct StatusItemExtraUsageMetricTests {
             providerCost: nil,
             updatedAt: Date())
 
-        store._setSnapshotForTesting(snapshot, provider: .cursor)
-        store._setErrorForTesting(nil, provider: .cursor)
+        store._setSnapshotForTesting(snapshot, provider: .claude)
+        store._setErrorForTesting(nil, provider: .claude)
 
-        let displayText = controller.menuBarDisplayText(for: .cursor, snapshot: snapshot)
+        #expect(controller.settings.menuBarMetricPreference(for: .claude) == .extraUsage)
+        #expect(controller.settings.menuBarMetricPreference(for: .claude, snapshot: snapshot) == .automatic)
+        #expect(controller.menuBarMetricWindow(for: .claude, snapshot: snapshot) == snapshot.primary)
+        #expect(controller.menuBarDisplayText(for: .claude, snapshot: snapshot) == "10%")
+        let secondaryOnly = UsageSnapshot(
+            primary: nil,
+            secondary: snapshot.secondary,
+            tertiary: nil,
+            providerCost: nil,
+            updatedAt: snapshot.updatedAt)
+        store._setSnapshotForTesting(secondaryOnly, provider: .claude)
+        #expect(controller.settings.menuBarMetricPreference(for: .claude, snapshot: secondaryOnly) == .automatic)
+        #expect(controller.menuBarMetricWindow(for: .claude, snapshot: secondaryOnly) == snapshot.secondary)
+        let displayText = controller.menuBarDisplayText(for: .claude, snapshot: secondaryOnly)
 
         #expect(displayText == "72%")
     }
@@ -205,7 +108,7 @@ struct StatusItemExtraUsageMetricTests {
         let resetsAt = Date().addingTimeInterval(2 * 24 * 3600)
         let (store, controller) = self.makeController(
             suiteName: "StatusItemExtraUsageMetricTests-reset-time",
-            provider: .cursor,
+            provider: .claude,
             displayMode: .resetTime,
             resetTimesShowAbsolute: true)
         defer { controller.releaseStatusItemsForTesting() }
@@ -222,16 +125,16 @@ struct StatusItemExtraUsageMetricTests {
                 updatedAt: Date()),
             updatedAt: Date())
 
-        store._setSnapshotForTesting(snapshot, provider: .cursor)
-        store._setErrorForTesting(nil, provider: .cursor)
+        store._setSnapshotForTesting(snapshot, provider: .claude)
+        store._setErrorForTesting(nil, provider: .claude)
 
-        let displayText = controller.menuBarDisplayText(for: .cursor, snapshot: snapshot)
+        let displayText = controller.menuBarDisplayText(for: .claude, snapshot: snapshot)
 
         #expect(displayText == "↻ \(UsageFormatter.resetDescription(from: resetsAt))")
     }
 
-    private func makeCursorController(suiteName: String) -> (UsageStore, StatusItemController) {
-        self.makeController(suiteName: suiteName, provider: .cursor)
+    private func makeClaudeController(suiteName: String) -> (UsageStore, StatusItemController) {
+        self.makeController(suiteName: suiteName, provider: .claude)
     }
 
     private func makeController(

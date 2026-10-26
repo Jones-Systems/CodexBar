@@ -86,13 +86,15 @@ struct StatusMenuHostedSubmenuReleaseTests {
     @Test
     func `full close preserves native status links and unavailable rows`() throws {
         try self.withFixture { controller in
+            #expect(controller.tokenSnapshotForCostHistorySubmenu(provider: .codex) == nil)
             let parent = controller.makeMenu()
             controller.mergedMenu = parent
             controller.menuWillOpen(parent)
             let native = controller.makeHostedSubviewPlaceholderMenu(
                 chartID: StatusItemController.statusComponentsID, provider: .claude)
+            // Claude has chart data in this fixture; Codex has no scoped cost snapshot.
             let unavailable = controller.makeHostedSubviewPlaceholderMenu(
-                chartID: StatusItemController.costHistoryChartID, provider: .openai)
+                chartID: StatusItemController.costHistoryChartID, provider: .codex)
             for submenu in [native, unavailable] {
                 let item = NSMenuItem(title: "Fixture", action: nil, keyEquivalent: "")
                 item.submenu = submenu
@@ -105,6 +107,8 @@ struct StatusMenuHostedSubmenuReleaseTests {
             #expect(link.view == nil)
             #expect(link.identifier?.rawValue == UsageProvider.claude.rawValue)
             #expect(unavailableItem.title == "No data available")
+            #expect(unavailableItem.view == nil)
+            #expect(unavailableItem.toolTip == UsageProvider.codex.rawValue)
             controller.menuDidClose(parent)
             #expect(native.items.first === link)
             #expect(unavailable.items.first === unavailableItem)
@@ -147,22 +151,9 @@ struct StatusMenuHostedSubmenuReleaseTests {
         let settings = SettingsStore(
             userDefaults: InMemoryUserDefaults(),
             configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore(),
             codexCookieStore: InMemoryCookieHeaderStore(),
             claudeCookieStore: InMemoryCookieHeaderStore(),
-            cursorCookieStore: InMemoryCookieHeaderStore(),
-            opencodeCookieStore: InMemoryCookieHeaderStore(),
-            factoryCookieStore: InMemoryCookieHeaderStore(),
-            minimaxCookieStore: InMemoryMiniMaxCookieStore(),
-            minimaxAPITokenStore: InMemoryMiniMaxAPITokenStore(),
-            kimiTokenStore: InMemoryKimiTokenStore(),
-            augmentCookieStore: InMemoryCookieHeaderStore(),
-            ampCookieStore: InMemoryCookieHeaderStore(),
-            copilotTokenStore: InMemoryCopilotTokenStore(),
             tokenAccountStore: InMemoryTokenAccountStore(fileURL: root.appendingPathComponent("accounts.json")),
-            antigravityOAuthCredentialsStore: AntigravityOAuthCredentialsStore(
-                fileURL: root.appendingPathComponent("antigravity.json")),
             keychainAccessPolicy: SettingsStoreKeychainAccessPolicy(
                 setDisabled: { _ in }, isExplicitlyDisabled: { true }),
             performInitialProviderDetection: false)

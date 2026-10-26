@@ -29,50 +29,12 @@ struct CLIDiagnoseCommandTests {
         #expect(contents == #"{"provider":"minimax"}"#)
     }
 
-    private func makeSettingsWithMiniMaxCookie(_ manualCookieHeader: String) -> ProviderSettingsSnapshot {
-        ProviderSettingsSnapshot.make(
-            minimax: ProviderSettingsSnapshot.MiniMaxProviderSettings(
-                cookieSource: .manual,
-                manualCookieHeader: manualCookieHeader,
-                apiRegion: .global))
-    }
-
-    @Test
-    func `diagnose auth mode uses settings-backed MiniMax manual cookie when env token is absent`() {
-        let settings = self.makeSettingsWithMiniMaxCookie("Cookie: session_id=demo-cookie")
-
-        let summary = CodexBarCLI._diagnosticAuthSummaryForTesting(
-            provider: .minimax,
-            account: nil,
-            config: nil,
-            environment: [:],
-            settings: settings)
-
-        #expect(summary.configured)
-        #expect(summary.modes == ["cookie"])
-    }
-
-    @Test
-    func `diagnose auth mode keeps apiToken precedence over settings cookie`() {
-        let settings = self.makeSettingsWithMiniMaxCookie("Cookie: session_id=demo-cookie")
-
-        let summary = CodexBarCLI._diagnosticAuthSummaryForTesting(
-            provider: .minimax,
-            account: nil,
-            config: nil,
-            environment: [MiniMaxAPISettingsReader.apiTokenKey: "sk-api-demo-token"],
-            settings: settings)
-
-        #expect(summary.configured)
-        #expect(summary.modes == ["apiToken"])
-    }
-
     @Test
     func `generic diagnose auth summary detects provider config`() {
         let summary = CodexBarCLI._diagnosticAuthSummaryForTesting(
-            provider: .openai,
+            provider: .claude,
             account: nil,
-            config: ProviderConfig(id: .openai, apiKey: "sk-test"),
+            config: ProviderConfig(id: .claude, apiKey: "sk-test"),
             environment: [:],
             settings: nil)
 
@@ -83,64 +45,14 @@ struct CLIDiagnoseCommandTests {
     @Test
     func `generic diagnose auth summary detects provider environment credentials`() {
         let summary = CodexBarCLI._diagnosticAuthSummaryForTesting(
-            provider: .openai,
+            provider: .claude,
             account: nil,
             config: nil,
-            environment: [OpenAIAPISettingsReader.apiKeyEnvironmentKey: "sk-test"],
+            environment: ["ANTHROPIC_ADMIN_KEY": "sk-test"],
             settings: nil)
 
         #expect(summary.configured)
         #expect(summary.modes == ["api"])
-    }
-
-    @Test
-    func `generic diagnose auth summary detects Chutes environment credentials`() {
-        let summary = CodexBarCLI._diagnosticAuthSummaryForTesting(
-            provider: .chutes,
-            account: nil,
-            config: nil,
-            environment: [ChutesSettingsReader.apiKeyEnvironmentKey: "chutes-test"],
-            settings: nil)
-
-        #expect(summary.configured)
-        #expect(summary.modes == ["api"])
-    }
-
-    @Test
-    func `generic diagnose auth summary detects Neuralwatt environment credentials`() {
-        let summary = CodexBarCLI._diagnosticAuthSummaryForTesting(
-            provider: .neuralwatt,
-            account: nil,
-            config: nil,
-            environment: [NeuralWattSettingsReader.apiKeyEnvironmentKey: "sk-test"],
-            settings: nil)
-
-        #expect(summary.configured)
-        #expect(summary.modes == ["api"])
-    }
-
-    @Test
-    func `generic diagnose auth summary requires complete Bedrock credentials`() {
-        let partial = CodexBarCLI._diagnosticAuthSummaryForTesting(
-            provider: .bedrock,
-            account: nil,
-            config: ProviderConfig(id: .bedrock, apiKey: "access-only"),
-            environment: [BedrockSettingsReader.accessKeyIDKey: "access-only"],
-            settings: nil)
-        #expect(!partial.configured)
-        #expect(partial.modes.isEmpty)
-
-        let complete = CodexBarCLI._diagnosticAuthSummaryForTesting(
-            provider: .bedrock,
-            account: nil,
-            config: nil,
-            environment: [
-                BedrockSettingsReader.accessKeyIDKey: "access",
-                BedrockSettingsReader.secretAccessKeyKey: "secret",
-            ],
-            settings: nil)
-        #expect(complete.configured)
-        #expect(complete.modes == ["api"])
     }
 
     @Test

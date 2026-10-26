@@ -8,8 +8,9 @@
 # user machine: it copies the packaged app to a temp directory, launches the
 # binary directly (skipping LaunchServices, so it cannot re-activate a running
 # production CodexBar) with every file read under the repo checkout denied via
-# sandbox-exec, and requires the process to stay alive. A resource-bundle
-# regression now fails packaging instead of shipping.
+# sandbox-exec, and requires the process to stay alive. Builds retaining Core
+# resources also force deterministic resource loads; Coreless builds verify
+# CLI --help relocation and app liveness, without equivalent resource proof.
 
 set -euo pipefail
 
@@ -37,7 +38,17 @@ if [[ ! -x "$APP_BUNDLE/Contents/Helpers/CodexBarCLI" ]]; then
   echo "ERROR: Launch smoke check: missing Helpers/CodexBarCLI in ${APP_BUNDLE}" >&2
   exit 1
 fi
-if [[ ! -d "$APP_BUNDLE/Contents/Helpers/CodexBar_CodexBarCore.bundle" ]]; then
+# Current tracked source inputs select the contract, never leftover .build bundles.
+if [[ "$(git -C "$ROOT" rev-parse --show-toplevel)" != "$ROOT" ]]; then
+  echo "ERROR: Launch smoke resource contract requires the exact source checkout root." >&2
+  exit 1
+fi
+CORE_RESOURCE_INPUTS="$(git -C "$ROOT" ls-files -- Sources/CodexBarCore/Resources/)"
+CORE_RESOURCES_REQUIRED=0
+if [[ -n "$CORE_RESOURCE_INPUTS" ]]; then
+  CORE_RESOURCES_REQUIRED=1
+fi
+if [[ "$CORE_RESOURCES_REQUIRED" == "1" && ! -d "$APP_BUNDLE/Contents/Helpers/CodexBar_CodexBarCore.bundle" ]]; then
   echo "ERROR: Launch smoke check: missing CodexBarCore resource bundle beside Helpers/CodexBarCLI" >&2
   exit 1
 fi
@@ -128,10 +139,14 @@ fail_with_cli_symlink_probe_log() {
 # Probe the executable-context resolver before the app-context resolver. The
 # checkout denial proves the helper is using its adjacent bundle rather than
 # SwiftPM's compile-time development path.
-log "Launch smoke check: probing packaged Helpers CLI resource loads with ${ROOT} unreadable."
+log "Launch smoke check: probing packaged Helpers CLI with ${ROOT} unreadable."
 (
   cd "$SMOKE_DIR"
-  exec env CODEXBAR_RESOURCE_SMOKE=1 sandbox-exec -p "$SANDBOX_PROFILE" "$CLI_BIN"
+  if [[ "$CORE_RESOURCES_REQUIRED" == "1" ]]; then
+    exec env CODEXBAR_RESOURCE_SMOKE=1 sandbox-exec -p "$SANDBOX_PROFILE" "$CLI_BIN"
+  else
+    exec env -u CODEXBAR_RESOURCE_SMOKE sandbox-exec -p "$SANDBOX_PROFILE" "$CLI_BIN" --help
+  fi
 ) >"$CLI_PROBE_LOG" 2>&1 &
 SMOKE_PID=$!
 CLI_PROBE_OK=0
@@ -143,20 +158,31 @@ for _ in $(seq 1 60); do
   sleep 0.5
 done
 if [[ "$CLI_PROBE_OK" == "0" ]]; then
-  fail_with_cli_probe_log "Launch smoke check FAILED: Helpers CLI resource probe did not finish within 30s."
+  fail_with_cli_probe_log "Launch smoke check FAILED: Helpers CLI probe did not finish within 30s."
 fi
 CLI_PROBE_STATUS=0
 wait "$SMOKE_PID" || CLI_PROBE_STATUS=$?
 SMOKE_PID=""
-if [[ "$CLI_PROBE_STATUS" -ne 0 ]] || ! grep -q "CODEXBAR_RESOURCE_SMOKE_OK" "$CLI_PROBE_LOG"; then
-  fail_with_cli_probe_log "Launch smoke check FAILED: packaged Helpers CLI cannot load CodexBarCore resources without the build checkout. Exit status: ${CLI_PROBE_STATUS}."
+if [[ "$CORE_RESOURCES_REQUIRED" == "1" ]]; then
+  if [[ "$CLI_PROBE_STATUS" -ne 0 ]] || ! grep -q "CODEXBAR_RESOURCE_SMOKE_OK" "$CLI_PROBE_LOG"; then
+    fail_with_cli_probe_log "Launch smoke check FAILED: packaged Helpers CLI cannot load CodexBarCore resources without the build checkout. Exit status: ${CLI_PROBE_STATUS}."
+  fi
+  log "Launch smoke check: Helpers CLI resource probe OK."
+else
+  if [[ "$CLI_PROBE_STATUS" -ne 0 ]]; then
+    fail_with_cli_probe_log "Launch smoke check FAILED: packaged Helpers CLI --help failed without the build checkout. Exit status: ${CLI_PROBE_STATUS}."
+  fi
+  log "Launch smoke check: Helpers CLI --help relocation OK; forced resource loads were not tested."
 fi
-log "Launch smoke check: Helpers CLI resource probe OK."
 
-log "Launch smoke check: probing symlinked Helpers CLI resource loads with ${ROOT} unreadable."
+log "Launch smoke check: probing symlinked Helpers CLI with ${ROOT} unreadable."
 (
   cd "$SMOKE_DIR"
-  exec env CODEXBAR_RESOURCE_SMOKE=1 sandbox-exec -p "$SANDBOX_PROFILE" "$CLI_SYMLINK"
+  if [[ "$CORE_RESOURCES_REQUIRED" == "1" ]]; then
+    exec env CODEXBAR_RESOURCE_SMOKE=1 sandbox-exec -p "$SANDBOX_PROFILE" "$CLI_SYMLINK"
+  else
+    exec env -u CODEXBAR_RESOURCE_SMOKE sandbox-exec -p "$SANDBOX_PROFILE" "$CLI_SYMLINK" --help
+  fi
 ) >"$CLI_SYMLINK_PROBE_LOG" 2>&1 &
 SMOKE_PID=$!
 CLI_SYMLINK_PROBE_OK=0
@@ -168,49 +194,65 @@ for _ in $(seq 1 60); do
   sleep 0.5
 done
 if [[ "$CLI_SYMLINK_PROBE_OK" == "0" ]]; then
-  fail_with_cli_symlink_probe_log "Launch smoke check FAILED: symlinked Helpers CLI resource probe did not finish within 30s."
+  fail_with_cli_symlink_probe_log "Launch smoke check FAILED: symlinked Helpers CLI probe did not finish within 30s."
 fi
 CLI_SYMLINK_PROBE_STATUS=0
 wait "$SMOKE_PID" || CLI_SYMLINK_PROBE_STATUS=$?
 SMOKE_PID=""
-if [[ "$CLI_SYMLINK_PROBE_STATUS" -ne 0 ]] || ! grep -q "CODEXBAR_RESOURCE_SMOKE_OK" "$CLI_SYMLINK_PROBE_LOG"; then
-  fail_with_cli_symlink_probe_log "Launch smoke check FAILED: symlinked packaged Helpers CLI cannot load CodexBarCore resources without the build checkout. Exit status: ${CLI_SYMLINK_PROBE_STATUS}."
+if [[ "$CORE_RESOURCES_REQUIRED" == "1" ]]; then
+  if [[ "$CLI_SYMLINK_PROBE_STATUS" -ne 0 ]] || ! grep -q "CODEXBAR_RESOURCE_SMOKE_OK" "$CLI_SYMLINK_PROBE_LOG"; then
+    fail_with_cli_symlink_probe_log "Launch smoke check FAILED: symlinked packaged Helpers CLI cannot load CodexBarCore resources without the build checkout. Exit status: ${CLI_SYMLINK_PROBE_STATUS}."
+  fi
+  log "Launch smoke check: symlinked Helpers CLI resource probe OK."
+else
+  if [[ "$CLI_SYMLINK_PROBE_STATUS" -ne 0 ]]; then
+    fail_with_cli_symlink_probe_log "Launch smoke check FAILED: symlinked packaged Helpers CLI --help failed without the build checkout. Exit status: ${CLI_SYMLINK_PROBE_STATUS}."
+  fi
+  log "Launch smoke check: symlinked Helpers CLI --help relocation OK; forced resource loads were not tested."
 fi
-log "Launch smoke check: symlinked Helpers CLI resource probe OK."
 
 # Phase 1 (deterministic, headless-safe): CODEXBAR_RESOURCE_SMOKE=1 makes the
 # app force the resource loads that trapped in 0.48.0 and exit before any UI.
 # The loads are lazy in normal operation, so the liveness phase below cannot be
 # relied on alone to reach them.
-log "Launch smoke check: probing packaged resource loads with ${ROOT} unreadable."
-(
-  cd "$SMOKE_DIR"
-  exec env CODEXBAR_RESOURCE_SMOKE=1 sandbox-exec -p "$SANDBOX_PROFILE" "$SMOKE_BIN"
-) >"$PROBE_LOG" 2>&1 &
-SMOKE_PID=$!
-PROBE_OK=0
-for _ in $(seq 1 60); do
-  if ! kill -0 "$SMOKE_PID" 2>/dev/null; then
-    PROBE_OK=1
-    break
+if [[ "$CORE_RESOURCES_REQUIRED" == "1" ]]; then
+  log "Launch smoke check: probing packaged resource loads with ${ROOT} unreadable."
+  (
+    cd "$SMOKE_DIR"
+    exec env CODEXBAR_RESOURCE_SMOKE=1 sandbox-exec -p "$SANDBOX_PROFILE" "$SMOKE_BIN"
+  ) >"$PROBE_LOG" 2>&1 &
+  SMOKE_PID=$!
+  PROBE_OK=0
+  for _ in $(seq 1 60); do
+    if ! kill -0 "$SMOKE_PID" 2>/dev/null; then
+      PROBE_OK=1
+      break
+    fi
+    sleep 0.5
+  done
+  if [[ "$PROBE_OK" == "0" ]]; then
+    fail_with_probe_log "Launch smoke check FAILED: resource probe did not finish within 30s."
   fi
-  sleep 0.5
-done
-if [[ "$PROBE_OK" == "0" ]]; then
-  fail_with_probe_log "Launch smoke check FAILED: resource probe did not finish within 30s."
+  PROBE_STATUS=0
+  wait "$SMOKE_PID" || PROBE_STATUS=$?
+  SMOKE_PID=""
+  if [[ "$PROBE_STATUS" -ne 0 ]] || ! grep -q "CODEXBAR_RESOURCE_SMOKE_OK" "$PROBE_LOG"; then
+    fail_with_probe_log "Launch smoke check FAILED: packaged app cannot load its resource bundles without the build checkout (the 0.48.0 crash class, #2738). Do not ship this build. Exit status: ${PROBE_STATUS}."
+  fi
+  log "Launch smoke check: resource probe OK."
+else
+  log "Launch smoke check: app forced resource-load proof unavailable; Core resource smoke entrypoints were removed."
 fi
-PROBE_STATUS=0
-wait "$SMOKE_PID" || PROBE_STATUS=$?
-SMOKE_PID=""
-if [[ "$PROBE_STATUS" -ne 0 ]] || ! grep -q "CODEXBAR_RESOURCE_SMOKE_OK" "$PROBE_LOG"; then
-  fail_with_probe_log "Launch smoke check FAILED: packaged app cannot load its resource bundles without the build checkout (the 0.48.0 crash class, #2738). Do not ship this build. Exit status: ${PROBE_STATUS}."
-fi
-log "Launch smoke check: resource probe OK."
 
 # Candidate packaging can prove resources without starting provider/account work.
-# All three probes above must still pass; this opt-in skips only the UI lifetime check.
+# Retained builds require all three resource probes; Coreless builds require both
+# CLI --help routes. This opt-in always skips ordinary app startup and lifetime.
 if [[ "${CODEXBAR_LAUNCH_SMOKE_RESOURCE_ONLY:-0}" == "1" ]]; then
-  log "Launch smoke check: resource-only verification complete; application lifetime was not tested."
+  if [[ "$CORE_RESOURCES_REQUIRED" == "1" ]]; then
+    log "Launch smoke check: resource-only verification complete; application lifetime was not tested."
+  else
+    log "Launch smoke check: CLI relocation only; app resource proof unavailable; application lifetime was not tested."
+  fi
   exit 0
 fi
 

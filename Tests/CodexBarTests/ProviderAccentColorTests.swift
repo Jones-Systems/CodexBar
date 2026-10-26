@@ -73,7 +73,6 @@ struct ProviderAccentColorTests {
         let config = CodexBarConfig(providers: [
             ProviderConfig(id: .codex, accentColor: "#60BA7E"),
             ProviderConfig(id: .claude, accentColor: "nonsense"),
-            ProviderConfig(id: .antigravity),
         ])
 
         let overrides = ProviderAccentColors.overrides(in: config)
@@ -81,7 +80,6 @@ struct ProviderAccentColorTests {
         #expect(overrides.count == 1)
         #expect(overrides[.codex] == ProviderColor(hex: 0x60BA7E))
         #expect(overrides[.claude] == nil)
-        #expect(overrides[.antigravity] == nil)
     }
 
     @Test
@@ -107,51 +105,5 @@ struct ProviderAccentColorTests {
         ])
 
         #expect(decoded == [.codex: ProviderColor(hex: 0x60BA7E)])
-    }
-
-    @Test
-    func `sync carries the accent override to another Mac`() throws {
-        let local = ProviderConfig(id: .codex, enabled: true, accentColor: "#60BA7E")
-
-        let payload = ProviderIntentPayload(config: local)
-        let applied = try payload.applying(
-            to: ProviderConfig(id: .codex),
-            secretFields: [:],
-            canEnable: { _, _ in true })
-
-        #expect(payload.accentColor == "#60BA7E")
-        #expect(applied.accentColor == "#60BA7E")
-    }
-
-    @Test
-    func `sync clears the accent override when the sending Mac cleared it`() throws {
-        let payload = ProviderIntentPayload(config: ProviderConfig(id: .codex, enabled: true))
-
-        let applied = try payload.applying(
-            to: ProviderConfig(id: .codex, accentColor: "#60BA7E"),
-            secretFields: [:],
-            canEnable: { _, _ in true })
-
-        // A Mac that knows the field reports an empty string, which means "the user cleared it".
-        #expect(payload.accentColor?.isEmpty == true)
-        #expect(applied.accentColor == nil)
-    }
-
-    @Test
-    func `a client that predates accent colors cannot erase an override`() throws {
-        // A payload from an older Mac carries no accentColor key at all.
-        let legacy = #"""
-        {"schemaVersion":1,"provider":"codex","enabled":true}
-        """#
-        let data = try #require(legacy.data(using: .utf8))
-        let payload = try JSONDecoder().decode(ProviderIntentPayload.self, from: data)
-
-        let applied = try payload.applying(
-            to: ProviderConfig(id: .codex, accentColor: "#60BA7E"),
-            secretFields: [:],
-            canEnable: { _, _ in true })
-
-        #expect(payload.accentColor == nil)
-        #expect(applied.accentColor == "#60BA7E")
     }
 }

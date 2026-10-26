@@ -68,16 +68,16 @@ struct FleetAccountMenuProjectionTests {
                 accountID: localIdentity))
         let localCopy = Self.snapshot(accountKey: localKey, fetchedAt: Date(timeIntervalSince1970: 200))
         let distinct = Self.snapshot(accountKey: distinctKey, fetchedAt: Date(timeIntervalSince1970: 300))
-        let localAccountKeys = store.cloudSyncLocalAccountKeys(for: .codex)
+        let localAccountKeys = store.localAccountKeys(for: .codex)
 
         let projection = FleetAccountMenuPlanner.projection(
             provider: .codex,
             snapshots: [distinct, localCopy],
-            currentDeviceID: settings.iCloudSyncDeviceID,
+            currentDeviceID: settings.localDeviceID,
             localAccountKeys: localAccountKeys,
             hasLocalUsage: true)
 
-        #expect(store.cloudSyncAccountSnapshots().map(\.accountKey) == [localKey])
+        #expect(store.localAccountSnapshots().map(\.accountKey) == [localKey])
         #expect(localAccountKeys == [localKey])
         #expect(projection.fallback == nil)
         #expect(projection.additionalAccounts.map(\.accountKey) == [distinctKey])
@@ -141,7 +141,7 @@ struct FleetAccountMenuProjectionTests {
             settings: settings,
             startupBehavior: .testing,
             environmentBase: [:])
-        store.snapshots[.openrouter] = UsageSnapshot(
+        store.snapshots[.claude] = UsageSnapshot(
             primary: RateWindow(
                 usedPercent: 25,
                 windowMinutes: 300,
@@ -150,18 +150,18 @@ struct FleetAccountMenuProjectionTests {
             secondary: nil,
             updatedAt: Date(timeIntervalSince1970: 100))
         let remote = Self.snapshot(
-            provider: .openrouter,
+            provider: .claude,
             accountKey: AccountSnapshotSyncPayload.accountKey(for: nil),
             fetchedAt: Date(timeIntervalSince1970: 200))
 
         let projection = FleetAccountMenuPlanner.projection(
-            provider: .openrouter,
+            provider: .claude,
             snapshots: [remote],
-            currentDeviceID: settings.iCloudSyncDeviceID,
-            localAccountKeys: store.cloudSyncLocalAccountKeys(for: .openrouter),
+            currentDeviceID: settings.localDeviceID,
+            localAccountKeys: store.localAccountKeys(for: .claude),
             hasLocalUsage: true)
 
-        #expect(store.cloudSyncLocalAccountKeys(for: .openrouter) == ["default"])
+        #expect(store.localAccountKeys(for: .claude) == ["default"])
         #expect(projection.fallback == nil)
         #expect(projection.additionalAccounts.isEmpty)
     }
@@ -190,12 +190,12 @@ struct FleetAccountMenuProjectionTests {
             configRevision: settings.configRevision,
             expiresAt: .distantFuture)
         let remote = Self.snapshot(accountKey: emailKey, fetchedAt: Date(timeIntervalSince1970: 200))
-        let localAccountKeys = store.cloudSyncLocalAccountKeys(for: .codex)
+        let localAccountKeys = store.localAccountKeys(for: .codex)
 
         let projection = FleetAccountMenuPlanner.projection(
             provider: .codex,
             snapshots: [remote],
-            currentDeviceID: settings.iCloudSyncDeviceID,
+            currentDeviceID: settings.localDeviceID,
             localAccountKeys: localAccountKeys,
             hasLocalUsage: true)
 

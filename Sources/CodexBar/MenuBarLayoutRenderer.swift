@@ -36,8 +36,6 @@ struct MenuBarLayoutRenderMetrics: Hashable {
     let runsOutMinutes: Int?
     /// USD amounts mirroring `balance` / `costToday` / `cost30d`. Provider amounts reported in another
     /// currency are converted to USD so thresholds do not move when the user's display currency does.
-    let balanceRemainingUSD: Double?
-    let balanceUsedUSD: Double?
     let costTodayUSD: Double?
     let cost30dUSD: Double?
 
@@ -46,8 +44,6 @@ struct MenuBarLayoutRenderMetrics: Hashable {
         weeklyPaceDelta: nil,
         automaticPaceDelta: nil,
         runsOutMinutes: nil,
-        balanceRemainingUSD: nil,
-        balanceUsedUSD: nil,
         costTodayUSD: nil,
         cost30dUSD: nil)
 }
@@ -77,7 +73,6 @@ struct MenuBarLayoutRenderData: Hashable {
     let weeklyPace: String?
     let automaticPace: String?
     let runsOut: String?
-    let balance: String?
     let costToday: String?
     let cost30d: String?
     /// Numeric twins of the display strings above, for conditional predicates.
@@ -484,11 +479,6 @@ final class MenuBarLayoutRenderer {
                 unavailableLabel: L("Run-out estimate unavailable"),
                 accessibilityText: isCompact ? data.runsOut : nil,
                 attributes: style.attributes)
-        case .balance:
-            return self.optionalTextToken(
-                data.balance,
-                unavailableLabel: L("%@ unavailable", L("Balance")),
-                attributes: style.attributes)
         case .costToday:
             return self.optionalTextToken(
                 data.costToday,
@@ -876,9 +866,6 @@ extension MenuBarLayoutConditional {
         case .weeklyPace: data.metrics.weeklyPaceDelta
         case .automaticPace: data.metrics.automaticPaceDelta
         case .runsOutIn: data.metrics.runsOutMinutes.map { Double($0) / 60 }
-        case .balance: predicate.direction == .used
-            ? data.metrics.balanceUsedUSD
-            : data.metrics.balanceRemainingUSD
         case .costToday: data.metrics.costTodayUSD
         case .cost30d: data.metrics.cost30dUSD
         }

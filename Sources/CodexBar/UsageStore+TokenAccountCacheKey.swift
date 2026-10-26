@@ -13,9 +13,7 @@ extension UsageStore {
         var material = Data(provider.rawValue.utf8)
         material.append((try? encoder.encode(config)) ?? Data())
         material.append((try? encoder.encode(account)) ?? Data())
-        if Self.tokenCostRequiresProviderSnapshot(provider) {
-            material.append(Data(self.tokenSnapshotScopeSignature(for: provider).utf8))
-        }
+
         return SHA256.hash(data: material).map { String(format: "%02x", $0) }.joined()
     }
 }

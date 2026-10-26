@@ -14,11 +14,6 @@ import ci_swift_test_by_suite as runner
 
 
 ROOT = Path(__file__).resolve().parent.parent
-FILTER = (
-    "ProviderPluginRuntimeTests|ProviderPluginParityTests|ProviderPluginDetailsParityTests|"
-    "ProviderPluginExtensionParityTests|Sub2APIPluginGoldenTests|UserProviderPluginPortableTests"
-)
-
 
 class IsolatedCICommandsTests(unittest.TestCase):
     def setUp(self):
@@ -28,8 +23,8 @@ class IsolatedCICommandsTests(unittest.TestCase):
         self.workspace = self.root / "workspace"
         scripts = self.workspace / "Scripts"
         scripts.mkdir(parents=True)
-        for name in ("test.sh", "test-plugin-engines.sh", "ci_swift_test_by_suite.py",
-                     "ci_swift_test_campaign.py", "test_profiles.py", "build_jobs.py"):
+        for name in ("test.sh", "ci_swift_test_by_suite.py",
+                     "ci_swift_test_campaign.py", "ci_swift_test_artifact.py", "test_profiles.py", "build_jobs.py"):
             shutil.copy2(ROOT / "Scripts" / name, scripts / name)
         (scripts / "test_profiles.json").write_text(json.dumps({
             "version": 1, "normal_providers": ["codex", "claude"],
@@ -123,46 +118,6 @@ sys.exit(int(os.environ.get("CI_COMMAND_EXIT", "0")))
         self.assertEqual(records[0]["args"], ["test", "--filter", "FocusedTests", "--jobs", "6",
                                                "-Xswiftc", "-num-threads", "-Xswiftc", "1"])
         self.assert_owned_cleanup(records)
-
-    def test_plugin_passes_share_parent_and_preserve_filters(self):
-        status = self.invoke([str(self.workspace / "Scripts/test-plugin-engines.sh")])
-        self.assertEqual(status, 0, self.output)
-        records = self.records()
-        self.assertEqual([item["engine"] for item in records], [None, "jsc"])
-        self.assertEqual([item["profile"] for item in records], ["full", "full"])
-        self.assertEqual([item["args"] for item in records], [
-            ["test", "--filter", FILTER], ["test", "--skip-build", "--filter", FILTER],
-        ])
-        self.assert_owned_cleanup(records)
-
-    def test_plugin_failure_keeps_status_and_does_not_run_second_engine(self):
-        self.env["CI_COMMAND_EXIT"] = "37"
-        status = self.invoke([str(self.workspace / "Scripts/test-plugin-engines.sh")])
-        self.assertEqual(status, 37, self.output)
-        records = self.records()
-        self.assertEqual(len(records), 1)
-        self.assert_owned_cleanup(records)
-
-    def test_plugin_rollback_selects_full_build_and_preserves_result(self):
-        for result in (0, 37):
-            with self.subTest(result=result):
-                self.record = self.root / f"jsc-{result}.jsonl"
-                self.env["CI_COMMAND_RECORD"] = str(self.record)
-                self.env["CI_COMMAND_EXIT"] = str(result)
-                status = self.invoke([str(self.workspace / "Scripts/test-plugin-engines.sh"), "--jsc-only"])
-                self.assertEqual(status, result, self.output)
-                records = self.records()
-                self.assertEqual([item["engine"] for item in records], ["jsc"])
-                self.assertEqual([item["profile"] for item in records], ["full"])
-                self.assertEqual([item["args"] for item in records], [
-                    ["test", "--filter", FILTER],
-                ])
-                self.assert_owned_cleanup(records)
-
-    def test_plugin_unknown_option_starts_no_command(self):
-        status = self.invoke([str(self.workspace / "Scripts/test-plugin-engines.sh"), "--unknown"])
-        self.assertEqual(status, 2, self.output)
-        self.assertFalse(self.record.exists())
 
     def test_borrowed_parent_is_retained_on_command_failure(self):
         parent = self.workspace / "borrowed"

@@ -27,7 +27,6 @@ extension UsageMenuCardView.Model {
             "dashboard=\(self.inlineUsageDashboard?.heightFingerprint ?? "")",
             "providerCost=\(self.providerCost?.heightFingerprint ?? "")",
             "tokenUsage=\(self.tokenUsage?.heightFingerprint ?? "")",
-            "openaiAPI=\(self.openAIAPIUsage == nil ? "0" : "1")",
         ] + additional)
     }
 
@@ -143,7 +142,6 @@ extension UsageMenuCardView.Model.TokenUsageSection {
         MenuCardHeightFingerprint.join([
             MenuCardHeightFingerprint.field("session", self.sessionLine),
             MenuCardHeightFingerprint.field("month", self.monthLine),
-            MenuCardHeightFingerprint.field("metered", self.meteredLine),
             MenuCardHeightFingerprint.field("comparisons", self.comparisonLines.joined(separator: "|")),
             MenuCardHeightFingerprint.field("hint", self.hintLine),
             MenuCardHeightFingerprint.field("error", self.errorLine),

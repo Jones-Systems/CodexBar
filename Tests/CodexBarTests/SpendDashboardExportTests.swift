@@ -20,8 +20,8 @@ struct SpendDashboardExportTests {
         let model = SpendDashboardModel.build(
             inputs: [
                 SpendDashboardModel.ProviderInput(
-                    id: "cursor",
-                    provider: .cursor,
+                    id: "claude",
+                    provider: .claude,
                     displayName: "Cursor",
                     snapshot: CostUsageTokenSnapshot(
                         sessionTokens: 10,
@@ -44,7 +44,7 @@ struct SpendDashboardExportTests {
             ],
             requestedDays: 7,
             now: now)
-        let data = try SpendDashboardJSONExporter.encodedData(model: model, hiddenSourceIDs: ["cursor"])
+        let data = try SpendDashboardJSONExporter.encodedData(model: model, hiddenSourceIDs: ["claude"])
         let root = TestFixtureScratch.root
             .appendingPathComponent("SpendDashboardExportTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -55,7 +55,7 @@ struct SpendDashboardExportTests {
         let object = try #require(
             JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
         #expect(object["requestedDays"] as? Int == 7)
-        #expect(object["hiddenSourceIDs"] as? [String] == ["cursor"])
+        #expect(object["hiddenSourceIDs"] as? [String] == ["claude"])
         let json = try #require(String(bytes: data, encoding: .utf8))
         #expect(json.contains("\n"))
         #expect(json.contains("\"provenance\""))
@@ -68,8 +68,8 @@ struct SpendDashboardExportTests {
         let model = SpendDashboardModel.build(
             inputs: [
                 SpendDashboardModel.ProviderInput(
-                    id: "cursor",
-                    provider: .cursor,
+                    id: "claude",
+                    provider: .claude,
                     displayName: "Cursor",
                     snapshot: CostUsageTokenSnapshot(
                         sessionTokens: 10,
@@ -92,12 +92,12 @@ struct SpendDashboardExportTests {
             ],
             requestedDays: 7,
             now: now)
-        let data = try SpendDashboardJSONExporter.encodedData(model: model, hiddenSourceIDs: ["cursor"])
+        let data = try SpendDashboardJSONExporter.encodedData(model: model, hiddenSourceIDs: ["claude"])
         let json = try #require(String(bytes: data, encoding: .utf8))
         let pb = NSPasteboard(name: NSPasteboard.Name("SpendDashboardExportTests-copy-\(UUID().uuidString)"))
         pb.clearContents()
         defer { pb.releaseGlobally() }
-        #expect(SpendDashboardJSONExporter.copyToPasteboard(model: model, hiddenSourceIDs: ["cursor"], pasteboard: pb))
+        #expect(SpendDashboardJSONExporter.copyToPasteboard(model: model, hiddenSourceIDs: ["claude"], pasteboard: pb))
         #expect(pb.string(forType: .string) == json)
     }
 
@@ -108,8 +108,8 @@ struct SpendDashboardExportTests {
         let model = SpendDashboardModel.build(
             inputs: [
                 SpendDashboardModel.ProviderInput(
-                    id: "cursor",
-                    provider: .cursor,
+                    id: "claude",
+                    provider: .claude,
                     displayName: "Cursor",
                     snapshot: CostUsageTokenSnapshot(
                         sessionTokens: 10,
@@ -140,7 +140,7 @@ struct SpendDashboardExportTests {
         let savedURL = root.appendingPathComponent("codexbar-spend-last-7-days.json")
         let saved = SpendDashboardJSONExporter.save(
             model: model,
-            hiddenSourceIDs: ["cursor"],
+            hiddenSourceIDs: ["claude"],
             chooseDestination: { filename in
                 #expect(filename == "codexbar-spend-last-7-days.json")
                 return savedURL

@@ -4,6 +4,40 @@ import Testing
 
 struct AppGroupSupportTests {
     @Test
+    func `unavailable synthetic target does not mark migration complete`() throws {
+        let fixture = try MigrationFixture()
+        defer { fixture.cleanUp() }
+
+        let result = fixture.migrate(currentDefaultsAvailable: false)
+
+        #expect(result.status == .targetUnavailable)
+        #expect(!result.copiedSnapshot)
+        #expect(result.copiedDefaults == 0)
+        #expect(fixture.standardDefaults.object(forKey: AppGroupSupport.migrationVersionKey) == nil)
+        #expect(fixture.fileManager.operations == [.containerLookup])
+    }
+
+    @Test
+    func `legacy migration completes when synthetic legacy data is absent`() throws {
+        let fixture = try MigrationFixture()
+        defer { fixture.cleanUp() }
+
+        let result = fixture.migrate()
+
+        #expect(result.status == .noChangesNeeded)
+        #expect(!result.copiedSnapshot)
+        #expect(result.copiedDefaults == 0)
+        #expect(fixture.currentDefaults.dictionaryRepresentation().isEmpty)
+        #expect(
+            fixture.standardDefaults.integer(forKey: AppGroupSupport.migrationVersionKey)
+                == AppGroupSupport.migrationVersion)
+        #expect(fixture.fileManager.operations == [
+            .exists(fixture.currentSnapshotURL.path),
+            .exists(fixture.legacySnapshotURL.path),
+        ])
+    }
+
+    @Test
     func `app group identifiers use resolved team-prefixed release and debug variants`() {
         #expect(
             AppGroupSupport.currentGroupID(teamID: "Y5PE65HELJ", bundleID: "com.steipete.codexbar")
@@ -36,7 +70,7 @@ struct AppGroupSupportTests {
         let fixture = try MigrationFixture()
         defer { fixture.cleanUp() }
         fixture.legacyDefaults.set(true, forKey: "debugDisableKeychainAccess")
-        fixture.legacyDefaults.set(UsageProvider.cursor.rawValue, forKey: "widgetSelectedProvider")
+        fixture.legacyDefaults.set(UsageProvider.claude.rawValue, forKey: "widgetSelectedProvider")
         try fixture.writeSnapshot("legacy-snapshot", to: fixture.legacySnapshotURL)
 
         let result = fixture.migrate()
@@ -45,7 +79,7 @@ struct AppGroupSupportTests {
         #expect(result.copiedSnapshot)
         #expect(result.copiedDefaults == 2)
         #expect(fixture.currentDefaults.bool(forKey: "debugDisableKeychainAccess"))
-        #expect(fixture.currentDefaults.string(forKey: "widgetSelectedProvider") == UsageProvider.cursor.rawValue)
+        #expect(fixture.currentDefaults.string(forKey: "widgetSelectedProvider") == UsageProvider.claude.rawValue)
         #expect(try Data(contentsOf: fixture.currentSnapshotURL) == Data("legacy-snapshot".utf8))
         #expect(
             fixture.standardDefaults.integer(forKey: AppGroupSupport.migrationVersionKey)
@@ -74,7 +108,7 @@ struct AppGroupSupportTests {
         fixture.currentDefaults.set(false, forKey: "debugDisableKeychainAccess")
         fixture.currentDefaults.set(UsageProvider.codex.rawValue, forKey: "widgetSelectedProvider")
         fixture.legacyDefaults.set(true, forKey: "debugDisableKeychainAccess")
-        fixture.legacyDefaults.set(UsageProvider.cursor.rawValue, forKey: "widgetSelectedProvider")
+        fixture.legacyDefaults.set(UsageProvider.claude.rawValue, forKey: "widgetSelectedProvider")
 
         let result = fixture.migrate()
 
@@ -104,40 +138,6 @@ struct AppGroupSupportTests {
         #expect(result.copiedDefaults == 0)
         #expect(try Data(contentsOf: fixture.currentSnapshotURL) == Data("current-snapshot".utf8))
         #expect(fixture.fileManager.operations == [.exists(fixture.currentSnapshotURL.path)])
-    }
-
-    @Test
-    func `legacy migration completes when synthetic legacy data is absent`() throws {
-        let fixture = try MigrationFixture()
-        defer { fixture.cleanUp() }
-
-        let result = fixture.migrate()
-
-        #expect(result.status == .noChangesNeeded)
-        #expect(!result.copiedSnapshot)
-        #expect(result.copiedDefaults == 0)
-        #expect(fixture.currentDefaults.dictionaryRepresentation().isEmpty)
-        #expect(
-            fixture.standardDefaults.integer(forKey: AppGroupSupport.migrationVersionKey)
-                == AppGroupSupport.migrationVersion)
-        #expect(fixture.fileManager.operations == [
-            .exists(fixture.currentSnapshotURL.path),
-            .exists(fixture.legacySnapshotURL.path),
-        ])
-    }
-
-    @Test
-    func `unavailable synthetic target does not mark migration complete`() throws {
-        let fixture = try MigrationFixture()
-        defer { fixture.cleanUp() }
-
-        let result = fixture.migrate(currentDefaultsAvailable: false)
-
-        #expect(result.status == .targetUnavailable)
-        #expect(!result.copiedSnapshot)
-        #expect(result.copiedDefaults == 0)
-        #expect(fixture.standardDefaults.object(forKey: AppGroupSupport.migrationVersionKey) == nil)
-        #expect(fixture.fileManager.operations == [.containerLookup])
     }
 }
 

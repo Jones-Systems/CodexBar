@@ -1,6 +1,6 @@
 # CodexBar 🎚️ — May your tokens never run out.
 
-> Every AI coding limit, in your menu bar.
+> Codex and Claude usage, in your menu bar.
 
 This is the [Jones Systems source fork](https://github.com/Jones-Systems/CodexBar) of
 [steipete/CodexBar](https://github.com/steipete/CodexBar), a menu bar app for monitoring
@@ -18,9 +18,7 @@ or the [fork guide](docs/FORK_QUICK_START.md). Coding agents start at [AGENTS.md
 [![License: MIT](https://img.shields.io/badge/license-MIT-6e5aff?style=flat-square)](LICENSE)
 [![Site](https://img.shields.io/badge/site-codexbar.app-16d3b4?style=flat-square)](https://codexbar.app)
 
-<a href="https://codexbar.app"><img src="docs/social.png" alt="CodexBar — every AI coding limit in your menu bar. 69 providers." width="100%" /></a>
-
-Tiny macOS 14+ menu bar app that keeps **AI coding-provider limits visible** and shows when each window resets. Codex, OpenAI, Claude, Cursor, Gemini, Copilot, Grok, GroqCloud, ElevenLabs, Deepgram, z.ai, MiniMax, Kiro, Zed, Vertex AI, Augment, OpenRouter, LiteLLM, LLM Proxy, Codebuff, Command Code, ClinePass, AWS Bedrock, and many newer coding providers. One status item per provider, or Merge Icons mode with a provider switcher. No Dock icon, minimal UI, dynamic bar icons.
+Tiny macOS 14+ menu bar app that keeps **Codex and Claude limits visible** and shows when each window resets. One status item per provider, or Merge Icons mode with a provider switcher. No Dock icon, minimal UI, dynamic bar icons.
 
 <img src="docs/codexbar.png" alt="CodexBar menu popover with provider tiles, usage bars, and reset countdowns" width="520" />
 
@@ -42,11 +40,10 @@ Codex process has switched accounts.
 ## Why
 
 - **Plan around resets.** Per-provider session, weekly, and monthly windows with countdowns to the next reset — stop guessing whether to start that long task.
-- **Credits, spend, and cost scans.** Credit balances, Admin API spend dashboards, provider billing summaries, and local cost scans where the source exposes enough detail.
+- **Credits, spend, and cost scans.** Codex credits, Claude Admin API summaries, and local cost scans.
 - **Live status.** Provider status polling surfaces incident badges in the menu and an indicator overlay on the bar icon.
 - **Provider-specific authentication.** Uses existing sessions, OAuth/device flow,
-  API keys, browser cookies, or local files where supported. Some providers, including
-  [StepFun](docs/stepfun.md), also accept login credentials. See
+  API keys, browser cookies, or local files where supported. See
   [configuration](docs/configuration.md) and [Keychain boundaries](docs/keychain-prompts.md).
 
 ## Install
@@ -92,14 +89,14 @@ script the same provider list that Settings → Providers uses:
 
 ```bash
 codexbar config providers
-codexbar config enable --provider grok
-codexbar config disable --provider cursor
+codexbar config enable --provider codex
+codexbar config disable --provider claude
 ```
 
 For API-key providers, store a key without opening Settings:
 
 ```bash
-printf '%s' "$ELEVENLABS_API_KEY" | codexbar config set-api-key --provider elevenlabs --stdin
+printf '%s' "$ANTHROPIC_ADMIN_KEY" | codexbar config set-api-key --provider claude --stdin
 ```
 
 `set-api-key` trims the piped value, stores it with restrictive config-file permissions, and enables the provider by default. Use `--no-enable` to only save the key, or `--api-key <key>` for one-off local scripts where shell history is not a concern.
@@ -107,72 +104,15 @@ See [CLI configuration](docs/cli-configuration.md) for the full flow.
 
 ## Providers
 
+This product supports 2 providers: Codex and Claude.
+
 - [Codex](docs/codex.md) — OAuth API or local Codex CLI, plus optional OpenAI web dashboard extras.
-- [OpenAI](docs/openai.md) — Admin API key usage/cost graphs with legacy credit-balance fallback.
-- [Azure OpenAI](docs/azure-openai.md) — API key, endpoint, and deployment validation probe.
-- [Claude](docs/claude.md) — OAuth API, browser cookies, or CLI PTY fallback; session and weekly usage where available.
-- [Cursor](docs/cursor.md) — Browser session cookies for plan + usage + billing resets.
-- [OpenCode](docs/opencode.md) — Browser cookies for workspace subscription usage.
-- [OpenCode Go](docs/opencode.md) — Usage API, browser fallback, and local SQLite cost history.
-- [Alibaba Coding Plan](docs/alibaba-coding-plan.md) — Web cookies or API key for coding-plan quotas.
-- [Alibaba Token Plan](docs/alibaba-token-plan.md) — Bailian browser/manual cookies for token-plan credits.
-- [Qwen Cloud](docs/qwen-cloud.md) — 5-hour and weekly individual Token Plan usage via browser/manual cookies.
-- [Gemini](docs/gemini.md) — OAuth-backed quota API using Gemini CLI credentials (no browser cookies).
-- [Antigravity](docs/antigravity.md) — Local language server probe, `agy` CLI HTTPS source, and Google OAuth fallback (experimental).
-- [Droid](docs/factory.md) — Browser cookies + WorkOS token flows for Factory usage + billing.
-- [Copilot](docs/copilot.md) — GitHub device flow + Copilot internal usage API.
-- [Devin](docs/devin.md) — Chrome localStorage session or manual Bearer token for daily and weekly quotas.
-- [z.ai](docs/zai.md) — API token for personal/team quota, MCP, 5-hour, and hourly usage windows.
-- [Manus](docs/manus.md) — Browser `session_id` auth for credit balance, monthly credits, and daily refresh tracking.
-- [MiniMax](docs/minimax.md) — API token, cookie header, or browser cookies for coding-plan usage.
-- [T3 Chat](docs/t3chat.md) — Browser cookies capture for Base and Overage usage buckets.
-- [ZoomMate](docs/zoommate.md) — Chrome cookie auto-import or manual cURL capture for credits usage.
-- [Kimi](docs/kimi.md) — Auth token (JWT from `kimi-auth` cookie) for weekly quota + 5‑hour rate limit.
-- [Kilo](docs/kilo.md) — API token with CLI-auth fallback for Kilo Pass usage.
-- [Kiro](docs/kiro.md) — CLI-based usage; monthly credits + bonus credits.
-- [Vertex AI](docs/vertexai.md) — Google Cloud gcloud OAuth with token cost tracking from local Claude logs.
-- [Augment](docs/augment.md) — Augment CLI or browser cookies for credits tracking and usage monitoring.
-- [Amp](docs/amp.md) — Browser cookie-based authentication with Amp Free usage tracking.
-- [Ollama](docs/ollama.md) — API key access plus browser cookies for Ollama Cloud usage windows.
-- [Synthetic](docs/synthetic.md) — API key quota endpoint for rolling five-hour, weekly token, and search-hourly usage.
-- [JetBrains AI](docs/jetbrains.md) — Local XML-based quota from JetBrains IDE configuration; monthly credits tracking.
-- [Warp](docs/warp.md) — API token for GraphQL request limits and monthly credits.
-- [ElevenLabs](docs/elevenlabs.md) — API key for character credits and voice slot usage.
-- [OpenRouter](docs/openrouter.md) — API token for credit-based usage tracking across multiple AI providers.
-- [Windsurf](docs/windsurf.md) — Browser localStorage session import or local SQLite cache for plan usage.
-- [Zed](docs/zed.md) — Zed editor Keychain session for plan, edit-prediction quota, billing cycle, and overdue invoices.
-- [Perplexity](docs/perplexity.md) — Account usage credits from Perplexity usage data.
-- [Xiaomi MiMo](docs/mimo.md) — Browser cookies for balance and token-plan usage.
-- [Doubao](docs/doubao.md) — API key for Volcengine Ark request-limit probes.
-- [Sakana AI](docs/sakana.md) — Manual Cookie header for 5-hour and weekly quota windows.
-- [Abacus AI](docs/abacus.md) — Browser cookie auth for ChatLLM/RouteLLM compute credit tracking.
-- [Mistral](docs/mistral.md) — Browser cookies for API spend, credit balance, and monthly-plan usage.
-- [DeepSeek](docs/deepseek.md) — API key for credit balance tracking (paid vs. granted breakdown).
-- [Fireworks](docs/fireworks.md) — API key + account slug for 30-day spend from the billing summary API.
-- [DeepInfra](docs/deepinfra.md) — API key for prepaid balance, current-month spend, and spending-limit tracking.
-- [Moonshot / Kimi API](docs/moonshot.md) — API key for Moonshot/Kimi API account balance tracking.
-- [Venice](docs/venice.md) — API key for DIEM or USD balance tracking.
-- [Codebuff](docs/codebuff.md) — API token (or `~/.config/manicode/credentials.json`) for credit balance + weekly rate limit.
-- [Crof](docs/crof.md) — API key for dollar credit balance and optional request quota tracking.
-- [Command Code](docs/command-code.md) — Browser or manual cookies for monthly USD credits from Command Code billing.
-- [Qoder](docs/qoder.md) — Browser or manual cookies for Qoder big model credit usage.
-- [StepFun](docs/stepfun.md) — Username + password login for Step Plan rate limits (5‑hour + weekly windows) and subscription plan name.
-- [AWS Bedrock](docs/bedrock.md) — AWS access keys or a named AWS profile (SSO/assume-role via the AWS CLI) for Cost Explorer spend, monthly budgets, and optional CloudWatch Claude activity.
-- [Grok](docs/grok.md) — Grok CLI billing RPC plus grok.com browser-session fallback.
-- [GroqCloud](docs/groqcloud.md) — API key for Enterprise Prometheus request/token/cache-hit metrics.
-- [LLM Proxy](docs/llm-proxy.md) — API key + base URL for aggregate proxy quota stats and provider breakdowns.
-- [ClawRouter](docs/clawrouter.md) — API key for monthly budget, spend, requests, tokens, and routed-provider usage.
-- [sub2api](docs/sub2api.md) — Self-hosted gateway key quota, subscription limits, wallet balance, and per-key usage.
-- [Wayfinder](docs/wayfinder.md) — Local router gateway polling for health, per-route breakdown, savings, and decision latency.
-- [LiteLLM](docs/litellm.md) — Virtual key + proxy URL for personal and team budget/spend tracking.
-- [Deepgram](docs/deepgram.md) — API key usage summaries across speech, agent, token, and TTS metrics.
-- [Poe](docs/poe.md) — API key for current point balance and recent points history.
-- [Chutes](docs/chutes.md) — API key for subscription usage, rolling and monthly quota windows, and pay-as-you-go quotas.
-- [Neuralwatt](docs/neuralwatt.md) — API key for subscription kWh usage and prepaid credit balance.
-- [ZenMux](docs/zenmux.md) — Management API key for rolling five-hour and seven-day quota windows plus PAYG balance.
-- [xAI](docs/xai.md) — Management API key + team ID for prepaid credit balance and daily platform spend.
-- [IBM Bob](docs/ibm-bob.md) — API key for monthly Bobcoin budget and usage across subscription teams.
-- Open to new providers: [provider authoring guide](docs/provider.md).
+- [Claude](docs/claude.md) — OAuth API, browser cookies or CLI fallback; session/weekly quotas and local spend history.
+
+Other providers, provider plugins/QuickJS, hooks and iCloud synchronization are
+removed from this product. Source and tests can be restored deliberately from
+Git `91bd5fb4af704da9181212bea636d527a058e615`; see the
+[product spec](docs/engineering-specs/slim-codex-claude-product.md).
 
 ## Icon & Screenshot
 The menu bar icon is a tiny usage meter. Bar meaning is provider-specific, and errors/stale data can dim the icon or
@@ -182,7 +122,7 @@ show an incident indicator.
 - Multi-provider menu bar with per-provider toggles (Settings → Providers).
 - Provider-specific usage meters with reset countdowns.
 - Optional Codex web dashboard enrichments (code review remaining, usage breakdown, credits history).
-- Inline spend and usage charts for API-backed providers such as OpenAI, Claude Admin API, OpenRouter, LiteLLM, z.ai, MiniMax, Mistral, and AWS Bedrock.
+- Inline spend and usage charts for Claude Admin API and retained Codex/Claude local histories.
 - Configurable cost-usage scans for Codex + Claude, plus reused chart UI for supported provider histories. Codex history uses a WAL-enabled SQLite store capped at 25,000 retained session entries and 256 MiB.
 - A persistent Settings → Usage & Spend view for local 7/30-day estimates, grouped by native currency and limited to providers that expose cost history.
 - Provider status polling with incident badges in the menu and icon overlay.

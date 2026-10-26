@@ -50,11 +50,6 @@ protocol ProviderImplementation: Sendable {
     @MainActor
     func settingsPickers(context: ProviderSettingsContext) -> [ProviderSettingsPickerDescriptor]
 
-    /// Optional provider-specific organizations selection rendered in the Providers pane.
-    @MainActor
-    func settingsOrganizations(context: ProviderSettingsContext)
-        -> ProviderSettingsOrganizationsDescriptor?
-
     /// Optional visibility gate for token account settings.
     @MainActor
     func tokenAccountsVisibility(context: ProviderSettingsContext, support: TokenAccountSupport)
@@ -64,10 +59,6 @@ protocol ProviderImplementation: Sendable {
     @MainActor
     func settingsSnapshot(context: ProviderSettingsSnapshotContext)
         -> ProviderSettingsSnapshotContribution?
-
-    /// Optional primary action for the shared token-account editor.
-    @MainActor
-    func runTokenAccountPrimaryAction(context: ProviderSettingsContext) async
 
     /// Return true if the provider opened its own token file. False keeps the CodexBar config.
     @MainActor
@@ -162,13 +153,6 @@ extension ProviderImplementation {
     }
 
     @MainActor
-    func settingsOrganizations(context _: ProviderSettingsContext)
-        -> ProviderSettingsOrganizationsDescriptor?
-    {
-        nil
-    }
-
-    @MainActor
     func tokenAccountsVisibility(context: ProviderSettingsContext, support: TokenAccountSupport)
         -> Bool
     {
@@ -182,9 +166,6 @@ extension ProviderImplementation {
     {
         ProviderDescriptorRegistry.descriptor(for: self.id).settingsSection.defaultContribution
     }
-
-    @MainActor
-    func runTokenAccountPrimaryAction(context _: ProviderSettingsContext) async {}
 
     @MainActor
     func openTokenFile(context _: ProviderSettingsContext) -> Bool {

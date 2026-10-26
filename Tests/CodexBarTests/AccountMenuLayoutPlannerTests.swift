@@ -6,6 +6,48 @@ import Testing
 /// inactive accounts as headroom-sorted compact rows, healthy tail collapsed
 /// behind a summary row, and per-account expansion back to full cards.
 struct AccountMenuLayoutPlannerTests {
+    @Test
+    func `limiting windows retain planner order and exclude synthetic and unknown usage`() {
+        let known = RateWindow(usedPercent: 80, windowMinutes: 10080, resetsAt: Self.now, resetDescription: nil)
+        let unknown = RateWindow(usedPercent: 100, windowMinutes: 10080, resetsAt: Self.now, resetDescription: nil)
+        let row = ProviderAccountUsageSnapshot(
+            id: .init(source: "synthetic", opaqueID: "limits"),
+            provider: .claude,
+            displayLabel: "Synthetic",
+            isActive: false,
+            snapshot: UsageSnapshot(
+                primary: RateWindow(
+                    usedPercent: 100,
+                    windowMinutes: 300,
+                    resetsAt: nil,
+                    resetDescription: nil,
+                    isSyntheticPlaceholder: true),
+                secondary: known,
+                extraRateWindows: [
+                    NamedRateWindow(id: "unknown", title: "Unknown", window: unknown, usageKnown: false),
+                    NamedRateWindow(id: "known", title: "Known", window: known),
+                ],
+                updatedAt: Self.now),
+            error: nil,
+            sourceLabel: nil)
+        let windows = AccountMenuLayoutPlanner.limitingWindows(for: row)
+        #expect(windows == [known, known])
+        #expect(windows.first?.remainingPercent == AccountMenuLayoutPlanner.headroomPercent(for: row))
+        #expect(AccountMenuLayoutPlanner.headroomPercent(for: row) == 20)
+    }
+
+    @Test
+    func `synthetic session placeholder does not count toward headroom`() {
+        let account = self.account(
+            slot: 9,
+            email: "placeholder@example.com",
+            sessionUsed: 100,
+            weeklyUsed: 20,
+            sessionIsSyntheticPlaceholder: true)
+
+        #expect(AccountMenuLayoutPlanner.headroomPercent(for: account) == 80)
+    }
+
     private static let now = Date(timeIntervalSince1970: 1_782_000_000)
 
     private func account(
@@ -202,18 +244,6 @@ struct AccountMenuLayoutPlannerTests {
     }
 
     @Test
-    func `synthetic session placeholder does not count toward headroom`() {
-        let account = self.account(
-            slot: 9,
-            email: "placeholder@example.com",
-            sessionUsed: 100,
-            weeklyUsed: 20,
-            sessionIsSyntheticPlaceholder: true)
-
-        #expect(AccountMenuLayoutPlanner.headroomPercent(for: account) == 80)
-    }
-
-    @Test
     func `collapse only engages once enough healthy rows exist`() {
         let accounts = [
             self.account(slot: 1, email: "a@example.com", isActive: true, sessionUsed: 5),
@@ -393,35 +423,5 @@ struct AccountMenuLayoutPlannerTests {
             #expect(toggled.rows.last == .collapsedHealthy(count: 1))
             #expect(toggled.rows.count == 8)
         }
-    }
-
-    @Test
-    func `limiting windows retain planner order and exclude synthetic and unknown usage`() {
-        let known = RateWindow(usedPercent: 80, windowMinutes: 10080, resetsAt: Self.now, resetDescription: nil)
-        let unknown = RateWindow(usedPercent: 100, windowMinutes: 10080, resetsAt: Self.now, resetDescription: nil)
-        let row = ProviderAccountUsageSnapshot(
-            id: .init(source: "synthetic", opaqueID: "limits"),
-            provider: .claude,
-            displayLabel: "Synthetic",
-            isActive: false,
-            snapshot: UsageSnapshot(
-                primary: RateWindow(
-                    usedPercent: 100,
-                    windowMinutes: 300,
-                    resetsAt: nil,
-                    resetDescription: nil,
-                    isSyntheticPlaceholder: true),
-                secondary: known,
-                extraRateWindows: [
-                    NamedRateWindow(id: "unknown", title: "Unknown", window: unknown, usageKnown: false),
-                    NamedRateWindow(id: "known", title: "Known", window: known),
-                ],
-                updatedAt: Self.now),
-            error: nil,
-            sourceLabel: nil)
-        let windows = AccountMenuLayoutPlanner.limitingWindows(for: row)
-        #expect(windows == [known, known])
-        #expect(windows.first?.remainingPercent == AccountMenuLayoutPlanner.headroomPercent(for: row))
-        #expect(AccountMenuLayoutPlanner.headroomPercent(for: row) == 20)
     }
 }

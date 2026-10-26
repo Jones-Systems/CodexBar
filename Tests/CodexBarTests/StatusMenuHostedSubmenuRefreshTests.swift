@@ -290,10 +290,6 @@ struct StatusMenuHostedSubmenuRefreshTests {
             provider: .claude,
             seed: Self.seedClaudeSnapshots)
         try self.assertHostedSubmenuPreservesIdentity(
-            chartID: StatusItemController.costHistoryChartID,
-            provider: .openai,
-            seed: Self.seedOpenAICostSnapshot)
-        try self.assertHostedSubmenuPreservesIdentity(
             chartID: StatusItemController.usageHistoryChartID,
             provider: .claude,
             seed: Self.seedPlanUtilizationHistory)
@@ -497,9 +493,7 @@ struct StatusMenuHostedSubmenuRefreshTests {
         defaults.removePersistentDomain(forName: suite)
         return SettingsStore(
             userDefaults: defaults,
-            configStore: testConfigStore(suiteName: suite),
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: testConfigStore(suiteName: suite))
     }
 
     private static func enableOnlyClaude(_ settings: SettingsStore) {
@@ -527,38 +521,6 @@ struct StatusMenuHostedSubmenuRefreshTests {
                 loginMethod: "Team"))
         store._setSnapshotForTesting(snapshot, provider: .claude)
         store._setTokenSnapshotForTesting(Self.makeTokenSnapshot(), provider: .claude)
-    }
-
-    private static func seedOpenAICostSnapshot(in store: UsageStore) {
-        let day = Date(timeIntervalSince1970: 1_700_000_000)
-        let apiUsage = OpenAIAPIUsageSnapshot(
-            daily: [
-                OpenAIAPIUsageSnapshot.DailyBucket(
-                    day: "2025-12-23",
-                    startTime: day,
-                    endTime: day.addingTimeInterval(86400),
-                    costUSD: 1.23,
-                    requests: 12,
-                    inputTokens: 100,
-                    cachedInputTokens: 20,
-                    outputTokens: 40,
-                    totalTokens: 160,
-                    lineItems: [],
-                    models: []),
-            ],
-            updatedAt: Date(timeIntervalSince1970: 1_700_086_400))
-        let snapshot = UsageSnapshot(
-            primary: nil,
-            secondary: nil,
-            tertiary: nil,
-            openAIAPIUsage: apiUsage,
-            updatedAt: Date(timeIntervalSince1970: 1_700_086_400),
-            identity: ProviderIdentitySnapshot(
-                providerID: .openai,
-                accountEmail: "openai@example.com",
-                accountOrganization: nil,
-                loginMethod: "API"))
-        store._setSnapshotForTesting(snapshot, provider: .openai)
     }
 
     private static func seedPlanUtilizationHistory(in store: UsageStore) {

@@ -221,18 +221,18 @@ struct SpendDashboardPublicationTests {
         let sources = Dictionary(uniqueKeysWithValues: publication.sources.map { ($0.id, $0) })
         let inputs = Dictionary(uniqueKeysWithValues: publication.inputs.map { ($0.id, $0) })
 
-        #expect(Set(sources.keys) == ["openai", "claude", "gemini", "codex:first", "codex:second"])
-        #expect(sources["openai"]?.state == .available)
-        #expect(inputs["openai"]?.id == "openai")
-        #expect(sources["claude"]?.state == .confirmedEmpty)
-        #expect(inputs["claude"]?.id == nil)
-        #expect(sources["gemini"]?.state == .unavailable)
-        #expect(inputs["gemini"]?.id == nil)
+        #expect(Set(sources.keys) == ["claude", "codex:third", "codex:fourth", "codex:first", "codex:second"])
+        #expect(sources["claude"]?.state == .available)
+        #expect(inputs["claude"]?.id == "claude")
+        #expect(sources["codex:third"]?.state == .confirmedEmpty)
+        #expect(inputs["codex:third"]?.id == nil)
+        #expect(sources["codex:fourth"]?.state == .unavailable)
+        #expect(inputs["codex:fourth"]?.id == nil)
         #expect(sources["codex:first"]?.state == .available)
         #expect(inputs["codex:first"]?.id == "codex:first")
         #expect(sources["codex:second"]?.state == .available)
         #expect(inputs["codex:second"]?.id == "codex:second")
-        #expect(publication.subscriptionCount(providerScope: [.codex, .openai, .claude, .gemini]) == 5)
+        #expect(publication.subscriptionCount(providerScope: [.codex, .claude]) == 5)
         let model = publication.model(
             requestedDays: 30,
             now: Self.now,
@@ -240,7 +240,7 @@ struct SpendDashboardPublicationTests {
             preferredCurrencyCode: "USD")
         #expect(publication.knownCostSubscriptionCount(
             model: model,
-            providerScope: [.codex, .openai, .claude, .gemini]) == 4)
+            providerScope: [.codex, .claude]) == 4)
     }
 
     @Test
@@ -338,11 +338,11 @@ struct SpendDashboardPublicationTests {
             configuration: nil,
             loadedAt: Self.now,
             isRefreshing: false,
-            inputs: [Self.input(id: "openai", provider: .openai, cost: 7)],
+            inputs: [Self.input(id: "codex", provider: .codex, cost: 7)],
             sources: [
                 SpendSourcePublication(
-                    id: "openai",
-                    provider: .openai,
+                    id: "codex",
+                    provider: .codex,
                     displayName: "OpenAI",
                     role: .subscription,
                     state: .available),
@@ -353,7 +353,7 @@ struct SpendDashboardPublicationTests {
                     role: .subscription,
                     state: .confirmedEmpty),
             ])
-        let scope: Set<UsageProvider> = [.openai, .claude]
+        let scope: Set<UsageProvider> = [.codex, .claude]
         let model = publication.model(
             requestedDays: 30,
             now: Self.now,
@@ -380,13 +380,13 @@ struct SpendDashboardPublicationTests {
             loadedAt: Self.now,
             isRefreshing: false,
             inputs: [
-                Self.input(id: "openai", provider: .openai, cost: 7),
+                Self.input(id: "codex", provider: .codex, cost: 7),
                 Self.input(id: "claude", provider: .claude, cost: nil),
             ],
             sources: [
                 SpendSourcePublication(
-                    id: "openai",
-                    provider: .openai,
+                    id: "codex",
+                    provider: .codex,
                     displayName: "OpenAI",
                     role: .subscription,
                     state: .available),
@@ -397,7 +397,7 @@ struct SpendDashboardPublicationTests {
                     role: .subscription,
                     state: .available),
             ])
-        let scope: Set<UsageProvider> = [.openai, .claude]
+        let scope: Set<UsageProvider> = [.codex, .claude]
         let model = publication.model(
             requestedDays: 30,
             now: Self.now,
@@ -503,11 +503,11 @@ struct SpendDashboardPublicationTests {
     @Test
     func `non-Codex OpenCodex enrichment does not replace native Codex`() {
         let nativeCodex = Self.input(id: "codex:first", provider: .codex, cost: 2)
-        let openCodexKimi = SpendDashboardModel.ProviderInput(
-            id: "kimi",
-            provider: .kimi,
-            displayName: "Kimi",
-            snapshot: Self.input(id: "unused", provider: .kimi, cost: 8).snapshot,
+        let openCodexClaude = SpendDashboardModel.ProviderInput(
+            id: "claude",
+            provider: .claude,
+            displayName: "Claude",
+            snapshot: Self.input(id: "unused", provider: .claude, cost: 8).snapshot,
             sourceKind: .openCodex)
         let publication = SpendDashboardPublication(
             revision: 1,
@@ -515,7 +515,7 @@ struct SpendDashboardPublicationTests {
             configuration: nil,
             loadedAt: Self.now,
             isRefreshing: false,
-            inputs: [nativeCodex, openCodexKimi],
+            inputs: [nativeCodex, openCodexClaude],
             sources: [
                 SpendSourcePublication(
                     id: nativeCodex.id,
@@ -530,9 +530,9 @@ struct SpendDashboardPublicationTests {
                     role: .enrichment,
                     state: .available),
                 SpendSourcePublication(
-                    id: openCodexKimi.id,
-                    provider: .kimi,
-                    displayName: openCodexKimi.displayName,
+                    id: openCodexClaude.id,
+                    provider: .claude,
+                    displayName: openCodexClaude.displayName,
                     role: .enrichment,
                     state: .available),
             ])
@@ -542,9 +542,9 @@ struct SpendDashboardPublicationTests {
             calendar: Self.calendar,
             preferredCurrencyCode: "USD",
             hideNativeCodexWhenOpenCodexPresent: true,
-            providerScope: [.codex, .kimi])
+            providerScope: [.codex, .claude])
 
-        #expect(Set(model.groups.flatMap(\.providers).map(\.id)) == [nativeCodex.id, openCodexKimi.id])
+        #expect(Set(model.groups.flatMap(\.providers).map(\.id)) == [nativeCodex.id, openCodexClaude.id])
         #expect(publication.subscriptionCount(
             providerScope: [.codex],
             hideNativeCodexWhenOpenCodexPresent: true) == 1)
@@ -734,30 +734,27 @@ struct SpendDashboardPublicationTests {
     private static func fixture() -> (request: SpendDashboardLoadRequest, result: SpendDashboardLoadResult) {
         let configuration = SpendDashboardConfiguration(
             costUsageEnabled: true,
-            providerIDs: [
-                UsageProvider.codex.rawValue,
-                UsageProvider.openai.rawValue,
-                UsageProvider.claude.rawValue,
-                UsageProvider.gemini.rawValue,
-            ],
-            codexAccountIdentities: ["first|first-cache", "second|second-cache"])
-        let openAI = Self.input(id: "openai", provider: .openai, cost: 7)
+            providerIDs: [UsageProvider.codex.rawValue, UsageProvider.claude.rawValue],
+            codexAccountIdentities: [
+                "first|first-cache", "second|second-cache", "third|third-cache", "fourth|fourth-cache",
+            ])
+        let claude = Self.input(id: "claude", provider: .claude, cost: 7)
         return (
             request: SpendDashboardLoadRequest(
                 configuration: configuration,
-                capturedInputs: [openAI],
-                unavailableSourceIDs: ["gemini"],
-                confirmedEmptySourceIDs: ["claude"],
+                capturedInputs: [claude],
+                unavailableSourceIDs: ["codex:fourth"],
+                confirmedEmptySourceIDs: ["codex:third"],
                 codexRequests: [],
                 now: Self.now,
                 force: false),
             result: SpendDashboardLoadResult(
                 inputs: [
-                    openAI,
+                    claude,
                     Self.input(id: "codex:first", provider: .codex, cost: 2),
                     Self.input(id: "codex:second", provider: .codex, cost: 3),
                 ],
-                failedSourceIDs: ["gemini"]))
+                failedSourceIDs: ["codex:fourth"]))
     }
 
     private static func configuration(revision: String) -> SpendDashboardConfiguration {

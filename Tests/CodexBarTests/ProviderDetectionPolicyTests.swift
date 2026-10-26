@@ -4,29 +4,13 @@ import Testing
 
 struct ProviderDetectionPolicyTests {
     @Test
-    func `fresh install detects Codex and Claude Desktop without unconfigured Gemini`() {
+    func `fresh install detects installed Codex and Claude Desktop sources`() {
         let enabled = ProviderDetectionPolicy.enabledProviders(signals: .init(
             codexCLIInstalled: true,
             claudeCLIInstalled: false,
-            claudeDesktopInstalled: true,
-            geminiCLIInstalled: true,
-            geminiConfigured: false,
-            antigravityAvailable: false))
+            claudeDesktopInstalled: true))
 
         #expect(enabled == [.codex, .claude])
-    }
-
-    @Test
-    func `configured Gemini CLI is detected`() {
-        let enabled = ProviderDetectionPolicy.enabledProviders(signals: .init(
-            codexCLIInstalled: false,
-            claudeCLIInstalled: false,
-            claudeDesktopInstalled: false,
-            geminiCLIInstalled: true,
-            geminiConfigured: true,
-            antigravityAvailable: false))
-
-        #expect(enabled == [.gemini])
     }
 
     @Test
@@ -34,10 +18,7 @@ struct ProviderDetectionPolicyTests {
         let enabled = ProviderDetectionPolicy.enabledProviders(signals: .init(
             codexCLIInstalled: false,
             claudeCLIInstalled: false,
-            claudeDesktopInstalled: false,
-            geminiCLIInstalled: false,
-            geminiConfigured: false,
-            antigravityAvailable: false))
+            claudeDesktopInstalled: false))
 
         #expect(enabled == [.codex])
     }

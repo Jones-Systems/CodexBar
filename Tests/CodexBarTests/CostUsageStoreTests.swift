@@ -128,17 +128,6 @@ struct CostUsageStoreTests {
 
 extension CostUsageStoreTests {
     @Test
-    func `file state round trips all validation fields`() async throws {
-        let fixture = try StoreFixture()
-        defer { fixture.remove() }
-        let store = CostUsageStore(cacheRoot: fixture.root)
-        let file = Self.file(path: "/rollouts/a.jsonl", day: "2026-08-01")
-
-        #expect(await store.upsertFile(file))
-        #expect(await store.fetchFile(path: file.path) == file)
-    }
-
-    @Test
     func `file upsert replaces mutable state`() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
@@ -688,17 +677,6 @@ extension CostUsageStoreTests {
     }
 
     @Test
-    func `day aggregate inserts and reads by model`() async throws {
-        let fixture = try StoreFixture()
-        defer { fixture.remove() }
-        let store = CostUsageStore(cacheRoot: fixture.root)
-        let aggregate = Self.aggregate(day: "2026-08-01", model: "gpt-5.6-sol", scale: 1)
-
-        #expect(await store.mergeDayAggregates([aggregate]))
-        #expect(await store.fetchDayAggregates(sinceDay: "2026-08-01", untilDay: "2026-08-01") == [aggregate])
-    }
-
-    @Test
     func `per file aggregates replace and round trip`() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
@@ -835,17 +813,6 @@ extension CostUsageStoreTests {
 
         #expect(await store.setLookbackState(state))
         #expect(await store.fetchLookbackState() == state)
-    }
-
-    @Test
-    func `scan metadata round trips`() async throws {
-        let fixture = try StoreFixture()
-        defer { fixture.remove() }
-        let store = CostUsageStore(cacheRoot: fixture.root)
-        let metadata = Self.metadata()
-
-        #expect(await store.setMetadata(metadata))
-        #expect(await store.fetchMetadata() == metadata)
     }
 
     @Test

@@ -79,7 +79,10 @@ struct ProviderDetailSectionTests {
         let snapshot = try decoder.decode(UsageSnapshot.self, from: Data(contentsOf: url))
 
         #expect(snapshot.primary?.usedPercent == 42)
-        #expect(snapshot.identity?.providerID == .synthetic)
+        #expect(snapshot.identity?.providerID == ProviderInstanceID(rawValue: "synthetic"))
+        #expect(snapshot.identity?.providerID?.firstPartyProvider == nil)
+        #expect(snapshot.identity(for: .codex) == nil)
+        #expect(snapshot.identity(for: .claude) == nil)
         #expect(snapshot.details.isEmpty)
         let encoded = try JSONEncoder().encode(snapshot)
         #expect(String(bytes: encoded, encoding: .utf8)?.contains("\"details\"") == false)

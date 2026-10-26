@@ -24,108 +24,29 @@ struct ProvidersPaneCoverageTests {
         let claudeDescriptor = try #require(pane._test_tokenAccountDescriptor(for: .claude))
         #expect(claudeDescriptor.showsOrganizationField)
 
-        let copilotDescriptor = try #require(pane._test_tokenAccountDescriptor(for: .copilot))
-        #expect(!copilotDescriptor.showsOrganizationField)
-    }
-
-    @Test
-    func `zai token account descriptor shows team mode controls only for zai`() throws {
-        let settings = Self.makeSettingsStore(suite: "ProvidersPaneCoverageTests-zai-team-controls")
-        let store = Self.makeUsageStore(settings: settings)
-        let pane = ProvidersPane(settings: settings, store: store)
-
-        let zaiDescriptor = try #require(pane._test_tokenAccountDescriptor(for: .zai))
-        #expect(zaiDescriptor.showsTeamModeControls)
-        #expect(!zaiDescriptor.showsOrganizationField)
-
-        let claudeDescriptor = try #require(pane._test_tokenAccountDescriptor(for: .claude))
-        #expect(!claudeDescriptor.showsTeamModeControls)
-        #expect(claudeDescriptor.showsOrganizationField)
-    }
-
-    @Test
-    func `zai team account add button requires organization and project`() {
-        #expect(ProviderSettingsTokenAccountsRowView.isAddDisabled(
-            label: "Team",
-            token: "token",
-            showsTeamModeControls: true,
-            teamMode: true,
-            teamContext: (organizationID: "", projectID: "proj-test")))
-        #expect(ProviderSettingsTokenAccountsRowView.isAddDisabled(
-            label: "Team",
-            token: "token",
-            showsTeamModeControls: true,
-            teamMode: true,
-            teamContext: (organizationID: "org-test", projectID: "")))
-        #expect(!ProviderSettingsTokenAccountsRowView.isAddDisabled(
-            label: "Team",
-            token: "token",
-            showsTeamModeControls: true,
-            teamMode: true,
-            teamContext: (organizationID: "org-test", projectID: "proj-test")))
-        #expect(!ProviderSettingsTokenAccountsRowView.isAddDisabled(
-            label: "Personal",
-            token: "token",
-            showsTeamModeControls: true,
-            teamMode: false,
-            teamContext: (organizationID: "", projectID: "")))
-    }
-
-    @Test
-    func `zai team account draft requires complete ids before apply`() {
-        let original = ProviderSettingsTokenAccountsRowView.TeamAccountDraft(
-            teamMode: false,
-            organizationID: "",
-            projectID: "")
-
-        #expect(ProviderSettingsTokenAccountsRowView.isTeamDraftApplyDisabled(
-            draft: original,
-            original: original))
-        #expect(ProviderSettingsTokenAccountsRowView.isTeamDraftApplyDisabled(
-            draft: ProviderSettingsTokenAccountsRowView.TeamAccountDraft(
-                teamMode: true,
-                organizationID: "org-test",
-                projectID: ""),
-            original: original))
-        #expect(!ProviderSettingsTokenAccountsRowView.isTeamDraftApplyDisabled(
-            draft: ProviderSettingsTokenAccountsRowView.TeamAccountDraft(
-                teamMode: true,
-                organizationID: "org-test",
-                projectID: "proj-test"),
-            original: original))
-        #expect(!ProviderSettingsTokenAccountsRowView.isTeamDraftApplyDisabled(
-            draft: ProviderSettingsTokenAccountsRowView.TeamAccountDraft(
-                teamMode: false,
-                organizationID: "",
-                projectID: ""),
-            original: ProviderSettingsTokenAccountsRowView.TeamAccountDraft(
-                teamMode: true,
-                organizationID: "org-test",
-                projectID: "proj-test")))
+        #expect(pane._test_tokenAccountDescriptor(for: .codex) == nil)
     }
 
     @Test
     func `provider search filters display names and raw ids`() {
-        let providers: [UsageProvider] = [.codex, .claude, .openrouter, .deepseek]
+        let providers: [UsageProvider] = [.codex, .claude]
         let names: [UsageProvider: String] = [
             .codex: "Codex",
             .claude: "Claude",
-            .openrouter: "OpenRouter",
-            .deepseek: "DeepSeek",
         ]
 
         #expect(
             ProvidersPane.filteredProviders(providers, query: "  ", displayName: { names[$0] ?? $0.rawValue })
                 == providers)
         #expect(
-            ProvidersPane.filteredProviders(providers, query: "router", displayName: { names[$0] ?? $0.rawValue })
-                == [.openrouter])
+            ProvidersPane.filteredProviders(providers, query: "missing", displayName: { names[$0] ?? $0.rawValue })
+                == [])
         #expect(
             ProvidersPane.filteredProviders(providers, query: "CLA", displayName: { names[$0] ?? $0.rawValue })
                 == [.claude])
         #expect(
-            ProvidersPane.filteredProviders(providers, query: "deepseek", displayName: { _ in "API" })
-                == [.deepseek])
+            ProvidersPane.filteredProviders(providers, query: "codex", displayName: { _ in "API" })
+                == [.codex])
     }
 
     @Test
@@ -151,35 +72,6 @@ struct ProvidersPaneCoverageTests {
         #expect(SettingsPane.about.title == L("tab_about"))
         #expect(!SettingsPane.provider(.codex).title.isEmpty)
         #expect(SettingsPane.provider(.codex) != SettingsPane.provider(.claude))
-    }
-
-    @Test
-    func `copilot menu card preview follows budget extras setting`() {
-        let settings = Self.makeSettingsStore(suite: "ProvidersPaneCoverageTests-copilot-budget-preview")
-        let store = Self.makeUsageStore(settings: settings)
-        let budgetTitle = "Budget - Copilot Agent Premium Requests"
-        store._setSnapshotForTesting(
-            UsageSnapshot(
-                primary: RateWindow(usedPercent: 20, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-                secondary: RateWindow(usedPercent: 30, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-                extraRateWindows: [
-                    NamedRateWindow(
-                        id: "copilot-budget-agent",
-                        title: budgetTitle,
-                        window: RateWindow(
-                            usedPercent: 65,
-                            windowMinutes: nil,
-                            resetsAt: nil,
-                            resetDescription: nil)),
-                ],
-                updatedAt: Date()),
-            provider: .copilot)
-        let pane = ProvidersPane(settings: settings, store: store)
-
-        #expect(!pane._test_menuCardModel(for: .copilot).metrics.map(\.title).contains(budgetTitle))
-
-        settings.copilotBudgetExtrasEnabled = true
-        #expect(pane._test_menuCardModel(for: .copilot).metrics.map(\.title).contains(budgetTitle))
     }
 
     @Test
@@ -271,36 +163,6 @@ struct ProvidersPaneCoverageTests {
     }
 
     @Test
-    func `provider detail plan row formats open router as balance`() {
-        Self.withEnglishLocalization {
-            let row = ProviderDetailView<EmptyView>.planRow(provider: .openrouter, planText: "Balance: $4.61")
-
-            #expect(row?.label == "Balance")
-            #expect(row?.value == "$4.61")
-        }
-    }
-
-    @Test
-    func `provider detail plan row formats moonshot as balance`() {
-        Self.withEnglishLocalization {
-            let row = ProviderDetailView<EmptyView>.planRow(provider: .moonshot, planText: "Balance: $49.58")
-
-            #expect(row?.label == "Balance")
-            #expect(row?.value == "$49.58")
-        }
-    }
-
-    @Test
-    func `provider detail plan row keeps plan label for non open router`() {
-        Self.withEnglishLocalization {
-            let row = ProviderDetailView<EmptyView>.planRow(provider: .codex, planText: "Pro")
-
-            #expect(row?.label == "Plan")
-            #expect(row?.value == "Pro")
-        }
-    }
-
-    @Test
     func `provider detail renders metric status without progress`() {
         let metric = UsageMenuCardView.Model.Metric(
             id: "fixture",
@@ -333,38 +195,6 @@ struct ProvidersPaneCoverageTests {
             paceOnTop: false)
 
         #expect(ProviderDetailView<EmptyView>.metricInlinePresentation(metric) == .progress)
-    }
-
-    @Test
-    func `opencode manual cookie source hides cached browser trailing text`() {
-        let settings = Self.makeSettingsStore(suite: "ProvidersPaneCoverageTests-opencode-manual")
-        let store = Self.makeUsageStore(settings: settings)
-        settings.opencodeCookieSource = .manual
-        CookieHeaderCache.store(provider: .opencode, cookieHeader: "auth=cache", sourceLabel: "Chrome")
-        defer { CookieHeaderCache.clear(provider: .opencode) }
-
-        let pane = ProvidersPane(settings: settings, store: store)
-        let picker = pane._test_settingsPickers(for: .opencode).first { $0.id == "opencode-cookie-source" }
-
-        #expect(picker?.dynamicSubtitle?() == "Paste a Cookie header captured from the billing page.")
-        #expect(picker?.trailingText?() == nil)
-        #expect(picker?.trailingActions.first?.isVisible?() == false)
-    }
-
-    @Test
-    func `opencode go manual cookie source hides cached browser trailing text`() {
-        let settings = Self.makeSettingsStore(suite: "ProvidersPaneCoverageTests-opencodego-manual")
-        let store = Self.makeUsageStore(settings: settings)
-        settings.opencodegoCookieSource = .manual
-        CookieHeaderCache.store(provider: .opencodego, cookieHeader: "auth=cache", sourceLabel: "Chrome")
-        defer { CookieHeaderCache.clear(provider: .opencodego) }
-
-        let pane = ProvidersPane(settings: settings, store: store)
-        let picker = pane._test_settingsPickers(for: .opencodego).first { $0.id == "opencodego-cookie-source" }
-
-        #expect(picker?.dynamicSubtitle?() == "Paste a Cookie header captured from the billing page.")
-        #expect(picker?.trailingText?() == nil)
-        #expect(picker?.trailingActions.first?.isVisible?() == false)
     }
 
     @Test(CodexCredentialFixtures())
@@ -421,19 +251,8 @@ struct ProvidersPaneCoverageTests {
         return SettingsStore(
             userDefaults: defaults,
             configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore(),
             codexCookieStore: InMemoryCookieHeaderStore(),
             claudeCookieStore: InMemoryCookieHeaderStore(),
-            cursorCookieStore: InMemoryCookieHeaderStore(),
-            opencodeCookieStore: InMemoryCookieHeaderStore(),
-            factoryCookieStore: InMemoryCookieHeaderStore(),
-            minimaxCookieStore: InMemoryMiniMaxCookieStore(),
-            minimaxAPITokenStore: InMemoryMiniMaxAPITokenStore(),
-            kimiTokenStore: InMemoryKimiTokenStore(),
-            augmentCookieStore: InMemoryCookieHeaderStore(),
-            ampCookieStore: InMemoryCookieHeaderStore(),
-            copilotTokenStore: InMemoryCopilotTokenStore(),
             tokenAccountStore: InMemoryTokenAccountStore())
     }
 
@@ -442,10 +261,6 @@ struct ProvidersPaneCoverageTests {
             fetcher: UsageFetcher(environment: [:]),
             browserDetection: BrowserDetection(cacheTTL: 0),
             settings: settings)
-    }
-
-    private static func withEnglishLocalization(perform body: () -> Void) {
-        CodexBarLocalizationOverride.$appLanguage.withValue("en", operation: body)
     }
 
     private static func writeCodexAuthFile(homeURL: URL, email: String, plan: String) throws {

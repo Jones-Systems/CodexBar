@@ -54,13 +54,12 @@ struct ProviderInstanceIdentityCharacterizationTests {
     @Test
     func `provider config ordering remains the menu and status ordering contract`() {
         let config = CodexBarConfig(providers: [
-            ProviderConfig(id: .gemini, enabled: true),
             ProviderConfig(id: .claude, enabled: false),
             ProviderConfig(id: .codex, enabled: true),
         ])
 
-        #expect(config.orderedProviders() == [.gemini, .claude, .codex])
-        #expect(config.enabledProviders() == [.gemini, .codex])
+        #expect(config.orderedProviders() == [.claude, .codex])
+        #expect(config.enabledProviders() == [.codex])
     }
 
     @MainActor
@@ -144,7 +143,6 @@ struct ProviderInstanceIdentityCharacterizationTests {
             status: nil,
             usage: nil,
             credits: nil,
-            antigravityPlanInfo: nil,
             openaiDashboard: nil,
             error: nil)
 

@@ -137,22 +137,6 @@ struct CostHistoryChartMenuViewTests {
     }
 
     @Test
-    func `Mistral UTC day keys map to the same local day as spend activity`() throws {
-        let losAngeles = try #require(TimeZone(identifier: "America/Los_Angeles"))
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = losAngeles
-        let date = try #require(CostHistoryChartMenuView._dateFromDayKeyForTesting(
-            "2026-08-14",
-            provider: .mistral,
-            calendar: calendar))
-
-        #expect(calendar.dateComponents([.year, .month, .day], from: date) == DateComponents(
-            year: 2026,
-            month: 8,
-            day: 13))
-    }
-
-    @Test
     func `Codex daily chart defaults to tokens while other providers preserve cost`() {
         let daily = [
             Self.dailyEntry(date: "2026-08-12", totalTokens: 1_250_000, costUSD: 1.25),

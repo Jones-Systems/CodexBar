@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import build_jobs
+import ci_swift_test_artifact as build_artifact
 import ci_swift_test_campaign as campaign
 import test_profiles
 import ctypes
@@ -22,7 +23,7 @@ import sys
 import tempfile
 import time
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 SCRATCH_PARENT_KEY = "CODEXBAR_TEST_SCRATCH_PARENT"
@@ -124,6 +125,7 @@ class TestSelection:
 
 @dataclass
 class RunStats:
+    test_ids: list[str] = field(default_factory=list)
     discovered_tests: int = 0
     discovery_manifest_sha256: str = ""
     selected_manifest_sha256: str = ""
@@ -134,6 +136,7 @@ class RunStats:
     shard_index: int | None = None
     shard_count: int | None = None
     build_seconds: float = 0
+    artifact_seconds: float = 0
     discovery_seconds: float = 0
     execution_seconds: float = 0
     total_seconds: float = 0
@@ -164,6 +167,7 @@ class RunStats:
             ("Timed out groups", str(self.timed_out_groups)),
             ("Isolated selection retries", str(self.isolated_selection_retries)),
             ("Test build seconds", f"{self.build_seconds:.1f}"),
+            ("Build artifact seconds", f"{self.artifact_seconds:.1f}"),
             ("Discovery seconds", f"{self.discovery_seconds:.1f}"),
             ("Execution seconds", f"{self.execution_seconds:.1f}"),
             ("Total seconds", f"{self.total_seconds:.1f}"),
@@ -187,6 +191,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--parallel", action="store_true", help="run one measured Linux-style aggregate after build/discovery")
     parser.add_argument("--swift-command", default="swift")
     parser.add_argument("--swift-command-arg", action="append", default=[])
+    handoff = parser.add_mutually_exclusive_group()
+    handoff.add_argument("--export-build", type=Path, help="build/discover once and export a same-run hosted artifact")
+    handoff.add_argument("--use-build", type=Path, help="verify/restore an exact hosted artifact; never compile")
     parser.add_argument(
         "--command", nargs=argparse.REMAINDER,
         help="run a command once inside the fixture lifecycle, preserving selection without discovery or sharding",
@@ -765,19 +772,22 @@ def check_native_evidence_support(swift_command: list[str]) -> None:
     _campaign.native_support = True
 
 
-def swift_test_list(swift_command: list[str], stats: RunStats | None = None) -> list[TestSelection]:
-    build_started = time.monotonic()
-    build = run_captured_command([*swift_command, "build", "--build-tests"])
-    if stats is not None:
-        stats.build_seconds = time.monotonic() - build_started
-    for output in (build.stdout, build.stderr):
-        if output:
-            print(output, end="" if output.endswith("\n") else "\n", file=sys.stderr, flush=True)
-    build.check_returncode()
+def swift_test_list(
+    swift_command: list[str], stats: RunStats | None = None, *, skip_build: bool = False,
+) -> list[TestSelection]:
+    if not skip_build:
+        build_started = time.monotonic()
+        build = run_captured_command([*swift_command, "build", "--build-tests"])
+        if stats is not None:
+            stats.build_seconds = time.monotonic() - build_started
+        for output in (build.stdout, build.stderr):
+            if output:
+                print(output, end="" if output.endswith("\n") else "\n", file=sys.stderr, flush=True)
+        build.check_returncode()
     discovery_started = time.monotonic()
     command = [*swift_command, "test", "list", "--skip-build"]
     result = run_captured_command(command)
-    if result.returncode != 0 and is_missing_sparkle_runtime_failure(result):
+    if not skip_build and result.returncode != 0 and is_missing_sparkle_runtime_failure(result):
         if repair_sparkle_test_runtime(swift_command):
             print("Recovered SwiftPM Sparkle test runtime; retrying discovery once.", file=sys.stderr, flush=True)
             # The missing-library diagnostic proves discovery reached the built executable.
@@ -831,6 +841,7 @@ def swift_test_list(swift_command: list[str], stats: RunStats | None = None) -> 
     test_ids = sorted(result.stdout.splitlines())
     digest = manifest_digest(test_ids)
     if stats is not None:
+        stats.test_ids = test_ids
         stats.discovered_tests = len(test_ids)
         stats.discovery_manifest_sha256 = digest
     emit_evidence("discovery", test_ids=test_ids, sha256=digest)
@@ -989,7 +1000,8 @@ def run_suites() -> int:
         if not args.command:
             print("--command requires an executable", file=sys.stderr)
             return 2
-        if args.parallel or args.list_only or args.limit_groups is not None or args.shard_index is not None or args.shard_count is not None:
+        if (args.parallel or args.list_only or args.limit_groups is not None or args.shard_index is not None
+                or args.shard_count is not None or args.export_build is not None or args.use_build is not None):
             print("--command cannot be combined with discovery or shard selection", file=sys.stderr)
             return 2
         # Aggregate commands retain their enclosing job's deadline and original test selection.
@@ -1006,14 +1018,86 @@ def run_suites() -> int:
 
     swift_command = [args.swift_command, *args.swift_command_arg]
     result = 0
+    restored_identity = None
     try:
+        if args.export_build is not None:
+            if (args.parallel or args.list_only or args.limit_groups is not None or args.shard_index is not None
+                    or args.shard_count is not None or _campaign is not None):
+                raise ValueError("--export-build cannot select test execution, shards, limits or a campaign")
+        current = None
+        restored = None
+        if args.export_build is not None or args.use_build is not None:
+            current = build_artifact.identity(Path.cwd(), dict(os.environ), swift_command, run_captured_command)
+        if args.use_build is not None:
+            artifact_started = time.monotonic()
+            native_state = build_artifact.native_precheck(Path.cwd(), run_captured_command, swift_command)
+            if native_state is not None:
+                emit_evidence("native-host-precheck", status="complete" if native_state["host"] else "unavailable",
+                              reason=native_state["reason"], host_seconds=native_state["host_seconds"],
+                              diagnostic=native_state.get("diagnostic"))
+            restored = build_artifact.restore_build(
+                Path.cwd(), args.use_build, os.environ.get("CODEXBAR_TEST_BUILD_MANIFEST_SHA256"), current,
+                native_state=native_state,
+                native_observer=lambda **fields: emit_evidence("native-compatibility", **fields),
+            )
+            info = (Path.cwd() / ".build").stat()
+            restored_identity = (info.st_dev, info.st_ino)
+            stats.artifact_seconds = time.monotonic() - artifact_started
+            emit_evidence("build-restored", identity=current, archive_sha256=restored["archive_sha256"],
+                          payload_bytes=restored["payload_bytes"], seconds=stats.artifact_seconds)
         if _campaign is not None:
             check_native_evidence_support(swift_command)
         if args.parallel and (args.list_only or args.limit_groups is not None or args.shard_index is not None
                               or args.shard_count is not None or _campaign is not None):
             print("--parallel cannot be combined with discovery-only, shards, limits or a macOS campaign", file=sys.stderr)
             return 2
-        discovered = swift_test_list(swift_command, stats)
+        if args.export_build is not None:
+            preflight = build_artifact.native_precheck(Path.cwd(), run_captured_command, swift_command)
+            if preflight is not None:
+                tool_runtime, tool_seconds = build_artifact.native_finish(
+                    preflight, Path.cwd() / ".build", include_build=False)
+                host_complete = preflight["host"] is not None
+                build_allowed = not host_complete or tool_runtime["status"] == "complete"
+                emit_evidence("native-tool-preflight", status=tool_runtime["status"],
+                              host_status="complete" if host_complete else "unavailable",
+                              build_allowed=build_allowed,
+                              reason=tool_runtime.get("reason"), host_seconds=preflight["host_seconds"],
+                              closure_seconds=tool_seconds, diagnostic=tool_runtime.get("diagnostic"),
+                              work=preflight.get("closure_work"))
+                if not build_allowed:
+                    raise ValueError("native selected-tool runtime closure incomplete before compilation: "
+                                     + tool_runtime["reason"])
+                # Unavailable host/API evidence retains exact-image fallback.
+                # Complete tool preflight never replaces the post-build proof.
+        discovered = swift_test_list(swift_command, stats, skip_build=args.use_build is not None)
+        if restored is not None:
+            build_artifact.require(stats.test_ids == restored["test_ids"],
+                                   "worker discovery differs from compiled build manifest")
+        if args.export_build is not None:
+            # Recollect after compilation: the bounded native budget never spans
+            # the build, and the final manifest binds fresh host/runtime evidence.
+            native_state = build_artifact.native_precheck(Path.cwd(), run_captured_command, swift_command)
+            native_runtime = None
+            if native_state is not None:
+                native_runtime, native_seconds = build_artifact.native_finish(native_state, Path.cwd() / ".build")
+                emit_evidence("native-compatibility-produced", status=native_runtime["status"],
+                              reason=native_runtime.get("reason"), host_seconds=native_state["host_seconds"],
+                              closure_seconds=native_seconds, diagnostic=native_runtime.get("diagnostic"),
+                              work=native_state.get("closure_work"))
+            artifact_started = time.monotonic()
+            manifest, manifest_sha256 = build_artifact.export_build(
+                Path.cwd(), args.export_build, current, stats.test_ids,
+                native_runtime=native_runtime,
+            )
+            stats.artifact_seconds = time.monotonic() - artifact_started
+            emit_evidence("build-exported", manifest_sha256=manifest_sha256,
+                          archive_sha256=manifest["archive_sha256"], archive_bytes=manifest["archive_bytes"],
+                          payload_bytes=manifest["payload_bytes"], entries=manifest["entries"],
+                          seconds=stats.artifact_seconds, identity=current)
+            if os.environ.get("GITHUB_OUTPUT"):
+                with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+                    output.write(f"manifest-sha256={manifest_sha256}\n")
+            return 0
         suites = discovered if args.parallel else prioritized_suites(filtered_suites_for_environment(discovered))
         stats.discovered_selections = len(suites)
         if args.parallel:
@@ -1110,6 +1194,14 @@ def run_suites() -> int:
 
         return result
     finally:
+        if restored_identity is not None:
+            propagating_error = sys.exc_info()[0] is not None
+            try:
+                build_artifact.cleanup_restored_build(Path.cwd(), restored_identity, _scratch_cleanup_safe)
+            except Exception as error:
+                print(f"Restored build cleanup failed: {error}", file=sys.stderr, flush=True)
+                if not propagating_error and result == 0:
+                    raise
         stats.total_seconds = time.monotonic() - total_started
         if "execution_started" in locals():
             stats.execution_seconds = time.monotonic() - execution_started

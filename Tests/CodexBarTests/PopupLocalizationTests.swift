@@ -103,110 +103,41 @@ struct PopupLocalizationTests {
     }
 
     @Test
-    func `factory descriptor localizes every time window label`() throws {
-        try CodexBarLocalizationOverride.$appLanguage.withValue("zh-Hans") {
-            let suite = "PopupLocalizationTests-factory-rate-windows"
-            let settings = try Self.makeSettingsStore(suite: suite)
-            let store = UsageStore(
-                fetcher: UsageFetcher(environment: [:]),
-                browserDetection: BrowserDetection(cacheTTL: 0),
-                settings: settings,
-                startupBehavior: .testing)
-            store._setSnapshotForTesting(
-                UsageSnapshot(
-                    primary: RateWindow(usedPercent: 12, windowMinutes: 300, resetsAt: nil, resetDescription: nil),
-                    secondary: RateWindow(
-                        usedPercent: 34,
-                        windowMinutes: 10080,
-                        resetsAt: nil,
-                        resetDescription: nil),
-                    tertiary: RateWindow(usedPercent: 56, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-                    updatedAt: Date(),
-                    identity: nil),
-                provider: .factory)
-
-            let descriptor = MenuDescriptor.build(
-                provider: .factory,
-                store: store,
-                settings: settings,
-                account: AccountInfo(email: nil, plan: nil),
-                updateReady: false,
-                includeContextualActions: false)
-            let lines = Self.textLines(from: descriptor)
-
-            #expect(lines.contains { $0.hasPrefix("5 小时:") })
-            #expect(lines.contains { $0.hasPrefix("每周:") })
-            #expect(lines.contains { $0.hasPrefix("每月:") })
-            #expect(!lines.contains { $0.hasPrefix("5-hour:") })
-        }
-    }
-
-    @Test
-    func `OpenRouter localizes only its static cap disclosure`() throws {
-        let disclosure = "Spending cap, not balance"
-        let details = try [ProviderDetailSection(title: "API key", rows: [
-            .init(label: "API key limit", value: "$30.00", secondaryValue: disclosure),
-            .init(label: "API key limit", value: "Unavailable right now", secondaryValue: "Request returned HTTP 403"),
-            .init(label: "API key limit", value: disclosure, secondaryValue: "arbitrary provider value"),
-            .init(label: "Other", value: "$30.00", secondaryValue: disclosure),
-        ])]
-        CodexBarLocalizationOverride.$appLanguage.withValue("de") {
-            let localized = UsageMenuCardView.Model.localizedProviderDetails(details, provider: .openrouter)[0]
-            #expect(localized.rows[0].label == "API-Schlüssellimit")
-            #expect(localized.rows[0].value == "$30.00")
-            #expect(localized.rows[0].secondaryValue == "Ausgabenlimit, kein Guthaben")
-            #expect(localized.rows[1].secondaryValue == "Request returned HTTP 403")
-            #expect(localized.rows[2].value == disclosure)
-            #expect(localized.rows[2].secondaryValue == "arbitrary provider value")
-            #expect(localized.rows[3].secondaryValue == disclosure)
-            let other = UsageMenuCardView.Model.localizedProviderDetails(details, provider: .synthetic)[0]
-            #expect(other.rows[0].secondaryValue == disclosure)
-        }
-    }
-
-    @Test
-    @MainActor
-    func `bundled OpenRouter snapshot preserves used and remaining presentation`() async throws {
-        let snapshot = try await OpenRouterLimitTestSupport.snapshot()
-        try CodexBarLocalizationOverride.$appLanguage.withValue("en") {
-            for showUsed in [true, false] {
-                let model = try OpenRouterLimitTestSupport.model(snapshot, showUsed: showUsed)
-                let metric = try #require(model.metrics.first)
-                #expect(metric.percent == (showUsed ? 0 : 100))
-                #expect(metric.percentStyle == (showUsed ? .used : .left))
-                #expect(UsageMenuCardView.popupMetricTitle(provider: .openrouter, metric: metric) == "API key limit")
-                #expect(model.planText == "Balance: $1.90")
-                #expect(model.providerDetails.flatMap(\.rows).first { $0.label == "API key limit" }?.secondaryValue ==
-                    "Spending cap, not balance")
-            }
-        }
-    }
-
-    @Test
     func `generic provider details keep canonical labels alongside localized core metrics`() throws {
         try CodexBarLocalizationOverride.$appLanguage.withValue("zh-Hant") {
             let now = Date(timeIntervalSince1970: 1_700_179_200)
-            let metadata = try #require(ProviderDefaults.metadata[.openrouter])
-            let usage = OpenRouterUsageSnapshot(
-                totalCredits: 100,
-                totalUsage: 40,
-                balance: 60,
-                usedPercent: 40,
-                keyDataFetched: true,
-                keyLimit: 25,
-                keyLimitRemaining: 15,
-                keyLimitReset: "monthly",
-                keyUsage: 10,
-                keyUsageDaily: 1.25,
-                keyUsageWeekly: 7.5,
-                keyUsageMonthly: 18.75,
-                rateLimit: OpenRouterRateLimit(requests: 100, interval: "10s"),
+            let metadata = try #require(ProviderDefaults.metadata[.claude])
+            let apiKeyDetails = try ProviderDetailSection(
+                title: "API key",
+                rows: [
+                    .init(label: "API key limit", value: "$25.00"),
+                    .init(label: "API key remaining", value: "$15.00"),
+                    .init(label: "API key used", value: "$10.00"),
+                    .init(label: "Reset window", value: "monthly"),
+                    .init(label: "Today", value: "$1.25"),
+                    .init(label: "This week", value: "$7.50"),
+                    .init(label: "This month", value: "$18.75"),
+                    .init(label: "Rate limit", value: "100 requests / 10s"),
+                ],
+                chart: .init(
+                    kind: .bars,
+                    title: "Usage",
+                    unit: "USD",
+                    points: [
+                        .init(label: "Today", value: 1.25),
+                        .init(label: "This week", value: 7.5),
+                        .init(label: "This month", value: 18.75),
+                    ]))
+            let usage = UsageSnapshot(
+                primary: RateWindow(usedPercent: 40, windowMinutes: 300, resetsAt: nil, resetDescription: nil),
+                secondary: nil,
+                details: [apiKeyDetails],
                 updatedAt: now)
 
             let model = UsageMenuCardView.Model.make(.init(
-                provider: .openrouter,
+                provider: .claude,
                 metadata: metadata,
-                snapshot: usage.toUsageSnapshot(),
+                snapshot: usage,
                 credits: nil,
                 creditsError: nil,
                 dashboard: nil,
@@ -223,7 +154,7 @@ struct PopupLocalizationTests {
                 hidePersonalInfo: false,
                 now: now))
 
-            #expect(model.metrics.first?.title == "額度")
+            #expect(model.metrics.first?.title == "工作階段")
             // After 84a4ca725, generic providers localize section titles and row labels via L();
             // values and chart point labels stay canonical.
             let apiKey = try #require(model.providerDetails.first { $0.title == "API 金鑰" })
@@ -269,49 +200,8 @@ struct PopupLocalizationTests {
     @Test
     func `settings labels use selected localization`() {
         CodexBarLocalizationOverride.$appLanguage.withValue("zh-Hant") {
-            #expect(KiroMenuBarDisplayMode.hidden.label == "隱藏")
-            #expect(KiroMenuBarDisplayMode.creditsLeft.label == "剩餘額度")
             #expect(L("(System)") == "（系統）")
         }
-    }
-
-    @Test
-    func `provider organization entries preserve provider supplied text`() throws {
-        let settings = try Self.makeSettingsStore(suite: "PopupLocalizationTests-organizations")
-        settings.kiloKnownOrganizations = [
-            KiloOrganization(id: "org_cost", name: "Cost", role: "Today"),
-        ]
-        let store = UsageStore(
-            fetcher: UsageFetcher(environment: [:]),
-            browserDetection: BrowserDetection(cacheTTL: 0),
-            settings: settings,
-            startupBehavior: .testing)
-        let context = ProviderSettingsContext(
-            provider: .kilo,
-            settings: settings,
-            store: store,
-            boolBinding: { keyPath in
-                Binding(
-                    get: { settings[keyPath: keyPath] },
-                    set: { settings[keyPath: keyPath] = $0 })
-            },
-            stringBinding: { keyPath in
-                Binding(
-                    get: { settings[keyPath: keyPath] },
-                    set: { settings[keyPath: keyPath] = $0 })
-            },
-            statusText: { _ in nil },
-            setStatusText: { _, _ in },
-            lastAppActiveRunAt: { _ in nil },
-            setLastAppActiveRunAt: { _, _ in },
-            requestConfirmation: { _ in })
-        let descriptor = try #require(KiloProviderImplementation().settingsOrganizations(context: context))
-        let orgEntry = try #require(descriptor.entries().first { $0.id == "org_cost" })
-
-        #expect(orgEntry.title == "Cost")
-        #expect(orgEntry.localizesTitle == false)
-        #expect(orgEntry.subtitle == "Today")
-        #expect(orgEntry.localizesSubtitle == false)
     }
 
     private static func makeSettingsStore(suite: String) throws -> SettingsStore {
@@ -319,9 +209,7 @@ struct PopupLocalizationTests {
         defaults.removePersistentDomain(forName: suite)
         let settings = SettingsStore(
             userDefaults: defaults,
-            configStore: testConfigStore(suiteName: suite),
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: testConfigStore(suiteName: suite))
         settings.statusChecksEnabled = false
         return settings
     }

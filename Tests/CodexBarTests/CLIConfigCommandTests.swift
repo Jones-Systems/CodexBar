@@ -6,65 +6,27 @@ import Testing
 
 struct CLIConfigCommandTests {
     @Test
-    func `Moonshot API key is bound to configured region`() {
-        var config = CodexBarConfig.makeDefault()
-        config.setProviderConfig(ProviderConfig(id: .moonshot, region: MoonshotRegion.china.rawValue))
-
-        let updated = CodexBarCLI.configSettingAPIKey(
-            config,
-            provider: .moonshot,
-            apiKey: "china-token",
-            enableProvider: true)
-
-        let moonshot = updated.providerConfig(for: .moonshot)
-        #expect(moonshot?.apiKey == "china-token")
-        #expect(moonshot?.apiKeyRegion == MoonshotRegion.china.rawValue)
-    }
-
-    @Test
     func `config set api key parses provider stdin and no enable flags`() throws {
         let parser = CommandParser(signature: CodexBarCLI._configSetAPIKeySignatureForTesting())
         let parsed = try parser.parse(arguments: [
-            "--provider", "elevenlabs",
+            "--provider", "claude",
             "--stdin",
             "--no-enable",
             "--json",
         ])
 
-        #expect(parsed.options["provider"] == ["elevenlabs"])
+        #expect(parsed.options["provider"] == ["claude"])
         #expect(parsed.flags.contains("stdin"))
         #expect(parsed.flags.contains("noEnable"))
         #expect(CodexBarCLI._decodeFormatForTesting(from: parsed) == .json)
     }
 
     @Test
-    func `config set api key for codex provider hints openai provider`() {
+    func `config set api key for codex provider rejects an unsupported credential source`() {
         #expect(ProviderConfigEnvironment.supportsAPIKeyOverride(for: .codex) == false)
         let codexMsg = CodexBarCLI.unsupportedAPIKeyErrorMessage(for: .codex, rawProvider: "codex")
         #expect(codexMsg ==
-            "codex does not support config API keys. For OpenAI Platform API keys, use '--provider openai'.")
-
-        let claudeMsg = CodexBarCLI.unsupportedAPIKeyErrorMessage(for: .claude, rawProvider: "claude")
-        #expect(claudeMsg == "claude does not support config API keys.")
-    }
-
-    @Test
-    func `config set api key parses zai team account options`() throws {
-        let parser = CommandParser(signature: CodexBarCLI._configSetAPIKeySignatureForTesting())
-        let parsed = try parser.parse(arguments: [
-            "--provider", "zai",
-            "--stdin",
-            "--label", "Team",
-            "--usage-scope", "team",
-            "--organization-id", "org-team",
-            "--workspace-id", "proj-team",
-        ])
-
-        #expect(parsed.options["provider"] == ["zai"])
-        #expect(parsed.options["label"] == ["Team"])
-        #expect(parsed.options["usageScope"] == ["team"])
-        #expect(parsed.options["organizationId"] == ["org-team"])
-        #expect(parsed.options["workspaceId"] == ["proj-team"])
+            "codex does not support config API keys.")
     }
 
     @Test
@@ -72,65 +34,25 @@ struct CLIConfigCommandTests {
         let config = CodexBarConfig.makeDefault()
         let updated = CodexBarCLI.configSettingAPIKey(
             config,
-            provider: .elevenlabs,
+            provider: .claude,
             apiKey: "xi-test-token",
             enableProvider: true)
-        let provider = updated.providerConfig(for: .elevenlabs)
+        let provider = updated.providerConfig(for: .claude)
 
         #expect(provider?.sanitizedAPIKey == "xi-test-token")
         #expect(provider?.enabled == true)
     }
 
     @Test
-    func `config set api key stores zai team token account`() throws {
-        let config = CodexBarConfig.makeDefault()
-        let options = try CodexBarCLI.resolveConfigAPIKeyAccountOptions(
-            provider: .zai,
-            label: "Team",
-            usageScope: "team",
-            organizationID: " org-team ",
-            workspaceID: " proj-team ")
-        let updated = CodexBarCLI.configSettingAPIKey(
-            config,
-            provider: .zai,
-            apiKey: "z-token",
-            enableProvider: true,
-            accountOptions: options)
-        let provider = try #require(updated.providerConfig(for: .zai))
-        let account = try #require(provider.tokenAccounts?.accounts.first)
-
-        #expect(provider.enabled == true)
-        #expect(provider.apiKey == nil)
-        #expect(provider.tokenAccounts?.activeIndex == 0)
-        #expect(account.label == "Team")
-        #expect(account.token == "z-token")
-        #expect(account.usageScope == "team")
-        #expect(account.organizationID == "org-team")
-        #expect(account.workspaceID == "proj-team")
-    }
-
-    @Test
-    func `config set api key rejects incomplete zai team account options`() {
-        #expect(throws: CLIArgumentError.self) {
-            _ = try CodexBarCLI.resolveConfigAPIKeyAccountOptions(
-                provider: .zai,
-                label: "Team",
-                usageScope: "team",
-                organizationID: "org-team",
-                workspaceID: nil)
-        }
-    }
-
-    @Test
     func `config provider toggle parses provider and json flags`() throws {
         let parser = CommandParser(signature: CodexBarCLI._configProviderToggleSignatureForTesting())
         let parsed = try parser.parse(arguments: [
-            "--provider", "grok",
+            "--provider", "codex",
             "--json",
             "--pretty",
         ])
 
-        #expect(parsed.options["provider"] == ["grok"])
+        #expect(parsed.options["provider"] == ["codex"])
         #expect(CodexBarCLI._decodeFormatForTesting(from: parsed) == .json)
         #expect(parsed.flags.contains("pretty"))
     }
@@ -138,53 +60,45 @@ struct CLIConfigCommandTests {
     @Test
     func `config provider toggle enables and disables provider`() {
         let config = CodexBarConfig.makeDefault()
-        let enabled = CodexBarCLI.configSettingProviderEnabled(config, provider: .grok, enabled: true)
-        let disabled = CodexBarCLI.configSettingProviderEnabled(enabled, provider: .grok, enabled: false)
+        let enabled = CodexBarCLI.configSettingProviderEnabled(config, provider: .codex, enabled: true)
+        let disabled = CodexBarCLI.configSettingProviderEnabled(enabled, provider: .codex, enabled: false)
 
-        #expect(enabled.providerConfig(for: .grok)?.enabled == true)
-        #expect(disabled.providerConfig(for: .grok)?.enabled == false)
+        #expect(enabled.providerConfig(for: .codex)?.enabled == true)
+        #expect(disabled.providerConfig(for: .codex)?.enabled == false)
     }
 
     @Test
     func `config provider status includes effective default`() throws {
         let config = CodexBarConfig(providers: [
-            ProviderConfig(id: .grok, enabled: true),
-            ProviderConfig(id: .cursor, enabled: false),
+            ProviderConfig(id: .codex, enabled: true),
+            ProviderConfig(id: .claude, enabled: false),
         ])
         let statuses = CodexBarCLI.configProviderStatuses(config)
-        let grok = try #require(statuses.first { $0.provider == "grok" })
-        let cursor = try #require(statuses.first { $0.provider == "cursor" })
+        let codex = try #require(statuses.first { $0.provider == "codex" })
+        let claude = try #require(statuses.first { $0.provider == "claude" })
 
-        #expect(grok.enabled)
-        #expect(!cursor.enabled)
+        #expect(codex.enabled)
+        #expect(!claude.enabled)
         #expect(statuses.count == UsageProvider.allCases.count)
     }
 
     @Test
     func `config set api key only accepts consumed config keys`() {
-        #expect(ProviderConfigEnvironment.supportsAPIKeyOverride(for: .elevenlabs))
-        #expect(ProviderConfigEnvironment.supportsAPIKeyOverride(for: .groq))
-        #expect(ProviderConfigEnvironment.supportsAPIKeyOverride(for: .llmproxy))
-        #expect(ProviderConfigEnvironment.supportsAPIKeyOverride(for: .openai))
-        #expect(ProviderConfigEnvironment.supportsAPIKeyOverride(for: .amp))
-        #expect(ProviderConfigEnvironment.supportsAPIKeyOverride(for: .kimi))
-        #expect(ProviderConfigEnvironment.supportsAPIKeyOverride(for: .factory))
-        #expect(!ProviderConfigEnvironment.supportsAPIKeyOverride(for: .bedrock))
-        #expect(!ProviderConfigEnvironment.supportsAPIKeyOverride(for: .deepseek))
-        #expect(!ProviderConfigEnvironment.supportsAPIKeyOverride(for: .cursor))
+        #expect(ProviderConfigEnvironment.supportsAPIKeyOverride(for: .claude))
+        #expect(!ProviderConfigEnvironment.supportsAPIKeyOverride(for: .codex))
     }
 
     @Test
     func `config set api key preserves disabled provider when requested`() {
         var config = CodexBarConfig.makeDefault()
-        config.setProviderConfig(ProviderConfig(id: .elevenlabs, enabled: false))
+        config.setProviderConfig(ProviderConfig(id: .claude, enabled: false))
 
         let updated = CodexBarCLI.configSettingAPIKey(
             config,
-            provider: .elevenlabs,
+            provider: .claude,
             apiKey: "xi-test-token",
             enableProvider: false)
-        let provider = updated.providerConfig(for: .elevenlabs)
+        let provider = updated.providerConfig(for: .claude)
 
         #expect(provider?.sanitizedAPIKey == "xi-test-token")
         #expect(provider?.enabled == false)
@@ -232,7 +146,7 @@ struct CLIConfigCommandTests {
             organizationID: "org-1",
             workspaceID: "proj-1")
         let provider = ProviderConfig(
-            id: .zai,
+            id: .claude,
             apiKey: "cb_test_api_key_456",
             secretKey: "cb_test_secret_key_789",
             cookieHeader: "cb_test_cookie_abc",
@@ -240,7 +154,7 @@ struct CLIConfigCommandTests {
         let config = CodexBarConfig(providers: [provider])
 
         let redacted = config.sanitizedForDump(showSecrets: false)
-        let redactedProvider = redacted.providerConfig(for: .zai)
+        let redactedProvider = redacted.providerConfig(for: .claude)
 
         #expect(redactedProvider?.apiKey == "[REDACTED]")
         #expect(redactedProvider?.secretKey == "[REDACTED]")
@@ -260,7 +174,7 @@ struct CLIConfigCommandTests {
             organizationID: "org-1",
             workspaceID: "proj-1")
         let provider = ProviderConfig(
-            id: .zai,
+            id: .claude,
             apiKey: "cb_test_api_key_456",
             secretKey: "cb_test_secret_key_789",
             cookieHeader: "cb_test_cookie_abc",
@@ -268,7 +182,7 @@ struct CLIConfigCommandTests {
         let config = CodexBarConfig(providers: [provider])
 
         let unredacted = config.sanitizedForDump(showSecrets: true)
-        let unredactedProvider = unredacted.providerConfig(for: .zai)
+        let unredactedProvider = unredacted.providerConfig(for: .claude)
 
         #expect(unredactedProvider?.apiKey == "cb_test_api_key_456")
         #expect(unredactedProvider?.secretKey == "cb_test_secret_key_789")
@@ -299,7 +213,7 @@ struct CLIConfigCommandTests {
             organizationID: "fixture-org",
             workspaceID: "fixture-workspace")
         let config = CodexBarConfig(providers: [ProviderConfig(
-            id: .zai,
+            id: .claude,
             enabled: true,
             apiKey: secrets[0],
             secretKey: secrets[1],

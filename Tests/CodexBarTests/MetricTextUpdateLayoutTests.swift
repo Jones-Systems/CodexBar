@@ -81,7 +81,7 @@ struct MetricTextUpdateLayoutTests {
 
     private static func model(kind: TextKind, text: String) -> UsageMenuCardView.Model {
         UsageMenuCardView.Model(
-            provider: .kimi,
+            provider: .claude,
             providerName: "Kimi Code",
             email: "synthetic@example.test",
             subtitleText: "Updated just now",
@@ -100,7 +100,6 @@ struct MetricTextUpdateLayoutTests {
                 detailIsPaceDerived: kind == .pace,
                 paceOnTop: false)],
             usageNotes: [],
-            openAIAPIUsage: nil,
             inlineUsageDashboard: nil,
             creditsText: nil,
             creditsRemaining: nil,
