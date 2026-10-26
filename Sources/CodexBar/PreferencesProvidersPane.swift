@@ -27,7 +27,8 @@ struct ProvidersPane: View {
     @State private var settingsLastAppActiveRunAtByID: [String: Date] = [:]
     @State private var activeConfirmation: ProviderSettingsConfirmationState?
     @State private var codexAccountsNotice: CodexAccountsSectionNotice?
-    @State private var netdataObservabilityBridge: NetdataObservabilityBridge
+    let netdataObservabilityBridge: NetdataObservabilityBridge?
+    let netdataObservabilityCoordinator: NetdataObservabilityCoordinator?
 
     init(
         // Provider-specific by design: Codex is the historical settings selection when no provider is supplied.
@@ -38,6 +39,7 @@ struct ProvidersPane: View {
         codexAccountPromotionCoordinator: CodexAccountPromotionCoordinator? = nil,
         codexAmbientLoginRunner: any CodexAmbientLoginRunning = DefaultCodexAmbientLoginRunner(),
         netdataObservabilityBridge: NetdataObservabilityBridge? = nil,
+        netdataObservabilityCoordinator: NetdataObservabilityCoordinator? = nil,
         runProviderLoginFlow: @escaping @MainActor (UsageProvider) async -> Void = { _ in })
     {
         self.provider = provider
@@ -50,8 +52,8 @@ struct ProvidersPane: View {
                 usageStore: store,
                 managedAccountCoordinator: managedCodexAccountCoordinator)
         self.codexAmbientLoginRunner = codexAmbientLoginRunner
-        self._netdataObservabilityBridge = State(
-            initialValue: netdataObservabilityBridge ?? NetdataObservabilityBridge())
+        self.netdataObservabilityCoordinator = netdataObservabilityCoordinator
+        self.netdataObservabilityBridge = netdataObservabilityCoordinator?.bridge ?? netdataObservabilityBridge
         self.runProviderLoginFlow = runProviderLoginFlow
     }
 
@@ -110,7 +112,8 @@ struct ProvidersPane: View {
                     CodexObservabilityHubView(
                         accountInputs: { self.observabilityAccountInputs() },
                         providerInputs: { self.observabilityProviderInputs() },
-                        netdataBridge: self.netdataObservabilityBridge)
+                        netdataBridge: self.netdataObservabilityBridge,
+                        netdataCoordinator: self.netdataObservabilityCoordinator)
                 }
             })
             .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in

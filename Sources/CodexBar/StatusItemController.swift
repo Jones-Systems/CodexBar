@@ -52,10 +52,13 @@ final class StatusItemController: NSObject, NSMenuDelegate, StatusItemControllin
 
     enum StatusItemIdentity {
         case merged
+        case netdata
         case provider(ProviderInstanceID)
 
         var autosaveName: String {
             switch self {
+            case .netdata:
+                "codexbar-netdata"
             case .merged:
                 "codexbar-merged"
             case let .provider(provider):
@@ -65,6 +68,8 @@ final class StatusItemController: NSObject, NSMenuDelegate, StatusItemControllin
 
         var accessibilityIdentifier: String {
             switch self {
+            case .netdata:
+                "\(StatusItemController.statusItemAccessibilityIdentifierPrefix).netdata"
             case .merged:
                 StatusItemController.statusItemAccessibilityIdentifierPrefix
             case let .provider(provider):
@@ -111,6 +116,10 @@ final class StatusItemController: NSObject, NSMenuDelegate, StatusItemControllin
     let menuRefreshEnabledForController: Bool
     var statusItem: NSStatusItem
     var statusItems: [ProviderInstanceID: NSStatusItem] = [:]
+    var netdataObservabilityCoordinator: NetdataObservabilityCoordinator?
+    var netdataStatusItem: NSStatusItem?
+    var netdataMenu: NSMenu?
+    var netdataObservationID = UUID()
     /// App intent survives Tahoe changing `NSStatusItem.isVisible` after Control Center rejects its scene.
     var expectedVisibleStatusItemAutosaveNames: Set<String> = []
     var lastMenuProvider: ProviderInstanceID?
@@ -736,6 +745,7 @@ final class StatusItemController: NSObject, NSMenuDelegate, StatusItemControllin
         #if DEBUG
         guard !self.isReleasedForTesting else { return }
         #endif
+        self.removeNetdataStatusItem()
         self.statusItem.menu = nil
         self.statusBar.removeStatusItem(self.statusItem)
         self.statusItem = Self.makeStatusItem(
@@ -787,6 +797,7 @@ final class StatusItemController: NSObject, NSMenuDelegate, StatusItemControllin
             self.attachMenus(fallback: fallback)
         }
         self.expectedVisibleStatusItemAutosaveNames = expectedVisibleAutosaveNames
+        self.updateNetdataStatusItem()
         self.updateAnimationState()
         self.updateBlinkingState()
     }
@@ -1032,7 +1043,8 @@ extension StatusItemController {
         #if DEBUG
         guard !self.isReleasedForTesting else { return }
         #endif
-        let visibleItems = ([self.statusItem] + Array(self.statusItems.values)).filter(\.isVisible)
+        let allItems = [self.statusItem] + Array(self.statusItems.values) + [self.netdataStatusItem].compactMap { $0 }
+        let visibleItems = allItems.filter(\.isVisible)
         for item in visibleItems {
             item.isVisible = false
         }

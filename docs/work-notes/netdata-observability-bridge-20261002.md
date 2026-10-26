@@ -2,6 +2,11 @@
 
 # Netdata in-memory Observability bridge
 
+> The supplied-bridge checkpoint below is historical source evidence. The
+> source-only application integration continuation is tracked in
+> [Netdata app lifetime](../engineering-specs/netdata-app-lifetime.md). Its source
+> implementation does not establish installed or live acceptance.
+
 <!-- codex-section:begin id="worknote.netdata-observability-bridge#ctx.artifact-header.001" -->
 Artifact Type: `work-note`
 

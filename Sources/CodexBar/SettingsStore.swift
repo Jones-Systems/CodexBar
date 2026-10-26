@@ -272,6 +272,7 @@ final class SettingsStore {
     @ObservationIgnored private nonisolated(unsafe) var lowPowerModeObserver: NSObjectProtocol?
     var defaultsState: SettingsDefaultsState
     var configRevision: Int = 0
+    @ObservationIgnored let netdataConfigurationNotifications = NotificationCenter()
     var providerDetailSettingsRevision: Int = 0
     var backgroundWorkSettingsRevision: Int = 0
     var costUsageSettingsRevision: UInt64 = 0
@@ -658,6 +659,7 @@ extension SettingsStore {
             userDefaults.set(iCloudSyncDeviceID, forKey: "iCloudSyncDeviceID")
         }
         return SettingsDefaultsState(
+            netdataConfiguration: Self.loadNetdataConfiguration(userDefaults: userDefaults),
             refreshFrequency: refreshFrequency,
             adaptiveActivityScanConsent: adaptiveActivityScanConsent,
             refreshAllProvidersOnMenuOpen: refreshAllProvidersOnMenuOpen,

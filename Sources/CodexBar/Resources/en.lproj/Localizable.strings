@@ -1620,3 +1620,22 @@
 
 "No system observations are available." = "No system observations are available.";
 "Historical provider cache; not a billing receipt or an identified account." = "Historical provider cache; not a billing receipt or an identified account.";
+
+/* Device-local Netdata configuration and host menu. */
+"netdata_title" = "Netdata host resources";
+"netdata_enabled" = "Collect host resources";
+"netdata_environment_id" = "Environment ID (not local)";
+"netdata_host_label" = "Short host label";
+"netdata_loopback_origin" = "HTTP loopback origin";
+"netdata_machine_guid" = "Expected machine GUID";
+"netdata_dashboard_url" = "Dashboard URL (optional)";
+"netdata_apply" = "Apply";
+"netdata_saved" = "Saved.";
+"netdata_invalid_configuration" = "Not saved. Check the host identity, label, loopback origin, and dashboard URL.";
+"netdata_configuration_help" = "Off by default. Apply saves this device's configuration. Use an existing HTTP loopback origin without a path or trailing slash. The environment ID must not be local; the label is limited to 32 characters. The dashboard is navigation only: HTTPS or loopback HTTP, without credentials, query parameters, or fragments.";
+"netdata_cpu_value" = "CPU: %@";
+"netdata_ram_value" = "Available RAM: %@";
+"netdata_sample_age_value" = "Sample age: %@";
+"netdata_availability_value" = "Availability: %@";
+"netdata_source_value" = "Source: %@";
+"netdata_age_seconds" = "%.0f seconds";

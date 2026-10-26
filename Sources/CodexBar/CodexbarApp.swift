@@ -438,6 +438,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var preferencesSelection: PreferencesSelection?
     private var managedCodexAccountCoordinator: ManagedCodexAccountCoordinator?
     private var codexAccountPromotionCoordinator: CodexAccountPromotionCoordinator?
+    private(set) var netdataObservabilityCoordinator: NetdataObservabilityCoordinator?
     private var cloudSyncCoordinator: CloudSyncCoordinator?
     private var settingsWindowController: SettingsWindowController?
     private lazy var placeholderSettingsWindowGuard = PlaceholderSettingsWindowGuard(
@@ -460,11 +461,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.preferencesSelection = dependencies.selection
         self.managedCodexAccountCoordinator = dependencies.managedCodexAccountCoordinator
         self.codexAccountPromotionCoordinator = dependencies.codexAccountPromotionCoordinator
+        self.netdataObservabilityCoordinator = NetdataObservabilityCoordinator(settings: dependencies.settings)
         self.cloudSyncCoordinator = CloudSyncCoordinator(settings: dependencies.settings, state: self.cloudSyncState)
         self.settingsWindowController = SettingsWindowController(
             settings: dependencies.settings,
             store: dependencies.store,
             cloudSyncState: self.cloudSyncState,
+            netdataObservabilityCoordinator: self.netdataObservabilityCoordinator,
             updater: self.updaterController,
             selection: dependencies.selection,
             managedCodexAccountCoordinator: dependencies.managedCodexAccountCoordinator,
@@ -523,6 +526,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             missingItemRetriesRemaining: Self.settingsMenuReadinessRetryCount,
             fallbackVerificationRetriesRemaining: Self.settingsMenuFallbackVerificationRetryCount)
         self.cloudSyncCoordinator?.start()
+        self.netdataObservabilityCoordinator?.start()
         Task { @MainActor [weak self] in
             await Task.yield()
             guard let settings = self?.settings else { return }
@@ -576,6 +580,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         (self.updaterController as? JonesUpdateController)?.disableIdleApplication()
         NotificationCenter.default.removeObserver(self, name: NSMenu.didBeginTrackingNotification, object: nil)
         NotificationCenter.default.removeObserver(self, name: NSMenu.didEndTrackingNotification, object: nil)
+        self.netdataObservabilityCoordinator?.stop()
         self.cloudSyncCoordinator?.stop()
         self.memoryPressureMonitor.stop()
         #if DEBUG
@@ -798,6 +803,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self.statusController = statusController
             if let concreteStatusController = statusController as? StatusItemController {
                 concreteStatusController.cloudSyncState = self.cloudSyncState
+                concreteStatusController.setNetdataCoordinator(self.netdataObservabilityCoordinator)
                 MenuSwitchFlickerProbe.startIfRequested(controller: concreteStatusController)
             }
             return

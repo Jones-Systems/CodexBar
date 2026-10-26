@@ -26,7 +26,9 @@ private enum ObservabilityHubTab: String, CaseIterable, Identifiable {
 struct CodexObservabilityHubView: View {
     let accountInputs: () -> [HubAccountObservation]
     let providerInputs: () -> [HubProviderInput]
-    @Bindable var netdataBridge: NetdataObservabilityBridge
+    var netdataBridge: NetdataObservabilityBridge?
+    var netdataCoordinator: NetdataObservabilityCoordinator?
+    @State private var isAppeared = false
     @State private var tab: ObservabilityHubTab = .overview
 
     var body: some View {
@@ -38,21 +40,22 @@ struct CodexObservabilityHubView: View {
             }
             .pickerStyle(.segmented)
             TimelineView(.periodic(from: .now, by: 15)) { context in
+                let now = self.presentationDate(fallback: context.date)
                 let accounts = self.accountInputs()
-                let hosts = self.netdataBridge.hostsByEnvironmentID(now: context.date)
+                let hosts = self.netdataBridge?.hostsByEnvironmentID(now: now) ?? [:]
                 let snapshot = ObservabilityHub.aggregate(
                     services: self.systemObservations(accounts: accounts, hosts: hosts),
                     accounts: accounts,
                     providers: self.providerInputs(),
                     includeWork: self.tab == .work,
                     hostsByEnvironmentID: hosts,
-                    now: context.date)
+                    now: now)
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 12) {
                         switch self.tab {
-                        case .overview: self.overview(snapshot, now: context.date)
+                        case .overview: self.overview(snapshot, now: now)
                         case .accounts: self.accounts(snapshot)
-                        case .systems: self.systems(snapshot, now: context.date)
+                        case .systems: self.systems(snapshot, now: now)
                         case .work: self.work(snapshot)
                         }
                     }
@@ -66,6 +69,25 @@ struct CodexObservabilityHubView: View {
             SettingsSectionFooter(
                 L("Local service state, provider usage and cost, and host resources are separate ledgers."))
         }
+        .onAppear {
+            self.isAppeared = true
+            self.updateNetdataVisibility()
+        }
+        .onDisappear {
+            self.isAppeared = false
+            self.updateNetdataVisibility()
+        }
+        .onChange(of: self.tab) { _, _ in self.updateNetdataVisibility() }
+    }
+
+    private func presentationDate(fallback: Date) -> Date {
+        guard let coordinator = self.netdataCoordinator, coordinator.isRunning,
+              coordinator.configuration.activeHost != nil else { return fallback }
+        return coordinator.presentationNow
+    }
+
+    private func updateNetdataVisibility() {
+        self.netdataCoordinator?.setSystemsVisible(self.isAppeared && self.tab == .systems)
     }
 
     private func systemObservations(
@@ -79,7 +101,9 @@ struct CodexObservabilityHubView: View {
         let remote = hosts.keys.sorted().filter { $0 != "local" }.map { id in
             HubServiceObservation(
                 id: id,
-                label: id,
+                label: self.netdataCoordinator?.configuration.activeHost.flatMap {
+                    $0.environmentID == id ? $0.label : nil
+                } ?? id,
                 evidence: HubEvidence(source: "No service observation", observedAt: nil, availability: .unavailable))
         }
         return [local] + remote
@@ -200,7 +224,13 @@ struct CodexObservabilityHubView: View {
                         service.runtimeEffectiveProfile ?? L("Unknown")))
                     HubEvidenceView(evidence: service.evidence)
                     self.hostResources(environmentID: service.id, label: service.label, now: now)
-                    NetdataDashboardLinkView(environmentID: service.id)
+                    if self.netdataCoordinator?.configuration.activeHost?.environmentID == service.id,
+                       let destination = self.netdataCoordinator?.configuration.dashboardDestination
+                    {
+                        Link(L("Open dashboard in browser"), destination: destination)
+                        Text(L("Opening a dashboard does not import telemetry or verify this host."))
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 .font(.caption)
             }
@@ -208,7 +238,10 @@ struct CodexObservabilityHubView: View {
     }
 
     private func hostResources(environmentID: String, label: String, now: Date) -> some View {
-        let state = self.netdataBridge.systemsState(environmentID: environmentID, now: now)
+        let state = self.netdataBridge?.systemsState(environmentID: environmentID, now: now) ?? NetdataSystemsState(
+            environmentID: environmentID,
+            observation: NetdataReadOnlyFacade.unavailable(environmentID: environmentID),
+            now: now)
         return VStack(alignment: .leading, spacing: 3) {
             Text(state.compactLabel(hostLabel: label))
             if state.availability == .unsupported {
@@ -285,26 +318,5 @@ private struct HubEvidenceView: View {
         case .unavailable: L("Unavailable")
         case .unsupported: L("Unsupported")
         }
-    }
-}
-
-private struct NetdataDashboardLinkView: View {
-    let environmentID: String
-    @State private var destination = ""
-
-    var body: some View {
-        DisclosureGroup(L("Open an existing Netdata dashboard")) {
-            TextField(L("Dashboard URL (not stored)"), text: self.$destination)
-                .textFieldStyle(.roundedBorder)
-            if let url = NetdataReadOnlyFacade.dashboardURL(self.destination) {
-                Link(L("Open dashboard in browser"), destination: url)
-            } else if !self.destination.isEmpty {
-                Text(L("Use HTTPS, or loopback HTTP, without credentials, query parameters, or fragments."))
-                    .foregroundStyle(.orange)
-            }
-            Text(L("Opening a dashboard does not import telemetry or verify this host."))
-                .foregroundStyle(.secondary)
-        }
-        .onChange(of: self.environmentID) { _, _ in self.destination = "" }
     }
 }
