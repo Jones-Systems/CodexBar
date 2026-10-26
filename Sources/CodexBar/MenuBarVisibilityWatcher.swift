@@ -423,7 +423,7 @@ extension StatusItemController {
     }
 
     private var startupVisibilityStatusItems: [NSStatusItem] {
-        [self.statusItem] + Array(self.statusItems.values)
+        [self.statusItem] + Array(self.statusItems.values) + [self.netdataStatusItem].compactMap(\.self)
     }
 
     private func startupStatusItemVisibilityEvidence() -> [StatusItemStartupVisibilityEvidence] {

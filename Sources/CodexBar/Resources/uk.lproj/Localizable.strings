@@ -1619,3 +1619,22 @@
 "jones_updates_size_failure" = "Неможливо безпечно завантажити це оновлення. Установіть перевірену збірку Jones.";
 "jones_updates_capacity_unknown" = "Не вдалося перевірити вільне місце. Перевірте диски й повторіть спробу.";
 "jones_updates_capacity_low" = "Для оновлень потрібно щонайменше %@ вільного місця. Звільніть місце й повторіть спробу.";
+
+/* Device-local Netdata configuration and host menu (uk). */
+"netdata_title" = "Ресурси хоста Netdata";
+"netdata_enabled" = "Збирати дані про ресурси хоста";
+"netdata_environment_id" = "ID середовища (не local)";
+"netdata_host_label" = "Коротка мітка хоста";
+"netdata_loopback_origin" = "HTTP-джерело на петльовій адресі";
+"netdata_machine_guid" = "Очікуваний GUID машини";
+"netdata_dashboard_url" = "URL панелі (необов’язково)";
+"netdata_apply" = "Застосувати";
+"netdata_saved" = "Збережено.";
+"netdata_invalid_configuration" = "Не збережено. Перевірте ідентифікатор хоста, мітку, джерело на петльовій адресі та URL панелі.";
+"netdata_configuration_help" = "Типово вимкнено. Кнопка «Застосувати» зберігає конфігурацію цього пристрою. Використовуйте наявне HTTP-джерело на петльовій адресі без шляху та кінцевої скісної риски. ID середовища не має бути local; мітку обмежено 32 символами. Панель призначена лише для навігації: HTTPS або HTTP на петльовій адресі, без облікових даних, параметрів запиту чи фрагментів.";
+"netdata_cpu_value" = "CPU: %@";
+"netdata_ram_value" = "Доступна RAM: %@";
+"netdata_sample_age_value" = "Вік зразка: %@";
+"netdata_availability_value" = "Доступність: %@";
+"netdata_source_value" = "Джерело: %@";
+"netdata_age_seconds" = "%.0f с";

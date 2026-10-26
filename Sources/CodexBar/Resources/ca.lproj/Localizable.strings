@@ -1621,3 +1621,22 @@
 "jones_updates_size_failure" = "Aquesta actualització no es pot descarregar de manera segura. Instal·la una versió de Jones verificada.";
 "jones_updates_capacity_unknown" = "No s’ha pogut comprovar l’espai disponible. Revisa els discs i torna-ho a provar.";
 "jones_updates_capacity_low" = "Les actualitzacions necessiten almenys %@ d’espai disponible. Allibera espai i torna-ho a provar.";
+
+/* Device-local Netdata configuration and host menu (ca). */
+"netdata_title" = "Recursos de l’amfitrió de Netdata";
+"netdata_enabled" = "Recopila els recursos de l’amfitrió";
+"netdata_environment_id" = "ID de l’entorn (no pot ser local)";
+"netdata_host_label" = "Etiqueta curta de l’amfitrió";
+"netdata_loopback_origin" = "Origen HTTP de bucle local";
+"netdata_machine_guid" = "GUID esperat de la màquina";
+"netdata_dashboard_url" = "URL del tauler (opcional)";
+"netdata_apply" = "Aplica";
+"netdata_saved" = "Desat.";
+"netdata_invalid_configuration" = "No s’ha desat. Comprova la identitat de l’amfitrió, l’etiqueta, l’origen de bucle local i l’URL del tauler.";
+"netdata_configuration_help" = "Desactivat per defecte. Aplica desa la configuració d’aquest dispositiu. Utilitza un origen HTTP de bucle local existent sense camí ni barra final. L’ID de l’entorn no pot ser local; l’etiqueta té un límit de 32 caràcters. El tauler només serveix per navegar: HTTPS o HTTP de bucle local, sense credencials, paràmetres de consulta ni fragments.";
+"netdata_cpu_value" = "CPU: %@";
+"netdata_ram_value" = "RAM disponible: %@";
+"netdata_sample_age_value" = "Antiguitat de la mostra: %@";
+"netdata_availability_value" = "Disponibilitat: %@";
+"netdata_source_value" = "Font: %@";
+"netdata_age_seconds" = "%.0f segons";

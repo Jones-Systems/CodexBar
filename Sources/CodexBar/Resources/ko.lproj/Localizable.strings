@@ -1588,3 +1588,22 @@
 "jones_updates_size_failure" = "이 업데이트를 안전하게 다운로드할 수 없습니다. 검증된 Jones 빌드를 설치하세요.";
 "jones_updates_capacity_unknown" = "사용 가능한 저장 공간을 확인할 수 없습니다. 디스크를 확인한 후 다시 시도하세요.";
 "jones_updates_capacity_low" = "업데이트하려면 최소 %@의 여유 공간이 필요합니다. 공간을 확보한 후 다시 시도하세요.";
+
+/* Device-local Netdata configuration and host menu (ko). */
+"netdata_title" = "Netdata 호스트 리소스";
+"netdata_enabled" = "호스트 리소스 수집";
+"netdata_environment_id" = "환경 ID(local 사용 불가)";
+"netdata_host_label" = "짧은 호스트 레이블";
+"netdata_loopback_origin" = "HTTP 루프백 오리진";
+"netdata_machine_guid" = "예상 머신 GUID";
+"netdata_dashboard_url" = "대시보드 URL(선택 사항)";
+"netdata_apply" = "적용";
+"netdata_saved" = "저장되었습니다.";
+"netdata_invalid_configuration" = "저장되지 않았습니다. 호스트 식별 정보, 레이블, 루프백 오리진 및 대시보드 URL을 확인하세요.";
+"netdata_configuration_help" = "기본적으로 꺼져 있습니다. 적용을 누르면 이 기기의 구성이 저장됩니다. 경로나 끝의 슬래시가 없는 기존 HTTP 루프백 오리진을 사용하세요. 환경 ID는 local일 수 없으며 레이블은 32자로 제한됩니다. 대시보드는 탐색 전용입니다. HTTPS 또는 루프백 HTTP를 사용하고 자격 증명, 쿼리 매개변수 또는 프래그먼트를 포함하지 마세요.";
+"netdata_cpu_value" = "CPU: %@";
+"netdata_ram_value" = "사용 가능한 RAM: %@";
+"netdata_sample_age_value" = "샘플 경과 시간: %@";
+"netdata_availability_value" = "가용성: %@";
+"netdata_source_value" = "출처: %@";
+"netdata_age_seconds" = "%.0f초";

@@ -1620,3 +1620,22 @@
 "jones_updates_size_failure" = "Không thể tải bản cập nhật này một cách an toàn. Hãy cài đặt bản dựng Jones đã được xác minh.";
 "jones_updates_capacity_unknown" = "Không thể kiểm tra dung lượng trống. Hãy kiểm tra các ổ đĩa rồi thử lại.";
 "jones_updates_capacity_low" = "Bản cập nhật cần ít nhất %@ dung lượng trống. Hãy giải phóng dung lượng rồi thử lại.";
+
+/* Device-local Netdata configuration and host menu (vi). */
+"netdata_title" = "Tài nguyên máy chủ Netdata";
+"netdata_enabled" = "Thu thập tài nguyên máy chủ";
+"netdata_environment_id" = "ID môi trường (không được là local)";
+"netdata_host_label" = "Nhãn máy chủ ngắn";
+"netdata_loopback_origin" = "Nguồn HTTP loopback";
+"netdata_machine_guid" = "GUID máy dự kiến";
+"netdata_dashboard_url" = "URL bảng điều khiển (không bắt buộc)";
+"netdata_apply" = "Áp dụng";
+"netdata_saved" = "Đã lưu.";
+"netdata_invalid_configuration" = "Chưa lưu. Kiểm tra danh tính máy chủ, nhãn, nguồn loopback và URL bảng điều khiển.";
+"netdata_configuration_help" = "Mặc định tắt. Áp dụng sẽ lưu cấu hình của thiết bị này. Sử dụng nguồn HTTP loopback hiện có, không có đường dẫn hoặc dấu gạch chéo ở cuối. ID môi trường không được là local; nhãn giới hạn ở 32 ký tự. Bảng điều khiển chỉ dùng để điều hướng: HTTPS hoặc HTTP loopback, không có thông tin xác thực, tham số truy vấn hoặc đoạn định danh.";
+"netdata_cpu_value" = "CPU: %@";
+"netdata_ram_value" = "RAM khả dụng: %@";
+"netdata_sample_age_value" = "Tuổi mẫu: %@";
+"netdata_availability_value" = "Tính khả dụng: %@";
+"netdata_source_value" = "Nguồn: %@";
+"netdata_age_seconds" = "%.0f giây";

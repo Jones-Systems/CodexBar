@@ -58,12 +58,8 @@ extension StatusItemController {
         return self.makeBaseMenu()
     }
 
-    func menuNeedsUpdate(_ menu: NSMenu) {
-        guard self.shouldMergeIcons, menu === self.mergedMenu else { return }
-        self.refreshMenuForOpenIfNeeded(menu, provider: self.resolvedMenuProvider())
-    }
-
     func menuWillOpen(_ menu: NSMenu) {
+        if self.netdataMenuWillOpen(menu) { return }
         if menu.supermenu == nil {
             // Records interaction and may bring an adaptive timer forward; never refreshes
             // synchronously. Root opens only: hover-opening a hosted chart submenu must not kick
@@ -162,6 +158,7 @@ extension StatusItemController {
     }
 
     func menuDidClose(_ menu: NSMenu) {
+        if self.netdataMenuDidClose(menu) { return }
         let wasHostedSubviewMenu = self.isHostedSubviewMenu(menu)
         self.forgetClosedMenu(menu)
         if wasHostedSubviewMenu {
@@ -212,6 +209,7 @@ extension StatusItemController {
     }
 
     func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
+        if menu === self.netdataMenu { return }
         let key = ObjectIdentifier(menu)
         let previous = self.highlightedMenuItems[key]
         guard previous !== item else { return }

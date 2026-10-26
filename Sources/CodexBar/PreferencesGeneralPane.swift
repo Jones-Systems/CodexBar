@@ -125,6 +125,7 @@ struct GeneralPane: View {
 
     var body: some View {
         Form {
+            PreferencesNetdataSection(settings: self.settings)
             Section {
                 SettingsMenuPicker(
                     selection: self.$settings.appLanguage,

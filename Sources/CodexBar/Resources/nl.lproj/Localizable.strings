@@ -1618,3 +1618,22 @@
 "jones_updates_size_failure" = "Deze update kan niet veilig worden gedownload. Installeer een geverifieerde Jones-versie.";
 "jones_updates_capacity_unknown" = "De beschikbare opslag kon niet worden gecontroleerd. Controleer je schijven en probeer het opnieuw.";
 "jones_updates_capacity_low" = "Updates vereisen minstens %@ beschikbare opslag. Maak ruimte vrij en probeer het opnieuw.";
+
+/* Device-local Netdata configuration and host menu (nl). */
+"netdata_title" = "Netdata-hostbronnen";
+"netdata_enabled" = "Hostbronnen verzamelen";
+"netdata_environment_id" = "Omgevings-ID (niet local)";
+"netdata_host_label" = "Kort hostlabel";
+"netdata_loopback_origin" = "HTTP-loopback-oorsprong";
+"netdata_machine_guid" = "Verwachte machine-GUID";
+"netdata_dashboard_url" = "Dashboard-URL (optioneel)";
+"netdata_apply" = "Toepassen";
+"netdata_saved" = "Opgeslagen.";
+"netdata_invalid_configuration" = "Niet opgeslagen. Controleer de hostidentiteit, het label, de loopback-oorsprong en de dashboard-URL.";
+"netdata_configuration_help" = "Standaard uitgeschakeld. Toepassen slaat de configuratie van dit apparaat op. Gebruik een bestaande HTTP-loopback-oorsprong zonder pad of afsluitende schuine streep. De omgevings-ID mag niet local zijn; het label is beperkt tot 32 tekens. Het dashboard dient alleen voor navigatie: HTTPS of loopback-HTTP, zonder inloggegevens, queryparameters of fragmenten.";
+"netdata_cpu_value" = "CPU: %@";
+"netdata_ram_value" = "Beschikbaar RAM: %@";
+"netdata_sample_age_value" = "Leeftijd van meting: %@";
+"netdata_availability_value" = "Beschikbaarheid: %@";
+"netdata_source_value" = "Bron: %@";
+"netdata_age_seconds" = "%.0f seconden";

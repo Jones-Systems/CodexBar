@@ -1623,3 +1623,22 @@
 "jones_updates_size_failure" = "بارگیری امن این به‌روزرسانی ممکن نیست. یک نسخهٔ تأییدشدهٔ Jones نصب کنید.";
 "jones_updates_capacity_unknown" = "فضای ذخیره‌سازی آزاد بررسی نشد. دیسک‌ها را بررسی کنید و دوباره تلاش کنید.";
 "jones_updates_capacity_low" = "به‌روزرسانی‌ها به دست‌کم %@ فضای آزاد نیاز دارند. فضا آزاد کنید و دوباره تلاش کنید.";
+
+/* Device-local Netdata configuration and host menu (fa). */
+"netdata_title" = "منابع میزبان Netdata";
+"netdata_enabled" = "جمع‌آوری منابع میزبان";
+"netdata_environment_id" = "شناسهٔ محیط (نباید local باشد)";
+"netdata_host_label" = "برچسب کوتاه میزبان";
+"netdata_loopback_origin" = "مبدأ HTTP حلقهٔ بازگشت";
+"netdata_machine_guid" = "GUID مورد انتظار دستگاه";
+"netdata_dashboard_url" = "نشانی پنل (اختیاری)";
+"netdata_apply" = "اعمال";
+"netdata_saved" = "ذخیره شد.";
+"netdata_invalid_configuration" = "ذخیره نشد. هویت میزبان، برچسب، مبدأ حلقهٔ بازگشت و نشانی پنل را بررسی کنید.";
+"netdata_configuration_help" = "به‌طور پیش‌فرض خاموش است. اعمال، پیکربندی این دستگاه را ذخیره می‌کند. از یک مبدأ HTTP حلقهٔ بازگشت موجود، بدون مسیر یا اسلش پایانی استفاده کنید. شناسهٔ محیط نباید local باشد؛ برچسب به 32 نویسه محدود است. پنل فقط برای پیمایش است: HTTPS یا HTTP حلقهٔ بازگشت، بدون اطلاعات احراز هویت، پارامترهای پرس‌وجو یا قطعه‌های نشانی.";
+"netdata_cpu_value" = "CPU: %@";
+"netdata_ram_value" = "RAM در دسترس: %@";
+"netdata_sample_age_value" = "عمر نمونه: %@";
+"netdata_availability_value" = "دسترس‌پذیری: %@";
+"netdata_source_value" = "منبع: %@";
+"netdata_age_seconds" = "%.0f ثانیه";

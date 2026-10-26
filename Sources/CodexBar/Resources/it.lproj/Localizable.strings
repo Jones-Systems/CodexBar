@@ -1622,3 +1622,22 @@
 "jones_updates_size_failure" = "Impossibile scaricare questo aggiornamento in sicurezza. Installa una versione Jones verificata.";
 "jones_updates_capacity_unknown" = "Impossibile verificare lo spazio disponibile. Controlla i dischi e riprova.";
 "jones_updates_capacity_low" = "Gli aggiornamenti richiedono almeno %@ di spazio disponibile. Libera spazio e riprova.";
+
+/* Device-local Netdata configuration and host menu (it). */
+"netdata_title" = "Risorse host Netdata";
+"netdata_enabled" = "Raccogli risorse host";
+"netdata_environment_id" = "ID ambiente (diverso da local)";
+"netdata_host_label" = "Etichetta breve dell’host";
+"netdata_loopback_origin" = "Origine HTTP di loopback";
+"netdata_machine_guid" = "GUID previsto della macchina";
+"netdata_dashboard_url" = "URL della dashboard (facoltativo)";
+"netdata_apply" = "Applica";
+"netdata_saved" = "Salvato.";
+"netdata_invalid_configuration" = "Non salvato. Controlla l’identità dell’host, l’etichetta, l’origine di loopback e l’URL della dashboard.";
+"netdata_configuration_help" = "Disattivato per impostazione predefinita. Applica salva la configurazione di questo dispositivo. Usa un’origine HTTP di loopback esistente senza percorso né barra finale. L’ID ambiente non deve essere local; l’etichetta è limitata a 32 caratteri. La dashboard serve solo per la navigazione: HTTPS o HTTP di loopback, senza credenziali, parametri di query né frammenti.";
+"netdata_cpu_value" = "Utilizzo CPU: %@";
+"netdata_ram_value" = "RAM disponibile: %@";
+"netdata_sample_age_value" = "Età del campione: %@";
+"netdata_availability_value" = "Disponibilità: %@";
+"netdata_source_value" = "Origine: %@";
+"netdata_age_seconds" = "%.0f secondi";

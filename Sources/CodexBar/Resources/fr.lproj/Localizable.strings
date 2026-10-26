@@ -1618,3 +1618,22 @@
 "jones_updates_size_failure" = "Cette mise à jour ne peut pas être téléchargée en toute sécurité. Installez une version Jones vérifiée.";
 "jones_updates_capacity_unknown" = "L’espace disponible n’a pas pu être vérifié. Vérifiez vos disques, puis réessayez.";
 "jones_updates_capacity_low" = "Les mises à jour nécessitent au moins %@ d’espace disponible. Libérez de l’espace et réessayez.";
+
+/* Device-local Netdata configuration and host menu (fr). */
+"netdata_title" = "Ressources de l’hôte Netdata";
+"netdata_enabled" = "Collecter les ressources de l’hôte";
+"netdata_environment_id" = "ID de l’environnement (autre que local)";
+"netdata_host_label" = "Libellé court de l’hôte";
+"netdata_loopback_origin" = "Origine HTTP de bouclage";
+"netdata_machine_guid" = "GUID attendu de la machine";
+"netdata_dashboard_url" = "URL du tableau de bord (facultative)";
+"netdata_apply" = "Appliquer";
+"netdata_saved" = "Enregistré.";
+"netdata_invalid_configuration" = "Non enregistré. Vérifiez l’identité de l’hôte, le libellé, l’origine de bouclage et l’URL du tableau de bord.";
+"netdata_configuration_help" = "Désactivé par défaut. Appliquer enregistre la configuration de cet appareil. Utilisez une origine HTTP de bouclage existante sans chemin ni barre oblique finale. L’ID de l’environnement ne doit pas être local ; le libellé est limité à 32 caractères. Le tableau de bord sert uniquement à la navigation : HTTPS ou HTTP de bouclage, sans identifiants, paramètres de requête ni fragments.";
+"netdata_cpu_value" = "CPU : %@";
+"netdata_ram_value" = "RAM disponible : %@";
+"netdata_sample_age_value" = "Âge de l’échantillon : %@";
+"netdata_availability_value" = "Disponibilité : %@";
+"netdata_source_value" = "Source : %@";
+"netdata_age_seconds" = "%.0f secondes";

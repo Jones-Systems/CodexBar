@@ -27,6 +27,7 @@ final class SettingsWindowController: NSWindowController {
     private let presentationFailed: @MainActor () -> Void
     private let logger = CodexBarLog.logger(LogCategories.app)
     private var retainedWindow: NSWindow?
+    private var netdataObservabilityCoordinator: NetdataObservabilityCoordinator?
 
     init(
         selection: PreferencesSelection,
@@ -61,6 +62,7 @@ final class SettingsWindowController: NSWindowController {
         settings: SettingsStore,
         store: UsageStore,
         cloudSyncState: CloudSyncState,
+        netdataObservabilityCoordinator: NetdataObservabilityCoordinator? = nil,
         updater: UpdaterProviding,
         selection: PreferencesSelection,
         managedCodexAccountCoordinator: ManagedCodexAccountCoordinator,
@@ -72,6 +74,7 @@ final class SettingsWindowController: NSWindowController {
                 settings: settings,
                 store: store,
                 cloudSyncState: cloudSyncState,
+                netdataObservabilityCoordinator: netdataObservabilityCoordinator,
                 updater: updater,
                 selection: selection,
                 managedCodexAccountCoordinator: managedCodexAccountCoordinator,
@@ -100,11 +103,20 @@ final class SettingsWindowController: NSWindowController {
             window.setFrameAutosaveName(SettingsWindowIdentity.frameAutosaveName)
             return window
         }
+        self.netdataObservabilityCoordinator = netdataObservabilityCoordinator
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    @objc private func settingsWindowWillClose(_ notification: Notification) {
+        self.netdataObservabilityCoordinator?.setSettingsWindowVisible(false)
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 
     @discardableResult
@@ -124,6 +136,11 @@ final class SettingsWindowController: NSWindowController {
             SettingsWindowStageBehavior.applyCollectionBehavior(createdWindow)
             self.retainedWindow = createdWindow
             self.window = createdWindow
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(self.settingsWindowWillClose(_:)),
+                name: NSWindow.willCloseNotification,
+                object: createdWindow)
             window = createdWindow
             outcome = .created
         } else {
@@ -135,6 +152,7 @@ final class SettingsWindowController: NSWindowController {
         self.registerWindow(window)
         self.presentWindow(window)
         self.didPresentWindow(window)
+        self.netdataObservabilityCoordinator?.setSettingsWindowVisible(true)
         self.logger.info(
             "Settings window presented",
             metadata: [

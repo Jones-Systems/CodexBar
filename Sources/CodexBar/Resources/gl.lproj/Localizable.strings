@@ -1618,3 +1618,22 @@
 "jones_updates_size_failure" = "Esta actualización non se pode descargar de forma segura. Instala unha versión de Jones verificada.";
 "jones_updates_capacity_unknown" = "Non se puido comprobar o espazo dispoñible. Revisa os discos e téntao de novo.";
 "jones_updates_capacity_low" = "As actualizacións precisan polo menos %@ de espazo dispoñible. Libera espazo e téntao de novo.";
+
+/* Device-local Netdata configuration and host menu (gl). */
+"netdata_title" = "Recursos do host de Netdata";
+"netdata_enabled" = "Recoller recursos do host";
+"netdata_environment_id" = "ID do contorno (non pode ser local)";
+"netdata_host_label" = "Etiqueta curta do host";
+"netdata_loopback_origin" = "Orixe HTTP de bucle local";
+"netdata_machine_guid" = "GUID esperado da máquina";
+"netdata_dashboard_url" = "URL do panel (opcional)";
+"netdata_apply" = "Aplicar";
+"netdata_saved" = "Gardado.";
+"netdata_invalid_configuration" = "Non se gardou. Comproba a identidade do host, a etiqueta, a orixe de bucle local e o URL do panel.";
+"netdata_configuration_help" = "Desactivado de forma predeterminada. Aplicar garda a configuración deste dispositivo. Usa unha orixe HTTP de bucle local existente sen ruta nin barra final. O ID do contorno non pode ser local; a etiqueta está limitada a 32 caracteres. O panel só serve para navegar: HTTPS ou HTTP de bucle local, sen credenciais, parámetros de consulta nin fragmentos.";
+"netdata_cpu_value" = "CPU: %@";
+"netdata_ram_value" = "RAM dispoñible: %@";
+"netdata_sample_age_value" = "Antigüidade da mostra: %@";
+"netdata_availability_value" = "Dispoñibilidade: %@";
+"netdata_source_value" = "Fonte: %@";
+"netdata_age_seconds" = "%.0f segundos";

@@ -1,6 +1,7 @@
 import Foundation
 
 struct SettingsDefaultsState {
+    var netdataConfiguration: NetdataConfiguration
     var refreshFrequency: RefreshFrequency
     var adaptiveActivityScanConsent: AdaptiveActivityScanConsent
     var refreshAllProvidersOnMenuOpen: Bool

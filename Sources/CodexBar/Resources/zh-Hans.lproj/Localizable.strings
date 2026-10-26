@@ -1631,3 +1631,22 @@
 "jones_updates_size_failure" = "无法安全下载此更新。请安装已验证的 Jones 构建版本。";
 "jones_updates_capacity_unknown" = "无法检查可用存储空间。请检查磁盘后重试。";
 "jones_updates_capacity_low" = "更新至少需要 %@ 的可用存储空间。请释放空间后重试。";
+
+/* Device-local Netdata configuration and host menu (zh-Hans). */
+"netdata_title" = "Netdata 主机资源";
+"netdata_enabled" = "收集主机资源";
+"netdata_environment_id" = "环境 ID（不能为 local）";
+"netdata_host_label" = "简短主机标签";
+"netdata_loopback_origin" = "HTTP 回环源";
+"netdata_machine_guid" = "预期的机器 GUID";
+"netdata_dashboard_url" = "仪表盘 URL（可选）";
+"netdata_apply" = "应用";
+"netdata_saved" = "已保存。";
+"netdata_invalid_configuration" = "未保存。请检查主机身份、标签、回环源和仪表盘 URL。";
+"netdata_configuration_help" = "默认关闭。点击“应用”可保存此设备的配置。请使用现有的 HTTP 回环源，不得包含路径或末尾斜杠。环境 ID 不能为 local；标签最多 32 个字符。仪表盘仅用于导航：使用 HTTPS 或回环 HTTP，不得包含凭据、查询参数或片段。";
+"netdata_cpu_value" = "CPU：%@";
+"netdata_ram_value" = "可用 RAM：%@";
+"netdata_sample_age_value" = "样本距今时间：%@";
+"netdata_availability_value" = "可用性：%@";
+"netdata_source_value" = "来源：%@";
+"netdata_age_seconds" = "%.0f 秒";

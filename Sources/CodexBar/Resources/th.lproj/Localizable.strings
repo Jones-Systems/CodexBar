@@ -1623,3 +1623,22 @@
 "jones_updates_size_failure" = "ไม่สามารถดาวน์โหลดอัปเดตนี้อย่างปลอดภัยได้ โปรดติดตั้งรุ่น Jones ที่ผ่านการตรวจสอบแล้ว";
 "jones_updates_capacity_unknown" = "ไม่สามารถตรวจสอบพื้นที่ว่างได้ โปรดตรวจสอบดิสก์แล้วลองอีกครั้ง";
 "jones_updates_capacity_low" = "การอัปเดตต้องใช้พื้นที่ว่างอย่างน้อย %@ โปรดเพิ่มพื้นที่ว่างแล้วลองอีกครั้ง";
+
+/* Device-local Netdata configuration and host menu (th). */
+"netdata_title" = "ทรัพยากรโฮสต์ Netdata";
+"netdata_enabled" = "รวบรวมทรัพยากรโฮสต์";
+"netdata_environment_id" = "ID สภาพแวดล้อม (ห้ามใช้ local)";
+"netdata_host_label" = "ป้ายชื่อโฮสต์แบบสั้น";
+"netdata_loopback_origin" = "ต้นทาง HTTP แบบลูปแบ็ก";
+"netdata_machine_guid" = "GUID ของเครื่องที่คาดไว้";
+"netdata_dashboard_url" = "URL แดชบอร์ด (ไม่บังคับ)";
+"netdata_apply" = "นำไปใช้";
+"netdata_saved" = "บันทึกแล้ว";
+"netdata_invalid_configuration" = "ไม่ได้บันทึก ตรวจสอบข้อมูลระบุตัวตนของโฮสต์ ป้ายชื่อ ต้นทางแบบลูปแบ็ก และ URL แดชบอร์ด";
+"netdata_configuration_help" = "ปิดไว้โดยค่าเริ่มต้น ปุ่มนำไปใช้จะบันทึกการกำหนดค่าของอุปกรณ์นี้ ใช้ต้นทาง HTTP แบบลูปแบ็กที่มีอยู่โดยไม่มีเส้นทางหรือเครื่องหมายทับต่อท้าย ID สภาพแวดล้อมต้องไม่เป็น local และป้ายชื่อจำกัดความยาวไว้ที่ 32 อักขระ แดชบอร์ดใช้สำหรับการนำทางเท่านั้น: HTTPS หรือ HTTP แบบลูปแบ็ก โดยไม่มีข้อมูลรับรอง พารามิเตอร์คำค้น หรือส่วนย่อยของ URL";
+"netdata_cpu_value" = "CPU: %@";
+"netdata_ram_value" = "RAM ที่พร้อมใช้งาน: %@";
+"netdata_sample_age_value" = "อายุของตัวอย่าง: %@";
+"netdata_availability_value" = "ความพร้อมใช้งาน: %@";
+"netdata_source_value" = "แหล่งที่มา: %@";
+"netdata_age_seconds" = "%.0f วินาที";

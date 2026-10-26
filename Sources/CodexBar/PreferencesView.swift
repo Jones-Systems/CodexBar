@@ -53,6 +53,7 @@ struct PreferencesView: View {
     @Bindable var settings: SettingsStore
     @Bindable var store: UsageStore
     @Bindable var cloudSyncState: CloudSyncState
+    let netdataObservabilityCoordinator: NetdataObservabilityCoordinator?
     let updater: UpdaterProviding
     @Bindable var selection: PreferencesSelection
     let managedCodexAccountCoordinator: ManagedCodexAccountCoordinator
@@ -75,6 +76,7 @@ struct PreferencesView: View {
         settings: SettingsStore,
         store: UsageStore,
         cloudSyncState: CloudSyncState = CloudSyncState(),
+        netdataObservabilityCoordinator: NetdataObservabilityCoordinator? = nil,
         updater: UpdaterProviding,
         selection: PreferencesSelection,
         managedCodexAccountCoordinator: ManagedCodexAccountCoordinator = ManagedCodexAccountCoordinator(),
@@ -84,6 +86,7 @@ struct PreferencesView: View {
         self.settings = settings
         self.store = store
         self.cloudSyncState = cloudSyncState
+        self.netdataObservabilityCoordinator = netdataObservabilityCoordinator
         self.updater = updater
         self.selection = selection
         self.managedCodexAccountCoordinator = managedCodexAccountCoordinator
@@ -216,6 +219,7 @@ struct PreferencesView: View {
                     store: self.store,
                     managedCodexAccountCoordinator: self.managedCodexAccountCoordinator,
                     codexAccountPromotionCoordinator: self.codexAccountPromotionCoordinator,
+                    netdataObservabilityCoordinator: self.netdataObservabilityCoordinator,
                     runProviderLoginFlow: self.runProviderLoginFlow)
                     .id(instanceID)
             }
