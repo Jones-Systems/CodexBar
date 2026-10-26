@@ -1,6 +1,9 @@
 name: CI
 
 on:
+  schedule:
+    - cron: '0 5 * * *'
+      timezone: America/New_York
   push:
     branches: [main]
   pull_request:
@@ -49,7 +52,7 @@ on:
         default: 'off'
 
 concurrency:
-  group: ${{ github.event_name == 'workflow_dispatch' && format('ci-manual-{0}-{1}-{2}-{3}', github.workflow, github.ref, github.run_id, github.run_attempt) || format('ci-{0}-{1}', github.workflow, github.ref) }}
+  group: ${{ github.event_name == 'workflow_dispatch' && format('ci-manual-{0}-{1}-{2}-{3}', github.workflow, github.ref, github.run_id, github.run_attempt) || github.event_name == 'schedule' && format('ci-nightly-{0}-{1}', github.workflow, github.ref) || format('ci-{0}-{1}', github.workflow, github.ref) }}
   cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 env:
@@ -171,18 +174,15 @@ jobs:
       - name: Lint
         run: ./Scripts/lint.sh lint-linux
 
-  swift-test-macos:
-    name: swift-test-macos (${{ matrix.shard-index }}, ${{ matrix.shard-count }})
+  swift-build-macos:
     needs: changes
     if: ${{ needs.changes.outputs.macos-tests == 'true' && needs.changes.outputs.macos-tests-deferred != 'true' }}
-    # Apple-Silicon runners: ~2-4x faster Swift builds than the retired-path
-    # Intel pool and much shorter queues (see #2585 for the measurements).
     runs-on: macos-26
     timeout-minutes: 80
-    strategy:
-      fail-fast: false
-      # Ordinary CI remains group four / two shards. Only validated manual arms vary.
-      matrix: ${{ fromJSON(needs.changes.outputs.macos-matrix) }}
+    outputs:
+      artifact-id: ${{ steps.build-upload.outputs.artifact-id }}
+      manifest-sha256: ${{ steps.swift-build.outputs.manifest-sha256 }}
+      cache-hit: ${{ steps.swift-cache.outputs.cache-hit }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
@@ -192,8 +192,8 @@ jobs:
           # Both versions are part of the official macOS 26 runner image.
           for candidate in /Applications/Xcode_26.3.app /Applications/Xcode_26.2.app; do
             if [[ -d "$candidate" ]]; then
-              sudo xcode-select -s "${candidate}/Contents/Developer"
-              echo "DEVELOPER_DIR=${candidate}/Contents/Developer" >> "$GITHUB_ENV"
+              export DEVELOPER_DIR="${candidate}/Contents/Developer"
+              echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> "$GITHUB_ENV"
               break
             fi
           done
@@ -217,7 +217,7 @@ jobs:
 
       - name: Restore SwiftPM build cache
         id: swift-cache
-        if: ${{ matrix.cache-mode != 'cold' }}
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.cache_mode != 'cold' }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
@@ -229,6 +229,90 @@ jobs:
           restore-keys: |
             swiftpm-macos26-v3-${{ runner.arch }}-${{ steps.swift-toolchain.outputs.cache-id }}-${{ env.CODEXBAR_TEST_PROFILE }}-${{ steps.swift-toolchain.outputs.profile-manifest-sha256 }}-${{ hashFiles('Package.resolved', 'Package.swift') }}-
 
+      - name: Require an exact cache hit for a warm campaign
+        env:
+          CACHE_MODE: ${{ inputs.cache_mode }}
+          CACHE_HIT: ${{ steps.swift-cache.outputs.cache-hit }}
+        run: |
+          if [[ "$CACHE_MODE" == warm && "$CACHE_HIT" != true ]]; then
+            echo 'Warm producer requires an exact build-cache hit.' >&2
+            exit 1
+          fi
+
+      - name: Check app locales and Swift formatting
+        run: ./Scripts/lint.sh lint-macos
+
+      - name: Prepare compiled test transfer
+        run: python3 Scripts/ci_swift_test_artifact.py prepare-transfer
+
+      - name: Build and export macOS tests once
+        id: swift-build
+        timeout-minutes: 70
+        env:
+          CODEXBAR_TEST_TOOLCHAIN_ID: ${{ steps.swift-toolchain.outputs.cache-id }}
+        run: ./Scripts/test.sh --export-build "$CODEXBAR_TEST_BUILD_ROOT"
+
+      - name: Upload compiled macOS tests
+        id: build-upload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: swift-test-build-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}-${{ env.CODEXBAR_TEST_PROFILE }}
+          path: |
+            ${{ env.CODEXBAR_TEST_BUILD_ROOT }}/manifest.json
+            ${{ env.CODEXBAR_TEST_BUILD_ROOT }}/build.tar.gz
+          include-hidden-files: false
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+
+      - name: Remove runner-local compiled test transfer
+        if: ${{ always() && env.CODEXBAR_TEST_BUILD_ROOT != '' }}
+        run: python3 Scripts/ci_swift_test_artifact.py cleanup-transfer
+
+  swift-test-macos:
+    name: swift-test-macos (${{ matrix.shard-index }}, ${{ matrix.shard-count }})
+    needs: [changes, swift-build-macos]
+    if: ${{ needs.changes.outputs.macos-tests == 'true' && needs.changes.outputs.macos-tests-deferred != 'true' }}
+    # Apple-Silicon runners: ~2-4x faster Swift builds than the retired-path
+    # Intel pool and much shorter queues (see #2585 for the measurements).
+    runs-on: macos-26
+    timeout-minutes: 80
+    strategy:
+      fail-fast: false
+      # Ordinary CI remains group four / two shards. Only validated manual arms vary.
+      matrix: ${{ fromJSON(needs.changes.outputs.macos-matrix) }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Select Xcode 26.3 or 26.2
+        run: |
+          set -euo pipefail
+          # Both versions are part of the official macOS 26 runner image.
+          for candidate in /Applications/Xcode_26.3.app /Applications/Xcode_26.2.app; do
+            if [[ -d "$candidate" ]]; then
+              export DEVELOPER_DIR="${candidate}/Contents/Developer"
+              echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> "$GITHUB_ENV"
+              break
+            fi
+          done
+          [[ "$(/usr/bin/xcodebuild -version)" == Xcode\ 26.* ]]
+          /usr/bin/xcodebuild -version
+
+      - name: Swift toolchain version
+        id: swift-toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcode_version="$(/usr/bin/xcodebuild -version)"
+          swift_version="$(swift --version)"
+          swiftpm_version="$(swift package --version)"
+          toolchain_info="$(printf '%s\n' "$xcode_version" "$swift_version" "$swiftpm_version")"
+          printf '%s\n' "$toolchain_info"
+          cache_id="$(printf '%s\n' "$toolchain_info" | shasum -a 256 | awk '{print $1}')"
+          printf 'cache-id=%s\n' "$cache_id" >> "$GITHUB_OUTPUT"
+          profile_manifest_sha256="$(python3 -c 'import sys; sys.path.insert(0, "Scripts"); from test_profiles import manifest_digest; print(manifest_digest())')"
+          printf 'profile-manifest-sha256=%s\n' "$profile_manifest_sha256" >> "$GITHUB_OUTPUT"
+
       - name: Prepare campaign evidence
         id: campaign-evidence
         if: ${{ matrix.campaign }}
@@ -238,14 +322,28 @@ jobs:
           CAMPAIGN_SHARD_INDEX: ${{ matrix.shard-index }}
           CAMPAIGN_EXPECTED_SHA: ${{ inputs.expected_sha }}
           CAMPAIGN_CACHE_MODE: ${{ matrix.cache-mode }}
-          CAMPAIGN_CACHE_HIT: ${{ steps.swift-cache.outputs.cache-hit }}
+          CAMPAIGN_CACHE_HIT: ${{ needs.swift-build-macos.outputs.cache-hit }}
           CAMPAIGN_CACHE_KEY: swiftpm-macos26-v3-${{ runner.arch }}-${{ steps.swift-toolchain.outputs.cache-id }}-${{ env.CODEXBAR_TEST_PROFILE }}-${{ steps.swift-toolchain.outputs.profile-manifest-sha256 }}-${{ hashFiles('Package.resolved', 'Package.swift') }}-${{ github.sha }}
           CAMPAIGN_TOOLCHAIN_ID: ${{ steps.swift-toolchain.outputs.cache-id }}
         run: python3 Scripts/ci_swift_test_campaign.py prepare --checkout-sha "$(git rev-parse HEAD)"
 
-      - name: Check app locales and Swift formatting
-        if: ${{ matrix.shard-index == 0 }}
-        run: ./Scripts/lint.sh lint-macos
+      - name: Require producer artifact identity
+        env:
+          PRODUCER_ARTIFACT_ID: ${{ needs.swift-build-macos.outputs.artifact-id }}
+          PRODUCER_MANIFEST_SHA256: ${{ needs.swift-build-macos.outputs.manifest-sha256 }}
+        run: |
+          [[ "$PRODUCER_ARTIFACT_ID" =~ ^[1-9][0-9]*$ && "$PRODUCER_MANIFEST_SHA256" =~ ^[0-9a-f]{64}$ ]]
+
+      - name: Prepare compiled test transfer
+        run: python3 Scripts/ci_swift_test_artifact.py prepare-transfer
+
+      - name: Download exact producer build
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          artifact-ids: ${{ needs.swift-build-macos.outputs.artifact-id }}
+          path: ${{ env.CODEXBAR_TEST_BUILD_ROOT }}
+          merge-multiple: true
+          digest-mismatch: error
 
       - name: Prepare synthetic reset timing captures
         shell: bash
@@ -267,13 +365,24 @@ jobs:
         timeout-minutes: 70
         env:
           CODEXBAR_TEST_EVIDENCE_DIR: ${{ steps.campaign-evidence.outputs.root }}
+          CODEXBAR_TEST_TOOLCHAIN_ID: ${{ steps.swift-toolchain.outputs.cache-id }}
+          CODEXBAR_TEST_BUILD_MANIFEST_SHA256: ${{ needs.swift-build-macos.outputs.manifest-sha256 }}
         run: |
+          extra=()
+          if [[ "$CODEXBAR_TEST_PROFILE" == full && '${{ matrix.shard-index }}' == 0 &&
+                -d Sources/CodexBarCore/Resources/Plugins ]]; then
+            extra+=(--jsc-goldens)
+          fi
           CODEXBAR_TEST_GROUP_SIZE=${{ matrix.group-size }} \
             CODEXBAR_TEST_SUITE_TIMEOUT=120 \
             CODEXBAR_TEST_RETRY_NON_TIMEOUT_FAILURES=0 \
             CODEXBAR_TEST_SHARD_INDEX=${{ matrix.shard-index }} \
             CODEXBAR_TEST_SHARD_COUNT=${{ matrix.shard-count }} \
-            ./Scripts/test.sh
+            ./Scripts/test.sh --use-build "$CODEXBAR_TEST_BUILD_ROOT" "${extra[@]}"
+
+      - name: Remove runner-local compiled test transfer
+        if: ${{ always() && env.CODEXBAR_TEST_BUILD_ROOT != '' }}
+        run: python3 Scripts/ci_swift_test_artifact.py cleanup-transfer
 
       - name: Upload synthetic reset timing captures
         if: ${{ always() && env.CODEXBAR_RESET_CAPTURE_ROOT != '' }}
@@ -291,10 +400,6 @@ jobs:
           set -euo pipefail
           rm -rf -- "$CODEXBAR_RESET_CAPTURE_ROOT"
           test ! -e "$CODEXBAR_RESET_CAPTURE_ROOT"
-
-      - name: Provider plugin JavaScriptCore goldens
-        if: ${{ env.CODEXBAR_TEST_PROFILE == 'full' && matrix.shard-index == 0 }}
-        run: ./Scripts/test-plugin-engines.sh --jsc-only
 
       - name: Collect crash reports on failure
         if: ${{ failure() }}
@@ -319,7 +424,7 @@ jobs:
         env:
           SHARD_INDEX: ${{ matrix.shard-index }}
           SHARD_COUNT: ${{ matrix.shard-count }}
-          RUNS_LINT_MACOS: ${{ matrix.shard-index == 0 }}
+          RUNS_LINT_MACOS: 'false'
         run: |
           set -euo pipefail
           display_shard_index=$((SHARD_INDEX + 1))
@@ -363,6 +468,7 @@ jobs:
     needs:
       - changes
       - lint
+      - swift-build-macos
       - swift-test-macos
       - build-linux-musl-cli
       - build-linux-cli
@@ -381,7 +487,8 @@ jobs:
             "${{ needs.changes.outputs.linux-musl-build }}" \
             "${{ needs.build-linux-musl-cli.result }}" \
             "${{ needs.build-linux-cli.result }}" \
-            "${{ needs.changes.outputs.linux-tests }}"
+            "${{ needs.changes.outputs.linux-tests }}" \
+            "${{ needs.swift-build-macos.result }}"
 
       - name: Summarize aggregate CI gate
         if: ${{ always() }}
@@ -393,6 +500,7 @@ jobs:
           MACOS_TESTS_DEFERRED: ${{ needs.changes.outputs.macos-tests-deferred }}
           MACOS_TESTS_REASON: ${{ needs.changes.outputs.macos-tests-reason }}
           MACOS_RESULT: ${{ needs.swift-test-macos.result }}
+          MACOS_BUILD_RESULT: ${{ needs.swift-build-macos.result }}
           LINUX_TESTS: ${{ needs.changes.outputs.linux-tests }}
           LINUX_TESTS_REASON: ${{ needs.changes.outputs.linux-tests-reason }}
           LINUX_MUSL_BUILD: ${{ needs.changes.outputs.linux-musl-build }}
@@ -416,6 +524,7 @@ jobs:
             printf '| macOS Swift tests required | `%s` |\n' "${MACOS_TESTS:-<unset>}"
             printf '| macOS Swift tests deferred | `%s` |\n' "${MACOS_TESTS_DEFERRED:-<unset>}"
             printf '| macOS gate reason | %s |\n' "$reason"
+            printf '| swift-build-macos result | `%s` |\n' "$MACOS_BUILD_RESULT"
             printf '| swift-test-macos result | `%s` |\n' "$MACOS_RESULT"
             printf '| Linux glibc tests required | `%s` |\n' "${LINUX_TESTS:-<unset>}"
             printf '| Linux glibc reason | %s |\n' "$linux_reason"

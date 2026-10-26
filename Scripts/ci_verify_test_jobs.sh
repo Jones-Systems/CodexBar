@@ -11,6 +11,7 @@ linux_musl_build_required="${6:-}"
 linux_musl_build_result="${7:-}"
 linux_build_result="${8-<missing>}"
 linux_tests_required="${9-<missing>}"
+macos_build_result="${10-<missing>}"
 
 if [[ "$lint_result" != "success" ]]; then
   printf 'lint job finished with %s\n' "${lint_result:-<empty>}" >&2
@@ -22,21 +23,21 @@ if [[ "$changes_result" != "success" ]]; then
   exit 1
 fi
 
-case "${macos_tests_required}:${macos_tests_deferred}:${macos_test_result}" in
-  true:false:success)
-    printf 'Lint and macOS Swift test shards passed.\n'
+case "${macos_tests_required}:${macos_tests_deferred}:${macos_build_result}:${macos_test_result}" in
+  true:false:success:success)
+    printf 'Lint, macOS test producer and both Swift test shards passed.\n'
     ;;
-  false:false:skipped)
+  false:false:skipped:skipped)
     printf 'Lint passed; macOS Swift tests skipped by the macOS test gate.\n'
     ;;
-  true:true:skipped)
+  true:true:skipped:skipped)
     printf 'macOS Swift tests are required but deferred; aggregate CI remains incomplete\n' >&2
     exit 1
     ;;
   *)
-    printf 'macOS test gate/result mismatch: required=%s deferred=%s result=%s\n' \
+    printf 'macOS test gate/result mismatch: required=%s deferred=%s producer=%s shards=%s\n' \
       "${macos_tests_required:-<empty>}" "${macos_tests_deferred:-<empty>}" \
-      "${macos_test_result:-<empty>}" >&2
+      "${macos_build_result:-<empty>}" "${macos_test_result:-<empty>}" >&2
     exit 1
     ;;
 esac

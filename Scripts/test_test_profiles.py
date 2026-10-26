@@ -37,6 +37,8 @@ class ProfileContractTests(unittest.TestCase):
                 (root / profiles.MANIFEST).write_text(json.dumps(manifest))
                 return profiles.load_manifest(root)
             self.assertEqual(load(base), base)
+            empty = {**base, "full_only_groups": []}
+            self.assertEqual(load(empty), empty)
             for path in ("Tests/../Sources/Example.swift", "/Tests/Example.swift", "Sources/Example.swift",
                          "Tests/Missing.swift", "Tests//Example.swift"):
                 changed = copy.deepcopy(base)

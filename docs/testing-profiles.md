@@ -18,10 +18,27 @@ python3 Scripts/test_profiles.py describe
 ```
 
 In the CI workflow’s manual dispatch, select `test_profile: full` and provide the
-exact `expected_sha` and the existing campaign controls. PR and push events
-always select normal. Full is offline: it does not grant live provider,
-Keychain, browser-cookie, private-account, signing or packaging access.
+exact `expected_sha` and the existing campaign controls. PR, push and daily
+scheduled events always select normal. Full is offline: it does not grant live
+provider, Keychain, browser-cookie, private-account, signing or packaging access.
 The native journey cap and advisory label/manual placement remain unchanged.
+
+The CI workflow runs the normal used-feature profile daily at **05:00
+America/New_York (EST/EDT)**, following daylight saving time automatically. It uses
+the default branch's latest commit and selects the macOS build producer, both
+existing macOS shards, both Linux test architectures and the musl CLI build. Its
+concurrency group is separate from push/PR runs. Unused providers, plugins, hooks
+and iCloud tests remain manual full-profile opt-in. GitHub may delay or drop
+scheduled events under runner/service load; this is a requested trigger time,
+not a guaranteed start time.
+
+Results use the existing Actions job/step logs and path-gate/aggregate summaries.
+The producer and both macOS shards must pass; failure or skipped selected jobs
+fail the aggregate. Compiled artifacts expire after one day. Synthetic reset-timing
+artifacts upload on macOS success or failure when setup succeeded and are retained
+for seven days. Failure includes existing crash diagnostics; no issue is created
+automatically. Campaign receipts remain specific to manual measurement runs.
+See GitHub's [schedule documentation](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule).
 
 `Scripts/test_profiles.json` is the reviewed selector and reasons manifest.
 `Package.swift` excludes its whole-file paths only from **test** targets in
