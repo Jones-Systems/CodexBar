@@ -3,6 +3,15 @@ import CodexBarCore
 import Observation
 
 extension StatusItemController {
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        if menu === self.netdataMenu {
+            self.updateNetdataStatusItem()
+            return
+        }
+        guard self.shouldMergeIcons, menu === self.mergedMenu else { return }
+        self.refreshMenuForOpenIfNeeded(menu, provider: self.resolvedMenuProvider())
+    }
+
     enum NetdataMenuRow: Int, CaseIterable {
         case cpu
         case memory

@@ -58,15 +58,6 @@ extension StatusItemController {
         return self.makeBaseMenu()
     }
 
-    func menuNeedsUpdate(_ menu: NSMenu) {
-        if menu === self.netdataMenu {
-            self.updateNetdataStatusItem()
-            return
-        }
-        guard self.shouldMergeIcons, menu === self.mergedMenu else { return }
-        self.refreshMenuForOpenIfNeeded(menu, provider: self.resolvedMenuProvider())
-    }
-
     func menuWillOpen(_ menu: NSMenu) {
         if self.netdataMenuWillOpen(menu) { return }
         if menu.supermenu == nil {
