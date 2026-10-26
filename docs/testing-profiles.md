@@ -3,8 +3,13 @@
 The shipped product and offline tests cover Codex, Claude and shared behavior.
 Unused providers, provider plugins and QuickJS, hooks and iCloud synchronization
 have been removed from source. Both `normal` and `full` remain valid profile
-names for existing SwiftPM, CLI and CI callers; they select the same retained
-source because the full-only and mixed full-only partitions are empty.
+names for existing SwiftPM, CLI and CI callers. The owner uses the visual menu
+bar app without intentional repository CLI terminal or remote Agent Sessions use.
+`normal` excludes four owner-terminal-only suites from test compilation and
+execution: `CLICacheTests.swift`, `CLIToonSnapshotTests.swift`,
+`ToonFormatterTests.swift` and `CLIUnificationGoldenTests.swift`. `full` retains
+all current offline test sources, methods, assertions and fixtures. The mixed
+full-only partition remains empty.
 
 ## Commands and restoration
 
@@ -63,3 +68,8 @@ and UI inventories have no retained product route.
 The CLI and supported-platform build checks remain enabled. Offline tests do
 not authorize Keychain, browser-cookie, private-account, live provider, signing
 or packaging access. Native journey placement remains advisory and opt-in.
+
+All other CLI suites, shared safety and shipped regression coverage remain normal,
+including external Codex/Claude executable, session, login, probe and fallback paths.
+Local/adaptive Agent Sessions, scheduling, shared session JSON and Tailscale security
+coverage remain normal; no remote-only group is excluded.
