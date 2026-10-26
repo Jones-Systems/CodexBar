@@ -1635,7 +1635,7 @@
 "netdata_saved" = "Salvato.";
 "netdata_invalid_configuration" = "Non salvato. Controlla l’identità dell’host, l’etichetta, l’origine di loopback e l’URL della dashboard.";
 "netdata_configuration_help" = "Disattivato per impostazione predefinita. Applica salva la configurazione di questo dispositivo. Usa un’origine HTTP di loopback esistente senza percorso né barra finale. L’ID ambiente non deve essere local; l’etichetta è limitata a 32 caratteri. La dashboard serve solo per la navigazione: HTTPS o HTTP di loopback, senza credenziali, parametri di query né frammenti.";
-"netdata_cpu_value" = "CPU: %@";
+"netdata_cpu_value" = "Utilizzo CPU: %@";
 "netdata_ram_value" = "RAM disponibile: %@";
 "netdata_sample_age_value" = "Età del campione: %@";
 "netdata_availability_value" = "Disponibilità: %@";
