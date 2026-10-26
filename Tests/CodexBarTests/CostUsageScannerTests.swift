@@ -97,7 +97,7 @@ struct CostUsageScannerTests {
     }
 
     @Test
-    func `vertex daily report filters claude logs`() throws {
+    func `Claude scanner isolates Vertex metadata with an explicit filter`() throws {
         let env = try CostUsageTestEnvironment()
         defer { env.cleanup() }
 
@@ -148,9 +148,10 @@ struct CostUsageScannerTests {
             claudeProjectsRoots: [env.claudeProjectsRoot],
             cacheRoot: env.cacheRoot)
         options.refreshMinIntervalSeconds = 0
+        options.claudeLogProviderFilter = .vertexAIOnly
 
         let report = CostUsageScanner.loadDailyReport(
-            provider: .vertexai,
+            provider: .claude,
             since: day,
             until: day,
             now: day,
@@ -163,7 +164,7 @@ struct CostUsageScannerTests {
     }
 
     @Test
-    func `vertex daily report detects by vrtx id prefix`() throws {
+    func `Claude scanner separates Vertex ID rows from native rows`() throws {
         let env = try CostUsageTestEnvironment()
         defer { env.cleanup() }
 
@@ -213,10 +214,11 @@ struct CostUsageScannerTests {
             claudeProjectsRoots: [env.claudeProjectsRoot],
             cacheRoot: env.cacheRoot)
         options.refreshMinIntervalSeconds = 0
+        options.claudeLogProviderFilter = .vertexAIOnly
 
-        // Vertex AI report should only include entries with _vrtx_ prefix
+        // The Vertex-only filter should include only entries with the _vrtx_ prefix.
         let vertexReport = CostUsageScanner.loadDailyReport(
-            provider: .vertexai,
+            provider: .claude,
             since: day,
             until: day,
             now: day,
@@ -227,7 +229,7 @@ struct CostUsageScannerTests {
         #expect(vertexReport.data[0].outputTokens == 50)
         #expect(vertexReport.data[0].totalTokens == 150)
 
-        // Claude report with excludeVertexAI should only include non-vrtx entries
+        // Reusing the Claude cache with the exclusion filter must include only native entries.
         var claudeOptions = options
         claudeOptions.claudeLogProviderFilter = .excludeVertexAI
         let claudeReport = CostUsageScanner.loadDailyReport(

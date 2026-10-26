@@ -65,11 +65,12 @@ fails. Uploaded build artifacts expire after one day. Producer `.build` remains
 owned by the existing bounded GitHub cache and hosted runner lifecycle.
 
 Normal/full profile controls and manual group/shard/cache controls are preserved.
-Full-profile JavaScriptCore goldens, while plugin resources exist, run on shard 0
-with the same `--skip-build` products before build cleanup. Their separate native
-campaign evidence scope is preserved. The daily 05:00 America/New_York (EST/EDT)
-normal nightly uses the same producer and shard route with separate concurrency;
-scheduled triggering becomes effective on the default branch.
+After product removal, both supported profile controls use the same retained
+test targets without plugin engine passes. Full-profile handoff still verifies
+its exact profile identity and uses only `--skip-build`. The daily 05:00
+America/New_York (EST/EDT) normal nightly uses the same producer and shard route
+with separate concurrency; scheduled triggering becomes effective on the default
+branch.
 
 The build and shard summaries/logs distinguish test-build, discovery, archive
 packaging/restore, and execution seconds. GitHub job-step timestamps supply

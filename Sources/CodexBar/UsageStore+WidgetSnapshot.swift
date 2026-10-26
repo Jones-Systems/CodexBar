@@ -38,9 +38,6 @@ extension UsageStore {
         }()
         let snapshot = self.makeWidgetSnapshot(previousSnapshot: previousSnapshot)
         self.lastQueuedWidgetSnapshot = snapshot
-        NotificationCenter.default.post(
-            name: .codexbarUsageSnapshotsDidChange,
-            object: UsageSnapshotsDidChangeEvent(snapshots: self.cloudSyncAccountSnapshots()))
         let previousTask = self.widgetSnapshotPersistTask
         self.widgetSnapshotPersistTask = Task { @MainActor in
             _ = await previousTask?.result
@@ -82,9 +79,9 @@ extension UsageStore {
         #endif
     }
 
-    /// Builds outbound snapshots only from this Mac's UsageStore; remote fleet snapshots live in CloudSyncState.
-    func cloudSyncAccountSnapshots() -> [AccountSnapshotSyncPayload] {
-        let deviceID = self.settings.iCloudSyncDeviceID
+    /// Builds account snapshots from this Mac's UsageStore; fleet snapshots live in FleetAccountState.
+    func localAccountSnapshots() -> [AccountSnapshotSyncPayload] {
+        let deviceID = self.settings.localDeviceID
         var payloads: [String: AccountSnapshotSyncPayload] = [:]
 
         for (instanceID, usage) in self.snapshots {
@@ -137,8 +134,8 @@ extension UsageStore {
         return payloads.values.sorted { $0.recordName < $1.recordName }
     }
 
-    func cloudSyncLocalAccountKeys(for provider: UsageProvider) -> Set<String> {
-        let snapshotKeys = self.cloudSyncAccountSnapshots().filter { $0.provider == provider.instanceID }
+    func localAccountKeys(for provider: UsageProvider) -> Set<String> {
+        let snapshotKeys = self.localAccountSnapshots().filter { $0.provider == provider.instanceID }
             .map(\.accountKey)
         var identities = Set(snapshotKeys)
         var hasDefaultCodexSnapshot = false
@@ -262,13 +259,7 @@ extension UsageStore {
             creditsRemaining = nil
             codeReviewRemaining = nil
         }
-        let providerCost: ProviderCostSnapshot? = if provider == .devin,
-                                                     self.settings.showOptionalCreditsAndExtraUsage
-        {
-            snapshot?.providerCost
-        } else {
-            nil
-        }
+        let providerCost: ProviderCostSnapshot? = nil
         let quotaOwnerKey: String? = if provider == .claude {
             snapshot != nil ? claudeQuotaOwnerKey : preservedClaudeUsage?.quotaOwnerKey
         } else {
@@ -370,9 +361,7 @@ extension UsageStore {
             return sum > 0 ? sum : nil
         }()
         let monthTokensValue = snapshot.last30DaysTokens ?? fallbackTokens
-        let sessionLabel = if provider == .bedrock || provider == .mistral {
-            "Latest billing day"
-        } else if provider == .codex {
+        let sessionLabel = if provider == .codex {
             "Today API est. · not billed"
         } else {
             "Today"
@@ -399,39 +388,7 @@ extension UsageStore {
         snapshot: UsageSnapshot,
         metadata: ProviderMetadata?) -> String
     {
-        // Legacy request-based Cursor plans track a request quota, not the token-based "Total" pool.
-        if provider == .cursor, snapshot.detailRow(label: "Request quota") != nil {
-            return "Requests"
-        }
-        if provider == .grok,
-           let dyn = GrokProviderDescriptor.displayLabel(window: snapshot.primary)
-        {
-            return dyn
-        }
-        if provider == .doubao,
-           let dyn = DoubaoProviderDescriptor.primaryLabel(window: snapshot.primary)
-        {
-            return dyn
-        }
-        if provider == .amp,
-           let dyn = AmpProviderDescriptor.primaryLabel(snapshot: snapshot)
-        {
-            return dyn
-        }
-        if provider == .crof {
-            return CrofProviderDescriptor.primaryLabel(snapshot: snapshot)
-        }
-        if provider == .alibabatokenplan,
-           let dyn = AlibabaTokenPlanProviderDescriptor.primaryLabel(window: snapshot.primary)
-        {
-            return dyn
-        }
-        if provider == .ollama,
-           let dyn = OllamaProviderDescriptor.primaryLabel(window: snapshot.primary)
-        {
-            return dyn
-        }
-        return metadata?.sessionLabel ?? "Session"
+        metadata?.sessionLabel ?? "Session"
     }
 
     private func widgetUsageRows(
@@ -472,30 +429,9 @@ extension UsageStore {
                     window: spendLimit),
             ]
         }
-        if provider == .antigravity,
-           let rows = Self.antigravityQuotaSummaryWidgetRows(snapshot: snapshot),
-           !rows.isEmpty
-        {
-            return rows
-        }
-        if provider == .antigravity,
-           snapshot.primary == nil,
-           snapshot.secondary == nil,
-           let rows = Self.antigravityLegacyExtraWidgetRows(snapshot: snapshot),
-           !rows.isEmpty
-        {
-            return rows
-        }
 
         let primaryTitle = Self.widgetPrimaryTitle(provider: provider, snapshot: snapshot, metadata: metadata)
-        let secondaryTitle = if provider == .amp {
-            AmpProviderDescriptor.secondaryLabel(snapshot: snapshot) ?? metadata?.weeklyLabel ?? "Weekly"
-        } else if provider == .alibabatokenplan {
-            AlibabaTokenPlanProviderDescriptor.secondaryLabel(window: snapshot.secondary) ??
-                metadata?.weeklyLabel ?? "Weekly"
-        } else {
-            metadata?.weeklyLabel ?? "Weekly"
-        }
+        let secondaryTitle = metadata?.weeklyLabel ?? "Weekly"
 
         var rows: [WidgetSnapshot.WidgetUsageRowSnapshot] = [
             WidgetSnapshot.WidgetUsageRowSnapshot(
@@ -513,19 +449,6 @@ extension UsageStore {
                 title: metadata?.opusLabel ?? "Opus",
                 percentLeft: snapshot.tertiary?.remainingPercent))
         }
-        // Provider-specific by design: Cursor Grok Bot weekly included usage is a named extraRateWindow.
-        if provider == .cursor {
-            rows.append(contentsOf: (snapshot.extraRateWindows ?? []).compactMap { namedWindow in
-                guard namedWindow.id == CursorSandUsageStatus.extraWindowID, namedWindow.usageKnown else {
-                    return nil
-                }
-                return WidgetSnapshot.WidgetUsageRowSnapshot(
-                    id: namedWindow.id,
-                    title: namedWindow.title,
-                    percentLeft: namedWindow.window.remainingPercent,
-                    window: namedWindow.window)
-            })
-        }
 
         if provider == .claude, self.settings.claudeModelScopedWeeklyUsageVisible {
             // Claude fetchers place model-scoped weekly quotas (for example, Fable) in extraRateWindows.
@@ -541,56 +464,10 @@ extension UsageStore {
                     window: namedWindow.window)
             })
         }
-        if provider == .kimi {
-            // Keep persisted widget order stable and include only Kimi's intentional subscription lanes.
-            let kimiWindowIDs = ["kimi-monthly", "kimi-code-7d"]
-            rows.append(contentsOf: kimiWindowIDs.compactMap { id in
-                guard let window = snapshot.extraRateWindows?.first(where: { $0.id == id }), window.usageKnown
-                else { return nil }
-                return WidgetSnapshot.WidgetUsageRowSnapshot(
-                    id: window.id,
-                    title: window.title,
-                    percentLeft: window.window.remainingPercent)
-            })
-        }
+
         return rows.filter { $0.percentLeft != nil }
     }
 
     /// Identifier prefix Claude fetchers use for model-scoped weekly carve-outs (for example, Fable).
     private nonisolated static let claudeModelScopedWeeklyWindowIDPrefix = "claude-weekly-scoped-"
-
-    private nonisolated static let antigravityQuotaSummaryWindowIDPrefix = "antigravity-quota-summary-"
-    private nonisolated static let antigravityCompactFallbackWindowIDPrefix = "antigravity-compact-fallback-"
-
-    private nonisolated static func antigravityQuotaSummaryWidgetRows(
-        snapshot: UsageSnapshot) -> [WidgetSnapshot.WidgetUsageRowSnapshot]?
-    {
-        guard let windows = snapshot.extraRateWindows?.filter({
-            $0.id.hasPrefix(Self.antigravityQuotaSummaryWindowIDPrefix)
-        }), !windows.isEmpty else {
-            return nil
-        }
-        // Match the menu card and drop model families the account never touches.
-        let idleIDs = AntigravityQuotaFamilyVisibility.idleWindowIDs(in: snapshot)
-        return windows.filter { !idleIDs.contains($0.id) }.map { namedWindow in
-            WidgetSnapshot.WidgetUsageRowSnapshot(
-                id: namedWindow.id,
-                title: namedWindow.title,
-                percentLeft: namedWindow.usageKnown ? namedWindow.window.remainingPercent : nil)
-        }
-    }
-
-    private nonisolated static func antigravityLegacyExtraWidgetRows(
-        snapshot: UsageSnapshot) -> [WidgetSnapshot.WidgetUsageRowSnapshot]?
-    {
-        let windows = snapshot.extraRateWindows?
-            .filter { $0.id.hasPrefix(Self.antigravityCompactFallbackWindowIDPrefix) && $0.usageKnown }
-        guard let windows, !windows.isEmpty else { return nil }
-        return windows.map { namedWindow in
-            WidgetSnapshot.WidgetUsageRowSnapshot(
-                id: namedWindow.id,
-                title: namedWindow.title,
-                percentLeft: namedWindow.window.remainingPercent)
-        }
-    }
 }

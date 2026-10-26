@@ -29,7 +29,7 @@ final class StatusMenuSwitcherWarmupTests: XCTestCase {
             settings.setProviderEnabled(
                 provider: provider,
                 metadata: metadata,
-                enabled: [.claude, .codex, .grok].contains(provider))
+                enabled: [.claude, .codex].contains(provider))
         }
 
         let fetcher = UsageFetcher()
@@ -103,8 +103,8 @@ final class StatusMenuSwitcherWarmupTests: XCTestCase {
     }
 
     func test_warmedStatusSubmenusRemainScopedAcrossSwitchesAndReopen() throws {
-        for initialProvider: UsageProvider in [.claude, .codex, .grok] {
-            for provider: UsageProvider in [.grok, .codex, .claude] where provider != initialProvider {
+        for initialProvider: UsageProvider in [.claude, .codex] {
+            for provider: UsageProvider in [.codex, .claude] where provider != initialProvider {
                 let (controller, menu) = self.makeController(
                     selectedProvider: initialProvider,
                     statusChecksEnabled: true)
@@ -152,18 +152,13 @@ final class StatusMenuSwitcherWarmupTests: XCTestCase {
         item: NSMenuItem,
         controller: StatusItemController) throws
     {
-        if provider == .grok {
-            XCTAssertNil(item.submenu, "Grok has a website link, not another provider's components")
-            XCTAssertEqual(item.action, #selector(StatusItemController.openStatusPage))
-        } else {
-            let submenu = try XCTUnwrap(item.submenu)
-            if submenu.items.first?.identifier == nil {
-                XCTAssertTrue(controller.hydrateHostedSubviewMenuIfNeeded(submenu))
-            }
-            let link = try XCTUnwrap(submenu.items.last)
-            XCTAssertEqual(link.identifier?.rawValue, provider.rawValue)
-            XCTAssertEqual(link.action, #selector(StatusItemController.openStatusPageFromMenuItem(_:)))
-            XCTAssertTrue(link.target === controller)
+        let submenu = try XCTUnwrap(item.submenu)
+        if submenu.items.first?.identifier == nil {
+            XCTAssertTrue(controller.hydrateHostedSubviewMenuIfNeeded(submenu))
         }
+        let link = try XCTUnwrap(submenu.items.last)
+        XCTAssertEqual(link.identifier?.rawValue, provider.rawValue)
+        XCTAssertEqual(link.action, #selector(StatusItemController.openStatusPageFromMenuItem(_:)))
+        XCTAssertTrue(link.target === controller)
     }
 }

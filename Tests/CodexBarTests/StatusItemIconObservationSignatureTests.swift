@@ -39,9 +39,7 @@ struct StatusItemIconObservationSignatureTests {
         }
 
         let fetcher = UsageFetcher()
-        let environmentBase = provider == .openrouter
-            ? [OpenRouterSettingsReader.envKey: "test-openrouter-key"]
-            : [:]
+        let environmentBase: [String: String] = [:]
         let store = UsageStore(
             fetcher: fetcher,
             browserDetection: BrowserDetection(cacheTTL: 0),
@@ -207,33 +205,6 @@ struct StatusItemIconObservationSignatureTests {
     }
 
     @Test
-    func `store icon observation signature tracks selected copilot budget`() throws {
-        let (settings, store, controller) = self.makeController(
-            suiteName: "StatusItemIconObservationSignatureTests-copilot-budget")
-        defer { controller.releaseStatusItemsForTesting() }
-
-        let registry = ProviderRegistry.shared
-        let codexMetadata = try #require(registry.metadata[.codex])
-        let copilotMetadata = try #require(registry.metadata[.copilot])
-        settings.setProviderEnabled(provider: .codex, metadata: codexMetadata, enabled: false)
-        settings.setProviderEnabled(provider: .copilot, metadata: copilotMetadata, enabled: true)
-        settings.selectedMenuProvider = .copilot
-        settings.copilotBudgetExtrasEnabled = true
-        settings.copilotIconSecondaryWindowID = "copilot-budget-agent"
-
-        store._setSnapshotForTesting(
-            Self.makeCopilotSnapshot(budgetUsedPercent: 25),
-            provider: .copilot)
-        let baseline = controller.storeIconObservationSignature()
-
-        store._setSnapshotForTesting(
-            Self.makeCopilotSnapshot(budgetUsedPercent: 75),
-            provider: .copilot)
-
-        #expect(controller.storeIconObservationSignature() != baseline)
-    }
-
-    @Test
     func `store icon observation signature changes when credit fallback changes`() {
         let (_, store, controller) = self.makeController(
             suiteName: "StatusItemIconObservationSignatureTests-credit-fallback")
@@ -361,17 +332,17 @@ struct StatusItemIconObservationSignatureTests {
         let (_, store, controller) = self.makeController(
             suiteName: "StatusItemIconObservationSignatureTests-tertiary-lane",
             menuBarLayout: MenuBarLayout(lines: [[.icon, .lanePercent(lane: .tertiary)]]),
-            provider: .cursor)
+            provider: .claude)
         defer { controller.releaseStatusItemsForTesting() }
 
         store._setSnapshotForTesting(
             Self.makeLaneSnapshot(primary: 90, secondary: 20, tertiary: 60),
-            provider: .cursor)
+            provider: .claude)
         let baseline = controller.storeIconObservationSignature()
 
         store._setSnapshotForTesting(
             Self.makeLaneSnapshot(primary: 90, secondary: 20, tertiary: 61),
-            provider: .cursor)
+            provider: .claude)
 
         #expect(baseline.contains("layoutLanes=tertiary="))
         #expect(controller.storeIconObservationSignature() != baseline)
@@ -382,38 +353,21 @@ struct StatusItemIconObservationSignatureTests {
         let (_, store, controller) = self.makeController(
             suiteName: "StatusItemIconObservationSignatureTests-unused-lane",
             menuBarLayout: MenuBarLayout(lines: [[.icon, .lanePercent(lane: .secondary)]]),
-            provider: .cursor)
+            provider: .claude)
         defer { controller.releaseStatusItemsForTesting() }
 
         store._setSnapshotForTesting(
             Self.makeLaneSnapshot(primary: 90, secondary: 20, tertiary: 60),
-            provider: .cursor)
+            provider: .claude)
         let baseline = controller.storeIconObservationSignature()
 
         store._setSnapshotForTesting(
             Self.makeLaneSnapshot(primary: 90, secondary: 20, tertiary: 61),
-            provider: .cursor)
+            provider: .claude)
 
         #expect(baseline.contains("layoutLanes=secondary="))
         #expect(!baseline.contains("tertiary="))
         #expect(controller.storeIconObservationSignature() == baseline)
-    }
-
-    @Test
-    func `custom OpenRouter balance token changes the store icon observation signature`() throws {
-        let (settings, store, controller) = self.makeController(
-            suiteName: "StatusItemIconObservationSignatureTests-openrouter-balance",
-            menuBarLayout: MenuBarLayout(lines: [[.balance]]),
-            provider: .openrouter)
-        defer { controller.releaseStatusItemsForTesting() }
-
-        settings.setMenuBarMetricPreference(.primary, for: .openrouter)
-        try store._setSnapshotForTesting(Self.makeBalanceSnapshot("$12.34"), provider: .openrouter)
-        let baseline = controller.storeIconObservationSignature()
-
-        try store._setSnapshotForTesting(Self.makeBalanceSnapshot("$9.87"), provider: .openrouter)
-
-        #expect(controller.storeIconObservationSignature() != baseline)
     }
 
     @Test
@@ -471,7 +425,7 @@ struct StatusItemIconObservationSignatureTests {
         store._test_widgetSnapshotSaveOverride = { widgetSnapshots.append($0) }
         defer { store._test_widgetSnapshotSaveOverride = nil }
 
-        settings.zaiAPIToken = "test-token"
+        settings.claudeAdminAPIKey = "test-token"
         try? await Task.sleep(nanoseconds: 100_000_000)
         await store.widgetSnapshotPersistTask?.value
 
@@ -554,55 +508,10 @@ struct StatusItemIconObservationSignatureTests {
                 resetDescription: nil),
             updatedAt: Date(timeIntervalSince1970: 100),
             identity: ProviderIdentitySnapshot(
-                providerID: .cursor,
+                providerID: .claude,
                 accountEmail: "icon@example.com",
                 accountOrganization: nil,
                 loginMethod: "plus"))
-    }
-
-    private static func makeCopilotSnapshot(budgetUsedPercent: Double) -> UsageSnapshot {
-        UsageSnapshot(
-            primary: RateWindow(
-                usedPercent: 10,
-                windowMinutes: nil,
-                resetsAt: nil,
-                resetDescription: nil),
-            secondary: RateWindow(
-                usedPercent: 20,
-                windowMinutes: nil,
-                resetsAt: nil,
-                resetDescription: nil),
-            extraRateWindows: [
-                NamedRateWindow(
-                    id: "copilot-budget-agent",
-                    title: "Budget - Copilot Agent Premium Requests",
-                    window: RateWindow(
-                        usedPercent: budgetUsedPercent,
-                        windowMinutes: nil,
-                        resetsAt: nil,
-                        resetDescription: nil)),
-            ],
-            updatedAt: Date(timeIntervalSince1970: 100),
-            identity: ProviderIdentitySnapshot(
-                providerID: .copilot,
-                accountEmail: "copilot@example.com",
-                accountOrganization: nil,
-                loginMethod: "individual"))
-    }
-
-    private static func makeBalanceSnapshot(_ balance: String) throws -> UsageSnapshot {
-        let row = try ProviderDetailSection.Row(label: "Remaining", value: balance)
-        let section = try ProviderDetailSection(title: "Credits", rows: [row])
-        return UsageSnapshot(
-            primary: nil,
-            secondary: nil,
-            details: [section],
-            updatedAt: Date(timeIntervalSince1970: 100),
-            identity: ProviderIdentitySnapshot(
-                providerID: .openrouter,
-                accountEmail: nil,
-                accountOrganization: nil,
-                loginMethod: "api_key"))
     }
 
     private static func makeTokenSnapshot(

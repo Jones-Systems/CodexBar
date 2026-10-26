@@ -35,10 +35,6 @@ struct MenuCardMetricTimingTests {
         #expect(MenuCardMetricTiming.clockSymbolName == "clock")
         #expect(Self.metric(timing: nil).linePresentation(title: "Weekly").metaText ==
             "19% in deficit · Runs out in 1d 5m")
-        #expect(MenuCardMetricTiming.make(
-            provider: .kimi,
-            window: Self.window(reset: Self.now.addingTimeInterval(3600)),
-            now: Self.now) == nil)
     }
 
     @Test(arguments: [Date?.none, Self.now, Self.now.addingTimeInterval(-1)])

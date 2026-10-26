@@ -194,7 +194,6 @@ def parse_args() -> argparse.Namespace:
     handoff = parser.add_mutually_exclusive_group()
     handoff.add_argument("--export-build", type=Path, help="build/discover once and export a same-run hosted artifact")
     handoff.add_argument("--use-build", type=Path, help="verify/restore an exact hosted artifact; never compile")
-    parser.add_argument("--jsc-goldens", action="store_true", help="run retained full-profile JSC goldens before build cleanup")
     parser.add_argument(
         "--command", nargs=argparse.REMAINDER,
         help="run a command once inside the fixture lifecycle, preserving selection without discovery or sharding",
@@ -991,26 +990,6 @@ def retry_selections_individually(
     return 0
 
 
-def run_jsc_goldens(swift_command):
-    global _campaign
-    capture, previous = _campaign, os.environ.get("CODEXBAR_PLUGIN_ENGINE")
-    # These additional engine goldens retain their separate evidence scope, using the same compiled products.
-    _campaign = None
-    os.environ["CODEXBAR_PLUGIN_ENGINE"] = "jsc"
-    try:
-        return run_test_command([
-            *swift_command, "test", "--skip-build", "--no-parallel", "--filter",
-            "ProviderPluginRuntimeTests|ProviderPluginParityTests|ProviderPluginDetailsParityTests|"
-            "ProviderPluginExtensionParityTests|Sub2APIPluginGoldenTests|UserProviderPluginPortableTests",
-        ])
-    finally:
-        _campaign = capture
-        if previous is None:
-            os.environ.pop("CODEXBAR_PLUGIN_ENGINE", None)
-        else:
-            os.environ["CODEXBAR_PLUGIN_ENGINE"] = previous
-
-
 def run_suites() -> int:
     total_started = time.monotonic()
     args = parse_args()
@@ -1022,8 +1001,7 @@ def run_suites() -> int:
             print("--command requires an executable", file=sys.stderr)
             return 2
         if (args.parallel or args.list_only or args.limit_groups is not None or args.shard_index is not None
-                or args.shard_count is not None or args.export_build is not None or args.use_build is not None
-                or args.jsc_goldens):
+                or args.shard_count is not None or args.export_build is not None or args.use_build is not None):
             print("--command cannot be combined with discovery or shard selection", file=sys.stderr)
             return 2
         # Aggregate commands retain their enclosing job's deadline and original test selection.
@@ -1042,9 +1020,6 @@ def run_suites() -> int:
     result = 0
     restored_identity = None
     try:
-        if args.jsc_goldens and (args.use_build is None or test_profiles.selected_profile() != "full"
-                                or args.parallel or args.list_only or args.limit_groups is not None):
-            raise ValueError("--jsc-goldens requires a full-profile compiled-build execution")
         if args.export_build is not None:
             if (args.parallel or args.list_only or args.limit_groups is not None or args.shard_index is not None
                     or args.shard_count is not None or _campaign is not None):
@@ -1217,8 +1192,6 @@ def run_suites() -> int:
             if group_timed_out:
                 stats.recovered_groups += 1
 
-        if args.jsc_goldens:
-            result = run_jsc_goldens(swift_command)
         return result
     finally:
         if restored_identity is not None:

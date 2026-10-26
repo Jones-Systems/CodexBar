@@ -19,7 +19,6 @@ struct ProviderDetailView<SupplementaryContent: View>: View {
     let settingsFields: [ProviderSettingsFieldDescriptor]
     let settingsActions: [ProviderSettingsActionsDescriptor]
     let settingsTokenAccounts: ProviderSettingsTokenAccountsDescriptor?
-    let settingsOrganizations: ProviderSettingsOrganizationsDescriptor?
     let errorDisplay: ProviderErrorDisplay?
     @Binding var isErrorExpanded: Bool
     let onCopyError: (String) -> Void
@@ -39,7 +38,6 @@ struct ProviderDetailView<SupplementaryContent: View>: View {
         settingsFields: [ProviderSettingsFieldDescriptor],
         settingsActions: [ProviderSettingsActionsDescriptor] = [],
         settingsTokenAccounts: ProviderSettingsTokenAccountsDescriptor?,
-        settingsOrganizations: ProviderSettingsOrganizationsDescriptor? = nil,
         errorDisplay: ProviderErrorDisplay?,
         isErrorExpanded: Binding<Bool>,
         onCopyError: @escaping (String) -> Void,
@@ -58,7 +56,6 @@ struct ProviderDetailView<SupplementaryContent: View>: View {
         self.settingsFields = settingsFields
         self.settingsActions = settingsActions
         self.settingsTokenAccounts = settingsTokenAccounts
-        self.settingsOrganizations = settingsOrganizations
         self.errorDisplay = errorDisplay
         self._isErrorExpanded = isErrorExpanded
         self.onCopyError = onCopyError
@@ -183,10 +180,6 @@ struct ProviderDetailView<SupplementaryContent: View>: View {
                 ProviderSettingsFieldRowView(field: field)
             }
 
-            if let organizations = self.settingsOrganizations {
-                ProviderSettingsOrganizationsRowView(descriptor: organizations)
-            }
-
             if self.showsSupplementarySettingsContent {
                 self.supplementarySettingsContent
             }
@@ -301,14 +294,6 @@ private struct ProviderDetailInfoRows: View {
 
         if !self.model.email.isEmpty {
             ProviderDetailInfoRow(label: L("Account"), value: self.model.email)
-        }
-
-        // Provider-specific by design: Kiro reports an auth method as a separate identity field, not a plan.
-        if self.provider == .kiro,
-           let authMethod = self.store.snapshot(for: self.provider.instanceID)?.loginMethod(for: .kiro),
-           !authMethod.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        {
-            ProviderDetailInfoRow(label: L("Auth"), value: authMethod)
         }
 
         if let planRow = ProviderDetailView<EmptyView>.planRow(

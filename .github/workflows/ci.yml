@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       test_profile:
-        description: Test coverage profile; full includes unused-feature coverage
+        description: Test coverage profile; both select retained Codex/Claude tests
         required: true
         type: choice
         options: [normal, full]
@@ -169,7 +169,7 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Install lint tools
-        run: ./Scripts/install_lint_tools.sh swiftlint oxlint oxfmt typescript
+        run: ./Scripts/install_lint_tools.sh swiftlint oxlint oxfmt
 
       - name: Lint
         run: ./Scripts/lint.sh lint-linux
@@ -368,17 +368,12 @@ jobs:
           CODEXBAR_TEST_TOOLCHAIN_ID: ${{ steps.swift-toolchain.outputs.cache-id }}
           CODEXBAR_TEST_BUILD_MANIFEST_SHA256: ${{ needs.swift-build-macos.outputs.manifest-sha256 }}
         run: |
-          extra=()
-          if [[ "$CODEXBAR_TEST_PROFILE" == full && '${{ matrix.shard-index }}' == 0 &&
-                -d Sources/CodexBarCore/Resources/Plugins ]]; then
-            extra+=(--jsc-goldens)
-          fi
           CODEXBAR_TEST_GROUP_SIZE=${{ matrix.group-size }} \
             CODEXBAR_TEST_SUITE_TIMEOUT=120 \
             CODEXBAR_TEST_RETRY_NON_TIMEOUT_FAILURES=0 \
             CODEXBAR_TEST_SHARD_INDEX=${{ matrix.shard-index }} \
             CODEXBAR_TEST_SHARD_COUNT=${{ matrix.shard-count }} \
-            ./Scripts/test.sh --use-build "$CODEXBAR_TEST_BUILD_ROOT" "${extra[@]}"
+            ./Scripts/test.sh --use-build "$CODEXBAR_TEST_BUILD_ROOT"
 
       - name: Remove runner-local compiled test transfer
         if: ${{ always() && env.CODEXBAR_TEST_BUILD_ROOT != '' }}

@@ -8,6 +8,46 @@ import Testing
 /// reset backfill that previously defeated a shape-only heuristic.
 struct RateWindowSyntheticPlaceholderTests {
     @Test
+    func `web mapping flags the null five-hour session as a synthetic placeholder`() throws {
+        let json = """
+        {
+          "five_hour": null,
+          "seven_day": { "utilization": 42, "resets_at": "2025-12-29T23:00:00.000Z" }
+        }
+        """
+        let webData = try ClaudeWebAPIFetcher._parseUsageResponseForTesting(Data(json.utf8))
+        let primary = ClaudeUsageFetcher.webPrimaryWindow(from: webData)
+
+        #expect(primary.isSyntheticPlaceholder == true)
+        #expect(primary.usedPercent == 0)
+        #expect(primary.windowMinutes == 300)
+        #expect(primary.resetsAt == nil)
+    }
+
+    @Test
+    func `backfilling a reset preserves the synthetic placeholder flag`() {
+        // Regression: backfilling a still-future cached reset onto the placeholder (which has no reset)
+        // must NOT let it masquerade as a real session — the marker has to survive the backfill.
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let cached = RateWindow(
+            usedPercent: 12,
+            windowMinutes: 300,
+            resetsAt: now.addingTimeInterval(3600),
+            resetDescription: "Resets in 1h")
+        let placeholder = RateWindow(
+            usedPercent: 0,
+            windowMinutes: 300,
+            resetsAt: nil,
+            resetDescription: nil,
+            isSyntheticPlaceholder: true)
+
+        let result = placeholder.backfillingResetTime(from: cached, now: now)
+
+        #expect(result.resetsAt == now.addingTimeInterval(3600))
+        #expect(result.isSyntheticPlaceholder == true)
+    }
+
+    @Test
     func `synthetic placeholder flag round-trips through Codable`() throws {
         let window = RateWindow(
             usedPercent: 0,
@@ -44,46 +84,6 @@ struct RateWindowSyntheticPlaceholderTests {
 
         // The flag is only persisted when true, so real windows keep their prior on-disk shape.
         #expect(json.contains("isSyntheticPlaceholder") == false)
-    }
-
-    @Test
-    func `backfilling a reset preserves the synthetic placeholder flag`() {
-        // Regression: backfilling a still-future cached reset onto the placeholder (which has no reset)
-        // must NOT let it masquerade as a real session — the marker has to survive the backfill.
-        let now = Date(timeIntervalSince1970: 1_800_000_000)
-        let cached = RateWindow(
-            usedPercent: 12,
-            windowMinutes: 300,
-            resetsAt: now.addingTimeInterval(3600),
-            resetDescription: "Resets in 1h")
-        let placeholder = RateWindow(
-            usedPercent: 0,
-            windowMinutes: 300,
-            resetsAt: nil,
-            resetDescription: nil,
-            isSyntheticPlaceholder: true)
-
-        let result = placeholder.backfillingResetTime(from: cached, now: now)
-
-        #expect(result.resetsAt == now.addingTimeInterval(3600))
-        #expect(result.isSyntheticPlaceholder == true)
-    }
-
-    @Test
-    func `web mapping flags the null five-hour session as a synthetic placeholder`() throws {
-        let json = """
-        {
-          "five_hour": null,
-          "seven_day": { "utilization": 42, "resets_at": "2025-12-29T23:00:00.000Z" }
-        }
-        """
-        let webData = try ClaudeWebAPIFetcher._parseUsageResponseForTesting(Data(json.utf8))
-        let primary = ClaudeUsageFetcher.webPrimaryWindow(from: webData)
-
-        #expect(primary.isSyntheticPlaceholder == true)
-        #expect(primary.usedPercent == 0)
-        #expect(primary.windowMinutes == 300)
-        #expect(primary.resetsAt == nil)
     }
 
     @Test

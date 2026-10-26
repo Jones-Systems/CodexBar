@@ -8,7 +8,6 @@ extension CostUsageClaudeResolverTests {
         let env = try CostUsageTestEnvironment()
         defer { env.cleanup() }
         let catalog = try Self.catalog()
-        let provider: UsageProvider = vertex ? .vertexai : .claude
         let filter: CostUsageScanner.ClaudeLogProviderFilter = vertex ? .vertexAIOnly : .excludeVertexAI
         let day = try env.makeLocalNoon(year: 2026, month: 7, day: 1)
         let range = CostUsageScanner.CostUsageDayRange(since: day, until: day, calendar: .current)
@@ -75,10 +74,11 @@ extension CostUsageClaudeResolverTests {
         #expect(parsed.rows == expectedRows)
         #expect(parsed.rows.map { Array($0.model.utf8) } == expectedRows.map { Array($0.model.utf8) })
         #expect(ModelsDevCache.save(catalog: catalog, fetchedAt: day, cacheRoot: env.cacheRoot))
-        let options = CostUsageScanner.Options(claudeProjectsRoots: [env.claudeProjectsRoot], cacheRoot: env.cacheRoot)
+        var options = CostUsageScanner.Options(claudeProjectsRoots: [env.claudeProjectsRoot], cacheRoot: env.cacheRoot)
+        options.claudeLogProviderFilter = filter
         let report = CostUsageScanner.loadDailyReport(
-            provider: provider, since: day, until: day, now: day, options: options)
-        let cache = CostUsageClaudeCacheIO.load(provider: provider, cacheRoot: env.cacheRoot)
+            provider: .claude, since: day, until: day, now: day, options: options)
+        let cache = CostUsageClaudeCacheIO.load(provider: .claude, cacheRoot: env.cacheRoot)
         #expect(cache.days == expectedDays)
         #expect(cache.days[dayKey]?["anthropic.example"] != nil)
         #expect(cache.files.values.flatMap { $0.claudeRows ?? [] } == expectedRows)

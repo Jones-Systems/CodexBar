@@ -12,13 +12,7 @@ public enum OpenCodexRouteDispatcher {
         switch provider.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
         case "openai":
             .subscription(.codex)
-        case "opencode-go":
-            .subscription(.opencodego)
-        case "kimi-coding", "kimi-for-coding":
-            .subscription(.kimi)
-        case "deepseek":
-            .subscription(.deepseek)
-        case "opencode-free", "opencode":
+        case "opencode-go", "kimi-coding", "kimi-for-coding", "deepseek", "opencode-free", "opencode":
             .tokenOnly
         default:
             .unknown

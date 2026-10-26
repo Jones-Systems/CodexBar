@@ -32,12 +32,7 @@ extension UsageStore {
         self.errors[provider.instanceID] = nil
         self.diagnostics[provider.instanceID] = nil
         // Provider-specific by design: disabling clears each provider's app-owned transient account/session state.
-        if provider == .deepseek {
-            self.clearDeepSeekProfileTransition()
-        }
-        if provider == .gemini {
-            self.clearGeminiConsumerTierDeprecationObservation()
-        }
+
         self.knownLimitsAvailabilityByProvider.removeValue(forKey: provider.instanceID)
         self.lastSourceLabels.removeValue(forKey: provider.instanceID)
         self.lastFetchAttempts.removeValue(forKey: provider.instanceID)
@@ -47,9 +42,7 @@ extension UsageStore {
             self.codexAccountSnapshots = []
             self.lastCodexUsagePublicationGuard = nil
         }
-        if provider == .kilo {
-            self.kiloScopeSnapshots = []
-        }
+
         if provider == .claude {
             self.widgetUsagePreservationBlockedProviders.insert(provider.instanceID)
             self.clearClaudeSwapAccountState()

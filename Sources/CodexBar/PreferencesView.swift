@@ -5,14 +5,11 @@ import SwiftUI
 /// Sidebar destinations of the settings window: fixed app panes plus one entry per provider.
 enum SettingsPane: Hashable {
     case general
-    case iCloudSync
     case usageSpend
     case notifications
     case menuBar
     case menu
     case advanced
-    case hooks
-    case plugins
     case about
     case debug
     case provider(ProviderInstanceID)
@@ -30,14 +27,11 @@ enum SettingsPane: Hashable {
     var title: String {
         switch self {
         case .general: L("tab_general")
-        case .iCloudSync: L("iCloud Sync")
         case .usageSpend: L("tab_usage_spend")
         case .notifications: L("tab_notifications")
         case .menuBar: L("tab_menu_bar")
         case .menu: L("tab_menu")
         case .advanced: L("tab_advanced")
-        case .hooks: L("tab_hooks")
-        case .plugins: L("Plugins")
         case .about: L("tab_about")
         case .debug: L("tab_debug")
         case let .provider(instanceID):
@@ -52,7 +46,7 @@ enum SettingsPane: Hashable {
 struct PreferencesView: View {
     @Bindable var settings: SettingsStore
     @Bindable var store: UsageStore
-    @Bindable var cloudSyncState: CloudSyncState
+    @Bindable var fleetAccountState: FleetAccountState
     let updater: UpdaterProviding
     @Bindable var selection: PreferencesSelection
     let managedCodexAccountCoordinator: ManagedCodexAccountCoordinator
@@ -74,7 +68,7 @@ struct PreferencesView: View {
     init(
         settings: SettingsStore,
         store: UsageStore,
-        cloudSyncState: CloudSyncState = CloudSyncState(),
+        fleetAccountState: FleetAccountState = FleetAccountState(),
         updater: UpdaterProviding,
         selection: PreferencesSelection,
         managedCodexAccountCoordinator: ManagedCodexAccountCoordinator = ManagedCodexAccountCoordinator(),
@@ -83,7 +77,7 @@ struct PreferencesView: View {
     {
         self.settings = settings
         self.store = store
-        self.cloudSyncState = cloudSyncState
+        self.fleetAccountState = fleetAccountState
         self.updater = updater
         self.selection = selection
         self.managedCodexAccountCoordinator = managedCodexAccountCoordinator
@@ -188,8 +182,6 @@ struct PreferencesView: View {
         switch self.selection.pane {
         case .general:
             GeneralPane(settings: self.settings)
-        case .iCloudSync:
-            ICloudSyncPane(settings: self.settings, state: self.cloudSyncState)
         case .usageSpend:
             SpendDashboardPane(settings: self.settings, store: self.store)
         case .notifications:
@@ -200,10 +192,6 @@ struct PreferencesView: View {
             MenuPane(settings: self.settings, store: self.store)
         case .advanced:
             AdvancedPane(settings: self.settings, store: self.store)
-        case .hooks:
-            HooksPane(settings: self.settings)
-        case .plugins:
-            PluginsPane(settings: self.settings, store: self.store)
         case .about:
             AboutPane(updater: self.updater)
         case .debug:

@@ -4,6 +4,53 @@ import Testing
 @testable import CodexBar
 
 struct UsageStorePlanUtilizationExactFitResetTests {
+    @Test
+    func `weekly chart prefers reset backed history over legacy synthetic points`() {
+        let legacyCapturedAt = Date(timeIntervalSince1970: 1_742_100_000)
+        let firstBoundary = Date(timeIntervalSince1970: 1_742_356_855) // 2026-03-18T17:00:55Z
+        let secondBoundary = Date(timeIntervalSince1970: 1_742_961_343) // 2026-03-25T17:02:23Z
+        let histories = [
+            planSeries(name: .weekly, windowMinutes: 10080, entries: [
+                planEntry(at: legacyCapturedAt, usedPercent: 57),
+                planEntry(at: firstBoundary.addingTimeInterval(-60 * 60), usedPercent: 73, resetsAt: firstBoundary),
+                planEntry(at: secondBoundary.addingTimeInterval(-60 * 60), usedPercent: 35, resetsAt: secondBoundary),
+            ]),
+        ]
+
+        let model = PlanUtilizationHistoryChartMenuView._modelSnapshotForTesting(
+            selectedSeriesRawValue: "weekly:10080",
+            histories: histories,
+            provider: .codex,
+            referenceDate: secondBoundary.addingTimeInterval(-60))
+
+        #expect(model.usedPercents == [73, 35])
+    }
+
+    @Test
+    func `chart adds synthetic current bar when current period has no observation`() {
+        let firstBoundary = Date(timeIntervalSince1970: 1_710_000_000)
+        let currentBoundary = firstBoundary.addingTimeInterval(10 * 60 * 60)
+        let referenceDate = currentBoundary.addingTimeInterval(-30 * 60)
+        let histories = [
+            planSeries(name: .session, windowMinutes: 300, entries: [
+                planEntry(at: firstBoundary.addingTimeInterval(-30 * 60), usedPercent: 62, resetsAt: firstBoundary),
+            ]),
+        ]
+
+        let model = PlanUtilizationHistoryChartMenuView._modelSnapshotForTesting(
+            selectedSeriesRawValue: "session:300",
+            histories: histories,
+            provider: .codex,
+            referenceDate: referenceDate)
+
+        #expect(model.usedPercents == [62, 0, 0])
+        #expect(model.pointDates == [
+            formattedBoundary(firstBoundary),
+            formattedBoundary(firstBoundary.addingTimeInterval(5 * 60 * 60)),
+            formattedBoundary(currentBoundary),
+        ])
+    }
+
     @MainActor
     @Test
     func `weekly chart uses reset date as bar date`() {
@@ -84,32 +131,6 @@ struct UsageStorePlanUtilizationExactFitResetTests {
 
     @MainActor
     @Test
-    func `chart adds synthetic current bar when current period has no observation`() {
-        let firstBoundary = Date(timeIntervalSince1970: 1_710_000_000)
-        let currentBoundary = firstBoundary.addingTimeInterval(10 * 60 * 60)
-        let referenceDate = currentBoundary.addingTimeInterval(-30 * 60)
-        let histories = [
-            planSeries(name: .session, windowMinutes: 300, entries: [
-                planEntry(at: firstBoundary.addingTimeInterval(-30 * 60), usedPercent: 62, resetsAt: firstBoundary),
-            ]),
-        ]
-
-        let model = PlanUtilizationHistoryChartMenuView._modelSnapshotForTesting(
-            selectedSeriesRawValue: "session:300",
-            histories: histories,
-            provider: .codex,
-            referenceDate: referenceDate)
-
-        #expect(model.usedPercents == [62, 0, 0])
-        #expect(model.pointDates == [
-            formattedBoundary(firstBoundary),
-            formattedBoundary(firstBoundary.addingTimeInterval(5 * 60 * 60)),
-            formattedBoundary(currentBoundary),
-        ])
-    }
-
-    @MainActor
-    @Test
     func `weekly chart shows zero bars for missing reset periods`() {
         let firstBoundary = Date(timeIntervalSince1970: 1_710_000_000)
         let secondBoundary = firstBoundary.addingTimeInterval(7 * 24 * 60 * 60)
@@ -175,29 +196,6 @@ struct UsageStorePlanUtilizationExactFitResetTests {
             referenceDate: secondBoundary.addingTimeInterval(-60))
 
         #expect(model.usedPercents == [62, 33])
-    }
-
-    @MainActor
-    @Test
-    func `weekly chart prefers reset backed history over legacy synthetic points`() {
-        let legacyCapturedAt = Date(timeIntervalSince1970: 1_742_100_000)
-        let firstBoundary = Date(timeIntervalSince1970: 1_742_356_855) // 2026-03-18T17:00:55Z
-        let secondBoundary = Date(timeIntervalSince1970: 1_742_961_343) // 2026-03-25T17:02:23Z
-        let histories = [
-            planSeries(name: .weekly, windowMinutes: 10080, entries: [
-                planEntry(at: legacyCapturedAt, usedPercent: 57),
-                planEntry(at: firstBoundary.addingTimeInterval(-60 * 60), usedPercent: 73, resetsAt: firstBoundary),
-                planEntry(at: secondBoundary.addingTimeInterval(-60 * 60), usedPercent: 35, resetsAt: secondBoundary),
-            ]),
-        ]
-
-        let model = PlanUtilizationHistoryChartMenuView._modelSnapshotForTesting(
-            selectedSeriesRawValue: "weekly:10080",
-            histories: histories,
-            provider: .codex,
-            referenceDate: secondBoundary.addingTimeInterval(-60))
-
-        #expect(model.usedPercents == [73, 35])
     }
 
     @MainActor

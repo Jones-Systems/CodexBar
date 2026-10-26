@@ -42,8 +42,10 @@ native_prefixes = (
 portable_test_prefixes = (
     "TestsLinux/", "TestsPlugin/", "Tests/AdaptiveReplayCLITests/", "Tests/AdaptiveReplayKitTests/",
 )
-# TestsPlugin compiles these sources through checked-in symlinks.
-portable_source_paths = {
+# No retained native test source is shared through TestsPlugin symlinks.
+portable_source_paths = set()
+# Preserve conservative platform selection for changes/deletions from old branches.
+retired_portable_source_paths = {
     "Tests/CodexBarTests/ProviderPluginDetailsParityTests.swift",
     "Tests/CodexBarTests/ProviderPluginExtensionParityTests.swift",
     "Tests/CodexBarTests/ProviderPluginParityTests.swift",
@@ -57,7 +59,7 @@ portable_paths = {
     "Scripts/check-site-locales.mjs", "Scripts/check-documentation-links.mjs", "Scripts/docs-list.mjs",
     "Scripts/generate-llms.mjs", "Scripts/check_repository_size.sh", "Scripts/check_upstreams.sh",
     ".github/workflows/upstream-monitor.yml", ".github/workflows/jones-app-candidate.yml",
-    ".github/workflows/jones-menu-candidate.yml", ".oxfmtrc.json", ".oxlintrc.json", "tsconfig.plugins.json",
+    ".github/workflows/jones-menu-candidate.yml", ".oxfmtrc.json", ".oxlintrc.json",
 }
 
 
@@ -66,8 +68,8 @@ def classify(path):
                  "docs/compiler-resource-limits.md"}
             or path.endswith(("/AGENTS.md", "/CLAUDE.md")) or path.startswith(".agents/")):
         return all_platforms, "changes contributor or runtime configuration contracts"
-    if path in portable_source_paths:
-        return {"macos", "linux"}, "changes a source shared through TestsPlugin symlinks"
+    if path in portable_source_paths or path in retired_portable_source_paths:
+        return {"macos", "linux"}, "changes a current or retired shared test source"
     if path.startswith(native_prefixes) or path == "Icon.icns":
         return {"macos"}, "changes macOS app, widget, resources or native tests"
     if path.startswith(portable_test_prefixes):

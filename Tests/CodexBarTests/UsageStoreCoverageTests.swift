@@ -30,8 +30,13 @@ struct UsageStoreCoverageTests {
         let metadata = ProviderRegistry.shared.metadata
 
         try settings.setProviderEnabled(provider: .codex, metadata: #require(metadata[.codex]), enabled: true)
-        try settings.setProviderEnabled(provider: .factory, metadata: #require(metadata[.factory]), enabled: true)
         try settings.setProviderEnabled(provider: .claude, metadata: #require(metadata[.claude]), enabled: true)
+        settings.setMenuBarMetricPreference(.primaryAndSecondary, for: .claude)
+
+        let expectedProviders: Set<ProviderInstanceID> = [.codex, .claude]
+        #expect(Set(store.enabledProvidersForDisplay()) == expectedProviders)
+        #expect(Set(store.enabledProvidersForBackgroundWork()) == expectedProviders)
+        #expect(settings.menuBarMetricPreference(for: .claude) == .primaryAndSecondary)
 
         let now = Date()
         store._setSnapshotForTesting(
@@ -45,135 +50,26 @@ struct UsageStoreCoverageTests {
                 primary: RateWindow(usedPercent: 10, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
                 secondary: RateWindow(usedPercent: 70, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
                 updatedAt: now),
-            provider: .factory)
+            provider: .claude)
+        let highest = store.providerWithHighestUsage()
+        #expect(highest?.provider == .claude)
+        #expect(highest?.usedPercent == 70)
+        #expect(store.iconStyle == .combined)
+
         store._setSnapshotForTesting(
             UsageSnapshot(
                 primary: RateWindow(usedPercent: 100, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
                 secondary: nil,
                 updatedAt: now),
             provider: .claude)
+        #expect(store.providerWithHighestUsage()?.provider == .codex)
+        #expect(store.providerWithHighestUsage()?.usedPercent == 50)
 
-        let highest = store.providerWithHighestUsage()
-        #expect(highest?.provider == .factory)
-        #expect(highest?.usedPercent == 70)
-        #expect(store.iconStyle == .combined)
-
-        try settings.setProviderEnabled(provider: .factory, metadata: #require(metadata[.factory]), enabled: false)
         try settings.setProviderEnabled(provider: .claude, metadata: #require(metadata[.claude]), enabled: false)
         #expect(store.iconStyle == store.style(for: .codex))
 
         store._setErrorForTesting("error", provider: .codex)
         #expect(store.isStale)
-    }
-
-    @Test
-    func `cursor credential fingerprint is stable and does not expose the cookie`() {
-        let cookie = "fixture=a"
-        let fingerprint = CookieHeaderCache.credentialFingerprint(cookie)
-
-        #expect(fingerprint == CookieHeaderCache.credentialFingerprint("  \(cookie)  "))
-        #expect(fingerprint != CookieHeaderCache.credentialFingerprint("fixture=b"))
-        #expect(!fingerprint.contains("fixture=a"))
-    }
-
-    @Test
-    func `cursor manual cost refresh rejects an empty cookie without falling back`() async throws {
-        let settings = Self.makeSettingsStore(suite: "UsageStoreCoverageTests-cursor-manual-cost")
-        settings.costUsageEnabled = true
-        settings.cursorCookieSource = .manual
-        settings.cursorCookieHeader = "  "
-        let metadata = try #require(ProviderRegistry.shared.metadata[.cursor])
-        settings.setProviderEnabled(provider: .cursor, metadata: metadata, enabled: true)
-        let store = Self.makeUsageStore(settings: settings)
-        let invoked = ObservationFlag()
-        store._test_tokenUsageSnapshotLoaderOverride = { _, _, now, _, _ in
-            invoked.set()
-            return CostUsageTokenSnapshot(
-                sessionTokens: nil,
-                sessionCostUSD: nil,
-                last30DaysTokens: nil,
-                last30DaysCostUSD: nil,
-                meteredCostUSD: 1,
-                daily: [],
-                updatedAt: now)
-        }
-
-        await store.refreshTokenUsage(.cursor, force: true)
-
-        #expect(!invoked.get())
-        #expect(store.tokenSnapshot(for: .cursor) == nil)
-        #expect(store.tokenError(for: .cursor)?.contains("non-empty Manual cookie header") == true)
-        #expect(store.tokenSnapshotScopeSignature(for: .cursor).contains("manual:missing"))
-    }
-
-    @Test
-    func `cursor metered-only cost refresh publishes the snapshot`() async throws {
-        let settings = Self.makeSettingsStore(suite: "UsageStoreCoverageTests-cursor-metered-only")
-        settings.costUsageEnabled = true
-        settings.cursorCookieSource = .manual
-        settings.cursorCookieHeader = "fixture=cursor"
-        let metadata = try #require(ProviderRegistry.shared.metadata[.cursor])
-        settings.setProviderEnabled(provider: .cursor, metadata: metadata, enabled: true)
-        let store = Self.makeUsageStore(settings: settings)
-        store._test_tokenUsageSnapshotLoaderOverride = { _, _, now, _, _ in
-            CostUsageTokenSnapshot(
-                sessionTokens: nil,
-                sessionCostUSD: nil,
-                last30DaysTokens: nil,
-                last30DaysCostUSD: nil,
-                meteredCostUSD: 1.25,
-                daily: [],
-                updatedAt: now)
-        }
-
-        await store.refreshTokenUsage(.cursor, force: true)
-
-        #expect(store.tokenSnapshot(for: .cursor)?.meteredCostUSD == 1.25)
-        #expect(store.tokenError(for: .cursor) == nil)
-    }
-
-    @Test
-    func `cursor auto credential resolution cannot relax a changed history window`() throws {
-        let settings = Self.makeSettingsStore(suite: "UsageStoreCoverageTests-cursor-history-race")
-        settings.costUsageEnabled = true
-        settings.costUsageHistoryDays = 30
-        settings.cursorCookieSource = .auto
-        let metadata = try #require(ProviderRegistry.shared.metadata[.cursor])
-        settings.setProviderEnabled(provider: .cursor, metadata: metadata, enabled: true)
-        let store = Self.makeUsageStore(settings: settings)
-        let cookie = "fixture=resolved"
-        let fingerprint = CookieHeaderCache.credentialFingerprint(cookie)
-        let generation = CookieHeaderCache.beginDisplayReadGenerationForTesting(provider: .cursor)
-        let previousEntry = CookieHeaderCache.currentDisplayEntryForTesting(provider: .cursor)
-        _ = CookieHeaderCache.commitDisplaySnapshotIfCurrentForTesting(
-            provider: .cursor,
-            entry: CookieHeaderCache.Entry(
-                cookieHeader: cookie,
-                storedAt: Date(),
-                sourceLabel: "test"),
-            generation: generation)
-        defer {
-            _ = CookieHeaderCache.commitDisplaySnapshotIfCurrentForTesting(
-                provider: .cursor,
-                entry: previousEntry,
-                generation: generation)
-        }
-
-        let initialSignature = store.cursorCostScopeSignature(
-            historyDays: 30,
-            source: .auto,
-            credentialFingerprint: "unresolved")
-        let revision = store.providerPublicationRevision(for: .cursor)
-        let providerConfigRevision = settings.providerConfigRevision(for: .cursor)
-        settings.costUsageHistoryDays = 7
-
-        #expect(!store.tokenRefreshPublicationIsCurrent(
-            provider: .cursor,
-            publicationRevision: revision,
-            providerConfigRevision: providerConfigRevision,
-            historyDays: 30,
-            costScopeSignature: initialSignature,
-            fetchedCredentialScopeFingerprint: fingerprint))
     }
 
     @Test
@@ -196,89 +92,6 @@ struct UsageStoreCoverageTests {
 
         let label = store.sourceLabel(for: .codex)
         #expect(label.contains("openai-web"))
-    }
-
-    @Test
-    func `amp balances are rendered in provider cards`() {
-        let settings = Self.makeSettingsStore(suite: "UsageStoreCoverageTests-amp-credits")
-        let store = Self.makeUsageStore(settings: settings)
-        let now = Date()
-
-        let snapshot = AmpUsageSnapshot(
-            freeQuota: 100,
-            freeUsed: 51.4,
-            hourlyReplenishment: nil,
-            windowHours: 24,
-            individualCredits: 25.64,
-            workspaceBalances: [AmpWorkspaceBalance(name: "billing@example.test", remaining: 10.22)],
-            updatedAt: now).toUsageSnapshot(now: now)
-        store._setSnapshotForTesting(snapshot, provider: .amp)
-        let model = ProvidersPane(settings: settings, store: store)._test_menuCardModel(for: .amp)
-
-        #expect(model.metrics.map(\.title) == ["Amp Free"])
-        #expect(model.metrics.allSatisfy { $0.pacePercent == nil })
-        #expect(model.creditsText == nil)
-        #expect(model.providerDetails.first?.rows.map(\.label) == [
-            "Individual credits", "Workspace billing@example.test",
-        ])
-        #expect(model.creditsRemaining == nil)
-
-        settings.hidePersonalInfo = true
-        let redactedModel = ProvidersPane(settings: settings, store: store)._test_menuCardModel(for: .amp)
-        #expect(redactedModel.providerDetails.first?.rows.last?.label == "Workspace")
-    }
-
-    @Test
-    func `amp subscription pools use their own labels`() {
-        let settings = Self.makeSettingsStore(suite: "UsageStoreCoverageTests-amp-subscription")
-        let store = Self.makeUsageStore(settings: settings)
-        let now = Date()
-
-        store._setSnapshotForTesting(
-            UsageSnapshot(
-                primary: RateWindow(
-                    usedPercent: 3,
-                    windowMinutes: ProviderPaceCapability.monthlyWindowSentinelMinutes,
-                    resetsAt: now.addingTimeInterval(29 * 24 * 60 * 60),
-                    resetDescription: "renews in 29 days"),
-                secondary: RateWindow(
-                    usedPercent: 0,
-                    windowMinutes: ProviderPaceCapability.monthlyWindowSentinelMinutes,
-                    resetsAt: now.addingTimeInterval(29 * 24 * 60 * 60),
-                    resetDescription: "renews in 29 days"),
-                extraRateWindows: [NamedRateWindow(
-                    id: "amp-free",
-                    title: "Amp Free",
-                    window: RateWindow(
-                        usedPercent: 39,
-                        windowMinutes: 1440,
-                        resetsAt: now.addingTimeInterval(8 * 60 * 60),
-                        resetDescription: "resets daily"))],
-                updatedAt: now,
-                identity: ProviderIdentitySnapshot(
-                    providerID: .amp,
-                    accountEmail: nil,
-                    accountOrganization: nil,
-                    loginMethod: "Megawatt")),
-            provider: .amp)
-
-        let model = ProvidersPane(settings: settings, store: store)._test_menuCardModel(for: .amp)
-        let descriptor = MenuDescriptor.build(
-            provider: .amp,
-            store: store,
-            settings: settings,
-            account: AccountInfo(email: nil, plan: nil),
-            updateReady: false,
-            includeContextualActions: false,
-            now: now)
-        let menuLines = descriptor.sections.flatMap(\.entries).compactMap { entry -> String? in
-            guard case let .text(text, _) = entry else { return nil }
-            return text
-        }
-
-        #expect(model.metrics.map(\.title) == ["Other usage", "Orb usage", "Amp Free"])
-        #expect(model.planText == "Megawatt")
-        #expect(menuLines.contains { $0.hasPrefix("Amp Free:") })
     }
 
     @Test(CodexCredentialFixtures())
@@ -312,50 +125,6 @@ struct UsageStoreCoverageTests {
     }
 
     @Test
-    func `source label uses configured kilo source`() {
-        let settings = Self.makeSettingsStore(suite: "UsageStoreCoverageTests-kilo-source")
-        settings.kiloUsageDataSource = .api
-
-        let store = Self.makeUsageStore(settings: settings)
-        #expect(store.sourceLabel(for: .kilo) == "api")
-    }
-
-    @Test
-    func `clearing copilot budget extras syncs reset baseline`() {
-        let settings = Self.makeSettingsStore(suite: "UsageStoreCoverageTests-copilot-budget-clear")
-        let store = Self.makeUsageStore(settings: settings)
-        let live = Self.makeCopilotSnapshot(usedPercent: 20, extraRateWindows: [Self.makeCopilotBudgetWindow()])
-        let resetBaseline = Self.makeCopilotSnapshot(usedPercent: 10, extraRateWindows: nil)
-        store._setSnapshotForTesting(live, provider: .copilot)
-        store.lastKnownResetSnapshots[.copilot] = resetBaseline
-
-        store.clearCopilotBudgetExtras()
-
-        #expect(store.snapshot(for: .copilot)?.extraRateWindows == nil)
-        #expect(store.lastKnownResetSnapshots[.copilot]?.extraRateWindows == nil)
-        #expect(store.lastKnownResetSnapshots[.copilot]?.primary?.usedPercent == 20)
-    }
-
-    @Test
-    func `clearing copilot budget extras also clears stale reset baseline`() {
-        let settings = Self.makeSettingsStore(suite: "UsageStoreCoverageTests-copilot-budget-reset-clear")
-        let store = Self.makeUsageStore(settings: settings)
-        let live = Self.makeCopilotSnapshot(usedPercent: 20, extraRateWindows: nil)
-        let resetBaseline = Self.makeCopilotSnapshot(
-            usedPercent: 10,
-            extraRateWindows: [Self.makeCopilotBudgetWindow()])
-        store._setSnapshotForTesting(live, provider: .copilot)
-        store.lastKnownResetSnapshots[.copilot] = resetBaseline
-
-        store.clearCopilotBudgetExtras()
-
-        #expect(store.snapshot(for: .copilot)?.extraRateWindows == nil)
-        #expect(store.snapshot(for: .copilot)?.primary?.usedPercent == 20)
-        #expect(store.lastKnownResetSnapshots[.copilot]?.extraRateWindows == nil)
-        #expect(store.lastKnownResetSnapshots[.copilot]?.primary?.usedPercent == 10)
-    }
-
-    @Test
     func `permission prompt errors are detected for notifications`() {
         let errors: [LocalizedTestError] = [
             LocalizedTestError("Waiting for folder trust prompt"),
@@ -369,45 +138,13 @@ struct UsageStoreCoverageTests {
     }
 
     @Test
-    func `provider with highest usage prefers kimi rate limit window`() throws {
-        let settings = Self.makeSettingsStore(suite: "UsageStoreCoverageTests-kimi-highest")
-        let store = Self.makeUsageStore(settings: settings)
-        let metadata = ProviderRegistry.shared.metadata
-
-        try settings.setProviderEnabled(provider: .codex, metadata: #require(metadata[.codex]), enabled: true)
-        try settings.setProviderEnabled(provider: .kimi, metadata: #require(metadata[.kimi]), enabled: true)
-
-        let now = Date()
-        store._setSnapshotForTesting(
-            UsageSnapshot(
-                primary: RateWindow(usedPercent: 60, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-                secondary: nil,
-                updatedAt: now),
-            provider: .codex)
-        store._setSnapshotForTesting(
-            UsageSnapshot(
-                primary: RateWindow(usedPercent: 10, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
-                secondary: RateWindow(usedPercent: 80, windowMinutes: 300, resetsAt: nil, resetDescription: nil),
-                updatedAt: now),
-            provider: .kimi)
-
-        let highest = store.providerWithHighestUsage()
-        #expect(highest?.provider == .kimi)
-        #expect(highest?.usedPercent == 80)
-    }
-
-    @Test
     func `provider availability and subscription detection`() {
-        let zaiStore = InMemoryZaiTokenStore(value: "zai-token")
-        let syntheticStore = InMemorySyntheticTokenStore(value: "synthetic-token")
         let settings = Self.makeSettingsStore(
-            suite: "UsageStoreCoverageTests-availability",
-            zaiTokenStore: zaiStore,
-            syntheticTokenStore: syntheticStore)
+            suite: "UsageStoreCoverageTests-availability")
         let store = Self.makeUsageStore(settings: settings)
 
-        #expect(store.isProviderAvailable(.zai))
-        #expect(store.isProviderAvailable(.synthetic))
+        #expect(store.isProviderAvailable(.codex))
+        #expect(store.isProviderAvailable(.claude))
 
         let identity = ProviderIdentitySnapshot(
             providerID: .claude,
@@ -420,6 +157,68 @@ struct UsageStoreCoverageTests {
         #expect(store.isClaudeSubscription())
         #expect(UsageStore.isSubscriptionPlan("Team"))
         #expect(!UsageStore.isSubscriptionPlan("api"))
+    }
+
+    @Test(arguments: [UsageProvider.codex, .claude])
+    func `enabled instances isolate availability and reject unknown provider IDs`(
+        availableProvider: UsageProvider) throws
+    {
+        try #require(SettingsStore.isRunningTests)
+        let root = TestFixtureScratch.root
+            .appendingPathComponent("enabled-instances-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer {
+            do {
+                try FileManager.default.removeItem(at: root)
+            } catch {
+                Issue.record("Could not remove enabled-instance fixture: \(error)")
+            }
+        }
+        let settings = SettingsStore(
+            userDefaults: InMemoryUserDefaults(),
+            configStore: CodexBarConfigStore(fileURL: root.appendingPathComponent("config.json")),
+            codexCookieStore: InMemoryCookieHeaderStore(),
+            claudeCookieStore: InMemoryCookieHeaderStore(),
+            tokenAccountStore: InMemoryTokenAccountStore(fileURL: root.appendingPathComponent("accounts.json")),
+            keychainAccessPolicy: SettingsStoreKeychainAccessPolicy(
+                setDisabled: { _ in },
+                isExplicitlyDisabled: { true }),
+            performInitialProviderDetection: false)
+        defer { settings.configFileWatcher?.stop() }
+        for provider in UsageProvider.allCases {
+            settings.setProviderEnabled(
+                provider: provider,
+                metadata: ProviderDescriptorRegistry.descriptor(for: provider).metadata,
+                enabled: true)
+        }
+        let store = UsageStore(
+            fetcher: UsageFetcher(environment: [:]),
+            browserDetection: BrowserDetection(cacheTTL: 0),
+            settings: settings,
+            startupBehavior: .testing,
+            environmentBase: [:])
+        var availabilityRequests: [UsageProvider] = []
+        store._test_providerAvailabilityOverride = { provider in
+            availabilityRequests.append(provider)
+            return provider == availableProvider
+        }
+        defer { store._test_providerAvailabilityOverride = nil }
+
+        #expect(store.enabledProviders() == [availableProvider.instanceID])
+        #expect(store.enabledProvidersForBackgroundWork() == [availableProvider.instanceID])
+        #expect(Set(store.enabledProvidersForDisplay()) == Set(UsageProvider.allCases.map(\.instanceID)))
+
+        availabilityRequests.removeAll()
+        let unknown = try #require(ProviderInstanceID(rawValue: "retired-gateway"))
+        #expect(!store.isEnabledProviderInstance(unknown, now: Date(timeIntervalSince1970: 1_700_000_000)))
+        #expect(availabilityRequests.isEmpty)
+
+        settings.setProviderEnabled(
+            provider: availableProvider,
+            metadata: ProviderDescriptorRegistry.descriptor(for: availableProvider).metadata,
+            enabled: false)
+        #expect(store.enabledProviders().isEmpty)
+        #expect(!store.enabledProvidersForDisplay().contains(availableProvider.instanceID))
     }
 
     @Test
@@ -473,27 +272,28 @@ struct UsageStoreCoverageTests {
                 enabled: false)
         }
         try settings.setProviderEnabled(
-            provider: .synthetic,
-            metadata: #require(metadata[.synthetic]),
+            provider: .claude,
+            metadata: #require(metadata[.claude]),
             enabled: true)
 
         let store = Self.makeUsageStore(settings: settings)
+        store._test_providerAvailabilityOverride = { _ in false }
         let staleSnapshot = UsageSnapshot(
             primary: RateWindow(usedPercent: 25, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
             secondary: nil,
             updatedAt: Date())
-        store._setSnapshotForTesting(staleSnapshot, provider: .synthetic)
-        store._setErrorForTesting("stale", provider: .synthetic)
-        store.statuses[.synthetic] = ProviderStatus(indicator: .major, description: "Outage", updatedAt: Date())
+        store._setSnapshotForTesting(staleSnapshot, provider: .claude)
+        store._setErrorForTesting("stale", provider: .claude)
+        store.statuses[.claude] = ProviderStatus(indicator: .major, description: "Outage", updatedAt: Date())
 
         #expect(store.enabledProviders().isEmpty)
-        #expect(store.enabledProvidersForDisplay() == [.synthetic])
+        #expect(store.enabledProvidersForDisplay() == [.claude])
 
         store.clearDisabledProviderState(enabledProviders: Set(store.enabledProvidersForDisplay()))
 
-        #expect(store.snapshot(for: .synthetic) != nil)
-        #expect(store.errors[.synthetic] == "stale")
-        #expect(store.statuses[.synthetic]?.indicator == .major)
+        #expect(store.snapshot(for: .claude) != nil)
+        #expect(store.errors[.claude] == "stale")
+        #expect(store.statuses[.claude]?.indicator == .major)
     }
 
     @Test
@@ -510,13 +310,14 @@ struct UsageStoreCoverageTests {
                 enabled: false)
         }
         try settings.setProviderEnabled(
-            provider: .synthetic,
-            metadata: #require(metadata[.synthetic]),
+            provider: .claude,
+            metadata: #require(metadata[.claude]),
             enabled: true)
 
         let store = Self.makeUsageStore(settings: settings)
+        store._test_providerAvailabilityOverride = { _ in false }
 
-        #expect(store.enabledProvidersForDisplay() == [.synthetic])
+        #expect(store.enabledProvidersForDisplay() == [.claude])
         #expect(store.enabledProviders().isEmpty)
         #expect(store.enabledProvidersForBackgroundWork().isEmpty)
     }
@@ -535,42 +336,22 @@ struct UsageStoreCoverageTests {
                 enabled: false)
         }
         try settings.setProviderEnabled(
-            provider: .synthetic,
-            metadata: #require(metadata[.synthetic]),
+            provider: .claude,
+            metadata: #require(metadata[.claude]),
             enabled: true)
 
         let store = Self.makeUsageStore(settings: settings)
+        store._test_providerAvailabilityOverride = { _ in false }
 
-        #expect(store.errors[.synthetic] == nil)
-        #expect(store.enabledProvidersForDisplay() == [.synthetic])
-        #expect(store.isProviderAvailable(.synthetic) == false)
-        #expect(store.userFacingError(for: .synthetic) == SyntheticSettingsError.missingToken.errorDescription)
-        #expect(store.unavailableMessage(for: .synthetic) == SyntheticSettingsError.missingToken.errorDescription)
+        #expect(store.errors[.claude] == nil)
+        #expect(store.enabledProvidersForDisplay() == [.claude])
+        #expect(store.isProviderAvailable(.claude) == false)
+        #expect(store.userFacingError(for: .claude) == "Claude is unavailable in the current environment.")
+        #expect(store.unavailableMessage(for: .claude) == "Claude is unavailable in the current environment.")
     }
 }
 
 extension UsageStoreCoverageTests {
-    @Test
-    func `sub2api unavailable message identifies the missing setting`() throws {
-        let settings = Self.makeSettingsStore(suite: "UsageStoreCoverageTests-sub2api-unavailable-message")
-        settings.refreshFrequency = .manual
-        settings.statusChecksEnabled = false
-
-        let metadata = ProviderRegistry.shared.metadata
-        for provider in UsageProvider.allCases {
-            try settings.setProviderEnabled(
-                provider: provider,
-                metadata: #require(metadata[provider]),
-                enabled: provider == .sub2api)
-        }
-
-        let store = Self.makeUsageStore(settings: settings)
-        #expect(store.unavailableMessage(for: .sub2api) == Sub2APISettingsReader.missingCredentialsMessage)
-
-        settings[providerConfig: .sub2api, field: .apiKey] = "group-key"
-        #expect(store.unavailableMessage(for: .sub2api) == Sub2APISettingsReader.missingBaseURLMessage)
-    }
-
     @Test
     func `refresh clears enabled but unavailable cached state`() async throws {
         let settings = Self.makeSettingsStore(suite: "UsageStoreCoverageTests-background-cleanup")
@@ -585,24 +366,25 @@ extension UsageStoreCoverageTests {
                 enabled: false)
         }
         try settings.setProviderEnabled(
-            provider: .synthetic,
-            metadata: #require(metadata[.synthetic]),
+            provider: .claude,
+            metadata: #require(metadata[.claude]),
             enabled: true)
 
         let store = Self.makeUsageStore(settings: settings)
+        store._test_providerAvailabilityOverride = { _ in false }
         let cachedSnapshot = UsageSnapshot(
             primary: RateWindow(usedPercent: 25, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
             secondary: nil,
             updatedAt: Date())
-        store._setSnapshotForTesting(cachedSnapshot, provider: .synthetic)
+        store._setSnapshotForTesting(cachedSnapshot, provider: .claude)
         let account = ProviderTokenAccount(id: UUID(), label: "Account", token: "token", addedAt: 0, lastUsed: nil)
-        store.accountSnapshots[.synthetic] = [
+        store.accountSnapshots[.claude] = [
             TokenAccountUsageSnapshot(
                 account: account,
                 snapshot: cachedSnapshot,
                 error: nil,
                 sourceLabel: "api",
-                cacheKey: store.tokenAccountSnapshotCacheKey(provider: .synthetic, account: account)),
+                cacheKey: store.tokenAccountSnapshotCacheKey(provider: .claude, account: account)),
         ]
         store._setTokenSnapshotForTesting(
             CostUsageTokenSnapshot(
@@ -612,16 +394,16 @@ extension UsageStoreCoverageTests {
                 last30DaysCostUSD: 4.56,
                 daily: [],
                 updatedAt: Date()),
-            provider: .synthetic)
+            provider: .claude)
 
-        #expect(store.enabledProvidersForDisplay() == [.synthetic])
+        #expect(store.enabledProvidersForDisplay() == [.claude])
         #expect(store.enabledProviders().isEmpty)
         #expect(store.enabledProvidersForBackgroundWork().isEmpty)
 
         await store.refresh()
-        #expect(store.snapshot(for: .synthetic) == nil)
-        #expect((store.accountSnapshots[.synthetic] ?? []).isEmpty)
-        #expect(store.tokenSnapshots[.synthetic] == nil)
+        #expect(store.snapshot(for: .claude) == nil)
+        #expect((store.accountSnapshots[.claude] ?? []).isEmpty)
+        #expect(store.tokenSnapshots[.claude] == nil)
         #expect(store.enabledProvidersForBackgroundWork().isEmpty)
     }
 
@@ -639,64 +421,58 @@ extension UsageStoreCoverageTests {
                 enabled: false)
         }
         try settings.setProviderEnabled(
-            provider: .synthetic,
-            metadata: #require(metadata[.synthetic]),
+            provider: .claude,
+            metadata: #require(metadata[.claude]),
             enabled: true)
 
         let store = Self.makeUsageStore(settings: settings)
-        store._setErrorForTesting("stale", provider: .synthetic)
-        store.statuses[.synthetic] = ProviderStatus(indicator: .major, description: "Outage", updatedAt: Date())
-        store.statusComponents[.synthetic] = [
+        store._test_providerAvailabilityOverride = { _ in false }
+        store._setErrorForTesting("stale", provider: .claude)
+        store.statuses[.claude] = ProviderStatus(indicator: .major, description: "Outage", updatedAt: Date())
+        store.statusComponents[.claude] = [
             ProviderStatusComponent(id: "api", name: "API", indicator: .major, status: "major_outage"),
         ]
-        store.tokenErrors[.synthetic] = "token stale"
+        store.tokenErrors[.claude] = "token stale"
 
-        #expect(store.enabledProvidersForDisplay() == [.synthetic])
+        #expect(store.enabledProvidersForDisplay() == [.claude])
         #expect(store.enabledProviders().isEmpty)
         #expect(store.enabledProvidersForBackgroundWork().isEmpty)
 
         await store.refresh()
 
-        #expect(store.errors[.synthetic] == nil)
-        #expect(store.tokenErrors[.synthetic] == nil)
-        #expect(store.statuses[.synthetic] == nil)
-        #expect(store.statusComponents(for: .synthetic).isEmpty)
+        #expect(store.errors[.claude] == nil)
+        #expect(store.tokenErrors[.claude] == nil)
+        #expect(store.statuses[.claude] == nil)
+        #expect(store.statusComponents(for: .claude).isEmpty)
         #expect(store.enabledProvidersForBackgroundWork().isEmpty)
     }
 
     @Test
-    func `widget snapshot projects provider derived token usage`() async throws {
+    func `widget snapshot preserves local token usage currency and labels`() async throws {
         let settings = Self.makeSettingsStore(suite: "UsageStoreCoverageTests-widget-provider-cost")
         settings.costUsageEnabled = true
         let store = Self.makeUsageStore(settings: settings)
         let formatter = ISO8601DateFormatter()
         let updatedAt = try #require(formatter.date(from: "2026-05-26T12:00:00Z"))
-        let startDate = try #require(formatter.date(from: "2026-05-01T00:00:00Z"))
-        let endDate = try #require(formatter.date(from: "2026-05-31T23:59:59Z"))
-        let day = MistralDailyUsageBucket(
-            day: "2026-05-26",
-            cost: 9,
-            inputTokens: 10,
-            cachedTokens: 0,
-            outputTokens: 5,
-            models: [])
-        let providerSnapshot = MistralUsageSnapshot(
-            totalCost: 9,
-            currency: "eur",
-            currencySymbol: "€",
-            totalInputTokens: 10,
-            totalOutputTokens: 5,
-            totalCachedTokens: 0,
-            modelCount: 1,
-            daily: [day],
-            startDate: startDate,
-            endDate: endDate,
-            updatedAt: updatedAt).toUsageSnapshot()
-        store._setSnapshotForTesting(providerSnapshot, provider: .mistral)
-        let tokenSnapshot = try #require(store.tokenSnapshot(
-            fromProviderSnapshot: providerSnapshot,
-            provider: .mistral))
-        store._setTokenSnapshotForTesting(tokenSnapshot, provider: .mistral)
+        let tokenSnapshot = CostUsageTokenSnapshot(
+            sessionTokens: 15,
+            sessionCostUSD: 9,
+            last30DaysTokens: 15,
+            last30DaysCostUSD: 9,
+            currencyCode: "EUR",
+            historyLabel: "This month",
+            daily: [
+                CostUsageDailyReport.Entry(
+                    date: "2026-05-26",
+                    inputTokens: 10,
+                    outputTokens: 5,
+                    totalTokens: 15,
+                    costUSD: 9,
+                    modelsUsed: nil,
+                    modelBreakdowns: nil),
+            ],
+            updatedAt: updatedAt)
+        store._setTokenSnapshotForTesting(tokenSnapshot, provider: .claude)
 
         var widgetSnapshots: [WidgetSnapshot] = []
         store._test_widgetSnapshotSaveOverride = { widgetSnapshots.append($0) }
@@ -705,11 +481,11 @@ extension UsageStoreCoverageTests {
         store.persistWidgetSnapshot(reason: "provider-cost")
         await store.widgetSnapshotPersistTask?.value
 
-        let mistralEntry = try #require(widgetSnapshots.last?.entries.first { $0.provider == .mistral })
-        #expect(mistralEntry.tokenUsage?.currencyCode == "EUR")
-        #expect(mistralEntry.tokenUsage?.sessionLabel == "Latest billing day")
-        #expect(mistralEntry.tokenUsage?.last30DaysLabel == "This month")
-        #expect(mistralEntry.tokenUsage?.last30DaysCostUSD == 9)
+        let claudeEntry = try #require(widgetSnapshots.last?.entries.first { $0.provider == .claude })
+        #expect(claudeEntry.tokenUsage?.currencyCode == "EUR")
+        #expect(claudeEntry.tokenUsage?.sessionLabel == "Today")
+        #expect(claudeEntry.tokenUsage?.last30DaysLabel == "This month")
+        #expect(claudeEntry.tokenUsage?.last30DaysCostUSD == 9)
     }
 
     @Test
@@ -727,20 +503,21 @@ extension UsageStoreCoverageTests {
                 enabled: false)
         }
         try settings.setProviderEnabled(
-            provider: .synthetic,
-            metadata: #require(metadata[.synthetic]),
+            provider: .claude,
+            metadata: #require(metadata[.claude]),
             enabled: true)
 
         let store = Self.makeUsageStore(settings: settings)
-        store.statuses[.synthetic] = ProviderStatus(indicator: .major, description: "Outage", updatedAt: Date())
+        store._test_providerAvailabilityOverride = { _ in false }
+        store.statuses[.claude] = ProviderStatus(indicator: .major, description: "Outage", updatedAt: Date())
 
-        #expect(store.enabledProvidersForDisplay() == [.synthetic])
+        #expect(store.enabledProvidersForDisplay() == [.claude])
         #expect(store.enabledProviders().isEmpty)
         #expect(store.enabledProvidersForBackgroundWork().isEmpty)
 
         await store.refresh()
 
-        #expect(store.statuses[.synthetic] == nil)
+        #expect(store.statuses[.claude] == nil)
         #expect(store.enabledProvidersForBackgroundWork().isEmpty)
     }
 
@@ -770,7 +547,7 @@ extension UsageStoreCoverageTests {
         let store = Self.makeUsageStore(settings: settings)
 
         #expect(store.tokenAccountErrorMessage(CancellationError()) == nil)
-        #expect(store.tokenAccountErrorMessage(ProviderFetchError.noAvailableStrategy(.copilot)) != nil)
+        #expect(store.tokenAccountErrorMessage(ProviderFetchError.noAvailableStrategy(.claude)) != nil)
     }
 
     @Test
@@ -1045,9 +822,7 @@ extension UsageStoreCoverageTests {
     }
 
     private static func makeSettingsStore(
-        suite: String,
-        zaiTokenStore: any ZaiTokenStoring = NoopZaiTokenStore(),
-        syntheticTokenStore: any SyntheticTokenStoring = NoopSyntheticTokenStore())
+        suite: String)
         -> SettingsStore
     {
         let defaults = UserDefaults(suiteName: suite)!
@@ -1057,19 +832,8 @@ extension UsageStoreCoverageTests {
         let settings = SettingsStore(
             userDefaults: defaults,
             configStore: configStore,
-            zaiTokenStore: zaiTokenStore,
-            syntheticTokenStore: syntheticTokenStore,
             codexCookieStore: InMemoryCookieHeaderStore(),
             claudeCookieStore: InMemoryCookieHeaderStore(),
-            cursorCookieStore: InMemoryCookieHeaderStore(),
-            opencodeCookieStore: InMemoryCookieHeaderStore(),
-            factoryCookieStore: InMemoryCookieHeaderStore(),
-            minimaxCookieStore: InMemoryMiniMaxCookieStore(),
-            minimaxAPITokenStore: InMemoryMiniMaxAPITokenStore(),
-            kimiTokenStore: InMemoryKimiTokenStore(),
-            augmentCookieStore: InMemoryCookieHeaderStore(),
-            ampCookieStore: InMemoryCookieHeaderStore(),
-            copilotTokenStore: InMemoryCopilotTokenStore(),
             tokenAccountStore: InMemoryTokenAccountStore())
         settings.providerDetectionCompleted = true
         return settings
@@ -1176,38 +940,6 @@ private actor StartupConnectivityRetrySleepGate {
         for waiter in waiters {
             waiter.resume()
         }
-    }
-}
-
-private final class InMemoryZaiTokenStore: ZaiTokenStoring, @unchecked Sendable {
-    var value: String?
-
-    init(value: String? = nil) {
-        self.value = value
-    }
-
-    func loadToken() throws -> String? {
-        self.value
-    }
-
-    func storeToken(_ token: String?) throws {
-        self.value = token
-    }
-}
-
-private final class InMemorySyntheticTokenStore: SyntheticTokenStoring, @unchecked Sendable {
-    var value: String?
-
-    init(value: String? = nil) {
-        self.value = value
-    }
-
-    func loadToken() throws -> String? {
-        self.value
-    }
-
-    func storeToken(_ token: String?) throws {
-        self.value = token
     }
 }
 

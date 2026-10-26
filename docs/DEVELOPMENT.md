@@ -26,7 +26,7 @@ swift build
 # Run the isolated, sharded normal profile (Codex/Claude and shared app coverage)
 make test
 
-# Explicitly restore all offline provider/plugin/hook/iCloud tests
+# Compatibility profile name; the same retained Codex/Claude/shared source
 CODEXBAR_TEST_PROFILE=full make test
 
 # Required after code changes
@@ -97,20 +97,26 @@ processes, access live accounts or credentials, sign, or publish.
 
 ### Native workflow proofs
 
-`Scripts/verify_packaged_relocation.sh` exercises only the packaged **resource**
-entrypoints (CB-N6): copied helper, symlinked helper, and app resource smoke, followed
-by all three missing-bundle negative controls. Every invocation sets
-`CODEXBAR_RESOURCE_SMOKE=1`. It never executes ordinary app startup or the survival
-phase in `verify_packaged_app_launch.sh`. Resource success is not menu, window,
-provider, installed-app, or full native UI proof. This resource-only check needs no
-Aqua session; a future ordinary-app/UI proof would need one and an independently
-qualified synthetic startup boundary.
+`Scripts/verify_packaged_relocation.sh` has two explicit source-qualified modes.
+The default `resources` mode applies to builds retaining tracked Core resources.
+It exercises the packaged resource entrypoints (CB-N6): copied helper, symlinked
+helper, and app resource smoke, followed by all three missing-bundle negative
+controls. These probes set `CODEXBAR_RESOURCE_SMOKE=1` and force Core plugin loads.
+The `cli-relocation` mode applies only when the qualified source has removed Core
+resources. It runs only copied and symlinked helper `--help`, without the deleted
+smoke flag or ordinary app startup, and reports app resource proof unavailable.
+Wrong mode/source combinations fail before execution. Neither mode executes the
+survival phase in `verify_packaged_app_launch.sh`, needs Aqua, or proves menu,
+window, provider, installed-app, or full native UI behavior.
 
 Before running, qualify the exact disposable build against its source and review
-both smoke entrypoints plus their transitive initialization. The review flag below
-records that prerequisite; it cannot prove provenance by itself. The script checks
-the bundle's embedded commit prefix against the full supplied SHA and records copied
-executable hashes. Build qualification, architecture/signature checks, and any build
+the selected entrypoints plus their transitive initialization. Resource mode requires
+`--resource-entrypoints-reviewed`; CLI mode separately requires
+`--cli-entrypoints-reviewed`, including review of `--help` initialization. A review
+flag records that prerequisite; it cannot prove provenance by itself. The script
+requires the exact checkout root, clean tracked source, and HEAD matching the supplied
+full SHA, checks the bundle's embedded commit prefix, and records copied executable
+hashes. Build qualification, architecture/signature checks, and any build
 commands belong to the caller. Do not supply an installed app or build via an
 automatic launch wrapper. When packaging is authorized separately, use the existing
 `CODEXBAR_SKIP_LAUNCH_SMOKE=1` option to suppress its ordinary launch smoke.
@@ -123,6 +129,27 @@ bash Scripts/verify_packaged_relocation.sh \
   --qualified-source-commit FULL_40_CHARACTER_SOURCE_SHA \
   --resource-entrypoints-reviewed
 ```
+
+For a qualified slim build with Core resource inputs removed, use the separate mode:
+
+```bash
+bash Scripts/verify_packaged_relocation.sh \
+  --app /absolute/path/to/qualified/CodexBar.app \
+  --checkout /absolute/path/to/source-checkout \
+  --scratch-parent /absolute/path/to/existing-owned-proof-parent \
+  --qualified-source-commit FULL_40_CHARACTER_SOURCE_SHA \
+  --mode cli-relocation --cli-entrypoints-reviewed
+```
+
+This proves CLI help relocation only. App resource-load proof is unavailable and
+application lifetime is not tested. `verify_packaged_app_launch.sh` separately
+retains bounded normal app liveness. Its `CODEXBAR_LAUNCH_SMOKE_RESOURCE_ONLY=1`
+mode runs only the selected resource probes or slim CLI help probes and explicitly
+does not test application lifetime. Ordinary liveness does not force lazy resource
+loads. Core smoke never forced KeyboardShortcuts or app-icon loads; their existing
+strict package presence checks remain, without a claim of deterministic runtime
+consumption. App/CLI packaging selects Core bundle membership from tracked source
+inputs and excludes stale Core bundles when those inputs have been removed.
 
 Use an existing canonical, disk-backed scratch parent outside the denied checkout
 and bundle. The caller owns that parent. The verifier allocates one private child,
@@ -138,10 +165,11 @@ The sandbox denies by default, allowing system-library reads and owned scratch w
 explicitly denying checkout reads. It allows reading the literal root directory for
 dyld startup; that grant does not allow reading descendant file contents. It grants no network, preference/Keychain Mach
 service access, or child forks. A readable control and a denied checkout read must
-both succeed before any smoke entrypoint runs. This is needed even for the resource
-smoke: plugin engine selection currently consults `UserDefaults.standard`. Synthetic
-`HOME` alone does not isolate defaults. If the restricted smoke cannot initialize,
-report failure and investigate; do not weaken it to access live defaults or providers.
+both succeed before either mode's entrypoints run. Legacy resource builds selected
+plugin engines through `UserDefaults.standard`; slim CLI initialization also needs
+its own reviewed boundary. Synthetic `HOME` alone does not isolate defaults. If a
+restricted probe cannot initialize, report failure and investigate; do not weaken
+it to access live defaults or providers.
 Only exit 1 with the exact missing-bundle diagnostic counts as a negative control;
 timeouts, crashes, signing failures and other startup errors do not.
 
@@ -151,7 +179,7 @@ failure and cleanup readback. A final status of zero is required; an intermediat
 resource pass followed by cleanup failure is a failed run. Missing macOS or
 `sandbox-exec` is unavailable (exit 2), never a skipped pass. Synthetic lifecycle
 regressions are run separately with
-`bash Scripts/test_verify_packaged_relocation.sh`; they use fake resource responses
+`bash Scripts/test_verify_packaged_relocation.sh`; they use fake resource/help responses
 and owned Python children, not a real bundle, TCC, live stores, or providers.
 
 G-CB1 is a separate, bounded no-prompt query:
@@ -297,10 +325,9 @@ For an aggregate command that must keep its original selection and parallelism, 
 `./Scripts/test.sh --command swift test --parallel`. This mode runs the command once,
 without discovery, sharding, or retries, inside the same fixture-parent and process-drain
 lifecycle. It keeps the enclosing CI job's deadline rather than the per-shard timeout.
-It rejects discovery/shard selectors. The plugin engine A/B script uses this mode around
-both existing engine passes, sharing one invocation parent and retaining `--skip-build`
-for the second pass. Both CI entry points inherit the same file/Keychain isolation as
-the ordinary test runner; neither depends on environment left by a previous CI step.
+It rejects discovery/shard selectors. This command mode inherits the same file/Keychain
+isolation as the ordinary test runner and does not depend on environment left by a
+previous CI step. Removed plugin-engine scripts are not a supported product route.
 
 Direct `swift test` commands require both variables naming existing canonical directories: workspace
 root and a strict workspace-descendant fixture parent. Prepare that parent through the invoking
@@ -602,9 +629,9 @@ may defer for a draft, but that still leaves the aggregate incomplete. Whole-wor
 
 | Pull-request changed paths | Required compiler/test coverage |
 | --- | --- |
-| macOS app, widget, native-only executables/resources, native tests (except shared plugin sources below) | Both complete macOS shards |
+| macOS app, widget, native-only executables/resources, native tests | Both complete macOS shards |
 | Shared core/CLI/other source, C modules, `Package.swift`, `Package.resolved` | macOS, both glibc architectures, musl |
-| `TestsLinux`, `TestsPlugin` (including its symlinked sources), adaptive replay test directories | macOS and both glibc architectures |
+| `TestsLinux` and adaptive replay test directories | macOS and both glibc architectures |
 | Documentation/site assets and explicitly listed portable scripts/workflows | Portable lint |
 | Unknown paths, global build/test harnesses or policy changes | All platforms |
 
@@ -614,7 +641,7 @@ empty diff. Manual runs and unavailable PR/push bases also select all platforms.
 platform gates against the previous main head, running the normal profile on each selected platform. Source resources are
 classified before Markdown suffixes. Changes to the classifier, aggregate verifier and primary CI workflow
 select all platforms. The path partition selects platforms; the [test profile](testing-profiles.md) selects
-normal or explicit-full feature coverage without deleting test source.
+normal or full compatibility names for the same retained source.
 
 Selected macOS runs require `swift-build-macos` before both shards. It compiles once and distributes a
 verified same-run build artifact; workers fail closed on an invalid handoff and execute with `--skip-build`.
@@ -628,13 +655,10 @@ configuration with the same pinned compiler, static SDK, target triple and stati
 builds retain release configuration. Both configurations reject dynamic-loader or library dependencies.
 Release-only branches and optimizer/link behavior are therefore checked on main/manual runs. Existing Linux campaign step IDs retain their historical `release` label; consult the recorded
 CLI build configuration when comparing PR measurements with older runs. macOS retains two complete shards of the selected profile
-and groups of four. JavaScript product-integrity checks run in portable lint. The explicit full profile
-also runs plugin JavaScriptCore goldens and QuickJS coverage; normal excludes unused plugin behavior.
+and groups of four. Portable source/script integrity checks run in lint. Provider plugins, JavaScriptCore integration and QuickJS were removed.
 
 `Scripts/test_ci_path_gate.sh` checks platform partitions, malformed changes, rename/deletion behavior,
-result combinations and the workflow's explicit glibc gate/result arguments. `CodexBarLinuxTests` includes
-`AntigravityLocalhostSessionLifetimeTests` on both macOS and Linux in the explicit full profile. It checks session reuse and concurrent
-synthetic loopback failures without credentials; this coverage does not establish or fix Linux dispatch crashes.
+result combinations and the workflow's explicit glibc gate/result arguments.
 
 ### Native and packaging tier
 

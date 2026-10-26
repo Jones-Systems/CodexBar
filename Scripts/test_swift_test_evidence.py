@@ -196,9 +196,7 @@ class CampaignActivationTests(unittest.TestCase):
             self.assertIn(f"      {name}:", workflow)
         self.assertIn("Scripts/ci_swift_test_campaign.py plan", workflow)
         self.assertIn("CODEXBAR_TEST_PROFILE: ${{ github.event_name == 'workflow_dispatch' && inputs.test_profile || 'normal' }}", workflow)
-        self.assertIn('if [[ "$CODEXBAR_TEST_PROFILE" == full', workflow)
-        self.assertIn("'${{ matrix.shard-index }}' == 0", workflow)
-        self.assertIn("extra+=(--jsc-goldens)", workflow)
+        self.assertNotIn("--jsc-goldens", workflow)
 
     def test_native_evidence_is_opt_in(self):
         source = (ROOT / "Scripts/ci_swift_test_by_suite.py").read_text()
@@ -249,8 +247,8 @@ class CampaignPlanTests(unittest.TestCase):
         self.assertIn("retention-days: 7", job)
         self.assertIn("steps.campaign-upload.outcome == 'success'", job)
         self.assertIn("./Scripts/test.sh --parallel", workflow)
-        self.assertIn("extra+=(--jsc-goldens)", swift_step)
-        self.assertIn('-d Sources/CodexBarCore/Resources/Plugins', swift_step)
+        self.assertNotIn("--jsc-goldens", swift_step)
+        self.assertNotIn("CODEXBAR_PLUGIN_ENGINE", swift_step)
         self.assertNotIn("GITHUB_ENV", (ROOT / "Scripts/ci_swift_test_campaign.py").read_text())
 
     def test_prepare_refuses_unproved_warm_cold_and_storage(self):

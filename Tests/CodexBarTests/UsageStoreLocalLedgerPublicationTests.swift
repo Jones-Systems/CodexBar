@@ -54,7 +54,7 @@ struct UsageStoreLocalLedgerPublicationTests {
             fixture.expectIdle(loadCount: 0)
 
             fixture.store.settings.codexLocalSessionCostLedgerEnabled = true
-            for provider in [UsageProvider.claude, .cursor] {
+            for provider in [UsageProvider.claude] {
                 fixture.store.settings.setProviderEnabled(
                     provider: provider, metadata: fixture.store.metadata(for: provider), enabled: true)
                 await fixture.store.refreshTokenUsageNow(for: provider, force: false)

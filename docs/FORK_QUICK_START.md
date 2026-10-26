@@ -61,7 +61,7 @@ and provider/browser-owned items can still cause prompts. See
 | Native and portable tests | `Tests/CodexBarTests`, `TestsLinux` |
 
 Use the [architecture overview](architecture.md), [provider authoring guide](provider.md),
-[provider inventory](providers.md), [CLI guide](cli.md), and [plugin guide](plugins.md)
+[provider inventory](providers.md), [CLI guide](cli.md), and [product scope](engineering-specs/slim-codex-claude-product.md)
 for the relevant source surface. A provider entry or command definition is not proof
 of current account access or live service availability.
 

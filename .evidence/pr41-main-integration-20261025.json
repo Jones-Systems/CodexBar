@@ -1,0 +1,351 @@
+{
+  "schema": "codexbar-pr41-main-integration/v1",
+  "authority_effect": "none",
+  "recorded_at_utc": "2026-10-26T02:51:02.094484+00:00",
+  "repository": {
+    "full_name": "Jones-Systems/CodexBar",
+    "id": 1425008735,
+    "node_id": "R_kgDOVO_oXw"
+  },
+  "thread_id": "thread:delegated-task:command%3Amcp%3Ab036eeba-42d1-47f8-9599-19c6443cf03c%3Adelegate-task%3Acodexbar-slim-product-solmax-20261024-v1",
+  "worktree": "/home/malcolmjones/.t3/worktrees/Jones-CodexBar/work-slim-codex-claude-product-20261024",
+  "branch": "work/slim-codex-claude-product-20261024",
+  "git_owner": "existing product implementation coordinator",
+  "instruction": "Root-scoped ordinary merge of canonical main into the existing PR41 branch; root owns CI watch and remote integration. No main mutation, source redesign, work-note edits, or PR26 integration.",
+  "pr": "https://github.com/Jones-Systems/CodexBar/pull/41",
+  "base_branch": "main",
+  "parents_in_order": [
+    "ba523f60b7161e70a3afd201f87d49dd2b0e37fe",
+    "d897c6365ae03df9f2d939f0292dae820eeb0360"
+  ],
+  "merge_bases": [
+    "951c99a96b052e1a70898e75330554403bb643b3",
+    "91bd5fb4af704da9181212bea636d527a058e615"
+  ],
+  "preview": {
+    "command": [
+      "git",
+      "merge-tree",
+      "--write-tree",
+      "--messages",
+      "--name-only",
+      "ba523f60b7161e70a3afd201f87d49dd2b0e37fe",
+      "d897c6365ae03df9f2d939f0292dae820eeb0360"
+    ],
+    "exit_code": 0,
+    "tree": "dde55a62837c27f95b13805bc3c6007f32ab8eb1",
+    "conflict_paths": []
+  },
+  "merge": {
+    "command": [
+      "git",
+      "merge",
+      "--no-ff",
+      "--no-commit",
+      "d897c6365ae03df9f2d939f0292dae820eeb0360"
+    ],
+    "exit_code": 0,
+    "index_tree_before_receipt": "dde55a62837c27f95b13805bc3c6007f32ab8eb1",
+    "unmerged_index_entries": 0,
+    "manual_resolution_paths": []
+  },
+  "disposition": "GitHub reported dirty after retargeting. Both local merge-tree and the actual ordinary merge are clean. No conflict hunks or semantic choice occurred; the sole inherited delta is PR42\u2019s measurement report, copied exactly from main. The reason for the earlier GitHub conflict classification is not established.",
+  "qualified_tree_preservation": {
+    "entry_count": 2020,
+    "all_entries_same_mode_type_oid": true,
+    "before_manifest_sha256": "ced1f94bc2571d044c36bc7a200e38524663cae4ff7963805b1e150b26442509",
+    "merged_manifest_sha256_before_receipt": "3f8189d1f3e4ba85f618506d536905fd268437fc5d47fb0d20c8754c906ffc91",
+    "protected_objects": [
+      {
+        "path": "Sources",
+        "before_object": "588cffc206c857b676dec75e03a66c38b683b56f",
+        "after_object": "588cffc206c857b676dec75e03a66c38b683b56f",
+        "identical": true
+      },
+      {
+        "path": "WidgetExtension",
+        "before_object": "700ca1bb9eba1081612d201649c6941f2e90edc0",
+        "after_object": "700ca1bb9eba1081612d201649c6941f2e90edc0",
+        "identical": true
+      },
+      {
+        "path": "Tests",
+        "before_object": "3f4bba6c65fae4c725bf867252c20d736e1bac00",
+        "after_object": "3f4bba6c65fae4c725bf867252c20d736e1bac00",
+        "identical": true
+      },
+      {
+        "path": "TestsLinux",
+        "before_object": "1d5b3ec82d5cc043fe90706bc192174543236a0c",
+        "after_object": "1d5b3ec82d5cc043fe90706bc192174543236a0c",
+        "identical": true
+      },
+      {
+        "path": "Scripts",
+        "before_object": "82f74ebcc5d1bbdf8034d62c0b3092657dae9b40",
+        "after_object": "82f74ebcc5d1bbdf8034d62c0b3092657dae9b40",
+        "identical": true
+      },
+      {
+        "path": ".github",
+        "before_object": "c9760f6ecf0a61d8798e755063313e788ece3b48",
+        "after_object": "c9760f6ecf0a61d8798e755063313e788ece3b48",
+        "identical": true
+      },
+      {
+        "path": "Package.swift",
+        "before_object": "3fa6070712fd37a166bd74f17421a1cd809a4b27",
+        "after_object": "3fa6070712fd37a166bd74f17421a1cd809a4b27",
+        "identical": true
+      },
+      {
+        "path": "Package.resolved",
+        "before_object": "86032ac98b9fb1829dc1ce209dd92670048c987e",
+        "after_object": "86032ac98b9fb1829dc1ce209dd92670048c987e",
+        "identical": true
+      },
+      {
+        "path": "AGENTS.md",
+        "before_object": "8ae4dbbfaa3da709b2cb10651f1c75668d30b042",
+        "after_object": "8ae4dbbfaa3da709b2cb10651f1c75668d30b042",
+        "identical": true
+      },
+      {
+        "path": "docs/work-notes/slim-codex-claude-product.md",
+        "before_object": "132e09503900720a724bcc9a4a8883b391fa3420",
+        "after_object": "132e09503900720a724bcc9a4a8883b391fa3420",
+        "identical": true
+      },
+      {
+        "path": "docs/engineering-specs/slim-codex-claude-product.md",
+        "before_object": "4503d53e89ee2ceaa16a1bb96b199761c48f92f1",
+        "after_object": "4503d53e89ee2ceaa16a1bb96b199761c48f92f1",
+        "identical": true
+      },
+      {
+        "path": "docs/engineering-specs/slim-codex-claude-comparison.json",
+        "before_object": "37b2c6f62494a07f6e6142f02374e2a5e3b20177",
+        "after_object": "37b2c6f62494a07f6e6142f02374e2a5e3b20177",
+        "identical": true
+      }
+    ]
+  },
+  "main_report": {
+    "path": "docs/work-notes/used-feature-test-measurements.md",
+    "before_entry": null,
+    "after_entry": "100644 blob 649b350144a3e16ec3c4714259a1cf24e5252a92",
+    "main_entry": "100644 blob 649b350144a3e16ec3c4714259a1cf24e5252a92",
+    "blob_sha256": "961946c52822c898978961d2f5d594fd326a1b218c20572d1e2fc3deb4b998ca",
+    "line_count": 236
+  },
+  "prior_qualification": {
+    "head": "ba523f60b7161e70a3afd201f87d49dd2b0e37fe",
+    "run_id": 40186271235,
+    "all_nine_checks": "success on that exact prior head only; not qualification of this new merge commit"
+  },
+  "affected_checks": [
+    {
+      "label": "documentation-links",
+      "command": [
+        "node",
+        "Scripts/check-documentation-links.mjs"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.253,
+      "admission": {
+        "schema": "work-capacity-admission/v1",
+        "collected_at_utc": "2026-10-26T02:50:06Z",
+        "status": "ok",
+        "admission": {
+          "agent_batch_ceiling": 10,
+          "memory_batch_ceiling": 10,
+          "cpu_batch_ceiling": 10,
+          "serial_test_process_ceiling": 1,
+          "broad_test_allowed": true,
+          "measurements": {
+            "ram_available_gib": 40.88,
+            "cpu_used_percent": 37.62,
+            "effective_cpu_capacity": 16.0,
+            "one_fully_used_core_percent": 6.25,
+            "normalized_load_one_minute": 0.4556,
+            "sampled_steal_percent": 0.0,
+            "cpu_psi_some_avg10_percent": 2.33
+          },
+          "summary": "CPU 37.62% used; 40.88 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+        },
+        "warnings": [],
+        "errors": [],
+        "unavailable_sources": []
+      },
+      "log": ".build/slim-product-work/main-integration-ba523f60-20261025/documentation-links.log",
+      "log_sha256": "877cf25a3c358e05acbb72c11e97767c233ad30a41bec251aeda53a8fc71e4f5",
+      "status": "passed"
+    },
+    {
+      "label": "profile-validation",
+      "command": [
+        "python3",
+        "-B",
+        "Scripts/test_profiles.py",
+        "validate"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.048,
+      "admission": {
+        "schema": "work-capacity-admission/v1",
+        "collected_at_utc": "2026-10-26T02:50:06Z",
+        "status": "ok",
+        "admission": {
+          "agent_batch_ceiling": 10,
+          "memory_batch_ceiling": 10,
+          "cpu_batch_ceiling": 10,
+          "serial_test_process_ceiling": 1,
+          "broad_test_allowed": true,
+          "measurements": {
+            "ram_available_gib": 40.98,
+            "cpu_used_percent": 29.59,
+            "effective_cpu_capacity": 16.0,
+            "one_fully_used_core_percent": 6.25,
+            "normalized_load_one_minute": 0.4556,
+            "sampled_steal_percent": 0.312,
+            "cpu_psi_some_avg10_percent": 2.33
+          },
+          "summary": "CPU 29.59% used; 40.98 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+        },
+        "warnings": [],
+        "errors": [],
+        "unavailable_sources": []
+      },
+      "log": ".build/slim-product-work/main-integration-ba523f60-20261025/profile-validation.log",
+      "log_sha256": "93208715d5d6bf3850a90ec348173bc25f41f8278b15d859f20539744546325b",
+      "status": "passed"
+    },
+    {
+      "label": "generated-parser-hash",
+      "command": [
+        "bash",
+        "Scripts/regenerate-codex-parser-hash.sh",
+        "--check"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.093,
+      "admission": {
+        "schema": "work-capacity-admission/v1",
+        "collected_at_utc": "2026-10-26T02:50:07Z",
+        "status": "ok",
+        "admission": {
+          "agent_batch_ceiling": 10,
+          "memory_batch_ceiling": 10,
+          "cpu_batch_ceiling": 10,
+          "serial_test_process_ceiling": 1,
+          "broad_test_allowed": true,
+          "measurements": {
+            "ram_available_gib": 40.96,
+            "cpu_used_percent": 18.44,
+            "effective_cpu_capacity": 16.0,
+            "one_fully_used_core_percent": 6.25,
+            "normalized_load_one_minute": 0.4556,
+            "sampled_steal_percent": 0.0,
+            "cpu_psi_some_avg10_percent": 2.33
+          },
+          "summary": "CPU 18.44% used; 40.96 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+        },
+        "warnings": [],
+        "errors": [],
+        "unavailable_sources": []
+      },
+      "log": ".build/slim-product-work/main-integration-ba523f60-20261025/generated-parser-hash.log",
+      "log_sha256": "8cf06d55f90a74224ec56a68e869324dcd3c25ce4bec137ae143c274065728d6",
+      "status": "passed"
+    },
+    {
+      "label": "make-check",
+      "command": [
+        "make",
+        "check"
+      ],
+      "exit_code": 2,
+      "elapsed_seconds": 0.115,
+      "admission": {
+        "schema": "work-capacity-admission/v1",
+        "collected_at_utc": "2026-10-26T02:50:07Z",
+        "status": "ok",
+        "admission": {
+          "agent_batch_ceiling": 10,
+          "memory_batch_ceiling": 10,
+          "cpu_batch_ceiling": 10,
+          "serial_test_process_ceiling": 1,
+          "broad_test_allowed": true,
+          "measurements": {
+            "ram_available_gib": 40.89,
+            "cpu_used_percent": 19.87,
+            "effective_cpu_capacity": 16.0,
+            "one_fully_used_core_percent": 6.25,
+            "normalized_load_one_minute": 0.4556,
+            "sampled_steal_percent": 0.0,
+            "cpu_psi_some_avg10_percent": 2.63
+          },
+          "summary": "CPU 19.87% used; 40.89 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+        },
+        "warnings": [],
+        "errors": [],
+        "unavailable_sources": []
+      },
+      "log": ".build/slim-product-work/main-integration-ba523f60-20261025/make-check.log",
+      "log_sha256": "16d2e9a4b5bd3a36f478379f55d481fe20826d06223084a5055efe3847569981",
+      "status": "unavailable-missing-plutil"
+    },
+    {
+      "label": "make-test",
+      "command": [
+        "make",
+        "test"
+      ],
+      "exit_code": 2,
+      "elapsed_seconds": 0.122,
+      "admission": {
+        "schema": "work-capacity-admission/v1",
+        "collected_at_utc": "2026-10-26T02:50:07Z",
+        "status": "ok",
+        "admission": {
+          "agent_batch_ceiling": 10,
+          "memory_batch_ceiling": 10,
+          "cpu_batch_ceiling": 10,
+          "serial_test_process_ceiling": 1,
+          "broad_test_allowed": true,
+          "measurements": {
+            "ram_available_gib": 40.84,
+            "cpu_used_percent": 18.07,
+            "effective_cpu_capacity": 16.0,
+            "one_fully_used_core_percent": 6.25,
+            "normalized_load_one_minute": 0.4556,
+            "sampled_steal_percent": 0.0,
+            "cpu_psi_some_avg10_percent": 2.63
+          },
+          "summary": "CPU 18.07% used; 40.84 GiB RAM available; one fully used core is 6.25% of capacity; next agent batch ceiling 10."
+        },
+        "warnings": [],
+        "errors": [],
+        "unavailable_sources": []
+      },
+      "log": ".build/slim-product-work/main-integration-ba523f60-20261025/make-test.log",
+      "log_sha256": "bf113cfee31202a36be03b0ab699b1303b4ca1b209fbed0fcfad07c725b4fdf6",
+      "status": "unavailable-missing-swift"
+    }
+  ],
+  "whitespace_checks": {
+    "git_diff_check": 0,
+    "git_diff_cached_check": 0
+  },
+  "scratch": {
+    "path": ".build/slim-product-work/main-integration-ba523f60-20261025",
+    "disposition": "Preserved under explicit root instruction; no extra cleanup or frozen-handoff changes.",
+    "fixture_path": ".test-fixtures-co9_4xiq",
+    "fixture_absence_verified": true
+  },
+  "pr_body": {
+    "before_sha256": "03046815a24323a30d6d729f395510893f7ed9118b7f2bf70783cf197b52c4e0",
+    "policy": "Preserve the entire current root-authored body and append the integration disposition after publication."
+  },
+  "next_gate": "All nine applicable GitHub checks for the new merge head; root is sole watcher and merge owner. No child campaign, watch, rerun, merge, install, or host effect."
+}

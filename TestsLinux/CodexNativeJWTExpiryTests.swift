@@ -123,17 +123,6 @@ struct CodexNativeJWTExpiryTests {
         #expect(credentials.needsRefresh == (lastRefresh != Self.freshTimestamp))
     }
 
-    @Test
-    func `OpenCode keeps its explicit milliseconds rather than JWT expiry`() throws {
-        let token = Self.jwt(#"{"exp":0}"#)
-        let data = try JSONSerialization.data(withJSONObject: [
-            "openai": ["type": "oauth", "access": token, "expires": 4_102_444_800_000] as [String: Any],
-        ])
-        let credentials = try CodexOAuthCredentialsStore._parseOpenCodeForTesting(data: data)
-        #expect(credentials.source == .openCode)
-        #expect(credentials.expiresAt == Date(timeIntervalSince1970: 4_102_444_800))
-        #expect(!credentials.needsRefresh)
-    }
 
     @Test
     func `ID token expiry is not an access token scheduling hint`() throws {

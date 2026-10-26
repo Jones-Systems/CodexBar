@@ -23,10 +23,6 @@ ensure_oxfmt() {
   "${ROOT_DIR}/Scripts/install_lint_tools.sh" oxfmt
 }
 
-ensure_typescript() {
-  "${ROOT_DIR}/Scripts/install_lint_tools.sh" typescript
-}
-
 check_codex_parser_hash() {
   "${ROOT_DIR}/Scripts/regenerate-codex-parser-hash.sh" --check
 }
@@ -37,12 +33,6 @@ check_provider_manifests() {
 
 check_test_profiles() {
   "${ROOT_DIR}/Scripts/test.sh" --command python3 -B "${ROOT_DIR}/Scripts/test_test_profiles.py"
-}
-
-check_plugin_javascript() {
-  if [[ -d "${ROOT_DIR}/Sources/CodexBarCore/Resources/Plugins" ]]; then
-    "${ROOT_DIR}/Scripts/regenerate-plugin-js.sh" --check
-  fi
 }
 
 check_package_product_paths() {
@@ -152,7 +142,6 @@ run_portable_checks() {
   check_codex_parser_hash
   check_provider_manifests
   check_test_profiles
-  check_plugin_javascript
   check_package_product_paths
   check_package_strip
   check_package_signing
@@ -190,13 +179,9 @@ run_swiftlint() {
 collect_javascript_files() {
   JAVASCRIPT_FILES=("${ROOT_DIR}/docs/site.js")
   local file
-  for file in "${ROOT_DIR}"/Scripts/*.mjs "${ROOT_DIR}"/Sources/CodexBarCore/Resources/Plugins/*.js \
-    "${ROOT_DIR}"/Sources/CodexBarCore/Resources/Plugins/*.ts
+  for file in "${ROOT_DIR}"/Scripts/*.mjs
   do
     [[ -f "$file" ]] || continue
-    case "$(basename "$file")" in
-      sucrase-*.min.js) continue ;;
-    esac
     JAVASCRIPT_FILES+=("$file")
   done
 }
@@ -217,17 +202,9 @@ run_oxlint() {
     "${JAVASCRIPT_FILES[@]}"
 }
 
-run_typescript_check() {
-  if [[ -d "${ROOT_DIR}/Sources/CodexBarCore/Resources/Plugins" ]]; then
-    ensure_typescript
-    node "${ROOT_DIR}/.build/lint-tools/typescript/bin/tsc" --project "${ROOT_DIR}/tsconfig.plugins.json"
-  fi
-}
-
 run_javascript_checks() {
   run_oxfmt_check
   run_oxlint
-  run_typescript_check
 }
 
 cmd="${1:-lint}"
@@ -257,9 +234,6 @@ case "$cmd" in
     ensure_oxfmt
     collect_javascript_files
     "${BIN_DIR}/oxfmt" --config "${ROOT_DIR}/.oxfmtrc.json" --write "${JAVASCRIPT_FILES[@]}"
-    if [[ -d "${ROOT_DIR}/Sources/CodexBarCore/Resources/Plugins" ]]; then
-      "${ROOT_DIR}/Scripts/regenerate-plugin-js.sh" --write
-    fi
     ;;
   *)
     printf 'Usage: %s [lint|lint-linux|lint-macos|format]\n' "$(basename "$0")" >&2

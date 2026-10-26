@@ -68,7 +68,6 @@ struct ProvidersPane: View {
             settingsFields: self.extraSettingsFields(for: self.provider),
             settingsActions: self.extraSettingsActions(for: self.provider),
             settingsTokenAccounts: self.tokenAccountDescriptor(for: self.provider),
-            settingsOrganizations: self.extraSettingsOrganizations(for: self.provider),
             errorDisplay: self.providerErrorDisplay(self.provider),
             isErrorExpanded: self.expandedBinding(for: self.provider),
             onCopyError: { text in self.copyToPasteboard(text) },
@@ -398,14 +397,6 @@ struct ProvidersPane: View {
             .filter { $0.isVisible?() ?? true }
     }
 
-    private func extraSettingsOrganizations(
-        for provider: UsageProvider) -> ProviderSettingsOrganizationsDescriptor?
-    {
-        guard let impl = ProviderCatalog.implementation(for: provider) else { return nil }
-        let context = self.makeSettingsContext(provider: provider)
-        return impl.settingsOrganizations(context: context)
-    }
-
     func tokenAccountDescriptor(for provider: UsageProvider) -> ProviderSettingsTokenAccountsDescriptor? {
         guard let support = TokenAccountSupportCatalog.support(for: provider) else { return nil }
         let context = self.makeSettingsContext(provider: provider)
@@ -436,28 +427,12 @@ struct ProvidersPane: View {
                 }
             },
             showsOrganizationField: support.showsOrganizationField,
-            showsTeamModeControls: support.showsTeamModeControls,
-            addAccount: { label, token, usageScope, organizationID, workspaceID in
+            addAccount: { label, token, organizationID in
                 self.settings.addTokenAccount(
                     provider: provider,
                     label: label,
                     token: token,
-                    usageScope: usageScope,
-                    organizationID: organizationID,
-                    workspaceID: workspaceID)
-                Task { @MainActor in
-                    await ProviderInteractionContext.$current.withValue(.userInitiated) {
-                        await self.store.refreshProvider(provider, allowDisabled: true)
-                    }
-                }
-            },
-            updateAccount: { accountID, usageScope, organizationID, workspaceID in
-                self.settings.updateTokenAccount(
-                    provider: provider,
-                    accountID: accountID,
-                    usageScope: usageScope,
-                    organizationID: organizationID,
-                    workspaceID: workspaceID)
+                    organizationID: organizationID)
                 Task { @MainActor in
                     await ProviderInteractionContext.$current.withValue(.userInitiated) {
                         await self.store.refreshProvider(provider, allowDisabled: true)
@@ -472,13 +447,6 @@ struct ProvidersPane: View {
                     }
                 }
             },
-            primaryAddActionTitle: support.primaryAddActionTitle,
-            primaryAddAction: support.primaryAddActionTitle.map { _ in {
-                await implementation?.runTokenAccountPrimaryAction(context: context)
-                await ProviderInteractionContext.$current.withValue(.userInitiated) {
-                    await self.store.refreshProvider(provider, allowDisabled: true)
-                }
-            } },
             openConfigFile: {
                 if implementation?.openTokenFile(context: context) == true {
                     return
@@ -621,7 +589,6 @@ struct ProvidersPane: View {
             showOptionalCreditsAndExtraUsage: self.settings.showOptionalCreditsAndExtraUsage,
             claudeDailyRoutinesUsageVisible: self.settings.claudeDailyRoutinesUsageVisible,
             codexSparkUsageVisible: self.settings.codexSparkUsageVisible,
-            copilotBudgetExtrasEnabled: self.settings.copilotBudgetExtrasEnabled,
             showsAllUsageLanes: true,
             hidePersonalInfo: self.settings.hidePersonalInfo,
             weeklyPace: weeklyPace,

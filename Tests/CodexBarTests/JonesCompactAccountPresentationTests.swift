@@ -352,10 +352,10 @@ struct JonesCompactAccountPresentationTests {
 
     @Test(arguments: [1, 2, 3, 4, 5, 6, 8, 12])
     func `other providers retain default planning at every account count`(count: Int) {
-        let accounts = self.accounts(count: count, provider: .copilot)
+        let accounts = self.accounts(count: count, provider: .claude)
         for tailExpanded in [false, true] {
             let unchanged = JonesCompactAccountPresentation.plan(
-                for: .copilot,
+                for: .claude,
                 accounts: accounts,
                 expandedAccountIDs: [accounts[count - 1].id],
                 collapsedAccountIDs: [accounts[0].id],

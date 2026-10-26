@@ -19,9 +19,7 @@ struct StatusMenuSwitcherClickTests {
         let configStore = testConfigStore(suiteName: suite)
         return SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
     }
 
     private func makeInstalledSwitcherShortcutMonitor() -> (controller: StatusItemController, menu: StatusItemMenu) {
@@ -379,7 +377,7 @@ struct StatusMenuSwitcherClickTests {
         settings.statusChecksEnabled = false
         settings.refreshFrequency = .manual
         settings.mergeIcons = true
-        settings.selectedMenuProvider = .openai
+        settings.selectedMenuProvider = .codex
         settings.mergedMenuLastSelectedWasOverview = true
         settings.costUsageEnabled = true
         settings.costSummaryDisplayStyle = .both
@@ -387,30 +385,30 @@ struct StatusMenuSwitcherClickTests {
         let registry = ProviderRegistry.shared
         for provider in UsageProvider.allCases {
             guard let metadata = registry.metadata[provider] else { continue }
-            let shouldEnable = provider == .openai || provider == .claude
+            let shouldEnable = provider == .codex || provider == .claude
             settings.setProviderEnabled(provider: provider, metadata: metadata, enabled: shouldEnable)
         }
 
         let fetcher = UsageFetcher()
         let store = UsageStore(fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
         let now = Date(timeIntervalSince1970: 1_700_000_000)
-        let usage = OpenAIAPIUsageSnapshot(
+        let usage = CostUsageTokenSnapshot(
+            sessionTokens: 150,
+            sessionCostUSD: 9,
+            last30DaysTokens: 150,
+            last30DaysCostUSD: 9,
             daily: [
-                OpenAIAPIUsageSnapshot.DailyBucket(
-                    day: "2023-11-14",
-                    startTime: now,
-                    endTime: now.addingTimeInterval(86400),
-                    costUSD: 9,
-                    requests: 12,
+                CostUsageDailyReport.Entry(
+                    date: "2023-11-14",
                     inputTokens: 100,
-                    cachedInputTokens: 0,
                     outputTokens: 50,
                     totalTokens: 150,
-                    lineItems: [],
-                    models: []),
+                    costUSD: 9,
+                    modelsUsed: nil,
+                    modelBreakdowns: nil),
             ],
             updatedAt: now)
-        store._setSnapshotForTesting(usage.toUsageSnapshot(), provider: .openai)
+        store._setTokenSnapshotForTesting(usage, provider: .codex)
 
         let controller = StatusItemController(
             store: store,
@@ -426,7 +424,7 @@ struct StatusMenuSwitcherClickTests {
         controller.openMenus[ObjectIdentifier(menu)] = menu
 
         let openAIRow = try #require(menu.items.first {
-            ($0.representedObject as? String) == "overviewRow-openai"
+            ($0.representedObject as? String) == "overviewRow-codex"
         })
         let submenu = try #require(openAIRow.submenu)
         controller.openMenus[ObjectIdentifier(submenu)] = submenu
@@ -550,7 +548,7 @@ struct StatusMenuSwitcherClickTests {
         let registry = ProviderRegistry.shared
         for provider in UsageProvider.allCases {
             guard let metadata = registry.metadata[provider] else { continue }
-            let shouldEnable = provider == .codex || provider == .claude || provider == .cursor
+            let shouldEnable = provider == .codex || provider == .claude
             settings.setProviderEnabled(provider: provider, metadata: metadata, enabled: shouldEnable)
         }
 
@@ -629,7 +627,7 @@ struct StatusMenuSwitcherClickTests {
     @Test
     func `switcher hover styling keeps layout stable`() {
         let view = ProviderSwitcherView(
-            providers: [.codex, .claude, .cursor, .factory, .zai, .minimax, .alibaba],
+            providers: [.codex, .claude],
             selected: .provider(.codex),
             includesOverview: true,
             width: 300,
@@ -652,7 +650,7 @@ struct StatusMenuSwitcherClickTests {
     @Test
     func `switcher quota indicator preserves remaining percentage`() throws {
         let view = ProviderSwitcherView(
-            providers: [.claude, .grok],
+            providers: [.claude, .codex],
             selected: .provider(.claude),
             includesOverview: false,
             width: 180,
@@ -662,7 +660,7 @@ struct StatusMenuSwitcherClickTests {
                 switch provider {
                 case .claude:
                     5
-                case .grok:
+                case .codex:
                     95
                 default:
                     nil
@@ -680,9 +678,9 @@ struct StatusMenuSwitcherClickTests {
     @Test
     func `switcher quota indicator refresh updates fill ratios`() throws {
         var claudeRemaining = 5.0
-        var grokRemaining = 95.0
+        var codexRemaining = 95.0
         let view = ProviderSwitcherView(
-            providers: [.claude, .grok],
+            providers: [.claude, .codex],
             selected: .provider(.claude),
             includesOverview: false,
             width: 180,
@@ -692,8 +690,8 @@ struct StatusMenuSwitcherClickTests {
                 switch provider {
                 case .claude:
                     claudeRemaining
-                case .grok:
-                    grokRemaining
+                case .codex:
+                    codexRemaining
                 default:
                     nil
                 }
@@ -705,7 +703,7 @@ struct StatusMenuSwitcherClickTests {
         let initialHigh = try #require(initialRatios.last)
 
         claudeRemaining = 80
-        grokRemaining = 12
+        codexRemaining = 12
         view.updateQuotaIndicators()
 
         let updatedRatios = view._test_quotaIndicatorFillRatios()
@@ -717,9 +715,9 @@ struct StatusMenuSwitcherClickTests {
 
     @Test
     func `switcher quota indicator renders zero remaining empty`() {
-        var grokRemaining = 50.0
+        var codexRemaining = 50.0
         let view = ProviderSwitcherView(
-            providers: [.claude, .grok],
+            providers: [.claude, .codex],
             selected: .provider(.claude),
             includesOverview: false,
             width: 180,
@@ -729,15 +727,15 @@ struct StatusMenuSwitcherClickTests {
                 switch provider {
                 case .claude:
                     100
-                case .grok:
-                    grokRemaining
+                case .codex:
+                    codexRemaining
                 default:
                     nil
                 }
             },
             onSelect: { _ in })
 
-        grokRemaining = 0
+        codexRemaining = 0
         view.updateQuotaIndicators()
         view.updateConstraintsForSubtreeIfNeeded()
         view.layoutSubtreeIfNeeded()
@@ -750,9 +748,9 @@ struct StatusMenuSwitcherClickTests {
 
     @Test
     func `switcher keeps stable height when remaining becomes unavailable`() throws {
-        var grokRemaining: Double? = 50
+        var codexRemaining: Double? = 50
         let noQuotaView = ProviderSwitcherView(
-            providers: [.claude, .grok],
+            providers: [.claude, .codex],
             selected: .provider(.claude),
             includesOverview: false,
             width: 180,
@@ -761,7 +759,7 @@ struct StatusMenuSwitcherClickTests {
             weeklyRemainingProvider: { _ in nil },
             onSelect: { _ in })
         let view = ProviderSwitcherView(
-            providers: [.claude, .grok],
+            providers: [.claude, .codex],
             selected: .provider(.claude),
             includesOverview: false,
             width: 180,
@@ -771,8 +769,8 @@ struct StatusMenuSwitcherClickTests {
                 switch provider {
                 case .claude:
                     100
-                case .grok:
-                    grokRemaining
+                case .codex:
+                    codexRemaining
                 default:
                     nil
                 }
@@ -783,7 +781,7 @@ struct StatusMenuSwitcherClickTests {
         let quotaHeight = try #require(view._test_buttonFittingSizes().last?.height)
         #expect(quotaHeight == noQuotaHeight)
 
-        grokRemaining = nil
+        codexRemaining = nil
         view.updateQuotaIndicators()
 
         #expect(view._test_quotaIndicatorFillRatios().count == 1)
@@ -793,7 +791,7 @@ struct StatusMenuSwitcherClickTests {
 
     @Test
     func `text only switcher keeps stable height with quota bars`() throws {
-        let providers: [UsageProvider] = [.claude, .grok]
+        let providers: [UsageProvider] = [.claude, .codex]
         let textOnlyWithoutQuota = ProviderSwitcherView(
             providers: providers,
             selected: .provider(.claude),
@@ -816,26 +814,6 @@ struct StatusMenuSwitcherClickTests {
         let withoutQuotaHeight = try #require(textOnlyWithoutQuota._test_buttonFittingSizes().first?.height)
         let withQuotaHeight = try #require(textOnlyWithQuota._test_buttonFittingSizes().first?.height)
         #expect(withQuotaHeight == withoutQuotaHeight)
-    }
-
-    @Test
-    func `multi row switcher quota bars stay inside bounds`() {
-        let view = ProviderSwitcherView(
-            providers: [.codex, .claude, .cursor, .factory, .zai, .minimax, .alibaba],
-            selected: .provider(.codex),
-            includesOverview: true,
-            width: 300,
-            showsIcons: true,
-            iconProvider: { _ in NSImage(size: NSSize(width: 16, height: 16)) },
-            weeklyRemainingProvider: { _ in 50 },
-            onSelect: { _ in })
-        view.updateConstraintsForSubtreeIfNeeded()
-        view.layoutSubtreeIfNeeded()
-
-        for frame in view._test_buttonFrames() {
-            #expect(frame.minY >= 0)
-            #expect(frame.maxY <= view.bounds.maxY)
-        }
     }
 
     private static func arrowKeyEvent(keyCode: UInt16) throws -> NSEvent {
@@ -864,54 +842,5 @@ struct StatusMenuSwitcherClickTests {
             charactersIgnoringModifiers: characters,
             isARepeat: false,
             keyCode: keyCode))
-    }
-
-    @Test
-    func `multi-row switcher uses compact height and stays inside bounds`() {
-        // 14 providers + Overview forces the four-row path and includes multi-word titles.
-        let view = ProviderSwitcherView(
-            providers: [
-                .codex,
-                .claude,
-                .cursor,
-                .factory,
-                .zai,
-                .minimax,
-                .alibaba,
-                .opencodego,
-                .grok,
-                .groq,
-                .gemini,
-                .openrouter,
-                .perplexity,
-                .kiro,
-            ],
-            selected: .provider(.codex),
-            includesOverview: true,
-            width: 300,
-            showsIcons: true,
-            iconProvider: { _ in NSImage(size: NSSize(width: 16, height: 16)) },
-            weeklyRemainingProvider: { _ in 50 },
-            onSelect: { _ in })
-        view.updateConstraintsForSubtreeIfNeeded()
-        view.layoutSubtreeIfNeeded()
-
-        // All buttons must stay within switcher bounds (no vertical overflow).
-        let buttonFrames = view._test_buttonFrames()
-        let contentFrames = view._test_buttonContentFrames()
-        let trackFrames = view._test_quotaIndicatorTrackFrames()
-        for (frame, contentFrame) in zip(buttonFrames, contentFrames) {
-            #expect(frame.minY >= 0)
-            #expect(frame.maxY <= view.bounds.maxY)
-            #expect(abs((contentFrame?.midY ?? -1) - frame.height / 2) <= 0.5)
-        }
-        for (buttonFrame, trackFrame) in zip(buttonFrames.dropFirst(), trackFrames) {
-            #expect(trackFrame.minY >= buttonFrame.minY)
-            #expect(trackFrame.maxY <= buttonFrame.maxY)
-        }
-
-        #expect(view._test_rowCount() == 4)
-        #expect(view._test_rowHeight() == 39)
-        #expect(view.bounds.height == 168)
     }
 }

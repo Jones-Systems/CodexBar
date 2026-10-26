@@ -1,4 +1,5 @@
 import AppKit
+import CodexBarCore
 import Testing
 @testable import CodexBar
 
@@ -7,8 +8,10 @@ import Testing
 struct StatusMenuSwitcherLayoutTests {
     @Test
     func `overview switcher segment matches provider segment height when quota bars are present`() throws {
+        let providers: [UsageProvider] = [.claude, .codex]
+        #expect(Set(providers) == Set(UsageProvider.allCases))
         let view = ProviderSwitcherView(
-            providers: [.claude, .grok, .cursor],
+            providers: providers,
             selected: .overview,
             includesOverview: true,
             width: 300,
@@ -20,7 +23,7 @@ struct StatusMenuSwitcherLayoutTests {
         view.layoutSubtreeIfNeeded()
 
         let frames = view._test_buttonFrames()
-        #expect(frames.count == 4)
+        #expect(frames.count == 3)
         let overviewFrame = try #require(frames.first)
 
         for frame in frames.dropFirst() {
@@ -29,20 +32,35 @@ struct StatusMenuSwitcherLayoutTests {
             #expect(frame.maxY == overviewFrame.maxY)
         }
 
-        #expect(view._test_rowHeight() == 36)
+        // Overview and both retained providers use the inline layout, with quota bars on each provider.
+        #expect(view._test_rowCount() == 1)
+        #expect(view._test_rowHeight() == 30)
+        #expect(overviewFrame.height == view._test_rowHeight())
+        let trackFrames = view._test_quotaIndicatorTrackFrames()
+        #expect(trackFrames.count == 2)
+        #expect(view._test_quotaIndicatorFillRatios() == [0.5, 0.5])
+        #expect(view._test_quotaIndicatorVisibility().allSatisfy { !$0.trackHidden && !$0.fillHidden })
+        for (frame, trackFrame) in zip(frames.dropFirst(), trackFrames) {
+            #expect(trackFrame.width > 0)
+            #expect(trackFrame.height == 2)
+            #expect(trackFrame.minX >= frame.minX)
+            #expect(trackFrame.maxX <= frame.maxX)
+            #expect(trackFrame.minY >= frame.minY)
+            #expect(trackFrame.maxY <= frame.maxY)
+        }
     }
 
     @Test
     func `quota bars do not offset inline switcher content`() throws {
         let view = ProviderSwitcherView(
-            providers: [.codex, .devin],
+            providers: [.codex, .claude],
             selected: .provider(.codex),
             includesOverview: true,
             width: 300,
             showsIcons: true,
             iconProvider: { _ in NSImage(size: NSSize(width: 16, height: 16)) },
             weeklyRemainingProvider: { provider in
-                provider == .devin ? 50 : nil
+                provider == .claude ? 50 : nil
             },
             onSelect: { _ in })
         view.updateConstraintsForSubtreeIfNeeded()
@@ -74,13 +92,13 @@ struct StatusMenuSwitcherLayoutTests {
     @Test
     func `integrated quota indicator selects its provider`() {
         let view = ProviderSwitcherView(
-            providers: [.codex, .devin],
+            providers: [.codex, .claude],
             selected: .provider(.codex),
             includesOverview: true,
             width: 300,
             showsIcons: true,
             iconProvider: { _ in NSImage(size: NSSize(width: 16, height: 16)) },
-            weeklyRemainingProvider: { $0 == .devin ? 50 : nil },
+            weeklyRemainingProvider: { $0 == .claude ? 50 : nil },
             onSelect: { _ in })
 
         #expect(view._test_simulateRuntimeClickOnQuotaIndicator(buttonTag: 2))
@@ -91,7 +109,7 @@ struct StatusMenuSwitcherLayoutTests {
         try CodexBarLocalizationOverride.$appLanguage.withValue("tr") {
             for width in stride(from: CGFloat(280), through: CGFloat(330), by: 1) {
                 let view = ProviderSwitcherView(
-                    providers: [.codex, .devin],
+                    providers: [.codex, .claude],
                     selected: .overview,
                     includesOverview: true,
                     width: width,
