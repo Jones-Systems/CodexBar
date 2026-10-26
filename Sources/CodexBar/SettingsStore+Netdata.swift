@@ -9,7 +9,7 @@ extension SettingsStore {
     }
 
     static func loadNetdataConfiguration(userDefaults: UserDefaults) -> NetdataConfiguration {
-        guard let data = userDefaults.data(forKey: Self.netdataConfigurationKey),
+        guard let data = userDefaults.data(forKey: netdataConfigurationKey),
               let configuration = try? JSONDecoder().decode(NetdataConfiguration.self, from: data),
               (try? configuration.validate()) != nil
         else { return NetdataConfiguration() }

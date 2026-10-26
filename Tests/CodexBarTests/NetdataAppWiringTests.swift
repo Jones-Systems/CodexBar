@@ -23,7 +23,7 @@ struct NetdataAppWiringTests {
         #expect(item.button?.accessibilityIdentifier() == "CodexBar.StatusItem.netdata")
         harness.coordinator.start()
         await harness.fetches.waitForCalls(1)
-        await harness.finish(observation: try netdataTestObservation(now: harness.clock.now()))
+        try await harness.finish(observation: netdataTestObservation(now: harness.clock.now()))
         controller.menuWillOpen(menu)
         #expect(item.button?.title == "VPS 0% · 1.0 GiB avail")
         #expect(harness.coordinator.menuVisible)

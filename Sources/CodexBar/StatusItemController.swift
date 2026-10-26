@@ -1043,7 +1043,7 @@ extension StatusItemController {
         #if DEBUG
         guard !self.isReleasedForTesting else { return }
         #endif
-        let allItems = [self.statusItem] + Array(self.statusItems.values) + [self.netdataStatusItem].compactMap { $0 }
+        let allItems = [self.statusItem] + Array(self.statusItems.values) + [self.netdataStatusItem].compactMap(\.self)
         let visibleItems = allItems.filter(\.isVisible)
         for item in visibleItems {
             item.isVisible = false

@@ -11,11 +11,11 @@ struct NetdataConfigurationTests {
         unsupported.version = 2
         var invalid = netdataTestConfiguration()
         invalid.host?.environmentID = "local"
-        let records: [Data?] = [
+        let records: [Data?] = try [
             nil,
             Data("not JSON".utf8),
-            try JSONEncoder().encode(unsupported),
-            try JSONEncoder().encode(invalid),
+            JSONEncoder().encode(unsupported),
+            JSONEncoder().encode(invalid),
         ]
         for record in records {
             let defaults = InMemoryUserDefaults()

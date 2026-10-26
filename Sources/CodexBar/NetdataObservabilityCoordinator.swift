@@ -171,7 +171,8 @@ final class NetdataObservabilityCoordinator {
     private func observeWorkspace(lifecycleID: UUID) {
         for name in [NSWorkspace.willSleepNotification, NSWorkspace.didWakeNotification] {
             let token = self.workspaceNotifications.addObserver(
-                forName: name, object: nil, queue: .main) { [weak self] notification in
+                forName: name, object: nil, queue: .main)
+            { [weak self] notification in
                 let sleeping = notification.name == NSWorkspace.willSleepNotification
                 MainActor.assumeIsolated {
                     guard let self, self.isRunning, self.lifecycleID == lifecycleID else { return }

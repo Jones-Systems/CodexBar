@@ -14,9 +14,9 @@ struct NetdataObservabilityCoordinatorTests {
         invalid.host?.environmentID = "local"
         var disabled = netdataTestConfiguration()
         disabled.enabled = false
-        let records: [Data?] = [
-            nil, Data("corrupt".utf8), try JSONEncoder().encode(unsupported),
-            try JSONEncoder().encode(invalid), try JSONEncoder().encode(disabled),
+        let records: [Data?] = try [
+            nil, Data("corrupt".utf8), JSONEncoder().encode(unsupported),
+            JSONEncoder().encode(invalid), JSONEncoder().encode(disabled),
         ]
         for record in records {
             let defaults = InMemoryUserDefaults()
@@ -46,7 +46,7 @@ struct NetdataObservabilityCoordinatorTests {
         await harness.fetches.waitForCalls(1)
         coordinator.refresh()
         coordinator.refresh()
-        await harness.finish(observation: try netdataTestObservation(now: harness.clock.now()))
+        try await harness.finish(observation: netdataTestObservation(now: harness.clock.now()))
         #expect(await harness.fetches.callCount == 1)
         var due = try #require(coordinator.bridge.refreshState(environmentID: "vps-a")?.nextRefreshAt)
         #expect(due == harness.clock.now().addingTimeInterval(10))
@@ -57,7 +57,7 @@ struct NetdataObservabilityCoordinatorTests {
         #expect(coordinator.bridge.refreshState(environmentID: "vps-a")?.nextRefreshAt == due)
         harness.advance(to: due)
         await harness.fetches.waitForCalls(2)
-        await harness.finish(observation: try netdataTestObservation(now: harness.clock.now()))
+        try await harness.finish(observation: netdataTestObservation(now: harness.clock.now()))
         due = try #require(coordinator.bridge.refreshState(environmentID: "vps-a")?.nextRefreshAt)
         #expect(due == harness.clock.now().addingTimeInterval(5))
 
@@ -76,7 +76,7 @@ struct NetdataObservabilityCoordinatorTests {
         coordinator.refresh()
         await harness.fetches.waitForCalls(9)
         coordinator.refresh()
-        await harness.finish(observation: try netdataTestObservation(now: harness.clock.now()))
+        try await harness.finish(observation: netdataTestObservation(now: harness.clock.now()))
         #expect(await harness.fetches.callCount == 9)
         coordinator.stop()
         #expect(harness.scheduler.active.isEmpty)
@@ -114,7 +114,7 @@ struct NetdataObservabilityCoordinatorTests {
             coordinator.refresh()
             #expect(harness.constructedHosts.count == 1)
             #expect(await harness.fetches.maximumActive == 1)
-            await harness.fetches.finishNext(observation: try netdataTestObservation(now: harness.clock.now()))
+            try await harness.fetches.finishNext(observation: netdataTestObservation(now: harness.clock.now()))
             await oldTask?.value
             if transition == "disabled" {
                 #expect(!coordinator.isFetching)
@@ -189,7 +189,7 @@ struct NetdataObservabilityCoordinatorTests {
         let coordinator = harness.coordinator
         coordinator.start()
         await harness.fetches.waitForCalls(1)
-        await harness.finish(observation: try netdataTestObservation(now: harness.clock.now()))
+        try await harness.finish(observation: netdataTestObservation(now: harness.clock.now()))
         let sampledAt = harness.clock.now()
         harness.advance(to: sampledAt.addingTimeInterval(10))
         await harness.fetches.waitForCalls(2)
@@ -285,7 +285,9 @@ actor NetdataHeldFetches {
             self.maximumActive = max(self.maximumActive, self.pending.count)
             let ready = self.waiters.filter { $0.0 <= self.callCount }
             self.waiters.removeAll { $0.0 <= self.callCount }
-            for (_, waiter) in ready { waiter.resume() }
+            for (_, waiter) in ready {
+                waiter.resume()
+            }
         }
     }
 

@@ -134,6 +134,11 @@ Run the repository's contained `make test` and `make check` or their checked-in
 hosted CI equivalents on an authorized execution surface. No laptop test,
 compiler, capture or heavy lint process is allowed for this assignment.
 
+The owning pull request's description is this slice's deferred-review ledger;
+the coordinator persists findings at review fan-in. NETDATA-01 records partial
+fixture isolation in two wiring-test preferences selections, deferred under the
+owner's P2 rule. Do not claim complete synthetic isolation for those calls.
+
 <!-- codex-section:begin id="spec.netdata-app-lifetime#ctx.stop-recovery.001" -->
 ## Stop, Recovery, And Delivery Boundaries
 
