@@ -4,9 +4,30 @@ The CI/harness lane owns this source change in
 `work/mac-build-once-test-shards-20261024`, based on local diagnostic checkpoint
 `0862c61d967dfaab2d995567d6a0b1ab572d038b`. The coordinator reviewed exact inactive
 checkpoint `5f6469e2cc6b314902b9b9b86495cd14e7dc484c` and approved activation and
-normal publication to PR #40. The native compatibility flag is now true. Native
-behavior remains hosted-unverified. No independent campaign, local Mac execution,
-installation, signing or provider access occurred.
+normal publication to PR #40. The native compatibility flag is true. The historical
+repair checkpoints below culminated in qualified hosted producer/two-shard execution.
+No local Mac execution, installation, signing or provider access occurred in this source lane.
+
+## Qualified hosted closure
+
+Root qualified exact PR40 head `951c99a96b052e1a70898e75330554403bb643b3` in
+[run 40148474449](https://github.com/Jones-Systems/CodexBar/actions/runs/40148474449): all nine checks succeeded,
+including producer `121034849021` and skip-build shards `121037780364` / `121037780442`. Root observed
+complete-fingerprint verification across runner images and matching discovery SHA256
+`67d0307bbff37082f0df4ff1e1a95181e8bacf43d886e13801fd28f72216a49b`.
+Mac occupancy was 41.27 runner-minutes; DAG elapsed was 28m26s. Product descendant
+`ba523f60b7161e70a3afd201f87d49dd2b0e37fe` retained successful attempt-1 Mac results in
+[run 40186271235](https://github.com/Jones-Systems/CodexBar/actions/runs/40186271235), with 40.00 Mac
+runner-minutes / 29m33s DAG, 170 shard groups in total and zero worker builds/retries/timeouts; all nine
+checks ultimately passed after a targeted musl retry in attempt 2. Those CI timings are unpaired.
+
+This closes the previously pending actual-host closure and both-shard qualification gates for those exact
+heads. It does not prove compatibility for every future image, universal resolver completeness or installed-app
+behavior. Local Swift/plutil remain unavailable. All remaining sections preserve revision-bound historical
+intent, failures, fixes and pending statements at their original checkpoints, rather than live delivery holds.
+The later [cold-build observation](cold-build-size-measurement.md#qualified-hosted-observation) is separate
+measurement evidence and does not substitute for the native compatibility fingerprint. Root owns successor
+qualification/integration; no new campaign or native proof is claimed by this documentation-only closure.
 
 ## Intent and affected checks
 

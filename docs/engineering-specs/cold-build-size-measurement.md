@@ -13,7 +13,7 @@ Specification owner: measurement implementation lane
 
 Integration owner: CodexBar root coordinator
 
-Consumers: source reviewer, future hosted measurement operator
+Consumers: source reviewer, hosted measurement operator and results reviewer
 
 Authority effect: none
 <!-- codex-section:end id="spec.cold-build-size#ctx.artifact-header.001" -->
@@ -43,7 +43,8 @@ test discovery/execution, shard, replay, full-suite campaign or automatic retry 
 contract fixtures run first. Ordinary source-PR CI is additional: unknown/global harness paths conservatively
 select nine required jobs, including three macOS jobs with 80-minute caps. With a later observation this is
 up to ten jobs and 420 nominal macOS runner-minutes of configured caps, not predicted runtime or billing.
-No workflow is dispatched or observed by this implementation lane.
+The original source-only capsule dispatched or observed no workflow. Root later reviewed and dispatched the
+single observation recorded below; a separate bounded observer capsule collected its terminal evidence.
 <!-- codex-section:end id="spec.cold-build-size#req.scope.001" -->
 
 <!-- codex-section:begin id="spec.cold-build-size#iface.phases.001" -->
@@ -127,7 +128,7 @@ presence/flags without verifying trust or claiming all components are signature-
 This source checkpoint has driver SHA256
 `4a39afcf65a4a4b896636b383b753272be014b98d50cf08388f3a3d62761a5fb` and adapter SHA256
 `75089b0f3a08384fbadf8f783715112767fa8e2359aabf7e833043279746f4c0`.
-The future receipt independently records actual harness commit, helper hashes, block hashes and rendered
+Each receipt independently records actual harness commit, helper hashes, block hashes and rendered
 script hashes. These are new common harness bytes applied to two historical sources, not historical behavior.
 The selected blocks below are at the exact packager revisions/hashes above; line ends are inclusive.
 
@@ -193,7 +194,37 @@ fixtures remain separate checks. Run `make test` and `make check` when admitted;
 
 Root's concrete source review must assess the block/substitution mapping, the complete resource/widget layout,
 local-vs-GitHub metadata separation, cold-state/cache coverage, byte definitions and cancellation/cleanup/evidence
-behavior before selecting any hosted experiment. Xcode/Swift compilation, actual widget/cache placement,
-dispatch acceptance, app/CLI bytes, duration, signature observations and cleanup on macOS remain unproved until
-that separately authorized run. A green ordinary source PR would not prove the observation succeeded.
+behavior before selecting any hosted experiment. Those were pre-run acceptance gates; the separately reviewed
+run below supplies actual compilation, widget/cache, dispatch, size/timing, signature-metadata and successful
+macOS cleanup evidence for its exact inputs. A green ordinary source PR alone does not prove measurement
+success. Local Swift/plutil remain unavailable, and this successful run does not exercise full-build
+failure/cancellation or establish installed-app behavior or signature validity.
 <!-- codex-section:end id="spec.cold-build-size#ac.proof.001" -->
+
+<!-- codex-section:begin id="spec.cold-build-size#ctx.observation.001" -->
+## Accepted observation
+
+[Run 40199152659](https://github.com/Jones-Systems/CodexBar/actions/runs/40199152659), workflow `393256428`,
+attempt 1, succeeded with reviewed harness `16ae87423ca9017ef9f42d8a46a18ae6fff2f86a` and the fixed pair
+`91bd5fb4af704da9181212bea636d527a058e615` → `ba523f60b7161e70a3afd201f87d49dd2b0e37fe`.
+One active Mac job took 37m23s. It observed expanded regular-file app bytes 92034241 → 55578768
+(87.771 → 53.004 MiB, −39.61%), with nine links / 213 link-payload bytes separately on both sides.
+Debug outer seconds were 620.658944250 → 498.384087458; Swift internal seconds were 614.98 → 494.27.
+Five sequential commands per source totaled 1272.462223042 → 916.722154417 seconds (−27.96%).
+These are observed elapsed values from one baseline-first pair, confounded by network, load, order and
+OS/SDK page caches. They establish no general causal speedup or billed-runner saving.
+
+All four phase observations matched the required toolchain fingerprint and actual image
+`macos26 / 20261013.0424.1`, macOS 26.6.2 build 25G83, SDK 26.2 build 25C58, arm64 Apple M1 (Virtual).
+Four fresh-state absence checks, ten successful command/drain receipts, four phase cleanup absences and
+final root absence passed. Both Package.resolved files stayed unchanged; locked preparation/patch hashes
+matched. Complete inventories and all retained log hashes verified. No new package signing or app/provider
+launch occurred; vendor/linker signature metadata was retained without trust verification.
+
+The [measurement Work Note](../work-notes/cold-build-size-measurement.md#qualified-hosted-observation)
+records every phase, raw/stripped product and component totals, and remaining proof limits. Frozen local
+evidence lives at `.evidence-cold-build-size-20261025/observation-run40199152659/`; its verified 31-file
+manifest SHA256 is `09628fef308a5acd4a58cab7d7b02bd224f0d06695baf0bf2786abe69f10a8d4`.
+Later source integration does not change the historical pair, helper hashes or the accepted run's identity.
+No additional measurement is authorized by this documentation closure.
+<!-- codex-section:end id="spec.cold-build-size#ctx.observation.001" -->

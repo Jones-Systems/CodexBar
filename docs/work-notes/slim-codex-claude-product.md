@@ -72,13 +72,34 @@ nonblocking acquisition of
 <!-- codex-section:end work.slim-codex-claude-product#ownership -->
 
 <!-- codex-section:begin work.slim-codex-claude-product#evidence -->
-## Evidence and remaining gates
+## Qualified evidence and historical checkpoints
 
 Plan: [Engineering Spec](../engineering-specs/slim-codex-claude-product.md).
-Keep spend/history and high-limit scanner/persistence regressions pending root's
-separate fleet measurement decision. Before/after source and test accounting,
-local tool availability, hosted compilation and comparable app-size/build evidence
-will be recorded here as obtained. No binary-size or speed claim is made yet.
+Root qualified exact product head `ba523f60b7161e70a3afd201f87d49dd2b0e37fe` in
+[run 40186271235](https://github.com/Jones-Systems/CodexBar/actions/runs/40186271235): all nine required checks
+ultimately succeeded after a targeted musl retry in attempt 2. The original attempt-1 Mac producer/shards
+were retained: 40.00 Mac runner-minutes, 29m33s DAG elapsed, both shards completing 170 groups in total with
+zero worker builds, retries or timeouts. Qualified PR40 head `951c99a96b052e1a70898e75330554403bb643b3`,
+[run 40148474449](https://github.com/Jones-Systems/CodexBar/actions/runs/40148474449), recorded 41.27 Mac
+runner-minutes and 28m26s DAG elapsed. These CI runs are unpaired observations, not a causal speed comparison.
+
+The separately reviewed [cold-build observation](cold-build-size-measurement.md#qualified-hosted-observation)
+in run `40199152659` compared only `91bd5fb4af704da9181212bea636d527a058e615` then qualified `ba523f60`:
+expanded bundle 87.771 → 53.004 MiB (−39.61%), debug outer 620.659 → 498.384 seconds, and per-source
+command total 1272.462 → 916.722 seconds (−27.96%). It is one baseline-first pair with network/load/order/
+OS-page-cache confounds. Its full hashes, cold-state/cleanup proof and limits remain bound to that historical
+pair; subsequent integration heads do not retarget it. No installed-app or live provider behavior is proved.
+
+Local Swift/plutil limits remain. The child no-merge/install capsule above is historical child scope, not an
+owner hold on root integration. Root owns reconciliation, current-head qualification and merge; no merge or
+installation of this product head is claimed here. Spend/history and high-limit scanner/persistence proofs
+remain retained; the separate fleet-measurement decision is outside this closure.
+
+### Historical implementation checkpoints
+
+The entries below preserve evidence and pending gates at their stated revisions. Their earlier hosted
+qualification/app-size/build-time gaps are superseded by the exact qualified results above; unavailable
+local native tools and revision-specific limitations remain accurately recorded.
 
 Root cleared the cloud-only CodexbarApp edits after inspecting PR26 head
 `fe03150aa02651dccd190452e2dc0105c955b4be`: its bootstrap guards are confined
