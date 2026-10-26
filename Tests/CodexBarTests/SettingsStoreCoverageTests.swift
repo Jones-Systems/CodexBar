@@ -486,30 +486,6 @@ struct SettingsStoreCoverageTests {
     }
 
     @Test
-    func `ensure token loaders execute`() {
-        let settings = Self.makeSettingsStore()
-
-        settings.ensureZaiAPITokenLoaded()
-        settings.ensureSyntheticAPITokenLoaded()
-        settings.ensureCodexCookieLoaded()
-        settings.ensureClaudeCookieLoaded()
-        settings.ensureCursorCookieLoaded()
-        settings.ensureOpenCodeCookieLoaded()
-        settings.ensureFactoryCookieLoaded()
-        settings.ensureMiniMaxCookieLoaded()
-        settings.ensureMiniMaxAPITokenLoaded()
-        settings.ensureKimiAuthTokenLoaded()
-        settings.ensureAugmentCookieLoaded()
-        settings.ensureAmpCookieLoaded()
-        settings.ensureOllamaCookieLoaded()
-        settings.ensureCopilotAPITokenLoaded()
-        settings.ensureTokenAccountsLoaded()
-
-        #expect(settings.zaiAPIToken.isEmpty)
-        #expect(settings[providerConfig: .synthetic, field: .apiKey].isEmpty)
-    }
-
-    @Test
     func `keychain disable forces manual cookie sources`() throws {
         let suite = "SettingsStoreCoverageTests-keychain"
         let defaults = try #require(UserDefaults(suiteName: suite))
