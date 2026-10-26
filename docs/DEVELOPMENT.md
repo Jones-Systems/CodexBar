@@ -26,7 +26,7 @@ swift build
 # Run the isolated, sharded normal profile (Codex/Claude and shared app coverage)
 make test
 
-# Compatibility profile name; the same retained Codex/Claude/shared source
+# Include the four terminal-only CLI suites with all retained offline test source
 CODEXBAR_TEST_PROFILE=full make test
 
 # Required after code changes
