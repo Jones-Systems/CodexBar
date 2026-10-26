@@ -1618,3 +1618,22 @@
 "jones_updates_size_failure" = "Den här uppdateringen kan inte hämtas säkert. Installera en verifierad Jones-version.";
 "jones_updates_capacity_unknown" = "Tillgängligt utrymme kunde inte kontrolleras. Kontrollera diskarna och försök igen.";
 "jones_updates_capacity_low" = "Uppdateringar kräver minst %@ ledigt utrymme. Frigör utrymme och försök igen.";
+
+/* Device-local Netdata configuration and host menu (sv). */
+"netdata_title" = "Netdata-värdresurser";
+"netdata_enabled" = "Samla in värdresurser";
+"netdata_environment_id" = "Miljö-ID (inte local)";
+"netdata_host_label" = "Kort värdetikett";
+"netdata_loopback_origin" = "HTTP-loopback-ursprung";
+"netdata_machine_guid" = "Förväntat maskin-GUID";
+"netdata_dashboard_url" = "URL till instrumentpanel (valfritt)";
+"netdata_apply" = "Tillämpa";
+"netdata_saved" = "Sparat.";
+"netdata_invalid_configuration" = "Inte sparat. Kontrollera värdens identitet, etiketten, loopback-ursprunget och instrumentpanelens URL.";
+"netdata_configuration_help" = "Avstängt som standard. Tillämpa sparar den här enhetens konfiguration. Använd ett befintligt HTTP-loopback-ursprung utan sökväg eller avslutande snedstreck. Miljö-ID får inte vara local; etiketten är begränsad till 32 tecken. Instrumentpanelen är endast till för navigering: HTTPS eller loopback-HTTP, utan autentiseringsuppgifter, frågeparametrar eller fragment.";
+"netdata_cpu_value" = "CPU: %@";
+"netdata_ram_value" = "Tillgängligt RAM: %@";
+"netdata_sample_age_value" = "Provets ålder: %@";
+"netdata_availability_value" = "Tillgänglighet: %@";
+"netdata_source_value" = "Källa: %@";
+"netdata_age_seconds" = "%.0f sekunder";

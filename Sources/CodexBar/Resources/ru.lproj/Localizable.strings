@@ -1620,3 +1620,22 @@
 "jones_updates_size_failure" = "Невозможно безопасно загрузить это обновление. Установите проверенную сборку Jones.";
 "jones_updates_capacity_unknown" = "Не удалось проверить свободное место. Проверьте диски и повторите попытку.";
 "jones_updates_capacity_low" = "Для обновлений требуется не менее %@ свободного места. Освободите место и повторите попытку.";
+
+/* Device-local Netdata configuration and host menu (ru). */
+"netdata_title" = "Ресурсы хоста Netdata";
+"netdata_enabled" = "Собирать данные о ресурсах хоста";
+"netdata_environment_id" = "ID окружения (не local)";
+"netdata_host_label" = "Короткая метка хоста";
+"netdata_loopback_origin" = "HTTP-источник на петлевом адресе";
+"netdata_machine_guid" = "Ожидаемый GUID машины";
+"netdata_dashboard_url" = "URL панели (необязательно)";
+"netdata_apply" = "Применить";
+"netdata_saved" = "Сохранено.";
+"netdata_invalid_configuration" = "Не сохранено. Проверьте идентификатор хоста, метку, источник на петлевом адресе и URL панели.";
+"netdata_configuration_help" = "По умолчанию отключено. Кнопка «Применить» сохраняет конфигурацию этого устройства. Используйте существующий HTTP-источник на петлевом адресе без пути и завершающей косой черты. ID окружения не должен быть local; длина метки ограничена 32 символами. Панель служит только для навигации: HTTPS или HTTP на петлевом адресе, без учётных данных, параметров запроса и фрагментов.";
+"netdata_cpu_value" = "CPU: %@";
+"netdata_ram_value" = "Доступная RAM: %@";
+"netdata_sample_age_value" = "Возраст образца: %@";
+"netdata_availability_value" = "Доступность: %@";
+"netdata_source_value" = "Источник: %@";
+"netdata_age_seconds" = "%.0f с";

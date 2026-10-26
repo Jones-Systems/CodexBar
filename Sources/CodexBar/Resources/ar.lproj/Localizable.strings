@@ -1623,3 +1623,22 @@
 "jones_updates_size_failure" = "لا يمكن تنزيل هذا التحديث بأمان. ثبّت إصدار Jones تم التحقق منه.";
 "jones_updates_capacity_unknown" = "تعذّر التحقق من مساحة التخزين المتاحة. تحقّق من الأقراص ثم حاول مجددًا.";
 "jones_updates_capacity_low" = "تحتاج التحديثات إلى %@ على الأقل من المساحة المتاحة. أفرغ مساحة ثم حاول مجددًا.";
+
+/* Device-local Netdata configuration and host menu (ar). */
+"netdata_title" = "موارد المضيف في Netdata";
+"netdata_enabled" = "جمع موارد المضيف";
+"netdata_environment_id" = "معرّف البيئة (ليس local)";
+"netdata_host_label" = "تسمية قصيرة للمضيف";
+"netdata_loopback_origin" = "أصل HTTP على عنوان الاسترجاع";
+"netdata_machine_guid" = "GUID المتوقع للجهاز";
+"netdata_dashboard_url" = "عنوان URL للوحة المعلومات (اختياري)";
+"netdata_apply" = "تطبيق";
+"netdata_saved" = "تم الحفظ.";
+"netdata_invalid_configuration" = "لم يتم الحفظ. تحقق من هوية المضيف والتسمية وأصل عنوان الاسترجاع وعنوان URL للوحة المعلومات.";
+"netdata_configuration_help" = "معطّل افتراضيًا. يحفظ زر تطبيق إعدادات هذا الجهاز. استخدم أصل HTTP موجودًا على عنوان الاسترجاع دون مسار أو شرطة مائلة نهائية. يجب ألا يكون معرّف البيئة local؛ والتسمية محدودة بـ 32 حرفًا. لوحة المعلومات للتنقل فقط: HTTPS أو HTTP على عنوان الاسترجاع، دون بيانات اعتماد أو معاملات استعلام أو أجزاء عنوان.";
+"netdata_cpu_value" = "CPU: %@";
+"netdata_ram_value" = "RAM المتاحة: %@";
+"netdata_sample_age_value" = "عمر العينة: %@";
+"netdata_availability_value" = "التوفر: %@";
+"netdata_source_value" = "المصدر: %@";
+"netdata_age_seconds" = "%.0f ثانية";

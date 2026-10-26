@@ -1621,3 +1621,22 @@
 "jones_updates_size_failure" = "Bu güncelleme güvenli bir şekilde indirilemiyor. Doğrulanmış bir Jones derlemesi yükleyin.";
 "jones_updates_capacity_unknown" = "Kullanılabilir alan denetlenemedi. Disklerinizi kontrol ettikten sonra tekrar deneyin.";
 "jones_updates_capacity_low" = "Güncellemeler için en az %@ kullanılabilir alan gerekir. Yer açıp tekrar deneyin.";
+
+/* Device-local Netdata configuration and host menu (tr). */
+"netdata_title" = "Netdata ana makine kaynakları";
+"netdata_enabled" = "Ana makine kaynaklarını topla";
+"netdata_environment_id" = "Ortam kimliği (local olamaz)";
+"netdata_host_label" = "Kısa ana makine etiketi";
+"netdata_loopback_origin" = "HTTP geri döngü kökeni";
+"netdata_machine_guid" = "Beklenen makine GUID’si";
+"netdata_dashboard_url" = "Pano URL’si (isteğe bağlı)";
+"netdata_apply" = "Uygula";
+"netdata_saved" = "Kaydedildi.";
+"netdata_invalid_configuration" = "Kaydedilmedi. Ana makine kimliğini, etiketi, geri döngü kökenini ve pano URL’sini kontrol edin.";
+"netdata_configuration_help" = "Varsayılan olarak kapalıdır. Uygula, bu cihazın yapılandırmasını kaydeder. Yol veya sonda eğik çizgi içermeyen mevcut bir HTTP geri döngü kökeni kullanın. Ortam kimliği local olamaz; etiket 32 karakterle sınırlıdır. Pano yalnızca gezinme içindir: kimlik bilgileri, sorgu parametreleri veya parçalar içermeyen HTTPS ya da geri döngü HTTP kullanın.";
+"netdata_cpu_value" = "CPU: %@";
+"netdata_ram_value" = "Kullanılabilir RAM: %@";
+"netdata_sample_age_value" = "Örnek yaşı: %@";
+"netdata_availability_value" = "Kullanılabilirlik: %@";
+"netdata_source_value" = "Kaynak: %@";
+"netdata_age_seconds" = "%.0f saniye";

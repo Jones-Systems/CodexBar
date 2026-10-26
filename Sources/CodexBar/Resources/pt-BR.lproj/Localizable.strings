@@ -1619,3 +1619,22 @@
 "jones_updates_size_failure" = "Esta atualização não pode ser baixada com segurança. Instale uma versão verificada do Jones.";
 "jones_updates_capacity_unknown" = "Não foi possível verificar o espaço disponível. Verifique os discos e tente novamente.";
 "jones_updates_capacity_low" = "As atualizações precisam de pelo menos %@ de espaço disponível. Libere espaço e tente novamente.";
+
+/* Device-local Netdata configuration and host menu (pt-BR). */
+"netdata_title" = "Recursos do host Netdata";
+"netdata_enabled" = "Coletar recursos do host";
+"netdata_environment_id" = "ID do ambiente (diferente de local)";
+"netdata_host_label" = "Rótulo curto do host";
+"netdata_loopback_origin" = "Origem HTTP de loopback";
+"netdata_machine_guid" = "GUID esperado da máquina";
+"netdata_dashboard_url" = "URL do painel (opcional)";
+"netdata_apply" = "Aplicar";
+"netdata_saved" = "Salvo.";
+"netdata_invalid_configuration" = "Não foi salvo. Verifique a identidade do host, o rótulo, a origem de loopback e a URL do painel.";
+"netdata_configuration_help" = "Desativado por padrão. Aplicar salva a configuração deste dispositivo. Use uma origem HTTP de loopback existente sem caminho nem barra final. O ID do ambiente não pode ser local; o rótulo é limitado a 32 caracteres. O painel serve apenas para navegação: HTTPS ou HTTP de loopback, sem credenciais, parâmetros de consulta ou fragmentos.";
+"netdata_cpu_value" = "CPU: %@";
+"netdata_ram_value" = "RAM disponível: %@";
+"netdata_sample_age_value" = "Idade da amostra: %@";
+"netdata_availability_value" = "Disponibilidade: %@";
+"netdata_source_value" = "Fonte: %@";
+"netdata_age_seconds" = "%.0f segundos";

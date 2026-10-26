@@ -1650,3 +1650,22 @@
 "jones_updates_size_failure" = "無法安全下載此更新。請安裝已驗證的 Jones 建置版本。";
 "jones_updates_capacity_unknown" = "無法檢查可用儲存空間。請檢查磁碟後再試。";
 "jones_updates_capacity_low" = "更新至少需要 %@ 的可用儲存空間。請釋出空間後再試。";
+
+/* Device-local Netdata configuration and host menu (zh-Hant). */
+"netdata_title" = "Netdata 主機資源";
+"netdata_enabled" = "收集主機資源";
+"netdata_environment_id" = "環境 ID（不可為 local）";
+"netdata_host_label" = "簡短主機標籤";
+"netdata_loopback_origin" = "HTTP 回環來源";
+"netdata_machine_guid" = "預期的機器 GUID";
+"netdata_dashboard_url" = "儀表板 URL（選填）";
+"netdata_apply" = "套用";
+"netdata_saved" = "已儲存。";
+"netdata_invalid_configuration" = "未儲存。請檢查主機身分、標籤、回環來源和儀表板 URL。";
+"netdata_configuration_help" = "預設關閉。按下「套用」可儲存此裝置的設定。請使用現有的 HTTP 回環來源，不得包含路徑或結尾斜線。環境 ID 不可為 local；標籤最多 32 個字元。儀表板僅供導覽：使用 HTTPS 或回環 HTTP，不得包含認證資訊、查詢參數或片段。";
+"netdata_cpu_value" = "CPU：%@";
+"netdata_ram_value" = "可用 RAM：%@";
+"netdata_sample_age_value" = "樣本經過時間：%@";
+"netdata_availability_value" = "可用性：%@";
+"netdata_source_value" = "來源：%@";
+"netdata_age_seconds" = "%.0f 秒";

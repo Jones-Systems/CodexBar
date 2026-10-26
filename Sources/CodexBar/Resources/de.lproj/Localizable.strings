@@ -1619,3 +1619,22 @@
 "jones_updates_size_failure" = "Dieses Update kann nicht sicher geladen werden. Installiere einen verifizierten Jones-Build.";
 "jones_updates_capacity_unknown" = "Der freie Speicherplatz konnte nicht geprüft werden. Prüfe deine Laufwerke und versuche es erneut.";
 "jones_updates_capacity_low" = "Updates benötigen mindestens %@ freien Speicherplatz. Gib Speicherplatz frei und versuche es erneut.";
+
+/* Device-local Netdata configuration and host menu (de). */
+"netdata_title" = "Netdata-Hostressourcen";
+"netdata_enabled" = "Hostressourcen erfassen";
+"netdata_environment_id" = "Umgebungs-ID (nicht local)";
+"netdata_host_label" = "Kurze Hostbezeichnung";
+"netdata_loopback_origin" = "HTTP-Loopback-Ursprung";
+"netdata_machine_guid" = "Erwartete Maschinen-GUID";
+"netdata_dashboard_url" = "Dashboard-URL (optional)";
+"netdata_apply" = "Anwenden";
+"netdata_saved" = "Gespeichert.";
+"netdata_invalid_configuration" = "Nicht gespeichert. Prüfe die Hostidentität, die Bezeichnung, den Loopback-Ursprung und die Dashboard-URL.";
+"netdata_configuration_help" = "Standardmäßig deaktiviert. Anwenden speichert die Konfiguration dieses Geräts. Verwende einen vorhandenen HTTP-Loopback-Ursprung ohne Pfad oder abschließenden Schrägstrich. Die Umgebungs-ID darf nicht local sein; die Bezeichnung ist auf 32 Zeichen begrenzt. Das Dashboard dient nur zur Navigation: HTTPS oder Loopback-HTTP, ohne Zugangsdaten, Abfrageparameter oder Fragmente.";
+"netdata_cpu_value" = "CPU: %@";
+"netdata_ram_value" = "Verfügbarer RAM: %@";
+"netdata_sample_age_value" = "Alter der Stichprobe: %@";
+"netdata_availability_value" = "Verfügbarkeit: %@";
+"netdata_source_value" = "Quelle: %@";
+"netdata_age_seconds" = "%.0f Sekunden";

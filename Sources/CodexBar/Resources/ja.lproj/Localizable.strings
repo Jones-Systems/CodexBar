@@ -1619,3 +1619,22 @@
 "jones_updates_size_failure" = "このアップデートを安全にダウンロードできません。検証済みの Jones ビルドをインストールしてください。";
 "jones_updates_capacity_unknown" = "空き容量を確認できませんでした。ディスクを確認してから再試行してください。";
 "jones_updates_capacity_low" = "アップデートには少なくとも %@ の空き容量が必要です。空き容量を増やして再試行してください。";
+
+/* Device-local Netdata configuration and host menu (ja). */
+"netdata_title" = "Netdata ホストリソース";
+"netdata_enabled" = "ホストリソースを収集";
+"netdata_environment_id" = "環境 ID（local は不可）";
+"netdata_host_label" = "短いホストラベル";
+"netdata_loopback_origin" = "HTTP ループバックオリジン";
+"netdata_machine_guid" = "想定されるマシン GUID";
+"netdata_dashboard_url" = "ダッシュボード URL（任意）";
+"netdata_apply" = "適用";
+"netdata_saved" = "保存しました。";
+"netdata_invalid_configuration" = "保存できませんでした。ホストの識別情報、ラベル、ループバックオリジン、ダッシュボード URL を確認してください。";
+"netdata_configuration_help" = "デフォルトではオフです。「適用」でこのデバイスの設定を保存します。パスや末尾のスラッシュを含まない既存の HTTP ループバックオリジンを使用してください。環境 ID に local は使用できません。ラベルは 32 文字以内です。ダッシュボードは移動専用です。HTTPS またはループバック HTTP を使用し、認証情報、クエリパラメータ、フラグメントを含めないでください。";
+"netdata_cpu_value" = "CPU: %@";
+"netdata_ram_value" = "使用可能な RAM: %@";
+"netdata_sample_age_value" = "サンプルの経過時間: %@";
+"netdata_availability_value" = "可用性: %@";
+"netdata_source_value" = "ソース: %@";
+"netdata_age_seconds" = "%.0f 秒";

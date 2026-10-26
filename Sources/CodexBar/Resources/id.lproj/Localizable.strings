@@ -1622,3 +1622,22 @@
 "jones_updates_size_failure" = "Pembaruan ini tidak dapat diunduh dengan aman. Instal versi Jones yang terverifikasi.";
 "jones_updates_capacity_unknown" = "Ruang penyimpanan tersedia tidak dapat diperiksa. Periksa disk Anda lalu coba lagi.";
 "jones_updates_capacity_low" = "Pembaruan memerlukan setidaknya %@ ruang tersedia. Kosongkan ruang lalu coba lagi.";
+
+/* Device-local Netdata configuration and host menu (id). */
+"netdata_title" = "Sumber daya host Netdata";
+"netdata_enabled" = "Kumpulkan sumber daya host";
+"netdata_environment_id" = "ID lingkungan (bukan local)";
+"netdata_host_label" = "Label host singkat";
+"netdata_loopback_origin" = "Origin HTTP loopback";
+"netdata_machine_guid" = "GUID mesin yang diharapkan";
+"netdata_dashboard_url" = "URL dasbor (opsional)";
+"netdata_apply" = "Terapkan";
+"netdata_saved" = "Tersimpan.";
+"netdata_invalid_configuration" = "Tidak tersimpan. Periksa identitas host, label, origin loopback, dan URL dasbor.";
+"netdata_configuration_help" = "Nonaktif secara default. Terapkan menyimpan konfigurasi perangkat ini. Gunakan origin HTTP loopback yang sudah ada tanpa jalur atau garis miring di akhir. ID lingkungan tidak boleh local; label dibatasi hingga 32 karakter. Dasbor hanya untuk navigasi: HTTPS atau HTTP loopback, tanpa kredensial, parameter kueri, atau fragmen.";
+"netdata_cpu_value" = "CPU: %@";
+"netdata_ram_value" = "RAM tersedia: %@";
+"netdata_sample_age_value" = "Usia sampel: %@";
+"netdata_availability_value" = "Ketersediaan: %@";
+"netdata_source_value" = "Sumber: %@";
+"netdata_age_seconds" = "%.0f detik";
