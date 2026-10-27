@@ -4,6 +4,39 @@
     "codex",
     "claude"
   ],
-  "full_only_groups": [],
+  "full_only_groups": [
+    {
+      "id": "cli-cache-command",
+      "category": "owner_terminal_only",
+      "reason": "CLI cache command signature, provider-scope argument rejection and help are terminal-only surfaces outside the owner's menu-bar workflow; shared cache integrity stays normal.",
+      "files": [
+        "Tests/CodexBarTests/CLICacheTests.swift"
+      ]
+    },
+    {
+      "id": "cli-toon-snapshots",
+      "category": "owner_terminal_only",
+      "reason": "Synthetic CLI TOON document snapshots and field-name parity cover terminal output outside the owner's menu-bar workflow; full retains both tests.",
+      "files": [
+        "Tests/CodexBarTests/CLIToonSnapshotTests.swift"
+      ]
+    },
+    {
+      "id": "cli-toon-formatter",
+      "category": "owner_terminal_only",
+      "reason": "TOON serialization, CLI output-format precedence and CLI error serialization serve terminal output outside the owner's menu-bar workflow; full retains every case.",
+      "files": [
+        "Tests/CodexBarTests/ToonFormatterTests.swift"
+      ]
+    },
+    {
+      "id": "cli-unification-goldens",
+      "category": "owner_terminal_only",
+      "reason": "Synthetic text/JSON CLI projection goldens cover terminal rendering outside the owner's menu-bar workflow; shared usage models and safety coverage stay normal.",
+      "files": [
+        "Tests/CodexBarTests/CLIUnificationGoldenTests.swift"
+      ]
+    }
+  ],
   "mixed_full_only": []
 }
