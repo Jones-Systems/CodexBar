@@ -20,6 +20,8 @@ import shlex
 import subprocess
 import sys
 
+import jones_signing
+
 
 REPOSITORY = "Jones-Systems/CodexBar"
 REPOSITORY_ID = "1425008735"
@@ -51,14 +53,20 @@ class UpdateConfiguration:
     display_name: str = DISPLAY_NAME
     app_group_id: str = APP_GROUP_ID
     icloud_id: str = ICLOUD_ID
+    signing_mode: str = "adhoc"
 
     def validate(self):
+        if self.signing_mode not in ("adhoc", jones_signing.MODE):
+            raise MetadataError("Unknown Jones signing mode")
+        production = self.signing_mode == jones_signing.MODE
+        if production and self.channel != "none":
+            raise MetadataError("Developer ID updates are held pending legacy app-group migration qualification")
         expected = {
             "bundle_id": BUNDLE_ID,
-            "team_id": TEAM_ID,
+            "team_id": jones_signing.TEAM if production else TEAM_ID,
             "state_key": "jones",
             "display_name": DISPLAY_NAME,
-            "app_group_id": APP_GROUP_ID,
+            "app_group_id": jones_signing.GROUP if production else APP_GROUP_ID,
             "icloud_id": ICLOUD_ID,
         }
         for name, value in expected.items():
@@ -93,6 +101,7 @@ class UpdateConfiguration:
             "JonesAppGroupID": self.app_group_id,
             "JonesICloudID": self.icloud_id,
             "JonesUpdateChannel": self.channel,
+            "JonesSigningMode": self.signing_mode,
             "SUFeedURL": self.feed_url,
             "SUPublicEDKey": self.public_ed_key,
             "SUEnableAutomaticChecks": enabled,
@@ -166,7 +175,7 @@ def load_ci_event(environment):
     return event
 
 
-def provenance_metadata(source, build_number, origin="local", build_run="", environment=None, event=None):
+def provenance_metadata(source, build_number, origin="local", build_run="", environment=None, event=None, signing_mode="adhoc"):
     environment = {} if environment is None else environment
     if not REVISION_PATTERN.fullmatch(source.revision):
         raise MetadataError("Jones source revision must be a complete lowercase SHA-1")
@@ -195,7 +204,16 @@ def provenance_metadata(source, build_number, origin="local", build_run="", envi
         if not isinstance(event, dict) or not canonical_repository(event.get("repository")):
             raise MetadataError("GitHub event repository is not canonical Jones CodexBar")
         if origin == "ci-main":
-            if (
+            production_dispatch = (
+                signing_mode == jones_signing.MODE
+                and environment.get("GITHUB_EVENT_NAME") == "workflow_dispatch"
+                and environment.get("GITHUB_WORKFLOW_REF") ==
+                f"{REPOSITORY}/{jones_signing.WORKFLOW}@refs/heads/main"
+                and environment.get("GITHUB_WORKFLOW_SHA") == source.revision
+                and environment.get("GITHUB_REF") == "refs/heads/main"
+                and environment.get("GITHUB_SHA") == source.revision
+            )
+            if not production_dispatch and (
                 environment.get("GITHUB_EVENT_NAME") != "push"
                 or environment.get("GITHUB_REF") != "refs/heads/main"
                 or environment.get("GITHUB_SHA") != source.revision
@@ -257,7 +275,7 @@ def parser():
     for name in ("validate", "metadata"):
         command = subcommands.add_parser(name)
         for flag, default in (
-            ("channel", "none"), ("feed-url", ""), ("public-ed-key", ""),
+            ("signing-mode", "adhoc"), ("channel", "none"), ("feed-url", ""), ("public-ed-key", ""),
             ("bundle-id", BUNDLE_ID), ("team-id", TEAM_ID), ("state-key", "jones"),
             ("display-name", DISPLAY_NAME), ("app-group-id", APP_GROUP_ID), ("icloud-id", ICLOUD_ID),
         ):
@@ -284,7 +302,7 @@ def main(argv=None, environment=None, stdout=None, stderr=None):
         metadata = configuration.metadata()
         if args.command == "metadata":
             provenance = provenance_metadata(
-                inspect_source(args.repo), args.build_number, args.origin, args.build_run, environment)
+                inspect_source(args.repo), args.build_number, args.origin, args.build_run, environment, signing_mode=args.signing_mode)
             metadata.update(provenance)
         if args.format == "shell":
             output = shell_metadata(provenance)

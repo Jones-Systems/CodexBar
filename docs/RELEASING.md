@@ -186,3 +186,76 @@ After publishing the GitHub release, `.github/workflows/release-cli.yml` builds 
 - **App won’t launch**: ensure Sparkle.framework is embedded under `Contents/Frameworks` and rpath added; codesign deep.
 - **App “damaged” dialog after unzip**: re-extract with `ditto -x -k`, removing any `._*` files, then re-verify with `spctl`.
 - **Update download fails (404)**: ensure the release asset referenced in appcast exists and is published in the corresponding GitHub release; verify with `curl -I <enclosure-url>`.
+
+## Jones Developer ID source support (CB-SIGN-R1)
+
+`.github/workflows/jones-macos-signing.yml` defines a separate manual, canonical
+`main`-only signing route for `Jones-Systems/CodexBar` (repository ID `1425008735`),
+protected by environment `macos-signing`. Source support does not enroll that
+environment, establish approval, create credentials, sign, notarize or release.
+A PR runs only secret-free source checks and importer compilation. The protected
+job checks repository, ref, source SHA and workflow SHA, takes no checkout-ref
+input, uses pinned checkout/upload actions and read-only repository permission,
+and never uses `pull_request_target`. Restrict the environment to the canonical
+default branch and apply the owner's approval policy before any real dispatch.
+
+The signing job additionally requires `vars.JONES_MACOS_SIGNING_ENABLED == 'true'`.
+Keep the repository-level Actions variable absent or set to `false` during partial
+credential enrollment, and verify that no organization-level variable supplies
+`true`. Setting the repository variable to the exact string `true` is a separate,
+explicitly approved activation step after credential, profile and operation
+readiness are established. Use repository scope: the job condition is evaluated
+before environment-level variables are available. Credentials alone do not enable
+the consumer, and source publication does not authorize changing this flag or
+dispatching the workflow. The public PR source-checks job is unaffected.
+
+The environment's five secret names are:
+
+- `MACOS_SIGNING_CERTIFICATE_P12_BASE64`
+- `MACOS_SIGNING_CERTIFICATE_PASSWORD`
+- `APPLE_NOTARY_API_KEY_P8_BASE64`
+- `APPLE_NOTARY_KEY_ID`
+- `APPLE_NOTARY_ISSUER_ID`
+
+Supply the separately obtained public signed profiles through environment
+variables `JONES_APP_PROVISIONING_PROFILE_BASE64` and
+`JONES_WIDGET_PROVISIONING_PROFILE_BASE64` (GitHub environment variables, not
+private key material). Both must authorize the exact certificate and team
+`2CUPSQS986`; the app profile must authorize Production CloudKit for
+`iCloud.com.jonessystems.codexbar`. Profile availability and schema readiness are
+unknown. Missing or mismatched profiles stop packaging; entitlements are never
+stripped as a fallback.
+
+`Scripts/jones_import_identity.swift` imports the P12 through Security.framework
+into an explicitly supplied job-owned keychain. The P12 password is read in
+process from its environment and never interpolated into command arguments.
+The unique keychain has an intentionally empty password inside a mode-0700
+scratch directory; empty literals in keychain commands are not account secrets.
+The operation never unlocks or imports into the login keychain. It captures and
+restores the original search list, restricts code signing to the exact ephemeral
+keychain, and removes the owned keychain and private P12/P8 files. Child commands
+receive no signing secrets except the import helper's password. The notary key
+is a mode-0600 file; only its path and public API identifiers appear in argv.
+Do not enable shell tracing or upload the scratch directory.
+
+`Scripts/jones_sign_and_notarize.py` applies existing hosted CPU/memory/storage
+admission and compiler wrappers, builds arm64 with one job and the resource-only
+launch proof, signs nested code with runtime/timestamp, verifies exact profiles
+and entitlements, submits notarization, requires Accepted, staples and validates,
+then verifies the archive round trip. Only the verified public ZIP, hash and
+provenance are retained as a fourteen-day Actions artifact. Build/cache lifetime
+is the fresh hosted VM. Cleanup failure preserves the exact scratch path and
+fails the job; VM teardown bounds credentials after unhandled host loss.
+No GitHub Release, tag, appcast, upstream destination, installation, migration
+or feed activation is performed. A failed/unknown notary response is not an
+automatic resubmission authorization; reconcile the Actions run before retry.
+
+Production mode and channel `none` are sealed into both bundles. Legacy-to-team
+app-group migration remains held; see [installation limits](jones/INSTALL-AND-UPDATES.md#explicit-developer-id-inspection-and-transition-hold).
+Apple Developer ID and notarization do not replace Jones Ed25519 feed trust.
+Real signing, profile validation, notarization and native installation are
+unperformed until the exact protected operation is authorized.
+
+Primary references: [Apple provisioning-profile model](https://developer.apple.com/documentation/technotes/tn3125-inside-code-signing-provisioning-profiles),
+[Security.framework PKCS12 import](https://developer.apple.com/documentation/security/secpkcs12import(_:_:_:)),
+and [keychain import options](https://developer.apple.com/documentation/security/keychain-import-and-export-options).

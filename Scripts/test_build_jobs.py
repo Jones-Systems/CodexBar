@@ -118,8 +118,10 @@ class BuildJobsTests(unittest.TestCase):
         self.assertEqual((self.directory / "lock/compiler.lock").read_bytes(), b"")
 
     def test_storage_swift_destinations_and_nonexistent_ancestor(self):
+        (self.directory / "Package.swift").touch()
         package = self.directory / "package"
         package.mkdir()
+        (package / "Package.swift").touch()
         external = self.directory / "volume"
         external.mkdir()
         alias = self.directory / "alias"

@@ -8,9 +8,10 @@ not an installed or approved trial. The stock laptop app is unaffected.
 
 `Scripts/package_app.sh` sources `.mac-release.jones.env` only when that exact
 file exists. The file is executable local shell configuration, not a data parser;
-review it before a separately authorized build. Never commit real values.
-`.mac-release.jones.env.example` contains planning names and a literal team
-placeholder, no real team, credential, signing key, or signing identity.
+review it before a separately authorized build. Never commit private values.
+`.mac-release.jones.env.example` defaults to the local `JONESLOCAL` identity.
+Its comments name the public production team `2CUPSQS986`; it contains no
+credential, private signing key, or certificate selector.
 The `.gitignore` exception is one exact pattern line without a marker: Git does
 not support an inline comment after a pattern. This paragraph is its ledger marker.
 
@@ -280,3 +281,37 @@ the existing absence of iCloud entitlements; any signed-entitlement drift is a
 refusal. Upstream applications, unknown pending Jones siblings, preferences,
 Keychain grants, application state and Sparkle-owned staging are outside installer
 cleanup ownership. No post-launch or application-data rollback is promised.
+
+## Opt-in Developer ID identity (CB-SIGN-R1)
+
+`JONES_SIGNING_MODE=developer-id` selects team `2CUPSQS986` only, with
+`CODEXBAR_SIGNING=identity` and release configuration. The app remains
+`com.jonessystems.codexbar`, widget `com.jonessystems.codexbar.widget`, display
+name `CodexBar Jones`, and state key `jones`. The production app group becomes
+`2CUPSQS986.com.jonessystems.codexbar`. Both bundles seal `JonesSigningMode`;
+old bundles without it retain the ad-hoc contract. The default remains ad-hoc.
+
+The production app retains CloudKit at `iCloud.com.jonessystems.codexbar` with
+the Production entitlement. Packaging requires separate valid app and widget
+Developer ID profiles that grant their exact application identifiers and authorize
+the selected signing certificate. The signed App Group entitlement stays exact;
+a profile may authorize it with the exact group or Apple’s documented
+`2CUPSQS986.*` team grant. Foreign-team and unconstrained wildcards are refused. Ad-hoc absence of
+CloudKit entitlements is not evidence that existing users have no sync state.
+Availability of real Jones profiles and the production CloudKit schema is unknown.
+
+The change from `JONESLOCAL` changes the shared defaults/widget container.
+Keeping the state key and app ID does not prove shared preferences or widget
+snapshot continuity. Production automatic updates are therefore disabled by
+both package metadata and the runtime trust policy. Ordinary installation and
+restore still refuse cross-team replacement. CB-MIGRATION-R1 adds a separate
+[explicit bootstrap transaction](INSTALL-AND-UPDATES.md#explicit-owner-bootstrap-cb-migration-r1),
+using the production-signed app before application initialization and an exact
+private receipt. No generic team-change override or startup migration exists.
+Source support does not prove native access, data continuity or permission to run
+the migration. Native Keychain and login-item consent remains owned by macOS.
+
+Signing and notarization establish Apple distribution identity, independently of
+Sparkle's Jones Ed25519 feed/archive trust. The canonical feed restrictions,
+pre-extraction verification, zero signed-feed failure expiry and isolated updater
+harness remain intact. See [the held signing workflow](../RELEASING.md#jones-developer-id-source-support-cb-sign-r1).
