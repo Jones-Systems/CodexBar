@@ -34,6 +34,8 @@ class BuildJobsTests(unittest.TestCase):
         self.stack = ExitStack()
         self.addCleanup(self.stack.close)
         self.directory = Path(self.stack.enter_context(tempfile.TemporaryDirectory()))
+        # Admission unit tests must not publish synthetic outcomes into this checkout's Git admin store.
+        self.stack.enter_context(patch("workspace_attest.begin_command", return_value=None))
         self.clock = Clock()
         self.stack.enter_context(patch.object(jobs, "PLATFORM", "darwin"))
         self.stack.enter_context(patch.object(jobs.time, "monotonic", self.clock.monotonic))
@@ -471,7 +473,7 @@ class BuildJobsTests(unittest.TestCase):
 
     def test_child_exit_and_signal_status(self):
         self.stack.close()
-        with patch.object(jobs, "PLATFORM", "linux"):
+        with patch.object(jobs, "PLATFORM", "linux"), patch("workspace_attest.begin_command", return_value=None):
             self.assertEqual(jobs.run([sys.executable, "-c", "raise SystemExit(37)"], "swift"), 37)
             self.assertEqual(jobs.run([sys.executable, "-c", "import os,signal; os.kill(os.getpid(),signal.SIGTERM)"], "swift"), 143)
 
@@ -512,6 +514,7 @@ class RealLockTests(unittest.TestCase):
                         "child=subprocess.Popen([sys.executable,'-c'," + repr(grandchild) + "]); "
                         "Path(" + repr(str(ready)) + ").write_text(str(child.pid)); time.sleep(30)")
             bootstrap = ("import sys; sys.path.insert(0,sys.argv[1]); import build_jobs as b; "
+                         "import workspace_attest as w; w.begin_command=lambda *args:None; "
                          "from pathlib import Path; from fractions import Fraction; b.PLATFORM='darwin'; "
                          "b.lock_directory=lambda:Path(sys.argv[2]); "
                          "b.sample_window=lambda deadline:(Fraction(0),Fraction(0),30); "
@@ -608,6 +611,12 @@ class RealLockTests(unittest.TestCase):
                 fd = jobs.open_lock()
                 fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 os.close(fd)
+
+
+def load_tests(loader, tests, _pattern):
+    # Keep producer lifecycle proofs in the existing portable build-helper CI entrypoint.
+    tests.addTests(loader.loadTestsFromName("test_workspace_attest"))
+    return tests
 
 
 if __name__ == "__main__":

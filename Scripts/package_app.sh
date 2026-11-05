@@ -8,6 +8,16 @@ if [[ "${1:-}" == "--jones-candidate-capabilities" ]]; then
   exit 0
 fi
 
+# The outer runner owns the shell and descendants, drains them, then records
+# terminal outputs. The internal argument only prevents recursive wrapping.
+if [[ "${1:-}" == "--workspace-attested-package" ]]; then
+  shift
+else
+  ATTEST_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+  exec python3 -B "$ATTEST_ROOT/Scripts/workspace_attest.py" --package-root "$ATTEST_ROOT" -- \
+    bash "$ATTEST_ROOT/Scripts/package_app.sh" --workspace-attested-package "$@"
+fi
+
 # JONES(trial-identity): pure identity resolution; fixture tests source only this block.
 resolve_package_identity() {
   BUNDLE_ID="com.steipete.codexbar"
