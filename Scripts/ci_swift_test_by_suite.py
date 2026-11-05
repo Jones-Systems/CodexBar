@@ -1209,6 +1209,11 @@ def run_suites() -> int:
             if restored_identity is not None:
                 try:
                     build_artifact.cleanup_restored_build(Path.cwd(), restored_identity, _scratch_cleanup_safe)
+                    if producer is not None:
+                        try:
+                            producer.mark_disposed(Path.cwd() / '.build')
+                        except Exception:
+                            pass  # Optional observation cannot change the proved cleanup result.
                 except Exception as error:
                     print(f"Restored build cleanup failed: {error}", file=sys.stderr, flush=True)
                     if terminal_error is None and result == 0:

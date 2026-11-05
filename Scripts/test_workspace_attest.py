@@ -183,25 +183,46 @@ class AttestationTests(unittest.TestCase):
         for result in (0, 23, 143):
             with self.subTest(result=result), patch.object(producer, 'finish', side_effect=OSError('disk')):
                 self.assertEqual(attest.finalize(producer, result, True), result)
-        self.assertTrue(producer.obligation.is_file())
-        with patch.object(attest, 'binding', side_effect=attest.Failure('no_metadata')):
+        self.assertFalse((Path(self.bound['git_dir']) / 'workspace-outputs').exists())
+        with patch.object(attest, 'Producer', side_effect=OSError('no metadata')):
             self.assertIsNone(attest.begin(self.root, 'fixture', [self.output]))
         self.assertEqual(attest.finalize(None, 0, True), 0)
 
-    def test_default_finalization_never_enumerates_outputs_and_names_external_owner(self):
-        external = self.parent / 'external-build'
-        external.mkdir()
-        producer = attest.Producer(self.root, 'fixture', [self.output, external])
-        with patch.object(attest.os, 'scandir', side_effect=AssertionError('routine traversal')):
-            resolution = json.loads(producer.finish('succeeded', True).read_text())
-        self.assertEqual({root['path'] for root in resolution['roots']}, {str(self.output), str(external)})
-        for root in resolution['roots']:
+    def test_default_completion_has_no_walk_hash_git_store_or_slow_sink(self):
+        with patch.object(attest.os, 'scandir', side_effect=AssertionError('routine traversal')), \
+                patch.object(attest, 'content_manifest', side_effect=AssertionError('routine hash')), \
+                patch.object(attest, 'binding', side_effect=AssertionError('routine Git lookup')), \
+                patch.object(attest, '_publish', side_effect=AssertionError('unbounded file sink')):
+            external = self.parent / 'large-tree-descriptor-500000-entries'
+            producer = attest.Producer(self.root, 'fixture', [self.output, external])
+            completion = producer.finish('succeeded', True)
+        self.assertEqual(completion['schema'], attest.COMPLETION_SCHEMA)
+        self.assertEqual(completion['proofStatus'], 'deferred')
+        self.assertEqual({root['path'] for root in completion['roots']}, {str(self.output), str(external)})
+        for root in completion['roots']:
             self.assertEqual(root['disposition'], 'retained')
             self.assertEqual(root['owner'], 'fixture')
-            sidecar = json.loads(Path(root['sidecar']).read_text())
-            self.assertEqual(sidecar['roots'][0]['verification'], 'unverifiable')
-            self.assertEqual(sidecar['roots'][0]['reasons'], ['content_capture_deferred'])
-            self.assertIsNone(sidecar['manifest'])
+            self.assertNotIn('entries', root)
+            self.assertNotIn('content_manifest_sha256', root)
+        self.assertFalse((Path(self.bound['git_dir']) / 'workspace-outputs').exists())
+
+    def test_oversize_completion_is_bounded_without_background_work(self):
+        with patch.dict(os.environ, {'T3_THREAD_ID': 'x' * 100000, 'GITHUB_SHA': 'a' * 40}):
+            producer = attest.Producer(self.root, 'fixture', [self.output, 'x' * 100000])
+            completion = producer.finish('failed', True)
+        self.assertLessEqual(len(attest.canonical_json(completion)), attest.OBSERVATION_BYTES)
+        self.assertIn('lineage_over_budget', completion['omitted'])
+        self.assertIn('output_roots_over_budget', completion['omitted'])
+        self.assertNotIn('thread', completion['lineage'])
+
+    def test_blocking_diagnostic_sink_is_never_called_or_queued(self):
+        with patch.object(attest.fcntl, 'fcntl', return_value=0), \
+                patch.object(attest.os, 'write', side_effect=AssertionError('stalled sink')), \
+                patch.object(attest, '_publish', side_effect=AssertionError('unbounded persistence')):
+            producer = attest.Producer(self.root, 'fixture', [self.output])
+            self.assertEqual(attest.finalize(producer, 23, True), 23)
+        self.assertEqual(attest.LAST_COMPLETION['status'], 'failed')
+        self.assertEqual(attest.LAST_COMPLETION['provenanceObservation'], 'unavailable')
 
     def test_optional_discovery_failure_does_not_block_swift_command(self):
         with patch.object(runner.build_jobs, 'admission', return_value=nullcontext(['swift', 'test'])), \
@@ -210,20 +231,18 @@ class AttestationTests(unittest.TestCase):
             self.assertEqual(runner.run_command(['swift', 'test']), 23)
         command.assert_called_once()
 
-    def test_external_command_destinations_and_disposed_roots(self):
+    def test_external_command_roots_and_existing_cleanup_disposition(self):
         external = self.parent / 'external-build'
         worktree, roots = attest.command_roots([
             'swift', 'test', '--package-path', str(self.root), '--scratch-path=' + str(external)])
         self.assertEqual(worktree, self.root)
         self.assertEqual(roots, [external])
         producer = attest.Producer(worktree, 'fixture', roots)
-        resolution = json.loads(producer.finish('failed', True).read_text())
-        self.assertEqual(resolution['roots'], [dict(path=str(external), disposition='disposed', reason='output_absent')])
-        with patch.object(attest, 'binding', return_value={**self.bound, 'ino': -1}):
-            with self.assertRaisesRegex(attest.Failure, 'identity_mismatch'):
-                producer.finish('failed', True)
+        producer.mark_disposed(external)
+        completion = producer.finish('failed', True)
+        self.assertEqual(completion['roots'][0]['disposition'], 'disposed')
 
-    def test_package_without_waitid_preserves_command_and_unresolved_obligation(self):
+    def test_package_without_waitid_preserves_command_without_manufactured_obligation(self):
         waitid = os.waitid
         try:
             del os.waitid
@@ -233,46 +252,45 @@ class AttestationTests(unittest.TestCase):
             execute.assert_called_once_with('bash', ['bash', 'fixture'])
         finally:
             os.waitid = waitid
-        self.assertTrue(any(record['schema'] == 'codexbar-output-obligation/v1' for record in self.records()))
-        self.assertFalse(any(record['schema'] == 'codexbar-output-finalization/v1' for record in self.records()))
+        self.assertFalse((Path(self.bound['git_dir']) / 'workspace-outputs').exists())
 
     def test_terminal_outcomes_after_actual_drain_keep_build_path_and_defer_hash(self):
         for status in (0, 23, -signal.SIGTERM):
             with self.subTest(status=status):
                 code = ('import os,signal; os.kill(os.getpid(),signal.SIGTERM)' if status < 0
                         else f'raise SystemExit({status})')
-                with patch.object(attest, 'content_manifest', side_effect=AssertionError('routine hash')):
+                producer = attest.Producer(self.root, 'package-app', [self.output])
+                with patch.object(attest, 'begin', return_value=producer), \
+                        patch.object(attest, 'content_manifest', side_effect=AssertionError('routine hash')):
                     self.assertEqual(attest.run_package(self.root, [sys.executable, '-c', code]),
                                      143 if status < 0 else status)
-                sidecars = [r for r in self.records() if r['schema'] == attest.SCHEMA]
-                self.assertEqual(sidecars[-1]['roots'][0]['path'], str(self.output))
-                # Directory enumeration has no ordering contract.
-                self.assertTrue(any(r['status'] == attest.terminal_status(status) for r in sidecars))
+                self.assertEqual(producer.completion['status'], attest.terminal_status(status))
+                self.assertTrue(producer.completion['drain_proved'])
+                self.assertEqual(producer.completion['proofStatus'], 'deferred')
                 self.assertTrue(self.file.is_file())
 
-    def test_unproved_drain_never_reads_outputs_and_retains_obligation(self):
+    def test_unproved_drain_never_reads_outputs_and_keeps_actual_owner(self):
         def uncertain(_command):
             runner._scratch_cleanup_safe = False
             return 23
-        with patch.object(runner, '_run_command', side_effect=uncertain), \
+        producer = attest.Producer(self.root, 'package-app', [self.output])
+        with patch.object(attest, 'begin', return_value=producer), \
+                patch.object(runner, '_run_command', side_effect=uncertain), \
                 patch.object(attest, 'content_manifest', side_effect=AssertionError('uncertain content')):
             self.assertEqual(attest.run_package(self.root, ['fixture']), 23)
-        records = self.records()
-        sidecar = next(r for r in records if r['schema'] == attest.SCHEMA)
-        self.assertEqual(sidecar['roots'][0]['reasons'], ['owned_child_drain_unproved'])
-        resolution = next(r for r in records if r['schema'] == 'codexbar-output-finalization/v1')
-        self.assertFalse(resolution['drain_proved'])
-        self.assertTrue(all(root['disposition'] == 'unresolved' for root in resolution['roots']))
+        self.assertFalse(producer.completion['drain_proved'])
+        self.assertEqual(producer.completion['roots'][0]['disposition'], 'unresolved')
+        self.assertEqual(producer.completion['roots'][0]['owner'], 'package-app')
         self.assertTrue(self.file.exists())
 
-    def test_reservation_refuses_capture_and_incarnation_binds_provenance(self):
-        producer = attest.Producer(self.root, 'fixture', [self.output])
+    def test_reservation_refuses_explicit_proof_and_incarnation_binds_provenance(self):
+        with attest.mutation_guard(self.bound):
+            pass
         path = Path(self.bound['git_common_dir']) / 'workspace-lifecycle/reservations.sqlite3'
         with closing(sqlite3.connect(path)) as connection, connection:
             connection.execute('INSERT INTO reservations VALUES (?,?,?)', (self.bound['admin_id'], 'held', '{}'))
         with self.assertRaisesRegex(attest.Failure, 'retiring'):
-            producer.finish('cancelled', True)
-        self.assertTrue(producer.obligation.exists())
+            attest.attest(self.output, 'fixture', self.bound, 'cancelled', attest.now())
         provenance = Path(self.bound['git_dir']) / 'workspace-provenance.json'
         self.assertIsNone(self.bound['breadcrumb_id'])
         provenance.write_text('{"breadcrumb_id":"birth"}')

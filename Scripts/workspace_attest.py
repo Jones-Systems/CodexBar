@@ -5,6 +5,7 @@ import argparse
 from contextlib import contextmanager
 from datetime import datetime, timezone
 import fnmatch
+import fcntl
 import hashlib
 import json
 import os
@@ -302,7 +303,9 @@ def sync_directory(directory):
         os.close(fd)
 
 
-def attest(path, producer, bound, status, started_at, *, drain_proved=True, capture_content=False):
+def attest(path, producer, bound, status, started_at, *, drain_proved=True, capture_content=True):
+    if not capture_content:
+        raise Failure('content_capture_not_requested')
     with mutation_guard(bound):
         return _attest(path, producer, bound, status, started_at,
                        drain_proved=drain_proved, capture_content=capture_content)
@@ -346,57 +349,101 @@ def now():
     return datetime.now(timezone.utc).isoformat()
 
 
-class Producer:
-    """Durable obligation before launch; immutable finalization after owned drain.
+COMPLETION_SCHEMA = 'codexbar-producer-completion/v1'
+OBSERVATION_BYTES = 64 * 1024
+CAPTURE_SECONDS = 0.1
+LINEAGE_ENV = {
+    'thread': ('T3_THREAD_ID',), 'task': ('T3_TASK_ID',), 'run': ('T3_RUN_ID', 'GITHUB_RUN_ID'),
+    'environment': ('T3_ENVIRONMENT_ID',), 'project': ('T3_PROJECT_ID',),
+    'incarnation': ('T3_WORKTREE_INCARNATION_ID',), 'branch': ('GITHUB_HEAD_REF', 'GITHUB_REF_NAME'),
+    'head': ('GITHUB_SHA',), 'base': ('GITHUB_BASE_REF',), 'predecessor': ('T3_PREDECESSOR_ID',),
+    'pr': ('T3_PULL_REQUEST_URL',), 'nativeEvent': ('GITHUB_EVENT_NAME',),
+}
 
-    Retained roots belong to the invoking producer/handoff. No deletion or
-    registry allocation is implied. Interrupted writers leave the obligation.
+
+LAST_COMPLETION = None
+
+
+def diagnostic(message):
+    # Never wait on a blocking file/terminal/logger or change inherited FD flags.
+    # A nonblocking pipe/socket accepts one compact attempt, with no retry.
+    try:
+        fd = sys.stderr.fileno()
+        if not fcntl.fcntl(fd, fcntl.F_GETFL) & os.O_NONBLOCK:
+            return
+        mode = os.fstat(fd).st_mode
+        if stat.S_ISFIFO(mode) or stat.S_ISSOCK(mode):
+            os.write(fd, (message[:500] + '\n').encode('ascii', 'backslashreplace')[:512])
+    except Exception:
+        pass
+
+
+class Producer:
+    """Cheap completion facts, independent of explicit C2 proof and allocation stores.
+
+    No safely bounded durable sink is available in these launchers. Return the
+    observation to the caller and use its existing diagnostic stream; do not
+    create sidecars, reservations, active claims, or metadata-write obligations.
+    Existing resource owners retain known roots; uncertain drains stay explicit.
     """
     def __init__(self, worktree, producer, roots):
-        self.bound = binding(worktree)
         self.producer = producer
-        self.roots = list(dict.fromkeys(os.path.abspath(root) for root in roots))
+        self.worktree = str(worktree)
+        self.roots = []
+        self.disposed = set()
         self.started = now()
-        self.directory = output_directory(self.bound)
-        self.obligation = self.directory / (producer + '-' + secrets.token_hex(16) + '.obligation.json')
-        with mutation_guard(self.bound):
-            if binding(worktree) != self.bound:
-                raise Failure('identity_mismatch')
-            _publish(self.obligation, canonical_json(dict(
-                schema='codexbar-output-obligation/v1', owner=producer, roots=self.roots,
-                incarnation=dict(self.bound, id=incarnation(self.bound)), started_at=self.started,
-                reason='producer_unfinalized')) + b'\n')
-            sync_directory(self.directory)
+        self.lineage = {}
+        self.omitted = []
+        deadline = time.monotonic() + CAPTURE_SECONDS
+        size = len(self.worktree) + len(producer)
+        for root in roots:
+            value = str(root)
+            size += len(value)
+            if size > OBSERVATION_BYTES // 6 or time.monotonic() >= deadline:
+                self.omitted.append('output_roots_over_budget')
+                break
+            if value not in self.roots:
+                self.roots.append(value)
+        for key, names in LINEAGE_ENV.items():
+            value = next((os.environ[name] for name in names if os.environ.get(name)), None)
+            if value is None:
+                continue
+            size += len(value)
+            if size > OBSERVATION_BYTES // 6 or time.monotonic() >= deadline:
+                self.omitted.append('lineage_over_budget')
+                break
+            self.lineage[key] = value
+        if len(self.worktree) > 4096:
+            self.worktree = None
+            self.omitted.append('worktree_over_budget')
+
+    def mark_disposed(self, root):
+        # Only the existing exact cleanup callback can establish disposal.
+        self.disposed.add(str(root))
 
     def finish(self, status, drain_proved):
-        with mutation_guard(self.bound):
-            if binding(self.bound['path']) != self.bound:
-                raise Failure('identity_mismatch')
-            records = []
-            for root in self.roots:
-                # Missing roots are disposed only after a proved drain. Dangling
-                # symlinks are observations, not absence; they remain unverifiable.
-                try:
-                    os.lstat(root)
-                    absent = False
-                except FileNotFoundError:
-                    absent = True
-                if drain_proved and absent:
-                    records.append(dict(path=root, disposition='disposed', reason='output_absent'))
-                    continue
-                record = _attest(root, self.producer, self.bound, status, self.started, drain_proved=drain_proved)
-                records.append(dict(path=root, sidecar=record['sidecar'], disposition='retained' if drain_proved
-                                    else 'unresolved', owner=self.producer,
-                                    reason='producer_handoff_or_reuse' if drain_proved else 'owned_child_drain_unproved'))
-            # Keep the initial obligation as immutable history. Its create-only
-            # resolution names every sidecar; an interrupted publish never clears it.
-            resolution = self.obligation.with_suffix('.resolved.json')
-            _publish(resolution, canonical_json(dict(schema='codexbar-output-finalization/v1',
-                     obligation=self.obligation.name, status=status, drain_proved=drain_proved,
-                     roots=records, finished_at=now())) + b'\n')
-            sync_directory(self.directory)
-            print(f'workspace outputs: {resolution}', file=sys.stderr, flush=True)
-            return resolution
+        record = dict(schema=COMPLETION_SCHEMA, producer=self.producer, owner=self.producer,
+                      worktree=self.worktree, status=status, proofStatus='deferred',
+                      started_at=self.started, finished_at=now(), lineage=self.lineage,
+                      drain_proved=drain_proved,
+                      roots=[dict(path=root, owner=self.producer,
+                                  disposition='disposed' if root in self.disposed else
+                                  'retained' if drain_proved else 'unresolved',
+                                  reason='existing_cleanup_completed' if root in self.disposed else
+                                  'producer_handoff_or_reuse' if drain_proved else 'owned_child_drain_unproved')
+                             for root in self.roots],
+                      provenanceObservation='unavailable',
+                      omitted=[*self.omitted, 'durable_sink_has_no_safe_100ms_bound'])
+        payload = canonical_json(record)
+        if len(payload) > OBSERVATION_BYTES:
+            record = dict(schema=COMPLETION_SCHEMA, producer=self.producer, status=status,
+                          proofStatus='deferred', provenanceObservation='unavailable',
+                          omitted=['observation_over_budget'])
+        self.completion = record
+        # Existing operation logging is the fallback, never a new persistence
+        # worker or retry. No file sink is opened and no write outlives this hook.
+        diagnostic('Workspace completion: ' + canonical_json(record).decode('ascii'))
+        return record
 
 
 def terminal_status(result, error=None):
@@ -407,14 +454,14 @@ def terminal_status(result, error=None):
 
 def finalize(producer, result, drain_proved, error=None):
     """Optional producer evidence never changes the command outcome."""
+    global LAST_COMPLETION
     if producer is None:
         return result
     try:
-        producer.finish(terminal_status(result, error), drain_proved)
+        LAST_COMPLETION = producer.finish(terminal_status(result, error), drain_proved)
         return result
     except Exception as failure:
-        print(f'Workspace finalization unresolved: {type(failure).__name__}: {failure}; '
-              f'obligation={producer.obligation}', file=sys.stderr, flush=True)
+        diagnostic(f'Workspace completion unavailable: {type(failure).__name__}; owner={producer.producer}')
         return result
 
 
@@ -422,8 +469,7 @@ def begin(worktree, producer, roots):
     try:
         return Producer(worktree, producer, roots)
     except Exception as error:
-        print(f'Workspace evidence unavailable: {type(error).__name__}: {error}; '
-              f'owner={producer}', file=sys.stderr, flush=True)
+        diagnostic(f'Workspace evidence unavailable: {type(error).__name__}; owner={producer}')
         return None
 
 def begin_command(command, producer, kind='swift'):
@@ -431,8 +477,7 @@ def begin_command(command, producer, kind='swift'):
         worktree, roots = command_roots(command, kind)
         return begin(worktree, producer, roots)
     except Exception as error:
-        print(f'Workspace output discovery unavailable: {type(error).__name__}: {error}; '
-              f'owner={producer}', file=sys.stderr, flush=True)
+        diagnostic(f'Workspace output discovery unavailable: {type(error).__name__}; owner={producer}')
         return None
 
 
@@ -449,10 +494,6 @@ def command_roots(command, kind='swift'):
             selected[key] = Path(value if equal else next(args))
     if kind == 'swift':
         package = selected.pop('--package-path', Path.cwd()).absolute()
-        for candidate in (package, *package.parents):
-            if (candidate / 'Package.swift').is_file():
-                package = candidate
-                break
         roots = [selected.pop('--scratch-path', package / '.build'), *selected.values()]
         return package, roots
     return Path.cwd(), list(selected.values())
@@ -462,10 +503,9 @@ def run_package(worktree, command):
     import ci_swift_test_by_suite as runner
     producer = begin(worktree, 'package-app', [Path(worktree) / '.build', Path(worktree) / 'CodexBar.app'])
     if not hasattr(os, 'waitid'):
-        # Preserve packaging on older Python builds. The pre-launch obligation
-        # remains unresolved: exec cannot prove a terminal outcome or drain.
-        print('Workspace package drain unavailable: Python os.waitid missing; '
-              'owner=package-app, finalization remains unresolved', file=sys.stderr, flush=True)
+        # Preserve packaging on older Python builds. No terminal outcome or drain
+        # can be observed across exec; retain the existing package owner.
+        diagnostic('Workspace package drain unavailable: Python os.waitid missing; owner=package-app')
         os.execvp(command[0], command)
     result = None
     try:
