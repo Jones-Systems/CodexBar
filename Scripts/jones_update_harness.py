@@ -454,7 +454,9 @@ def native_state(home):
                 "fixture-state-exists", "Existing harness state must be preserved; use a fresh qualified user")
         result = subprocess.run(["/usr/bin/defaults", "read", BUNDLE_ID], stdout=subprocess.DEVNULL,
                                 stderr=subprocess.PIPE, timeout=10, env={**os.environ, "LC_ALL": "C"})
-        require(result.returncode == 1 and b"does not exist" in result.stderr,
+        missing_domain = f"Error: Domain '{BUNDLE_ID}' not found.".encode("utf-8")
+        require(result.returncode == 1 and
+                (b"does not exist" in result.stderr or result.stderr.strip() == missing_domain),
                 "fixture-defaults-exist", "The harness defaults domain must be absent")
         admitted = True
         yield lease
