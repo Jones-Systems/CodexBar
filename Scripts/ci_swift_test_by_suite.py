@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import build_jobs
+import workspace_attest
 import ci_swift_test_artifact as build_artifact
 import ci_swift_test_campaign as campaign
 import test_profiles
@@ -553,7 +554,13 @@ def run_command(command: list[str], timeout: int | None = None, *, stdout=None, 
     if command and Path(command[0]).name == "swift":
         try:
             with build_jobs.admission(command, cleanup_proved=lambda: _scratch_cleanup_safe) as bounded:
-                return _run_command(bounded, timeout, stdout=stdout, stderr=stderr)
+                producer = workspace_attest.begin_command(command, 'swift-test-command')
+                result = None
+                try:
+                    result = _run_command(bounded, timeout, stdout=stdout, stderr=stderr)
+                    return result
+                finally:
+                    workspace_attest.finalize(producer, result, _scratch_cleanup_safe, sys.exc_info()[1])
         except build_jobs.AdmissionError as error:
             print(f"build not started: {error}", file=sys.stderr, flush=True)
             return 75
@@ -1019,6 +1026,8 @@ def run_suites() -> int:
     swift_command = [args.swift_command, *args.swift_command_arg]
     result = 0
     restored_identity = None
+    producer = workspace_attest.begin(Path.cwd(), 'swift-test-suites', [
+        Path.cwd() / '.build', *([args.export_build] if args.export_build is not None else [])])
     try:
         if args.export_build is not None:
             if (args.parallel or args.list_only or args.limit_groups is not None or args.shard_index is not None
@@ -1050,7 +1059,8 @@ def run_suites() -> int:
         if args.parallel and (args.list_only or args.limit_groups is not None or args.shard_index is not None
                               or args.shard_count is not None or _campaign is not None):
             print("--parallel cannot be combined with discovery-only, shards, limits or a macOS campaign", file=sys.stderr)
-            return 2
+            result = 2
+            return result
         if args.export_build is not None:
             preflight = build_artifact.native_precheck(Path.cwd(), run_captured_command, swift_command)
             if preflight is not None:
@@ -1194,14 +1204,23 @@ def run_suites() -> int:
 
         return result
     finally:
-        if restored_identity is not None:
-            propagating_error = sys.exc_info()[0] is not None
-            try:
-                build_artifact.cleanup_restored_build(Path.cwd(), restored_identity, _scratch_cleanup_safe)
-            except Exception as error:
-                print(f"Restored build cleanup failed: {error}", file=sys.stderr, flush=True)
-                if not propagating_error and result == 0:
-                    raise
+        terminal_error = sys.exc_info()[1]
+        try:
+            if restored_identity is not None:
+                try:
+                    build_artifact.cleanup_restored_build(Path.cwd(), restored_identity, _scratch_cleanup_safe)
+                    if producer is not None:
+                        try:
+                            producer.mark_disposed(Path.cwd() / '.build')
+                        except Exception:
+                            pass  # Optional observation cannot change the proved cleanup result.
+                except Exception as error:
+                    print(f"Restored build cleanup failed: {error}", file=sys.stderr, flush=True)
+                    if terminal_error is None and result == 0:
+                        raise
+        finally:
+            workspace_attest.finalize(producer, result, _scratch_cleanup_safe,
+                                      sys.exc_info()[1] or terminal_error)
         stats.total_seconds = time.monotonic() - total_started
         if "execution_started" in locals():
             stats.execution_seconds = time.monotonic() - execution_started

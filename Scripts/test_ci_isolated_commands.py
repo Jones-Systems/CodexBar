@@ -24,7 +24,8 @@ class IsolatedCICommandsTests(unittest.TestCase):
         scripts = self.workspace / "Scripts"
         scripts.mkdir(parents=True)
         for name in ("test.sh", "ci_swift_test_by_suite.py",
-                     "ci_swift_test_campaign.py", "ci_swift_test_artifact.py", "test_profiles.py", "build_jobs.py"):
+                     "ci_swift_test_campaign.py", "ci_swift_test_artifact.py", "test_profiles.py", "build_jobs.py",
+                     "workspace_attest.py"):
             shutil.copy2(ROOT / "Scripts" / name, scripts / name)
         (scripts / "test_profiles.json").write_text(json.dumps({
             "version": 1, "normal_providers": ["codex", "claude"],
