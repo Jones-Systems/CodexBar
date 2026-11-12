@@ -438,6 +438,40 @@ class HarnessTests(unittest.TestCase):
         return subprocess.CompletedProcess(arguments, 1 if action == "read" else 0,
                                            stdout=b"", stderr=b"Domain does not exist" if action == "read" else b"")
 
+    def test_native_defaults_absence_formats_refuse_other_domains_and_errors(self):
+        current = f"Error: Domain '{harness.BUNDLE_ID}' not found.\n".encode()
+        cases = (
+            (1, b"Domain does not exist", True),
+            (1, current, True),
+            (0, current, False),
+            (2, current, False),
+            (1, b"Error: Domain 'another.fixture' not found.\n", False),
+            (1, b"Permission denied: domain not found.\n", False),
+            (1, b"", False),
+        )
+        for index, (code, diagnostic, admitted) in enumerate(cases):
+            with self.subTest(code=code, diagnostic=diagnostic):
+                home = self.root / f"defaults-{index}"
+                (home / "Library/Caches").mkdir(parents=True)
+
+                def defaults(arguments, **_):
+                    return subprocess.CompletedProcess(
+                        arguments, code if arguments[1] == "read" else 0,
+                        stdout=b"", stderr=diagnostic if arguments[1] == "read" else b"")
+
+                with patch.object(harness.subprocess, "run", side_effect=defaults):
+                    if admitted:
+                        with harness.native_state(home) as lease:
+                            lease.cleanup_allowed = True
+                    else:
+                        self.rejects("fixture-defaults-exist", self.enter_native_state, home)
+                self.assertEqual(list((home / "Library/Caches").iterdir()), [])
+
+    @staticmethod
+    def enter_native_state(home):
+        with harness.native_state(home):
+            raise AssertionError("Unexpected admission of existing or unknown defaults")
+
     def test_native_state_cleanup_success_and_original_failure(self):
         for should_fail in (False, True):
             home = self.home()
