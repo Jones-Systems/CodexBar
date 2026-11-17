@@ -410,6 +410,7 @@ def admission(command: list[str], kind: str = "swift", *, cleanup_proved=None):
 
 def run(command: list[str], kind: str) -> int:
     import ci_swift_test_by_suite as runner
+    import workspace_attest
 
     def cancel(signum, _frame):
         raise SystemExit(128 + signum)
@@ -419,8 +420,13 @@ def run(command: list[str], kind: str) -> int:
         with admission(command, kind, cleanup_proved=lambda: runner._scratch_cleanup_safe) as bounded:
             # Reuse the repository's identity-bound descendant drain without entering
             # its fixture lifecycle or recursively acquiring admission.
-            result = runner._run_command(bounded)
-            return 128 - result if result < 0 else result
+            producer = workspace_attest.begin_command(command, 'build-jobs', kind)
+            result = None
+            try:
+                result = runner._run_command(bounded)
+                return 128 - result if result < 0 else result
+            finally:
+                workspace_attest.finalize(producer, result, runner._scratch_cleanup_safe, sys.exc_info()[1])
     finally:
         for sig, handler in previous.items():
             signal.signal(sig, handler)

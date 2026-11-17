@@ -89,9 +89,8 @@ extension KiroStatusProbeTests {
         print("PTY hard-stop latency after fixture readiness: \(elapsed)")
 
         #expect(result.completion == .idleTimeout)
-        let snapshot = try KiroStatusProbe().parse(output: result.text)
-        #expect(snapshot.planName == "KIRO FREE")
-        #expect(snapshot.creditsUsed == 12.50)
+        #expect(result.text.contains("KIRO FREE"))
+        #expect(result.text.contains("12.50"))
         #expect(
             elapsed < .seconds(hardStopBudget),
             "Delayed holder discovery should not extend the PTY hard stop, took \(elapsed)s")
@@ -181,9 +180,8 @@ extension KiroStatusProbeTests {
 
         #expect(result.completion == .processExited(status: 0))
         #expect(FileManager.default.fileExists(atPath: rootExitedFile.path))
-        let snapshot = try KiroStatusProbe().parse(output: result.text)
-        #expect(snapshot.planName == "KIRO FREE")
-        #expect(snapshot.creditsUsed == 12.50)
+        #expect(result.text.contains("KIRO FREE"))
+        #expect(result.text.contains("12.50"))
         #expect(
             elapsed < .seconds(hardStopBudget),
             "Delayed holder discovery should not extend cleanup after a settle exit, took \(elapsed)s")

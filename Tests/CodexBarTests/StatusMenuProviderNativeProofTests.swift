@@ -25,7 +25,7 @@ final class StatusMenuProviderNativeProofTests: XCTestCase {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let fixture = try CodexWorkspacesNavigationFixture()
         defer { fixture.cleanup() }
-        let providers: [UsageProvider] = [.claude, .codex, .grok]
+        let providers: [UsageProvider] = [.claude, .codex]
         for provider in providers {
             fixture.settings.setProviderEnabled(
                 provider: provider,

@@ -42,10 +42,7 @@ extension StatusItemController {
             provider: target,
             surface: surface,
             override: snapshotOverride)
-        let projectedTokenSnapshot = self.store.tokenSnapshot(fromProviderSnapshot: snapshot, provider: target)
-        let storedTokenSnapshot = UsageStore.tokenCostRequiresProviderSnapshot(target)
-            ? nil
-            : self.store.tokenSnapshot(for: target)
+        let storedTokenSnapshot = self.store.tokenSnapshot(for: target)
         let now = Date()
         let codexProjection = self.store.codexConsumerProjectionIfNeeded(
             for: target,
@@ -68,10 +65,10 @@ extension StatusItemController {
             dashboard = nil
             dashboardError = nil
             if surface == .liveCard {
-                tokenSnapshot = projectedTokenSnapshot ?? storedTokenSnapshot
+                tokenSnapshot = storedTokenSnapshot
                 tokenError = self.store.tokenError(for: target)
             } else {
-                tokenSnapshot = projectedTokenSnapshot
+                tokenSnapshot = nil
                 tokenError = nil
             }
         } else if ProviderDescriptorRegistry.descriptor(for: target).tokenCost.supportsTokenCost,
@@ -81,20 +78,18 @@ extension StatusItemController {
             creditsError = nil
             dashboard = nil
             dashboardError = nil
-            tokenSnapshot = projectedTokenSnapshot ?? storedTokenSnapshot
+            tokenSnapshot = storedTokenSnapshot
             tokenError = self.store.tokenError(for: target)
         } else {
             credits = nil
             creditsError = nil
             dashboard = nil
             dashboardError = nil
-            tokenSnapshot = projectedTokenSnapshot
+            tokenSnapshot = nil
             tokenError = nil
         }
 
         let sourceLabel = sourceLabelOverride ?? (surface == .liveCard ? self.store.sourceLabel(for: target) : nil)
-        // Provider-specific by design: Kilo's automatic source mode is surfaced as card fallback context.
-        let kiloAutoMode = target == .kilo && self.settings.kiloUsageDataSource == .auto
         let (weeklyPace, sessionEquivalentForecast) = self.resolvePaceAndForecast(
             target: target,
             snapshot: snapshot,
@@ -138,14 +133,6 @@ extension StatusItemController {
             tokenCostIsRefreshing: self.store.tokenCostRefreshIsActive(for: target),
             codexLocalSessionCostLedgerEnabled: self.settings.codexLocalSessionCostLedgerEnabled,
             costSummaryInlineEnabled: self.settings.costSummaryShowsInline(for: target),
-            // openai/mistral's cost history always surfaces via the inline dashboard or a
-            // dedicated top-pane submenu (see `makeUsageSubmenu`), so they skip the generic
-            // "Cost" row. This must stay an explicit provider check rather than reusing
-            // `usesProviderCostHistoryAsPrimaryDashboard` (or `tokenCostRequiresProviderSnapshot`):
-            // both of those sets are shared with unrelated concerns (inline-dashboard eligibility,
-            // provider-derived snapshot sourcing) and gain members for reasons that have nothing to
-            // do with whether this row should show, silently disabling the Cost row for those
-            // providers too (e.g. groq's addition to the inline-dashboard set previously did this).
             tokenCostMenuSectionEnabled: ProviderDescriptorRegistry.descriptor(for: target).tokenCost
                 .showsCostMenuSection &&
                 self.settings.costSummaryShowsSubmenu(for: target),
@@ -153,10 +140,8 @@ extension StatusItemController {
             showOptionalCreditsAndExtraUsage: self.settings.showOptionalCreditsAndExtraUsage,
             claudeDailyRoutinesUsageVisible: self.settings.claudeDailyRoutinesUsageVisible,
             codexSparkUsageVisible: self.settings.codexSparkUsageVisible,
-            copilotBudgetExtrasEnabled: self.settings.copilotBudgetExtrasEnabled,
             sourceLabel: sourceLabel,
             subtitleOverride: subtitleOverride,
-            kiloAutoMode: kiloAutoMode,
             hidePersonalInfo: self.settings.hidePersonalInfo,
             weeklyPace: weeklyPace,
             sessionEquivalentForecast: sessionEquivalentForecast,

@@ -3,20 +3,6 @@ import Testing
 @testable import CodexBarCore
 
 struct ObservabilityHubLinuxTests {
-    @Test
-    func `local row identities stay distinct without claiming account correlation`() {
-        let rows = ["profile-a", "profile-b"].map { id in
-            HubAccountObservation(
-                environmentID: "local", environmentLabel: "Local", profile: "Same display name",
-                provider: "codex", stableID: nil, displayLabel: nil, hostDefault: false,
-                health: .unknown,
-                evidence: HubEvidence(source: "Synthetic projection", observedAt: nil, availability: .partial),
-                id: id)
-        }
-        let hub = ObservabilityHub.aggregate(accounts: rows, providers: [], now: Self.now)
-        #expect(Set(hub.accounts.map(\.id)).count == 2)
-        #expect(!hub.accounts[0].isSameAccount(as: hub.accounts[1]))
-    }
 
     @Test
     func `missing host telemetry remains unsupported without synthetic zeros`() {
@@ -31,6 +17,21 @@ struct ObservabilityHubLinuxTests {
         #expect(hub.hosts.first?.cpuPercent == nil)
         #expect(hub.hosts.first?.memoryUsedBytes == nil)
         #expect(hub.work.isEmpty)
+    }
+
+    @Test
+    func `local row identities stay distinct without claiming account correlation`() {
+        let rows = ["profile-a", "profile-b"].map { id in
+            HubAccountObservation(
+                environmentID: "local", environmentLabel: "Local", profile: "Same display name",
+                provider: "codex", stableID: nil, displayLabel: nil, hostDefault: false,
+                health: .unknown,
+                evidence: HubEvidence(source: "Synthetic projection", observedAt: nil, availability: .partial),
+                id: id)
+        }
+        let hub = ObservabilityHub.aggregate(accounts: rows, providers: [], now: Self.now)
+        #expect(Set(hub.accounts.map(\.id)).count == 2)
+        #expect(!hub.accounts[0].isSameAccount(as: hub.accounts[1]))
     }
 
     @Test

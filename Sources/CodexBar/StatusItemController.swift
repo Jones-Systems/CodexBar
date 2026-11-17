@@ -96,10 +96,10 @@ final class StatusItemController: NSObject, NSMenuDelegate, StatusItemControllin
 
     let store: UsageStore
     let settings: SettingsStore
-    var cloudSyncState: CloudSyncState {
+    var fleetAccountState: FleetAccountState {
         didSet {
-            guard oldValue !== self.cloudSyncState else { return }
-            self.observeCloudSyncChanges()
+            guard oldValue !== self.fleetAccountState else { return }
+            self.observeFleetAccountChanges()
             self.invalidateMenus(refreshOpenMenus: true)
         }
     }
@@ -354,8 +354,6 @@ final class StatusItemController: NSObject, NSMenuDelegate, StatusItemControllin
             preference: self.settings.menuBarMetricPreference(for: provider, snapshot: snapshot),
             provider: provider,
             snapshot: snapshot,
-            supportsAverage: self.settings.menuBarMetricSupportsAverage(for: provider),
-            antigravityPrioritizeExhaustedQuotas: self.settings.antigravityPrioritizeExhaustedQuotas,
             now: now)
     }
 
@@ -377,14 +375,14 @@ final class StatusItemController: NSObject, NSMenuDelegate, StatusItemControllin
         menuCardRenderingEnabled: Bool = StatusItemController.menuCardRenderingEnabled,
         menuRefreshEnabled: Bool = StatusItemController.menuRefreshEnabled,
         observeProviderConfigNotifications: Bool = !SettingsStore.isRunningTests,
-        cloudSyncState: CloudSyncState = CloudSyncState())
+        fleetAccountState: FleetAccountState = FleetAccountState())
     {
         if SettingsStore.isRunningTests {
             _ = NSApplication.shared
         }
         self.store = store
         self.settings = settings
-        self.cloudSyncState = cloudSyncState
+        self.fleetAccountState = fleetAccountState
         self.agentSessions = AgentSessionsStore(settings: settings)
         self.account = account
         self.updater = updater
@@ -501,7 +499,7 @@ final class StatusItemController: NSObject, NSMenuDelegate, StatusItemControllin
         self.observeSettingsChanges()
         self.observeUpdaterChanges()
         self.observeManagedCodexCoordinatorChanges()
-        self.observeCloudSyncChanges()
+        self.observeFleetAccountChanges()
     }
 
     private func observeStoreChanges() {

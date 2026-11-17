@@ -29,7 +29,7 @@ final class ProviderAccentColorScreenshotRenderTests: XCTestCase {
             isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
-        let provider = UsageProvider.antigravity
+        let provider = UsageProvider.codex
         let defaultSettings = Self.settings(accentColor: nil, provider: provider)
         let overriddenSettings = Self.settings(accentColor: Self.overrideHex, provider: provider)
 

@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Exercise the real launch-smoke script with owned executable fixtures, never an app."""
+"""Exercise packaging resource contracts with owned executables, never a real app."""
 
 import os
 from pathlib import Path
+import shlex
+import shutil
 import signal
 import subprocess
 import sys
+import tarfile
 import tempfile
 import textwrap
 import unittest
@@ -30,6 +33,11 @@ class LaunchSmokeTests(unittest.TestCase):
         self.checkout = self.root / "checkout"
         (self.checkout / "Scripts").mkdir(parents=True)
         (self.checkout / ".build").mkdir()
+        self.resource_input = self.checkout / "Sources/CodexBarCore/Resources/fixture.js"
+        self.resource_input.parent.mkdir(parents=True)
+        self.resource_input.write_text("synthetic tracked resource\n")
+        self.git("init", "--quiet")
+        self.git("add", "--", str(self.resource_input.relative_to(self.checkout)))
         self.script = self.checkout / "Scripts/verify_packaged_app_launch.sh"
         self.write_executable(self.script, SCRIPT.read_text(encoding="utf-8"))
         self.app = self.checkout / "Fixture.app"
@@ -53,6 +61,13 @@ if executable == denied or denied in executable.parents:
 os.execv(sys.argv[3], sys.argv[3:])
 ''')
         fixture = '''#!/bin/sh
+if [ "${1:-}" = --help ]; then
+  case "$0" in */codexbar) printf 'symlink-help\\n' >> "$FIXTURE_RECORD" ;;
+    *) printf 'helper-help\\n' >> "$FIXTURE_RECORD" ;; esac
+  if [ "${FIXTURE_PROBE_FAILURE:-0}" = 1 ]; then exit 17; fi
+  printf 'fixture help\\n'
+  exit 0
+fi
 if [ "${CODEXBAR_RESOURCE_SMOKE:-0}" = 1 ]; then
   printf 'probe\\n' >> "$FIXTURE_RECORD"
   if [ "${FIXTURE_PROBE_FAILURE:-0}" = 1 ]; then exit 17; fi
@@ -65,6 +80,16 @@ exec sleep 300
         self.write_executable(executable, fixture)
         self.write_executable(cli, fixture)
         self.record = self.root / "record"
+
+    def git(self, *arguments):
+        return subprocess.run(["/usr/bin/git", "-C", str(self.checkout), *arguments],
+                              env={"PATH": "/usr/bin:/bin", "GIT_CONFIG_NOSYSTEM": "1",
+                                   "GIT_CONFIG_GLOBAL": "/dev/null"},
+                              check=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    def slim_source(self):
+        # Keep untracked source/output leftovers to prove the index selects the contract.
+        self.git("rm", "--quiet", "--cached", "--", str(self.resource_input.relative_to(self.checkout)))
 
     @staticmethod
     def write_executable(path, content):
@@ -128,6 +153,164 @@ exec sleep 300
         self.assertEqual(self.record.read_text().splitlines(), ["probe"])
         self.assertIn("cannot load CodexBarCore resources", stderr)
 
+    def test_tracked_resources_require_bundle_before_launch(self):
+        shutil.rmtree(self.app / "Contents/Helpers/CodexBar_CodexBarCore.bundle")
+        result, stdout, stderr = self.run_smoke(resource_only=True)
+        self.assertNotEqual(result, 0, stdout)
+        self.assertIn("missing CodexBarCore resource bundle", stderr)
+        self.assertFalse(self.record.exists())
+
+    def test_coreless_resource_only_proves_both_cli_routes_without_app_startup(self):
+        self.slim_source()
+        result, stdout, stderr = self.run_smoke(resource_only=True)
+        self.assertEqual(result, 0, stderr)
+        self.assertEqual(self.record.read_text().splitlines(), ["helper-help", "symlink-help"])
+        self.assertIn("app forced resource-load proof unavailable", stdout)
+        self.assertIn("application lifetime was not tested", stdout)
+        self.assertNotIn("resource probe OK", stdout)
+
+    def test_coreless_default_keeps_app_liveness_separate(self):
+        self.slim_source()
+        result, stdout, stderr = self.run_smoke()
+        self.assertEqual(result, 0, stderr)
+        self.assertEqual(self.record.read_text().splitlines(), ["helper-help", "symlink-help", "application"])
+        self.assertIn("app forced resource-load proof unavailable", stdout)
+        self.assertIn("Launch smoke check OK", stdout)
+
+    def test_coreless_cli_failure_cannot_start_the_app(self):
+        self.slim_source()
+        result, stdout, stderr = self.run_smoke(probe_failure=True)
+        self.assertNotEqual(result, 0, stdout)
+        self.assertEqual(self.record.read_text().splitlines(), ["helper-help"])
+        self.assertIn("CLI --help failed", stderr)
+
+    def test_unverifiable_source_cannot_silently_select_coreless_contract(self):
+        (self.checkout / ".git").rename(self.checkout / ".git-unavailable")
+        result, stdout, _ = self.run_smoke(resource_only=True)
+        self.assertNotEqual(result, 0, stdout)
+        self.assertFalse(self.record.exists())
+
+    def stage_app_resources(self, *, core_bundle=True):
+        build = self.root / "build-products"
+        build.mkdir()
+        for bundle in ("KeyboardShortcuts_KeyboardShortcuts.bundle", "Retained.bundle"):
+            (build / bundle).mkdir()
+        if core_bundle:
+            (build / "CodexBar_CodexBarCore.bundle").mkdir()
+        stage = self.root / "staged.app"
+        (stage / "Contents/Resources").mkdir(parents=True)
+        (stage / "Contents/Helpers").mkdir()
+        source = (ROOT / "Scripts/package_app.sh").read_text()
+        block = source.split("# SwiftPM resource bundles (", 1)[1].split("# Ensure contents are writable", 1)[0]
+        # Execute only the real resource-copy block, never build, signing, or launch.
+        block = "# SwiftPM resource bundles (" + block
+        environment = self.environment()
+        environment.update(ROOT=str(self.checkout), PREFERRED_BUILD_DIR=str(build), APP=str(stage))
+        result, stdout, stderr = self.run_process(["/bin/bash", "-euc", block], environment)
+        return stage, result, stdout, stderr
+
+    def test_app_staging_retains_required_and_non_core_bundles(self):
+        stage, result, _, stderr = self.stage_app_resources()
+        self.assertEqual(result, 0, stderr)
+        for relative in ("Resources/CodexBar_CodexBarCore.bundle", "Helpers/CodexBar_CodexBarCore.bundle",
+                         "Resources/KeyboardShortcuts_KeyboardShortcuts.bundle", "Resources/Retained.bundle"):
+            self.assertTrue((stage / "Contents" / relative).is_dir(), relative)
+
+    def test_app_staging_does_not_accept_missing_required_core_bundle(self):
+        _, result, stdout, stderr = self.stage_app_resources(core_bundle=False)
+        self.assertNotEqual(result, 0, stdout)
+        self.assertIn("Missing CodexBarCore SwiftPM resource bundle", stderr)
+
+    def test_app_staging_excludes_stale_core_bundle_after_source_removal(self):
+        self.slim_source()
+        stage, result, _, stderr = self.stage_app_resources()
+        self.assertEqual(result, 0, stderr)
+        self.assertFalse(list(stage.rglob("CodexBar_CodexBarCore.bundle")))
+        self.assertTrue((stage / "Contents/Resources/KeyboardShortcuts_KeyboardShortcuts.bundle").is_dir())
+        self.assertTrue((stage / "Contents/Resources/Retained.bundle").is_dir())
+
+    @staticmethod
+    def workflow_command(name):
+        workflow = (ROOT / ".github/workflows/release-cli.yml").read_text()
+        step = workflow.split(f"      - name: {name}\n", 1)[1].split("\n      - name:", 1)[0]
+        lines = []
+        for line in step.split("        run: |\n", 1)[1].splitlines():
+            if line and not line.startswith("          "):
+                break
+            lines.append(line[10:])
+        return "\n".join(lines) + "\n"
+
+    def package_cli_resources(self, *, core_bundle=True):
+        build = self.root / "cli-products"
+        build.mkdir()
+        shutil.copy2(self.app / "Contents/Helpers/CodexBarCLI", build / "CodexBarCLI")
+        if core_bundle:
+            (build / "CodexBar_CodexBarCore.resources").mkdir()
+        shutil.copy2(ROOT / "Scripts/generate_release_checksum.sh", self.checkout / "Scripts")
+        output = self.root / "package-output"
+        environment = self.environment()
+        environment.update(GITHUB_WORKSPACE=str(self.checkout), GITHUB_OUTPUT=str(output),
+                           RELEASE_TAG="v0.0.0", FIXTURE_BIN_DIR=str(build))
+        command = self.workflow_command("Package")
+        command = command.replace("${{ steps.build.outputs.bin_dir }}", "$FIXTURE_BIN_DIR")
+        command = command.replace("${{ matrix.asset-platform }}", "fixture")
+        command = command.replace("${{ matrix.asset-arch }}", "fixture")
+        members = []
+        try:
+            result, stdout, stderr = self.run_process(["/bin/bash", "-c", command], environment)
+            values = dict(line.split("=", 1) for line in output.read_text().splitlines())
+            stage = Path(values["out_dir"])
+            self.assertFalse(stage.name.startswith("."), "manual artifact uploads exclude hidden ancestors")
+            if result == 0:
+                with tarfile.open(stage / values["asset"]) as archive:
+                    members = archive.getnames()
+                self.assertTrue((stage / (values["asset"] + ".sha256")).is_file())
+        finally:
+            values = dict(line.split("=", 1) for line in output.read_text().splitlines())
+            environment.update(CLI_PACKAGE_ROOT=values["out_dir"], CLI_PACKAGE_IDENTITY=values["out_dir_identity"])
+            cleanup, _, error = self.run_process(
+                ["/bin/bash", "-euc", self.workflow_command("Clean CLI package scratch")], environment)
+            self.assertEqual(cleanup, 0, error)
+            self.assertEqual(list(self.checkout.glob("cli-package-*")), [])
+        return result, stdout, stderr, members
+
+    def test_cli_archive_keeps_required_resources_and_both_forced_probes(self):
+        result, _, stderr, members = self.package_cli_resources()
+        self.assertEqual(result, 0, stderr)
+        self.assertIn("CodexBar_CodexBarCore.bundle", members)
+        self.assertEqual(self.record.read_text().splitlines(), ["probe", "probe"])
+
+    def test_cli_archive_rejects_missing_required_resources_and_cleans_failure(self):
+        result, stdout, stderr, _ = self.package_cli_resources(core_bundle=False)
+        self.assertNotEqual(result, 0, stdout)
+        self.assertIn("Missing CodexBarCore resource bundle", stderr)
+        self.assertFalse(self.record.exists())
+
+    def test_coreless_cli_archive_excludes_stale_resources_and_checks_help_routes(self):
+        self.slim_source()
+        result, stdout, stderr, members = self.package_cli_resources()
+        self.assertEqual(result, 0, stderr)
+        self.assertEqual(members, ["CodexBarCLI", "codexbar", "VERSION"])
+        self.assertEqual(self.record.read_text().splitlines(), ["helper-help", "symlink-help"])
+        self.assertIn("forced resource-load proof unavailable", stdout)
+
+    def test_cli_staging_cleanup_rejects_changed_identity(self):
+        stage = self.checkout / "cli-package-fixture"
+        stage.mkdir()
+        environment = self.environment()
+        environment.update(GITHUB_WORKSPACE=str(self.checkout), CLI_PACKAGE_ROOT=str(stage),
+                           CLI_PACKAGE_IDENTITY="0:0")
+        command = ["/bin/bash", "-euc", self.workflow_command("Clean CLI package scratch")]
+        result, stdout, stderr = self.run_process(command, environment)
+        self.assertNotEqual(result, 0, stdout)
+        self.assertIn("identity changed", stderr)
+        self.assertTrue(stage.is_dir())
+        info = stage.stat()
+        environment["CLI_PACKAGE_IDENTITY"] = f"{info.st_dev}:{info.st_ino}"
+        result, _, stderr = self.run_process(command, environment)
+        self.assertEqual(result, 0, stderr)
+        self.assertFalse(stage.exists())
+
     def test_scratch_inside_denied_checkout_fails_before_any_probe_and_cleans_up(self):
         scratch = self.checkout / ".build"
         result, stdout, stderr = self.run_smoke(resource_only=True, scratch=scratch)
@@ -141,7 +324,9 @@ exec sleep 300
         step = workflow.split("      - name: Admit, package and statically verify the candidate\n", 1)[1]
         step = step.split("\n      - name:", 1)[0]
         command = textwrap.dedent(step.split("        run: |\n", 1)[1])
-        self.write_executable(self.tools / "git", '#!/bin/sh\n[ "$1" = check-ignore ]\n')
+        self.write_executable(self.tools / "git", '#!/bin/sh\n'
+                              'if [ "$1" = check-ignore ]; then exit 0; fi\n'
+                              f'exec {shlex.quote(shutil.which("git"))} "$@"\n')
         # Keep the actual workflow shell and smoke checker; replace only build/admission producers.
         self.write_executable(self.tools / "python3", f"#!{sys.executable}\n" + '''
 from pathlib import Path

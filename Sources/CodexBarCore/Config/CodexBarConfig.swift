@@ -8,7 +8,6 @@ public struct CodexBarConfig: Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case version
         case providers
-        case hooks
     }
 
     private enum ProviderCodingKeys: String, CodingKey {
@@ -17,17 +16,13 @@ public struct CodexBarConfig: Codable, Sendable {
 
     public var version: Int
     public var providers: [ProviderConfig]
-    /// Optional external event hooks. Absent (nil) or disabled means no hooks run.
-    public var hooks: HooksConfig?
 
     public init(
         version: Int = Self.currentVersion,
-        providers: [ProviderConfig],
-        hooks: HooksConfig? = nil)
+        providers: [ProviderConfig])
     {
         self.version = version
         self.providers = providers
-        self.hooks = hooks
     }
 
     public init(from decoder: any Decoder) throws {
@@ -49,19 +44,10 @@ public struct CodexBarConfig: Codable, Sendable {
             try providers.append(ProviderConfig(from: providerDecoder))
         }
         self.providers = providers
-        self.hooks = try container.decodeIfPresent(HooksConfig.self, forKey: .hooks)
     }
 
-    /// User plugins exist only where JavaScriptCore does; other platforms drop their config entries.
     private static func isKnownProviderInstance(_ instanceID: ProviderInstanceID) -> Bool {
-        if instanceID.firstPartyProvider != nil {
-            return true
-        }
-        #if canImport(JavaScriptCore)
-        return UserProviderPluginRegistry.plugin(for: instanceID) != nil
-        #else
-        return false
-        #endif
+        instanceID.firstPartyProvider != nil
     }
 
     public static func makeDefault(
@@ -70,8 +56,7 @@ public struct CodexBarConfig: Codable, Sendable {
         let providers = UsageProvider.allCases.map { provider in
             Self.defaultProviderConfig(
                 provider,
-                metadata: metadata,
-                alibabaTokenPlanRegion: .international)
+                metadata: metadata)
         }
         return CodexBarConfig(version: Self.currentVersion, providers: providers)
     }
@@ -107,25 +92,23 @@ public struct CodexBarConfig: Codable, Sendable {
         normalized.reserveCapacity(max(self.providers.count, UsageProvider.allCases.count))
 
         for var provider in self.providers {
-            guard !seen.contains(provider.id) else { continue }
+            guard let firstPartyProvider = provider.id.firstPartyProvider,
+                  !seen.contains(provider.id)
+            else { continue }
             seen.insert(provider.id)
-            if let firstPartyProvider = provider.id.firstPartyProvider {
-                ProviderDescriptorRegistry.descriptor(for: firstPartyProvider).normalizeConfig(&provider)
-            }
+            ProviderDescriptorRegistry.descriptor(for: firstPartyProvider).normalizeConfig(&provider)
             normalized.append(provider)
         }
 
         for provider in UsageProvider.allCases where !seen.contains(provider.instanceID) {
             normalized.append(Self.defaultProviderConfig(
                 provider,
-                metadata: metadata,
-                alibabaTokenPlanRegion: .chinaMainland))
+                metadata: metadata))
         }
 
         return CodexBarConfig(
             version: Self.currentVersion,
-            providers: normalized,
-            hooks: self.hooks)
+            providers: normalized)
     }
 
     public func sanitizedForDump(showSecrets: Bool = false) -> CodexBarConfig {
@@ -163,13 +146,11 @@ public struct CodexBarConfig: Codable, Sendable {
 
     private static func defaultProviderConfig(
         _ provider: UsageProvider,
-        metadata: [UsageProvider: ProviderMetadata],
-        alibabaTokenPlanRegion: AlibabaTokenPlanAPIRegion) -> ProviderConfig
+        metadata: [UsageProvider: ProviderMetadata]) -> ProviderConfig
     {
         ProviderConfig(
             id: provider.instanceID,
-            enabled: metadata[provider]?.defaultEnabled,
-            region: provider == .alibabatokenplan ? alibabaTokenPlanRegion.rawValue : nil)
+            enabled: metadata[provider]?.defaultEnabled)
     }
 }
 
@@ -189,9 +170,6 @@ public struct ProviderConfig: Codable, Sendable, Identifiable {
     public var quotaWarnings: QuotaWarningConfig?
     /// User override for the provider brand color, as `#RRGGBB`. Nil keeps the descriptor default.
     public var accentColor: String?
-    /// Arbitrary user-plugin values stay scoped to the provider instance. Secure values are redacted from config dumps.
-    public var pluginSettings: [String: String]?
-    public var pluginSecrets: [String: String]?
     var extensionValues: [String: ProviderConfigExtensionValue]
 
     public init(
@@ -208,9 +186,7 @@ public struct ProviderConfig: Codable, Sendable, Identifiable {
         enterpriseHost: String? = nil,
         tokenAccounts: ProviderTokenAccountData? = nil,
         quotaWarnings: QuotaWarningConfig? = nil,
-        accentColor: String? = nil,
-        pluginSettings: [String: String]? = nil,
-        pluginSecrets: [String: String]? = nil)
+        accentColor: String? = nil)
     {
         self.id = id
         self.enabled = enabled
@@ -226,8 +202,6 @@ public struct ProviderConfig: Codable, Sendable, Identifiable {
         self.tokenAccounts = tokenAccounts
         self.quotaWarnings = quotaWarnings
         self.accentColor = accentColor
-        self.pluginSettings = pluginSettings
-        self.pluginSecrets = pluginSecrets
         self.extensionValues = [:]
     }
 
@@ -265,9 +239,6 @@ public struct ProviderConfig: Codable, Sendable, Identifiable {
         }
         if copy.cookieHeader != nil {
             copy.cookieHeader = "[REDACTED]"
-        }
-        if copy.pluginSecrets != nil {
-            copy.pluginSecrets = copy.pluginSecrets?.mapValues { _ in "[REDACTED]" }
         }
         if let tokenAccounts = copy.tokenAccounts {
             copy.tokenAccounts = tokenAccounts.sanitizedForDump()

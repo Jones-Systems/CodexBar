@@ -25,7 +25,7 @@ final class StatusMenuCompactAccountLayoutTests: XCTestCase {
         let registry = ProviderRegistry.shared
         for provider in UsageProvider.allCases {
             guard let metadata = registry.metadata[provider] else { continue }
-            settings.setProviderEnabled(provider: provider, metadata: metadata, enabled: provider == .copilot)
+            settings.setProviderEnabled(provider: provider, metadata: metadata, enabled: provider == .claude)
         }
         return settings
     }
@@ -46,21 +46,21 @@ final class StatusMenuCompactAccountLayoutTests: XCTestCase {
         self.disableMenuCardsForTesting()
         let settings = self.makeSettings()
         for label in ["One", "Two", "Three", "Four", "Five"] {
-            settings.addTokenAccount(provider: .copilot, label: label, token: "gh_\(label)")
+            settings.addTokenAccount(provider: .claude, label: label, token: "gh_\(label)")
         }
-        settings.setActiveTokenAccountIndex(0, for: .copilot)
-        let accounts = settings.tokenAccounts(for: .copilot)
+        settings.setActiveTokenAccountIndex(0, for: .claude)
+        let accounts = settings.tokenAccounts(for: .claude)
 
         let fetcher = UsageFetcher()
         let store = UsageStore(fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
         let usedPercents: [Double] = [10, 95, 20, 30, 40]
-        store.accountSnapshots[.copilot] = accounts.enumerated().map { index, account in
+        store.accountSnapshots[.claude] = accounts.enumerated().map { index, account in
             TokenAccountUsageSnapshot(
                 account: account,
                 snapshot: self.snapshot(usedPercent: usedPercents[index]),
                 error: nil,
                 sourceLabel: "test",
-                cacheKey: store.tokenAccountSnapshotCacheKey(provider: .copilot, account: account))
+                cacheKey: store.tokenAccountSnapshotCacheKey(provider: .claude, account: account))
         }
         let controller = StatusItemController(
             store: store,
@@ -71,7 +71,7 @@ final class StatusMenuCompactAccountLayoutTests: XCTestCase {
             statusBar: testStatusBar())
         defer { controller.releaseStatusItemsForTesting() }
 
-        let menu = controller.makeMenu(for: .copilot)
+        let menu = controller.makeMenu(for: .claude)
         controller.menuWillOpen(menu)
 
         // Active card + critical row + best-candidate row + two healthy rows folded.
@@ -89,19 +89,19 @@ final class StatusMenuCompactAccountLayoutTests: XCTestCase {
         self.disableMenuCardsForTesting()
         let settings = self.makeSettings()
         for label in ["One", "Two", "Three"] {
-            settings.addTokenAccount(provider: .copilot, label: label, token: "gh_\(label)")
+            settings.addTokenAccount(provider: .claude, label: label, token: "gh_\(label)")
         }
-        let accounts = settings.tokenAccounts(for: .copilot)
+        let accounts = settings.tokenAccounts(for: .claude)
 
         let fetcher = UsageFetcher()
         let store = UsageStore(fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
-        store.accountSnapshots[.copilot] = accounts.map { account in
+        store.accountSnapshots[.claude] = accounts.map { account in
             TokenAccountUsageSnapshot(
                 account: account,
                 snapshot: self.snapshot(usedPercent: 10),
                 error: nil,
                 sourceLabel: "test",
-                cacheKey: store.tokenAccountSnapshotCacheKey(provider: .copilot, account: account))
+                cacheKey: store.tokenAccountSnapshotCacheKey(provider: .claude, account: account))
         }
         let controller = StatusItemController(
             store: store,
@@ -112,7 +112,7 @@ final class StatusMenuCompactAccountLayoutTests: XCTestCase {
             statusBar: testStatusBar())
         defer { controller.releaseStatusItemsForTesting() }
 
-        let menu = controller.makeMenu(for: .copilot)
+        let menu = controller.makeMenu(for: .claude)
         controller.menuWillOpen(menu)
 
         let ids = menu.items.compactMap { $0.representedObject as? String }

@@ -41,6 +41,30 @@ enum JonesUpdateTestFixtures {
 
 struct JonesUpdateTrustPolicyTests {
     @Test
+    func `Developer ID identity remains disabled until migration qualification`() throws {
+        var info = JonesUpdateTestFixtures.package(channel: "none")
+        info["JonesSigningMode"] = "developer-id"
+        info["CodexBarTeamID"] = "2CUPSQS986"
+        info["JonesAppGroupID"] = "2CUPSQS986.com.jonessystems.codexbar"
+        #expect(try !JonesUpdateTrustPolicy.validate(infoDictionary: info).isEnabled)
+        info["JonesUpdateChannel"] = "stable"
+        #expect(throws: JonesUpdateTrustPolicy.Rejection.channel) {
+            try JonesUpdateTrustPolicy.validate(infoDictionary: info)
+        }
+        info["JonesUpdateChannel"] = "none"
+        for value in ["adhoc", "unknown"] {
+            info["JonesSigningMode"] = value
+            #expect(throws: JonesUpdateTrustPolicy.Rejection.identity) {
+                try JonesUpdateTrustPolicy.validate(infoDictionary: info)
+            }
+        }
+        info["JonesSigningMode"] = true
+        #expect(throws: JonesUpdateTrustPolicy.Rejection.identity) {
+            try JonesUpdateTrustPolicy.validate(infoDictionary: info)
+        }
+    }
+
+    @Test
     func `stable Jones package binds its feed key identity and source`() throws {
         let policy = try JonesUpdateTestFixtures.policy()
         #expect(policy.identity == .production)

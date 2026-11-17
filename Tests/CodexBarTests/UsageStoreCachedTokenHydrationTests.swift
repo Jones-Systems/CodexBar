@@ -289,9 +289,7 @@ struct UsageStoreCachedTokenHydrationTests {
         defaults.removePersistentDomain(forName: suite)
         let settings = SettingsStore(
             userDefaults: defaults,
-            configStore: testConfigStore(suiteName: suite),
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: testConfigStore(suiteName: suite))
         settings.refreshFrequency = .fiveMinutes
         settings.statusChecksEnabled = false
         settings.costUsageEnabled = true

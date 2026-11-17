@@ -65,25 +65,6 @@ extension SettingsStore {
             set: { self[providerConfig: provider, field: field] = $0 })
     }
 
-    func providerConfigSecretBinding(
-        provider: UsageProvider,
-        key: String,
-        logField: String) -> Binding<String>
-    {
-        Binding(
-            get: {
-                self.configSnapshot.providerConfig(for: provider.instanceID)?.pluginSecrets?[key] ?? ""
-            },
-            set: { value in
-                self.updateProviderConfig(provider: provider) { entry in
-                    var secrets = entry.pluginSecrets ?? [:]
-                    secrets[key] = self.normalizedConfigValue(value)
-                    entry.pluginSecrets = secrets.isEmpty ? nil : secrets
-                }
-                self.logSecretUpdate(provider: provider, field: logField, value: value)
-            })
-    }
-
     func providerCookieSourceBinding(
         provider: UsageProvider,
         fallback: ProviderCookieSource) -> Binding<ProviderCookieSource>
@@ -227,42 +208,6 @@ extension SettingsStore {
                 config.weekly = windowConfig.hasOverride ? windowConfig : nil
             }
             entry.quotaWarnings = config.isEmpty ? nil : config
-        }
-    }
-
-    // MARK: - Hooks
-
-    var hooksConfig: HooksConfig {
-        self.configSnapshot.hooks ?? HooksConfig()
-    }
-
-    var hooksEnabled: Bool {
-        self.hooksConfig.enabled
-    }
-
-    var hookRules: [HookRule] {
-        self.hooksConfig.events
-    }
-
-    func setHooksEnabled(_ enabled: Bool) {
-        self.updateHooks { $0.enabled = enabled }
-    }
-
-    func addHookRule(_ rule: HookRule) {
-        self.updateHooks { $0.events.append(rule) }
-    }
-
-    func updateHookRule(_ rule: HookRule) {
-        self.updateHooks { config in
-            if let index = config.events.firstIndex(where: { $0.id == rule.id }) {
-                config.events[index] = rule
-            }
-        }
-    }
-
-    func removeHookRule(id: String) {
-        self.updateHooks { config in
-            config.events.removeAll { $0.id == id }
         }
     }
 

@@ -96,9 +96,7 @@ extension CodexManagedOpenAIWebTests {
         let configStore = testConfigStore(suiteName: suite)
         let settings = SettingsStore(
             userDefaults: defaults,
-            configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: configStore)
         settings._test_activeManagedCodexAccount = nil
         settings._test_activeManagedCodexRemoteHomePath = nil
         settings._test_unreadableManagedCodexAccountStore = false

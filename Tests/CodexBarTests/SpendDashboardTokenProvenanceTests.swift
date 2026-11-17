@@ -8,8 +8,8 @@ import Testing
 struct SpendDashboardTokenProvenanceTests {
     @Test
     func `direct token scan rejects stale config completion`() async {
-        let (settings, store) = Self.makeStore(provider: .bedrock)
-        settings.updateProviderConfig(provider: .bedrock) { $0.region = "us-east-1" }
+        let (settings, store) = Self.makeStore(provider: .claude)
+        settings.updateProviderConfig(provider: .claude) { $0.apiKey = "fixture-first" }
         let gate = SpendDashboardProvenanceGate()
         store._test_tokenUsageSnapshotLoaderOverride = { _, _, _, _, _ in
             let call = await gate.enter()
@@ -17,24 +17,24 @@ struct SpendDashboardTokenProvenanceTests {
         }
 
         let refresh = Task { @MainActor in
-            await store.refreshTokenUsageNow(for: .bedrock, force: true)
+            await store.refreshTokenUsageNow(for: .claude, force: true)
         }
         await gate.waitForCalls(1)
-        settings.updateProviderConfig(provider: .bedrock) { $0.region = "us-west-2" }
+        settings.updateProviderConfig(provider: .claude) { $0.apiKey = "fixture-replacement" }
         await gate.releaseFirst()
         await refresh.value
         await gate.waitForCalls(2)
         await Self.waitUntil {
-            store.tokenSnapshotForCurrentProviderConfig(for: .bedrock)?.snapshot.last30DaysCostUSD == 2
+            store.tokenSnapshotForCurrentProviderConfig(for: .claude)?.snapshot.last30DaysCostUSD == 2
         }
 
-        #expect(store.tokenSnapshotForCurrentProviderConfig(for: .bedrock)?.snapshot.last30DaysCostUSD == 2)
-        #expect(store.tokenSnapshotPublicationRevision(for: .bedrock) == 1)
+        #expect(store.tokenSnapshotForCurrentProviderConfig(for: .claude)?.snapshot.last30DaysCostUSD == 2)
+        #expect(store.tokenSnapshotPublicationRevision(for: .claude) == 1)
     }
 
     @Test
     func `direct token scan rejects completion across disable and reenable epoch`() async {
-        let (settings, store) = Self.makeStore(provider: .bedrock)
+        let (settings, store) = Self.makeStore(provider: .claude)
         let gate = SpendDashboardProvenanceGate()
         store._test_tokenUsageSnapshotLoaderOverride = { _, _, _, _, _ in
             let call = await gate.enter()
@@ -42,7 +42,7 @@ struct SpendDashboardTokenProvenanceTests {
         }
 
         let refresh = Task { @MainActor in
-            await store.refreshTokenUsageNow(for: .bedrock, force: true)
+            await store.refreshTokenUsageNow(for: .claude, force: true)
         }
         await gate.waitForCalls(1)
         settings.costUsageEnabled = false
@@ -51,102 +51,44 @@ struct SpendDashboardTokenProvenanceTests {
         await refresh.value
         await gate.waitForCalls(2)
         await Self.waitUntil {
-            store.tokenSnapshotForCurrentProviderConfig(for: .bedrock)?.snapshot.last30DaysCostUSD == 2
+            store.tokenSnapshotForCurrentProviderConfig(for: .claude)?.snapshot.last30DaysCostUSD == 2
         }
 
-        #expect(store.tokenSnapshotForCurrentProviderConfig(for: .bedrock)?.snapshot.last30DaysCostUSD == 2)
-        #expect(store.tokenSnapshotPublicationRevision(for: .bedrock) == 1)
+        #expect(store.tokenSnapshotForCurrentProviderConfig(for: .claude)?.snapshot.last30DaysCostUSD == 2)
+        #expect(store.tokenSnapshotPublicationRevision(for: .claude) == 1)
     }
 
     @Test
     func `direct token scan refreshes changed provider config within ttl`() async {
-        let (settings, store) = Self.makeStore(provider: .bedrock)
-        settings.updateProviderConfig(provider: .bedrock) { $0.region = "us-east-1" }
+        let (settings, store) = Self.makeStore(provider: .claude)
+        settings.updateProviderConfig(provider: .claude) { $0.apiKey = "fixture-first" }
         var loadCount = 0
         store._test_tokenUsageSnapshotLoaderOverride = { _, _, _, _, _ in
             loadCount += 1
             return Self.tokenSnapshot(cost: Double(loadCount))
         }
 
-        await store.refreshTokenUsageNow(for: .bedrock, force: true)
-        #expect(store.tokenSnapshotForCurrentProviderConfig(for: .bedrock)?.snapshot.last30DaysCostUSD == 1)
+        await store.refreshTokenUsageNow(for: .claude, force: true)
+        #expect(store.tokenSnapshotForCurrentProviderConfig(for: .claude)?.snapshot.last30DaysCostUSD == 1)
 
-        settings.updateProviderConfig(provider: .bedrock) { $0.region = "us-west-2" }
-        await store.refreshTokenUsageNow(for: .bedrock, force: false)
+        settings.updateProviderConfig(provider: .claude) { $0.apiKey = "fixture-replacement" }
+        await store.refreshTokenUsageNow(for: .claude, force: false)
 
         #expect(loadCount == 2)
-        #expect(store.tokenSnapshotForCurrentProviderConfig(for: .bedrock)?.snapshot.last30DaysCostUSD == 2)
-        #expect(store.tokenSnapshotPublicationRevision(for: .bedrock) == 2)
-    }
-
-    @Test
-    func `provider derived snapshot rejects completion from old history scope`() async {
-        let (settings, store) = Self.makeStore(provider: .mistral)
-        let gate = SpendDashboardProvenanceGate()
-        store._test_providerFetchOutcomeOverride = { _ in
-            _ = await gate.enter()
-            return Self.mistralOutcome(cost: 4)
-        }
-
-        let refresh = Task { @MainActor in
-            await store.refreshProvider(.mistral)
-        }
-        await gate.waitForCalls(1)
-        settings.costUsageHistoryDays = 7
-        await gate.releaseFirst()
-        await refresh.value
-
-        #expect(store.tokenSnapshotForCurrentProviderConfig(for: .mistral) == nil)
-        #expect(store.tokenSnapshotPublicationRevision(for: .mistral) == 0)
-    }
-
-    @Test(arguments: Self.monthBoundaryDates)
-    func `cached token account activation does not prove a forced refresh`(now: Date) async throws {
-        let (settings, store) = Self.makeStore(provider: .mistral)
-        settings.addTokenAccount(provider: .mistral, label: "Fixture", token: "fixture")
-        let account = try #require(settings.effectiveSelectedTokenAccount(for: .mistral))
-        let usage = Self.mistralUsage(cost: 3)
-        store.accountSnapshots[.mistral] = [TokenAccountUsageSnapshot(
-            account: account,
-            snapshot: usage,
-            error: nil,
-            sourceLabel: "fixture-cache",
-            cacheKey: store.tokenAccountSnapshotCacheKey(provider: .mistral, account: account))]
-        store.tokenErrors[.mistral] = "stale account cost error"
-        _ = store.tokenFailureGates[.mistral]?.shouldSurfaceError(onFailureWithPriorData: false)
-        store.activateCachedTokenAccountSnapshot(provider: .mistral, accountID: account.id)
-        let baselineRevision = store.tokenSnapshotPublicationRevision(for: .mistral)
-        #expect(store.tokenSnapshot(for: .mistral)?.last30DaysCostUSD == 3)
-        #expect(store.tokenSnapshotPublicationForCurrentProviderConfig(for: .mistral)?.snapshot?.last30DaysCostUSD == 3)
-        #expect(store.tokenError(for: .mistral) == nil)
-        #expect(store.tokenFailureGates[.mistral]?.streak == 0)
-
-        store.activateCachedTokenAccountSnapshot(provider: .mistral, accountID: account.id)
-        #expect(store.tokenSnapshotPublicationRevision(for: .mistral) == baselineRevision)
-        store._test_providerRefreshOverride = { _ in }
-        let controller = Self.dashboardController(settings: settings, store: store, now: now)
-        controller.update(configuration: SpendDashboardSource.configuration(settings: settings, store: store))
-        await Self.waitUntil { !controller.isRefreshing }
-        #expect(controller.model.groups.first?.totalCost == 3)
-
-        controller.refresh()
-        await Self.waitUntil { !controller.isRefreshing }
-
-        #expect(controller.model.groups.first?.totalCost == 3)
-        #expect(controller.failedSourceCount == 1)
-        #expect(store.tokenSnapshotPublicationRevision(for: .mistral) == baselineRevision)
+        #expect(store.tokenSnapshotForCurrentProviderConfig(for: .claude)?.snapshot.last30DaysCostUSD == 2)
+        #expect(store.tokenSnapshotPublicationRevision(for: .claude) == 2)
     }
 
     @Test(arguments: Self.monthBoundaryDates)
     func `forced successful empty publication removes prior spend without warning`(now: Date) async {
-        let (settings, store) = Self.makeStore(provider: .bedrock)
+        let (settings, store) = Self.makeStore(provider: .claude)
         var loadCount = 0
         store._test_tokenUsageSnapshotLoaderOverride = { _, _, _, _, _ in
             loadCount += 1
             return loadCount <= 2 ? Self.tokenSnapshot(cost: 4) : Self.emptyTokenSnapshot()
         }
-        await store.refreshTokenUsageNow(for: .bedrock, force: true)
-        await store.refreshSpendDashboardTokenUsageNow(for: .bedrock, force: true)
+        await store.refreshTokenUsageNow(for: .claude, force: true)
+        await store.refreshSpendDashboardTokenUsageNow(for: .claude, force: true)
         let controller = Self.dashboardController(settings: settings, store: store, now: now)
         controller.update(configuration: SpendDashboardSource.configuration(settings: settings, store: store))
         await Self.waitUntil { !controller.isRefreshing }
@@ -158,23 +100,23 @@ struct SpendDashboardTokenProvenanceTests {
         #expect(loadCount == 3)
         #expect(controller.model.groups.isEmpty)
         #expect(controller.failedSourceCount == 0)
-        #expect(store.tokenSnapshot(for: .bedrock)?.last30DaysCostUSD == 4)
-        let publication = store.spendDashboardTokenSnapshotPublicationForCurrentConfig(for: .bedrock)
+        #expect(store.tokenSnapshot(for: .claude)?.last30DaysCostUSD == 4)
+        let publication = store.spendDashboardTokenSnapshotPublicationForCurrentConfig(for: .claude)
         #expect(publication?.snapshot == nil)
         #expect(publication?.publicationRevision == 2)
     }
 
     @Test
     func `first open accepts current independent empty publication without redundant refresh`() async {
-        let (settings, store) = Self.makeStore(provider: .bedrock)
+        let (settings, store) = Self.makeStore(provider: .claude)
         var loadCount = 0
         store._test_tokenUsageSnapshotLoaderOverride = { _, _, _, _, _ in
             loadCount += 1
             return Self.emptyTokenSnapshot()
         }
-        await store.refreshTokenUsageNow(for: .bedrock, force: true)
-        await store.refreshSpendDashboardTokenUsageNow(for: .bedrock, force: true)
-        let publicationRevision = store.tokenSnapshotPublicationRevision(for: .bedrock)
+        await store.refreshTokenUsageNow(for: .claude, force: true)
+        await store.refreshSpendDashboardTokenUsageNow(for: .claude, force: true)
+        let publicationRevision = store.tokenSnapshotPublicationRevision(for: .claude)
         let controller = Self.dashboardController(settings: settings, store: store, now: Self.fixtureNow)
 
         controller.update(configuration: SpendDashboardSource.configuration(settings: settings, store: store))
@@ -183,87 +125,20 @@ struct SpendDashboardTokenProvenanceTests {
         #expect(loadCount == 2)
         #expect(controller.model.groups.isEmpty)
         #expect(controller.failedSourceCount == 0)
-        #expect(store.tokenSnapshotPublicationRevision(for: .bedrock) == publicationRevision)
-    }
-
-    @Test
-    func `provider success without cost projection confirms empty publication`() async {
-        let (_, store) = Self.makeStore(provider: .mistral)
-        let outcome = Self.mistralOutcomeWithoutCostProjection()
-
-        await store.applySelectedOutcome(
-            outcome,
-            provider: .mistral,
-            account: nil,
-            fallbackSnapshot: nil)
-
-        let publication = store.tokenSnapshotPublicationForCurrentProviderConfig(for: .mistral)
-        #expect(publication?.snapshot == nil)
-        #expect(publication?.publicationRevision == 1)
-        #expect(store.tokenSnapshot(for: .mistral) == nil)
-    }
-
-    @Test
-    func `legacy token refresh preserves current confirmed empty provider publication`() async {
-        let (_, store) = Self.makeStore(provider: .mistral)
-        await store.applySelectedOutcome(
-            Self.mistralOutcomeWithoutCostProjection(),
-            provider: .mistral,
-            account: nil,
-            fallbackSnapshot: nil)
-        let publicationRevision = store.tokenSnapshotPublicationRevision(for: .mistral)
-
-        await store.refreshTokenUsage(.mistral, force: true)
-
-        let publication = store.tokenSnapshotPublicationForCurrentProviderConfig(for: .mistral)
-        #expect(publication?.snapshot == nil)
-        #expect(publication?.publicationRevision == publicationRevision)
-        #expect(store.tokenError(for: .mistral) == nil)
-    }
-
-    @Test
-    func `multi account provider success publishes current token provenance`() async throws {
-        let (settings, store) = Self.makeStore(provider: .mistral)
-        settings.addTokenAccount(provider: .mistral, label: "Fixture", token: "fixture")
-        let account = try #require(settings.effectiveSelectedTokenAccount(for: .mistral))
-        store.tokenErrors[.mistral] = "stale account cost error"
-        _ = store.tokenFailureGates[.mistral]?.shouldSurfaceError(onFailureWithPriorData: false)
-
-        await store.applySelectedOutcome(
-            Self.mistralOutcome(cost: 7),
-            provider: .mistral,
-            account: account,
-            fallbackSnapshot: nil)
-
-        #expect(store.tokenSnapshotForCurrentProviderConfig(for: .mistral)?.snapshot.last30DaysCostUSD == 7)
-        #expect(store.tokenSnapshotPublicationRevision(for: .mistral) == 1)
-        #expect(store.tokenError(for: .mistral) == nil)
-        #expect(store.tokenFailureGates[.mistral]?.streak == 0)
-    }
-
-    @Test
-    func `legacy token refresh cannot stamp raw provider snapshot without provenance`() async {
-        let (_, store) = Self.makeStore(provider: .mistral)
-        store._setSnapshotForTesting(Self.mistralUsage(cost: 8), provider: .mistral)
-
-        await store.refreshTokenUsage(.mistral, force: true)
-
-        #expect(store.snapshot(for: .mistral) != nil)
-        #expect(store.tokenSnapshotForCurrentProviderConfig(for: .mistral) == nil)
-        #expect(store.tokenSnapshotPublicationRevision(for: .mistral) == 0)
+        #expect(store.tokenSnapshotPublicationRevision(for: .claude) == publicationRevision)
     }
 
     @Test
     func `widget does not project raw provider cost without current provenance`() async throws {
-        let (_, store) = Self.makeStore(provider: .mistral)
-        store._setSnapshotForTesting(Self.mistralUsage(cost: 8), provider: .mistral)
+        let (_, store) = Self.makeStore(provider: .claude)
+        store._setSnapshotForTesting(Self.rawUsage(cost: 8), provider: .claude)
         var savedSnapshots: [WidgetSnapshot] = []
         store._test_widgetSnapshotSaveOverride = { savedSnapshots.append($0) }
 
         store.persistWidgetSnapshot(reason: "provenance-test")
         await store.widgetSnapshotPersistTask?.value
 
-        let entry = try #require(savedSnapshots.last?.entries.first { $0.provider == .mistral })
+        let entry = try #require(savedSnapshots.last?.entries.first { $0.provider == .claude })
         #expect(entry.tokenUsage == nil)
         #expect(entry.dailyUsage.isEmpty)
     }
@@ -312,12 +187,6 @@ struct SpendDashboardTokenProvenanceTests {
             guard let metadata = ProviderRegistry.shared.metadata[candidate] else { continue }
             settings.setProviderEnabled(provider: candidate, metadata: metadata, enabled: candidate == provider)
         }
-        if provider == .bedrock {
-            settings.updateProviderConfig(provider: .bedrock) { config in
-                config.awsAuthMode = BedrockAuthMode.profile.rawValue
-                config.awsProfile = "fixture"
-            }
-        }
         let store = UsageStore(
             fetcher: UsageFetcher(environment: [:]),
             browserDetection: BrowserDetection(cacheTTL: 0),
@@ -355,50 +224,12 @@ struct SpendDashboardTokenProvenanceTests {
             updatedAt: Date(timeIntervalSince1970: 1_784_179_200))
     }
 
-    private static func mistralUsage(cost: Double) -> UsageSnapshot {
-        MistralUsageSnapshot(
-            totalCost: cost,
-            currency: "USD",
-            currencySymbol: "$",
-            totalInputTokens: 4,
-            totalOutputTokens: 6,
-            totalCachedTokens: 0,
-            modelCount: 1,
-            daily: [MistralDailyUsageBucket(
-                day: "2026-07-16",
-                cost: cost,
-                inputTokens: 4,
-                cachedTokens: 0,
-                outputTokens: 6,
-                models: [])],
-            startDate: nil,
-            endDate: nil,
-            updatedAt: Date(timeIntervalSince1970: 1_784_179_200))
-            .toUsageSnapshot()
-    }
-
-    private static func mistralOutcome(cost: Double) -> ProviderFetchOutcome {
-        ProviderFetchOutcome(
-            result: .success(ProviderFetchResult(
-                usage: self.mistralUsage(cost: cost),
-                credits: nil,
-                dashboard: nil,
-                sourceLabel: "fixture",
-                strategyID: "fixture",
-                strategyKind: .apiToken)),
-            attempts: [])
-    }
-
-    private static func mistralOutcomeWithoutCostProjection() -> ProviderFetchOutcome {
-        ProviderFetchOutcome(
-            result: .success(ProviderFetchResult(
-                usage: UsageSnapshot(primary: nil, secondary: nil, updatedAt: Date()),
-                credits: nil,
-                dashboard: nil,
-                sourceLabel: "fixture",
-                strategyID: "fixture",
-                strategyKind: .apiToken)),
-            attempts: [])
+    private static func rawUsage(cost: Double) -> UsageSnapshot {
+        UsageSnapshot(
+            primary: nil,
+            secondary: nil,
+            costUsage: self.tokenSnapshot(cost: cost),
+            updatedAt: self.fixtureNow)
     }
 
     private static func waitUntil(_ condition: @MainActor () -> Bool) async {

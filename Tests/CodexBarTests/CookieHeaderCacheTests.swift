@@ -274,6 +274,7 @@ struct CookieHeaderCacheTests {
         self.withIsolatedCookieCache {
             let claudeAccount = UUID()
             let codexAccount = UUID()
+            let codexProfile = CookieHeaderCache.Scope.profileHome("/synthetic/codex-profile")
 
             CookieHeaderCache.store(
                 provider: .claude,
@@ -290,7 +291,11 @@ struct CookieHeaderCacheTests {
                 scope: .managedAccount(codexAccount),
                 cookieHeader: "auth=codex-account",
                 sourceLabel: "Safari")
-            CookieHeaderCache.store(provider: .perplexity, cookieHeader: "pplx=web", sourceLabel: "Chrome")
+            CookieHeaderCache.store(
+                provider: .codex,
+                scope: codexProfile,
+                cookieHeader: "pplx=web",
+                sourceLabel: "Chrome")
 
             let cleared = CookieHeaderCache.clearAllScopesDetailed(provider: .claude)
 
@@ -300,7 +305,7 @@ struct CookieHeaderCacheTests {
             #expect(CookieHeaderCache.load(provider: .codex)?.cookieHeader == "auth=codex-global")
             #expect(CookieHeaderCache.load(provider: .codex, scope: .managedAccount(codexAccount))?
                 .cookieHeader == "auth=codex-account")
-            #expect(CookieHeaderCache.load(provider: .perplexity)?.cookieHeader == "pplx=web")
+            #expect(CookieHeaderCache.load(provider: .codex, scope: codexProfile)?.cookieHeader == "pplx=web")
         }
     }
 
@@ -904,7 +909,7 @@ struct CookieHeaderCacheTests {
                 cookieHeader: "auth=codex",
                 sourceLabel: "Chrome")
             KeychainCacheStore.store(
-                key: .cookie(provider: .cursor),
+                key: .cookie(provider: .codex),
                 entry: WrongEntry(value: "invalid"))
 
             let cleared = CookieHeaderCache.clearAllDetailed()
@@ -948,13 +953,13 @@ extension CookieHeaderCacheTests {
                     } operation: {
                         try await KeychainCacheStore.$taskInteractionRequiredRetryIntervalOverride.withValue(0.05) {
                             _ = KeychainCacheStore.withRealKeychainPathForTesting {
-                                CookieHeaderCache.loadForDisplay(provider: .cursor)
+                                CookieHeaderCache.loadForDisplay(provider: .codex)
                             }
                             #expect(preflightCount.value == 1)
                             try await Task.sleep(for: .milliseconds(75))
                             for _ in 0..<200 {
                                 _ = KeychainCacheStore.withRealKeychainPathForTesting {
-                                    CookieHeaderCache.loadForDisplay(provider: .cursor)
+                                    CookieHeaderCache.loadForDisplay(provider: .codex)
                                 }
                                 if preflightCount.value >= 2 {
                                     break
@@ -974,7 +979,7 @@ extension CookieHeaderCacheTests {
         CookieHeaderCache.resetDisplayCacheForTesting()
         defer { CookieHeaderCache.resetDisplayCacheForTesting() }
 
-        let provider: UsageProvider = .cursor
+        let provider: UsageProvider = .codex
         let preflightCount = LockIsolated(0)
         try await KeychainCacheStore.withServiceOverrideForTesting("cache-preflight-loop-\(UUID().uuidString)") {
             try await KeychainAccessGate.withTaskOverrideForTesting(false) {

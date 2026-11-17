@@ -6,120 +6,11 @@ import Darwin
 import Glibc
 #endif
 
-#if !CODEXBAR_FULL_TEST_PROFILE
 import Testing
 
-/// Full declares this serialized suite with its provider tests; normal retains its shared TTY regressions.
+/// Shared TTY cleanup and cancellation regressions retained after Kiro provider removal.
 @Suite(.serialized)
 struct KiroStatusProbeTests {}
-#endif
-
-final class KiroTestProcessRegistry: @unchecked Sendable {
-    private struct Record {
-        var processGroup: pid_t?
-    }
-
-    private let lock = NSLock()
-    private let blockOnUnregister: Int?
-    private let blockStartedURL: URL?
-    private let unblock: DispatchSemaphore?
-    private var records: [pid_t: Record] = [:]
-    private var unregisteredPIDs: Set<pid_t> = []
-    private var unregisterCount = 0
-
-    init(
-        blockOnUnregister: Int? = nil,
-        blockStartedURL: URL? = nil,
-        unblock: DispatchSemaphore? = nil)
-    {
-        self.blockOnUnregister = blockOnUnregister
-        self.blockStartedURL = blockStartedURL
-        self.unblock = unblock
-    }
-
-    deinit {
-        self.terminateAll()
-    }
-
-    var dependencies: KiroStatusProbe.PipeProcessRegistry {
-        .init(
-            beginLaunch: { true },
-            endLaunch: {},
-            register: { pid, _ in
-                self.lock.withLock {
-                    self.records[pid] = Record(processGroup: nil)
-                }
-                return true
-            },
-            updateProcessGroup: { pid, processGroup in
-                self.lock.withLock {
-                    guard self.records[pid] != nil else { return }
-                    self.records[pid]?.processGroup = processGroup
-                }
-            },
-            unregister: { pid in
-                let shouldBlock = self.lock.withLock {
-                    self.records.removeValue(forKey: pid)
-                    self.unregisteredPIDs.insert(pid)
-                    self.unregisterCount += 1
-                    return self.unregisterCount == self.blockOnUnregister
-                }
-                if shouldBlock {
-                    if let blockStartedURL = self.blockStartedURL {
-                        _ = FileManager.default.createFile(atPath: blockStartedURL.path, contents: Data())
-                    }
-                    self.unblock?.wait()
-                }
-            })
-    }
-
-    func isRegistered(_ pid: pid_t) -> Bool {
-        self.lock.withLock { self.records[pid] != nil }
-    }
-
-    func didUnregister(_ pid: pid_t) -> Bool {
-        self.lock.withLock { self.unregisteredPIDs.contains(pid) }
-    }
-
-    func activePIDs() -> Set<pid_t> {
-        self.lock.withLock { Set(self.records.keys) }
-    }
-
-    func observedPIDs() -> Set<pid_t> {
-        self.lock.withLock { self.unregisteredPIDs.union(self.records.keys) }
-    }
-
-    func terminate(_ pid: pid_t) {
-        let processGroup = self.lock.withLock { () -> pid_t? in
-            self.records[pid]?.processGroup
-        }
-        if let processGroup, processGroup > 0, processGroup != getpgrp() {
-            _ = kill(-processGroup, SIGKILL)
-        }
-        if pid > 0 {
-            _ = kill(pid, SIGKILL)
-        }
-    }
-
-    func terminateAll() {
-        let records = self.lock.withLock {
-            let records = self.records
-            self.records.removeAll()
-            return records
-        }
-        for (pid, record) in records {
-            if let processGroup = record.processGroup,
-               processGroup > 0,
-               processGroup != getpgrp()
-            {
-                _ = kill(-processGroup, SIGKILL)
-            }
-            if pid > 0 {
-                _ = kill(pid, SIGKILL)
-            }
-        }
-    }
-}
 
 enum KiroProcessTestSupport {
     private struct WaitTimeout: LocalizedError {
@@ -133,25 +24,6 @@ enum KiroProcessTestSupport {
 
     /// This bounds fixture setup only. Tests that exercise production timeout behavior pass their own exact budgets.
     static let fixtureSetupTimeout: Duration = .seconds(20)
-    static let fixtureAccountTimeout: TimeInterval = 15
-
-    static func makeFunctionalProbe(
-        cliURL: URL,
-        accountProbeTimeout: TimeInterval = fixtureAccountTimeout,
-        usageProbeTimeout: TimeInterval = 20,
-        contextProbeTimeout: TimeInterval = 15,
-        pipeTimeoutCap: TimeInterval = 5,
-        processRegistry: KiroTestProcessRegistry? = nil) -> KiroStatusProbe
-    {
-        let registry = processRegistry ?? KiroTestProcessRegistry()
-        return KiroStatusProbe(
-            cliBinaryResolver: { cliURL.path },
-            accountProbeTimeout: accountProbeTimeout,
-            usageProbeTimeout: usageProbeTimeout,
-            contextProbeTimeout: contextProbeTimeout,
-            pipeTimeoutCap: pipeTimeoutCap,
-            pipeProcessRegistry: registry.dependencies)
-    }
 
     static func waitForFile(
         _ url: URL,

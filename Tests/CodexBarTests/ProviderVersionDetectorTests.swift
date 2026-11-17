@@ -11,10 +11,10 @@ final class ProviderVersionDetectorTests: XCTestCase {
     func test_run_returnsFirstLineForSuccessfulCommand() {
         let version = ProviderVersionDetector.run(
             path: "/bin/sh",
-            args: ["-c", "printf 'gemini 1.2.3\\nextra\\n'"],
+            args: ["-c", "printf 'codex 1.2.3\\nextra\\n'"],
             timeout: 1.0)
 
-        XCTAssertEqual(version, "gemini 1.2.3")
+        XCTAssertEqual(version, "codex 1.2.3")
     }
 
     func test_run_returnsNilAfterTimeout() {

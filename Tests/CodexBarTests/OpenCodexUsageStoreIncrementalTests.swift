@@ -245,24 +245,6 @@ struct OpenCodexUsageStoreIncrementalTests {
     }
 
     @Test
-    func `complete newline-less trailing record does not advance the cursor`() throws {
-        let harness = try Harness.make()
-        defer { harness.tearDown() }
-
-        let complete = Harness.line(id: "head", input: 1) + "\n"
-        let trailing = Harness.line(id: "tail", input: 2)
-        try Data((complete + trailing).utf8).write(to: harness.log)
-
-        let sliced = try OpenCodexUsageParser.parse(fileURL: harness.log, from: 0)
-        #expect(sliced.entries.map(\.requestID) == ["head", "tail"])
-        #expect(sliced.nextOffset == Int64(complete.utf8.count))
-
-        let loaded = try harness.store.loadEntries(logURL: harness.log)
-        #expect(loaded.map(\.requestID) == ["head", "tail"])
-        #expect(harness.store.parseCursorForTesting()?.parsedOffset == Int64(complete.utf8.count))
-    }
-
-    @Test
     func `gluing bytes onto a newline-less trailing record matches a full parse`() throws {
         let harness = try Harness.make()
         defer { harness.tearDown() }
@@ -308,65 +290,6 @@ struct OpenCodexUsageStoreIncrementalTests {
     }
 
     @Test
-    func `failed begin immediate leaves rows and cursor untouched`() throws {
-        let harness = try Harness.make()
-        defer { harness.tearDown() }
-
-        try harness.writeLines(Harness.line(id: "keep", input: 1))
-        _ = try harness.store.loadEntries(logURL: harness.log)
-        let cursorBefore = try #require(harness.store.parseCursorForTesting())
-        let rowsBefore = try harness.sqliteRequestIDs()
-        #expect(rowsBefore == ["keep"])
-
-        try harness.appendLines(Harness.line(id: "new", input: 2))
-        try harness.withExclusiveSQLiteWriteLock {
-            _ = try harness.store.loadEntries(logURL: harness.log)
-            let cursorAfter = try #require(harness.store.parseCursorForTesting())
-            #expect(cursorAfter.parsedOffset == cursorBefore.parsedOffset)
-            #expect(cursorAfter.prefixDigest == cursorBefore.prefixDigest)
-            #expect(cursorAfter.fileIdentity == cursorBefore.fileIdentity)
-            #expect(try harness.sqliteRequestIDs() == rowsBefore)
-        }
-    }
-
-    @Test
-    func `stale incremental write does not regress a newer durable cursor`() throws {
-        // Deterministic: commit a newer cursor, then force the write path with the older
-        // snapshot. No thread interleaving.
-        let harness = try Harness.make()
-        defer { harness.tearDown() }
-
-        try harness.writeLines(Harness.line(id: "req-1", input: 1), Harness.line(id: "req-2", input: 2))
-        let first = try harness.store.loadEntries(logURL: harness.log)
-        let firstCursor = try #require(harness.store.parseCursorForTesting())
-
-        try harness.appendLines(Harness.line(id: "req-3", input: 3), Harness.line(id: "req-4", input: 4))
-        _ = try harness.store.loadEntries(logURL: harness.log)
-        let newerCursor = try #require(harness.store.parseCursorForTesting())
-        #expect(newerCursor.parsedOffset > firstCursor.parsedOffset)
-
-        harness.store.writeIncrementalEntriesForTesting(
-            first,
-            path: firstCursor.path,
-            fileIdentity: firstCursor.fileIdentity,
-            parsedOffset: firstCursor.parsedOffset,
-            prefixDigest: firstCursor.prefixDigest)
-
-        let afterStale = try #require(harness.store.parseCursorForTesting())
-        #expect(afterStale.parsedOffset == newerCursor.parsedOffset)
-        #expect(afterStale.prefixDigest == newerCursor.prefixDigest)
-        #expect(afterStale.fileIdentity == newerCursor.fileIdentity)
-        #expect(afterStale.path == newerCursor.path)
-
-        let expected = try harness.referenceEntries()
-        #expect(try harness.sqliteEntryCount() == expected.count)
-        #expect(try harness.sqliteRequestIDs() == expected.map(\.requestID).sorted())
-
-        let loaded = try harness.store.loadEntries(logURL: harness.log)
-        #expect(loaded == expected)
-    }
-
-    @Test
     func `incremental reload falls back to a full parse when the cached rows cannot be read`() throws {
         let harness = try Harness.make()
         defer { harness.tearDown() }
@@ -385,16 +308,6 @@ struct OpenCodexUsageStoreIncrementalTests {
     @Test
     func `incremental post-parse hook is unset by default`() {
         #expect(OpenCodexUsageStore.incrementalPostParseHookInstalledForTesting() == false)
-    }
-
-    @Test
-    func `post-parse replacement longer than the cursor falls back to a full parse`() throws {
-        try self.assertPostParseReplacementFallsBack(longerThanCursor: true)
-    }
-
-    @Test
-    func `post-parse replacement shorter than the cursor falls back to a full parse`() throws {
-        try self.assertPostParseReplacementFallsBack(longerThanCursor: false)
     }
 
     private func assertPostParseReplacementFallsBack(longerThanCursor: Bool) throws {

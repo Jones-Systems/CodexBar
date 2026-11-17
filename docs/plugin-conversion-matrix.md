@@ -7,6 +7,11 @@ read_when:
 
 # Provider plugin conversion matrix
 
+Historical documentation: provider plugins and their JavaScript engines are
+removed from the current Codex/Claude product. Restore from Git
+`91bd5fb4af704da9181212bea636d527a058e615` and requalify before use.
+See the [current product scope](engineering-specs/slim-codex-claude-product.md).
+
 This matrix evaluates all 68 providers in the current capability audit against the prototype documented in
 [`plugin-prototype.md`](plugin-prototype.md). Each provider has one primary blocker.
 

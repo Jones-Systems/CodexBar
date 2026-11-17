@@ -10,9 +10,7 @@ struct ClaudeExtraWindowQuotaWarningTests {
         defaults.removePersistentDomain(forName: suiteName)
         return SettingsStore(
             userDefaults: defaults,
-            configStore: testConfigStore(suiteName: suiteName),
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: testConfigStore(suiteName: suiteName))
     }
 
     @MainActor
@@ -87,44 +85,6 @@ struct ClaudeExtraWindowQuotaWarningTests {
             windowID: "claude-routines")
         #expect(store.quotaWarningState[fableKey]?.firedThresholds.contains(50) == true)
         #expect(store.quotaWarningState[routinesKey]?.firedThresholds.contains(50) == true)
-    }
-
-    @Test
-    func `antigravity summary extra windows do not trigger the claude extra-window lane`() {
-        let settings = self.makeSettings(suiteName: "ClaudeExtraWindowQuotaWarningTests-antigravity-guard")
-        settings.refreshFrequency = .manual
-        settings.statusChecksEnabled = false
-        settings.quotaWarningNotificationsEnabled = true
-        settings.quotaWarningThresholds = [50, 20]
-        settings.setQuotaWarningWindowEnabled(.weekly, enabled: true)
-
-        let notifier = SessionQuotaNotifierSpy()
-        let store = UsageStore(
-            fetcher: UsageFetcher(),
-            browserDetection: BrowserDetection(cacheTTL: 0),
-            settings: settings,
-            sessionQuotaNotifier: notifier)
-
-        func snapshot(used: Double) -> UsageSnapshot {
-            UsageSnapshot(
-                primary: nil,
-                secondary: nil,
-                extraRateWindows: [
-                    NamedRateWindow(
-                        id: "antigravity-quota-summary-model-weekly",
-                        title: "Weekly",
-                        window: RateWindow(
-                            usedPercent: used,
-                            windowMinutes: 7 * 24 * 60,
-                            resetsAt: nil,
-                            resetDescription: nil)),
-                ],
-                updatedAt: Date())
-        }
-        store.handleQuotaWarningTransitions(provider: .claude, snapshot: snapshot(used: 40))
-        store.handleQuotaWarningTransitions(provider: .claude, snapshot: snapshot(used: 55))
-
-        #expect(notifier.quotaWarningPosts.isEmpty)
     }
 
     @Test

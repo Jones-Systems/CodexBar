@@ -3,8 +3,9 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-tmp_dir="$(mktemp -d)"
+tmp_dir="$(mktemp -d "${ROOT_DIR}/.test-ci-gate.XXXXXX")"
 trap 'rm -rf "$tmp_dir"' EXIT
+trap 'exit 129' HUP
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
@@ -289,9 +290,9 @@ for macos_required in true false; do
       linux_result=success
       [[ "$linux_required" == true ]] || linux_result=skipped
       valid_args=(success success "$macos_required" "$macos_result" false \
-        "$musl_required" "$musl_result" "$linux_result" "$linux_required")
+        "$musl_required" "$musl_result" "$linux_result" "$linux_required" "$macos_result")
       "$verify" "${valid_args[@]}" >/dev/null
-      for result_index in 0 1 3 6 7; do
+      for result_index in 0 1 3 6 7 9; do
         for result in success failure cancelled skipped '' unknown; do
           [[ "$result" == "${valid_args[$result_index]}" ]] && continue
           invalid_args=("${valid_args[@]}")
@@ -313,10 +314,11 @@ for macos_required in true false; do
       done
       assert_verify_fails "${valid_args[@]:0:8}"
       assert_verify_fails "${valid_args[@]:0:7}"
+      assert_verify_fails "${valid_args[@]:0:9}"
     done
   done
 done
-assert_verify_fails success success true skipped true false skipped skipped false
+assert_verify_fails success success true skipped true false skipped skipped false skipped
 
 # Check the actual aggregate dependency and shell argument, not summary text elsewhere in the workflow.
 python3 - "${ROOT_DIR}/.github/workflows/ci.yml" <<'PY'
@@ -335,14 +337,18 @@ body = aggregate.group(1)
 needs = re.search(r"(?m)^    needs:\n((?:      - [^\n]+\n)+)", body)
 if needs is None or "      - build-linux-cli" not in needs.group(1).splitlines():
     sys.exit("lint-build-test must need build-linux-cli")
+if "      - swift-build-macos" not in needs.group(1).splitlines():
+    sys.exit("lint-build-test must need the macOS build producer")
 command = re.search(r"(?m)^          \./Scripts/ci_verify_test_jobs\.sh(?:[^\n]*\\\n)+[^\n]*", body)
 if command is None:
     sys.exit("missing aggregate verifier command")
 arguments = shlex.split(command.group(0).replace("\\\n", ""))
-if len(arguments) != 10 or arguments[8] != "${{ needs.build-linux-cli.result }}":
+if len(arguments) != 11 or arguments[8] != "${{ needs.build-linux-cli.result }}":
     sys.exit("aggregate verifier argument eight must be needs.build-linux-cli.result")
 if arguments[9] != "${{ needs.changes.outputs.linux-tests }}":
     sys.exit("aggregate verifier argument nine must explicitly supply the Linux gate")
+if arguments[10] != "${{ needs.swift-build-macos.result }}":
+    sys.exit("aggregate verifier argument ten must explicitly supply the macOS producer result")
 linux = re.search(r"(?ms)^  build-linux-cli:\n(.*?)(?=^  [\w-]+:|\Z)", workflow).group(1)
 if "needs: changes" not in linux or "needs.changes.outputs.linux-tests == 'true'" not in linux:
     sys.exit("Linux matrix must use the explicit path gate")
@@ -380,10 +386,12 @@ shared_sources = next(ast.literal_eval(node.value) for node in ast.parse(classif
                       if isinstance(node, ast.Assign)
                       and any(isinstance(target, ast.Name) and target.id == "portable_source_paths"
                               for target in node.targets))
+plugin_tests = root / "TestsPlugin"
 symlink_sources = {str((path.parent / os.readlink(path)).resolve().relative_to(root))
-                   for path in (root / "TestsPlugin").iterdir() if path.is_symlink()}
-if shared_sources != symlink_sources:
-    sys.exit("shared plugin source path gate must match TestsPlugin symlink targets")
+                   for path in (plugin_tests.iterdir() if plugin_tests.is_dir() else ())
+                   if path.is_symlink()}
+if shared_sources or symlink_sources:
+    sys.exit("removed plugin test target must have no shared source paths or symlinks")
 
 PY
 

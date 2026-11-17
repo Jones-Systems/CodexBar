@@ -211,22 +211,8 @@ extension SettingsStore {
         self.menuBarMetricPreferencesRaw[provider.rawValue] = resolved.rawValue
     }
 
-    func menuBarMetricSupportsAverage(for provider: UsageProvider) -> Bool {
-        self.menuBarMetricCapabilities(for: provider).supports(.average)
-    }
-
     func menuBarMetricSupportsPrimaryAndSecondary(for provider: UsageProvider) -> Bool {
         self.menuBarMetricCapabilities(for: provider).supports(.primaryAndSecondary)
-    }
-
-    func menuBarMetricSupportsTertiary(for provider: UsageProvider) -> Bool {
-        self.menuBarMetricCapabilities(for: provider).supports(.tertiary)
-    }
-
-    func menuBarMetricSupportsTertiary(for provider: UsageProvider, snapshot: UsageSnapshot?) -> Bool {
-        let capabilities = self.menuBarMetricCapabilities(for: provider)
-        guard capabilities.supports(.tertiary) else { return false }
-        return !capabilities.tertiaryRequiresWindow || snapshot?.tertiary != nil
     }
 
     func menuBarMetricSupportsExtraUsage(for provider: UsageProvider) -> Bool {
@@ -241,11 +227,7 @@ extension SettingsStore {
 
     func menuBarMetricPreference(for provider: UsageProvider, snapshot: UsageSnapshot?) -> MenuBarMetricPreference {
         let preference = self.menuBarMetricPreference(for: provider)
-        if preference == .tertiary,
-           !self.menuBarMetricSupportsTertiary(for: provider, snapshot: snapshot)
-        {
-            return .automatic
-        }
+
         if preference == .extraUsage,
            !self.menuBarMetricSupportsExtraUsage(for: provider, snapshot: snapshot)
         {
@@ -280,10 +262,7 @@ extension MenuBarMetricPreference {
         case .primary: .primary
         case .secondary: .secondary
         case .primaryAndSecondary: .primaryAndSecondary
-        case .tertiary: .tertiary
         case .extraUsage: .extraUsage
-        case .average: .average
-        case .monthlyPlan: .monthlyPlan
         }
     }
 }

@@ -397,11 +397,6 @@ struct UsageFormatterTests {
         #expect(UsageFormatter.tokenCountString(-42) == "-42")
     }
 
-    @Test
-    func `clean plan maps O auth to ollama`() {
-        #expect(UsageFormatter.cleanPlanName("oauth") == "Ollama")
-    }
-
     // MARK: - Currency Formatting
 
     @Test

@@ -54,7 +54,7 @@ struct SpendDashboardPartialCostTests {
     }
 
     @Test
-    func `established Cursor history keeps priced days when another day omits cost`() throws {
+    func `established Codex history keeps priced days when another day omits cost`() throws {
         let snapshot = Self.snapshot(
             entries: [
                 Self.entry(day: "2026-07-15", cost: 1, tokens: 5, model: "claude-4.5-sonnet"),
@@ -63,7 +63,7 @@ struct SpendDashboardPartialCostTests {
             last30DaysTokens: 12,
             last30DaysCostUSD: 1)
         let group = try Self.group(inputs: [
-            .init(provider: .cursor, displayName: "Cursor", snapshot: snapshot),
+            .init(provider: .codex, displayName: "Codex", snapshot: snapshot),
         ])
 
         #expect(snapshot.historyCoverageIsEstablished)
@@ -73,7 +73,7 @@ struct SpendDashboardPartialCostTests {
     }
 
     @Test
-    func `unestablished Cursor history with an unresolved day keeps spend unavailable`() throws {
+    func `unestablished Codex history with an unresolved day keeps spend unavailable`() throws {
         let snapshot = Self.snapshot(
             entries: [
                 Self.entry(day: "2026-07-15", cost: 1, tokens: 5, model: "claude-4.5-sonnet"),
@@ -83,7 +83,7 @@ struct SpendDashboardPartialCostTests {
             last30DaysTokens: 12,
             last30DaysCostUSD: 1)
         let group = try Self.group(inputs: [
-            .init(provider: .cursor, displayName: "Cursor", snapshot: snapshot),
+            .init(provider: .codex, displayName: "Codex", snapshot: snapshot),
         ])
 
         #expect(!snapshot.historyCoverageIsEstablished)
@@ -92,7 +92,7 @@ struct SpendDashboardPartialCostTests {
     }
 
     @Test
-    func `established Cursor history retains priced days when some events omit total cents`() throws {
+    func `established Codex history retains a known subtotal when some model rows lack prices`() throws {
         let snapshot = Self.snapshot(
             entries: [
                 Self.entry(day: "2026-07-15", cost: 3, tokens: 30, model: "claude-4.5-sonnet"),
@@ -101,7 +101,7 @@ struct SpendDashboardPartialCostTests {
             last30DaysTokens: 70,
             last30DaysCostUSD: 3)
         let group = try Self.group(inputs: [
-            .init(provider: .cursor, displayName: "Cursor", snapshot: snapshot),
+            .init(provider: .codex, displayName: "Codex", snapshot: snapshot),
         ])
 
         #expect(group.totalCost == 3)
@@ -175,7 +175,7 @@ struct SpendDashboardPartialCostTests {
         let group = try Self.group(inputs: [
             .init(provider: .codex, displayName: "Codex", snapshot: priced),
             .init(provider: .claude, displayName: "Claude", snapshot: unpriced),
-            .init(provider: .cursor, displayName: "Cursor", snapshot: unpriced),
+            .init(id: "codex:secondary", provider: .codex, displayName: "Codex secondary", snapshot: unpriced),
         ])
 
         #expect(group.totalCost == 4)
@@ -188,6 +188,9 @@ struct SpendDashboardPartialCostTests {
         #expect(group.modelHistoryCompleteness == .incomplete)
         #expect(group.models.map(\.modelName) == ["gpt-5.4-mini", "deepseek-v4-flash", "deepseek-v4-flash"])
         #expect(group.models.map(\.totalCost) == [4, nil, nil])
+        #expect(group.providers.map(\.id) == ["codex", "claude", "codex:secondary"])
+        #expect(group.models.map(\.provider) == [.codex, .claude, .codex])
+        #expect(group.models.map(\.totalTokens) == [40, 100, 100])
         #expect(spendDashboardModelHistoryPresentation(group) == .partial)
         CodexBarLocalizationOverride.$appLanguage.withValue("en") {
             #expect(spendDashboardGroupCostText(group).hasPrefix("~"))
@@ -205,7 +208,7 @@ struct SpendDashboardPartialCostTests {
             last30DaysCostUSD: nil)
         let group = try Self.group(inputs: [
             .init(provider: .claude, displayName: "Claude", snapshot: unpriced),
-            .init(provider: .cursor, displayName: "Cursor", snapshot: unpriced),
+            .init(id: "codex:secondary", provider: .codex, displayName: "Codex secondary", snapshot: unpriced),
         ])
 
         #expect(group.totalCost == nil)
@@ -215,6 +218,9 @@ struct SpendDashboardPartialCostTests {
         #expect(group.modelHistoryCompleteness == .incomplete)
         #expect(group.models.map(\.modelName) == ["deepseek-v4-flash", "deepseek-v4-flash"])
         #expect(group.models.map(\.totalCost) == [nil, nil])
+        #expect(group.providers.map(\.id) == ["claude", "codex:secondary"])
+        #expect(group.models.map(\.provider) == [.claude, .codex])
+        #expect(group.models.map(\.totalTokens) == [100, 100])
         #expect(spendDashboardModelHistoryPresentation(group) == .partial)
         CodexBarLocalizationOverride.$appLanguage.withValue("en") {
             #expect(spendDashboardGroupCostText(group) == "Spend unavailable")

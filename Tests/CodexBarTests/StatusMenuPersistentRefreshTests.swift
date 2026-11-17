@@ -808,25 +808,24 @@ extension StatusMenuPersistentRefreshTests {
     func `refresh monitor preserves multiline workspace credit text`() throws {
         let settings = self.makeSettings()
         let controller = self.makeController(settings: settings)
-        controller.store.snapshots[.amp] = AmpUsageSnapshot(
-            freeQuota: nil,
-            freeUsed: nil,
-            hourlyReplenishment: nil,
-            windowHours: nil,
-            individualCredits: 12,
-            workspaceBalances: [AmpWorkspaceBalance(name: "Team", remaining: 7)],
-            updatedAt: Date()).toUsageSnapshot()
-        let fallback = try #require(controller.menuCardModel(for: .amp))
+        func snapshot(personal: String, team: String) throws -> UsageSnapshot {
+            try UsageSnapshot(
+                primary: nil,
+                secondary: nil,
+                details: [ProviderDetailSection(
+                    title: "Credits",
+                    rows: [
+                        .init(label: "Personal", value: personal),
+                        .init(label: "Workspace", value: "Team\n" + team),
+                    ])],
+                updatedAt: Date())
+        }
+        controller.store.snapshots[.claude] = try snapshot(personal: "$12", team: "$7")
+        let fallback = try #require(controller.menuCardModel(for: .claude))
+        #expect(fallback.providerDetails.first?.rows.last?.value == "Team\n$7")
 
-        controller.store.snapshots[.amp] = AmpUsageSnapshot(
-            freeQuota: nil,
-            freeUsed: nil,
-            hourlyReplenishment: nil,
-            windowHours: nil,
-            individualCredits: 10,
-            workspaceBalances: [AmpWorkspaceBalance(name: "Team", remaining: 3)],
-            updatedAt: Date()).toUsageSnapshot()
-        let refreshed = controller.menuCardRefreshMonitor.model(for: .amp, fallback: fallback)
+        controller.store.snapshots[.claude] = try snapshot(personal: "$10", team: "$3")
+        let refreshed = controller.menuCardRefreshMonitor.model(for: .claude, fallback: fallback)
 
         #expect(refreshed.providerDetails == fallback.providerDetails)
     }
@@ -1130,12 +1129,12 @@ extension StatusMenuPersistentRefreshTests {
         let settings = self.makeSettings()
         settings.refreshFrequency = .manual
         settings.statusChecksEnabled = true
-        self.enableOnly([.synthetic], settings: settings)
+        self.enableOnly([.claude], settings: settings)
 
         let controller = self.makeController(settings: settings)
         controller.store._test_providerRefreshOverride = { _ in }
         controller.store._test_providerStatusFetchOverride = { provider in
-            #expect(provider == .synthetic)
+            #expect(provider == .claude)
             return ProviderStatus(indicator: .none, description: "Operational", updatedAt: Date())
         }
         var savedSnapshots = 0
@@ -1144,12 +1143,12 @@ extension StatusMenuPersistentRefreshTests {
         }
 
         await controller.performStoreRefresh(
-            for: .synthetic,
+            for: .claude,
             refreshOpenMenusWhenComplete: false,
             interaction: .userInitiated)
         _ = await controller.store.widgetSnapshotPersistTask?.result
 
-        #expect(controller.store.statuses[.synthetic]?.description == "Operational")
+        #expect(controller.store.statuses[.claude]?.description == "Operational")
         #expect(savedSnapshots == 1)
     }
 

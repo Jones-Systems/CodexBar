@@ -198,7 +198,7 @@ extension CostUsageScanner {
 }
 #endif
 
-/// Claude and Vertex retain their small transcript cache. Codex deliberately has no route
+/// Claude retains its small transcript cache. Codex deliberately has no route
 /// through this JSON I/O boundary; its only persistence authority is `CostUsageStore`.
 enum CostUsageClaudeCacheIO {
     private static func defaultCacheRoot() -> URL {
@@ -206,11 +206,11 @@ enum CostUsageClaudeCacheIO {
         return root.appendingPathComponent(JonesStateRoot.path("CodexBar"), isDirectory: true) // JONES(trial-identity)
     }
 
-    // Provider-specific by design: Claude/Vertex cost caching still uses the legacy JSON artifact pending its own
+    // Provider-specific by design: Claude cost caching still uses the legacy JSON artifact pending its own
     // migration (see #2760).
 
     static func cacheFileURL(provider: UsageProvider, cacheRoot: URL? = nil) -> URL {
-        precondition(provider == .claude || provider == .vertexai)
+        precondition(provider == .claude)
         let root = cacheRoot ?? self.defaultCacheRoot()
         return root
             .appendingPathComponent("cost-usage", isDirectory: true)

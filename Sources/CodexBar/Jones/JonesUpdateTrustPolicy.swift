@@ -144,12 +144,23 @@ struct JonesUpdateTrustPolicy: Equatable, Sendable {
             else { throw Rejection.identity }
             return .harness
         }
-        guard info["CFBundleIdentifier"] as? String == self.productionBundleID,
+        let signingMode = info["JonesSigningMode"] as? String ?? "adhoc"
+        let team: String
+        switch signingMode {
+        case "adhoc": team = "JONESLOCAL"
+        case "developer-id":
+            team = "2CUPSQS986"
+            // The new app group requires a separately qualified bootstrap before updates can be enabled.
+            guard info["JonesUpdateChannel"] as? String == "none" else { throw Rejection.channel }
+        default: throw Rejection.identity
+        }
+        guard info["JonesSigningMode"] == nil || info["JonesSigningMode"] is String,
+              info["CFBundleIdentifier"] as? String == self.productionBundleID,
               info["JonesAppBundleID"] as? String == self.productionBundleID,
               info["CFBundleDisplayName"] as? String == "CodexBar Jones",
               info["JonesStateKey"] as? String == "jones",
-              info["CodexBarTeamID"] as? String == "JONESLOCAL",
-              info["JonesAppGroupID"] as? String == "JONESLOCAL.com.jonessystems.codexbar",
+              info["CodexBarTeamID"] as? String == team,
+              info["JonesAppGroupID"] as? String == "\(team).com.jonessystems.codexbar",
               info["JonesICloudID"] as? String == "iCloud.com.jonessystems.codexbar",
               info["JonesUpdateHarness"] == nil, info["JonesUpdateHarnessFixtureID"] == nil
         else { throw Rejection.identity }

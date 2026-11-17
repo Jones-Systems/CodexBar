@@ -7,13 +7,13 @@ struct MenuOpenRefreshPlanTests {
     func `refresh all selects every enabled provider concurrently`() {
         let plan = MenuOpenRefreshPlan.resolve(.init(
             refreshAllOnOpen: true,
-            enabledProviders: [.codex, .claude, .factory],
+            enabledProviders: [.codex, .claude],
             visibleProviders: [.codex],
             refreshingProviders: [],
             staleProviders: [],
             missingProviders: []))
 
-        #expect(plan.providers == [.codex, .claude, .factory])
+        #expect(plan.providers == [.codex, .claude])
         #expect(plan.scheduling == .concurrent)
         #expect(plan.refreshCodexDashboard)
         #expect(plan.refreshTokenCost)
@@ -23,13 +23,13 @@ struct MenuOpenRefreshPlanTests {
     func `refresh all skips dashboard refresh when codex is disabled`() {
         let plan = MenuOpenRefreshPlan.resolve(.init(
             refreshAllOnOpen: true,
-            enabledProviders: [.claude, .factory],
+            enabledProviders: [.claude],
             visibleProviders: [.claude],
             refreshingProviders: [],
             staleProviders: [],
             missingProviders: []))
 
-        #expect(plan.providers == [.claude, .factory])
+        #expect(plan.providers == [.claude])
         #expect(!plan.refreshCodexDashboard)
         #expect(plan.refreshTokenCost)
     }
@@ -52,13 +52,13 @@ struct MenuOpenRefreshPlanTests {
     func `ordinary refresh selects only visible enabled retries sequentially`() {
         let plan = MenuOpenRefreshPlan.resolve(.init(
             refreshAllOnOpen: false,
-            enabledProviders: [.codex, .claude, .factory],
-            visibleProviders: [.factory, .codex, .claude, .cursor],
-            refreshingProviders: [.factory],
+            enabledProviders: [.codex, .claude],
+            visibleProviders: [.claude, .codex],
+            refreshingProviders: [.claude],
             staleProviders: [.codex],
-            missingProviders: [.claude, .cursor]))
+            missingProviders: [.claude]))
 
-        #expect(plan.providers == [.factory, .codex, .claude])
+        #expect(plan.providers == [.claude, .codex])
         #expect(plan.scheduling == .sequential)
         #expect(!plan.refreshCodexDashboard)
         #expect(!plan.refreshTokenCost)

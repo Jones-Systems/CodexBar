@@ -54,7 +54,7 @@ See `docs/configuration.md` for the schema.
     `title`, `rows` (`label`, `value`, and optional `secondaryValue`), and an optional `bars` or `line` chart. The same
     shape is returned by `GET /usage` from `codexbar serve`.
   - Legacy provider-specific keys such as `openRouterUsage`, `clawRouterUsage`, and `sub2APIUsage` are not compatibility
-    aliases; clients must read `usage.details`. Unknown legacy keys in cached or iCloud-synced snapshots are ignored
+    aliases; clients must read `usage.details`. Unknown legacy keys in cached snapshots are ignored
     when decoding.
   - `--format toon` emits the same payload as `--format json` (and implies `--json`'s credits/no-color behavior),
     rendered as [TOON](https://github.com/toon-format/spec) instead: uniform arrays of scalar-only objects (for
@@ -63,11 +63,8 @@ See `docs/configuration.md` for the schema.
     no denormalization — intended for agents that want a token-cheaper alternative to parsing JSON. `usage --format
     toon` is the only command that supports it; every other command still advertises and accepts only
     `--format text|json`, and treats `toon` like any other unrecognized value.
-- `codexbar cost` prints token cost usage for Claude, Codex, Cursor, and Antigravity.
-  - Claude and Codex are scanned from local session logs without web/CLI access.
-  - Antigravity reads supported local token history without web, provider CLI, or credential access. It does not estimate dollar costs; unsupported timestamps and incomplete histories remain unavailable (see `docs/antigravity.md`). The same provider selection applies to `serve /cost` and dashboard cost collection.
-    Text output labels this as token history and distinguishes unavailable or incomplete history from a complete period with no recorded usage.
-  - Cursor is fetched from the cookie-authenticated cursor.com dashboard API (macOS only; see `docs/cursor.md`) and honors the configured cookie source: a non-empty Manual header is required and forwarded, while Off fails explicitly instead of silently omitting Cursor.
+- `codexbar cost` prints token cost usage for Codex and Claude.
+  - Both are scanned from local session logs without web/CLI access.
   - `--format text|json` (default: text). `--json` includes the same cost concepts as Settings → Usage & Spend (token mix, `provenance`, coverage), but it is not the dashboard Export JSON schema. CLI places mix fields under each provider's `totals` and emits `provenance`/`coverage` on that provider object; Export JSON nests `tokenMix`, `provenance`, and `coverage` under `groups[]`.
   - OpenCodex appears as a separate `opencodex` payload only when **Include OpenCodex usage logs** is on in Settings. That payload does not invent `projects` (OpenCodex logs have no workspace path).
   - `--refresh` ignores cached scans.
@@ -158,10 +155,6 @@ See `docs/configuration.md` for the schema.
       CLI Auto falls back to the installed Claude executable when web credentials are unavailable. This foreground
       command delegates authentication to Claude Code; the app keeps its stricter prompt-free background availability
       gate for scheduled refreshes.
-    - Command Code web: commandcode.ai browser session cookies on macOS, or a configured manual cookie on Linux, for monthly credit usage.
-    - OpenCode Go auto: local SQLite cost history on macOS and Linux with API usage-window enrichment when
-      `OPENCODE_API_KEY` is configured, plus legacy manual-cookie web fallback.
-    - Kilo auto: app.kilo.ai API first, then CLI auth fallback (`~/.local/share/kilo/auth.json`) on missing/unauthorized API credentials.
     - Linux: browser-backed `auto`/`web` modes are not supported; local sources and configured manual-cookie paths remain available where documented.
 - Global flags: `-h/--help`, `-V/--version`, `-v/--verbose`, `--no-color`, `--log-level <trace|verbose|debug|info|warning|error|critical>`, `--json-output`, `--json-only`.
   - `--json-output`: JSONL logs on stderr (machine-readable).
@@ -170,27 +163,6 @@ See `docs/configuration.md` for the schema.
   - `--format text|json`, `--pretty`, and `--json-only` are supported.
   - Warnings keep exit code 0; errors exit non-zero.
 - `codexbar config dump` prints the normalized config JSON.
-- `codexbar hooks list` shows the local hook configuration; `--format json` and `--pretty` are supported.
-- `codexbar hooks enable|disable` changes the explicit top-level opt-in switch in the local config file.
-- `codexbar hooks test <event> --provider <id>` invokes matching enabled rules with a representative event. Hook
-  commands run directly without a shell and receive `CODEXBAR_*` variables plus JSON on stdin. `--format json` and
-  `--json-only` return structured per-rule results. See
-  `docs/configuration.md#external-event-hooks` for the event, payload, timeout, and security contract.
-- `codexbar hooks watch` polls enabled providers and fires matching hooks on real quota and status transitions.
-  Without it, hook rules only ever fire from the macOS app, so a headless install can configure hooks that never run.
-  - `--interval <seconds>`: poll period. Default `300`, minimum `60`; a smaller value is rejected rather than
-    clamped, because each tick fetches every selected provider.
-  - `--provider <id>`: restrict to one provider; repeatable. Defaults to every enabled provider.
-  - `--format json`/`--json`/`--pretty`: emit each fired event as JSON.
-  - Events are edge-triggered against the previous poll, so a condition that merely persists (a saturated window,
-    an ongoing outage) does not re-fire every tick. State is in-memory only: a restart re-establishes baselines and
-    the first poll of any lane fires nothing.
-  - Run `watch` as one continuous process. Repeated one-shot invocations cannot preserve transition baselines or event
-    rate limits between polls.
-  - Runs read-only, like `codexbar guard`: it never prompts for credentials. A failed refresh reports
-    `refresh_failed` with a coarse category (`timeout`, `offline`, `auth_required`, `network_error`) and never
-    forwards the raw provider error.
-  - Stops cleanly on `SIGINT`/`SIGTERM`/`SIGHUP`.
 
 ### Token accounts
 The CLI reads multi-account tokens from the same resolved config file as the app.
@@ -232,7 +204,6 @@ codexbar cost --provider codex --group-by project
 codexbar cost --provider codex --group-by session
 codexbar cost --provider claude --format json --pretty
 codexbar guard --provider codex --min-remaining 20 --window weekly --json
-codexbar cost --provider cursor   # Cursor dashboard cost (API-rate + Cursor-metered)
 codexbar dashboard | jq '.providers[] | {id, windows, error}'
 codexbar serve --port 8080        # localhost HTTP JSON server
 codexbar serve --request-timeout 0 # disable serve request deadlines
@@ -246,13 +217,10 @@ codexbar --provider codex --all-accounts --format json --pretty
 codexbar --provider claude --account steipete@gmail.com
 codexbar --provider claude --all-accounts --format json --pretty
 codexbar --json-only --format json --pretty
-codexbar --provider gemini --source api --format json --pretty
-KILO_API_KEY=... codexbar --provider kilo --source api --format json --pretty
 MOONSHOT_API_KEY=... codexbar --provider moonshot --source api --format json --pretty
 codexbar config validate --format json --pretty
 codexbar config dump --pretty
-printf '%s' "$OPENAI_ADMIN_KEY" | codexbar config set-api-key --provider openai --stdin
-codexbar config enable --provider grok
+codexbar config enable --provider codex
 codexbar cache clear --cookies
 codexbar cache clear --cookies --provider claude
 codexbar cache clear --all --format json --pretty

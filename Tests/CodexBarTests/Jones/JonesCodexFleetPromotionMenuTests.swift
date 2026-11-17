@@ -173,7 +173,6 @@ struct JonesCodexFleetPromotionMenuTests {
             actions: MenuActions(
                 installUpdate: {},
                 refresh: {},
-                refreshAugmentSession: {},
                 openDashboard: {},
                 openStatusPage: {},
                 openChangelog: {},

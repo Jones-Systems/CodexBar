@@ -21,9 +21,7 @@ struct StatusItemControllerSplitLifecycleTests {
         defaults.removePersistentDomain(forName: suite)
         return SettingsStore(
             userDefaults: defaults,
-            configStore: testConfigStore(suiteName: suite),
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: testConfigStore(suiteName: suite))
     }
 
     private func containsHostingView(_ view: NSView) -> Bool {

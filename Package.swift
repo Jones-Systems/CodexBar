@@ -18,8 +18,8 @@ let sqlite3LinkerSettings: [LinkerSetting] = if let sqlite3LibDir, !sqlite3LibDi
     []
 }
 
-// Test membership only: product targets and fixtures are identical in both profiles.
-// An explicit full run restores unused-feature coverage; see docs/testing-profiles.md.
+// Keep normal/full as compatible runner inputs; both compile the retained Codex/Claude product.
+// Deleted feature source and its tests are restored from Git history, not a test profile.
 struct TestProfileManifest: Decodable {
     struct Group: Decodable {
         let files: [String]
@@ -93,17 +93,6 @@ let package = Package(
     ],
     targets: {
         var targets: [Target] = [
-            .target(
-                name: "CQuickJS",
-                path: "Sources/CQuickJS",
-                exclude: ["README.md", "LICENSE"],
-                publicHeadersPath: "include",
-                cSettings: [
-                    .define("_GNU_SOURCE"),
-                ],
-                linkerSettings: [
-                    .linkedLibrary("m", .when(platforms: [.linux])),
-                ]),
             // Both glibc and static-musl CLI builds use this target; the module map supplies sqlite3 linkage.
             .systemLibrary(
                 name: "CSQLite3",
@@ -114,21 +103,15 @@ let package = Package(
             .target(
                 name: "CodexBarCore",
                 dependencies: [
-                    "CQuickJS",
                     .target(name: "CSQLite3", condition: .when(platforms: [.linux])),
                     .product(name: "Crypto", package: "swift-crypto"),
                     .product(name: "Logging", package: "swift-log"),
                     .product(name: "SweetCookieKit", package: "SweetCookieKit"),
                 ],
-                resources: [
-                    .process("Resources"),
-                ],
                 swiftSettings: [
                     .enableUpcomingFeature("StrictConcurrency"),
                 ],
-                linkerSettings: sqlite3LinkerSettings + [
-                    .linkedFramework("JavaScriptCore", .when(platforms: [.macOS])),
-                ]),
+                linkerSettings: sqlite3LinkerSettings),
             .executableTarget(
                 name: "CodexBarCLI",
                 dependencies: [
@@ -191,15 +174,6 @@ let package = Package(
                 dependencies: ["AdaptiveRefreshCore", "AdaptiveReplayKit"],
                 path: "Tests/AdaptiveReplayKitTests",
                 exclude: testProfileExclusions(under: "Tests/AdaptiveReplayKitTests"),
-                swiftSettings: [
-                    .enableUpcomingFeature("StrictConcurrency"),
-                    .enableExperimentalFeature("SwiftTesting"),
-                ] + testProfileSettings),
-            .testTarget(
-                name: "CodexBarPluginTests",
-                dependencies: ["CodexBarCore"],
-                path: "TestsPlugin",
-                exclude: testProfileExclusions(under: "TestsPlugin"),
                 swiftSettings: [
                     .enableUpcomingFeature("StrictConcurrency"),
                     .enableExperimentalFeature("SwiftTesting"),
@@ -269,11 +243,6 @@ let package = Package(
             exclude: Array(Set([
                 "AdaptiveReplayCLITests",
                 "AdaptiveReplayKitTests",
-                "CodexBarTests/ProviderPluginDetailsParityTests.swift",
-                "CodexBarTests/ProviderPluginExtensionParityTests.swift",
-                "CodexBarTests/ProviderPluginParityTests.swift",
-                "CodexBarTests/ProviderPluginRuntimeTests.swift",
-                "CodexBarTests/Sub2APIPluginGoldenTests.swift",
             ] + testProfileExclusions(under: "Tests"))).sorted(),
             resources: [
                 .copy("CodexBarTests/Fixtures"),

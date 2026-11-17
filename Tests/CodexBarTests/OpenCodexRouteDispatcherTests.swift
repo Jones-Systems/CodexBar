@@ -5,9 +5,9 @@ import Testing
 struct OpenCodexRouteDispatcherTests {
     @Test(arguments: [
         ("openai", OpenCodexRouteTarget.subscription(.codex)),
-        ("opencode-go", OpenCodexRouteTarget.subscription(.opencodego)),
-        ("kimi-coding", OpenCodexRouteTarget.subscription(.kimi)),
-        ("deepseek", OpenCodexRouteTarget.subscription(.deepseek)),
+        ("opencode-go", OpenCodexRouteTarget.tokenOnly),
+        ("kimi-coding", OpenCodexRouteTarget.tokenOnly),
+        ("deepseek", OpenCodexRouteTarget.tokenOnly),
         ("opencode-free", OpenCodexRouteTarget.tokenOnly),
         ("unknown-vendor", OpenCodexRouteTarget.unknown),
     ])
@@ -36,10 +36,10 @@ struct OpenCodexRouteDispatcherTests {
         #expect(
             OpenCodexRouteDispatcher.route(
                 provider: "openai",
-                modelName: "opencode-go/deepseek-v4-flash") == .subscription(.opencodego))
+                modelName: "opencode-go/deepseek-v4-flash") == .tokenOnly)
         #expect(
             OpenCodexRouteDispatcher.route(
                 provider: "opencode-go",
-                modelName: "gpt-5.2") == .subscription(.opencodego))
+                modelName: "gpt-5.2") == .tokenOnly)
     }
 }

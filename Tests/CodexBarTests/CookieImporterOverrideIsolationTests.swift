@@ -20,7 +20,7 @@ private actor CookieImporterOverrideBarrier {
 
 struct CookieImporterOverrideIsolationTests {
     @Test
-    func `cookie importer overrides stay isolated across concurrent tasks`() async throws {
+    func `cookie import interaction contexts stay isolated across concurrent tasks`() async throws {
         let expectedLabels = ["first", "second"]
         let barrier = CookieImporterOverrideBarrier()
 
@@ -30,12 +30,11 @@ struct CookieImporterOverrideIsolationTests {
         { group in
             for label in expectedLabels {
                 group.addTask {
-                    try await AlibabaCodingPlanCookieImporter.withImportSessionOverrideForTesting { _, _ in
-                        AlibabaCodingPlanCookieImporter.SessionInfo(cookies: [], sourceLabel: label)
-                    } operation: {
+                    await ProviderInteractionContext.$current.withValue(
+                        label == "first" ? .userInitiated : .background)
+                    {
                         await barrier.wait()
-                        return try AlibabaCodingPlanCookieImporter.importSession(
-                            browserDetection: BrowserDetection()).sourceLabel
+                        return ProviderInteractionContext.current == .userInitiated ? "first" : "second"
                     }
                 }
             }
@@ -48,26 +47,6 @@ struct CookieImporterOverrideIsolationTests {
         }
 
         #expect(observedLabels == Set(expectedLabels))
-    }
-
-    @Test
-    func `perplexity overrides bypass the shared import cache`() async throws {
-        PerplexityCookieImporter.invalidateImportSessionCache()
-        defer { PerplexityCookieImporter.invalidateImportSessionCache() }
-
-        let first = try await PerplexityCookieImporter.withImportSessionsOverrideForTesting { _, _ in
-            [PerplexityCookieImporter.SessionInfo(cookies: [], sourceLabel: "first")]
-        } operation: {
-            try PerplexityCookieImporter.importSessions().map(\.sourceLabel)
-        }
-        let second = try await PerplexityCookieImporter.withImportSessionsOverrideForTesting { _, _ in
-            [PerplexityCookieImporter.SessionInfo(cookies: [], sourceLabel: "second")]
-        } operation: {
-            try PerplexityCookieImporter.importSessions().map(\.sourceLabel)
-        }
-
-        #expect(first == ["first"])
-        #expect(second == ["second"])
     }
 }
 #endif

@@ -711,25 +711,15 @@ extension UsageStore {
         let second = windows.dropFirst().first
 
         switch self.settings.menuBarMetricPreference(for: .codex, snapshot: snapshot) {
-        case .secondary, .tertiary:
+        case .secondary:
             return second ?? first
         case .extraUsage:
             return first
-        case .average:
-            guard self.settings.menuBarMetricSupportsAverage(for: .codex),
-                  let primary = first,
-                  let secondary = second
-            else {
-                return first
-            }
-            let usedPercent = (primary.usedPercent + secondary.usedPercent) / 2
-            return RateWindow(
-                usedPercent: usedPercent, windowMinutes: nil, resetsAt: nil, resetDescription: nil)
         case .primaryAndSecondary:
             return windows.prefix(2).max(by: { $0.usedPercent < $1.usedPercent })
         case .automatic:
             return projection.automaticMenuBarWindow()
-        case .primary, .monthlyPlan:
+        case .primary:
             return first
         }
     }

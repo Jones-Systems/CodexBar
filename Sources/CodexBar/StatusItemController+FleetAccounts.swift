@@ -3,32 +3,26 @@ import CodexBarCore
 import Observation
 
 extension StatusItemController {
-    func observeCloudSyncChanges() {
+    func observeFleetAccountChanges() {
         withObservationTracking {
-            _ = self.cloudSyncState.fleetDevices
-            _ = self.cloudSyncState.fleetSnapshots
+            _ = self.fleetAccountState.fleetDevices
+            _ = self.fleetAccountState.fleetSnapshots
         } onChange: { [weak self] in
             Task { @MainActor [weak self] in
                 guard let self else { return }
-                self.observeCloudSyncChanges()
+                self.observeFleetAccountChanges()
                 self.invalidateMenus(refreshOpenMenus: true)
             }
         }
     }
 
     func fleetAccountProjection(for provider: UsageProvider) -> FleetAccountMenuProjection {
-        guard self.settings.iCloudSyncEnabled,
-              self.settings.iCloudSyncSnapshotsEnabled,
-              self.settings.iCloudSyncShowFleetAccounts
-        else {
-            return FleetAccountMenuProjection(fallback: nil, additionalAccounts: [])
-        }
-        let localSnapshots = self.store.cloudSyncAccountSnapshots()
+        let localSnapshots = self.store.localAccountSnapshots()
         return FleetAccountMenuPlanner.projection(
             provider: provider,
-            snapshots: self.cloudSyncState.fleetSnapshots.values,
-            currentDeviceID: self.settings.iCloudSyncDeviceID,
-            localAccountKeys: self.store.cloudSyncLocalAccountKeys(for: provider),
+            snapshots: self.fleetAccountState.fleetSnapshots.values,
+            currentDeviceID: self.settings.localDeviceID,
+            localAccountKeys: self.store.localAccountKeys(for: provider),
             hasLocalUsage: localSnapshots.contains(where: { $0.provider == provider.instanceID }))
     }
 
@@ -76,7 +70,7 @@ extension StatusItemController {
         _ snapshot: AccountSnapshotSyncPayload) -> UsageMenuCardView.Model?
     {
         guard let provider = snapshot.provider.firstPartyProvider else { return nil }
-        let deviceName = self.cloudSyncState.fleetDevices.values
+        let deviceName = self.fleetAccountState.fleetDevices.values
             .first(where: { $0.deviceID == snapshot.deviceID })?
             .hostName ?? L("another Mac")
         let badge = FleetAccountMenuPlanner.badge(deviceName: deviceName, fetchedAt: snapshot.fetchedAt)

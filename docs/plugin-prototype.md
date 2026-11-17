@@ -8,6 +8,11 @@ read_when:
 
 # JavaScript provider-plugin prototype
 
+Historical documentation: provider plugins and their JavaScript engines are
+removed from the current Codex/Claude product. Restore from Git
+`91bd5fb4af704da9181212bea636d527a058e615` and requalify before use.
+See the [current product scope](engineering-specs/slim-codex-claude-product.md).
+
 This document describes the bundled first-party conversion prototype. User-installed files use the production path in
 [`plugins.md`](plugins.md); they do not depend on `CODEXBAR_JS_PROVIDERS`.
 

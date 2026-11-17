@@ -33,14 +33,11 @@ struct SettingsSidebarView: View {
     private var appPanesSection: some View {
         Section {
             SettingsSidebarPaneRow(pane: .general, systemImage: "gearshape.fill", color: .gray)
-            SettingsSidebarPaneRow(pane: .iCloudSync, systemImage: "icloud.fill", color: .blue)
             SettingsSidebarPaneRow(pane: .usageSpend, systemImage: "chart.bar.fill", color: .green)
             SettingsSidebarPaneRow(pane: .notifications, systemImage: "bell.badge.fill", color: .red)
             SettingsSidebarPaneRow(pane: .menuBar, systemImage: "menubar.rectangle", color: .blue)
             SettingsSidebarPaneRow(pane: .menu, systemImage: "filemenu.and.selection", color: .teal)
             SettingsSidebarPaneRow(pane: .advanced, systemImage: "slider.horizontal.3", color: .purple)
-            SettingsSidebarPaneRow(pane: .hooks, systemImage: "bolt.horizontal.circle.fill", color: .orange)
-            SettingsSidebarPaneRow(pane: .plugins, systemImage: "puzzlepiece.extension.fill", color: .indigo)
             SettingsSidebarAboutRow()
             if self.settings.debugMenuEnabled {
                 SettingsSidebarPaneRow(pane: .debug, systemImage: "ladybug.fill", color: .red)

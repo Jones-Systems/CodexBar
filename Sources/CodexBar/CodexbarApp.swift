@@ -21,13 +21,12 @@ enum CodexBarLaunchMode: Equatable {
 enum CodexBarEntryPoint {
     @MainActor
     static func main() {
+        if JonesBootstrapCommand.isRequested(CommandLine.arguments) { // JONES(bootstrap-migration)
+            exit(JonesBootstrapCommand.run(CommandLine.arguments))
+        }
+        guard JonesBootstrapCommand.admitNormalLaunch() else { exit(2) } // JONES(bootstrap-migration)
         if JonesUpdateHarness.isMarked(Bundle.main.infoDictionary ?? [:]) {
             JonesUpdateHarness.run()
-        }
-        // Packaging launch smoke check (#2738): force the resource loads that
-        // trapped in 0.48.0 and exit before any AppKit/UI setup.
-        if CodexBarCoreResourceSmoke.isRequested() {
-            exit(CodexBarCoreResourceSmoke.run())
         }
         guard CodexBarLaunchMode.resolve(arguments: CommandLine.arguments) == .application else {
             return
@@ -423,7 +422,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     let updaterController: UpdaterProviding = makeUpdaterController()
-    let cloudSyncState = CloudSyncState()
+    let fleetAccountState = FleetAccountState()
     private let confettiOverlayController = ScreenConfettiOverlayController()
     private let confettiLogger = CodexBarLog.logger(LogCategories.confetti)
     private let dockIconController = DockIconController.shared
@@ -439,7 +438,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var managedCodexAccountCoordinator: ManagedCodexAccountCoordinator?
     private var codexAccountPromotionCoordinator: CodexAccountPromotionCoordinator?
     private(set) var netdataObservabilityCoordinator: NetdataObservabilityCoordinator?
-    private var cloudSyncCoordinator: CloudSyncCoordinator?
     private var settingsWindowController: SettingsWindowController?
     private lazy var placeholderSettingsWindowGuard = PlaceholderSettingsWindowGuard(
         isKnownSettingsWindow: { [weak self] window in
@@ -462,11 +460,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.managedCodexAccountCoordinator = dependencies.managedCodexAccountCoordinator
         self.codexAccountPromotionCoordinator = dependencies.codexAccountPromotionCoordinator
         self.netdataObservabilityCoordinator = NetdataObservabilityCoordinator(settings: dependencies.settings)
-        self.cloudSyncCoordinator = CloudSyncCoordinator(settings: dependencies.settings, state: self.cloudSyncState)
         self.settingsWindowController = SettingsWindowController(
             settings: dependencies.settings,
             store: dependencies.store,
-            cloudSyncState: self.cloudSyncState,
+            fleetAccountState: self.fleetAccountState,
             netdataObservabilityCoordinator: self.netdataObservabilityCoordinator,
             updater: self.updaterController,
             selection: dependencies.selection,
@@ -525,7 +522,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.scheduleSettingsApplicationMenuValidation(
             missingItemRetriesRemaining: Self.settingsMenuReadinessRetryCount,
             fallbackVerificationRetriesRemaining: Self.settingsMenuFallbackVerificationRetryCount)
-        self.cloudSyncCoordinator?.start()
         self.netdataObservabilityCoordinator?.start()
         Task { @MainActor [weak self] in
             await Task.yield()
@@ -581,7 +577,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.removeObserver(self, name: NSMenu.didBeginTrackingNotification, object: nil)
         NotificationCenter.default.removeObserver(self, name: NSMenu.didEndTrackingNotification, object: nil)
         self.netdataObservabilityCoordinator?.stop()
-        self.cloudSyncCoordinator?.stop()
         self.memoryPressureMonitor.stop()
         #if DEBUG
         self.removeDebugMemoryPressureObserver()
@@ -600,10 +595,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func updateMenuDidEndTracking(_ notification: Notification) {
         guard let menu = notification.object as? NSMenu else { return }
         self.updateTrackingMenus.remove(ObjectIdentifier(menu))
-    }
-
-    func applicationDidBecomeActive(_ notification: Notification) {
-        self.cloudSyncCoordinator?.applicationDidBecomeActive()
     }
 
     func runProviderLoginFlow(_ provider: UsageProvider) async {
@@ -802,7 +793,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             self.statusController = statusController
             if let concreteStatusController = statusController as? StatusItemController {
-                concreteStatusController.cloudSyncState = self.cloudSyncState
+                concreteStatusController.fleetAccountState = self.fleetAccountState
                 concreteStatusController.setNetdataCoordinator(self.netdataObservabilityCoordinator)
                 MenuSwitchFlickerProbe.startIfRequested(controller: concreteStatusController)
             }

@@ -56,20 +56,20 @@ struct CookieHeaderCacheConditionalMutationTests {
     func `observable store failure preserves the current cookie entry`() {
         self.withIsolatedCookieCache {
             let initiallyStored = CookieHeaderCache.storeResult(
-                provider: .cursor,
+                provider: .claude,
                 cookieHeader: "WorkosCursorSessionToken=existing",
                 sourceLabel: "Chrome")
 
             let replaced = KeychainCacheStore.withStoreFailureStatusOverrideForTesting(errSecInteractionNotAllowed) {
                 CookieHeaderCache.storeResult(
-                    provider: .cursor,
+                    provider: .claude,
                     cookieHeader: "WorkosCursorSessionToken=replacement",
                     sourceLabel: "Comet")
             }
 
             #expect(initiallyStored)
             #expect(!replaced)
-            #expect(CookieHeaderCache.load(provider: .cursor)?.cookieHeader ==
+            #expect(CookieHeaderCache.load(provider: .claude)?.cookieHeader ==
                 "WorkosCursorSessionToken=existing")
         }
     }
@@ -114,33 +114,33 @@ struct CookieHeaderCacheConditionalMutationTests {
         self.withIsolatedCookieCache {
             let scope = CookieHeaderCache.Scope.providerVariant(UUID().uuidString)
             CookieHeaderCache.store(
-                provider: .cursor,
+                provider: .claude,
                 scope: scope,
                 cookieHeader: "fixtureSession=original",
                 sourceLabel: "Original")
-            let observation = CookieHeaderCache.observeForConditionalMutation(provider: .cursor, scope: scope)
-            let gate = CookieHeaderCache.beginConditionalMutationGate(provider: .cursor, scope: scope)
+            let observation = CookieHeaderCache.observeForConditionalMutation(provider: .claude, scope: scope)
+            let gate = CookieHeaderCache.beginConditionalMutationGate(provider: .claude, scope: scope)
 
             #expect(!CookieHeaderCache.storeIfObservationCurrent(
-                provider: .cursor,
+                provider: .claude,
                 scope: scope,
                 expected: observation,
                 cookieHeader: "fixtureSession=background-during-login",
                 sourceLabel: "Background"))
             #expect(CookieHeaderCache.storeResult(
-                provider: .cursor,
+                provider: .claude,
                 scope: scope,
                 cookieHeader: "fixtureSession=selected",
                 sourceLabel: "Interactive login"))
             CookieHeaderCache.endConditionalMutationGate(gate)
 
             #expect(!CookieHeaderCache.storeIfObservationCurrent(
-                provider: .cursor,
+                provider: .claude,
                 scope: scope,
                 expected: observation,
                 cookieHeader: "fixtureSession=background-after-login",
                 sourceLabel: "Background"))
-            #expect(CookieHeaderCache.load(provider: .cursor, scope: scope)?.cookieHeader == "fixtureSession=selected")
+            #expect(CookieHeaderCache.load(provider: .claude, scope: scope)?.cookieHeader == "fixtureSession=selected")
         }
     }
 
@@ -149,30 +149,30 @@ struct CookieHeaderCacheConditionalMutationTests {
         self.withIsolatedCookieCache {
             let scope = CookieHeaderCache.Scope.providerVariant(UUID().uuidString)
             CookieHeaderCache.store(
-                provider: .cursor,
+                provider: .claude,
                 scope: scope,
                 cookieHeader: "fixtureSession=stale",
                 sourceLabel: "Stale")
-            let stale = CookieHeaderCache.load(provider: .cursor, scope: scope)
-            let observation = CookieHeaderCache.observeForConditionalMutation(provider: .cursor, scope: scope)
+            let stale = CookieHeaderCache.load(provider: .claude, scope: scope)
+            let observation = CookieHeaderCache.observeForConditionalMutation(provider: .claude, scope: scope)
 
-            #expect(CookieHeaderCache.clearIfCurrent(provider: .cursor, scope: scope, expected: stale))
+            #expect(CookieHeaderCache.clearIfCurrent(provider: .claude, scope: scope, expected: stale))
             let afterClear = observation.afterOwnedClear()
             #expect(CookieHeaderCache.storeIfObservationCurrent(
-                provider: .cursor,
+                provider: .claude,
                 scope: scope,
                 expected: afterClear,
                 cookieHeader: "fixtureSession=browser-fallback",
                 sourceLabel: "Browser fallback"))
 
-            let nextObservation = CookieHeaderCache.observeForConditionalMutation(provider: .cursor, scope: scope)
-            let fallback = CookieHeaderCache.load(provider: .cursor, scope: scope)
-            #expect(CookieHeaderCache.clearIfCurrent(provider: .cursor, scope: scope, expected: fallback))
-            let gate = CookieHeaderCache.beginConditionalMutationGate(provider: .cursor, scope: scope)
+            let nextObservation = CookieHeaderCache.observeForConditionalMutation(provider: .claude, scope: scope)
+            let fallback = CookieHeaderCache.load(provider: .claude, scope: scope)
+            #expect(CookieHeaderCache.clearIfCurrent(provider: .claude, scope: scope, expected: fallback))
+            let gate = CookieHeaderCache.beginConditionalMutationGate(provider: .claude, scope: scope)
             CookieHeaderCache.endConditionalMutationGate(gate)
 
             #expect(!CookieHeaderCache.storeIfObservationCurrent(
-                provider: .cursor,
+                provider: .claude,
                 scope: scope,
                 expected: nextObservation.afterOwnedClear(),
                 cookieHeader: "fixtureSession=late-background",
@@ -185,15 +185,15 @@ struct CookieHeaderCacheConditionalMutationTests {
         self.withIsolatedCookieCache {
             let scope = CookieHeaderCache.Scope.providerVariant(UUID().uuidString)
             CookieHeaderCache.store(
-                provider: .cursor,
+                provider: .claude,
                 scope: scope,
                 cookieHeader: "fixtureSession=original",
                 sourceLabel: "Original")
-            let gate = CookieHeaderCache.beginConditionalMutationGate(provider: .cursor, scope: scope)
-            let observation = CookieHeaderCache.observeForConditionalMutation(provider: .cursor, scope: scope)
+            let gate = CookieHeaderCache.beginConditionalMutationGate(provider: .claude, scope: scope)
+            let observation = CookieHeaderCache.observeForConditionalMutation(provider: .claude, scope: scope)
 
             #expect(!CookieHeaderCache.storeIfObservationCurrent(
-                provider: .cursor,
+                provider: .claude,
                 scope: scope,
                 expected: observation,
                 cookieHeader: "fixtureSession=background-during-login",
@@ -201,12 +201,12 @@ struct CookieHeaderCacheConditionalMutationTests {
             CookieHeaderCache.endConditionalMutationGate(gate)
 
             #expect(!CookieHeaderCache.storeIfObservationCurrent(
-                provider: .cursor,
+                provider: .claude,
                 scope: scope,
                 expected: observation,
                 cookieHeader: "fixtureSession=background-after-cancel",
                 sourceLabel: "Background"))
-            #expect(CookieHeaderCache.load(provider: .cursor, scope: scope)?.cookieHeader == "fixtureSession=original")
+            #expect(CookieHeaderCache.load(provider: .claude, scope: scope)?.cookieHeader == "fixtureSession=original")
         }
     }
 
@@ -215,33 +215,33 @@ struct CookieHeaderCacheConditionalMutationTests {
         self.withIsolatedCookieCache {
             let scope = CookieHeaderCache.Scope.providerVariant(UUID().uuidString)
             CookieHeaderCache.store(
-                provider: .cursor,
+                provider: .claude,
                 scope: scope,
                 cookieHeader: "fixtureSession=original",
                 sourceLabel: "Original")
-            let outerGate = CookieHeaderCache.beginConditionalMutationGate(provider: .cursor, scope: scope)
-            let runnerGate = CookieHeaderCache.beginConditionalMutationGate(provider: .cursor, scope: scope)
+            let outerGate = CookieHeaderCache.beginConditionalMutationGate(provider: .claude, scope: scope)
+            let runnerGate = CookieHeaderCache.beginConditionalMutationGate(provider: .claude, scope: scope)
             CookieHeaderCache.endConditionalMutationGate(runnerGate)
 
             let whileOuterGateIsActive = CookieHeaderCache.observeForConditionalMutation(
-                provider: .cursor,
+                provider: .claude,
                 scope: scope)
             #expect(!CookieHeaderCache.storeIfObservationCurrent(
-                provider: .cursor,
+                provider: .claude,
                 scope: scope,
                 expected: whileOuterGateIsActive,
                 cookieHeader: "fixtureSession=background",
                 sourceLabel: "Background"))
             CookieHeaderCache.endConditionalMutationGate(outerGate)
 
-            let afterOuterGateEnds = CookieHeaderCache.observeForConditionalMutation(provider: .cursor, scope: scope)
+            let afterOuterGateEnds = CookieHeaderCache.observeForConditionalMutation(provider: .claude, scope: scope)
             #expect(CookieHeaderCache.storeIfObservationCurrent(
-                provider: .cursor,
+                provider: .claude,
                 scope: scope,
                 expected: afterOuterGateEnds,
                 cookieHeader: "fixtureSession=late-background",
                 sourceLabel: "Background"))
-            #expect(CookieHeaderCache.load(provider: .cursor, scope: scope)?.cookieHeader ==
+            #expect(CookieHeaderCache.load(provider: .claude, scope: scope)?.cookieHeader ==
                 "fixtureSession=late-background")
         }
     }
@@ -253,27 +253,27 @@ struct CookieHeaderCacheConditionalMutationTests {
             let refreshCoordinator = CookieHeaderCache.ConditionalMutationCoordinator()
             let loginCoordinator = CookieHeaderCache.ConditionalMutationCoordinator()
             CookieHeaderCache.store(
-                provider: .cursor,
+                provider: .claude,
                 scope: scope,
                 cookieHeader: "fixtureSession=original",
                 sourceLabel: "Original")
             let observation = CookieHeaderCache.observeForConditionalMutation(
-                provider: .cursor,
+                provider: .claude,
                 scope: scope,
                 coordinator: refreshCoordinator)
             let loginGate = CookieHeaderCache.beginConditionalMutationGate(
-                provider: .cursor,
+                provider: .claude,
                 scope: scope,
                 coordinator: loginCoordinator)
             defer { CookieHeaderCache.endConditionalMutationGate(loginGate) }
 
             #expect(CookieHeaderCache.storeIfObservationCurrent(
-                provider: .cursor,
+                provider: .claude,
                 scope: scope,
                 expected: observation,
                 cookieHeader: "fixtureSession=refreshed",
                 sourceLabel: "Background"))
-            #expect(CookieHeaderCache.load(provider: .cursor, scope: scope)?.cookieHeader ==
+            #expect(CookieHeaderCache.load(provider: .claude, scope: scope)?.cookieHeader ==
                 "fixtureSession=refreshed")
         }
     }
@@ -289,13 +289,13 @@ struct CookieHeaderCacheConditionalMutationTests {
         KeychainAccessGate.withTaskOverrideForTesting(true) {
             KeychainCacheStore.withDisabledAccessMemoryStoreForTesting(true) {
                 KeychainCacheStore.withServiceOverrideForTesting("cookie-disabled-\(UUID().uuidString)") {
-                    let observation = CookieHeaderCache.observeForConditionalMutation(provider: .cursor)
+                    let observation = CookieHeaderCache.observeForConditionalMutation(provider: .claude)
                     #expect(CookieHeaderCache.storeIfObservationCurrent(
-                        provider: .cursor,
+                        provider: .claude,
                         expected: observation,
                         cookieHeader: "WorkosCursorSessionToken=disabled-keychain",
                         sourceLabel: "Safari"))
-                    #expect(CookieHeaderCache.load(provider: .cursor)?.cookieHeader ==
+                    #expect(CookieHeaderCache.load(provider: .claude)?.cookieHeader ==
                         "WorkosCursorSessionToken=disabled-keychain")
                 }
             }
@@ -315,22 +315,22 @@ struct CookieHeaderCacheConditionalMutationTests {
                 KeychainCacheStore.withServiceOverrideForTesting("cookie-disabled-gate-\(UUID().uuidString)") {
                     let scope = CookieHeaderCache.Scope.providerVariant(UUID().uuidString)
                     CookieHeaderCache.store(
-                        provider: .cursor,
+                        provider: .claude,
                         scope: scope,
                         cookieHeader: "fixtureSession=original",
                         sourceLabel: "Original")
                     let observation = CookieHeaderCache.observeForConditionalMutation(
-                        provider: .cursor,
+                        provider: .claude,
                         scope: scope)
-                    let gate = CookieHeaderCache.beginConditionalMutationGate(provider: .cursor, scope: scope)
+                    let gate = CookieHeaderCache.beginConditionalMutationGate(provider: .claude, scope: scope)
 
                     #expect(!CookieHeaderCache.storeIfObservationCurrent(
-                        provider: .cursor,
+                        provider: .claude,
                         scope: scope,
                         expected: observation,
                         cookieHeader: "fixtureSession=background-during-login",
                         sourceLabel: "Background"))
-                    #expect(CookieHeaderCache.load(provider: .cursor, scope: scope)?.cookieHeader ==
+                    #expect(CookieHeaderCache.load(provider: .claude, scope: scope)?.cookieHeader ==
                         "fixtureSession=original")
                     CookieHeaderCache.endConditionalMutationGate(gate)
                 }

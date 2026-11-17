@@ -291,7 +291,7 @@ struct MenuBarLayoutEditor: View {
             MenuBarLayoutPaletteGroup(
                 id: "money",
                 title: L("menu_bar_layout_group_money"),
-                tokens: [.balance, .costToday, .cost30d],
+                tokens: [.costToday, .cost30d],
                 includesLineBreak: false),
             MenuBarLayoutPaletteGroup(
                 id: "structure",
@@ -949,24 +949,15 @@ struct MenuBarLayoutPreview: View {
                 snapshot: snapshot)
             session = semanticWindows.session
             weekly = semanticWindows.weekly
-            // Provider-specific by design: Mistral's automatic lane can explicitly select its Monthly Plan window.
-            let automaticPreference = provider == .mistral
-                ? self.settings.menuBarMetricPreference(for: provider, snapshot: snapshot)
-                : .automatic
             rawAutomatic = MenuBarMetricWindowResolver.rateWindow(
-                preference: automaticPreference,
+                preference: .automatic,
                 provider: provider,
                 snapshot: snapshot,
-                supportsAverage: self.settings.menuBarMetricSupportsAverage(for: provider),
-                antigravityPrioritizeExhaustedQuotas: self.settings.antigravityPrioritizeExhaustedQuotas,
                 now: now)
             primary = snapshot.primary
             secondary = snapshot.secondary
         }
-        let automatic = MenuBarLayoutAutomaticWindowDisplayNormalizer.normalized(
-            provider: provider,
-            snapshot: snapshot,
-            window: rawAutomatic)
+        let automatic = rawAutomatic
         let scopedNamed = MenuBarLayoutSemanticWindowResolver.scopedWeeklyNamedWindow(snapshot: snapshot)
         let paceWindow = weekly ?? automatic
         // Bind the pace itself: `etaSeconds` is the numeric run-out conditional predicates compare.
@@ -981,9 +972,6 @@ struct MenuBarLayoutPreview: View {
             .flatMap { UsagePaceText.weeklyDetail(provider: provider, pace: $0, now: now).rightLabel }
         let cost = self.store.tokenSnapshotForCurrentProviderConfig(for: provider)?.snapshot
         let costToday = MenuBarLayoutCostResolver.todayCostUSD(snapshot: cost, now: now)
-        let balanceAmounts = MenuBarLayoutBalanceResolver.balanceAmountsUSD(
-            provider: provider,
-            snapshot: snapshot)
         // Thresholds are USD, and `convertedCost` returns the source amount unchanged when no rate
         // exists, so keep the datum only when the conversion actually landed in USD.
         let toUSD = { (value: Double) -> Double? in
@@ -1008,10 +996,7 @@ struct MenuBarLayoutPreview: View {
             scopedWeekly: MenuBarLayoutRenderWindow(scopedNamed?.window),
             scopedWeeklyTitle: scopedNamed?.title,
             automatic: automaticRenderWindow,
-            // Provider-specific by design: Mistral uses spend text when its automatic lane has no percentage window.
-            automaticText: provider == .mistral && automaticRenderWindow == nil
-                ? StatusItemController.mistralSpendDisplayText(snapshot: snapshot)
-                : nil,
+            automaticText: nil,
             sessionPace: self.store.menuBarLayoutPaceText(
                 provider: provider,
                 window: session,
@@ -1029,7 +1014,6 @@ struct MenuBarLayoutPreview: View {
                 dataConfidence: snapshot.dataConfidence,
                 now: now),
             runsOut: runsOut,
-            balance: MenuBarLayoutBalanceResolver.balance(provider: provider, snapshot: snapshot),
             costToday: costToday.map {
                 UsageFormatter.currencyString($0, currencyCode: cost?.currencyCode ?? "USD")
             },
@@ -1054,8 +1038,6 @@ struct MenuBarLayoutPreview: View {
                     dataConfidence: snapshot.dataConfidence,
                     now: now),
                 runsOutMinutes: pace?.etaSeconds.map { Int(($0 / 60).rounded()) },
-                balanceRemainingUSD: balanceAmounts.remaining,
-                balanceUsedUSD: balanceAmounts.used,
                 costTodayUSD: costToday.flatMap(toUSD),
                 cost30dUSD: cost?.last30DaysCostUSD.flatMap(toUSD)),
             resetCreditExpiresAt: MenuBarResetCreditCountdown.preferredExpiry(
@@ -1106,8 +1088,6 @@ struct MenuBarLayoutPreview: View {
             weeklyPace: samplePace(weekly),
             automaticPace: samplePace(session),
             runsOut: L("Runs out in %@", "1d 16h"),
-            // Provider-specific by design: only OpenRouter previews the Balance palette token.
-            balance: provider == .openrouter ? "$12.34" : nil,
             costToday: "$1.25",
             cost30d: "$20.00",
             metrics: MenuBarLayoutRenderMetrics(
@@ -1116,8 +1096,6 @@ struct MenuBarLayoutPreview: View {
                 automaticPaceDelta: samplePaceDelta(session),
                 // 1d 16h == 40h, matching the sample `runsOut` text above.
                 runsOutMinutes: 2400,
-                balanceRemainingUSD: provider == .openrouter ? 12.34 : nil,
-                balanceUsedUSD: provider == .openrouter ? 7.66 : nil,
                 costTodayUSD: 1.25,
                 cost30dUSD: 20))
     }
@@ -1237,7 +1215,6 @@ extension MenuBarLayoutToken {
         case .resetAbsolute: L("menu_bar_layout_token_reset_at")
         case .runsOut: L("menu_bar_layout_token_runs_out")
         case .runsOutCompact: "\(L("menu_bar_layout_token_runs_out")) (compact)"
-        case .balance: L("Balance")
         case .costToday: L("menu_bar_layout_token_cost_today")
         case .cost30d: L("menu_bar_layout_token_cost_30d")
         case .separatorDot: "·"
@@ -1276,7 +1253,6 @@ extension MenuBarLayoutToken {
         case .resetCountdown: "timer"
         case .resetAbsolute: "clock"
         case .runsOut, .runsOutCompact: "hourglass.bottomhalf.filled"
-        case .balance: "creditcard"
         case .costToday: "dollarsign.circle"
         case .cost30d: "calendar.badge.clock"
         case .separatorDot: "smallcircle.filled.circle"

@@ -16,7 +16,7 @@ assertEqual(new Set(providerIDs).size, providerIDs.length, "UsageProvider IDs");
 const providerCount = providerIDs.length;
 
 const publicCountFiles = [
-  ["README.md", `alt="CodexBar — every AI coding limit in your menu bar. ${providerCount} providers."`],
+  ["README.md", `This product supports ${providerCount} providers:`],
   ["docs/providers.md", `CodexBar currently registers ${providerCount} provider IDs.`],
   ["docs/social.html", `<strong>${providerCount} providers</strong>`],
   ["docs/llms.txt", `across ${providerCount} providers`],
@@ -25,6 +25,18 @@ for (const [relativePath, expectedText] of publicCountFiles) {
   const contents = fs.readFileSync(path.join(repoRoot, relativePath), "utf8");
   assert(contents.includes(expectedText), `${relativePath} must advertise ${providerCount} providers`);
 }
+const readme = fs.readFileSync(path.join(repoRoot, "README.md"), "utf8");
+const readmeProviders = readme.match(/^## Providers\n([\s\S]*?)(?=^## |$(?![\s\S]))/m)?.[1];
+assert(readmeProviders, "README must have an active Providers inventory");
+const readmeProviderBullets = readmeProviders.split("\n").filter((line) => line.startsWith("- "));
+const readmeProviderIDs = readmeProviderBullets.map((line) => {
+  const entry = line.match(/^- \[([^\]]+)\]\(docs\/([a-z0-9-]+)\.md\)(?: |$)/);
+  assert(entry, "README provider entries must link to an explicit provider documentation ID");
+  assertEqual(entry[1].toLowerCase(), entry[2], "README provider label and documentation ID");
+  return entry[2];
+});
+assertEqual(readmeProviderIDs.sort(), [...providerIDs].sort(), "README active provider IDs");
+
 assert(
   indexHtml.includes(`across ${providerCount} providers`),
   `index metadata must advertise ${providerCount} providers`,
@@ -119,9 +131,18 @@ for (const code of catalogCodes) {
   assert(indexHtml.includes(`href="https://codexbar.app/?lang=${code}"`), `missing hreflang URL for ${code}`);
 }
 
-const providerCards = [...indexHtml.matchAll(/<li class="provider-card"([^>]*)>([\s\S]*?)<\/li>/g)];
+const providerSection = indexHtml.match(/<section\b[^>]*data-provider-section[^>]*>([\s\S]*?)<\/section>/)?.[1];
+assert(providerSection, "site must have an active provider section");
+const providerCards = [...providerSection.matchAll(/<li\b([^>]*)>([\s\S]*?)<\/li>/g)];
+const visibleProviderIDs = [];
 for (const [, attrs, body] of providerCards) {
-  if (!attrs.includes("hidden")) {
+  if (!/\bhidden(?:\s|=|$)/.test(attrs)) {
+    const id = attrs.match(/\bdata-provider-id="([a-z0-9-]+)"/)?.[1];
+    assert(id, "visible provider cards must declare an explicit provider ID");
+    visibleProviderIDs.push(id);
+    assertEqual(body.match(/<strong>([^<]+)<\/strong>/)?.[1].toLowerCase(), id, "provider card label and ID");
+    const docID = body.match(/href="[^"]*\/([a-z0-9-]+)\.md"/)?.[1];
+    assertEqual(docID, id, "provider card documentation ID");
     assert(body.includes('class="provider-card-link"'), "provider cards must link to provider documentation");
     assert(body.includes('class="provider-logo'), "provider cards must use logo assets");
     for (const match of body.matchAll(/src="\.\/([^"]+)"/g)) {
@@ -129,6 +150,18 @@ for (const [, attrs, body] of providerCards) {
     }
   }
 }
+assertEqual(visibleProviderIDs.sort(), [...providerIDs].sort(), "site active provider IDs");
+
+const socialHtml = fs.readFileSync(path.join(repoRoot, "docs/social.html"), "utf8");
+const socialGrid = socialHtml.match(/<ul class="grid">([\s\S]*?)<\/ul>/)?.[1];
+assert(socialGrid, "social source must have a provider tile inventory");
+const socialProviderIDs = [...socialGrid.matchAll(/<li\b([^>]*)>([\s\S]*?)<\/li>/g)].map(([, attrs, body]) => {
+  const id = attrs.match(/\bdata-provider-id="([a-z0-9-]+)"/)?.[1];
+  assert(id, "social provider tiles must declare an explicit provider ID");
+  assertEqual(body.match(/<div class="name">([^<]+)<\/div>/)?.[1].toLowerCase(), id, "social provider label and ID");
+  return id;
+});
+assertEqual(socialProviderIDs.sort(), [...providerIDs].sort(), "social active provider IDs");
 
 console.log(`app/site locales OK: ${catalogCodes.length} locales, ${englishKeys.length} site messages`);
 

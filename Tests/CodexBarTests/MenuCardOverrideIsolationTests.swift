@@ -34,9 +34,7 @@ struct MenuCardOverrideIsolationTests {
         defaults.removePersistentDomain(forName: suite)
         let settings = SettingsStore(
             userDefaults: defaults,
-            configStore: testConfigStore(suiteName: suite),
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: testConfigStore(suiteName: suite))
         settings.costUsageEnabled = true
         let fetcher = UsageFetcher()
         let store = UsageStore(fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
@@ -74,9 +72,7 @@ struct MenuCardOverrideIsolationTests {
         defaults.removePersistentDomain(forName: suite)
         let settings = SettingsStore(
             userDefaults: defaults,
-            configStore: testConfigStore(suiteName: suite),
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: testConfigStore(suiteName: suite))
         let fetcher = UsageFetcher()
         let store = UsageStore(fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
         store._setErrorForTesting("Claude OAuth credentials unavailable", provider: .claude)
@@ -183,9 +179,7 @@ struct MenuCardOverrideIsolationTests {
         defaults.removePersistentDomain(forName: suite)
         let settings = SettingsStore(
             userDefaults: defaults,
-            configStore: testConfigStore(suiteName: suite),
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: testConfigStore(suiteName: suite))
         let fetcher = UsageFetcher()
         let store = UsageStore(fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
         let controller = StatusItemController(
@@ -209,7 +203,7 @@ struct MenuCardOverrideIsolationTests {
             cacheKey: "fixture-cache")
 
         let model = try #require(controller.tokenAccountMenuCardModel(
-            for: .sub2api,
+            for: .claude,
             accountSnapshot: accountSnapshot))
 
         #expect(model.email == "Rejected group")
@@ -223,9 +217,7 @@ struct MenuCardOverrideIsolationTests {
         defaults.removePersistentDomain(forName: suite)
         let settings = SettingsStore(
             userDefaults: defaults,
-            configStore: testConfigStore(suiteName: suite),
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore())
+            configStore: testConfigStore(suiteName: suite))
         let fetcher = UsageFetcher()
         let store = UsageStore(fetcher: fetcher, browserDetection: BrowserDetection(cacheTTL: 0), settings: settings)
         let controller = StatusItemController(
@@ -246,7 +238,7 @@ struct MenuCardOverrideIsolationTests {
             secondary: nil,
             updatedAt: Date(),
             identity: ProviderIdentitySnapshot(
-                providerID: .sub2api,
+                providerID: .claude,
                 accountEmail: "fetched@example.com",
                 accountOrganization: nil,
                 loginMethod: nil))
@@ -258,7 +250,7 @@ struct MenuCardOverrideIsolationTests {
             cacheKey: "fixture-cache")
 
         let model = try #require(controller.tokenAccountMenuCardModel(
-            for: .sub2api,
+            for: .claude,
             accountSnapshot: accountSnapshot))
 
         #expect(model.email == "fetched@example.com")

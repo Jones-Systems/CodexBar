@@ -86,7 +86,7 @@ struct SpendActivityHeatmapTests {
         let model = SpendDashboardModel.build(
             inputs: [
                 .init(id: "annual", provider: .claude, displayName: "Claude", snapshot: annual),
-                .init(id: "recent", provider: .openai, displayName: "OpenAI", snapshot: recent),
+                .init(id: "recent", provider: .codex, displayName: "OpenAI", snapshot: recent),
             ],
             requestedDays: 30,
             now: now,
@@ -114,7 +114,7 @@ struct SpendActivityHeatmapTests {
         let model = SpendDashboardModel.build(
             inputs: [
                 .init(id: "recent", provider: .claude, displayName: "Claude", snapshot: recent),
-                .init(id: "missing", provider: .openai, displayName: "OpenAI", snapshot: unavailable),
+                .init(id: "missing", provider: .codex, displayName: "OpenAI", snapshot: unavailable),
             ],
             requestedDays: 30,
             now: now,
@@ -139,7 +139,7 @@ struct SpendActivityHeatmapTests {
         let model = SpendDashboardModel.build(
             inputs: [
                 .init(id: "valid", provider: .claude, displayName: "Claude", snapshot: valid),
-                .init(id: "invalid", provider: .openai, displayName: "OpenAI", snapshot: scannedWithInvalidDay),
+                .init(id: "invalid", provider: .codex, displayName: "OpenAI", snapshot: scannedWithInvalidDay),
             ],
             requestedDays: 30,
             now: now,

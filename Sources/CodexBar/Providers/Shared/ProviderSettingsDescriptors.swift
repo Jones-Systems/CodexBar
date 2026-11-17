@@ -31,10 +31,6 @@ struct ProviderSettingsContext {
         self.settings.providerConfigBinding(provider: self.provider, field: field)
     }
 
-    func providerConfigSecretBinding(key: String, logField: String) -> Binding<String> {
-        self.settings.providerConfigSecretBinding(provider: self.provider, key: key, logField: logField)
-    }
-
     init(
         provider: UsageProvider,
         settings: SettingsStore,
@@ -172,71 +168,13 @@ struct ProviderSettingsTokenAccountsDescriptor: Identifiable {
     let activeIndex: () -> Int
     let setActiveIndex: (Int) -> Void
     let showsOrganizationField: Bool
-    let showsTeamModeControls: Bool
     let addAccount: (
         _ label: String,
         _ token: String,
-        _ usageScope: String?,
-        _ organizationID: String?,
-        _ workspaceID: String?) -> Void
-    let updateAccount: (
-        _ accountID: UUID,
-        _ usageScope: String?,
-        _ organizationID: String?,
-        _ workspaceID: String?) -> Void
+        _ organizationID: String?) -> Void
     let removeAccount: (_ accountID: UUID) -> Void
-    let primaryAddActionTitle: String?
-    let primaryAddAction: (() async -> Void)?
     let openConfigFile: () -> Void
     let reloadFromDisk: () -> Void
-}
-
-/// Shared organizations descriptor rendered in the Providers settings pane.
-///
-/// Used by providers that let the user opt in to additional account scopes
-/// (e.g. Kilo organizations) shown alongside the personal account.
-@MainActor
-struct ProviderSettingsOrganizationsDescriptor: Identifiable {
-    struct Entry: Identifiable {
-        let id: String
-        let title: String
-        let subtitle: String?
-        let localizesTitle: Bool
-        let localizesSubtitle: Bool
-        let isEnabled: Bool
-        let isLocked: Bool
-
-        init(
-            id: String,
-            title: String,
-            subtitle: String?,
-            localizesTitle: Bool = true,
-            localizesSubtitle: Bool = true,
-            isEnabled: Bool,
-            isLocked: Bool)
-        {
-            self.id = id
-            self.title = title
-            self.subtitle = subtitle
-            self.localizesTitle = localizesTitle
-            self.localizesSubtitle = localizesSubtitle
-            self.isEnabled = isEnabled
-            self.isLocked = isLocked
-        }
-    }
-
-    struct RefreshOutcome {
-        let success: Bool
-        let errorMessage: String?
-    }
-
-    let id: String
-    let title: String
-    let subtitle: String?
-    let entries: () -> [Entry]
-    let onToggle: (String, Bool) -> Void
-    let onRefresh: () async -> RefreshOutcome
-    let canRefresh: () -> Bool
 }
 
 /// Shared picker descriptor rendered in the Providers settings pane.

@@ -226,29 +226,10 @@ struct ProviderSettingsActionsRowView: View {
 
 @MainActor
 struct ProviderSettingsTokenAccountsRowView: View {
-    struct TeamAccountDraft: Equatable {
-        var teamMode: Bool
-        var organizationID: String
-        var projectID: String
-
-        func normalizedForPersistence() -> Self {
-            guard self.teamMode else {
-                return Self(teamMode: false, organizationID: "", projectID: "")
-            }
-            return Self(
-                teamMode: true,
-                organizationID: self.organizationID.trimmingCharacters(in: .whitespacesAndNewlines),
-                projectID: self.projectID.trimmingCharacters(in: .whitespacesAndNewlines))
-        }
-    }
-
     let descriptor: ProviderSettingsTokenAccountsDescriptor
     @State private var newLabel: String = ""
     @State private var newToken: String = ""
     @State private var newOrgID: String = ""
-    @State private var newProjectID: String = ""
-    @State private var newTeamMode = false
-    @State private var teamDrafts: [UUID: TeamAccountDraft] = [:]
 
     var body: some View {
         Section {
@@ -259,128 +240,79 @@ struct ProviderSettingsTokenAccountsRowView: View {
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(Array(accounts.enumerated()), id: \.element.id) { index, account in
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(alignment: .center, spacing: 10) {
-                            Button {
-                                self.descriptor.setActiveIndex(index)
-                            } label: {
-                                HStack(alignment: .center, spacing: 8) {
-                                    Image(systemName: self.isActive(index: index, accountCount: accounts.count) ?
-                                        "checkmark.circle.fill" : "circle")
-                                        .font(.system(size: 13, weight: .medium))
-                                        .foregroundStyle(self.isActive(index: index, accountCount: accounts.count) ?
-                                            Color.accentColor : Color.secondary)
-                                    Text(account.displayName)
-                                        .font(
-                                            .footnote.weight(
-                                                self.isActive(index: index, accountCount: accounts.count) ?
-                                                    .semibold : .regular))
-                                        .foregroundStyle(.primary)
-                                    Spacer(minLength: 0)
-                                }
-                                .contentShape(Rectangle())
+                    HStack(alignment: .center, spacing: 10) {
+                        Button {
+                            self.descriptor.setActiveIndex(index)
+                        } label: {
+                            HStack(alignment: .center, spacing: 8) {
+                                Image(systemName: self.isActive(index: index, accountCount: accounts.count) ?
+                                    "checkmark.circle.fill" : "circle")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(self.isActive(index: index, accountCount: accounts.count) ?
+                                        Color.accentColor : Color.secondary)
+                                Text(account.displayName)
+                                    .font(
+                                        .footnote.weight(
+                                            self.isActive(index: index, accountCount: accounts.count) ?
+                                                .semibold : .regular))
+                                    .foregroundStyle(.primary)
+                                Spacer(minLength: 0)
                             }
-                            .buttonStyle(.plain)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
 
-                            Button(L("Remove")) {
-                                self.descriptor.removeAccount(account.id)
-                            }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
+                        Button(L("Remove")) {
+                            self.descriptor.removeAccount(account.id)
                         }
-                        if self.descriptor.showsTeamModeControls {
-                            self.teamModeEditor(account: account)
-                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
                     }
                 }
             }
 
-            if self.descriptor.primaryAddAction == nil {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 8) {
-                        TextField(text: self.$newLabel, prompt: Text(L("Label"))) {
-                            EmptyView()
-                        }
-                        .labelsHidden()
-                        .textFieldStyle(.roundedBorder)
-                        .font(.footnote)
-                        .frame(maxWidth: 160)
-                        SecureField(text: self.$newToken, prompt: Text(L(self.descriptor.placeholder))) {
-                            EmptyView()
-                        }
-                        .labelsHidden()
-                        .textFieldStyle(.roundedBorder)
-                        .font(.footnote)
-                        Button(L("Add")) {
-                            let label = self.newLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-                            let token = self.newToken.trimmingCharacters(in: .whitespacesAndNewlines)
-                            guard !label.isEmpty, !token.isEmpty else { return }
-                            let orgID = self.descriptor.showsOrganizationField
-                                ? self.newOrgID.trimmingCharacters(in: .whitespacesAndNewlines)
-                                : ""
-                            let teamOrgID = self.newOrgID.trimmingCharacters(in: .whitespacesAndNewlines)
-                            let projectID = self.newProjectID.trimmingCharacters(in: .whitespacesAndNewlines)
-                            let usageScope = self.descriptor.showsTeamModeControls
-                                ? (self.newTeamMode ? "team" : "personal")
-                                : nil
-                            let accountOrganizationID = if self.newTeamMode {
-                                teamOrgID.isEmpty ? nil : teamOrgID
-                            } else {
-                                orgID.isEmpty ? nil : orgID
-                            }
-                            let accountWorkspaceID = self.newTeamMode && !projectID.isEmpty ? projectID : nil
-                            self.descriptor.addAccount(
-                                label,
-                                token,
-                                usageScope,
-                                accountOrganizationID,
-                                accountWorkspaceID)
-                            self.newLabel = ""
-                            self.newToken = ""
-                            self.newOrgID = ""
-                            self.newProjectID = ""
-                            self.newTeamMode = false
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
-                        .disabled(Self.isAddDisabled(
-                            label: self.newLabel,
-                            token: self.newToken,
-                            showsTeamModeControls: self.descriptor.showsTeamModeControls,
-                            teamMode: self.newTeamMode,
-                            teamContext: (organizationID: self.newOrgID, projectID: self.newProjectID)))
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    TextField(text: self.$newLabel, prompt: Text(L("Label"))) {
+                        EmptyView()
                     }
-                    if self.descriptor.showsOrganizationField {
-                        TextField(text: self.$newOrgID, prompt: Text(L("Org ID (optional)"))) {
-                            EmptyView()
-                        }
-                        .labelsHidden()
-                        .textFieldStyle(.roundedBorder)
-                        .font(.footnote)
-                        .help(
-                            L("Optional organization ID for accounts linked to multiple Anthropic organizations."))
+                    .labelsHidden()
+                    .textFieldStyle(.roundedBorder)
+                    .font(.footnote)
+                    .frame(maxWidth: 160)
+                    SecureField(text: self.$newToken, prompt: Text(L(self.descriptor.placeholder))) {
+                        EmptyView()
                     }
-                    if self.descriptor.showsTeamModeControls {
-                        Toggle(L("Team mode"), isOn: self.$newTeamMode)
-                            .toggleStyle(.checkbox)
-                            .font(.footnote)
-                        if self.newTeamMode {
-                            HStack(spacing: 8) {
-                                TextField(text: self.$newOrgID, prompt: Text(L("Organization ID"))) {
-                                    EmptyView()
-                                }
-                                .labelsHidden()
-                                .textFieldStyle(.roundedBorder)
-                                .font(.footnote)
-                                TextField(text: self.$newProjectID, prompt: Text(L("Project ID"))) {
-                                    EmptyView()
-                                }
-                                .labelsHidden()
-                                .textFieldStyle(.roundedBorder)
-                                .font(.footnote)
-                            }
-                        }
+                    .labelsHidden()
+                    .textFieldStyle(.roundedBorder)
+                    .font(.footnote)
+                    Button(L("Add")) {
+                        let label = self.newLabel.trimmingCharacters(in: .whitespacesAndNewlines)
+                        let token = self.newToken.trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !label.isEmpty, !token.isEmpty else { return }
+                        let orgID = self.descriptor.showsOrganizationField
+                            ? self.newOrgID.trimmingCharacters(in: .whitespacesAndNewlines)
+                            : ""
+                        self.descriptor.addAccount(label, token, orgID.isEmpty ? nil : orgID)
+                        self.newLabel = ""
+                        self.newToken = ""
+                        self.newOrgID = ""
                     }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .disabled(
+                        self.newLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                            self.newToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+                if self.descriptor.showsOrganizationField {
+                    TextField(text: self.$newOrgID, prompt: Text(L("Org ID (optional)"))) {
+                        EmptyView()
+                    }
+                    .labelsHidden()
+                    .textFieldStyle(.roundedBorder)
+                    .font(.footnote)
+                    .help(
+                        L("Optional organization ID for accounts linked to multiple Anthropic organizations."))
                 }
             }
 
@@ -395,20 +327,7 @@ struct ProviderSettingsTokenAccountsRowView: View {
                 }
                 .buttonStyle(.link)
                 .controlSize(.small)
-
                 Spacer(minLength: 0)
-
-                if let title = self.descriptor.primaryAddActionTitle,
-                   let action = self.descriptor.primaryAddAction
-                {
-                    Button(L(title)) {
-                        Task { @MainActor in
-                            await action()
-                        }
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                }
             }
         } header: {
             Text(L(self.descriptor.title))
@@ -424,132 +343,6 @@ struct ProviderSettingsTokenAccountsRowView: View {
         let selectedIndex = min(self.descriptor.activeIndex(), max(0, accountCount - 1))
         return selectedIndex == index
     }
-
-    private func teamModeEditor(account: ProviderTokenAccount) -> some View {
-        let draft = self.teamDraft(for: account)
-        let original = Self.teamAccountDraft(for: account)
-        return VStack(alignment: .leading, spacing: 6) {
-            Toggle(L("Team mode"), isOn: self.teamModeDraftBinding(account: account))
-                .toggleStyle(.checkbox)
-                .font(.footnote)
-            if draft.teamMode {
-                HStack(spacing: 8) {
-                    TextField(
-                        text: self.organizationIDDraftBinding(account: account),
-                        prompt: Text(L("Organization ID")))
-                    {
-                        EmptyView()
-                    }
-                    .labelsHidden()
-                    .textFieldStyle(.roundedBorder)
-                    .font(.footnote)
-                    TextField(
-                        text: self.projectIDDraftBinding(account: account),
-                        prompt: Text(L("Project ID")))
-                    {
-                        EmptyView()
-                    }
-                    .labelsHidden()
-                    .textFieldStyle(.roundedBorder)
-                    .font(.footnote)
-                }
-            }
-            Button(L("apply")) {
-                self.applyTeamDraft(account: account)
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-            .disabled(Self.isTeamDraftApplyDisabled(draft: draft, original: original))
-        }
-        .padding(.leading, 24)
-    }
-
-    private func teamModeDraftBinding(account: ProviderTokenAccount) -> Binding<Bool> {
-        Binding(
-            get: { self.teamDraft(for: account).teamMode },
-            set: { enabled in
-                self.updateTeamDraft(account: account) { draft in
-                    draft.teamMode = enabled
-                }
-            })
-    }
-
-    private func organizationIDDraftBinding(account: ProviderTokenAccount) -> Binding<String> {
-        Binding(
-            get: { self.teamDraft(for: account).organizationID },
-            set: { value in
-                self.updateTeamDraft(account: account) { draft in
-                    draft.organizationID = value
-                }
-            })
-    }
-
-    private func projectIDDraftBinding(account: ProviderTokenAccount) -> Binding<String> {
-        Binding(
-            get: { self.teamDraft(for: account).projectID },
-            set: { value in
-                self.updateTeamDraft(account: account) { draft in
-                    draft.projectID = value
-                }
-            })
-    }
-
-    private func teamDraft(for account: ProviderTokenAccount) -> TeamAccountDraft {
-        self.teamDrafts[account.id] ?? Self.teamAccountDraft(for: account)
-    }
-
-    private func updateTeamDraft(
-        account: ProviderTokenAccount,
-        mutate: (inout TeamAccountDraft) -> Void)
-    {
-        var draft = self.teamDraft(for: account)
-        mutate(&draft)
-        self.teamDrafts[account.id] = draft
-    }
-
-    private func applyTeamDraft(account: ProviderTokenAccount) {
-        let draft = self.teamDraft(for: account)
-        let original = Self.teamAccountDraft(for: account)
-        guard !Self.isTeamDraftApplyDisabled(draft: draft, original: original) else { return }
-        let normalized = draft.normalizedForPersistence()
-        self.descriptor.updateAccount(
-            account.id,
-            normalized.teamMode ? "team" : "personal",
-            normalized.teamMode ? normalized.organizationID : nil,
-            normalized.teamMode ? normalized.projectID : nil)
-        self.teamDrafts[account.id] = nil
-    }
-
-    static func teamAccountDraft(for account: ProviderTokenAccount) -> TeamAccountDraft {
-        let teamMode = account.sanitizedUsageScope?.lowercased() == "team"
-        return TeamAccountDraft(
-            teamMode: teamMode,
-            organizationID: teamMode ? (account.sanitizedOrganizationID ?? "") : "",
-            projectID: teamMode ? (account.sanitizedWorkspaceID ?? "") : "")
-    }
-
-    static func isTeamDraftApplyDisabled(draft: TeamAccountDraft, original: TeamAccountDraft) -> Bool {
-        let draft = draft.normalizedForPersistence()
-        let original = original.normalizedForPersistence()
-        guard draft != original else { return true }
-        guard draft.teamMode else { return false }
-        return draft.organizationID.isEmpty || draft.projectID.isEmpty
-    }
-
-    static func isAddDisabled(
-        label: String,
-        token: String,
-        showsTeamModeControls: Bool,
-        teamMode: Bool,
-        teamContext: (organizationID: String, projectID: String)) -> Bool
-    {
-        let label = label.trimmingCharacters(in: .whitespacesAndNewlines)
-        let token = token.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !label.isEmpty, !token.isEmpty else { return true }
-        guard showsTeamModeControls, teamMode else { return false }
-        return teamContext.organizationID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-            teamContext.projectID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
 }
 
 extension View {
@@ -560,73 +353,6 @@ extension View {
             self.buttonStyle(.bordered)
         case .link:
             self.buttonStyle(.link)
-        }
-    }
-}
-
-@MainActor
-struct ProviderSettingsOrganizationsRowView: View {
-    let descriptor: ProviderSettingsOrganizationsDescriptor
-    @State private var errorMessage: String?
-    @State private var isRefreshing = false
-
-    var body: some View {
-        Section {
-            let entries = self.descriptor.entries()
-            if entries.allSatisfy(\.isLocked) {
-                Text(L("No organizations loaded. Click Refresh after setting your API key."))
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(entries) { entry in
-                    Toggle(isOn: Binding(
-                        get: { entry.isEnabled },
-                        set: { newValue in
-                            self.descriptor.onToggle(entry.id, newValue)
-                        })) {
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text(entry.localizesTitle ? L(entry.title) : entry.title)
-                                if let subtitle = entry.subtitle,
-                                   !subtitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                                {
-                                    Text(entry.localizesSubtitle ? L(subtitle) : subtitle)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                        .toggleStyle(.switch)
-                            .controlSize(.small)
-                            .disabled(entry.isLocked)
-                }
-            }
-
-            HStack(spacing: 10) {
-                Button(L("Refresh organizations")) {
-                    Task { @MainActor in
-                        self.isRefreshing = true
-                        let result = await self.descriptor.onRefresh()
-                        self.isRefreshing = false
-                        self.errorMessage = result.success ? nil : result.errorMessage
-                    }
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .disabled(!self.descriptor.canRefresh() || self.isRefreshing)
-                if let errorMessage = self.errorMessage, !errorMessage.isEmpty {
-                    Text(errorMessage)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                }
-            }
-        } header: {
-            Text(L(self.descriptor.title))
-        } footer: {
-            if let subtitle = self.descriptor.subtitle,
-               !subtitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            {
-                SettingsSectionFooter(L(subtitle))
-            }
         }
     }
 }

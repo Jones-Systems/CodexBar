@@ -16,14 +16,14 @@ struct ShareStatsTests {
             }
         }
 
-        #expect(fingerprint == 2_500_333_924_415_227_190)
+        #expect(fingerprint == 7_124_108_707_576_881_016)
     }
 
     @Test
     func `builder preserves native currencies and partial group spend`() throws {
         let subscriptionNames = try [
             "codex:one": #require(Self.subscriptionName(provider: .codex, rawName: "pro")),
-            "cursor": #require(Self.subscriptionName(provider: .cursor, rawName: "Cursor Pro")),
+            "codex:two": #require(Self.subscriptionName(provider: .codex, rawName: "Plus")),
             "claude": #require(Self.subscriptionName(provider: .claude, rawName: "Claude Max")),
         ]
         let payload = try #require(ShareStatsBuilder.make(
@@ -41,8 +41,8 @@ struct ShareStatsTests {
                 coveredDayCount: 0,
                 isPartial: true),
         ])
-        #expect(payload.providers.map(\.providerName) == ["Claude", "Codex · #1", "Cursor"])
-        #expect(payload.providers.map(\.subscriptionName) == ["Max", "Pro 20x", "Cursor Pro"])
+        #expect(payload.providers.map(\.providerName) == ["Claude", "Codex · #1", "Codex · #2"])
+        #expect(payload.providers.map(\.subscriptionName) == ["Max", "Pro 20x", "Plus"])
         #expect(payload.providers.last?.estimatedCost == nil)
         #expect(payload.topModels.map(\.modelName).prefix(2) == ["Claude", "GPT"])
 
@@ -51,7 +51,7 @@ struct ShareStatsTests {
         #expect(text.contains("Claude · Max: 300 tokens · ~£12.00 est · 10/30 days"))
         #expect(text.contains("USD: $4.00 estimated (partial) · coverage 0/30 days"))
         #expect(text.contains("~500 tracked tokens (partial)"))
-        #expect(text.contains("Cursor · Cursor Pro: Spend unavailable"))
+        #expect(text.contains("Codex · #2 · Plus: Spend unavailable"))
         #expect(!text.contains("£12.00 +"))
     }
 
@@ -91,8 +91,8 @@ struct ShareStatsTests {
         if let unsafeCodexName = Self.subscriptionName(provider: .codex, rawName: "person@example.com") {
             subscriptionNames["codex:one"] = unsafeCodexName
         }
-        if let unsafeCursorName = Self.subscriptionName(provider: .cursor, rawName: "/Users/peter/plan") {
-            subscriptionNames["cursor"] = unsafeCursorName
+        if let unsafeCursorName = Self.subscriptionName(provider: .codex, rawName: "/Users/peter/plan") {
+            subscriptionNames["codex:two"] = unsafeCursorName
         }
         let payload = try #require(ShareStatsBuilder.make(
             model: model,
@@ -116,19 +116,11 @@ struct ShareStatsTests {
     func `subscription labels require a plan tier provider contract`() {
         #expect(Self.subscriptionName(provider: .codex, rawName: "pro")?.displayName == "Pro 20x")
         #expect(Self.subscriptionName(provider: .codex, rawName: "Plus Plan")?.displayName == "Plus")
-        #expect(Self.subscriptionName(provider: .cursor, rawName: "Cursor Pro")?.displayName == "Cursor Pro")
-        #expect(Self.subscriptionName(provider: .gemini, rawName: "Paid")?.displayName == "Paid")
-        #expect(Self.subscriptionName(provider: .copilot, rawName: "Business")?.displayName == "Business")
-        #expect(Self.subscriptionName(provider: .perplexity, rawName: "Max")?.displayName == "Max")
-        #expect(Self.subscriptionName(provider: .windsurf, rawName: "Teams")?.displayName == "Teams")
-        #expect(Self.subscriptionName(provider: .zed, rawName: "Zed Pro")?.displayName == "Zed Pro")
-        #expect(Self.subscriptionName(provider: .minimax, rawName: "MiniMax Star")?.displayName == "MiniMax Star")
-        #expect(Self.subscriptionName(provider: .synthetic, rawName: "Starter")?.displayName == "Starter")
-        #expect(Self.subscriptionName(provider: .openrouter, rawName: "Team") == nil)
+        #expect(Self.subscriptionName(provider: .codex, rawName: "Plus")?.displayName == "Plus")
         #expect(Self.subscriptionName(provider: .claude, rawName: "name@example.com") == nil)
         #expect(Self.subscriptionName(provider: .claude, rawName: "Alice Smith") == nil)
         #expect(Self.subscriptionName(provider: .codex, rawName: "123456789") == nil)
-        #expect(Self.subscriptionName(provider: .cursor, rawName: "sk-live-example") == nil)
+        #expect(Self.subscriptionName(provider: .codex, rawName: "sk-live-example") == nil)
         #expect(Self.subscriptionName(provider: .claude, rawName: "internal.example") == nil)
         #expect(Self.subscriptionName(provider: .claude, rawName: "Max", accountOrganization: "Max") == nil)
     }
@@ -142,12 +134,6 @@ struct ShareStatsTests {
             from: [unidentified, fallback],
             provider: .codex)
         #expect(name?.displayName == "Pro 20x")
-    }
-
-    @Test
-    func `bedrock regional model identifiers map to public families`() {
-        #expect(ShareStatsSanitizer.modelName("us.amazon.nova-2-lite-v1:0") == "Amazon Nova")
-        #expect(ShareStatsSanitizer.modelName("global.anthropic.claude-sonnet-4-v1:0") == "Claude")
     }
 
     @Test
@@ -433,10 +419,10 @@ struct ShareStatsTests {
                         totalCost: 4,
                         coveredDayCount: 30),
                     SpendDashboardModel.ProviderRow(
-                        id: "cursor",
+                        id: "codex:two",
                         rank: 2,
-                        provider: .cursor,
-                        displayName: "Cursor",
+                        provider: .codex,
+                        displayName: "Codex · #2",
                         totalTokens: nil,
                         totalCost: nil,
                         coveredDayCount: 0),

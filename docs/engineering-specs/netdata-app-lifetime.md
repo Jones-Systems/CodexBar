@@ -84,11 +84,11 @@ construction, preferences, status lifecycle and Netdata tests. Installed apps,
 private configuration, live endpoints and rendered UI were excluded and remain
 unknown. Existing portable client/parser semantics remain unchanged.
 
-Open PR #41 at `ba523f60b7161e70a3afd201f87d49dd2b0e37fe` changes adjacent
-AppDelegate lifecycle and constructor fields for unrelated provider removal.
-Keep Netdata ownership additive and preserve the current cloud-sync behavior;
-do not make that work a dependency. PR #26 changes entry-point bootstrap only;
-the Netdata slice does not edit that entry point.
+The refreshed slice uses the app lifecycle and settings constructors on
+`main` at `28e826b89b699c138faf903874e60cc4b0e32b7f`. AppDelegate
+owns the Netdata coordinator and passes it to the settings and menu-bar owners
+alongside the existing fleet account state. The provider and cloud-sync removals
+on the base remain in effect. The slice leaves the app entry point untouched.
 <!-- codex-section:end id="spec.netdata-app-lifetime#dec.design.001" -->
 
 ## Exact Change Surface And Ownership

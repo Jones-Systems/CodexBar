@@ -85,13 +85,6 @@ extension UsageStore {
             updatedAt: response.page?.updatedAt)
     }
 
-    /// Resolves the provider's status and component list.
-    ///
-    /// OpenAI's status page is powered by incident.io, whose native feed groups components
-    /// (APIs / ChatGPT / Codex / FedRAMP) — so we try that first. Classic Atlassian
-    /// statuspage.io pages (Claude, Cursor, GitHub) expose a flat `api/v2` feed, which we fall
-    /// back to. `components.json` is used for the flat list because `summary.json` omits unlisted
-    /// components such as "FedRAMP".
     @concurrent
     nonisolated static func fetchStatusSummary(
         from baseURL: URL,

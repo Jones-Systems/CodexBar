@@ -28,7 +28,6 @@ extension UsageStore {
             if let components {
                 self.statusComponents[provider.instanceID] = components
             }
-            self.emitProviderStatusHooks(provider: provider, indicator: status.indicator)
         } catch {
             guard self.statusRefreshPublicationIsCurrent(publicationRevision, for: provider) else { return }
             self.recordStartupConnectivityRetryableFailure(error)

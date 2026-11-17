@@ -2,20 +2,6 @@ import CodexBarCore
 import Foundation
 
 enum MenuBarDisplayText {
-    static func deepSeekBalanceText(snapshot: UsageSnapshot?) -> String? {
-        guard
-            let rawValue = snapshot?.primary?.resetDescription?
-                .trimmingCharacters(in: .whitespacesAndNewlines),
-                !rawValue.isEmpty,
-                rawValue.hasPrefix("$") || rawValue.hasPrefix("¥")
-        else {
-            return nil
-        }
-
-        let balance = rawValue.split(separator: " ", maxSplits: 1).first
-        return balance.map(String.init)
-    }
-
     static func percentText(window: RateWindow?, showUsed: Bool) -> String? {
         guard let window else { return nil }
         let percent = showUsed ? window.usedPercent : window.remainingPercent
@@ -128,7 +114,7 @@ enum MenuBarDisplayText {
                 ?? self.percentText(window: percentWindow, showUsed: showUsed)
         case .both:
             guard let percent = percentText(window: percentWindow, showUsed: showUsed) else { return nil }
-            // Fall back to percent-only when pace is unavailable (e.g. Copilot)
+            // Fall back to percent-only when pace is unavailable
             guard let paceText = Self.paceText(pace: pace) else { return percent }
             return "\(percent) · \(paceText)"
         case .resetTime:

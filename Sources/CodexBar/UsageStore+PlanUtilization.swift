@@ -225,13 +225,7 @@ extension UsageStore {
             provider: provider,
             snapshot: snapshot,
             capturedAt: now)
-        let samples = provider == .antigravity
-            ? self.planUtilizationSeriesSamples(
-                provider: provider,
-                snapshot: snapshot,
-                capturedAt: now,
-                forSessionEquivalents: true)
-            : detectorSamples
+        let samples = detectorSamples
         var effectiveOwner = claudeOAuthHistoryOwnerIdentifier
         if provider == .claude, isClaudeOAuthSample, let owner = claudeOAuthHistoryOwnerIdentifier {
             effectiveOwner = self.resolvedClaudeOAuthHistoryOwner(evidence: ClaudeOAuthHistoryEvidence(
@@ -303,30 +297,11 @@ extension UsageStore {
                 shouldUpdatePreferredAccountKey: shouldUpdatePreferredAccountKey,
                 shouldAdoptUnscopedHistory: shouldAdoptUnscopedHistory,
                 providerBuckets: &providerBuckets)
-            var histories = providerBuckets.histories(for: accountKey)
+            let histories = providerBuckets.histories(for: accountKey)
             let originalHistories = histories
-            var samplesToPersist = samples
-            if provider == .antigravity,
-               samples.contains(where: { $0.name == .session }),
-               !histories.contains(where: { $0.name == .session })
-            {
-                // Pre-feature Antigravity history could contain a provider-wide weekly maximum.
-                // Drop it before starting the Gemini-pinned session/weekly pair.
-                histories.removeAll { $0.name == .weekly }
-            }
-            if ![UsageProvider.codex, .claude, .antigravity].contains(provider) {
-                self.reconcileGenericSessionEquivalentHistory(
-                    scope: (provider, accountKey),
-                    snapshot: snapshot,
-                    providerBuckets: &providerBuckets,
-                    histories: &histories,
-                    samples: &samplesToPersist)
-                self.sessionEquivalentBurnCache.removeValue(forKey: provider.instanceID)
-            }
-
             let updatedHistories = Self.updatedPlanUtilizationHistories(
                 existingHistories: histories,
-                samples: samplesToPersist) ?? histories
+                samples: samples) ?? histories
             if updatedHistories != originalHistories {
                 providerBuckets.setHistories(updatedHistories, for: accountKey)
             }
@@ -585,16 +560,13 @@ extension UsageStore {
         case .primary:
             guard let minutes = resolved.window.windowMinutes else { return false }
             return minutes > 0 && minutes <= 6 * 60
-        case .copilotSecondaryFallback, .antigravityQuotaSummary, .antigravityLegacy:
-            return true
         }
     }
 
     private func planUtilizationSeriesSamples(
         provider: UsageProvider,
         snapshot: UsageSnapshot,
-        capturedAt: Date,
-        forSessionEquivalents: Bool = false) -> [PlanUtilizationSeriesSample]
+        capturedAt: Date) -> [PlanUtilizationSeriesSample]
     {
         var samplesByKey: [PlanUtilizationSeriesKey: PlanUtilizationSeriesSample] = [:]
 
@@ -620,18 +592,6 @@ extension UsageStore {
                     resetsAt: window.resetsAt))
         }
 
-        func appendGenericSessionEquivalentWindows() {
-            let components = Self.genericSessionEquivalentWindowComponents(snapshot: snapshot)
-            switch Self.genericSessionEquivalentWindowPairResolution(snapshot: snapshot) {
-            case let .resolved(session, weekly, _, _):
-                appendWindow(session, name: .session)
-                appendWindow(weekly, name: .weekly)
-            case .incomplete, .ambiguous:
-                appendWindow(components.session?.window, name: .session)
-                appendWindow(components.weekly?.window, name: .weekly)
-            }
-        }
-
         // Provider-specific by design: payload shapes project different semantic lanes into history series.
         switch provider {
         case .codex:
@@ -646,44 +606,6 @@ extension UsageStore {
             appendWindow(snapshot.primary, name: .session)
             appendWindow(snapshot.secondary, name: .weekly)
             appendWindow(snapshot.tertiary, name: .opus)
-        case .opencodego:
-            appendWindow(snapshot.primary, name: .session)
-            appendWindow(snapshot.secondary, name: .weekly)
-            appendWindow(snapshot.tertiary, name: .monthly)
-        case .mimo, .stepfun, .ollama:
-            if snapshot.primary?.windowMinutes == ProviderPaceCapability.monthlyWindowSentinelMinutes {
-                appendWindow(snapshot.primary, name: .monthly)
-                if provider == .ollama {
-                    appendWindow(snapshot.secondary, name: .weekly)
-                }
-            } else {
-                appendGenericSessionEquivalentWindows()
-            }
-        case .antigravity:
-            if forSessionEquivalents {
-                guard let windows = self.sessionEquivalentWindows(provider: provider, snapshot: snapshot) else {
-                    return []
-                }
-                appendWindow(windows.session, name: .session)
-                appendWindow(windows.weekly, name: .weekly)
-            } else {
-                let namedWeeklyWindows = snapshot.extraRateWindows?
-                    .filter {
-                        $0.usageKnown
-                            && $0.id.hasPrefix("antigravity-quota-summary-")
-                            && $0.window.windowMinutes == Self.weeklyWindowMinutes
-                    }
-                    .map(\.window) ?? []
-                if let mostUsedWeeklyWindow = namedWeeklyWindows.max(by: { $0.usedPercent < $1.usedPercent }) {
-                    appendWindow(mostUsedWeeklyWindow, name: .weekly)
-                } else {
-                    appendWindow(
-                        self.planUtilizationWeeklyWindow(provider: provider, snapshot: snapshot),
-                        name: .weekly)
-                }
-            }
-        default:
-            appendGenericSessionEquivalentWindows()
         }
 
         return samplesByKey.values.sorted { lhs, rhs in
@@ -1386,21 +1308,12 @@ extension UsageStore {
         guard !providerBuckets.unscoped.isEmpty else { return }
 
         let existingHistory = providerBuckets.accounts[accountKey] ?? []
-        let targetHasHistory = !existingHistory.isEmpty
         let mergedHistory = Self.mergedPlanUtilizationHistories(provider: provider, histories: [
             existingHistory,
             providerBuckets.unscoped,
         ])
         providerBuckets.setHistories(mergedHistory, for: accountKey)
         providerBuckets.setHistories([], for: nil)
-        if ![UsageProvider.codex, .claude, .antigravity].contains(provider) {
-            self.materializeLegacySessionEquivalentHistoryIdentityDuringAccountAdoption(
-                provider: provider,
-                from: nil,
-                to: accountKey,
-                targetHasHistory: targetHasHistory,
-                providerBuckets: &providerBuckets)
-        }
     }
 
     private func stickyPlanUtilizationAccountKey(
@@ -1632,6 +1545,13 @@ extension UsageStore {
     }
 
     #if DEBUG
+    nonisolated static func _mergedPlanUtilizationHistoriesForTesting(
+        provider: UsageProvider,
+        histories: [[PlanUtilizationSeriesHistory]]) -> [PlanUtilizationSeriesHistory]
+    {
+        self.mergedPlanUtilizationHistories(provider: provider, histories: histories)
+    }
+
     nonisolated static func _planUtilizationAccountKeyForTesting(
         provider: UsageProvider,
         snapshot: UsageSnapshot) -> String?

@@ -14,180 +14,12 @@ struct SpendDashboardDateTruthTests {
     }
 
     @Test
-    func `Mistral UTC buckets map into Pacific dashboard days at midnight UTC`() throws {
-        var pacific = Calendar(identifier: .gregorian)
-        pacific.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
-        let now = try #require(ISO8601DateFormatter().date(from: "2026-07-02T00:01:00Z"))
-        let june30 = try #require(pacific.date(from: DateComponents(year: 2026, month: 6, day: 30)))
-        let july1 = try #require(pacific.date(from: DateComponents(year: 2026, month: 7, day: 1)))
-        let snapshot = Self.snapshot(
-            currency: "EUR",
-            entries: [
-                Self.entry(day: "2026-07-01", cost: 1, tokens: 10),
-                Self.entry(day: "2026-07-02", cost: 2, tokens: 20),
-            ],
-            historyDays: 2,
-            updatedAt: now)
-        let group = try #require(SpendDashboardModel.build(
-            inputs: [.init(provider: .mistral, displayName: "Mistral", snapshot: snapshot)],
-            requestedDays: 7,
-            now: now,
-            calendar: pacific).groups.first)
-
-        #expect(group.totalCost == 3)
-        #expect(group.totalTokens == 30)
-        #expect(group.coveredDayCount == 2)
-        #expect(group.dailyPoints.map(\.day) == [june30, july1])
-        #expect(group.dailyPoints.map(\.cost) == [1, 2])
-    }
-
-    @Test
-    func `Mistral coverage end preserves UTC bucket day after Pacific midnight`() throws {
-        var pacific = Calendar(identifier: .gregorian)
-        pacific.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
-        let now = try #require(ISO8601DateFormatter().date(from: "2026-07-02T08:00:00Z"))
-        let mistral = SpendDashboardModel.ProviderInput(
-            provider: .mistral,
-            displayName: "Mistral",
-            snapshot: Self.snapshot(
-                currency: "USD",
-                entries: [],
-                historyDays: 2,
-                updatedAt: now))
-        let local = SpendDashboardModel.ProviderInput(
-            provider: .claude,
-            displayName: "Claude",
-            snapshot: Self.snapshot(
-                currency: "USD",
-                entries: [Self.entry(day: "2026-07-02", cost: 1)],
-                historyDays: 1,
-                updatedAt: now))
-        let group = try #require(SpendDashboardModel.build(
-            inputs: [mistral, local],
-            requestedDays: 7,
-            now: now,
-            calendar: pacific).groups.first)
-
-        #expect(group.coveredDayCount == 0)
-        #expect(group.providers.first(where: { $0.provider == .mistral })?.coveredDayCount == 2)
-        #expect(group.providers.first(where: { $0.provider == .claude })?.coveredDayCount == 1)
-    }
-
-    @Test
-    func `Mistral ended range stays on observed UTC days instead of publishing recent zeros`() throws {
-        let formatter = ISO8601DateFormatter()
-        let updatedAt = try #require(formatter.date(from: "2026-07-16T12:00:00Z"))
-        let startDate = try #require(formatter.date(from: "2026-07-01T00:00:00Z"))
-        let endDate = try #require(formatter.date(from: "2026-07-02T00:00:01Z"))
-        let usage = MistralUsageSnapshot(
-            totalCost: 3,
-            currency: "USD",
-            currencySymbol: "$",
-            totalInputTokens: 30,
-            totalOutputTokens: 0,
-            totalCachedTokens: 0,
-            modelCount: 1,
-            daily: [
-                Self.mistralBucket(day: "2026-07-01", cost: 1, tokens: 10),
-                Self.mistralBucket(day: "2026-07-02", cost: 2, tokens: 20),
-            ],
-            startDate: startDate,
-            endDate: endDate,
-            updatedAt: updatedAt)
-        let snapshot = usage.toCostUsageTokenSnapshot(historyDays: 7)
-
-        let earlierGroup = try #require(SpendDashboardModel.build(
-            inputs: [.init(provider: .mistral, displayName: "Mistral", snapshot: snapshot)],
-            requestedDays: 30,
-            now: updatedAt,
-            calendar: Self.calendar).groups.first)
-        #expect(earlierGroup.providers.first?.coveredDayCount == 2)
-        #expect(earlierGroup.providers.first?.totalCost == 3)
-        #expect(earlierGroup.dailyPoints.map(\.day) == [startDate, Self.calendar.startOfDay(for: endDate)])
-
-        let recentGroup = try #require(SpendDashboardModel.build(
-            inputs: [.init(provider: .mistral, displayName: "Mistral", snapshot: snapshot)],
-            requestedDays: 7,
-            now: updatedAt,
-            calendar: Self.calendar).groups.first)
-        #expect(recentGroup.providers.first?.coveredDayCount == 0)
-        #expect(recentGroup.providers.first?.totalCost == nil)
-        #expect(recentGroup.providers.first?.totalTokens == nil)
-        #expect(recentGroup.dailyPoints.isEmpty)
-    }
-
-    @Test
-    func `metadata free Mistral coverage preserves stale valid billing buckets`() throws {
-        let formatter = ISO8601DateFormatter()
-        let updatedAt = try #require(formatter.date(from: "2026-07-16T12:00:00Z"))
-        let july14 = try #require(formatter.date(from: "2026-07-14T00:00:00Z"))
-        let july15 = try #require(formatter.date(from: "2026-07-15T00:00:00Z"))
-        let usage = MistralUsageSnapshot(
-            totalCost: 3,
-            currency: "EUR",
-            currencySymbol: "€",
-            totalInputTokens: 30,
-            totalOutputTokens: 0,
-            totalCachedTokens: 0,
-            modelCount: 1,
-            daily: [
-                Self.mistralBucket(day: "2026-07-14", cost: 1, tokens: 10),
-                Self.mistralBucket(day: "2026-07-15", cost: 2, tokens: 20),
-            ],
-            startDate: nil,
-            endDate: nil,
-            updatedAt: updatedAt)
-        let snapshot = usage.toCostUsageTokenSnapshot()
-        let group = try #require(SpendDashboardModel.build(
-            inputs: [.init(provider: .mistral, displayName: "Mistral", snapshot: snapshot)],
-            requestedDays: 30,
-            now: updatedAt,
-            calendar: Self.calendar).groups.first)
-
-        #expect(snapshot.updatedAt == july15)
-        #expect(group.coveredDayCount == 2)
-        #expect(group.totalCost == 3)
-        #expect(group.totalTokens == 30)
-        #expect(group.dailyPoints.map(\.day) == [july14, july15])
-        #expect(group.dailyPoints.map(\.cost) == [1, 2])
-    }
-
-    @Test
-    func `Mistral without established coverage cannot publish a current zero day`() throws {
-        let snapshot = MistralUsageSnapshot(
-            totalCost: 0,
-            currency: "EUR",
-            currencySymbol: "€",
-            totalInputTokens: 0,
-            totalOutputTokens: 0,
-            totalCachedTokens: 0,
-            modelCount: 0,
-            daily: [],
-            startDate: nil,
-            endDate: nil,
-            updatedAt: Self.now)
-            .toCostUsageTokenSnapshot(historyDays: 7)
-        let group = try #require(SpendDashboardModel.build(
-            inputs: [.init(provider: .mistral, displayName: "Mistral", snapshot: snapshot)],
-            requestedDays: 7,
-            now: Self.now,
-            calendar: Self.calendar).groups.first)
-
-        #expect(!snapshot.historyCoverageIsEstablished)
-        #expect(group.coveredDayCount == 0)
-        #expect(group.providers.first?.coveredDayCount == 0)
-        #expect(group.totalCost == nil)
-        #expect(group.totalTokens == nil)
-        #expect(group.dailyPoints.isEmpty)
-    }
-
-    @Test
     func `unknown currency spend cannot enter a known currency group`() throws {
         let model = SpendDashboardModel.build(
             inputs: [
                 Self.input(id: "usd", provider: .claude, currency: "USD", cost: 2),
-                Self.input(id: "blank", provider: .mistral, currency: "  ", cost: 100),
-                Self.input(id: "unknown", provider: .openai, currency: "XXX", cost: 200),
+                Self.input(id: "blank", provider: .claude, currency: "  ", cost: 100),
+                Self.input(id: "unknown", provider: .codex, currency: "XXX", cost: 200),
                 Self.input(id: "eur", provider: .codex, currency: "EUR", cost: 3),
             ],
             requestedDays: 30,
@@ -210,7 +42,7 @@ struct SpendDashboardDateTruthTests {
             inputs: [
                 Self.input(id: "usd", provider: .claude, currency: "USD", cost: 2),
                 Self.input(id: "eur", provider: .codex, currency: "EUR", cost: 3),
-                Self.input(id: "xyz", provider: .mistral, currency: "XYZ", cost: 5),
+                Self.input(id: "xyz", provider: .claude, currency: "XYZ", cost: 5),
             ],
             requestedDays: 30,
             now: Self.now,
@@ -308,7 +140,7 @@ struct SpendDashboardDateTruthTests {
                     historyDays: omission.historyDays))
             let costInvalid = SpendDashboardModel.ProviderInput(
                 id: "cost-invalid",
-                provider: .openai,
+                provider: .codex,
                 displayName: "Cost invalid",
                 snapshot: Self.snapshot(
                     currency: "CAD",
@@ -322,8 +154,8 @@ struct SpendDashboardDateTruthTests {
                     tokenInvalid,
                     Self.input(id: "healthy-usd", provider: .codex, currency: "USD", cost: 4),
                     costInvalid,
-                    Self.input(id: "healthy-cad", provider: .mistral, currency: "CAD", cost: 5),
-                    Self.input(id: "healthy-eur", provider: .bedrock, currency: "EUR", cost: 6),
+                    Self.input(id: "healthy-cad", provider: .claude, currency: "CAD", cost: 5),
+                    Self.input(id: "healthy-eur", provider: .claude, currency: "EUR", cost: 6),
                 ],
                 requestedDays: 7,
                 now: Self.now,
@@ -348,7 +180,7 @@ struct SpendDashboardDateTruthTests {
             #expect(cad.hasPartialCost)
             #expect(cad.totalTokens == 30)
             #expect(cad.modelHistoryCompleteness == .incomplete)
-            #expect(cad.models.map(\.provider) == [.mistral])
+            #expect(cad.models.map(\.provider) == [.claude])
             #expect(cad.models.map(\.totalCost) == [5])
             #expect(cad.dailyPoints.map(\.sourceID) == ["healthy-cad"])
             #expect(SpendDailyChartPresentation(
@@ -367,7 +199,7 @@ struct SpendDashboardDateTruthTests {
     func `complete model costs survive invalid aggregate and per-model tokens`() throws {
         let negative = SpendDashboardModel.ProviderInput(
             id: "negative",
-            provider: .mistral,
+            provider: .claude,
             displayName: "Negative",
             snapshot: Self.snapshot(currency: "USD", entries: [
                 Self.entryWithBreakdowns(
@@ -394,7 +226,7 @@ struct SpendDashboardDateTruthTests {
             ]))
         let mismatch = SpendDashboardModel.ProviderInput(
             id: "mismatch",
-            provider: .openai,
+            provider: .codex,
             displayName: "Mismatch",
             snapshot: Self.snapshot(currency: "USD", entries: [
                 Self.entryWithBreakdowns(
@@ -441,7 +273,7 @@ struct SpendDashboardDateTruthTests {
                 Self.entry(day: "not-a-day", cost: 7, tokens: 70),
             ]))
         let healthyUSD = Self.input(id: "healthy-usd", provider: .codex, currency: "USD", cost: 4)
-        let healthyEUR = Self.input(id: "healthy-eur", provider: .openai, currency: "EUR", cost: 5)
+        let healthyEUR = Self.input(id: "healthy-eur", provider: .codex, currency: "EUR", cost: 5)
         let groups = SpendDashboardModel.build(
             inputs: [malformed, healthyUSD, healthyEUR],
             requestedDays: 7,
@@ -621,7 +453,7 @@ struct SpendDashboardDateTruthTests {
                 ],
                 historyDays: 1))
         let healthyUSD = Self.input(id: "healthy-usd", provider: .codex, currency: "USD", cost: 4)
-        let healthyEUR = Self.input(id: "healthy-eur", provider: .openai, currency: "EUR", cost: 5)
+        let healthyEUR = Self.input(id: "healthy-eur", provider: .codex, currency: "EUR", cost: 5)
         let groups = SpendDashboardModel.build(
             inputs: [contradictory, healthyUSD, healthyEUR],
             requestedDays: 7,
@@ -641,43 +473,6 @@ struct SpendDashboardDateTruthTests {
         #expect(eur.modelHistoryCompleteness == .complete)
         #expect(eur.models.map(\.totalCost) == [5])
         #expect(eur.dailyPoints.map(\.sourceID) == ["healthy-eur"])
-    }
-
-    @Test
-    func `empty Mistral history with incomplete aggregates stays unavailable`() throws {
-        let snapshot = Self.mistralSnapshot(totalCost: 5, totalTokens: 50)
-        #expect(snapshot.last30DaysCostUSD == nil)
-        #expect(snapshot.last30DaysTokens == nil)
-        let group = try #require(SpendDashboardModel.build(
-            inputs: [.init(provider: .mistral, displayName: "Mistral", snapshot: snapshot)],
-            requestedDays: 7,
-            now: Self.now,
-            calendar: Self.calendar).groups.first)
-
-        #expect(!snapshot.historyCoverageIsEstablished)
-        #expect(group.coveredDayCount == 0)
-        #expect(group.totalCost == nil)
-        #expect(group.totalTokens == nil)
-        #expect(group.modelHistoryCompleteness == .incomplete)
-        #expect(group.models.isEmpty)
-    }
-
-    @Test
-    func `empty Mistral history with declared coverage preserves explicit zeros`() throws {
-        let snapshot = Self.mistralSnapshot(totalCost: 0, totalTokens: 0, establishesCoverage: true)
-        #expect(snapshot.historyCoverageIsEstablished)
-        #expect(snapshot.last30DaysCostUSD == 0)
-        #expect(snapshot.last30DaysTokens == 0)
-        let group = try #require(SpendDashboardModel.build(
-            inputs: [.init(provider: .mistral, displayName: "Mistral", snapshot: snapshot)],
-            requestedDays: 7,
-            now: Self.now,
-            calendar: Self.calendar).groups.first)
-
-        #expect(group.totalCost == 0)
-        #expect(group.totalTokens == 0)
-        #expect(group.modelHistoryCompleteness == .complete)
-        #expect(group.models.isEmpty)
     }
 
     @Test
@@ -704,9 +499,9 @@ struct SpendDashboardDateTruthTests {
     func `empty history metric proof stays independent and currency scoped`() throws {
         let costOnly = SpendDashboardModel.ProviderInput(
             id: "cost-only",
-            provider: .mistral,
+            provider: .claude,
             displayName: "Cost only",
-            snapshot: Self.mistralSnapshot(
+            snapshot: Self.emptyMetricSnapshot(
                 totalCost: 0,
                 totalTokens: 50,
                 currency: "USD",
@@ -723,9 +518,9 @@ struct SpendDashboardDateTruthTests {
                 last30DaysCostUSD: 0))
         let tokenOnly = SpendDashboardModel.ProviderInput(
             id: "token-only",
-            provider: .mistral,
+            provider: .claude,
             displayName: "Token only",
-            snapshot: Self.mistralSnapshot(
+            snapshot: Self.emptyMetricSnapshot(
                 totalCost: 5,
                 totalTokens: 0,
                 currency: "EUR",
@@ -781,25 +576,22 @@ struct SpendDashboardDateTruthTests {
             updatedAt: updatedAt)
     }
 
-    private static func mistralSnapshot(
+    private static func emptyMetricSnapshot(
         totalCost: Double,
         totalTokens: Int,
         currency: String = "USD",
         establishesCoverage: Bool = false) -> CostUsageTokenSnapshot
     {
-        MistralUsageSnapshot(
-            totalCost: totalCost,
-            currency: currency,
-            currencySymbol: currency,
-            totalInputTokens: totalTokens,
-            totalOutputTokens: 0,
-            totalCachedTokens: 0,
-            modelCount: 0,
+        CostUsageTokenSnapshot(
+            sessionTokens: nil,
+            sessionCostUSD: nil,
+            last30DaysTokens: totalTokens == 0 ? 0 : nil,
+            last30DaysCostUSD: totalCost == 0 ? 0 : nil,
+            currencyCode: currency,
+            historyDays: 7,
+            historyCoverageIsEstablished: establishesCoverage,
             daily: [],
-            startDate: establishesCoverage ? self.now : nil,
-            endDate: establishesCoverage ? self.now : nil,
             updatedAt: self.now)
-            .toCostUsageTokenSnapshot(historyDays: 7)
     }
 
     private static func entry(
@@ -834,23 +626,6 @@ struct SpendDashboardDateTruthTests {
             costUSD: totalCost,
             modelsUsed: nil,
             modelBreakdowns: breakdowns)
-    }
-
-    private static func mistralBucket(day: String, cost: Double, tokens: Int) -> MistralDailyUsageBucket {
-        MistralDailyUsageBucket(
-            day: day,
-            cost: cost,
-            inputTokens: tokens,
-            cachedTokens: 0,
-            outputTokens: 0,
-            models: [
-                .init(
-                    name: "test-model",
-                    cost: cost,
-                    inputTokens: tokens,
-                    cachedTokens: 0,
-                    outputTokens: 0),
-            ])
     }
 
     private static let now = Date(timeIntervalSince1970: 1_784_179_200)

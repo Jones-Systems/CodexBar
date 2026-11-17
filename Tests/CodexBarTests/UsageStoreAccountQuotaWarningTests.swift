@@ -34,9 +34,9 @@ struct UsageStoreAccountQuotaWarningTests {
         settings.setQuotaWarningWindowEnabled(.weekly, enabled: false)
         settings.sessionQuotaNotificationsEnabled = false
         settings.predictivePaceWarningNotificationsEnabled = false
-        settings.addTokenAccount(provider: .deepseek, label: "First", token: "fixture")
-        settings.addTokenAccount(provider: .deepseek, label: "Second", token: "fixture")
-        #expect(settings.tokenAccounts(for: .deepseek).map(\.label) == ["First", "Second"])
+        settings.addTokenAccount(provider: .claude, label: "First", token: "fixture")
+        settings.addTokenAccount(provider: .claude, label: "Second", token: "fixture")
+        #expect(settings.tokenAccounts(for: .claude).map(\.label) == ["First", "Second"])
 
         let notifier = NotifierSpy()
         let store = try self.makeStore(settings: settings, notifier: notifier)
@@ -50,17 +50,17 @@ struct UsageStoreAccountQuotaWarningTests {
         ]
 
         for (step, observation) in sequence.enumerated() {
-            settings.setActiveTokenAccountIndex(observation.accountIndex, for: .deepseek)
+            settings.setActiveTokenAccountIndex(observation.accountIndex, for: .claude)
             let outcome = Self.outcome(
                 usedPercent: observation.usedPercent,
                 updatedAt: Date(timeIntervalSince1970: 1_780_000_000 + Double(step)))
             var overrideCalls = 0
             store._test_providerFetchOutcomeOverride = { provider in
-                #expect(provider == .deepseek)
+                #expect(provider == .claude)
                 overrideCalls += 1
                 return outcome
             }
-            await store.refreshProvider(.deepseek, allowDisabled: true)
+            await store.refreshProvider(.claude, allowDisabled: true)
             #expect(overrideCalls == 1)
         }
 
@@ -109,7 +109,7 @@ struct UsageStoreAccountQuotaWarningTests {
                 Self.outcome(
                     usedPercent: observation.usedPercent,
                     updatedAt: Date(timeIntervalSince1970: 1_780_000_000 + Double(step))),
-                provider: .deepseek,
+                provider: .claude,
                 account: accounts[observation.accountIndex],
                 fallbackSnapshot: nil)
         }
@@ -122,19 +122,8 @@ struct UsageStoreAccountQuotaWarningTests {
         SettingsStore(
             userDefaults: InMemoryUserDefaults(),
             configStore: testConfigStore(suiteName: suiteName),
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore(),
             codexCookieStore: InMemoryCookieHeaderStore(),
             claudeCookieStore: InMemoryCookieHeaderStore(),
-            cursorCookieStore: InMemoryCookieHeaderStore(),
-            opencodeCookieStore: InMemoryCookieHeaderStore(),
-            factoryCookieStore: InMemoryCookieHeaderStore(),
-            minimaxCookieStore: InMemoryMiniMaxCookieStore(),
-            minimaxAPITokenStore: InMemoryMiniMaxAPITokenStore(),
-            kimiTokenStore: InMemoryKimiTokenStore(),
-            augmentCookieStore: InMemoryCookieHeaderStore(),
-            ampCookieStore: InMemoryCookieHeaderStore(),
-            copilotTokenStore: InMemoryCopilotTokenStore(),
             tokenAccountStore: InMemoryTokenAccountStore(),
             keychainAccessPolicy: SettingsStoreKeychainAccessPolicy(
                 setDisabled: { _ in }, isExplicitlyDisabled: { true }),
@@ -155,9 +144,9 @@ struct UsageStoreAccountQuotaWarningTests {
             widgetSnapshotURL: home.appendingPathComponent("widget.json"),
             widgetTimelineReloader: {})
         store._test_widgetSnapshotSaveOverride = { _ in }
-        let base = try #require(store.providerSpecs[.deepseek])
+        let base = try #require(store.providerSpecs[.claude])
         let descriptor = ProviderDescriptor(
-            id: .deepseek,
+            id: .claude,
             metadata: base.descriptor.metadata,
             branding: base.descriptor.branding,
             tokenCost: base.descriptor.tokenCost,
@@ -168,7 +157,7 @@ struct UsageStoreAccountQuotaWarningTests {
                     return []
                 }),
             cli: base.descriptor.cli)
-        store.providerSpecs[.deepseek] = ProviderSpec(
+        store.providerSpecs[.claude] = ProviderSpec(
             style: base.style,
             isEnabled: base.isEnabled,
             descriptor: descriptor,

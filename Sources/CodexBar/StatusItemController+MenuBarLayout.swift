@@ -96,9 +96,6 @@ extension StatusItemController {
         let runsOut = pace
             .flatMap { UsagePaceText.weeklyDetail(provider: provider, pace: $0, now: now).rightLabel }
         let costs = self.menuBarLayoutCosts(provider: provider, now: now)
-        let balanceAmounts = MenuBarLayoutBalanceResolver.balanceAmountsUSD(
-            provider: provider,
-            snapshot: snapshot)
         let providerName = L(self.store.metadata(for: provider).displayName)
         let accountLabel = self.menuBarLayoutAccountLabel(provider: provider, snapshot: snapshot)
         let automatic = MenuBarLayoutRenderWindow(windows.automatic)
@@ -117,10 +114,7 @@ extension StatusItemController {
             scopedWeekly: MenuBarLayoutRenderWindow(scopedNamed?.window),
             scopedWeeklyTitle: scopedNamed?.title,
             automatic: automatic,
-            // Provider-specific by design: Mistral uses spend text when its automatic lane has no percentage window.
-            automaticText: provider == .mistral && automatic == nil
-                ? Self.mistralSpendDisplayText(snapshot: snapshot)
-                : nil,
+            automaticText: nil,
             sessionPace: self.store.menuBarLayoutPaceText(
                 provider: provider,
                 window: windows.session,
@@ -138,7 +132,6 @@ extension StatusItemController {
                 dataConfidence: snapshot?.dataConfidence ?? .unknown,
                 now: now),
             runsOut: runsOut,
-            balance: MenuBarLayoutBalanceResolver.balance(provider: provider, snapshot: snapshot),
             costToday: costs.today,
             cost30d: costs.last30Days,
             metrics: MenuBarLayoutRenderMetrics(
@@ -159,8 +152,6 @@ extension StatusItemController {
                     dataConfidence: snapshot?.dataConfidence ?? .unknown,
                     now: now),
                 runsOutMinutes: pace?.etaSeconds.map { Int(($0 / 60).rounded()) },
-                balanceRemainingUSD: balanceAmounts.remaining,
-                balanceUsedUSD: balanceAmounts.used,
                 costTodayUSD: costs.todayUSD,
                 cost30dUSD: costs.last30DaysUSD),
             resetCreditExpiresAt: MenuBarResetCreditCountdown.preferredExpiry(
@@ -237,16 +228,10 @@ extension StatusItemController {
         let semanticWindows = MenuBarLayoutSemanticWindowResolver.windows(
             provider: provider,
             snapshot: snapshot)
-        // Provider-specific by design: Mistral's automatic lane can explicitly select its Monthly Plan window.
-        let automaticPreference = provider == .mistral
-            ? self.settings.menuBarMetricPreference(for: provider, snapshot: snapshot)
-            : .automatic
         let automatic = MenuBarMetricWindowResolver.rateWindow(
-            preference: automaticPreference,
+            preference: .automatic,
             provider: provider,
             snapshot: snapshot,
-            supportsAverage: self.settings.menuBarMetricSupportsAverage(for: provider),
-            antigravityPrioritizeExhaustedQuotas: self.settings.antigravityPrioritizeExhaustedQuotas,
             now: now)
         return MenuBarLayoutWindows(
             primary: snapshot?.primary,
@@ -254,10 +239,7 @@ extension StatusItemController {
             tertiary: snapshot?.tertiary,
             session: semanticWindows.session,
             weekly: semanticWindows.weekly,
-            automatic: MenuBarLayoutAutomaticWindowDisplayNormalizer.normalized(
-                provider: provider,
-                snapshot: snapshot,
-                window: automatic))
+            automatic: automatic)
     }
 
     private func setButtonLayoutContent(

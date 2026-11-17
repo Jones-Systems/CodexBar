@@ -8,10 +8,10 @@ import Testing
 struct ProviderVersionDetectionGatingTests {
     @Test
     func `disabled providers are excluded from version probes`() {
-        let implementations = UsageStore.versionDetectionImplementations(enabled: [.codex, .claude])
+        let implementations = UsageStore.versionDetectionImplementations(enabled: [.codex])
         let ids = Set(implementations.map(\.id))
-        #expect(ids == [.codex, .claude])
-        #expect(!ids.contains(.antigravity))
+        #expect(ids == [.codex])
+        #expect(!ids.contains(.claude))
     }
 
     @Test
@@ -22,7 +22,7 @@ struct ProviderVersionDetectionGatingTests {
     @Test
     func `enabling a provider includes it in version probes`() {
         let ids = Set(UsageStore.versionDetectionImplementations(
-            enabled: [.codex, .antigravity]).map(\.id))
-        #expect(ids.contains(.antigravity))
+            enabled: [.codex, .claude]).map(\.id))
+        #expect(ids.contains(.claude))
     }
 }

@@ -9,7 +9,6 @@ struct PreferencesSelectionTests {
     func `pane persistence tokens round-trip`() {
         let panes: [SettingsPane] = [
             .general,
-            .iCloudSync,
             .usageSpend,
             .notifications,
             .menuBar,
@@ -24,6 +23,9 @@ struct PreferencesSelectionTests {
         }
         #expect(SettingsPane(persistenceToken: "provider:definitely-not-a-provider") == nil)
         #expect(SettingsPane(persistenceToken: "") == nil)
+        for retired in ["iCloudSync", "plugins", "hooks", "provider:cursor", "provider:synthetic"] {
+            #expect(SettingsPane(persistenceToken: retired) == nil)
+        }
     }
 
     @Test

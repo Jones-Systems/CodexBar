@@ -8,6 +8,11 @@ read_when:
 
 # Local provider plugins
 
+Historical documentation: provider plugins and their JavaScript engines are
+removed from the current Codex/Claude product. Restore from Git
+`91bd5fb4af704da9181212bea636d527a058e615` and requalify before use.
+See the [current product scope](engineering-specs/slim-codex-claude-product.md).
+
 CodexBar can load one local JavaScript or TypeScript file as a provider. Put a `.js` or `.ts` file in
 `~/.config/codexbar/providers/`, or choose **Settings → Plugins → Install…**. Each file declares its complete authority
 and settings schema in a manifest, fetches through CodexBar's sandboxed host API, and returns a generic usage snapshot.

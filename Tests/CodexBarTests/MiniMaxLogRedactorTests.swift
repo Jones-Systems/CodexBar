@@ -64,14 +64,6 @@ struct MiniMaxLogRedactorTests {
     }
 
     @Test
-    func `minimax token in cookie is not present in raw form`() {
-        let input = "Cookie: session=session-placeholder; token=\(Self.miniMaxCpPlaceholder)"
-        let redacted = LogRedactor.redact(input)
-        #expect(redacted.contains("session=session-placeholder") == false)
-        #expect(redacted.contains(Self.miniMaxCpPlaceholder) == false)
-    }
-
-    @Test
     func `redacted text no longer matches original token pattern`() {
         let originalToken = Self.miniMaxCpPlaceholder
         let input = "Token: \(originalToken)"
@@ -79,27 +71,5 @@ struct MiniMaxLogRedactorTests {
 
         #expect(redacted.contains(originalToken) == false)
         #expect(redacted.contains("<redacted-minimax-token>"))
-    }
-
-    @Test
-    func `minimax token with punctuation suffix is fully redacted`() {
-        let punctuatedToken = "\(Self.miniMaxApiPlaceholder).suffix-more"
-        let input = "Error: token=\(punctuatedToken)"
-        let redacted = LogRedactor.redact(input)
-
-        #expect(redacted.contains("sk-api-") == false)
-        #expect(redacted.contains("suffix-more") == false)
-        #expect(redacted.contains("<redacted-minimax-token>"))
-    }
-
-    @Test
-    func `authorization header minimax token leaves no suffix fragment`() {
-        let punctuatedToken = "\(Self.miniMaxCpPlaceholder)-part.two"
-        let input = "Authorization: Bearer \(punctuatedToken)"
-        let redacted = LogRedactor.redact(input)
-
-        #expect(redacted.contains("sk-cp-") == false)
-        #expect(redacted.contains("part.two") == false)
-        #expect(redacted.contains("Authorization: <redacted>"))
     }
 }

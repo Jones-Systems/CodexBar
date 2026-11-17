@@ -28,6 +28,7 @@ import zipfile
 import zlib
 from xml.parsers.expat import ExpatError
 
+import jones_signing
 from jones_xattrs import list_xattrs
 
 
@@ -121,7 +122,9 @@ class Context:
     workflow_sha: str
 
 
-def validate_event(environment, event, revision):
+def validate_event(environment, event, revision, signing_mode="adhoc"):
+    require(signing_mode in ("adhoc", jones_signing.MODE), "signing-mode", "Unknown signing mode")
+    workflow = jones_signing.WORKFLOW if signing_mode == jones_signing.MODE else WORKFLOW_PATH
     for name, expected in {
         "GITHUB_ACTIONS": "true", "GITHUB_SERVER_URL": "https://github.com",
         "GITHUB_REPOSITORY": REPOSITORY, "GITHUB_REPOSITORY_ID": REPOSITORY_ID,
@@ -133,10 +136,15 @@ def validate_event(environment, event, revision):
     for name in ("GITHUB_SHA", "GITHUB_WORKFLOW_SHA"):
         require(bool(SHA.fullmatch(environment.get(name, ""))), "ci-revision", f"Invalid {name}")
     ref = environment.get("GITHUB_REF", "")
-    require(environment.get("GITHUB_WORKFLOW_REF") == f"{REPOSITORY}/{WORKFLOW_PATH}@{ref}",
+    require(environment.get("GITHUB_WORKFLOW_REF") == f"{REPOSITORY}/{workflow}@{ref}",
             "ci-workflow", "Unexpected workflow path or ref")
     event_name = environment.get("GITHUB_EVENT_NAME")
-    if event_name == "push":
+    if signing_mode == jones_signing.MODE:
+        require(event_name == "workflow_dispatch" and ref == "refs/heads/main"
+                and environment["GITHUB_SHA"] == revision and environment["GITHUB_WORKFLOW_SHA"] == revision,
+                "ci-signing", "Developer ID requires the exact canonical main workflow dispatch")
+        origin = "ci-main"
+    elif event_name == "push":
         require(ref == "refs/heads/main" and environment["GITHUB_SHA"] == revision
                 and event.get("ref") == ref and event.get("after") == revision and event.get("deleted") is False,
                 "ci-main", "ci-main requires the exact non-deleted canonical main push")
@@ -166,7 +174,7 @@ def validate_event(environment, event, revision):
     return origin, run_url
 
 
-def inspect_context(repo, environment, event=None):
+def inspect_context(repo, environment, event=None, signing_mode="adhoc"):
     repo = repo.resolve()
     require(Path(git(repo, "rev-parse", "--show-toplevel")).resolve() == repo,
             "source-root", "Expected the source repository root")
@@ -193,7 +201,7 @@ def inspect_context(repo, environment, event=None):
     if event is None:
         require(bool(environment.get("GITHUB_EVENT_PATH")), "ci-event", "Missing GITHUB_EVENT_PATH")
         event = load_json(Path(environment["GITHUB_EVENT_PATH"]))
-    origin, run_url = validate_event(environment, event, revision)
+    origin, run_url = validate_event(environment, event, revision, signing_mode)
     require(git(repo, "rev-parse", "--verify", "HEAD^{commit}") == revision,
             "source-changed", "Source revision changed while inspecting it")
     return Context(revision, short, versions["MARKETING_VERSION"], f"{versions['BUILD_NUMBER']}.{count}",
@@ -216,16 +224,27 @@ def production_plist(info):
         require(name not in info, "production-isolation", f"Production bundle must not contain {name}")
 
 
-def validate_plists(info, widget, context, channel):
+def validate_plists(info, widget, context, channel, signing_mode="adhoc"):
+    require(signing_mode in ("adhoc", jones_signing.MODE), "signing-mode", "Unknown signing mode")
+    production = signing_mode == jones_signing.MODE
+    if production:
+        require(channel == "none" and context.origin == "ci-main", "migration-held",
+                "Developer ID requires canonical-main provenance and disabled updates")
+        exact_values(info, {"JonesSigningMode": signing_mode})
+        exact_values(widget, {"JonesSigningMode": signing_mode, "CodexBarTeamID": jones_signing.TEAM})
+    else:
+        require(info.get("JonesSigningMode", "adhoc") == "adhoc"
+                and widget.get("JonesSigningMode", "adhoc") == "adhoc", "signing-mode", "Signing mode mismatch")
     shared = {
         "CFBundleShortVersionString": context.version, "CFBundleVersion": context.build,
         "JonesStateKey": "jones", "JonesAppBundleID": BUNDLE_ID,
-        "JonesAppGroupID": APP_GROUP, "JonesICloudID": ICLOUD_ID,
+        "JonesAppGroupID": jones_signing.GROUP if production else APP_GROUP, "JonesICloudID": ICLOUD_ID,
         "JonesSourceRevision": context.revision, "JonesBuildOrigin": context.origin,
         "JonesBuildRun": context.build_run, "JonesUpdateChannel": channel,
     }
     exact_values(info, dict(shared, CFBundleIdentifier=BUNDLE_ID, CFBundleDisplayName="CodexBar Jones",
-                            CFBundleExecutable="CodexBar", CFBundlePackageType="APPL", CodexBarTeamID="JONESLOCAL",
+                            CFBundleExecutable="CodexBar", CFBundlePackageType="APPL",
+                            CodexBarTeamID=jones_signing.TEAM if production else "JONESLOCAL",
                             CodexGitCommit=context.short_revision, LSUIElement=True))
     exact_values(widget, dict(shared, CFBundleIdentifier=BUNDLE_ID + ".widget", CFBundleExecutable="CodexBarWidget"))
     production_plist(info)
@@ -324,12 +343,12 @@ def validate_architectures(architectures, code="architecture"):
             code, "Universal candidate executables must contain exactly arm64 and x86_64 slices")
 
 
-def inspect_bundle(bundle, context, channel):
+def inspect_bundle(bundle, context, channel, signing_mode="adhoc"):
     require(sys.platform == "darwin", "platform", "Static bundle verification requires macOS")
     manifest = tree_manifest(bundle, check_quarantine=True)
     info = read_plist(bundle / "Contents/Info.plist")
     widget = bundle / "Contents/PlugIns/CodexBarWidget.appex"
-    validate_plists(info, read_plist(widget / "Contents/Info.plist"), context, channel)
+    validate_plists(info, read_plist(widget / "Contents/Info.plist"), context, channel, signing_mode)
     command(["/usr/bin/codesign", "--verify", "--deep", "--strict", "--verbose=2", bundle])
     entitlements = {}
     for path, identifier, expected in (
@@ -337,6 +356,10 @@ def inspect_bundle(bundle, context, channel):
         (widget, BUNDLE_ID + ".widget", {"com.apple.security.application-groups": [APP_GROUP],
                                        "com.apple.security.app-sandbox": True}),
     ):
+        if signing_mode == jones_signing.MODE:
+            _, actual = jones_signing.verify_bundle(path, identifier, distribution=path == bundle)
+            entitlements[identifier] = actual
+            continue
         displayed = command(["/usr/bin/codesign", "--display", "--verbose=4", path])
         validate_signature((displayed.stdout + displayed.stderr).decode("utf-8"), identifier)
         raw = command(["/usr/bin/codesign", "--display", "--entitlements", ":-", path]).stdout
@@ -359,9 +382,24 @@ def inspect_bundle(bundle, context, channel):
         with path.open("rb") as handle:
             magic = handle.read(4)
         if magic in MACHO_MAGICS:
+            if signing_mode == jones_signing.MODE:
+                command(["/usr/bin/codesign", "--verify", "--strict", path])
+                shown = command(["/usr/bin/codesign", "--display", "--verbose=4", path])
+                text = (shown.stdout + shown.stderr).decode()
+                identifiers = re.findall(r"^Identifier=(.+)$", text, re.MULTILINE)
+                require(len(identifiers) == 1, "signature-identity", "Missing nested signed identifier")
+                jones_signing.validate_signature(text, identifiers[0], resources=False)
             arches = command(["/usr/bin/lipo", "-archs", path]).stdout.decode("ascii").split()
-            # Validate the vendor's existing slices too; never thin or rewrite its binaries.
-            validate_architectures(arches)
+            if signing_mode == jones_signing.MODE:
+                if name.startswith("CodexBar.app/Contents/Frameworks/Sparkle.framework/"):
+                    # Preserve the production contract for the pinned vendor; never thin or rewrite it.
+                    require(len(arches) == len(set(arches)) and set(arches) in ({"arm64"}, {"arm64", "x86_64"}),
+                            "architecture", "Production Sparkle requires arm64 with only the known optional x86_64 slice")
+                else:
+                    require(arches == ["arm64"], "architecture", "Developer ID products must be arm64 only")
+            else:
+                # Ad-hoc candidates and their harness require both slices, including the unchanged vendor.
+                validate_architectures(arches)
             macho.append(name)
             macho_architectures[name] = arches
     for name in (
@@ -370,7 +408,7 @@ def inspect_bundle(bundle, context, channel):
     ):
         entry = manifest.get(f"CodexBar.app/{name}", {})
         require(f"CodexBar.app/{name}" in macho and entry.get("mode", 0) & 0o111,
-                "executable", "Missing executable universal product")
+                "executable", "Missing verified product executable")
     require(any("/Sparkle.framework/" in name for name in macho), "sparkle", "Missing Sparkle binary")
     return {"plist": info, "entitlements": entitlements, "macho_files": sorted(macho),
             "macho_architectures": macho_architectures}, manifest
@@ -458,11 +496,11 @@ def cancellation_cleanup():
             signal.signal(signum, handler)
 
 
-def create_artifact(bundle, output, context, channel):
+def create_artifact(bundle, output, context, channel, signing_mode="adhoc"):
     require(not output.exists() and not output.is_symlink(), "output-exists", "Artifact output must not exist")
     require(output.parent.is_dir(), "output-parent", "Artifact parent must already exist")
     require(bundle.resolve() not in output.resolve().parents, "output-location", "Artifact cannot be inside the app")
-    inspected, manifest = inspect_bundle(bundle, context, channel)
+    inspected, manifest = inspect_bundle(bundle, context, channel, signing_mode)
     unpacked_estimate = sum(entry["size"] for entry in manifest.values())
     require(0 < unpacked_estimate <= MAX_UNPACKED_BYTES, "unpacked-size", "Candidate exceeds 1 GiB unpacked")
     available = shutil.disk_usage(output.parent).free
@@ -482,7 +520,7 @@ def create_artifact(bundle, output, context, channel):
         command(["/usr/bin/ditto", "-x", "-k", "--noqtn", archive, extracted], timeout=300)
         require(sorted(path.name for path in extracted.iterdir()) == ["CodexBar.app"],
                 "archive-layout", "Extracted archive must contain only CodexBar.app")
-        _, roundtrip = inspect_bundle(extracted / "CodexBar.app", context, channel)
+        _, roundtrip = inspect_bundle(extracted / "CodexBar.app", context, channel, signing_mode)
         require(roundtrip == manifest, "archive-roundtrip", "Archive changed signed bytes, modes or symlinks")
         checksum = digest(archive)
         archive_size = archive.stat().st_size
@@ -495,8 +533,9 @@ def create_artifact(bundle, output, context, channel):
                          "install_peak_basis": ("archive + two unpacked bundles + 1 GiB reserve; "
                                                 "prior bundle size unmeasured"),
                          "size_is_reservation": False, "root": "CodexBar.app"},
-            "verification": {"signature": "adhoc", "codesign": "--verify --deep --strict",
-                             "product_architectures": list(PRODUCT_ARCHITECTURES),
+            "verification": {"signature": signing_mode, "codesign": "--verify --deep --strict",
+                             "product_architectures": sorted(inspected["macho_architectures"][
+                                 "CodexBar.app/Contents/MacOS/CodexBar"]),
                              "quarantine": "absent", "archive_roundtrip": True,
                              "signed_entitlements": inspected["entitlements"], "macho_files": inspected["macho_files"],
                              "macho_architectures": inspected["macho_architectures"]},
@@ -518,11 +557,13 @@ def parser():
     result = argparse.ArgumentParser(description=__doc__)
     commands = result.add_subparsers(dest="command", required=True)
     context = commands.add_parser("context")
+    context.add_argument("--signing-mode", choices=("adhoc", jones_signing.MODE), default="adhoc")
     context.add_argument("--repo", required=True, type=Path)
     context.add_argument("--github-output", type=Path)
     contract = commands.add_parser("check-packager")
     contract.add_argument("--repo", required=True, type=Path)
     create = commands.add_parser("create")
+    create.add_argument("--signing-mode", choices=("adhoc", jones_signing.MODE), default="adhoc")
     create.add_argument("--repo", required=True, type=Path)
     create.add_argument("--app", required=True, type=Path)
     create.add_argument("--output", required=True, type=Path)
@@ -537,7 +578,7 @@ def main(argv=None):
             if args.command == "check-packager":
                 result = packager_contract(args.repo.resolve())
             else:
-                context = inspect_context(args.repo, os.environ)
+                context = inspect_context(args.repo, os.environ, signing_mode=args.signing_mode)
                 if args.command == "context":
                     result = asdict(context)
                     if args.github_output:
@@ -545,9 +586,11 @@ def main(argv=None):
                             for name in ("revision", "origin", "build_run", "run_url"):
                                 handle.write(f"{name}={getattr(context, name)}\n")
                 else:
-                    result = create_artifact(args.app.absolute(), args.output.absolute(), context, args.channel)
+                    result = create_artifact(args.app.absolute(), args.output.absolute(), context, args.channel, args.signing_mode)
         print(json.dumps(result, sort_keys=True, indent=2))
         return 0
+    except jones_signing.SigningError as error:
+        print(json.dumps({"status": "rejected", "code": "developer-id", "reason": str(error)}), file=sys.stderr)
     except CandidateError as error:
         print(json.dumps({"status": "rejected", "code": error.code, "reason": str(error)}), file=sys.stderr)
     except (OSError, UnicodeError, ValueError, zipfile.BadZipFile, RuntimeError,

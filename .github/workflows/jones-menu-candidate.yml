@@ -2,6 +2,28 @@ name: Jones menu candidate
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Advisory route (cold-build-size needs separate reviewed dispatch)
+        type: choice
+        options: [candidate, cold-build-size]
+        default: candidate
+      baseline_sha:
+        description: Fixed pre-product source for cold-build-size
+        type: string
+        default: 91bd5fb4af704da9181212bea636d527a058e615
+      candidate_sha:
+        description: Fixed qualified product source for cold-build-size
+        type: string
+        default: ba523f60b7161e70a3afd201f87d49dd2b0e37fe
+      harness_sha:
+        description: Reviewed full harness SHA (required only for cold-build-size)
+        type: string
+        default: ''
+      expected_sha:
+        description: Expected dispatch branch/tag head, equal to harness_sha
+        type: string
+        default: ''
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, ready_for_review, labeled]
@@ -35,7 +57,7 @@ concurrency:
 jobs:
   package-jones-menu:
     if: >-
-      ${{ github.event_name == 'workflow_dispatch' ||
+      ${{ (github.event_name == 'workflow_dispatch' && inputs.mode == 'candidate') ||
           (github.event_name == 'pull_request' &&
            github.event.pull_request.draft == false &&
            github.event.pull_request.head.repo.full_name == github.repository &&
@@ -154,3 +176,57 @@ jobs:
       - name: Remove runner-local identity overlay
         if: ${{ always() }}
         run: rm -f -- "$GITHUB_WORKSPACE/.mac-release.jones.env"
+
+  cold-build-size:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'cold-build-size' }}
+    # One sequential pair, one slot, no matrix, cache actions, retries or Swift test execution.
+    concurrency:
+      group: codexbar-candidate-packaging
+      cancel-in-progress: false
+    runs-on: macos-26
+    timeout-minutes: 180
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      MEAS_MODE: ${{ inputs.mode }}
+      MEAS_BASELINE: ${{ inputs.baseline_sha }}
+      MEAS_CANDIDATE: ${{ inputs.candidate_sha }}
+      MEAS_HARNESS: ${{ inputs.harness_sha }}
+      MEAS_EXPECTED: ${{ inputs.expected_sha }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Bind exact dispatch and harness before measurement commands
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B Scripts/ci_cold_build_size.py --validate-only \
+            --mode "$MEAS_MODE" --baseline-sha "$MEAS_BASELINE" \
+            --candidate-sha "$MEAS_CANDIDATE" --harness-sha "$MEAS_HARNESS" \
+            --expected-sha "$MEAS_EXPECTED"
+
+      - name: Verify portable measurement contracts
+        run: bash Scripts/test.sh --command python3 -B Scripts/test_cold_build_size.py
+
+      - name: Measure reviewed historical sources (non-distributable)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B Scripts/ci_cold_build_size.py \
+            --mode "$MEAS_MODE" --baseline-sha "$MEAS_BASELINE" \
+            --candidate-sha "$MEAS_CANDIDATE" --harness-sha "$MEAS_HARNESS" \
+            --expected-sha "$MEAS_EXPECTED"
+
+      - name: Retain bounded measurement receipts and text tails
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: cold-build-size-${{ github.sha }}-${{ github.run_id }}
+          path: |
+            cold-build-size-evidence/*.json
+            cold-build-size-evidence/*.log
+          retention-days: 7
+          if-no-files-found: warn

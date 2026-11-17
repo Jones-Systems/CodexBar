@@ -3,16 +3,6 @@ import Testing
 @testable import CodexBarCore
 
 struct ProviderFetchErrorTests {
-    #if CODEXBAR_FULL_TEST_PROFILE
-    @Test
-    func `missing kiro strategy explains cli requirement`() {
-        let message = ProviderFetchError.noAvailableStrategy(.kiro).localizedDescription
-
-        #expect(message.contains("Kiro CLI"))
-        #expect(message.contains("kiro-cli login"))
-    }
-    #endif
-
     @Test
     func `pipeline honors one exact classified retry delay`() async throws {
         let state = DelayedRetryStrategyState()
@@ -22,7 +12,7 @@ struct ProviderFetchErrorTests {
             resolveStrategies: { _ in [strategy] },
             retrySleeper: { seconds in await delays.record(seconds) })
 
-        let outcome = await pipeline.fetch(context: Self.context(), provider: .neuralwatt)
+        let outcome = await pipeline.fetch(context: Self.context(), provider: .claude)
 
         _ = try outcome.result.get()
         #expect(await state.fetchCount == 2)

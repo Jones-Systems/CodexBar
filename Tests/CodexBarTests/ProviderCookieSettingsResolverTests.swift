@@ -3,45 +3,38 @@ import Foundation
 import Testing
 
 struct ProviderCookieSettingsResolverTests {
-    #if CODEXBAR_FULL_TEST_PROFILE
-    @Test
-    func `shared cookie settings preserve Alibaba token plan defaults`() {
-        let settings = ProviderSettingsSnapshot.AlibabaTokenPlanProviderSettings()
-
-        #expect(settings.cookieSource == .auto)
-        #expect(settings.manualCookieHeader == nil)
-    }
-    #endif
-
     @Test
     func `provider cookie settings remain distinct nominal types`() {
-        let cursor = ProviderSettingsSnapshot.CursorProviderSettings(
+        let codex = ProviderSettingsSnapshot.CodexProviderSettings(
+            usageDataSource: .auto,
             cookieSource: .auto,
             manualCookieHeader: nil)
-        let factory = ProviderSettingsSnapshot.FactoryProviderSettings(
+        let claude = ProviderSettingsSnapshot.ClaudeProviderSettings(
+            usageDataSource: .auto,
+            webExtrasEnabled: false,
             cookieSource: .auto,
             manualCookieHeader: nil)
 
-        #expect(Self.providerName(cursor) == "cursor")
-        #expect(Self.providerName(factory) == "factory")
+        #expect(Self.providerName(codex) == "codex")
+        #expect(Self.providerName(claude) == "claude")
     }
 
     @Test
     func `selected cookie account overrides configured credentials`() {
         let settings = ProviderCookieSettingsResolver.resolve(
-            provider: .manus,
+            provider: .claude,
             configuredSource: .auto,
-            configuredHeader: "session_id=config",
+            configuredHeader: "sessionKey=config",
             selectedAccount: Self.account(token: "account"))
 
         #expect(settings.cookieSource == .manual)
-        #expect(settings.manualCookieHeader == "session_id=account")
+        #expect(settings.manualCookieHeader == "sessionKey=account")
     }
 
     @Test
     func `configured credentials remain when no account is selected`() {
         let settings = ProviderCookieSettingsResolver.resolve(
-            provider: .cursor,
+            provider: .claude,
             configuredSource: .manual,
             configuredHeader: "Cookie: session=config",
             selectedAccount: nil)
@@ -51,21 +44,9 @@ struct ProviderCookieSettingsResolverTests {
     }
 
     @Test
-    func `environment token accounts do not become cookie credentials`() {
-        let settings = ProviderCookieSettingsResolver.resolve(
-            provider: .zai,
-            configuredSource: .off,
-            configuredHeader: nil,
-            selectedAccount: Self.account(token: "api-token"))
-
-        #expect(settings.cookieSource == .off)
-        #expect(settings.manualCookieHeader == nil)
-    }
-
-    @Test
     func `providers without token account support ignore selected account`() {
         let settings = ProviderCookieSettingsResolver.resolve(
-            provider: .mimo,
+            provider: .codex,
             configuredSource: .auto,
             configuredHeader: "configured=true",
             selectedAccount: Self.account(token: "account=true"))
@@ -83,11 +64,11 @@ struct ProviderCookieSettingsResolverTests {
             lastUsed: nil)
     }
 
-    private static func providerName(_: ProviderSettingsSnapshot.CursorProviderSettings) -> String {
-        "cursor"
+    private static func providerName(_: ProviderSettingsSnapshot.CodexProviderSettings) -> String {
+        "codex"
     }
 
-    private static func providerName(_: ProviderSettingsSnapshot.FactoryProviderSettings) -> String {
-        "factory"
+    private static func providerName(_: ProviderSettingsSnapshot.ClaudeProviderSettings) -> String {
+        "claude"
     }
 }

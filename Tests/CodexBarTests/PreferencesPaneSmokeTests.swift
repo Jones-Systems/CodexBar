@@ -12,12 +12,10 @@ struct PreferencesPaneSmokeTests {
         let store = Self.makeUsageStore(settings: settings)
 
         _ = GeneralPane(settings: settings).body
-        _ = ICloudSyncPane(settings: settings, state: CloudSyncState()).body
         _ = NotificationsPane(settings: settings).body
         _ = MenuBarPane(settings: settings, store: store).body
         _ = MenuPane(settings: settings, store: store).body
         _ = AdvancedPane(settings: settings, store: store).body
-        _ = HooksPane(settings: settings).body
         _ = ProvidersPane(settings: settings, store: store).body
         _ = DebugPane(settings: settings, store: store).body
         _ = AboutPane(updater: DisabledUpdaterController()).body
@@ -46,7 +44,6 @@ struct PreferencesPaneSmokeTests {
         store._setErrorForTesting("Example error", provider: .codex)
 
         _ = GeneralPane(settings: settings).body
-        _ = ICloudSyncPane(settings: settings, state: CloudSyncState()).body
         _ = NotificationsPane(settings: settings).body
         _ = MenuBarPane(settings: settings, store: store).body
         _ = MenuPane(settings: settings, store: store).body
@@ -592,19 +589,8 @@ struct PreferencesPaneSmokeTests {
         return SettingsStore(
             userDefaults: defaults,
             configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore(),
             codexCookieStore: InMemoryCookieHeaderStore(),
             claudeCookieStore: InMemoryCookieHeaderStore(),
-            cursorCookieStore: InMemoryCookieHeaderStore(),
-            opencodeCookieStore: InMemoryCookieHeaderStore(),
-            factoryCookieStore: InMemoryCookieHeaderStore(),
-            minimaxCookieStore: InMemoryMiniMaxCookieStore(),
-            minimaxAPITokenStore: InMemoryMiniMaxAPITokenStore(),
-            kimiTokenStore: InMemoryKimiTokenStore(),
-            augmentCookieStore: InMemoryCookieHeaderStore(),
-            ampCookieStore: InMemoryCookieHeaderStore(),
-            copilotTokenStore: InMemoryCopilotTokenStore(),
             tokenAccountStore: InMemoryTokenAccountStore())
     }
 

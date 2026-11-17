@@ -9,7 +9,6 @@ struct CostUsageClaudeMetadataParsingTests {
         defer { env.cleanup() }
         let day = try env.makeLocalNoon(year: 2026, month: 8, day: 29)
         let dayKey = CostUsageScanner.CostUsageDayRange.dayKey(from: day)
-        let provider: UsageProvider = vertex ? .vertexai : .claude
         let filter: CostUsageScanner.ClaudeLogProviderFilter = vertex ? .vertexAIOnly : .excludeVertexAI
         let inputs: [Any] = [false, true, 2, -1, 1.75, "2", NSNull()]
         let expectedInputs = [0, 1, 2, 0, 1, 0, 0]
@@ -69,10 +68,11 @@ struct CostUsageClaudeMetadataParsingTests {
         #expect(parsed.rows == expectedRows)
         #expect(parsed.rows.map { Array($0.model.utf8) } == expectedRows.map { Array($0.model.utf8) })
         #expect(parsed.parsedBytes == Int64(content.utf8.count))
-        let options = CostUsageScanner.Options(claudeProjectsRoots: [env.claudeProjectsRoot], cacheRoot: env.cacheRoot)
+        var options = CostUsageScanner.Options(claudeProjectsRoots: [env.claudeProjectsRoot], cacheRoot: env.cacheRoot)
+        options.claudeLogProviderFilter = filter
         let report = CostUsageScanner.loadDailyReport(
-            provider: provider, since: day, until: day, now: day, options: options)
-        let cache = CostUsageClaudeCacheIO.load(provider: provider, cacheRoot: env.cacheRoot)
+            provider: .claude, since: day, until: day, now: day, options: options)
+        let cache = CostUsageClaudeCacheIO.load(provider: .claude, cacheRoot: env.cacheRoot)
         #expect(cache.files.values.flatMap { $0.claudeRows ?? [] } == expectedRows)
         #expect(cache.files.values.map(\.parsedBytes) == [parsed.parsedBytes])
         #expect(report.summary?.totalTokens == 32)

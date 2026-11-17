@@ -4,6 +4,32 @@ import Testing
 @testable import CodexBarCore
 
 struct CodexCredentialFileAccessTests {
+    @Test
+    func `explicit file fixtures allow synthetic reads and whole write substitution`() throws {
+        let io = IO()
+        let home = URL(fileURLWithPath: "/fictitious-owned-fixture")
+        let auth = home.appendingPathComponent("auth.json")
+        try CodexCredentialFileAccess.$testIO.withValue(io.call) {
+            try CodexCredentialFileAccess.withFixtureScope(.init(files: [auth])) {
+                let env = ["CODEX_HOME": home.path]
+                let credentials = try CodexOAuthCredentialsStore.load(env: env)
+                #expect(credentials.accessToken == "synthetic")
+                #expect(try CodexOAuthCredentialsStore.loadOAuthTokens(env: env) == credentials)
+                #expect(try CodexOAuthCredentialsStore.loadPAT(env: env).token == "fixture-pat")
+                #expect(try CodexOAuthCredentialsStore.loadForUsage(env: env) == credentials)
+                #expect(CodexAuthFingerprint.fingerprint(env: env) == CodexAuthFingerprint.fingerprint(data: io.bytes))
+                #expect(try DefaultCodexAuthMaterialReader().readAuthData(homeURL: home) == io.bytes)
+                try CodexOAuthCredentialsStore.save(credentials, env: env)
+                try DefaultCodexLiveAuthSwapper().swapLiveAuthData(io.bytes, liveHomeURL: home)
+                #expect(!CodexCredentialFileAccess.permits(home.appendingPathComponent("other.json")))
+            }
+        }
+        #expect(io.calls.count(where: { $0 == .write }) == 2)
+        #expect(io.calls.contains(.existence))
+        #expect(io.calls.contains(.read))
+        #expect(!CodexCredentialFileAccess.permits(auth))
+    }
+
     private final class IO: @unchecked Sendable {
         private let lock = NSLock()
         private var operations: [CodexCredentialFileAccess.Operation] = []
@@ -100,32 +126,6 @@ struct CodexCredentialFileAccessTests {
     }
 
     @Test
-    func `explicit file fixtures allow synthetic reads and whole write substitution`() throws {
-        let io = IO()
-        let home = URL(fileURLWithPath: "/fictitious-owned-fixture")
-        let auth = home.appendingPathComponent("auth.json")
-        try CodexCredentialFileAccess.$testIO.withValue(io.call) {
-            try CodexCredentialFileAccess.withFixtureScope(.init(files: [auth])) {
-                let env = ["CODEX_HOME": home.path]
-                let credentials = try CodexOAuthCredentialsStore.load(env: env)
-                #expect(credentials.accessToken == "synthetic")
-                #expect(try CodexOAuthCredentialsStore.loadOAuthTokens(env: env) == credentials)
-                #expect(try CodexOAuthCredentialsStore.loadPAT(env: env).token == "fixture-pat")
-                #expect(try CodexOAuthCredentialsStore.loadForUsage(env: env) == credentials)
-                #expect(CodexAuthFingerprint.fingerprint(env: env) == CodexAuthFingerprint.fingerprint(data: io.bytes))
-                #expect(try DefaultCodexAuthMaterialReader().readAuthData(homeURL: home) == io.bytes)
-                try CodexOAuthCredentialsStore.save(credentials, env: env)
-                try DefaultCodexLiveAuthSwapper().swapLiveAuthData(io.bytes, liveHomeURL: home)
-                #expect(!CodexCredentialFileAccess.permits(home.appendingPathComponent("other.json")))
-            }
-        }
-        #expect(io.calls.count(where: { $0 == .write }) == 2)
-        #expect(io.calls.contains(.existence))
-        #expect(io.calls.contains(.read))
-        #expect(!CodexCredentialFileAccess.permits(auth))
-    }
-
-    @Test
     func `and child detection ignores keychain and live permissions`() {
         for process in ["swiftpm-testing-helper", "CodexBarPackageTests", "example.xctest"] {
             #expect(CodexCredentialFileAccess.isTestContext(
@@ -179,37 +179,6 @@ struct CodexCredentialFileAccessTests {
     }
 
     @Test
-    func `external fallback visits only authorized native legacy and OpenCode candidates`() throws {
-        let home = URL(fileURLWithPath: "/fictitious-fixture-home")
-        let native = home.appendingPathComponent(".codex/auth.json").path
-        let legacy = home.appendingPathComponent(".config/codex/auth.json").path
-        let oauth = IO().bytes
-        let external = Data(#"{"openai":{"type":"oauth","access":"external-fixture"}}"#.utf8)
-        for configured in [false, true] {
-            let dataHome = configured ? home.appendingPathComponent("xdg") : home.appendingPathComponent(".local/share")
-            let openCode = dataHome.appendingPathComponent("opencode/auth.json").path
-            let env = configured ? ["XDG_DATA_HOME": dataHome.path] : [:]
-            for winner in [native, legacy, openCode] {
-                let files = [native: oauth, legacy: oauth, openCode: external].filter { key, _ in
-                    winner == native || (winner == legacy ? key != native : key == openCode)
-                }
-                let io = IO(files: files)
-                let credentials = try CodexCredentialFileAccess.$testIO.withValue(io.call) {
-                    try CodexOAuthCredentialsStore._loadForUsageForTesting(
-                        env: env, homeDirectory: home, allowExternalSources: true)
-                }
-                #expect(credentials
-                    .source == (winner == native ? .codexHome : winner == legacy ? .legacyCodexHome : .openCode))
-                #expect(io.targets == (winner == native ? [native] : winner == legacy ? [native, legacy] : [
-                    native,
-                    legacy,
-                    openCode,
-                ]))
-            }
-        }
-    }
-
-    @Test
     func `authorized external root cannot bypass a denied native home`() {
         let io = IO()
         CodexCredentialFileAccess.$testIO.withValue(io.call) {
@@ -223,27 +192,6 @@ struct CodexCredentialFileAccessTests {
             }
             #expect(io.calls.count == before)
         }
-    }
-
-    @Test
-    func `unregistered OpenCode is not probed after an authorized native miss`() {
-        let home = URL(fileURLWithPath: "/fictitious-owned-home")
-        let io = IO(files: [
-            "/fictitious-unregistered-xdg/opencode/auth.json":
-                Data(#"{"openai":{"type":"oauth","access":"must-not-read"}}"#.utf8),
-        ])
-        _ = CodexCredentialFileAccess.$testIO.withValue(io.call) {
-            #expect(throws: CodexOAuthCredentialsError.self) {
-                try CodexOAuthCredentialsStore._loadForUsageForTesting(
-                    env: ["XDG_DATA_HOME": "/fictitious-unregistered-xdg"],
-                    homeDirectory: home,
-                    allowExternalSources: true)
-            }
-        }
-        #expect(io.targets == [
-            home.appendingPathComponent(".codex/auth.json").path,
-            home.appendingPathComponent(".config/codex/auth.json").path,
-        ])
     }
 
     @Test

@@ -37,6 +37,15 @@ private final class OverviewScrollEvent: NSEvent {
 
 @MainActor
 struct StatusMenuOverviewScrollTests {
+    @Test(arguments: [CGFloat(-1), 0, 0.5, 1, 30, 500], [false, true])
+    func `synthetic scroll events preserve handler inputs`(deltaY: CGFloat, precise: Bool) {
+        let event = self.makeScrollEvent(deltaY: deltaY, precise: precise)
+        #expect(event.type == .scrollWheel)
+        #expect(event.scrollingDeltaY == deltaY)
+        #expect(event.hasPreciseScrollingDeltas == precise)
+        #expect(event.momentumPhase.isEmpty)
+    }
+
     private func makeController(suiteName: String) throws -> StatusItemController {
         let suite = "\(suiteName)-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
@@ -50,8 +59,6 @@ struct StatusMenuOverviewScrollTests {
         let settings = SettingsStore(
             userDefaults: defaults,
             configStore: configStore,
-            zaiTokenStore: NoopZaiTokenStore(),
-            syntheticTokenStore: NoopSyntheticTokenStore(),
             tokenAccountStore: InMemoryTokenAccountStore(),
             performInitialProviderDetection: false)
         settings.statusChecksEnabled = false
@@ -91,15 +98,6 @@ struct StatusMenuOverviewScrollTests {
         // CGEvent line-scroll conversion can yield zero deltas depending on host state.
         // Supply the handler's NSEvent inputs directly without posting an event.
         OverviewScrollEvent(deltaY: deltaY, precise: precise)
-    }
-
-    @Test(arguments: [CGFloat(-1), 0, 0.5, 1, 30, 500], [false, true])
-    func `synthetic scroll events preserve handler inputs`(deltaY: CGFloat, precise: Bool) {
-        let event = self.makeScrollEvent(deltaY: deltaY, precise: precise)
-        #expect(event.type == .scrollWheel)
-        #expect(event.scrollingDeltaY == deltaY)
-        #expect(event.hasPreciseScrollingDeltas == precise)
-        #expect(event.momentumPhase.isEmpty)
     }
 
     @Test

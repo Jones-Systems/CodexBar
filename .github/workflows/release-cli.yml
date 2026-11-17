@@ -382,39 +382,61 @@ jobs:
           SAFE_REF_NAME="${REF_NAME//\//-}"
 
           BIN_DIR="${{ steps.build.outputs.bin_dir }}"
-          OUT_DIR="$(mktemp -d)"
+          OUT_DIR="$(mktemp -d "$GITHUB_WORKSPACE/cli-package-XXXXXX")"
+          PACKAGE_READY=0
+          trap 'if [[ "$PACKAGE_READY" != 1 ]]; then rm -rf -- "$OUT_DIR"; fi' EXIT
+          trap 'exit 129' HUP
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
+          echo "out_dir=$OUT_DIR" >> "$GITHUB_OUTPUT"
+          python3 - "$OUT_DIR" >> "$GITHUB_OUTPUT" <<'PY'
+          import os, sys
+          info = os.stat(sys.argv[1])
+          print(f"out_dir_identity={info.st_dev}:{info.st_ino}")
+          PY
           install -m 0755 "$BIN_DIR/CodexBarCLI" "$OUT_DIR/CodexBarCLI"
           ln -s "CodexBarCLI" "$OUT_DIR/codexbar"
           printf '%s\n' "${SAFE_REF_NAME#v}" > "$OUT_DIR/VERSION"
 
-          CORE_RESOURCE_SOURCE=""
-          for candidate in \
-            "$BIN_DIR/CodexBar_CodexBarCore.bundle" \
-            "$BIN_DIR/CodexBar_CodexBarCore.resources"; do
-            if [[ -d "$candidate" ]]; then
-              CORE_RESOURCE_SOURCE="$candidate"
-              break
-            fi
-          done
-          if [[ -z "$CORE_RESOURCE_SOURCE" ]]; then
-            echo "Missing CodexBarCore resource bundle in $BIN_DIR" >&2
+          # Current tracked source, never cached build products, selects the bundle contract.
+          if [[ "$(git -C "$GITHUB_WORKSPACE" rev-parse --show-toplevel)" != "$GITHUB_WORKSPACE" ]]; then
+            echo "Core resource contract requires the exact source checkout root." >&2
             exit 1
           fi
-          cp -R "$CORE_RESOURCE_SOURCE" "$OUT_DIR/CodexBar_CodexBarCore.bundle"
-          DIRECT_RESOURCE_SMOKE_OUTPUT="$RUNNER_TEMP/codexbar-cli-resource-smoke-direct-${{ matrix.name }}.txt"
-          CODEXBAR_RESOURCE_SMOKE=1 "$OUT_DIR/CodexBarCLI" > "$DIRECT_RESOURCE_SMOKE_OUTPUT"
-          grep -Fx "CODEXBAR_RESOURCE_SMOKE_OK" "$DIRECT_RESOURCE_SMOKE_OUTPUT"
-          SYMLINK_RESOURCE_SMOKE_OUTPUT="$RUNNER_TEMP/codexbar-cli-resource-smoke-symlink-${{ matrix.name }}.txt"
-          CODEXBAR_RESOURCE_SMOKE=1 "$OUT_DIR/codexbar" > "$SYMLINK_RESOURCE_SMOKE_OUTPUT"
-          grep -Fx "CODEXBAR_RESOURCE_SMOKE_OK" "$SYMLINK_RESOURCE_SMOKE_OUTPUT"
+          CORE_RESOURCE_INPUTS="$(git -C "$GITHUB_WORKSPACE" ls-files -- Sources/CodexBarCore/Resources/)"
+          PACKAGE_FILES=(CodexBarCLI codexbar VERSION)
+          if [[ -n "$CORE_RESOURCE_INPUTS" ]]; then
+            CORE_RESOURCE_SOURCE=""
+            for candidate in \
+              "$BIN_DIR/CodexBar_CodexBarCore.bundle" \
+              "$BIN_DIR/CodexBar_CodexBarCore.resources"; do
+              if [[ -d "$candidate" ]]; then
+                CORE_RESOURCE_SOURCE="$candidate"
+                break
+              fi
+            done
+            if [[ -z "$CORE_RESOURCE_SOURCE" ]]; then
+              echo "Missing CodexBarCore resource bundle in $BIN_DIR" >&2
+              exit 1
+            fi
+            cp -R "$CORE_RESOURCE_SOURCE" "$OUT_DIR/CodexBar_CodexBarCore.bundle"
+            PACKAGE_FILES+=(CodexBar_CodexBarCore.bundle)
+            CODEXBAR_RESOURCE_SMOKE=1 "$OUT_DIR/CodexBarCLI" > "$OUT_DIR/direct-probe.txt"
+            grep -Fx "CODEXBAR_RESOURCE_SMOKE_OK" "$OUT_DIR/direct-probe.txt"
+            CODEXBAR_RESOURCE_SMOKE=1 "$OUT_DIR/codexbar" > "$OUT_DIR/symlink-probe.txt"
+            grep -Fx "CODEXBAR_RESOURCE_SMOKE_OK" "$OUT_DIR/symlink-probe.txt"
+          else
+            env -u CODEXBAR_RESOURCE_SMOKE "$OUT_DIR/CodexBarCLI" --help > "$OUT_DIR/direct-probe.txt"
+            env -u CODEXBAR_RESOURCE_SMOKE "$OUT_DIR/codexbar" --help > "$OUT_DIR/symlink-probe.txt"
+            echo "CLI --help relocation passed; forced resource-load proof unavailable (Core resources removed)."
+          fi
 
           ASSET="CodexBarCLI-${SAFE_REF_NAME}-${{ matrix.asset-platform }}-${{ matrix.asset-arch }}.tar.gz"
-          (cd "$OUT_DIR" && tar czf "$ASSET" \
-            CodexBarCLI codexbar VERSION CodexBar_CodexBarCore.bundle)
+          (cd "$OUT_DIR" && tar czf "$ASSET" "${PACKAGE_FILES[@]}")
           Scripts/generate_release_checksum.sh "$OUT_DIR/$ASSET"
 
-          echo "out_dir=$OUT_DIR" >> "$GITHUB_OUTPUT"
           echo "asset=$ASSET" >> "$GITHUB_OUTPUT"
+          PACKAGE_READY=1
 
       - name: Upload release assets
         if: github.event_name == 'release'
@@ -436,6 +458,29 @@ jobs:
           path: |
             ${{ steps.pkg.outputs.out_dir }}/${{ steps.pkg.outputs.asset }}
             ${{ steps.pkg.outputs.out_dir }}/${{ steps.pkg.outputs.asset }}.sha256
+
+      - name: Clean CLI package scratch
+        if: ${{ always() && steps.pkg.outputs.out_dir != '' }}
+        env:
+          CLI_PACKAGE_ROOT: ${{ steps.pkg.outputs.out_dir }}
+          CLI_PACKAGE_IDENTITY: ${{ steps.pkg.outputs.out_dir_identity }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os, pathlib, shutil
+          root = pathlib.Path(os.environ["CLI_PACKAGE_ROOT"])
+          workspace = pathlib.Path(os.environ["GITHUB_WORKSPACE"]).resolve(strict=True)
+          if root.parent != workspace or not root.name.startswith("cli-package-") or root.is_symlink():
+              raise SystemExit("Refusing unowned CLI package scratch")
+          if root.exists():
+              info = root.stat()
+              if f"{info.st_dev}:{info.st_ino}" != os.environ["CLI_PACKAGE_IDENTITY"]:
+                  raise SystemExit("CLI package scratch identity changed; preserving it")
+              shutil.rmtree(root)
+          if os.path.lexists(root):
+              raise SystemExit("CLI package scratch remains")
+          print("CLI package scratch removed; absence verified")
+          PY
 
   update-homebrew-tap:
     runs-on: ubuntu-24.04

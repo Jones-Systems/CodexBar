@@ -16,6 +16,7 @@ extension ProviderConfig {
         case tokenAccounts
         case quotaWarnings
         case accentColor
+        // Reserve obsolete plugin keys so their payloads never enter inert extensions or config dumps.
         case pluginSettings
         case pluginSecrets
     }
@@ -44,12 +45,6 @@ extension ProviderConfig {
             QuotaWarningConfig.self,
             forKey: .init(CodingKeys.quotaWarnings.rawValue))
         self.accentColor = try container.decodeIfPresent(String.self, forKey: .init(CodingKeys.accentColor.rawValue))
-        self.pluginSettings = try container.decodeIfPresent(
-            [String: String].self,
-            forKey: .init(CodingKeys.pluginSettings.rawValue))
-        self.pluginSecrets = try container.decodeIfPresent(
-            [String: String].self,
-            forKey: .init(CodingKeys.pluginSecrets.rawValue))
 
         let genericKeys = Set(CodingKeys.allCases.map(\.rawValue))
         self.extensionValues = try container.allKeys.reduce(into: [:]) { values, key in
@@ -74,8 +69,6 @@ extension ProviderConfig {
         try container.encodeIfPresent(self.tokenAccounts, forKey: .init(CodingKeys.tokenAccounts.rawValue))
         try container.encodeIfPresent(self.quotaWarnings, forKey: .init(CodingKeys.quotaWarnings.rawValue))
         try container.encodeIfPresent(self.accentColor, forKey: .init(CodingKeys.accentColor.rawValue))
-        try container.encodeIfPresent(self.pluginSettings, forKey: .init(CodingKeys.pluginSettings.rawValue))
-        try container.encodeIfPresent(self.pluginSecrets, forKey: .init(CodingKeys.pluginSecrets.rawValue))
         for (key, value) in self.extensionValues {
             try container.encode(value, forKey: .init(key))
         }

@@ -5,42 +5,19 @@ import Testing
 
 struct CLIProviderSelectionTests {
     @Test
-    func `help includes gemini and all`() {
-        let usage = CodexBarCLI.usageHelp(version: "0.0.0")
-        let root = CodexBarCLI.rootHelp(version: "0.0.0")
-        let expectedProviders = [
-            "--provider codex|",
-            "|claude|",
-            "|factory|",
-            "|zai|",
-            "|cursor|",
-            "|gemini|",
-            "|antigravity|",
-            "|copilot|",
-            "|synthetic|",
-            "|kiro|",
-            "|warp|",
-            "|ollama|",
-            "|both|",
-            "|all]",
-        ]
-        for provider in expectedProviders {
-            #expect(usage.contains(provider))
-            #expect(root.contains(provider))
+    func `help lists retained providers and shared output controls`() {
+        for help in [CodexBarCLI.rootHelp(version: "0.0.0"), CodexBarCLI.usageHelp(version: "0.0.0")] {
+            #expect(help.contains("--provider codex|claude|both|all"))
+            for flag in ["--json", "--json-only", "--json-output", "--log-level", "--verbose"] {
+                #expect(help.contains(flag))
+            }
         }
-        #expect(usage.contains("--json"))
-        #expect(root.contains("--json"))
-        #expect(usage.contains("--json-only"))
-        #expect(root.contains("--json-only"))
-        #expect(usage.contains("--json-output"))
-        #expect(root.contains("--json-output"))
-        #expect(usage.contains("--log-level"))
-        #expect(root.contains("--log-level"))
-        #expect(usage.contains("--verbose"))
-        #expect(root.contains("--verbose"))
-        #expect(usage.contains("codexbar usage --provider gemini"))
-        #expect(usage.contains("codexbar usage --format json --provider all --pretty"))
-        #expect(root.contains("codexbar --provider gemini"))
+    }
+
+    @Test(arguments: ["cursor", "gemini", "fixture-plugin"])
+    func `retired provider overrides cannot select a different enabled account`(rawID: String) {
+        #expect(ProviderSelection(argument: rawID) == nil)
+        #expect(CodexBarCLI.providerSelection(rawOverride: rawID, enabled: [.codex, .claude]).asList.isEmpty)
     }
 
     @Test
@@ -76,43 +53,14 @@ struct CLIProviderSelectionTests {
 
     @Test
     func `provider selection respects override`() {
-        let selection = CodexBarCLI.providerSelection(rawOverride: "gemini", enabled: [.codex, .claude])
-        #expect(selection.asList == [.gemini])
-    }
-
-    @Test
-    func `provider selection uses enabled providers when three or more are enabled`() {
-        let selection = CodexBarCLI.providerSelection(
-            rawOverride: nil,
-            enabled: [.codex, .claude, .zai, .cursor, .gemini, .antigravity, .factory, .copilot])
-        #expect(selection.asList == [.codex, .claude, .zai, .cursor, .gemini, .antigravity, .factory, .copilot])
-    }
-
-    @Test
-    func `provider selection does not expand three enabled providers to all providers`() {
-        let enabled: [UsageProvider] = [.codex, .claude, .copilot]
-        let selection = CodexBarCLI.providerSelection(rawOverride: nil, enabled: enabled)
-        #expect(selection.asList == enabled)
-        #expect(!selection.asList.contains(.gemini))
+        let selection = CodexBarCLI.providerSelection(rawOverride: "claude", enabled: [.codex, .claude])
+        #expect(selection.asList == [.claude])
     }
 
     @Test
     func `provider selection uses both for codex and claude`() {
         let selection = CodexBarCLI.providerSelection(rawOverride: nil, enabled: [.codex, .claude])
         #expect(selection.asList == [.codex, .claude])
-    }
-
-    @Test
-    func `provider selection uses custom for codex and gemini`() {
-        let enabled: [UsageProvider] = [.codex, .gemini]
-        let selection = CodexBarCLI.providerSelection(rawOverride: nil, enabled: enabled)
-        #expect(selection.asList == enabled)
-    }
-
-    @Test
-    func `provider selection accepts kiro alias`() {
-        let selection = CodexBarCLI.providerSelection(rawOverride: "kiro-cli", enabled: [.codex])
-        #expect(selection.asList == [.kiro])
     }
 
     @Test

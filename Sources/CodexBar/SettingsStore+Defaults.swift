@@ -358,23 +358,6 @@ extension SettingsStore {
         }
     }
 
-    private var kiroMenuBarDisplayModeRaw: String? {
-        get { self.defaultsState.kiroMenuBarDisplayModeRaw }
-        set {
-            self.defaultsState.kiroMenuBarDisplayModeRaw = newValue
-            if let raw = newValue {
-                self.userDefaults.set(raw, forKey: "kiroMenuBarDisplayMode")
-            } else {
-                self.userDefaults.removeObject(forKey: "kiroMenuBarDisplayMode")
-            }
-        }
-    }
-
-    var kiroMenuBarDisplayMode: KiroMenuBarDisplayMode {
-        get { KiroMenuBarDisplayMode(rawValue: self.kiroMenuBarDisplayModeRaw ?? "") ?? .automatic }
-        set { self.kiroMenuBarDisplayModeRaw = newValue.rawValue }
-    }
-
     var multiAccountMenuLayout: MultiAccountMenuLayout {
         get { MultiAccountMenuLayout(rawValue: self.defaultsState.multiAccountMenuLayoutRaw) ?? .stacked }
         set {
@@ -539,14 +522,6 @@ extension SettingsStore {
         else { return }
         self.userDefaults.set(blobs.current, forKey: MenuBarLayoutUserDefaultsKey.overridesCurrent)
         self.userDefaults.set(blobs.legacy, forKey: MenuBarLayoutUserDefaultsKey.overrides)
-    }
-
-    var copilotIconSecondaryWindowIDRaw: String {
-        get { self.defaultsState.copilotIconSecondaryWindowIDRaw }
-        set {
-            self.defaultsState.copilotIconSecondaryWindowIDRaw = newValue
-            self.userDefaults.set(newValue, forKey: "copilotIconSecondaryWindowID")
-        }
     }
 
     var costUsageEnabled: Bool {
@@ -777,18 +752,6 @@ extension SettingsStore {
         set { self.claudeWebExtrasEnabledRaw = newValue }
     }
 
-    var copilotBudgetExtrasEnabled: Bool {
-        get { self.defaultsState.copilotBudgetExtrasEnabled }
-        set {
-            self.defaultsState.copilotBudgetExtrasEnabled = newValue
-            self.userDefaults.set(newValue, forKey: "copilotBudgetExtrasEnabled")
-            CodexBarLog.logger(LogCategories.settings).info(
-                "Copilot budget extras updated",
-                metadata: ["enabled": newValue ? "1" : "0"])
-            self.noteBackgroundWorkSettingsChanged()
-        }
-    }
-
     private var claudeWebExtrasEnabledRaw: Bool {
         get { self.defaultsState.claudeWebExtrasEnabledRaw }
         set {
@@ -903,14 +866,6 @@ extension SettingsStore {
                 "Provider storage footprints updated",
                 metadata: ["enabled": newValue ? "1" : "0"])
             self.noteBackgroundWorkSettingsChanged()
-        }
-    }
-
-    var jetbrainsIDEBasePath: String {
-        get { self.defaultsState.jetbrainsIDEBasePath }
-        set {
-            self.defaultsState.jetbrainsIDEBasePath = newValue
-            self.userDefaults.set(newValue, forKey: "jetbrainsIDEBasePath")
         }
     }
 

@@ -98,6 +98,16 @@ class RejectionAssertions:
 
 
 class ContextTests(RejectionAssertions, unittest.TestCase):
+    def test_signing_dispatch_is_bound_to_canonical_main_workflow_and_sha(self):
+        environment, event = event_fixture("workflow_dispatch")
+        environment["GITHUB_WORKFLOW_REF"] = f"{candidate.REPOSITORY}/{candidate.jones_signing.WORKFLOW}@refs/heads/main"
+        self.assertEqual(candidate.validate_event(environment, event, REVISION, "developer-id")[0], "ci-main")
+        for mutation in ({"GITHUB_REF": "refs/heads/topic"}, {"GITHUB_WORKFLOW_SHA": MERGE_SHA},
+                         {"GITHUB_EVENT_NAME": "pull_request"}, {"GITHUB_WORKFLOW_REF": "foreign"}):
+            with self.assertRaises(candidate.CandidateError):
+                candidate.validate_event(dict(environment, **mutation), event, REVISION, "developer-id")
+
+
     def test_only_exact_main_push_claims_ci_main(self):
         for event_name, origin in (("push", "ci-main"), ("pull_request", "ci-pr"), ("workflow_dispatch", "local")):
             with self.subTest(event=event_name):
@@ -182,6 +192,20 @@ class ContextTests(RejectionAssertions, unittest.TestCase):
 
 
 class PlistTests(RejectionAssertions, unittest.TestCase):
+    def test_developer_id_is_explicit_and_cannot_enable_updates(self):
+        app, widget = plists()
+        for info in (app, widget):
+            info.update(JonesSigningMode="developer-id", CodexBarTeamID=candidate.jones_signing.TEAM,
+                        JonesAppGroupID=candidate.jones_signing.GROUP)
+        candidate.validate_plists(app, widget, CONTEXT, "none", "developer-id")
+        self.rejects("signing-mode", candidate.validate_plists, app, widget, CONTEXT, "none")
+        self.rejects("migration-held", candidate.validate_plists, app, widget, CONTEXT, "stable", "developer-id")
+        for info in (app, widget):
+            altered = dict(info, JonesSigningMode="adhoc")
+            self.rejects("plist-value", candidate.validate_plists,
+                         altered if info is app else app, widget if info is app else altered,
+                         CONTEXT, "none", "developer-id")
+
     def test_bootstrap_and_stable_metadata_roundtrip(self):
         for channel in ("none", "stable"):
             app, widget = plists(channel=channel)
@@ -323,7 +347,14 @@ class FakeMac:
                 entitlements.update(self.entitlements_extra)
                 stdout = plistlib.dumps(entitlements)
             elif "--display" in args:
-                stderr = f"Identifier={identifier}\nSignature={self.signature}\nTeamIdentifier=not set\n".encode()
+                if self.signature == "developer-id":
+                    stderr = (f"Identifier={identifier}\nTeamIdentifier=2CUPSQS986\n"
+                              "Authority=Developer ID Application: Fixture (2CUPSQS986)\n"
+                              "Authority=Developer ID Certification Authority\nAuthority=Apple Root CA\n"
+                              "Timestamp=synthetic\nCodeDirectory flags=0x10000(runtime)\n"
+                              + "CDHash=" + "c" * 40 + "\n").encode()
+                else:
+                    stderr = f"Identifier={identifier}\nSignature={self.signature}\nTeamIdentifier=not set\n".encode()
         elif args[0] == "/usr/bin/lipo":
             stdout = self.framework_arches if "/Sparkle.framework/" in args[-1] else self.arches
         elif args[0] == "/usr/bin/ditto":
@@ -350,6 +381,47 @@ class ArtifactTests(RejectionAssertions, unittest.TestCase):
                         patch.object(candidate.shutil, "disk_usage", return_value=Mock(free=5 * candidate.GIB))):
             patcher.start()
             self.addCleanup(patcher.stop)
+
+    def production_fixture(self):
+        self.mac.arches = b"arm64\n"
+        self.mac.signature = "developer-id"
+        for path in (self.bundle / "Contents/Info.plist",
+                     self.bundle / "Contents/PlugIns/CodexBarWidget.appex/Contents/Info.plist"):
+            info = plistlib.loads(path.read_bytes())
+            info.update(JonesSigningMode="developer-id", CodexBarTeamID=candidate.jones_signing.TEAM,
+                        JonesAppGroupID=candidate.jones_signing.GROUP)
+            path.write_bytes(plistlib.dumps(info))
+        patcher = patch.object(candidate.jones_signing, "verify_bundle", side_effect=lambda bundle, identifier, **kwargs:
+                               ("c" * 40, candidate.jones_signing.entitlements(identifier)))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_developer_id_arm64_roundtrip_reports_product_separately_from_vendor(self):
+        self.production_fixture()
+        before = candidate.tree_manifest(self.bundle)
+        for index, framework in enumerate((b"arm64\n", b"x86_64 arm64\n")):
+            self.mac.framework_arches = framework
+            result = candidate.create_artifact(self.bundle, self.root / f"signed-{index}", CONTEXT,
+                                               "none", "developer-id")
+            self.assertEqual(result["verification"]["signature"], "developer-id")
+            self.assertEqual(result["verification"]["product_architectures"], ["arm64"])
+            for name, architectures in result["verification"]["macho_architectures"].items():
+                expected = framework.decode().split() if "/Sparkle.framework/" in name else ["arm64"]
+                self.assertEqual(architectures, expected)
+            self.assertEqual(candidate.tree_manifest(self.bundle), before)
+        self.rejects("signing-mode", candidate.inspect_bundle, self.bundle, CONTEXT, "none")
+
+    def test_developer_id_rejects_universal_products_and_missing_duplicate_or_unknown_slices(self):
+        self.production_fixture()
+        for field, invalids in (
+                ("arches", (b"arm64 x86_64\n", b"x86_64\n", b"arm64 arm64\n", b"arm64 arm64e\n", b"")),
+                ("framework_arches", (b"x86_64\n", b"arm64 arm64\n", b"arm64 arm64e\n",
+                                      b"arm64 x86_64 arm64e\n", b""))):
+            for invalid in invalids:
+                with self.subTest(field=field, invalid=invalid):
+                    setattr(self.mac, field, invalid)
+                    self.rejects("architecture", candidate.inspect_bundle, self.bundle, CONTEXT, "none", "developer-id")
+            setattr(self.mac, field, b"arm64\n")
 
     def test_universal_candidate_contains_both_native_slices(self):
         self.mac.arches = b"x86_64 arm64\n"

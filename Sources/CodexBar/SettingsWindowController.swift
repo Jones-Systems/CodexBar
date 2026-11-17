@@ -61,7 +61,7 @@ final class SettingsWindowController: NSWindowController {
     convenience init(
         settings: SettingsStore,
         store: UsageStore,
-        cloudSyncState: CloudSyncState,
+        fleetAccountState: FleetAccountState,
         netdataObservabilityCoordinator: NetdataObservabilityCoordinator? = nil,
         updater: UpdaterProviding,
         selection: PreferencesSelection,
@@ -73,7 +73,7 @@ final class SettingsWindowController: NSWindowController {
             let rootView = PreferencesView(
                 settings: settings,
                 store: store,
-                cloudSyncState: cloudSyncState,
+                fleetAccountState: fleetAccountState,
                 netdataObservabilityCoordinator: netdataObservabilityCoordinator,
                 updater: updater,
                 selection: selection,

@@ -37,8 +37,13 @@ class RelocationTests(unittest.TestCase):
         self.checkout = self.root / 'checkout with "quotes"'
         self.checkout.mkdir()
         (self.checkout / "AGENTS.md").write_text("checkout sentinel\n")
+        self.resource_input = self.checkout / "Sources/CodexBarCore/Resources/fixture.js"
+        self.resource_input.parent.mkdir(parents=True)
+        self.resource_input.write_text("synthetic tracked resource\n")
+        self.git("init", "--quiet")
+        self.git("add", "--", "AGENTS.md", str(self.resource_input.relative_to(self.checkout)))
+        self.commit_source()
         self.app = self.root / "Qualified.app"
-        self.sha = "a" * 40
         for relative in ("Contents/MacOS/CodexBar", "Contents/Helpers/CodexBarCLI"):
             path = self.app / relative
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -52,6 +57,36 @@ class RelocationTests(unittest.TestCase):
                           "--scratch-parent", str(self.parent), "--qualified-source-commit", self.sha,
                           "--resource-entrypoints-reviewed"]
         self.phases = []
+        self.cli_mode = False
+        self.original_core_present = True
+
+    def git(self, *arguments):
+        return subprocess.run(["/usr/bin/git", "-C", str(self.checkout), "-c", "core.hooksPath=/dev/null",
+                               "-c", "commit.gpgsign=false", "-c", "user.name=Synthetic fixture",
+                               "-c", "user.email=fixture@example.invalid", *arguments],
+                              env={"PATH": "/usr/bin:/bin", "GIT_CONFIG_NOSYSTEM": "1",
+                                   "GIT_CONFIG_GLOBAL": "/dev/null"},
+                              check=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+
+    def commit_source(self):
+        self.git("commit", "--quiet", "-m", "synthetic source qualification")
+        self.sha = self.git("rev-parse", "HEAD").strip()
+
+    def slim_source(self):
+        self.git("rm", "--quiet", "--cached", "--", str(self.resource_input.relative_to(self.checkout)))
+        self.commit_source()
+        self.arguments[self.arguments.index("--qualified-source-commit") + 1] = self.sha
+        with (self.app / "Contents/Info.plist").open("wb") as stream:
+            plistlib.dump({"CodexGitCommit": self.sha[:7], "CFBundleIdentifier": "test.synthetic"}, stream)
+
+    def cli_arguments(self, *, remove_bundles=True):
+        self.slim_source()
+        self.cli_mode = True
+        self.arguments[-1:] = ["--mode", "cli-relocation", "--cli-entrypoints-reviewed"]
+        if remove_bundles:
+            for path in self.app.rglob("CodexBar_CodexBarCore.bundle"):
+                shutil.rmtree(path)
+            self.original_core_present = False
 
     def fake_command(self, run, name, argv, environment):
         self.phases.append(name)
@@ -63,13 +98,22 @@ class RelocationTests(unittest.TestCase):
         self.assertNotIn("(allow network", argv[2])
         self.assertNotIn("(allow process-fork", argv[2])
         self.assertIn(json.dumps(str(self.checkout)), argv[2])
-        self.assertEqual(environment["CODEXBAR_RESOURCE_SMOKE"], "1")
+        if self.cli_mode:
+            self.assertNotIn("CODEXBAR_RESOURCE_SMOKE", environment)
+            self.assertNotIn("CODEXBAR_PLUGIN_ENGINE", environment)
+        else:
+            self.assertEqual(environment["CODEXBAR_RESOURCE_SMOKE"], "1")
         self.assertEqual(environment["HOME"], str(run.root / "home"))
         self.assertNotIn("CODEXBAR_ALLOW_TEST_KEYCHAIN_ACCESS", environment)
         if name == "read-control":
             return 0, "owned-read-control\n"
         if name == "checkout-denial":
             return 1, "cat: Operation not permitted\n"
+        if self.cli_mode:
+            self.assertIn(name, ("helper-help", "symlink-help"))
+            self.assertEqual(argv[-1], "--help")
+            self.assertEqual(Path(argv[3]).resolve(), run.root / "CodexBar.app/Contents/Helpers/CodexBarCLI")
+            return 0, "synthetic CLI help\n"
         if name.startswith("missing-"):
             self.assertFalse(list((run.root / "CodexBar.app").rglob("CodexBar_CodexBarCore.bundle")))
             return 1, proof.MISSING + "\n"
@@ -98,13 +142,94 @@ class RelocationTests(unittest.TestCase):
         for root in roots:
             self.assertFalse(root.exists())
         self.assertTrue(any(event["event"] == "cleanup" and event["absent"] for event in events))
-        self.assertTrue((self.app / "Contents/Helpers/CodexBar_CodexBarCore.bundle").is_dir())
+        self.assertEqual((self.app / "Contents/Helpers/CodexBar_CodexBarCore.bundle").is_dir(),
+                         self.original_core_present)
 
     def test_resources_and_negative_controls_cleanup(self):
         status, events = self.invoke()
         self.assertEqual(status, 0)
         self.assertEqual(self.phases, ["read-control", "checkout-denial", "helper", "symlink", "app-resource",
                                        "missing-helper", "missing-symlink", "missing-app"])
+        self.assert_clean(events)
+
+    def test_reviewed_cli_mode_only_runs_both_help_routes_and_reports_limits(self):
+        self.cli_arguments()
+        status, events = self.invoke()
+        self.assertEqual(status, 0)
+        self.assertEqual(self.phases, ["read-control", "checkout-denial", "helper-help", "symlink-help"])
+        identity = next(event for event in events if event["event"] == "identity")
+        self.assertEqual(identity["mode"], "cli-relocation")
+        self.assertIn("app resource proof unavailable", identity["proof"])
+        outcome = next(event for event in events if event["event"] == "cli-relocation")
+        self.assertEqual((outcome["app_resource_proof"], outcome["app_lifetime"]), ("unavailable", "not-tested"))
+        self.assertFalse(any(event["event"] == "resources" for event in events))
+        self.assert_clean(events)
+
+    def test_cli_mode_uses_tracked_source_instead_of_stale_bundles(self):
+        self.cli_arguments(remove_bundles=False)
+        status, events = self.invoke()
+        self.assertEqual(status, 0)
+        self.assertEqual(self.phases, ["read-control", "checkout-denial", "helper-help", "symlink-help"])
+        self.assert_clean(events)
+
+    def test_slim_source_cannot_run_resource_entrypoints(self):
+        self.slim_source()
+        status, events = self.invoke()
+        self.assertEqual(status, 2)
+        self.assertEqual(self.phases, [])
+        self.assertTrue(any("App resource proof unavailable" in event.get("message", "") for event in events))
+        self.assertFalse(any(event["event"] == "scratch" for event in events))
+
+    def test_retained_resources_cannot_downgrade_to_cli_mode(self):
+        arguments = self.arguments[:-1] + ["--mode", "cli-relocation", "--cli-entrypoints-reviewed"]
+        status, events = self.invoke(arguments=arguments)
+        self.assertEqual(status, 2)
+        self.assertEqual(self.phases, [])
+        self.assertFalse(any(event["event"] == "scratch" for event in events))
+
+    def test_cli_mode_requires_its_own_review_before_allocation_or_execution(self):
+        self.cli_arguments()
+        for review in ([], ["--resource-entrypoints-reviewed"],
+                       ["--cli-entrypoints-reviewed", "--resource-entrypoints-reviewed"]):
+            with self.subTest(review=review):
+                status, events = self.invoke(arguments=self.arguments[:-1] + review)
+                self.assertEqual(status, 2)
+                self.assertEqual(self.phases, [])
+                self.assertFalse(any(event["event"] == "scratch" for event in events))
+
+    def test_cli_failure_keeps_status_and_does_not_run_app_or_negative_controls(self):
+        self.cli_arguments()
+        for phase in ("helper-help", "symlink-help"):
+            with self.subTest(phase=phase):
+                self.phases = []
+                def command(run, name, argv, environment):
+                    return (17, "synthetic help failure") if name == phase else self.fake_command(run, name, argv, environment)
+                status, events = self.invoke(command)
+                self.assertEqual(status, 17)
+                self.assertNotIn("app-resource", self.phases)
+                self.assertFalse(any(event["event"] == "cli-relocation" for event in events))
+                self.assert_clean(events)
+
+    def test_checkout_identity_and_clean_tracked_source_required_before_execution(self):
+        (self.checkout / "AGENTS.md").write_text("unreviewed tracked change\n")
+        status, events = self.invoke()
+        self.assertEqual(status, 2)
+        self.assertEqual(self.phases, [])
+        self.assertFalse(any(event["event"] == "scratch" for event in events))
+        self.git("add", "--", "AGENTS.md")
+        self.commit_source()
+        status, events = self.invoke()
+        self.assertEqual(status, 2)
+        self.assertTrue(any("Checkout HEAD does not match" in event.get("message", "") for event in events))
+        self.assertFalse(any(event["event"] == "scratch" for event in events))
+
+    def test_cli_denial_control_cannot_be_an_arbitrary_error(self):
+        self.cli_arguments()
+        def command(run, name, argv, environment):
+            return (1, "No such file") if name == "checkout-denial" else self.fake_command(run, name, argv, environment)
+        status, events = self.invoke(command)
+        self.assertEqual(status, 1)
+        self.assertNotIn("helper-help", self.phases)
         self.assert_clean(events)
 
     def test_failure_preserves_status_and_diagnostics(self):

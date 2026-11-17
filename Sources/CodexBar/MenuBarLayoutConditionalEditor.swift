@@ -306,7 +306,6 @@ struct MenuBarLayoutConditionalEditorSheet: View {
         .resetAbsolute,
         .runsOut,
         .runsOutCompact,
-        .balance,
         .costToday,
         .cost30d,
         .separatorDot,
@@ -402,7 +401,6 @@ extension MenuBarConditionalMetric {
         case .weeklyPace: L("menu_bar_layout_token_weekly_pace")
         case .automaticPace: L("menu_bar_layout_token_auto_pace")
         case .runsOutIn: L("menu_bar_layout_token_runs_out")
-        case .balance: L("Balance")
         case .costToday: L("menu_bar_layout_token_cost_today")
         case .cost30d: L("menu_bar_layout_token_cost_30d")
         }
