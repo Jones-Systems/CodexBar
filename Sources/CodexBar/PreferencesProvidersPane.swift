@@ -27,7 +27,6 @@ struct ProvidersPane: View {
     @State private var settingsLastAppActiveRunAtByID: [String: Date] = [:]
     @State private var activeConfirmation: ProviderSettingsConfirmationState?
     @State private var codexAccountsNotice: CodexAccountsSectionNotice?
-    @State private var netdataObservabilityBridge: NetdataObservabilityBridge
 
     init(
         // Provider-specific by design: Codex is the historical settings selection when no provider is supplied.
@@ -37,7 +36,6 @@ struct ProvidersPane: View {
         managedCodexAccountCoordinator: ManagedCodexAccountCoordinator = ManagedCodexAccountCoordinator(),
         codexAccountPromotionCoordinator: CodexAccountPromotionCoordinator? = nil,
         codexAmbientLoginRunner: any CodexAmbientLoginRunning = DefaultCodexAmbientLoginRunner(),
-        netdataObservabilityBridge: NetdataObservabilityBridge? = nil,
         runProviderLoginFlow: @escaping @MainActor (UsageProvider) async -> Void = { _ in })
     {
         self.provider = provider
@@ -50,8 +48,6 @@ struct ProvidersPane: View {
                 usageStore: store,
                 managedAccountCoordinator: managedCodexAccountCoordinator)
         self.codexAmbientLoginRunner = codexAmbientLoginRunner
-        self._netdataObservabilityBridge = State(
-            initialValue: netdataObservabilityBridge ?? NetdataObservabilityBridge())
         self.runProviderLoginFlow = runProviderLoginFlow
     }
 
@@ -108,8 +104,7 @@ struct ProvidersPane: View {
                         })
                     CodexObservabilityHubView(
                         accountInputs: { self.observabilityAccountInputs() },
-                        providerInputs: { self.observabilityProviderInputs() },
-                        netdataBridge: self.netdataObservabilityBridge)
+                        providerInputs: { self.observabilityProviderInputs() })
                 }
             })
             .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in

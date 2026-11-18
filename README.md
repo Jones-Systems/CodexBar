@@ -27,9 +27,8 @@ Tiny macOS 14+ menu bar app that keeps **Codex and Claude limits visible** and s
 | Area | Source status |
 | --- | --- |
 | App, shared core, CLI, and widgets | Present in this source tree; platform and provider requirements vary. See the [architecture](docs/architecture.md) and [provider guides](docs/providers.md). |
-| Native account controls and observability | Native account/profile controls and independent provider, host, and work observations remain in source. CAAM integration is retired; see the [retirement boundary](docs/engineering-specs/caam-retirement.md). |
+| Native account controls and observability | Native account/profile controls and independent service, provider, and work observations remain in source. CAAM integration is retired; see the [retirement boundary](docs/engineering-specs/caam-retirement.md). |
 | Proposed repository sync safety | [PR #3](https://github.com/Jones-Systems/CodexBar/pull/3) is a separate sync-safety core. |
-| Proposed Netdata integration | [PR #4](https://github.com/Jones-Systems/CodexBar/pull/4), [#5](https://github.com/Jones-Systems/CodexBar/pull/5), [#6](https://github.com/Jones-Systems/CodexBar/pull/6), [#7](https://github.com/Jones-Systems/CodexBar/pull/7), and [#8](https://github.com/Jones-Systems/CodexBar/pull/8) form a dependent integration stack. |
 
 The linked proposals are pending work, not integrated or released functionality.
 Source integration does not prove release, installation, or live provider availability.

@@ -1552,16 +1552,12 @@
 "%@ · Recorded session %d" = "%@ · Sessione registrata %d";
 "Available" = "Disponibile";
 "Cost unavailable; not zero." = "Costo non disponibile; non equivale a zero.";
-"Dashboard URL (not stored)" = "URL della dashboard (non memorizzato)";
 "Data confidence: %@" = "Affidabilità dei dati: %@";
 "Estimated API cost: %@" = "Costo API stimato: %@";
 "Host default" = "Profilo predefinito dell’host";
 "Host default: %@" = "Profilo predefinito dell’host: %@";
-"Host resources" = "Risorse dell’host";
 "List-price estimate" = "Stima basata sui prezzi di listino";
-"Local service state, provider usage and cost, and host resources are separate ledgers." = "Lo stato del servizio locale, l’utilizzo e i costi del provider e le risorse dell’host sono registri separati.";
 "Mixed provenance" = "Provenienza mista";
-"Netdata telemetry is unsupported here. No host metrics were collected." = "La telemetria Netdata non è supportata qui. Non sono state raccolte metriche dell’host.";
 "No account profiles have been observed." = "Non sono stati osservati profili di account.";
 "No observation timestamp" = "Nessun orario di osservazione";
 "No provider observations are available." = "Non sono disponibili osservazioni del provider.";
@@ -1569,9 +1565,6 @@
 "Observability hub" = "Centro di osservabilità";
 "Observability view" = "Vista di osservabilità";
 "Observed: %@" = "Osservato: %@";
-"Open an existing Netdata dashboard" = "Apri una dashboard Netdata esistente";
-"Open dashboard in browser" = "Apri la dashboard nel browser";
-"Opening a dashboard does not import telemetry or verify this host." = "L’apertura di una dashboard non importa telemetria né verifica questo host.";
 "Partial" = "Parziale";
 "Partial view: limited to 100 recorded sessions." = "Vista parziale: limitata a 100 sessioni registrate.";
 "Primary window: %.1f%% used" = "Finestra principale: utilizzo %.1f%%";
@@ -1590,7 +1583,6 @@
 "Tokens: %d" = "Token: %d";
 "Unknown provenance" = "Provenienza sconosciuta";
 "Usage unavailable" = "Utilizzo non disponibile";
-"Use HTTPS, or loopback HTTP, without credentials, query parameters, or fragments." = "Usa HTTPS o HTTP di loopback, senza credenziali, parametri di query o frammenti.";
 "Vendor-metered" = "Misurato dal fornitore";
 "Window length: %d minutes" = "Durata della finestra: %d minuti";
 "Work" = "Lavoro";

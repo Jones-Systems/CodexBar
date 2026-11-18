@@ -5,7 +5,6 @@ public enum HubAvailability: String, Sendable, Equatable {
     case stale
     case partial
     case unavailable
-    case unsupported
 }
 
 public struct HubEvidence: Sendable, Equatable {
@@ -173,7 +172,6 @@ public struct ObservabilityHubSnapshot: Sendable, Equatable {
     public let services: [HubServiceObservation]
     public let accounts: [HubAccountObservation]
     public let providers: [HubProviderObservation]
-    public let hosts: [HubHostObservation]
     public let work: [HubWorkObservation]
     public let workIsPartial: Bool
 }
@@ -189,7 +187,6 @@ public enum ObservabilityHub {
         accounts: [HubAccountObservation] = [],
         providers: [HubProviderInput],
         includeWork: Bool = false,
-        hostsByEnvironmentID: [String: HubHostObservation] = [:],
         now: Date) -> ObservabilityHubSnapshot
     {
         let services = Array(services.prefix(self.maximumServices))
@@ -256,25 +253,6 @@ public enum ObservabilityHub {
             services: services,
             accounts: accounts,
             providers: providerRows,
-            hosts: services.map { service in
-                guard let host = hostsByEnvironmentID[service.id], host.environmentID == service.id else {
-                    return NetdataReadOnlyFacade.unavailable(environmentID: service.id)
-                }
-                if host.evidence.availability == .unsupported || host.evidence.availability == .unavailable {
-                    return host
-                }
-                return HubHostObservation(
-                    environmentID: host.environmentID,
-                    evidence: NetdataReadOnlyFacade.evidence(
-                        source: host.evidence.source,
-                        observedAt: host.evidence.observedAt,
-                        failed: host.evidence.availability == .stale,
-                        partial: host.cpuPercent == nil || host.memoryAvailableBytes == nil,
-                        now: now),
-                    cpuPercent: host.cpuPercent,
-                    memoryUsedBytes: host.memoryUsedBytes,
-                    memoryAvailableBytes: host.memoryAvailableBytes)
-            },
             work: work,
             workIsPartial: workIsPartial)
     }

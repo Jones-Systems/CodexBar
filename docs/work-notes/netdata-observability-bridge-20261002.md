@@ -1,4 +1,4 @@
-> Historical integration note: the CAAM wiring described below was subsequently retired. Generic Netdata telemetry, units, freshness, and caching remain active; see [CAAM retirement](../engineering-specs/caam-retirement.md).
+> Historical integration note: CodexBar subsequently removed both the CAAM wiring and the Netdata integration described here.
 
 # Netdata in-memory Observability bridge
 
