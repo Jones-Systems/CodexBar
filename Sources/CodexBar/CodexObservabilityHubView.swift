@@ -26,7 +26,6 @@ private enum ObservabilityHubTab: String, CaseIterable, Identifiable {
 struct CodexObservabilityHubView: View {
     let accountInputs: () -> [HubAccountObservation]
     let providerInputs: () -> [HubProviderInput]
-    @Bindable var netdataBridge: NetdataObservabilityBridge
     @State private var tab: ObservabilityHubTab = .overview
 
     var body: some View {
@@ -39,20 +38,18 @@ struct CodexObservabilityHubView: View {
             .pickerStyle(.segmented)
             TimelineView(.periodic(from: .now, by: 15)) { context in
                 let accounts = self.accountInputs()
-                let hosts = self.netdataBridge.hostsByEnvironmentID(now: context.date)
                 let snapshot = ObservabilityHub.aggregate(
-                    services: self.systemObservations(accounts: accounts, hosts: hosts),
+                    services: [self.localServiceObservation(accounts: accounts)],
                     accounts: accounts,
                     providers: self.providerInputs(),
                     includeWork: self.tab == .work,
-                    hostsByEnvironmentID: hosts,
                     now: context.date)
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 12) {
                         switch self.tab {
-                        case .overview: self.overview(snapshot, now: context.date)
+                        case .overview: self.overview(snapshot)
                         case .accounts: self.accounts(snapshot)
-                        case .systems: self.systems(snapshot, now: context.date)
+                        case .systems: self.systems(snapshot)
                         case .work: self.work(snapshot)
                         }
                     }
@@ -62,30 +59,18 @@ struct CodexObservabilityHubView: View {
             }
         } header: {
             Text(L("Observability hub"))
-        } footer: {
-            SettingsSectionFooter(
-                L("Local service state, provider usage and cost, and host resources are separate ledgers."))
         }
     }
 
-    private func systemObservations(
-        accounts: [HubAccountObservation], hosts: [String: HubHostObservation]) -> [HubServiceObservation]
-    {
-        let local = HubServiceObservation(
+    private func localServiceObservation(accounts: [HubAccountObservation]) -> HubServiceObservation {
+        HubServiceObservation(
             id: "local",
             label: L("This Mac"),
             currentProfile: accounts.first { $0.environmentID == "local" && $0.hostDefault }?.profile,
             evidence: HubEvidence(source: "Existing local account projection", observedAt: nil, availability: .partial))
-        let remote = hosts.keys.sorted().filter { $0 != "local" }.map { id in
-            HubServiceObservation(
-                id: id,
-                label: id,
-                evidence: HubEvidence(source: "No service observation", observedAt: nil, availability: .unavailable))
-        }
-        return [local] + remote
     }
 
-    private func overview(_ snapshot: ObservabilityHubSnapshot, now: Date) -> some View {
+    private func overview(_ snapshot: ObservabilityHubSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(L("Service and local state")).font(.subheadline.weight(.semibold))
             if snapshot.services.isEmpty {
@@ -130,14 +115,6 @@ struct CodexObservabilityHubView: View {
                     }
                 }
                 .font(.caption)
-            }
-            Divider()
-            Text(L("Host resources")).font(.subheadline.weight(.semibold))
-            if snapshot.services.isEmpty {
-                Text(L("No system observations are available.")).font(.caption)
-            }
-            ForEach(snapshot.services) { service in
-                self.hostResources(environmentID: service.id, label: service.label, now: now)
             }
         }
     }
@@ -188,7 +165,7 @@ struct CodexObservabilityHubView: View {
         }
     }
 
-    private func systems(_ snapshot: ObservabilityHubSnapshot, now: Date) -> some View {
+    private func systems(_ snapshot: ObservabilityHubSnapshot) -> some View {
         Group {
             if snapshot.services.isEmpty { Text(L("No system observations are available.")) }
             ForEach(snapshot.services) { service in
@@ -199,27 +176,10 @@ struct CodexObservabilityHubView: View {
                         format: L("Runtime effective profile: %@"),
                         service.runtimeEffectiveProfile ?? L("Unknown")))
                     HubEvidenceView(evidence: service.evidence)
-                    self.hostResources(environmentID: service.id, label: service.label, now: now)
-                    NetdataDashboardLinkView(environmentID: service.id)
                 }
                 .font(.caption)
             }
         }
-    }
-
-    private func hostResources(environmentID: String, label: String, now: Date) -> some View {
-        let state = self.netdataBridge.systemsState(environmentID: environmentID, now: now)
-        return VStack(alignment: .leading, spacing: 3) {
-            Text(state.compactLabel(hostLabel: label))
-            if state.availability == .unsupported {
-                Text(L("Netdata telemetry is unsupported here. No host metrics were collected."))
-            } else {
-                HubEvidenceView(evidence: HubEvidence(
-                    source: state.source, observedAt: state.observedAt, availability: state.availability))
-                if state.isRefreshing { Text(L("Refreshing")) }
-            }
-        }
-        .font(.caption).foregroundStyle(.secondary)
     }
 
     private func work(_ snapshot: ObservabilityHubSnapshot) -> some View {
@@ -283,28 +243,6 @@ private struct HubEvidenceView: View {
         case .stale: L("Stale")
         case .partial: L("Partial")
         case .unavailable: L("Unavailable")
-        case .unsupported: L("Unsupported")
         }
-    }
-}
-
-private struct NetdataDashboardLinkView: View {
-    let environmentID: String
-    @State private var destination = ""
-
-    var body: some View {
-        DisclosureGroup(L("Open an existing Netdata dashboard")) {
-            TextField(L("Dashboard URL (not stored)"), text: self.$destination)
-                .textFieldStyle(.roundedBorder)
-            if let url = NetdataReadOnlyFacade.dashboardURL(self.destination) {
-                Link(L("Open dashboard in browser"), destination: url)
-            } else if !self.destination.isEmpty {
-                Text(L("Use HTTPS, or loopback HTTP, without credentials, query parameters, or fragments."))
-                    .foregroundStyle(.orange)
-            }
-            Text(L("Opening a dashboard does not import telemetry or verify this host."))
-                .foregroundStyle(.secondary)
-        }
-        .onChange(of: self.environmentID) { _, _ in self.destination = "" }
     }
 }

@@ -1553,16 +1553,12 @@
 "%@ · Recorded session %d" = "%@ · Recorded session %d";
 "Available" = "Available";
 "Cost unavailable; not zero." = "Cost unavailable; not zero.";
-"Dashboard URL (not stored)" = "Dashboard URL (not stored)";
 "Data confidence: %@" = "Data confidence: %@";
 "Estimated API cost: %@" = "Estimated API cost: %@";
 "Host default" = "Host default";
 "Host default: %@" = "Host default: %@";
-"Host resources" = "Host resources";
 "List-price estimate" = "List-price estimate";
-"Local service state, provider usage and cost, and host resources are separate ledgers." = "Local service state, provider usage and cost, and host resources are separate ledgers.";
 "Mixed provenance" = "Mixed provenance";
-"Netdata telemetry is unsupported here. No host metrics were collected." = "Netdata telemetry is unsupported here. No host metrics were collected.";
 "No account profiles have been observed." = "No account profiles have been observed.";
 "No observation timestamp" = "No observation timestamp";
 "No provider observations are available." = "No provider observations are available.";
@@ -1570,9 +1566,6 @@
 "Observability hub" = "Observability hub";
 "Observability view" = "Observability view";
 "Observed: %@" = "Observed: %@";
-"Open an existing Netdata dashboard" = "Open an existing Netdata dashboard";
-"Open dashboard in browser" = "Open dashboard in browser";
-"Opening a dashboard does not import telemetry or verify this host." = "Opening a dashboard does not import telemetry or verify this host.";
 "Partial" = "Partial";
 "Partial view: limited to 100 recorded sessions." = "Partial view: limited to 100 recorded sessions.";
 "Primary window: %.1f%% used" = "Primary window: %.1f%% used";
@@ -1591,7 +1584,6 @@
 "Tokens: %d" = "Tokens: %d";
 "Unknown provenance" = "Unknown provenance";
 "Usage unavailable" = "Usage unavailable";
-"Use HTTPS, or loopback HTTP, without credentials, query parameters, or fragments." = "Use HTTPS, or loopback HTTP, without credentials, query parameters, or fragments.";
 "Vendor-metered" = "Vendor-metered";
 "Window length: %d minutes" = "Window length: %d minutes";
 "Work" = "Work";
